@@ -4,12 +4,12 @@
 //! session-only runtime state, never a document field (see `ShootingConfig::camera`). `SetShotCamera` and
 //! `SaveCamera` ARE real document mutations.
 
+use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::editor::shooting::ShootingDispatchCtx;
 use crate::mutations::create_saved_camera::CreateSavedCamera;
 use crate::mutations::replace_shot_camera::ReplaceShotCamera;
 use crate::op::ShootingMutation;
 use crate::{ShootingCamera, ShootingSavedCamera, ShootingSnapshot};
-use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::kit::schema::snapshot::{STDIO_SEMIOKIT_DOCUMENT_SCHEMA, SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitType};
+use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitType, STDIO_SEMIOKIT_DOCUMENT_SCHEMA};
 
 /// 🌱 A hand-built, non-empty catalog: 2 types, 2 designs (one with 2 pieces + 1 connection,
 /// one empty), no children/representations — exercises the real fold without depending on the

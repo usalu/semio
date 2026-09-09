@@ -1,4 +1,3 @@
-
 use super::*;
 
 //#region 🧪️RetainedCommandEnvelope
@@ -56,8 +55,8 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
 
 use crate::editor::animate::testkit::presentation_app;
 use protocol::OpText;
-use semio_framework_plugin::PluginApp;
 use semio_framework_plugin::testkit::meta;
+use semio_framework_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]
 async fn deck_schema_is_animate_presentation() {

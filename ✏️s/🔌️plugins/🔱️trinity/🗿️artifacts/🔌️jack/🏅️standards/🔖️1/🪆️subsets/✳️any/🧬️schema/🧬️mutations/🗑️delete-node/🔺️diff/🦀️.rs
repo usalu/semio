@@ -9,8 +9,7 @@ pub fn diff(payload: &super::DeleteNode, base: &JackSnapshot) -> protocol::Mutat
     if !scene.nodes.iter().any(|node| node.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
-    let cascaded_edge_ids: Vec<String> =
-        scene.edges.iter().filter(|edge| crate::port_node_id(&edge.source) == Some(payload.id.as_str()) || crate::port_node_id(&edge.target) == Some(payload.id.as_str())).map(|edge| edge.id.clone()).collect();
+    let cascaded_edge_ids: Vec<String> = scene.edges.iter().filter(|edge| crate::port_node_id(&edge.source) == Some(payload.id.as_str()) || crate::port_node_id(&edge.target) == Some(payload.id.as_str())).map(|edge| edge.id.clone()).collect();
     let nodes: Vec<_> = scene.nodes.into_iter().filter(|node| node.id != payload.id).collect();
     let edges: Vec<_> = scene.edges.into_iter().filter(|edge| crate::port_node_id(&edge.source) != Some(payload.id.as_str()) && crate::port_node_id(&edge.target) != Some(payload.id.as_str())).collect();
     let outcome = protocol::MutationOutcome::new(diff_replace_content(nodes, edges));

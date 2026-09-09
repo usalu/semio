@@ -1,0 +1,41 @@
+{
+  "path": ".devcontainer/post-attach.sh",
+  "start": "#region 🔖️InstallExtension",
+  "end": "#endregion 🔖️InstallExtension",
+  "target": "@semio-tech/repo-vscode:build-vsix",
+  "project": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
+  "cases": [
+    {
+      "id": "current",
+      "archive": true,
+      "sourceTime": 100,
+      "archiveTime": 200,
+      "buildStatus": 0,
+      "installs": 1
+    },
+    {
+      "id": "stale",
+      "archive": true,
+      "sourceTime": 200,
+      "archiveTime": 100,
+      "buildStatus": 0,
+      "installs": 1
+    },
+    {
+      "id": "missing",
+      "archive": false,
+      "sourceTime": 100,
+      "archiveTime": 200,
+      "buildStatus": 0,
+      "installs": 1
+    },
+    {
+      "id": "failed",
+      "archive": true,
+      "sourceTime": 100,
+      "archiveTime": 200,
+      "buildStatus": 3,
+      "installs": 0
+    }
+  ]
+}

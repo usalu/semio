@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::LayerDocument;
 use crate::document::ClimateZoneDe;
+use crate::LayerDocument;
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 
 fn round_trip(base: &Din4108Snapshot, operation: &Din4108Mutation) -> Din4108Snapshot {

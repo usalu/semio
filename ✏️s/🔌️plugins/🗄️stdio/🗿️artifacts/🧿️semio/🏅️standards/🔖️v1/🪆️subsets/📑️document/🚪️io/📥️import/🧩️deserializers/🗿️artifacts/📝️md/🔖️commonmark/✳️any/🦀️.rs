@@ -19,10 +19,10 @@
 //!   empty since md only carries a URL, never raw bytes.
 //! - `styles` is always empty: CommonMark has no named-style concept.
 
-use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
-use semio_s_artifact_stdio_md::MdSnapshot;
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
+use semio_s_artifact_stdio_md::MdSnapshot;
 
 //#region 🔖️FieldMapping
 /// ✍️ Flattens one inline node into zero or more runs, threading `style` down through

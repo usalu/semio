@@ -73,8 +73,6 @@ export interface En1992Diff {
   anchorNEdKn?: number;
   /** @state artifact */
   anchorVEdKn?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 
 export interface En1992Artifact {
@@ -113,5 +111,4 @@ export interface En1992Artifact {
   anchorC1Mm: number;
   anchorNEdKn: number;
   anchorVEdKn: number;
-  selectedCheckIndex?: number | null;
 }

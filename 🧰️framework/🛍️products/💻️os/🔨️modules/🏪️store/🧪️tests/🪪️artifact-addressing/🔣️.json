@@ -1,0 +1,109 @@
+{
+  "valid": [
+    {
+      "child": {
+        "childId": "child-1",
+        "target": {
+          "artifactId": "child-1",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        }
+      },
+      "coordinate": "s.stdio.semio@v1/graph",
+      "uri": "child-1!s.stdio.semio@v1/graph",
+      "app": {
+        "pluginId": "s.stdio",
+        "appId": "s.stdio.txt@utf-8/*#editor"
+      },
+      "role": "editor"
+    },
+    {
+      "child": {
+        "childId": "Ünicode-😀",
+        "target": {
+          "artifactId": "Ünicode-😀",
+          "dialect": {
+            "artifactKind": "s.stdio.txt",
+            "standard": "utf-8",
+            "subset": "*"
+          }
+        }
+      },
+      "coordinate": "s.stdio.txt@utf-8/*",
+      "uri": "Ünicode-😀!s.stdio.txt@utf-8/*",
+      "app": {
+        "pluginId": "s.stdio",
+        "appId": "s.stdio.txt@utf-8/*#editor"
+      },
+      "role": "editor"
+    },
+    {
+      "child": {
+        "childId": "document-3",
+        "target": {
+          "artifactId": "document-3",
+          "dialect": {
+            "artifactKind": "s.example.graph",
+            "standard": "release/1",
+            "subset": "subset"
+          }
+        }
+      },
+      "coordinate": "s.example.graph@release/1/subset",
+      "uri": "document-3!s.example.graph@release/1/subset",
+      "app": {
+        "pluginId": "s.stdio",
+        "appId": "s.stdio.txt@utf-8/*#editor"
+      },
+      "role": "editor"
+    }
+  ],
+  "invalidChildren": [
+    null,
+    {},
+    {
+      "childId": 1,
+      "target": {
+        "artifactId": "child-1",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "graph"
+        }
+      }
+    },
+    {
+      "childId": "x",
+      "target": {
+        "artifactId": "x"
+      }
+    },
+    {
+      "childId": "child-1",
+      "target": {
+        "artifactId": "child-1",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "graph"
+        }
+      },
+      "localOwner": {}
+    }
+  ],
+  "invalidCoordinates": [
+    "missing",
+    "s.stdio.txt@utf-8",
+    "@v1/*",
+    "s.stdio.txt@/*",
+    "s.stdio.txt@v1/"
+  ],
+  "invalidUris": [
+    "missing",
+    "!s.stdio.txt@utf-8/*",
+    "x!missing"
+  ]
+}

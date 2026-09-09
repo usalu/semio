@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::flow::FlowCommand;
 use crate::editor::flow::modes::generate::windows::{form, generations};
 use crate::editor::flow::testkit::{dispatch, flow_app, render};
+use crate::editor::flow::FlowCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn adding_a_generation_populates_the_form_and_emits_no_artifact_mutations() {

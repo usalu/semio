@@ -6,7 +6,7 @@ use semio_framework_plugin::Label;
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
-    /// 🗣️ Complete UI label set for the flow app; one field per label makes every locale×terminology combination compile-checked. `FlowConfig` carries no terminology axis, so `reuse_*` mirrors `native_*` throughout.
+    /// 🗣️ Complete UI label set for the flow app; one field per label makes every locale×terminology combination compile-checked.
     pub struct FlowPlayLabels {
         widgets: native_en "Widgets", native_de "Widgets", reuse_en "Widgets", reuse_de "Widgets";
         synapses: native_en "Synapses", native_de "Synapsen", reuse_en "Synapses", reuse_de "Synapsen";

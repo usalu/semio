@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::generation3d::Generation3dCommand;
 use crate::editor::generation3d::commands::{rotate_selection, scale_selection};
 use crate::editor::generation3d::testkit::{app, dispatch};
+use crate::editor::generation3d::Generation3dCommand;
 use crate::widget_id;
 use semio_framework_artifact_flow_flow::Widget;
 

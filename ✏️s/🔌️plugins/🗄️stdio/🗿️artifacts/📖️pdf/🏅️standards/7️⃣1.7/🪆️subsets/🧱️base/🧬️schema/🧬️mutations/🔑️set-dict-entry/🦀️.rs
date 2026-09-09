@@ -2,7 +2,10 @@
 
 use super::remove_dict_entry::RemoveDictEntry;
 use super::PdfMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff, PdfPathSegment}, snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{
+    diff::{self, PdfDiff, PdfPathSegment},
+    snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfSnapshot},
+};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -24,7 +27,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetDictEntry {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
-        match original_dict_value(base, self.id, &self.path, &self.key) { Some(value) => vec![PdfMutation::SetDictEntry(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value })], None => vec![PdfMutation::RemoveDictEntry(RemoveDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone() })] }
+        match original_dict_value(base, self.id, &self.path, &self.key) {
+            Some(value) => vec![PdfMutation::SetDictEntry(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value })],
+            None => vec![PdfMutation::RemoveDictEntry(RemoveDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone() })],
+        }
     }
 
     fn label(&self) -> String {

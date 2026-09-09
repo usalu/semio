@@ -95,13 +95,7 @@ impl EquationGraphDsl {
 }
 
 pub fn math_graph_to_dsl(graph: &EquationGraph) -> EquationGraphDsl {
-    EquationGraphDsl {
-        directed: graph.directed,
-        nodes: graph.nodes.clone(),
-        edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(),
-        algorithm: graph.algorithm.clone(),
-        algorithm_seed: graph.algorithm_seed.clone(),
-    }
+    EquationGraphDsl { directed: graph.directed, nodes: graph.nodes.clone(), edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(), algorithm: graph.algorithm.clone(), algorithm_seed: graph.algorithm_seed.clone() }
 }
 
 pub fn math_graph_from_dsl(graph: EquationGraphDsl) -> Result<EquationGraph, String> {

@@ -193,9 +193,7 @@ pub fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::Ha
             let da: Option<[f64; 3]> = <[f64; 3] as protocol::FromValue>::from_value(av).ok();
             let db: Option<[f64; 3]> = <[f64; 3] as protocol::FromValue>::from_value(bv).ok();
             match (da, db) {
-                (Some(a), Some(b)) => {
-                    DslValue::float(((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt())
-                }
+                (Some(a), Some(b)) => DslValue::float(((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()),
                 _ => DslValue::Null,
             }
         }

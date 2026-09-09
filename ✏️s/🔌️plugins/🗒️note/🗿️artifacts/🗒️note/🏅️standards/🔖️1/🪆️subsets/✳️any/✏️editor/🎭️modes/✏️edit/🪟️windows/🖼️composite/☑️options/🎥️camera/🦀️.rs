@@ -1,8 +1,8 @@
 //! 🎥️ Composite-window option — the free/live canvas camera zoom slider.
 //! Its command handlers live in `🎮️commands/🎥️camera::set_camera_zoom`.
 
-use crate::NoteCamera;
 use crate::editor::note::terminology::NotePlayLabels;
+use crate::NoteCamera;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

@@ -2,12 +2,12 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::op::PresentationMutation;
-use crate::PresentationSnapshot;
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::engine::export_video_from_scene;
 use crate::editor::animate::engine::PresentationScene;
 use crate::editor::animate::PresentationDispatchCtx;
+use crate::op::PresentationMutation;
+use crate::PresentationSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -26,10 +26,7 @@ pub struct ExportVideoFromDeck {
 }
 
 pub async fn handle_async(payload: &ExportVideoFromDeck) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
-    let scene: PresentationScene = dsl::os_pack::json::parse(&payload.scene_json)
-        .ok()
-        .and_then(|value| dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&value)).ok())
-        .unwrap_or_else(|| PresentationScene::empty("Deck export"));
+    let scene: PresentationScene = dsl::os_pack::json::parse(&payload.scene_json).ok().and_then(|value| dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&value)).ok()).unwrap_or_else(|| PresentationScene::empty("Deck export"));
     match export_video_from_deck(&scene, &payload.output_dir).await {
         Ok(bundles) => Ok(Emit {
             effects: vec![Effect::DownloadMediaExport {

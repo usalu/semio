@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::app::EditorApp;
 use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
@@ -58,9 +57,9 @@ pub async fn icon_scene(app: &mut ShootingApp) -> semio_framework_plugin::IconRe
 }
 
 pub async fn scene_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
-    app.window_measures().await.get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
+    app.window_measures(&ViewModel::default()).await.get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
 }
 
 pub async fn icon_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
-    app.window_measures().await.get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
+    app.window_measures(&ViewModel::default()).await.get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
 }

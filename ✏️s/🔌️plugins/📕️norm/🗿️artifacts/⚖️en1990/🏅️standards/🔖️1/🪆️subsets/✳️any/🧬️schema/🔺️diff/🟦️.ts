@@ -13,8 +13,6 @@ export interface En1990Diff {
   annex?: string;
   /** @state artifact */
   seismicAEdKn?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 
 /** 🌉️ Opaque mirror of `store::os_io::ArtifactRef` — a cross-cutting framework identity type, out of

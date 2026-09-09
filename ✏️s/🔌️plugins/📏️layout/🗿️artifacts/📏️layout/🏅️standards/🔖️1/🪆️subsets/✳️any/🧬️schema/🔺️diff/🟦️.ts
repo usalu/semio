@@ -32,29 +32,6 @@ export interface LayoutDiff {
   backgroundDrawing?: LayoutDrawingChild | null;
   /** @state artifact @link_slot roles=model */
   referencedModel?: ArtifactLink | null;
-  /** @state presence */
-  selectedIds?: LayoutStringList;
-  /** @state config */
-  activePageId?: string;
-  /** @state config */
-  engagementInput?: string;
-  /** @state config */
-  cameraX?: number;
-  /** @state config */
-  cameraY?: number;
-  /** @state config */
-  cameraZoom?: number;
-  /** @state config */
-  previewCameraX?: number;
-  /** @state config */
-  previewCameraY?: number;
-  /** @state config */
-  previewCameraZoom?: number;
-  /** @state config */
-  dropPreview?: LayoutDropPreviewState;
-  /** @state config */
-  /** @state artifact */
-  hoveredId?: string | null;
 }
 
 /** 🌉️ Opaque mirror of the full `LayoutArtifact` aggregate (artifact + presence + config lanes) —

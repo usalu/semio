@@ -1,0 +1,24 @@
+import assert from "node:assert/strict";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+
+const root = process.env.SEMIO_LAYOUT_REPO_ROOT;
+const output = process.env.SEMIO_LAYOUT_OUTPUT;
+if (!root || !output) throw new Error("Explicit repository and output paths are required");
+const engine = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine");
+const source = await readFile(join(engine, "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"), "utf8");
+const start = source.indexOf("    pub(crate) const TYPED_OPERATION_RESULT_PAGE_BYTES");
+const end = source.indexOf("    #[cfg(test)]\n    #[path = \"../../../🧪️tests/🗞️typed-result-page/🦀️.rs\"]", start);
+assert.ok(start >= 0 && end > start);
+const declarations = source.slice(start, end);
+assert.equal([...declarations.matchAll(/struct TypedOperationResult/g)].length, 2);
+assert.ok(declarations.includes("fn decode_guest_message"));
+await mkdir(output, { recursive: true });
+await writeFile(join(output, "Cargo.toml"), '[package]\nname = "renderer-page-layout-verification"\nversion = "0.0.0"\nedition = "2021"\n[workspace]\n[lib]\npath = "🦀️.rs"\n[dependencies]\nserde_json = "1.0.140"\n');
+await writeFile(join(output, "🦀️.rs"), declarations + '\n#[cfg(test)]\n#[path = ' + JSON.stringify(join(engine, "🧪️tests/🗞️typed-result-page/🦀️.rs")) + ']\nmod typed_result_page_tests;\n');
+const cargo = Bun.spawn(["cargo", "test", "--offline", "--manifest-path", join(output, "Cargo.toml"), "--lib", "--", "--nocapture"], { cwd: root, env: { ...process.env, CARGO_TARGET_DIR: join(dirname(output), "cargo") }, stdout: "pipe", stderr: "pipe" });
+const [code, stdout, stderr] = await Promise.all([cargo.exited, new Response(cargo.stdout).text(), new Response(cargo.stderr).text()]);
+await writeFile(join(output, "compiler-output.txt"), stdout + stderr);
+assert.equal(code, 0, stdout + stderr);
+assert.match(stdout, /1 passed; 0 failed/);
+console.log("[DEBUG] Actual renderer page/token declarations and canonical result-lane test passed the neutral fixture through Cargo");

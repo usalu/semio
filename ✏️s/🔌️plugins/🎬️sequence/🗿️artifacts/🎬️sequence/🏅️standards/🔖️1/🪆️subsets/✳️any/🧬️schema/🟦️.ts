@@ -1,11 +1,9 @@
 /** 🧬️ Sequence artifact schema — every field with its state class. */
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+
 export interface SequenceArtifact {
   /** @state artifact */ schema: string;
-  /** @state artifact */ steps: SequenceStep[];
-  /** @state artifact */ edges: SequenceEdge[];
-  /** @state config */ lastRunJson: string;
-  /** @state config */ orientation: string;
-  /** @state config */ camera: SequenceCamera;
+  /** @state artifact @child kind=s.stdio.semio.flow */ content: ArtifactChild;
 }
 export interface SequenceStep { id: string; kind: string; params: Record<string, unknown>; x: number; y: number; slot?: SlotRef; collapsed: boolean; }
 export interface SequenceEdge { id: string; from: string; to: string; }
@@ -63,11 +61,7 @@ export function parseSequenceArtifact(value: unknown, at = "$"): SequenceArtifac
   const row = sequenceSequenceArtifactGuardObject(value, at);
   return {
     schema: sequenceSequenceArtifactGuardString(row["schema"], `${at}.schema`),
-    steps: sequenceSequenceArtifactGuardArray(row["steps"], `${at}.steps`).map((item, index) => parseSequenceStep(item, `${at}.steps[${index}]`)),
-    edges: sequenceSequenceArtifactGuardArray(row["edges"], `${at}.edges`).map((item, index) => parseSequenceEdge(item, `${at}.edges[${index}]`)),
-    lastRunJson: sequenceSequenceArtifactGuardString(row["lastRunJson"], `${at}.lastRunJson`),
-    orientation: sequenceSequenceArtifactGuardString(row["orientation"], `${at}.orientation`),
-    camera: parseSequenceCamera(row["camera"], `${at}.camera`),
+    content: parseArtifactChild(row["content"], `${at}.content`),
   };
 }
 

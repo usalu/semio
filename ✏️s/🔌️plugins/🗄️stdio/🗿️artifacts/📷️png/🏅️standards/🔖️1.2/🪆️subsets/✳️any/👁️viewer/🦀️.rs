@@ -6,9 +6,9 @@
 
 use crate::standards::v1_2::subsets::any::schema::mutations::PngMutation;
 use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
-use crate::{PNG_DIALECT, STDIO_PNG_DOCUMENT_SCHEMA};
 use crate::viewer::png::modes::view;
 use crate::viewer::png::modes::view::windows::main;
+use crate::{PNG_DIALECT, STDIO_PNG_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

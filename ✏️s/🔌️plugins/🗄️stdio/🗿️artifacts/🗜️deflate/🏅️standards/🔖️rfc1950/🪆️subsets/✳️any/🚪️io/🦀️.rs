@@ -498,11 +498,7 @@ impl DeflateEncodeJob {
         self.writer.out
     }
 
-    fn retained_payload(
-        context: &mut semio_framework_job::StepContext<'_>,
-        stream: semio_framework_job::JobPayloadStream,
-        bytes: &[u8],
-    ) -> semio_framework_job::RetainedJobPayload {
+    fn retained_payload(context: &mut semio_framework_job::StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
         match context.payload_from_bytes(stream, bytes) {
             Ok(payload) => payload,
             Err(rejected) => {
@@ -514,10 +510,7 @@ impl DeflateEncodeJob {
 
     fn checkpoint(&self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::Checkpoint {
         let state = self.checkpoint_bytes();
-        semio_framework_job::Checkpoint {
-            state: Self::retained_payload(context, semio_framework_job::JobPayloadStream::CheckpointState, &state),
-            applied_progress: self.position as u64,
-        }
+        semio_framework_job::Checkpoint { state: Self::retained_payload(context, semio_framework_job::JobPayloadStream::CheckpointState, &state), applied_progress: self.position as u64 }
     }
 
     fn commit(&self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::CommitCandidate {

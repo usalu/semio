@@ -1,6 +1,6 @@
 {
   "artifact": null,
-  "vEdKn": 750.0,
+  "vEdKn": 750,
   "hEdKn": null,
   "footingAreaM2": null,
   "phiDeg": null,
@@ -21,6 +21,5 @@
   "qBKpa": null,
   "pileBaseAreaM2": null,
   "pileNProfiles": null,
-  "zInvestigatedM": null,
-  "selectedCheckIndex": null
+  "zInvestigatedM": null
 }

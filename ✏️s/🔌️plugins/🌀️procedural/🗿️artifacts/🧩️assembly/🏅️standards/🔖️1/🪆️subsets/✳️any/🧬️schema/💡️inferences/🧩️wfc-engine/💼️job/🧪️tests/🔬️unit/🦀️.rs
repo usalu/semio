@@ -1,7 +1,6 @@
-
 use std::time::{Duration, Instant};
 
-use semio_framework_job::{Generation, RevisionId, StepBudget, allocate_operation_id, root_cancel_token};
+use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, RevisionId, StepBudget};
 
 use super::*;
 use crate::wfc_engine::model::ModelBuilder;
@@ -196,7 +195,7 @@ fn every_interactive_solver_stage_is_preview_eligible_at_fixed_cadence() {
 }
 
 #[test]
-fn first_preview_is_immediate_and_continuous_gap_is_bounded() {
+fn first_preview_and_continuous_gap_include_bounded_publication() {
     let mut job = checkerboard(4_096, 83);
     let mut sequence = 0;
     let mut units_since_preview = 0;
@@ -208,9 +207,9 @@ fn first_preview_is_immediate_and_continuous_gap_is_bounded() {
         retire_outcome(&mut outcome);
         match outcome {
             StepOutcome::PreviewReady(_) => {
-                assert!(units_since_preview <= PREVIEW_UNIT_INTERVAL as usize);
+                assert!(units_since_preview <= PREVIEW_UNIT_INTERVAL as usize + 1);
                 if preview_count == 0 {
-                    assert_eq!(units_since_preview, 1);
+                    assert_eq!(units_since_preview, 2);
                 }
                 units_since_preview = 0;
                 preview_count += 1;

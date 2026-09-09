@@ -12,7 +12,9 @@
 
 use crate::editor::puzzle2d::commands::{
     add_node, apply_board_events, cancel_slot, commit_slot, cycle_candidate, delete_selection, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_submit, focus_selection, force_layout, lod_scale_json,
-    open_slot, patch_inspector, select_same_kind, set_active_example, set_active_utility, set_brush_kind_weights, set_brush_node_size, set_camera, set_candidate_index, set_fill_count, set_grid_factor, set_grid_snap_enabled,     set_lod_mode_for_pane, set_selection_flag, set_suggestion_offset, };
+    open_slot, patch_inspector, select_same_kind, set_active_example, set_brush_kind_weights, set_brush_node_size, set_camera, set_candidate_index, set_fill_count, set_grid_factor, set_grid_snap_enabled, set_lod_mode_for_pane, set_selection_flag,
+    set_suggestion_offset,
+};
 use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dPlayRuntime};
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
 use crate::editor::puzzle2d::engine::{BoardHost, Puzzle2dExtension};
@@ -22,8 +24,9 @@ use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::{brush a
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::panels::{catalogue, document, inspection};
 use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
-use crate::editor::puzzle2d::terminology::{puzzle2d_config_locale, puzzle2d_labels};
+use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 pub use crate::editor::puzzle2d::terminology::{puzzle2d_localized, puzzle2d_localized_phrase};
+use crate::editor::puzzle2d::window::{self, Puzzle2dWindowConfig, Puzzle2dWindowTransient};
 use crate::standards::v1::subsets::any::schema::mutations::text::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
@@ -31,11 +34,11 @@ use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
     Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, WindowEngagement, WindowMeasure,
-    INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
+    INTERACTION_SELECT_ACTION_ID,
 };
 // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
 // `semio_framework_plugin`, flagged to the coordinator, not fixed here).
-use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::app::{EphemeralEmit, InteractionView};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -81,14 +84,14 @@ pub fn nakagin_example_json() -> String {
 pub struct Puzzle2dScene {
     pub fixture: Value,
     pub runtime: Puzzle2dPlayRuntime,
-    /// 🧰️ The host-owned active utility for this render/mutation, sourced from
-    /// `Puzzle2dConfig::active_utility_by_window_id` (defaulting to `select`) — never a document field.
+    /// 🧰️ The host-owned active utility for this render/mutation.
     pub active_utility: String,
 }
 
 pub fn default_empty_fixture() -> Value {
     json!({
         "schema": PUZZLE2D_FIXTURE_SCHEMA,
+        "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [],
         "edges": []
     })
@@ -126,24 +129,9 @@ fn puzzle2d_interaction_definition() -> InteractionDefinition {
     }
 }
 
-/// 🪟️ B1: was host-pushed `view_state.window_instances` filtered by `window_kind_id`; puzzle2d has
-/// three DISTINCT pane kinds (unlike puzzle3d's split-top/perspective, which are several instances of
-/// ONE kind), and `Puzzle2dConfig` carries no field that ever differs between two instances of the
-/// SAME pane kind, so a self-maintained multi-instance registry would only ever produce
-/// byte-identical duplicate entries here. Always exactly one instance, keyed by the pane kind id.
-fn window_instance_ids(pane: &str) -> Vec<String> {
-    vec![pane.to_string()]
-}
-
-/// 🧰️ B1: the host-owned active utility for `window_id`'s pane, now real VCS'd config — see
-/// `🎮️commands/🧰️set-active-utility`, the only writer.
-pub fn puzzle2d_active_utility(config: &Puzzle2dConfig, window_id: Option<&str>) -> String {
-    if let Some(wid) = window_id {
-        if let Some(utility) = config.active_utility_by_window_id.get(wid) {
-            return utility.clone();
-        }
-    }
-    select_utility::UTILITY_ID.into()
+/// 🧰️ Resolves the canonical host-owned utility for the current window.
+pub fn puzzle2d_active_utility(view_state: Option<&semio_framework_plugin::ViewModel>) -> &str {
+    view_state.and_then(|view| view.active_utility_id.as_deref()).filter(|utility| !utility.is_empty()).unwrap_or(select_utility::UTILITY_ID)
 }
 
 /// 🎯️ `semio_framework_plugin::selection_ids`'s "ids" array plus a singular "id" fallback —
@@ -881,9 +869,6 @@ puzzle2d_command_variants! {
     BrushFillSessionBegin = "brushFillSessionBegin",
     BrushFillSessionClear = "brushFillSessionClear",
     LodScaleJson = "lodScaleJson",
-    SetActiveUtility = SET_ACTIVE_UTILITY_ACTION_ID,
-    // 🗣️ B1: locale/terminology used to be host-pushed `ViewModel` fields with no app-level action of
-    // their own; now that `ViewModel` is gone from the app-facing surface, they need a real Command.
 }
 
 impl protocol::OpBinary for Puzzle2dCommand {
@@ -1022,9 +1007,8 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
 pub struct Puzzle2dPlayApp;
 
 impl Puzzle2dPlayApp {
-    fn scene_for(fixture: Value, config: &Puzzle2dConfig, window_id: Option<&str>) -> Puzzle2dScene {
-        let active_utility = puzzle2d_active_utility(config, window_id);
-        Puzzle2dScene { fixture, runtime: config.clone(), active_utility }
+    fn scene_for(fixture: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str) -> Puzzle2dScene {
+        Puzzle2dScene { fixture, runtime, active_utility: active_utility.into() }
     }
 }
 
@@ -1067,10 +1051,10 @@ pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[
     "setFillCount",
     "setGridFactor",
     "setGridSnapEnabled",
-        "setLodModeForPane",
+    "setLodModeForPane",
     "setSelectionFlag",
     "setSuggestionOffset",
-    ];
+];
 const PUZZLE2D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.2d.fixture.tool-command.v1";
 
 /// 🎬️ The retained verbs whose whole completion is [`puzzle2d_dispatch_emit`] — one `🎮️commands/*`
@@ -1096,10 +1080,10 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setGridFactor",
     "setGridSnapEnabled",
-        "setLodModeForPane",
+    "setLodModeForPane",
     "setSelectionFlag",
     "setSuggestionOffset",
-    ];
+];
 
 /// 🫙️ The two verbs whose `🎮️commands/*` arm is empty by construction — `selectSameKind` has no
 /// channel to write framework-owned selection back, and `lodScaleJson` only reads a pure engine LOD
@@ -1172,37 +1156,37 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "forceLayout", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "redrawHandles", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "brushCancelSlot", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushCycleCandidate", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushOpenSlot", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushSetCandidateIndex", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "engagementControlSelect", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "brushCancelSlot", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "brushCycleCandidate", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "brushOpenSlot", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "brushSetCandidateIndex", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "engagementControlSelect", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setBrushKindWeights", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setBrushNodeSize", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setGridFactor", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setLodModeForPane", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setSuggestionOffset", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "applyBoardEvents", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushCommitSlot", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionAdopt", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionBegin", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionCancel", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionClear", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionDiscard", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionRetry", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "duplicateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "patchInspectorNodes", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setBrushNodeSize", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "setGridFactor", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "setLodModeForPane", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "setSuggestionOffset", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "applyBoardEvents", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "brushCommitSlot", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "brushFillSessionAdopt", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "brushFillSessionBegin", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "brushFillSessionCancel", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "brushFillSessionClear", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "brushFillSessionDiscard", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "brushFillSessionRetry", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "brushFillSessionStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "duplicateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchInspectorNodes", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "lodScaleJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "selectSameKind", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ];
@@ -1243,16 +1227,9 @@ fn puzzle2d_config_store_bounded_bytes(value: &Puzzle2dConfig) -> Result<usize, 
     Ok(encoded.len())
 }
 
-/// 🎚️ Both `Puzzle2dConfigMutation` variants are admitted, each bounded by the post-image the store
-/// would retain: `Snapshot` carries a whole runtime root (every generic-reduce Config completion),
-/// `Fill` a fixed-shape `Puzzle2dFillRuntime` (the fill session's own lane).
 fn puzzle2d_config_store_mutation_bytes(mutation: &Puzzle2dConfigMutation) -> Option<usize> {
     match mutation {
         Puzzle2dConfigMutation::Snapshot { config } => puzzle2d_config_store_bounded_bytes(config).ok(),
-        Puzzle2dConfigMutation::Fill { .. } => {
-            let encoded = dsl::json::to_json_string(mutation);
-            (encoded.len() <= PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES).then_some(encoded.len())
-        }
     }
 }
 
@@ -1585,16 +1562,88 @@ fn puzzle2d_board_events_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dP
     (count <= PUZZLE2D_BOARD_EVENT_BATCH_LIMIT).then_some(count.max(1))
 }
 
+struct Puzzle2dWindowCommandWork {
+    tool_id: &'static str,
+    extent: crate::retained_command::PuzzleCommandExtent<EditorApp<Puzzle2dPlayApp>>,
+    consumed: bool,
+    view_state: Option<semio_framework_plugin::ViewModel>,
+    window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
+    window_transient: Option<semio_framework_plugin::WindowTransientSnapshot>,
+    ephemeral: Option<EphemeralEmit<EditorApp<Puzzle2dPlayApp>>>,
+}
+
+impl Puzzle2dWindowCommandWork {
+    fn new(tool_id: &'static str, extent: crate::retained_command::PuzzleCommandExtent<EditorApp<Puzzle2dPlayApp>>) -> Self {
+        Self { tool_id, extent, consumed: false, view_state: None, window_config: None, window_transient: None, ephemeral: None }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dWindowCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn bind_view_state(&mut self, view_state: Option<semio_framework_plugin::ViewModel>) {
+        self.view_state = view_state;
+    }
+
+    fn bind_window_owners(&mut self, config: Option<semio_framework_plugin::WindowConfigSnapshot>, transient: Option<semio_framework_plugin::WindowTransientSnapshot>) {
+        self.window_config = config;
+        self.window_transient = transient;
+    }
+
+    fn take_ephemeral(&mut self) -> EphemeralEmit<EditorApp<Puzzle2dPlayApp>> {
+        self.ephemeral.take().unwrap_or_default()
+    }
+
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+        (self.extent)(command, snapshot, interaction)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle2dCommand,
+        snapshot: &Puzzle2dPlaySnapshot,
+        config: &Puzzle2dConfig,
+        interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+        if self.consumed {
+            return Err(Fault::from("puzzle2d-window-work-repeated"));
+        }
+        let window_config = window::config_from_snapshot_or_document(self.window_config.as_ref(), &snapshot.0);
+        let window_transient = window::transient_from_snapshot(self.window_transient.as_ref());
+        let window_kind = self.window_config.as_ref().map(semio_framework_plugin::WindowConfigSnapshot::window_kind_id).or_else(|| self.view_state.as_ref().and_then(window::kind_for_view)).unwrap_or(overview::WINDOW_KIND_ID);
+        let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+        let (emit, ephemeral) = puzzle2d_dispatch_emit(command, &snapshot.0, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, None)?;
+        self.consumed = true;
+        self.ephemeral = Some(ephemeral);
+        Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
+    }
+}
+
 /// 🎬️ THE dispatch pipeline — the one implementation both [`ArtifactEditor::handle`]'s batch path and
 /// every retained generic reduce run: rebuild the scene and a fresh board host from
 /// `(command, before, config, selection)`, run the `🎮️commands/*` arm, replay the host's owned
 /// events, then derive the granular document delta and the config snapshot. `operation` is the
 /// committed public authority a mounted continuation carries and is simply `None` for a retained
 /// work, which never sees an `ArtifactView`.
-fn puzzle2d_dispatch_emit(command: &Puzzle2dCommand, before: &Value, config: &Puzzle2dConfig, selection: &protocol::DomainSelection, operation: Option<semio_framework_plugin::AppOperationContext>) -> Emit<Puzzle2dMutation, Puzzle2dConfigMutation> {
+fn puzzle2d_dispatch_emit(
+    command: &Puzzle2dCommand,
+    before: &Value,
+    config: &Puzzle2dConfig,
+    window_config: &Puzzle2dWindowConfig,
+    window_transient: &Puzzle2dWindowTransient,
+    window_kind: &str,
+    view_state: Option<&semio_framework_plugin::ViewModel>,
+    active_utility: &str,
+    selection: &protocol::DomainSelection,
+    operation: Option<semio_framework_plugin::AppOperationContext>,
+) -> Result<(Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, EphemeralEmit<EditorApp<Puzzle2dPlayApp>>), Fault> {
     let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
-    let active_utility = puzzle2d_active_utility(config, window_id);
-    let mut scene = Puzzle2dPlayApp::scene_for(before.clone(), config, window_id);
+    let active_utility = active_utility.to_string();
+    let runtime = window::runtime(config, window_config, window_transient, Some(window_kind));
+    let mut scene = Puzzle2dPlayApp::scene_for(before.clone(), runtime, &active_utility);
     // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
     // each call. The previous last_synced_fixture cache lived on &self and cannot return.
     let host = RefCell::new(BoardHost::default());
@@ -1623,7 +1672,6 @@ fn puzzle2d_dispatch_emit(command: &Puzzle2dCommand, before: &Value, config: &Pu
             "forceLayout" | "reorganize" => force_layout::force_layout(ctx),
             "setCamera" => set_camera::set_camera(ctx, args),
             "focusSelection" => focus_selection::focus_selection(ctx),
-            SET_ACTIVE_UTILITY_ACTION_ID => set_active_utility::set_active_utility(ctx, args),
             "engagementInput" => engagement_input::engagement_input(ctx, args),
             "engagementSubmit" => engagement_submit::engagement_submit(ctx, args),
             "engagementAbort" => engagement_abort::engagement_abort(ctx, args),
@@ -1654,28 +1702,13 @@ fn puzzle2d_dispatch_emit(command: &Puzzle2dCommand, before: &Value, config: &Pu
     }
     // 🧮️ B1: only a REAL config change becomes a `Puzzle2dConfigMutation` — `PartialEq` (derived)
     // makes this cheap, and keeps a pure read-only action from creating a no-op undo entry.
-    let config_mutations = if &scene.runtime != config { vec![Puzzle2dConfigMutation::Snapshot { config: scene.runtime }] } else { Vec::new() };
+    let (next_config, next_window_config, next_window_transient) = window::split(&scene.runtime, window_kind);
+    let config_mutations = if &next_config != config { vec![Puzzle2dConfigMutation::Snapshot { config: next_config }] } else { Vec::new() };
+    let window_config_mutations = if &next_window_config != window_config { vec![window::addressed_config(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_config)?] } else { Vec::new() };
+    let window_transient = if &next_window_transient != window_transient { vec![window::addressed_transient(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_transient)?] } else { Vec::new() };
     // 🎥️ No action coalesces anymore: `setCamera` used to be the sole `coalesce_key` writer, but it
     // is now a View-kind action that never touches the document.
-    Emit { artifact_mutations: operations, config_mutations, coalesce_key: None, effects, ui_scope, ..Default::default() }
-}
-
-/// 🖌️ `applyBoardEvents` is the single verb the browser's board session commits through — `brushPlace`,
-/// `select`, `edgeCreate`/`edgeDelete`, `nodeDelete` and `camera` all arrive in its `eventsJson` batch
-/// (`🖥️Board2dHost/🟦️.tsx`). It runs [`puzzle2d_dispatch_emit`] — the same pipeline `handle` does —
-/// minus the `ArtifactView` a retained work never sees, so the committed `AppOperationContext` is absent.
-fn puzzle2d_board_events_reduce(
-    command: &Puzzle2dCommand,
-    snapshot: &Puzzle2dPlaySnapshot,
-    config: &Puzzle2dConfig,
-    interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault> {
-    if command.action_id() != "applyBoardEvents" {
-        return Err(Fault::from("puzzle2d-board-events-command-mismatch"));
-    }
-    let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
-    Ok(puzzle2d_dispatch_emit(command, &snapshot.0, config, &selection, None))
+    Ok((Emit { artifact_mutations: operations, config_mutations, window_config_mutations, coalesce_key: None, effects, ui_scope, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() }))
 }
 
 /// 🗂️ Upper bound on the entities one selection-acting retained step may touch. Nakagin — this
@@ -1699,22 +1732,6 @@ fn puzzle2d_generic_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySn
     let selected = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len());
     let addressed = command.args().filter(|_| action == "patchInspectorNodes").and_then(|args| args.get("ids")).and_then(Value::as_array).map_or(selected, Vec::len);
     (addressed <= PUZZLE2D_SELECTION_BATCH_LIMIT).then_some(addressed.max(1))
-}
-
-/// 🎬️ The retained completion for every [`PUZZLE2D_GENERIC_TOOL_IDS`] verb — one bounded first step
-/// through [`puzzle2d_dispatch_emit`], the same body `handle` runs.
-fn puzzle2d_generic_reduce(
-    command: &Puzzle2dCommand,
-    snapshot: &Puzzle2dPlaySnapshot,
-    config: &Puzzle2dConfig,
-    interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault> {
-    if !PUZZLE2D_GENERIC_TOOL_IDS.contains(&command.action_id()) {
-        return Err(Fault::from("puzzle2d-generic-command-mismatch"));
-    }
-    let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
-    Ok(puzzle2d_dispatch_emit(command, &snapshot.0, config, &selection, None))
 }
 
 /// 🛍️ Stage hand-offs [`Puzzle2dActiveExampleWork`] spends outside its per-item cursors (one per
@@ -1748,6 +1765,7 @@ fn puzzle2d_retained_reduce(
     _config: &Puzzle2dConfig,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _view_state: Option<&semio_framework_plugin::ViewModel>,
 ) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault> {
     if command.action_id() != "addNode" {
         return Err(Fault::from("puzzle2d-retained-command-mismatch"));
@@ -1815,7 +1833,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         &mut self,
         command: &Puzzle2dCommand,
         snapshot: &Puzzle2dPlaySnapshot,
-        config: &Puzzle2dConfig,
+        _config: &Puzzle2dConfig,
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
@@ -1909,16 +1927,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     return Ok(Self::progress("puzzle2d-example-edge", "Adding example edge", "Beispielkante wird hinzugefügt"));
                 }
                 self.stage = Puzzle2dExampleStage::Complete;
-                let generation = config.example_load_generation.saturating_add(1);
-                let next = Puzzle2dPlayRuntime { example_load_generation: generation, ..Default::default() };
                 let mutations = std::mem::take(&mut self.mutations);
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
-                    artifact_mutations: mutations,
-                    config_mutations: vec![Puzzle2dConfigMutation::Snapshot { config: next }],
-                    coalesce_key: Some(format!("setActiveExample:{generation}")),
-                    ui_scope: UiDirtyScope::Full,
-                    ..Default::default()
-                }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }))
             }
             Puzzle2dExampleStage::Complete => Err(Fault::from("puzzle2d-example-complete-repolled")),
             Puzzle2dExampleStage::Closing => Err(Fault::from("puzzle2d-example-closing")),
@@ -2838,7 +2848,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
 //#region 🧵️ReservedJobs
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::app::ArtifactToolCompletionRejection;
-use semio_framework_plugin::{ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, EphemeralEmit, MediaPayload, PluginCloseStep};
+use semio_framework_plugin::{ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, MediaPayload, PluginCloseStep};
 
 /// 🔌️ `import-media`'s own route cap. A `Media` reserved-tool input never travels through
 /// `RetainedToolWireInput` — the framework builds it with an empty `raw_wire` — so this bounds the
@@ -3529,6 +3539,14 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        window::register_config(registry)
+    }
+
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        window::register_transient(registry)
+    }
+
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
     /// `crate::editor::puzzle2d::config::schema::register_app_schema()` self-registering call, which
     /// puzzle's plugin root used to reach `.setup()` for — `register_document_app`/`document_app`
@@ -3562,7 +3580,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
         interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -3578,7 +3596,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         if set_fill_count::is_fill_session_action(action) {
             return Err(Fault::from("puzzle2d-fill-requires-retained-job"));
         }
-        Ok(puzzle2d_dispatch_emit(command, &doc.snapshot.0, config, interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned()))
+        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_transient = Puzzle2dWindowTransient::default();
+        let window_kind = view_state.and_then(window::kind_for_view).unwrap_or(overview::WINDOW_KIND_ID);
+        puzzle2d_dispatch_emit(command, &doc.snapshot.0, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned())
+            .map(|(emit, _)| emit)
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -3643,24 +3665,28 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         if request.command.action_id() != request.tool_id {
             return Err(Fault::from("puzzle2d-command-tool-mismatch"));
         }
-        let work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match request.command.action_id() {
+        let mut work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match request.command.action_id() {
             "setActiveExample" => Box::new(Puzzle2dActiveExampleWork::default()),
             "forceLayout" => Box::new(Puzzle2dForceLayoutWork::default()),
             "reorganize" => Box::new(Puzzle2dForceLayoutWork::new("reorganize")),
             "addNode" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("addNode", puzzle2d_retained_reduce, puzzle2d_retained_extent)),
-            "applyBoardEvents" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("applyBoardEvents", puzzle2d_board_events_reduce, puzzle2d_board_events_extent)),
-            generic if PUZZLE2D_GENERIC_TOOL_IDS.contains(&generic) => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(generic, puzzle2d_generic_reduce, puzzle2d_generic_extent)),
+            "applyBoardEvents" => Box::new(Puzzle2dWindowCommandWork::new("applyBoardEvents", puzzle2d_board_events_extent)),
+            generic if PUZZLE2D_GENERIC_TOOL_IDS.contains(&generic) => Box::new(Puzzle2dWindowCommandWork::new(generic, puzzle2d_generic_extent)),
             host_only if PUZZLE2D_HOST_ONLY_TOOL_IDS.contains(&host_only) => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(host_only)),
             "redrawHandles" => Box::new(Puzzle2dRedrawHandlesWork::default()),
             fill if set_fill_count::is_fill_session_action(fill) => Box::new(set_fill_count::Puzzle2dFillSessionWork::new(fill)),
             _ => return Err(Fault::from("puzzle2d-command-tool-unmapped")),
         };
+        work.bind_view_state(request.context.view_state.clone());
         let payload = crate::retained_command::RetainedPuzzleCommandPayload {
             command: *request.command,
             snapshot: request.snapshot,
             config: request.config,
             interaction_state: request.interaction_state,
             interaction_hover: request.interaction_hover,
+            window_config: request.window_config,
+            window_transient: request.context.window_transient.clone(),
+            context_identity: request.context.identity_digest(),
             completion: request.completion,
             command_id: Puzzle2dCommand::action_id,
             work,
@@ -3725,16 +3751,37 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let config = cfg.snapshot;
         let document_json = doc.snapshot.0.to_string();
-        // 🪟️ `body_key` already determines the pane deterministically, so the active utility resolves
-        // off the real targeted pane instead of an ambiguous stand-in.
-        let pane = match body_key {
-            overview::BODY_KEY => Some(overview::WINDOW_KIND_ID),
-            detail::BODY_KEY => Some(detail::WINDOW_KIND_ID),
-            selection::BODY_KEY => Some(selection::WINDOW_KIND_ID),
-            _ => None,
+        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
+        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(config, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
+        let labels = puzzle2d_labels(view_state);
+        let node = match body_key {
+            overview::BODY_KEY => overview::render(&document_json, &envelope)?,
+            detail::BODY_KEY => detail::render(&document_json, &envelope)?,
+            selection::BODY_KEY => selection::render(&document_json, &envelope)?,
+            document::PUZZLE2D_PLAY_BODY_LAYERS => document::render(&envelope, labels)?,
+            catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope.fixture, labels)?,
+            inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels)?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
         };
-        let envelope = Self::scene_for(doc.snapshot.0.clone(), config, pane);
-        let labels = puzzle2d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle2d locale or terminology is not recognized"))?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
+    }
+
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
+        cfg: &ConfigView<'_, Puzzle2dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_transient = window::transient_from_view(transient);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
+        let document_json = doc.snapshot.0.to_string();
+        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, &window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
+        let labels = puzzle2d_labels(view_state);
         let node = match body_key {
             overview::BODY_KEY => overview::render(&document_json, &envelope)?,
             detail::BODY_KEY => detail::render(&document_json, &envelope)?,
@@ -3748,64 +3795,58 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     }
 
     fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
-        let config = cfg.snapshot;
-        let Some(labels) = puzzle2d_labels(view_state) else {
-            return HashMap::new();
-        };
-        // 🪟️ One entry per live window INSTANCE of each pane kind — see `window_instance_ids`'s
-        // docstring for why puzzle2d always has exactly one instance per pane (no split tracking).
-        PUZZLE2D_PANES
-            .iter()
-            .flat_map(|pane| {
-                window_instance_ids(pane).into_iter().map(|wid| {
-                    let envelope = Self::scene_for(doc.snapshot.0.clone(), config, Some(&wid));
-                    (wid, edit::puzzle2d_engagement(&envelope, &puzzle_board_host(), pane, labels))
-                })
-            })
-            .collect()
+        let labels = puzzle2d_labels(view_state);
+        let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
+        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
+        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
+        HashMap::from([(window_id.to_string(), edit::puzzle2d_engagement(&envelope, &puzzle_board_host(), window_kind, labels))])
+    }
+
+    fn window_engagements_with_request_context(
+        doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
+        cfg: &ConfigView<'_, Puzzle2dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+    ) -> HashMap<String, WindowEngagement> {
+        let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
+        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_transient = window::transient_from_view(transient);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
+        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, &window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
+        HashMap::from([(window_id.to_string(), edit::puzzle2d_engagement(&envelope, &puzzle_board_host(), window_kind, puzzle2d_labels(view_state)))])
     }
 
     fn window_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.snapshot;
-        let Some(labels) = puzzle2d_labels(view_state) else {
-            return HashMap::new();
+        let labels = puzzle2d_labels(view_state);
+        let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
+        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
+        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
+        let measures = match window_kind {
+            detail::WINDOW_KIND_ID => detail::window_measures(&envelope, labels),
+            selection::WINDOW_KIND_ID => selection::window_measures(&envelope, labels),
+            _ => overview::window_measures(&envelope, labels),
         };
-        PUZZLE2D_PANES
-            .iter()
-            .flat_map(|pane| {
-                window_instance_ids(pane).into_iter().map(|wid| {
-                    let envelope = Self::scene_for(doc.snapshot.0.clone(), config, Some(&wid));
-                    let measures = match *pane {
-                        detail::WINDOW_KIND_ID => detail::window_measures(&envelope, labels),
-                        selection::WINDOW_KIND_ID => selection::window_measures(&envelope, labels),
-                        _ => overview::window_measures(&envelope, labels),
-                    };
-                    (wid, measures)
-                })
-            })
-            .collect()
+        HashMap::from([(window_id.to_string(), measures)])
     }
 
     fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.snapshot;
-        let envelope = Self::scene_for(doc.snapshot.0.clone(), config, None);
-        let Some(labels) = puzzle2d_labels(view_state) else {
-            return HashMap::new();
-        };
+        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
+        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
+        let labels = puzzle2d_labels(view_state);
         HashMap::from([(fill::TOOL_ID.to_string(), vec![fill::measures(&envelope, labels)])])
     }
 
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
-        cfg: &ConfigView<'_, Puzzle2dConfig>,
+        _cfg: &ConfigView<'_, Puzzle2dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let config = cfg.snapshot;
-        let Some(locale) = puzzle2d_config_locale(view_state) else {
-            return Vec::new();
-        };
-        let is_de = locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
         let selected: Vec<String> = request.surface.as_ref().map(|surface| surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect()).unwrap_or_default();
         semio_framework::io::resolve_ready(puzzle2d_context_menu_items(registry, &doc.snapshot.0, &selected, is_de))
     }
@@ -3828,7 +3869,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
     let mut host = puzzle_board_host();
     let envelope = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default(), active_utility: select_utility::UTILITY_ID.into() };
     sync_host_from_envelope(&mut host, &envelope);
-    let labels = puzzle2d_labels(&Puzzle2dConfig::default()).expect("default puzzle2d locale and terminology axes are explicit");
+    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::default());
     Editor::builder(Puzzle2dPlayApp::DIALECT)
             .document(["semio", "puzzle", "2d"])
             .artifact_kind(crate::artifact_kind())
@@ -3849,7 +3890,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(inspection::definition())
             // ✏️ Palette-visible content operations.
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             // 🗣️ Locale and terminology are real user-facing settings verbs (mirrors puzzle3d's own
             // `.view_action` pair); the labels stay inline `LocalizedLabel::native` like every other
             // action here, since `puzzle2d_localized` resolves a `Puzzle2dLabels` field, not a phrase.
@@ -3865,7 +3906,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).with_category("settings"))
             .action_with(puzzle2d_internal_action("patchInspectorNodes", LocalizedLabel::native("Patch Inspector Nodes", "Inspektorknoten aktualisieren"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("redrawHandles", LocalizedLabel::native("Redraw Handles", "Anschlüsse neu zeichnen"), ActionKind::Mutation))
-            .action_with(puzzle2d_internal_action("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "rotate-cw") })
             .action_with(puzzle2d_internal_action("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("brushFillSessionStep", LocalizedLabel::native("Brush Fill Session Step", "Pinsel-Füllsitzung-Schritt"), ActionKind::Mutation))
@@ -3876,14 +3917,14 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("brushCommitSlot", LocalizedLabel::native("Brush Commit Slot", "Pinsel-Platz übernehmen"), ActionKind::Mutation))
             // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no operations.
             // 🎥️ `setCamera` is session-only view state, so it belongs in this View-kind group.
-            .action_with(puzzle2d_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
             .action_with(puzzle2d_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View, "hand") })
             .action_with(puzzle2d_internal_action("setLodModeForPane", LocalizedLabel::native("Set LOD Mode For Pane", "LOD-Modus für Bereich festlegen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"), ActionKind::View))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View, "grid-3x3") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"), ActionKind::View, "grid-3x3") })
             .action_with(puzzle2d_internal_action("setBrushKindWeights", LocalizedLabel::native("Set Brush Kind Weights", "Pinsel-Artgewichte festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("setBrushNodeSize", LocalizedLabel::native("Set Brush Node Size", "Pinsel-Knotengröße festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("setSuggestionOffset", LocalizedLabel::native("Set Suggestion Offset", "Vorschlagsversatz festlegen"), ActionKind::View))

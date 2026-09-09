@@ -143,28 +143,6 @@ export interface ProgramDiff {
   traces?: ProgramTracesDelta;
   /** @state artifact */
   governance?: Governance;
-  /** @state presence */
-  selectedIds?: string;
-  /** @state presence */
-  activeRegister?: string;
-  /** @state presence */
-  adjacencyKindFilter?: AdjacencyKind;
-  /** @state presence */
-  activeReportJson?: string;
-  /** @state config */
-  searchQuery?: string;
-  /** @state config */
-  searchHistoryJson?: string;
-  /** @state config */
-  lastResultJson?: string;
-  /** @state config */
-  lastAnalysisJson?: string;
-  /** @state config */
-  graphCameraX?: number;
-  /** @state config */
-  graphCameraY?: number;
-  /** @state config */
-  graphCameraZoom?: number;
 }
 
 export interface ProgramStakeholdersDelta {

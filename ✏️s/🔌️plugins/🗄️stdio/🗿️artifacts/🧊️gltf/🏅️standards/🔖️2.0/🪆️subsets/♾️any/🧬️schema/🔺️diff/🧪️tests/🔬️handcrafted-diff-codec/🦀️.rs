@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
 use protocol::DiffCodec;

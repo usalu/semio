@@ -1446,7 +1446,7 @@ export async function loadPluginModuleResilient(pluginId: string, moduleUrl: str
       }),
     ]);
   } catch (error) {
-    console.error("[DEBUG] program load failed", pluginId, error);
+    console.error("program load failed", pluginId, error);
     return null;
   } finally {
     if (timer) window.clearTimeout(timer);

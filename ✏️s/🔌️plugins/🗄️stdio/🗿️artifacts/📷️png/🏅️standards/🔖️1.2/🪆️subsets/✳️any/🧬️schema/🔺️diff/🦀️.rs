@@ -27,9 +27,9 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use crate::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency};
 use crate::PngSnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️PlteTriple
@@ -261,14 +261,7 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 /// is plain LWW). Shared by `plte`/`unknown_chunks`/`chunk_order` (`text_chunks` needs its own
 /// field-aware variant, see `absorb_text_chunks`, since its modified payload IS a nested diff).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_weak_index_triple<T: Clone>(
-    d1_removed: Vec<usize>,
-    d1_modified: Vec<(usize, T)>,
-    d1_added: Vec<(usize, T)>,
-    d2_removed: &[usize],
-    d2_modified: &[(usize, T)],
-    d2_added: Vec<(usize, T)>,
-) -> IndexedDiffParts<T, T> {
+fn absorb_weak_index_triple<T: Clone>(d1_removed: Vec<usize>, d1_modified: Vec<(usize, T)>, d1_added: Vec<(usize, T)>, d2_removed: &[usize], d2_modified: &[(usize, T)], d2_added: Vec<(usize, T)>) -> IndexedDiffParts<T, T> {
     let d1_added_indices: Vec<usize> = d1_added.iter().map(|(i, _)| *i).collect();
     let removed_count = {
         let mut r = d1_removed.clone();
@@ -507,7 +500,14 @@ fn absorb_plte(base: &mut Option<Option<PngPlteDiff>>, other: Option<Option<PngP
                 *base = Some(Some(t2));
             }
             Some(Some(t1)) => {
-                let (removed, modified, added) = absorb_weak_index_triple(t1.removed, t1.modified.into_iter().map(|m| (m.index, m.rgb)).collect(), t1.added.into_iter().map(|a| (a.index, a.rgb)).collect(), &t2.removed, &t2.modified.into_iter().map(|m| (m.index, m.rgb)).collect::<Vec<_>>(), t2.added.into_iter().map(|a| (a.index, a.rgb)).collect());
+                let (removed, modified, added) = absorb_weak_index_triple(
+                    t1.removed,
+                    t1.modified.into_iter().map(|m| (m.index, m.rgb)).collect(),
+                    t1.added.into_iter().map(|a| (a.index, a.rgb)).collect(),
+                    &t2.removed,
+                    &t2.modified.into_iter().map(|m| (m.index, m.rgb)).collect::<Vec<_>>(),
+                    t2.added.into_iter().map(|a| (a.index, a.rgb)).collect(),
+                );
                 *base = Some(Some(PngPlteDiff { removed, modified: modified.into_iter().map(|(index, rgb)| PngPlteEntryModified { index, rgb }).collect(), added: added.into_iter().map(|(index, rgb)| PngPlteEntryAdded { index, rgb }).collect() }));
             }
         },
@@ -661,7 +661,14 @@ fn absorb_unknown_chunks_opt(base: &mut Option<PngUnknownChunksDiff>, other: Opt
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
         (Some(b), Some(o)) => {
-            let (removed, modified, added) = absorb_weak_index_triple(b.removed, b.modified.into_iter().map(|m| (m.index, m.chunk)).collect(), b.added.into_iter().map(|a| (a.index, a.chunk)).collect(), &o.removed, &o.modified.into_iter().map(|m| (m.index, m.chunk)).collect::<Vec<_>>(), o.added.into_iter().map(|a| (a.index, a.chunk)).collect());
+            let (removed, modified, added) = absorb_weak_index_triple(
+                b.removed,
+                b.modified.into_iter().map(|m| (m.index, m.chunk)).collect(),
+                b.added.into_iter().map(|a| (a.index, a.chunk)).collect(),
+                &o.removed,
+                &o.modified.into_iter().map(|m| (m.index, m.chunk)).collect::<Vec<_>>(),
+                o.added.into_iter().map(|a| (a.index, a.chunk)).collect(),
+            );
             *base = Some(PngUnknownChunksDiff {
                 removed,
                 modified: modified.into_iter().map(|(index, chunk)| PngUnknownChunkModified { index, chunk }).collect(),
@@ -677,7 +684,14 @@ fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Option<Pn
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
         (Some(b), Some(o)) => {
-            let (removed, modified, added) = absorb_weak_index_triple(b.removed, b.modified.into_iter().map(|m| (m.index, m.marker)).collect(), b.added.into_iter().map(|a| (a.index, a.marker)).collect(), &o.removed, &o.modified.into_iter().map(|m| (m.index, m.marker)).collect::<Vec<_>>(), o.added.into_iter().map(|a| (a.index, a.marker)).collect());
+            let (removed, modified, added) = absorb_weak_index_triple(
+                b.removed,
+                b.modified.into_iter().map(|m| (m.index, m.marker)).collect(),
+                b.added.into_iter().map(|a| (a.index, a.marker)).collect(),
+                &o.removed,
+                &o.modified.into_iter().map(|m| (m.index, m.marker)).collect::<Vec<_>>(),
+                o.added.into_iter().map(|a| (a.index, a.marker)).collect(),
+            );
             *base = Some(PngChunkOrderDiff {
                 removed,
                 modified: modified.into_iter().map(|(index, marker)| PngChunkOrderModified { index, marker }).collect(),
@@ -1017,45 +1031,31 @@ pub fn diff_set_snapshot(base: &PngSnapshot, next: &PngSnapshot) -> PngDiff {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 

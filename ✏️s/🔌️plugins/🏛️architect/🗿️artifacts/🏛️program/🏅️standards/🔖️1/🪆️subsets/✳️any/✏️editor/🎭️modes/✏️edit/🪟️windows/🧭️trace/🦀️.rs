@@ -1,9 +1,9 @@
 //! 🧭️ Architect trace window — the document-wide audit trail.
 
+use crate::editor::architect::ui_label;
 use crate::standards::v1::subsets::any::schema::inferences::audit_trail;
 use crate::ProgramSnapshot;
-use crate::editor::architect::ui_label;
-use semio_framework_plugin::{tree_item_desc,  LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_TRACE: &str = "architect-trace";

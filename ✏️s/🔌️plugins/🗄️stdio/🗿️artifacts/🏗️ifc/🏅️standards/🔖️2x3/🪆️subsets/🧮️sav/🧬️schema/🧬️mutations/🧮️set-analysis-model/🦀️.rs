@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetAnalysisModel {
-        pub(crate) id: u64,
-        pub(crate) model: Option<SavAnalysisModel>,
-    }
+    pub(crate) id: u64,
+    pub(crate) model: Option<SavAnalysisModel>,
+}
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetAnalysisModel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "analysis-model", kind: "set-analysis-model", record: "SetAnalysisModel" };

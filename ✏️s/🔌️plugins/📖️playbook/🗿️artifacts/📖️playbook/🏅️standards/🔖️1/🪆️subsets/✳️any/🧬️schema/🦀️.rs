@@ -4,7 +4,7 @@ use crate::{PlaybookDocumentChild, PlaybookFlowChild, PLAYBOOK_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full playbook artifact state across the artifact, presence and config lanes.
+/// 🧬️ playbook document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookArtifact {
@@ -22,10 +22,6 @@ pub struct PlaybookArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub flow: PlaybookFlowChild,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
-    #[state(config)]
-    pub contributions_json: String,
 }
 //#endregion 🔖️Artifact
 
@@ -33,7 +29,7 @@ pub struct PlaybookArtifact {
 impl Default for PlaybookArtifact {
     fn default() -> Self {
         let snapshot = crate::PlaybookSnapshot::default();
-        Self { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, document: snapshot.document, flow: snapshot.flow, selected_ids: Vec::new(), contributions_json: "[]".into() }
+        Self { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, document: snapshot.document, flow: snapshot.flow }
     }
 }
 
@@ -43,7 +39,7 @@ impl PlaybookArtifact {
         crate::PlaybookSnapshot { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), document: self.document.clone(), flow: self.flow.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::PlaybookSnapshot) -> Self {
         Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, document: snapshot.document, flow: snapshot.flow, ..Self::default() }
     }
@@ -75,8 +71,6 @@ impl ::semio_framework_os_kernel::ToValue for PlaybookArtifact {
             ("title".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.title)),
             ("document".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.document).expect("ArtifactChild serializes")),
             ("flow".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.flow).expect("ArtifactChild serializes")),
-            ("selectedIds".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.selected_ids)),
-            ("contributionsJson".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.contributions_json)),
         ])
     }
 }
@@ -92,8 +86,6 @@ impl ::semio_framework_os_kernel::FromValue for PlaybookArtifact {
             title: ::semio_framework_os_kernel::FromValue::from_value(field("title")?)?,
             document: ::semio_framework_os_kernel::from_dsl_value(field("document")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
             flow: ::semio_framework_os_kernel::from_dsl_value(field("flow")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
-            selected_ids: ::semio_framework_os_kernel::FromValue::from_value(field("selectedIds")?)?,
-            contributions_json: ::semio_framework_os_kernel::FromValue::from_value(field("contributionsJson")?)?,
         })
     }
 }
@@ -104,13 +96,7 @@ impl ::semio_framework_os_kernel::FromValue for PlaybookArtifact {
 pub fn playbook_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.playbook.playbook",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

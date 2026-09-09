@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::En1990Inference;
 use crate::standards::v1::subsets::any::schema::mutations::change_resistance::ChangeResistance;
-use crate::standards::v1::subsets::any::schema::snapshot::text::{EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT, parse_dsl};
+use crate::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT};
 use crate::{En1990Mutation, En1990Snapshot};
 use protocol::Inference;
 
@@ -39,7 +38,11 @@ impl SubsetRoundtripSpec for En1990AnyRoundtrip {
     }
 
     async fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
-        if let Some(text) = asset.text { parse_dsl(text).map_err(|error| error.to_string()) } else { en1990_from_pack(asset.bytes).map_err(|error| error.to_string()) }
+        if let Some(text) = asset.text {
+            parse_dsl(text).map_err(|error| error.to_string())
+        } else {
+            en1990_from_pack(asset.bytes).map_err(|error| error.to_string())
+        }
     }
 
     async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {

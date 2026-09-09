@@ -16,6 +16,34 @@ export type DocumentOpeningReceiptV1 = Readonly<{
   clientInstanceId: string;
 }>;
 
+export type BrowserDocumentMountOpeningV1 = Readonly<{
+  clientInstanceId: string;
+  scope?: Readonly<{ spaceId: string; documentId: string }>;
+  instanceId: number;
+}>;
+
+export type BrowserDocumentMountSurfaceV1 = BrowserDocumentMountOpeningV1 & Readonly<{
+  scope: Readonly<{ spaceId: string; documentId: string }>;
+  activationGeneration: string;
+  verifiedSurfaceId: string;
+  revision: number;
+}>;
+
+/** 🖥️ Binds a native actor-zero mount to the exact current Shell session and retained revision. */
+export function browserDocumentMountIsCurrentV1(opening: BrowserDocumentMountOpeningV1, retained: BrowserDocumentMountSurfaceV1, receipt: BrowserDocumentMountSurfaceV1): boolean {
+  return receipt.instanceId === 0
+    && opening.instanceId === retained.instanceId
+    && opening.clientInstanceId === retained.clientInstanceId
+    && retained.clientInstanceId === receipt.clientInstanceId
+    && opening.scope?.spaceId === retained.scope.spaceId
+    && opening.scope.documentId === retained.scope.documentId
+    && retained.scope.spaceId === receipt.scope.spaceId
+    && retained.scope.documentId === receipt.scope.documentId
+    && retained.activationGeneration === receipt.activationGeneration
+    && retained.verifiedSurfaceId === receipt.verifiedSurfaceId
+    && retained.revision === receipt.revision;
+}
+
 /** 🚦️ Only foreground openings may retire a document or app instance already in use. */
 export function admitDocumentOpeningV1<Plugin>(
   opening: Readonly<{ runtimeKey: string; plugin: Plugin; instanceId: number; background: boolean }>,

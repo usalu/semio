@@ -1,4 +1,3 @@
-
 use super::*;
 
 //#region 🧪️RetainedCommandEnvelope
@@ -21,8 +20,11 @@ fn retained_command_fixture_matches_exact_routes_and_value_codec_boundaries() {
                 ArtifactToolPublicationLane::Draft => "Draft",
                 ArtifactToolPublicationLane::Presence => "Presence",
                 ArtifactToolPublicationLane::Transient => "Transient",
+                ArtifactToolPublicationLane::WindowConfig => "WindowConfig",
+                ArtifactToolPublicationLane::WindowTransient => "WindowTransient",
                 ArtifactToolPublicationLane::Child => "Child",
                 ArtifactToolPublicationLane::HostOnly => "HostOnly",
+                ArtifactToolPublicationLane::Interaction => "Interaction",
             })
             .collect();
         assert_eq!(declared, actual, "publication lanes drifted for {}", contract.tool_id);
@@ -137,7 +139,9 @@ async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
         let mutation = Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: node.clone() });
         assert!(factory.preflight(&mutation, None, store::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
     }
-    assert!(factory.preflight(&Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 } }), None, store::HistoryLane::Interaction).is_err());
+    assert!(factory
+        .preflight(&Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 } }), None, store::HistoryLane::Interaction)
+        .is_err());
 }
 
 /// 🚀️ LAW: the editor boots with real geometry, so the `World3d` Model window has something to mesh
@@ -150,7 +154,7 @@ async fn initial_snapshot_is_the_bundled_example_not_empty() {
 }
 //#endregion 🧪️RetainedCommandEnvelope
 
-use crate::editor::fem3d::testkit::{Fem3dApp, dispatch, fem3d_app};
+use crate::editor::fem3d::testkit::{dispatch, fem3d_app, Fem3dApp};
 use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
 
 //#region 🔖️CommandSurface

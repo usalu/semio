@@ -9,10 +9,10 @@
 //! why it cannot live in `🧬️schema/` (artifacts must never depend on apps) and instead lives beside the
 //! topic modules it bridges.
 
+use crate::editor::remodeling::engine::{camera as remodeling_camera, geo as remodeling_geo, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
 #[cfg(test)]
 use crate::ImageAsset;
 use crate::{CalibrationState, CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
-use crate::editor::remodeling::engine::{camera as remodeling_camera, geo as remodeling_geo, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
 
 //#region 🔖️EngineMapping
 /// 🔭️ The calibrated focal ratio the engine's own calibration-free intrinsics guess needs, or `None`

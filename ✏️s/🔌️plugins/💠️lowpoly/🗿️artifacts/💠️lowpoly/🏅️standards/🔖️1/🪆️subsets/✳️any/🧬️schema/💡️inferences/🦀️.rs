@@ -7,7 +7,7 @@
 use crate::LowpolySnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::bounds::{scene_bounds};
+use super::bounds::scene_bounds;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a lowpoly snapshot. Today: object count and the 3d bounding box
 /// across every object's `transform.position` (see `📦bounds/🦀️.rs`). A simple
@@ -54,13 +54,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets:
 pub fn lowpoly_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.lowpoly.lowpoly.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

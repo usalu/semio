@@ -28,8 +28,8 @@
 
 use crate::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
 use crate::standards::v_rfc8259::subsets::base::schema::mutations::{
-    InsertArrayElementMutation, InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementMutation, RemoveArrayElementPayload, RemoveMemberMutation,
-    RemoveMemberPayload, SetMemberMutation, SetMemberPayload, SetScalarMutation, SetScalarPayload,
+    InsertArrayElementMutation, InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementMutation, RemoveArrayElementPayload, RemoveMemberMutation, RemoveMemberPayload, SetMemberMutation, SetMemberPayload,
+    SetScalarMutation, SetScalarPayload,
 };
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
 use protocol::Mutation;
@@ -69,27 +69,27 @@ impl JsonIJsonRoot {
 //#endregion 🔖️Root
 
 //#region 🔖️Mutations
-/// 📐️ Typed content mutation for `s.stdio.json@rfc8259/i-json` — see this file's header for what
-/// each variant owes to RFC 7493 and which four are inherited from the ✳️any sibling unchanged.
-//#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "🌳set-top-level/🦀️.rs"]
-pub mod set_top_level;
-#[path = "➕upsert-member/🦀️.rs"]
-pub mod upsert_member;
+#[path = "📥insert-array-element/🦀️.rs"]
+pub mod insert_array_element;
+#[path = "📤remove-array-element/🦀️.rs"]
+pub mod remove_array_element;
 #[path = "➖remove-member/🦀️.rs"]
 pub mod remove_member;
 #[path = "🏷️rename-member/🦀️.rs"]
 pub mod rename_member;
 #[path = "🔢set-safe-number/🦀️.rs"]
 pub mod set_safe_number;
+/// 📐️ Typed content mutation for `s.stdio.json@rfc8259/i-json` — see this file's header for what
+/// each variant owes to RFC 7493 and which four are inherited from the ✳️any sibling unchanged.
+//#region 🔖️Leaves
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 #[path = "🔤set-string/🦀️.rs"]
 pub mod set_string;
-#[path = "📥insert-array-element/🦀️.rs"]
-pub mod insert_array_element;
-#[path = "📤remove-array-element/🦀️.rs"]
-pub mod remove_array_element;
+#[path = "🌳set-top-level/🦀️.rs"]
+pub mod set_top_level;
+#[path = "➕upsert-member/🦀️.rs"]
+pub mod upsert_member;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -206,11 +206,7 @@ pub fn lower(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<JsonMu
     match mutation {
         JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: Vec::new(), value: snapshot.value.clone() }))),
         JsonIJsonMutation::SetTopLevel(set_top_level::SetTopLevel { root }) => Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: Vec::new(), value: root.to_value() }))),
-        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path, key, value }) => Ok(JsonMutation::SetMember(SetMemberMutation::Apply(SetMemberPayload {
-            path: path.clone(),
-            key: key.clone(),
-            value: value.clone(),
-        }))),
+        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path, key, value }) => Ok(JsonMutation::SetMember(SetMemberMutation::Apply(SetMemberPayload { path: path.clone(), key: key.clone(), value: value.clone() }))),
         JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path, key }) => Ok(JsonMutation::RemoveMember(RemoveMemberMutation::Apply(RemoveMemberPayload { path: path.clone(), key: key.clone() }))),
         JsonIJsonMutation::RenameMember(rename_member::RenameMember { path, from, to }) => {
             let Some(JsonValue::Object { members }) = resolve(&base.value, path) else {
@@ -220,7 +216,11 @@ pub fn lower(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<JsonMu
                 return Err((CODE_TARGET_MISSING, format!("rename-member: the object carries no member named {from:?}"), target_of(path)));
             }
             if from != to && members.iter().any(|member| &member.key == to) {
-                return Err((CODE_INVARIANT, format!("rename-member: the object already carries a member named {to:?} -- RFC 7493 §2.3 requires member names to be unique within one object, so this rename would create the duplicate the clause forbids"), target_of(path)));
+                return Err((
+                    CODE_INVARIANT,
+                    format!("rename-member: the object already carries a member named {to:?} -- RFC 7493 §2.3 requires member names to be unique within one object, so this rename would create the duplicate the clause forbids"),
+                    target_of(path),
+                ));
             }
             let renamed = members.iter().map(|member| if &member.key == from { JsonMember { key: to.clone(), value: member.value.clone() } } else { member.clone() }).collect();
             Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path.clone(), value: JsonValue::Object { members: renamed } })))
@@ -230,7 +230,11 @@ pub fn lower(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<JsonMu
                 return Err((CODE_TARGET_MISSING, "set-safe-number: the addressed path does not hold a number, and this verb writes a number over a number so that its own inverse is always another set-safe-number".to_string(), target_of(path)));
             }
             if !is_safe_number_lexeme(lexeme) {
-                return Err((CODE_INVARIANT, format!("set-safe-number: integer {lexeme} exceeds ±{MAX_SAFE_INTEGER_MAGNITUDE} = ±(2^53-1) and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids it in I-JSON"), target_of(path)));
+                return Err((
+                    CODE_INVARIANT,
+                    format!("set-safe-number: integer {lexeme} exceeds ±{MAX_SAFE_INTEGER_MAGNITUDE} = ±(2^53-1) and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids it in I-JSON"),
+                    target_of(path),
+                ));
             }
             Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path.clone(), value: JsonValue::Number { lexeme: lexeme.clone() } })))
         }
@@ -243,14 +247,10 @@ pub fn lower(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<JsonMu
             }
             Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path.clone(), value: JsonValue::String { value: value.clone() } })))
         }
-        JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { path, index, value }) => Ok(JsonMutation::InsertArrayElement(InsertArrayElementMutation::Apply(InsertArrayElementPayload {
-            path: path.clone(),
-            index: *index,
-            value: value.clone(),
-        }))),
-        JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path, index }) => {
-            Ok(JsonMutation::RemoveArrayElement(RemoveArrayElementMutation::Apply(RemoveArrayElementPayload { path: path.clone(), index: *index })))
+        JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { path, index, value }) => {
+            Ok(JsonMutation::InsertArrayElement(InsertArrayElementMutation::Apply(InsertArrayElementPayload { path: path.clone(), index: *index, value: value.clone() })))
         }
+        JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path, index }) => Ok(JsonMutation::RemoveArrayElement(RemoveArrayElementMutation::Apply(RemoveArrayElementPayload { path: path.clone(), index: *index }))),
     }
 }
 //#endregion 🔖️Lowering

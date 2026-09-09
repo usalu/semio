@@ -1,8 +1,8 @@
 //! 📄️ Trinity Jack app — Document panel (node/edge tree).
 
-use crate::JackSnapshot;
 use crate::editor::jack::config::JackConfig;
 use crate::editor::jack::terminology::TrinityJackLabels;
+use crate::JackSnapshot;
 use semio_framework_plugin::{tree_item, tree_item_desc, PanelTreeBuilder};
 
 pub(crate) fn render(fixture: &JackSnapshot, _cfg: &JackConfig, labels: &TrinityJackLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -19,5 +19,9 @@ pub(crate) fn render(fixture: &JackSnapshot, _cfg: &JackConfig, labels: &Trinity
         let label = crate::editor::jack::ui_label(format!("{} → {}", edge.source, edge.target))?;
         tree_item(builder.item_id("edge", &edge.id)?, label)
     }))?;
-    builder.section("trinity-document.nodes", Some(crate::editor::jack::ui_label(labels.pieces.as_str())?), true, node_items)?.section("trinity-document.edges", Some(crate::editor::jack::ui_label(labels.connections.as_str())?), false, edge_items)?.interaction_domain("ast")?.build()
+    builder
+        .section("trinity-document.nodes", Some(crate::editor::jack::ui_label(labels.pieces.as_str())?), true, node_items)?
+        .section("trinity-document.edges", Some(crate::editor::jack::ui_label(labels.connections.as_str())?), false, edge_items)?
+        .interaction_domain("ast")?
+        .build()
 }

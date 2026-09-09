@@ -1,11 +1,11 @@
 //! 🖼️ Drawing play app — the canvas window's render() (constitutional: was `ui`'s `Render` region).
 
-use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
-use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
 use crate::editor::drawing::commands::canvas_pointer_down::{draft_preview_segments, shape_preview_segments, DrawingGesturePreview, DrawingGesturePreviewPhase};
 use crate::editor::drawing::config::DrawingConfig;
-use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, UiAssemblyResult};
+use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
+use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
 use dsl::DslValue;
+use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, UiAssemblyResult};
 
 pub const DRAWING_PLAY_WINDOW_CANVAS: &str = "drawing-composite";
 pub const DRAWING_PLAY_SURFACE_ID: &str = "drawing.play.composite";
@@ -85,11 +85,7 @@ pub fn render(document: &DrawingSnapshot, config: &DrawingConfig, preview: &Draw
     let scene_nodes = flatten_drawing_document_to_scene_nodes(document);
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
-    records.push(DslValue::object([
-        ("id".to_string(), DslValue::String("meta:utility".to_string())),
-        ("role".to_string(), DslValue::String("meta".to_string())),
-        ("utility".to_string(), DslValue::String(active_utility.to_string())),
-    ]));
+    records.push(DslValue::object([("id".to_string(), DslValue::String("meta:utility".to_string())), ("role".to_string(), DslValue::String("meta".to_string())), ("utility".to_string(), DslValue::String(active_utility.to_string()))]));
     records.extend(artboard_records);
     for node in &scene_nodes {
         records.push(dsl::ToValue::to_value(node));

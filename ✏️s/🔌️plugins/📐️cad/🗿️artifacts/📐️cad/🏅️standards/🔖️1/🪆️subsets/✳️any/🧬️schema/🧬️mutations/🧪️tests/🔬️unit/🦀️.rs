@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::mutations::{
     change_active_model_definition::ChangeActiveModelDefinition, change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeReferenceLocked, change_reference_width::ChangeReferenceWidth,

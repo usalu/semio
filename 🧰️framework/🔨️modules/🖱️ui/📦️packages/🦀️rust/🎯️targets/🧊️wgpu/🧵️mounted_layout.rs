@@ -227,8 +227,18 @@ pub(crate) struct MountedLayoutJob {
     text_worker: DeterministicTextWorker,
 }
 
+#[derive(Clone, Copy)]
+pub(crate) struct MountedLayoutIdentity {
+    pub surface: UiSurfaceToken,
+    pub generation: u64,
+    pub revision: u64,
+    pub theme_revision: u64,
+    pub viewport_revision: u64,
+}
+
 impl MountedLayoutJob {
-    pub(crate) fn try_new(tree: &UiTree, root: NodeId, surface: UiSurfaceToken, generation: u64, revision: u64, theme_revision: u64, viewport_revision: u64, theme: Theme, width: f32, height: f32) -> Result<Self, MountedLayoutFault> {
+    pub(crate) fn try_new(tree: &UiTree, root: NodeId, identity: MountedLayoutIdentity, theme: Theme, width: f32, height: f32) -> Result<Self, MountedLayoutFault> {
+        let MountedLayoutIdentity { surface, generation, revision, theme_revision, viewport_revision } = identity;
         let root_node = tree.node(root).ok_or(MountedLayoutFault::Stale)?;
         if !root_node.flags.contains(NodeFlags::DIRTY_LAYOUT) && !root_node.flags.contains(NodeFlags::SUBTREE_DIRTY) {
             return Err(MountedLayoutFault::Stale);

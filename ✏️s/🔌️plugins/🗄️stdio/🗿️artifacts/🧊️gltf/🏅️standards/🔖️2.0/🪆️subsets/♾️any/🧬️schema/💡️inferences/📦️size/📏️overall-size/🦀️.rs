@@ -26,8 +26,8 @@ pub fn encode_result(indicators: &GltfEntityIndicators) -> dsl::DslValue {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-#[cfg(test)]
 #[path = "🧪️tests/🔬️canonical-vectors/🦀️.rs"]
 mod canonical_vectors;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::standards::v1::subsets::any::schema::{CombinationRule, check_combination_set, combination_uls};
+use crate::standards::v1::subsets::any::schema::{check_combination_set, combination_uls, CombinationRule};
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_accidental_situation_numeric() {

@@ -7,9 +7,9 @@
 //! a bare snapshot; each handler below clamps only against `0` (never negative), documenting the
 //! dropped upper bound honestly rather than guessing at an unknown length.
 
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::mutations::change_cursor::ChangeCursor;
 use crate::{op::Process3dMutation, Process3dSnapshot};
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -23,12 +23,7 @@ pub mod set_cursor {
         pub value: Option<u64>,
     }
 
-    pub fn handle(
-        payload: &SetCursor,
-        doc: &ArtifactView<'_, Process3dSnapshot>,
-        _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
-    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCursor, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let _ = doc;
         let resolved = payload.value.map(|n| n as usize);
         Ok(Emit::mutations(vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: resolved })]))
@@ -46,12 +41,7 @@ pub mod step_cursor {
         pub delta: i64,
     }
 
-    pub fn handle(
-        payload: &StepCursor,
-        doc: &ArtifactView<'_, Process3dSnapshot>,
-        _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
-    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &StepCursor, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let current = fixture.resolved_up_to.unwrap_or(0) as i64;
         Ok(Emit::mutations(vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some((current + payload.delta).max(0) as usize) })]))

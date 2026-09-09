@@ -16,18 +16,15 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-3d", "dep:semio-framework-async", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "semio-s-artifact-puzzle-3d/component-app-assembly"]
+component-app-assembly = ["dep:semio-framework-os-infinite", "semio-framework-plugin/component-guest", "dep:semio-framework-async", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen", "semio-s-artifact-puzzle-3d/component-app-assembly"]
 
 [dependencies]
-# 🌐️ `✏️editor/🌉️wasm` is declared ungated in this crate's root and carries `#[wasm_bindgen]`
-# exports, so the crate needs the attribute macro on every target it is built for — the browser
-# renderer builds it for wasm32-unknown-unknown, where the module is live.
-wasm-bindgen = { workspace = true }
+wasm-bindgen = { workspace = true, optional = true }
 semio-framework = { workspace = true }
-semio-framework-geometry = { workspace = true }
 semio-framework-graph = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-os-infinite = { workspace = true, optional = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
@@ -42,11 +39,12 @@ semio-s-artifact-stdio-zip = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-3d = { workspace = true, optional = true }
 semio-framework-async = { workspace = true, optional = true }
-semio-framework-dispatch-macros = { workspace = true, optional = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-scene = { workspace = true, optional = true }
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+js-sys = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

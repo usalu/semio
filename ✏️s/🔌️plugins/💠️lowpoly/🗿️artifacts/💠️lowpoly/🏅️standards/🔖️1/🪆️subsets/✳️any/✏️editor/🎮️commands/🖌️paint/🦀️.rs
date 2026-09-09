@@ -2,12 +2,12 @@
 //! `canvasPointerDown`/`canvasPointerMove`/`paintStrokeEnd`), single-shot fill (`paintFill`/
 //! `fillBucket`), sampling (`paintSample`) and paint-layer creation (`addPaintLayer`).
 
-use crate::op::LowpolyMutation;
-use crate::schema::{composite_layer_pixels, sample_pixel_from};
-use crate::{LowpolyPaintLayer, LowpolySnapshot};
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::resolve_active_object_id;
+use crate::op::LowpolyMutation;
+use crate::schema::{composite_layer_pixels, sample_pixel_from};
+use crate::{LowpolyPaintLayer, LowpolySnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

@@ -1,12 +1,12 @@
 //! 🧬️ Lowpoly artifact schema — every field of the artifact with its state class.
 
-use crate::{LOWPOLY_PAINT_TEXTURE_SIZE};
+use crate::LOWPOLY_PAINT_TEXTURE_SIZE;
 use framework_schema::ArtifactSchema;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_framework_plugin::MeshData;
 
 //#region 🔖️Artifact
-/// 🧬️ Full lowpoly artifact state across the artifact, presence and config lanes.
+/// 🧬️ lowpoly document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
@@ -15,115 +15,13 @@ pub struct LowpolyArtifact {
     pub schema: String,
     #[state(artifact)]
     pub objects: Vec<LowpolyObject>,
-    #[state(presence)]
-    pub active_object_id: Option<String>,
-    #[state(presence)]
-    pub selection: LowpolySelection,
-    #[state(presence)]
-    pub selected_object_ids: Vec<String>,
-    #[state(presence)]
-    pub paint_utility: String,
-    #[state(presence)]
-    pub active_paint_layer: u32,
-    #[state(config)]
-    pub show_edges: bool,
-    #[state(config)]
-    pub sun_enabled: bool,
-    #[state(config)]
-    pub sun_azimuth: f64,
-    #[state(config)]
-    pub sun_elevation: f64,
-    #[state(config)]
-    pub sun_intensity: f64,
-    #[state(config)]
-    pub sun_color: String,
-    #[state(config)]
-    pub world_camera_position_x: f64,
-    #[state(config)]
-    pub world_camera_position_y: f64,
-    #[state(config)]
-    pub world_camera_position_z: f64,
-    #[state(config)]
-    pub world_camera_target_x: f64,
-    #[state(config)]
-    pub world_camera_target_y: f64,
-    #[state(config)]
-    pub world_camera_target_z: f64,
-    #[state(config)]
-    pub world_camera_fov: f64,
-    #[state(config)]
-    pub utility_params_json: String,
-    #[state(config)]
-    pub paint_color_r: u32,
-    #[state(config)]
-    pub paint_color_g: u32,
-    #[state(config)]
-    pub paint_color_b: u32,
-    #[state(config)]
-    pub paint_color_a: u32,
-    #[state(config)]
-    pub selection_method: String,
-    #[state(config)]
-    pub selection_mode_default: String,
-    #[state(config)]
-    pub engagement_input: String,
-    #[state(artifact)]
-    pub hovered_object_id: Option<String>,
-    #[state(artifact)]
-    pub hovered_target_object_id: Option<String>,
-    #[state(artifact)]
-    pub hovered_target_mode: Option<String>,
-    #[state(artifact)]
-    pub hovered_target_id: Option<u32>,
-    #[state(artifact)]
-    pub stroke_drag_active: bool,
-    #[state(artifact)]
-    pub transform_drag_active: bool,
-    #[state(artifact)]
-    pub preview_seq: i64,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for LowpolyArtifact {
     fn default() -> Self {
-        Self {
-            schema: crate::LOWPOLY_DOCUMENT_SCHEMA.into(),
-            objects: Vec::new(),
-            active_object_id: None,
-            selection: LowpolySelection::default(),
-            selected_object_ids: Vec::new(),
-            paint_utility: "brush".into(),
-            active_paint_layer: 0,
-            show_edges: true,
-            sun_enabled: false,
-            sun_azimuth: 45.0,
-            sun_elevation: 35.0,
-            sun_intensity: 0.85,
-            sun_color: "#ffffff".into(),
-            world_camera_position_x: 18.0,
-            world_camera_position_y: -18.0,
-            world_camera_position_z: 12.0,
-            world_camera_target_x: 0.0,
-            world_camera_target_y: 0.0,
-            world_camera_target_z: 0.0,
-            world_camera_fov: 45.0,
-            utility_params_json: String::new(),
-            paint_color_r: 255,
-            paint_color_g: 64,
-            paint_color_b: 64,
-            paint_color_a: 255,
-            selection_method: "rectangle".into(),
-            selection_mode_default: "default".into(),
-            engagement_input: String::new(),
-            hovered_object_id: None,
-            hovered_target_object_id: None,
-            hovered_target_mode: None,
-            hovered_target_id: None,
-            stroke_drag_active: false,
-            transform_drag_active: false,
-            preview_seq: 0,
-        }
+        Self { schema: crate::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: Vec::new() }
     }
 }
 
@@ -133,7 +31,7 @@ impl LowpolyArtifact {
         crate::LowpolySnapshot { schema: self.schema.clone(), objects: self.objects.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::LowpolySnapshot) -> Self {
         Self { schema: snapshot.schema, objects: snapshot.objects, ..Self::default() }
     }
@@ -151,13 +49,7 @@ impl LowpolyArtifact {
 pub fn lowpoly_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.lowpoly.lowpoly",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

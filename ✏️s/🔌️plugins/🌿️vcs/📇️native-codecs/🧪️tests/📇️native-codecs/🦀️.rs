@@ -70,12 +70,7 @@ fn vcs_native_receipt_closure_denies_every_hostile_row_including_the_retired_doc
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
     let identity = native_codec_factory_receipts().expect("complete inert VCS closure")[0].identity();
     let exact = projection(&identity);
-    let admits = |package: &str, version: &str, rows: &[serde_json::Value]| {
-        package == identity.package_id
-            && version == identity.package_version
-            && rows.len() == 1
-            && rows.iter().all(|row| *row == exact && row["protocolSha256"] != "00".repeat(32))
-    };
+    let admits = |package: &str, version: &str, rows: &[serde_json::Value]| package == identity.package_id && version == identity.package_version && rows.len() == 1 && rows.iter().all(|row| *row == exact && row["protocolSha256"] != "00".repeat(32));
     assert!(admits(identity.package_id, identity.package_version, std::slice::from_ref(&exact)), "the literal VCS closure must be admitted");
     let mut denied = 0;
     for hostile in fixture["hostile"].as_array().unwrap() {

@@ -1,18 +1,8 @@
 /** 🧬️ Block3d artifact schema — every field with its state class. */
 
 import type { BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation } from "../../../../../../../🟦️";
-import type { Block3dBrushPreview, Block3dVortexKindExtra, Block3dVortexTemplate, Block3dWindowView } from "../../../../../🟦️";
-
-/** 🗂️ Dialect coordinate a child artifact is claimed against. */
-export interface ArtifactDialect { artifactKind: string; standard: string; subset: string; }
-
-/** 🎯️ What a child handle points at — verified against the real fixture
- * `…/🙅remove-author/🧪️tests/✏️uncredits-ada/📸️snapshot/⬅️before/🔣️.json`'s `catalog.target`
- * (NOT a plain string, unlike some sibling plugins' unverified `ArtifactChildHandle` stubs). */
-export interface ArtifactChildTarget { artifactId: string; dialect: ArtifactDialect; }
-
-/** 🧒️ `store::ArtifactChild<T>` wire handle — child artifact id plus its kind claim. */
-export interface ArtifactChildHandle { childId: string; target: ArtifactChildTarget; }
+import type { Block3dVortexKindExtra, Block3dVortexTemplate, Block3dWindowView } from "../../../../../🟦️";
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
 export interface Block3dArtifact {
   /** @state artifact */
@@ -22,7 +12,7 @@ export interface Block3dArtifact {
   /** @state artifact */
   representations: BlockRepresentation[];
   /** @state artifact @child kind=s.stdio.semio.kit */
-  catalog: ArtifactChildHandle;
+  catalog: ArtifactChild;
   /** @state artifact */
   vortexKindExtra: Block3dVortexKindExtra[];
   /** @state artifact */
@@ -37,27 +27,6 @@ export interface Block3dArtifact {
   camera3d: BlockCamera3d;
   /** @state artifact */
   meta: BlockMeta;
-  /** @state presence */
-  selectedIds: string[];
-  /** @state presence */
-  activeRepresentationId?: string;
-  /** @state presence */
-  wantedTags: string[];
-  /** @state config */
-  /** @state config */
-  windows: Block3dWindowView[];
-  /** @state config */
-  brushVortexKindId?: string;
-  /** @state config */
-  brushRadius: number;
-  /** @state config */
-  brushFlip: boolean;
-  /** @state artifact */
-  brushPreview?: Block3dBrushPreview;
-  /** @state config */
-  camera?: BlockCamera3d;
-  /** @state artifact */
-  hoveredVortexFullId?: string;
 }
 
 //#region 🚪️Parsers
@@ -113,24 +82,19 @@ export function parseBlock3dArtifact(value: unknown, at = "$"): Block3dArtifact 
     schema: blockBlock3dArtifactGuardString(row["schema"], `${at}.schema`),
     objectKind: parseBlockKindIdentity(row["objectKind"], `${at}.objectKind`),
     representations: blockBlock3dArtifactGuardArray(row["representations"], `${at}.representations`).map((item, index) => parseBlockRepresentation(item, `${at}.representations[${index}]`)),
-    vortexKinds: blockBlock3dArtifactGuardArray(row["vortexKinds"], `${at}.vortexKinds`).map((item, index) => parseBlock3dVortexKind(item, `${at}.vortexKinds[${index}]`)),
+    catalog: parseArtifactChild(row["catalog"]),
+    vortexKindExtra: blockBlock3dArtifactGuardArray(row["vortexKindExtra"], `${at}.vortexKindExtra`).map((item, index) => parseBlock3dVortexKindExtra(item, `${at}.vortexKindExtra[${index}]`)),
     vortices: blockBlock3dArtifactGuardArray(row["vortices"], `${at}.vortices`).map((item, index) => parseBlock3dVortexTemplate(item, `${at}.vortices[${index}]`)),
     compatibility: blockBlock3dArtifactGuardArray(row["compatibility"], `${at}.compatibility`).map((item, index) => parseBlockCompatibilityRule(item, `${at}.compatibility[${index}]`)),
     attributes: blockBlock3dArtifactGuardArray(row["attributes"], `${at}.attributes`).map((item, index) => parseBlockAttribute(item, `${at}.attributes[${index}]`)),
     authors: blockBlock3dArtifactGuardArray(row["authors"], `${at}.authors`).map((item, index) => parseBlockAuthor(item, `${at}.authors[${index}]`)),
     camera3d: parseBlockCamera3d(row["camera3d"], `${at}.camera3d`),
     meta: parseBlockMeta(row["meta"], `${at}.meta`),
-    selectedIds: blockBlock3dArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => blockBlock3dArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    activeRepresentationId: row["activeRepresentationId"] === undefined ? undefined : blockBlock3dArtifactGuardString(row["activeRepresentationId"], `${at}.activeRepresentationId`),
-    wantedTags: blockBlock3dArtifactGuardArray(row["wantedTags"], `${at}.wantedTags`).map((item, index) => blockBlock3dArtifactGuardString(item, `${at}.wantedTags[${index}]`)),
-    windows: blockBlock3dArtifactGuardArray(row["windows"], `${at}.windows`).map((item, index) => parseBlock3dWindowView(item, `${at}.windows[${index}]`)),
-    brushVortexKindId: row["brushVortexKindId"] === undefined ? undefined : blockBlock3dArtifactGuardString(row["brushVortexKindId"], `${at}.brushVortexKindId`),
-    brushRadius: blockBlock3dArtifactGuardNumber(row["brushRadius"], `${at}.brushRadius`),
-    brushFlip: blockBlock3dArtifactGuardBoolean(row["brushFlip"], `${at}.brushFlip`),
-    brushPreview: row["brushPreview"] === undefined ? undefined : parseBlock3dBrushPreview(row["brushPreview"], `${at}.brushPreview`),
-    camera: row["camera"] === undefined ? undefined : parseBlockCamera3d(row["camera"], `${at}.camera`),
-    hoveredVortexFullId: row["hoveredVortexFullId"] === undefined ? undefined : blockBlock3dArtifactGuardString(row["hoveredVortexFullId"], `${at}.hoveredVortexFullId`),
   };
+}
+
+export function parseBlock3dVortexKindExtra(value: unknown, at = "$"): Block3dVortexKindExtra {
+  return blockBlock3dArtifactGuardObject(value, at) as unknown as Block3dVortexKindExtra;
 }
 
 export type BlockKindIdentity = Readonly<Record<string, unknown>>;
@@ -190,11 +154,5 @@ export function parseBlockMeta(value: unknown, at = "$"): BlockMeta {
 export type Block3dWindowView = Readonly<Record<string, unknown>>;
 
 export function parseBlock3dWindowView(value: unknown, at = "$"): Block3dWindowView {
-  return blockBlock3dArtifactGuardObject(value, `${at}`);
-}
-
-export type Block3dBrushPreview = Readonly<Record<string, unknown>>;
-
-export function parseBlock3dBrushPreview(value: unknown, at = "$"): Block3dBrushPreview {
   return blockBlock3dArtifactGuardObject(value, `${at}`);
 }

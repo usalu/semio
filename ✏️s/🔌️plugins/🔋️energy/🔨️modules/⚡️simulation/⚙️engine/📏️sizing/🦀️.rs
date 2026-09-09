@@ -4,8 +4,8 @@ use crate::model::Model;
 use crate::results::{SizingResult, SizingTables};
 use crate::site::{DesignDay, DesignDayKind};
 use crate::units::CP_DRY_AIR;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️SizingConfig
 /// 📐️ Sizing configuration.

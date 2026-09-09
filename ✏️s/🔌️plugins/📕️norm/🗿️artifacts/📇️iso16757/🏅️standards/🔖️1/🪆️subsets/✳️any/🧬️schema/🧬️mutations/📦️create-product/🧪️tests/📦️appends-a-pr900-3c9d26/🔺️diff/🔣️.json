@@ -164,6 +164,5 @@
   "partNumberRule": null,
   "partNumberInputs": null,
   "scriptLimits": null,
-  "exchangeProcess": null,
-  "selectedCheckIndex": null
+  "exchangeProcess": null
 }

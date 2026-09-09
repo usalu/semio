@@ -37,5 +37,3 @@ message CadNode { string id = 1; }
 message CadReferenceList { repeated string values = 1; }
 message CadGeometry { string anchors_json = 1; }
 message CadCamera { double zoom = 1; }
-message CadComponentSelection { string mode = 1; }
-message CadDislocateOptions { bool move_enabled = 1; bool rotate_enabled = 2; }

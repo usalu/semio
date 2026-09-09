@@ -1,6 +1,5 @@
-
-use crate::editor::lowpoly::LowpolyCommand;
 use crate::editor::lowpoly::testkit::{app_with_registry, dispatch, select_face};
+use crate::editor::lowpoly::LowpolyCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn engagement_submit_resolves_a_typed_token_into_a_real_command() {

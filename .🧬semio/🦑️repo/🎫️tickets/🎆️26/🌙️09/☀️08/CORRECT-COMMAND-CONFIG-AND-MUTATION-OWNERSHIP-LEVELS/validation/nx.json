@@ -1,4 +1,5 @@
 {
   "plugins": [],
-  "cacheDirectory": "../🗑️generated/nx/cache"
+  "cacheDirectory": "../🗑️generated/nx/cache",
+  "analytics": false
 }

@@ -1,7 +1,7 @@
 //! 🫁️ Indoor air quality: CO₂ and generic contaminant mass balance with DCV.
 
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️ContaminantState
 /// 🫁️ Contaminant concentration state with history for transient integration.

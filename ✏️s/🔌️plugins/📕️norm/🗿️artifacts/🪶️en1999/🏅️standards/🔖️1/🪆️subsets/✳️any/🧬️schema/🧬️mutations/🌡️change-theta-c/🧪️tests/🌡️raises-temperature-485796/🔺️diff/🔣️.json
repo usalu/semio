@@ -8,7 +8,7 @@
   "chi": null,
   "iTMm4": null,
   "lCrMm": null,
-  "thetaC": 225.0,
+  "thetaC": 225,
   "deltaSigmaEd": null,
   "deltaSigmaC": null,
   "fatigueM": null,
@@ -25,6 +25,5 @@
   "shellTMm": null,
   "shellRMm": null,
   "sigmaEdShellMpa": null,
-  "annex": null,
-  "selectedCheckIndex": null
+  "annex": null
 }

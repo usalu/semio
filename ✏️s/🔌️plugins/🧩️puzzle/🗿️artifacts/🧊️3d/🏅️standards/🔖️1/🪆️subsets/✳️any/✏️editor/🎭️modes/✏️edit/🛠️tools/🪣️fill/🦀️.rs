@@ -6,7 +6,8 @@
 
 use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_distribution_group, Puzzle3dScene, PUZZLE3D_FILL_COUNT_MAX};
+use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_distribution_group, Puzzle3dScene, PUZZLE3D_FILL_COUNT_MAX, PUZZLE3D_PLAY_CONTROLLER_ID};
+use dsl::json;
 use semio_framework_plugin::{LocalizedLabel, ToolDefinition, WindowMeasure};
 
 //#region 🔖️Constants
@@ -45,8 +46,32 @@ pub fn count_measure(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSe
     }
 }
 
-/// 🛠️ Fill tool measures — count slider and nested distribution tree.
+/// 🛑 Cancel affordance and progress readout for the live background fill job — present only while one
+/// is actually planning, so the panel never offers to cancel nothing. The job's own
+/// `(job, operation, generation)` identity travels in the action args, so a cancel that arrives after
+/// the run it was rendered for was superseded is a no-op rather than a kill of the current plan.
+pub fn cancel_measure(precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Option<WindowMeasure> {
+    let progress = precompute.fill_progress_summary();
+    let (job, operation, generation) = precompute.fill_job_identity()?;
+    if progress.done {
+        return None;
+    }
+    Some(WindowMeasure::Toggle {
+        id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-fill-cancel"),
+        icon_id: "circle-stop".into(),
+        label: Some(labels.fill_cancel.into()),
+        pressed: false,
+        text: Some(format!("{} / {} {}", progress.count, progress.max_count, labels.fill_planned.as_str())),
+        on_change: puzzle3d_action("cancelFillBuild", Some(json!({ "job": job, "operation": operation, "generation": generation }))),
+    })
+}
+
+/// 🛠️ Fill tool measures — count slider, the live job's cancel/progress row, and the nested
+/// distribution tree.
 pub fn measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
-    vec![count_measure(envelope, precompute, labels), puzzle3d_distribution_group(envelope, labels, Some(true))]
+    let mut measures = vec![count_measure(envelope, precompute, labels)];
+    measures.extend(cancel_measure(precompute, labels));
+    measures.push(puzzle3d_distribution_group(envelope, labels, Some(true)));
+    measures
 }
 //#endregion 🔖️Definition

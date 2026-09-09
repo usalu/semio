@@ -1,9 +1,8 @@
 //! 🕷️ `change-tower-is-chimney` payload — changes the En1998 document's `tower_is_chimney` (tower-is-chimney flag).
 
-
-use crate::En1998Snapshot;
 use crate::diff::En1998Diff;
 use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 //#region 🔖️ChangeTowerIsChimney
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

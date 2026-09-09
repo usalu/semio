@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::En1999Snapshot;
 use crate::mutations::change_n_ed_kn;
+use crate::En1999Snapshot;
 
 fn sample_mutation() -> En1999Mutation {
     En1999Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: 95.0 })

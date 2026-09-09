@@ -34,10 +34,5 @@
     ],
     "sparsePointCloudPreview": "AAAAPwAAgD4AAAA+AACAPwAAwD8AAABA"
   },
-  "results": null,
-  "selection": null,
-  "reportTable": null,
-  "frameCursor": null,
-  "camera": null,
-  "layers": null
+  "results": null
 }

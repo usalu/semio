@@ -1,4 +1,3 @@
-
 use super::*;
 
 const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.ifc','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROJECT('gid-project',#2,'Demo Project',$,$,$,$,(#10),#11);\n#2=IFCOWNERHISTORY($,$,$,$,$,$,$,0);\n#6=IFCWALL('gid-wall',#2,'Wall-01',$,$,#80,$,$,$);\nENDSEC;\nEND-ISO-10303-21;\n";

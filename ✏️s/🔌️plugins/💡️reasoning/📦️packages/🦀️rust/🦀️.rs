@@ -9,11 +9,6 @@
 //! master ticket `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard
 //! ruling, and its Shape V2 addendum for the `📦️packages`-relocated entry file).
 
-extern crate infinite_canvas as infinite_board_port_directed;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<WiresMutation, WiresConfigMutation>, Fault>`, the exact signature
 // `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
@@ -22,21 +17,26 @@ extern crate semio_framework_schema as schema;
 // so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
 //#region 🗿️Artifacts
-mod artifacts { pub use semio_s_artifact_reasoning_wires as wires; }
+mod artifacts {
+    pub use semio_s_artifact_reasoning_wires as wires;
+}
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_reasoning_wires::editor::*; }
+mod editor {
+    pub use semio_s_artifact_reasoning_wires::editor::*;
+}
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_reasoning_wires::viewer::*; }
+mod viewer {
+    pub use semio_s_artifact_reasoning_wires::viewer::*;
+}
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ReasoningApps);
-
 
 //#endregion 🔖️Plugin

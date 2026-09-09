@@ -7,7 +7,7 @@
   "bMm": null,
   "dMm": null,
   "aSMm2": null,
-  "fYk": 550.0,
+  "fYk": 550,
   "rhoL": null,
   "nEdKn": null,
   "pKn": null,
@@ -34,6 +34,5 @@
   "anchorDMm": null,
   "anchorC1Mm": null,
   "anchorNEdKn": null,
-  "anchorVEdKn": null,
-  "selectedCheckIndex": null
+  "anchorVEdKn": null
 }

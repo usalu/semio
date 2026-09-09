@@ -1,10 +1,10 @@
 //! 🧭️ 🧭️ Generation3d play app commands command — `scale-selection`.
 
+use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_framework_artifact_flow_flow::FlowFixture;
 use semio_framework_os_flow::{FlowEvalSession, FlowHost};
-use semio_framework_artifact_flow_flow::{FlowFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
 use crate::standards::v1::subsets::any::schema::{commit_fixture, ensure_gumball_node, gumball_scale_params_json, gumball_widget_number_param, host_from_fixture};

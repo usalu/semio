@@ -1,11 +1,11 @@
 //! 👥️ Note play presence — shareable live ephemeral state + mutations.
 
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live canvas view state (camera, active utility). 🕹️ ticket
+/// 👥️ Shareable live canvas camera state. 🕹️ ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: peer selection/hover no longer live here —
 /// they broadcast automatically via the framework's typed `PresenceInteraction` (assembled from the
 /// "blocks" domain's `InteractionState`, zero app code).
@@ -18,12 +18,11 @@ pub struct NotePresence {
     pub camera_x: f64,
     pub camera_y: f64,
     pub camera_zoom: f64,
-    pub active_utility_id: String,
 }
 
 impl Default for NotePresence {
     fn default() -> Self {
-        Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, active_utility_id: String::new() }
+        Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0 }
     }
 }
 
@@ -85,7 +84,6 @@ impl ArtifactPack for NotePresence {
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
-
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]

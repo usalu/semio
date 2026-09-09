@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreatePrimitive`.
 
-use crate::standards::v1::subsets::mesh::schema::mutations::{SemioMeshMutation, delete_primitive};
+use crate::standards::v1::subsets::mesh::schema::mutations::{delete_primitive, SemioMeshMutation};
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Inverse

@@ -332,6 +332,7 @@ pub mod spatial {
 
 // 🌳 B-Rep entity BVH adapters over `spatial::Bvh` (ray / AABB / nearest by leaf bounds).
 
+use crate::standards::v1::subsets::brep::schema::engine::{Aabb, Vec3};
 use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::closest_point_on_face;
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
@@ -339,7 +340,6 @@ use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
-use crate::standards::v1::subsets::brep::schema::engine::{Aabb, Vec3};
 use spatial::Bvh;
 
 // #region 🔖️Bounds

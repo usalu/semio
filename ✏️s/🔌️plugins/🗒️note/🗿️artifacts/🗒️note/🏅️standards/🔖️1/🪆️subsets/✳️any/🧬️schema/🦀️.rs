@@ -2,13 +2,13 @@
 
 use crate::{NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
-/// 🧬️ Full note artifact state across the artifact, presence and config lanes.
+/// 🧬️ note document artifact state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.note.note")]
@@ -42,20 +42,6 @@ pub struct NoteArtifact {
     #[state(artifact)]
     #[link_slot(roles("any"))]
     pub linked_artifact: Option<store::ArtifactLink>,
-    #[state(presence)]
-    pub selected_block_ids: Vec<String>,
-    #[state(presence)]
-    pub active_utility_id: String,
-    #[state(config)]
-    pub engagement_input: String,
-    #[state(config)]
-    pub camera_x: f64,
-    #[state(config)]
-    pub camera_y: f64,
-    #[state(config)]
-    pub camera_zoom: f64,
-    #[state(artifact)]
-    pub hovered_block_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -87,7 +73,7 @@ impl NoteArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::NoteSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -124,13 +110,6 @@ impl NoteArtifact {
             eraser_radius: Some(12.0),
             assets: BTreeMap::new(),
             linked_artifact: None,
-            selected_block_ids: Vec::new(),
-            active_utility_id: "selectDirect".into(),
-            engagement_input: String::new(),
-            camera_x: 0.0,
-            camera_y: 0.0,
-            camera_zoom: 1.0,
-            hovered_block_id: None,
         }
     }
 
@@ -159,13 +138,7 @@ impl NoteArtifact {
 pub fn note_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.note.note",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

@@ -11,10 +11,10 @@
 //! FILES, per the migration recipe's `DocumentHelpers` placement rule).
 
 use crate::app_surface::{DisplayMode, ResultDisplay};
+use crate::editor::fem3d::config::Fem3dConfig;
 #[cfg(test)]
 use crate::Fem3dSnapshot;
 use crate::FemCamera;
-use crate::editor::fem3d::config::Fem3dConfig;
 use semio_framework_plugin::BuiltNode;
 #[cfg(test)]
 use semio_framework_plugin::Label;

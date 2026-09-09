@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧪️ F6: `diff_codec_text_binary_roundtrip_law` — exercises every scalar field plus all

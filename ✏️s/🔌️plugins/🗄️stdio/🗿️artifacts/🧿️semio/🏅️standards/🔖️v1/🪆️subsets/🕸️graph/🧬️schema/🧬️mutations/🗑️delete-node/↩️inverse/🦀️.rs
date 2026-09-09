@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteNode`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{SemioGraphMutation, create_edge, create_node};
+use crate::standards::v1::subsets::graph::schema::mutations::{create_edge, create_node, SemioGraphMutation};
 use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
@@ -9,14 +9,7 @@ pub fn inverse(payload: &super::DeleteNode, base: &SemioGraphSnapshot) -> Vec<Se
     let Some(node) = base.nodes.iter().find(|n| n.id == payload.id) else {
         return Vec::new();
     };
-    let mut out = vec![SemioGraphMutation::CreateNode(create_node::CreateNode {
-        id: node.id.clone(),
-        kind: node.kind.clone(),
-        label: node.label.clone(),
-        position: node.position,
-        ports: node.ports.clone(),
-        properties: node.properties.clone(),
-    })];
+    let mut out = vec![SemioGraphMutation::CreateNode(create_node::CreateNode { id: node.id.clone(), kind: node.kind.clone(), label: node.label.clone(), position: node.position, ports: node.ports.clone(), properties: node.properties.clone() })];
     for edge in base.edges.iter().filter(|e| e.source == payload.id || e.target == payload.id) {
         out.push(SemioGraphMutation::CreateEdge(create_edge::CreateEdge { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone(), kind: edge.kind.clone(), label: edge.label.clone() }));
     }

@@ -1,4 +1,3 @@
-
 use crate::mutations::tests::every_mutation;
 
 /// ⚖️ The pinned pre-migration byte fixture retired with the generic `Patch*`/`Set*` variants

@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::RasterOwnedMap;
 use crate::mutations::create_layer;
 use crate::op::RasterMutation;
-use crate::{RASTER_DOCUMENT_SCHEMA, RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform};
+use crate::RasterOwnedMap;
+use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
@@ -89,7 +88,7 @@ async fn pack_round_trips_representative_document() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, ArtifactStore, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::standards::v1::subsets::any::schema::empty_raster_document(), None);
     let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");

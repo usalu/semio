@@ -8,9 +8,9 @@
 //! encode, per the raw-retention rule.
 
 use crate::STDIO_DOCX_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️DocxModel
 /// ✍️ One `w:r` run: literal text plus the formatting flags this artifact models. Any richer

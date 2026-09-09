@@ -15,29 +15,10 @@
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "steps": {
-      "$ref": "#/$defs/SequenceStepsDelta",
-      "x-semio-state": "artifact"
-    },
-    "edges": {
-      "$ref": "#/$defs/SequenceEdgesDelta",
-      "x-semio-state": "artifact"
-    },
-    "selectedStepIds": {
-      "$ref": "#/$defs/SequenceStringList",
-      "x-semio-state": "presence"
-    },
-    "lastRunJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "orientation": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "camera": {
-      "$ref": "https://semio.tech/schema/s/sequence/sequence/artifact.json#/$defs/SequenceCamera",
-      "x-semio-state": "config"
+    "content": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio.flow"
     }
   },
   "$defs": {

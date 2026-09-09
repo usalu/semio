@@ -1,13 +1,13 @@
 //! ↔️ Architect adjacency window — the signature adjacency matrix surface: a triangle glyph strip
 //! beside a lower-triangle pair tree, each pair cycling its `AdjacencyKind` on activation.
 
-use crate::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
-use crate::ProgramSnapshot;
 use crate::editor::architect::chrome::{adjacency_kind_label, element_label};
 use crate::editor::architect::config::ArchitectConfig;
-use crate::editor::architect::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
 use crate::editor::architect::ui_label;
-use semio_framework_plugin::{tree_item_desc, tree_item_with_action,  LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
+use crate::editor::architect::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
+use crate::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
+use crate::ProgramSnapshot;
+use semio_framework_plugin::{tree_item_desc, tree_item_with_action, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_ADJACENCY: &str = "architect-adjacency";

@@ -47,11 +47,7 @@ async fn the_undo_remove_mark_detaches_the_link_again() {
     let base = before();
     let mutation = add_mark();
     let undo = mutation.inverse(&base);
-    assert_eq!(
-        undo,
-        vec![SemioTextMutation::RemoveMark(crate::standards::v1::subsets::text::schema::mutations::remove_mark::RemoveMark { run_index: 0, index: 0 })],
-        "add-mark at run #0/#0 must undo as remove-mark at run #0/#0"
-    );
+    assert_eq!(undo, vec![SemioTextMutation::RemoveMark(crate::standards::v1::subsets::text::schema::mutations::remove_mark::RemoveMark { run_index: 0, index: 0 })], "add-mark at run #0/#0 must undo as remove-mark at run #0/#0");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward add-mark applies");
     for step in &undo {
         current = step.diff(&current).diff().apply(&current).expect("the undo remove-mark applies to the marked state");

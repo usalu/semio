@@ -1,30 +1,20 @@
 //! 🧬️ Trinity jack configuration mutation collection.
 
-use super::{JackConfig, Camera};
+use super::JackConfig;
 #[path = "📸️replace-config/🦀️.rs"]
 mod replace_config;
 pub use replace_config::ReplaceConfig;
-#[path = "🎥️set-camera/🦀️.rs"]
-mod set_camera;
-pub use set_camera::SetCamera;
 #[path = "🔎️set-query/🦀️.rs"]
 mod set_query;
 pub use set_query::SetQuery;
-#[path = "🔍️set-lod-mode/🦀️.rs"]
-mod set_lod_mode;
-pub use set_lod_mode::SetLodMode;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = JackConfig, diff = JackConfig, schema = "trinity.jackcfg")]
 pub enum JackConfigMutation {
     #[dsl(key = "replace-config")]
     ReplaceConfig(ReplaceConfig),
-    #[dsl(key = "set-camera")]
-    SetCamera(SetCamera),
     #[dsl(key = "set-query")]
     SetQuery(SetQuery),
-    #[dsl(key = "set-lod-mode")]
-    SetLodMode(SetLodMode),
 }
 
 impl protocol::OpText for JackConfigMutation {
@@ -48,6 +38,10 @@ impl protocol::OpText for JackConfigMutation {
 }
 
 impl protocol::OpBinary for JackConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
 }

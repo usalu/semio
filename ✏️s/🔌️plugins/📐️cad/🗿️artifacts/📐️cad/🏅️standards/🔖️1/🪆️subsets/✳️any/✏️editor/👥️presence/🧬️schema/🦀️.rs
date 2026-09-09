@@ -14,8 +14,6 @@ pub struct CadPresence {
     #[state(presence)]
     pub camera_fov: f64,
     #[state(presence)]
-    pub active_utility_id: String,
-    #[state(presence)]
     pub engagement_step: String,
     #[state(presence)]
     pub engagement_pane: Option<String>,

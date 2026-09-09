@@ -22,12 +22,21 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
-    model.thermostats.push(crate::model::Thermostat { id: crate::model::EntityId(10), zone_id: crate::model::EntityId(1), heating_setpoint_schedule_id: crate::model::ScheduleId(1), cooling_setpoint_schedule_id: crate::model::ScheduleId(2), heating_throttle_range_k: 1.0, cooling_throttle_range_k: 1.0 });
+    model.thermostats.push(crate::model::Thermostat {
+        id: crate::model::EntityId(10),
+        zone_id: crate::model::EntityId(1),
+        heating_setpoint_schedule_id: crate::model::ScheduleId(1),
+        cooling_setpoint_schedule_id: crate::model::ScheduleId(2),
+        heating_throttle_range_k: 1.0,
+        cooling_throttle_range_k: 1.0,
+    });
     (snapshot(model), super::change_thermostat_heating_throttle_range(crate::model::EntityId(10), 0.0))
 }
 
 fn case() -> Case {
-    Case { kind: "change-thermostat-heating-throttle-range", directory: "🎚️change-thermostat-heating-throttle-range/🧪️tests/⛔️refuses-a-zero-band", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case {
+        kind: "change-thermostat-heating-throttle-range", directory: "🎚️change-thermostat-heating-throttle-range/🧪️tests/⛔️refuses-a-zero-band", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
+    }
 }
 
 #[semio_framework_async_macros::async_test]

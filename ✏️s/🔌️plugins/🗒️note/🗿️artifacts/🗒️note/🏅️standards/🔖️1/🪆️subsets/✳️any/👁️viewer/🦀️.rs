@@ -7,9 +7,9 @@
 
 use crate::op::NoteMutation;
 use crate::schema::empty_note_snapshot;
-use crate::{NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};
 use crate::viewer::note::modes::view;
 use crate::viewer::note::modes::view::windows::composite;
+use crate::{NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
@@ -74,7 +74,8 @@ impl ArtifactViewer for NoteViewer {
         match body_key {
             composite::BODY_KEY => composite::render(doc.snapshot),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note viewer diagnostic admission failed")),
-        }.map(semio_framework_plugin::built_to_component_tree)
+        }
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer

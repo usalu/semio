@@ -22,7 +22,15 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
-    model.plant_loops.push(crate::model::PlantLoopConfig { id: crate::model::EntityId(18), name: "HOT WATER LOOP".into(), loop_type: crate::model::PlantLoopType::Heating, supply_temperature_c: 80.0, return_temperature_c: 60.0, design_flow_kg_s: 2.0, equipment_ids: vec![crate::model::EntityId(50)] });
+    model.plant_loops.push(crate::model::PlantLoopConfig {
+        id: crate::model::EntityId(18),
+        name: "HOT WATER LOOP".into(),
+        loop_type: crate::model::PlantLoopType::Heating,
+        supply_temperature_c: 80.0,
+        return_temperature_c: 60.0,
+        design_flow_kg_s: 2.0,
+        equipment_ids: vec![crate::model::EntityId(50)],
+    });
     (snapshot(model), super::remove_plant_loop_equipment(crate::model::EntityId(18), crate::model::EntityId(50)))
 }
 

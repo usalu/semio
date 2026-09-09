@@ -1,22 +1,97 @@
 {
   "version": 1,
   "declarations": [
-    { "owner": "app:build", "path": "apps/🧪️app/dist", "cacheability": true, "consumers": ["app:test", "app:test"] },
-    { "owner": "tools:build", "path": "tools/dist", "cacheability": true }
+    {
+      "owner": "app:build",
+      "path": "apps/🧪️app/dist",
+      "cacheability": true,
+      "consumers": [
+        "app:test",
+        "app:test"
+      ]
+    },
+    {
+      "owner": "tools:build",
+      "path": "tools/dist",
+      "cacheability": true
+    }
   ],
   "files": [
-    { "path": "apps/🧪️app/dist/value.txt", "text": "forty-two\n" },
-    { "path": "tools/dist/tool.txt", "text": "run\n" },
-    { "path": "target/debug/native", "text": "native-intermediate\n" },
-    { "path": "node_modules/package/index.js", "text": "export default 42;\n" }
+    {
+      "path": "apps/🧪️app/dist/value.txt",
+      "text": "forty-two\n"
+    },
+    {
+      "path": "tools/dist/tool.txt",
+      "text": "run\n"
+    },
+    {
+      "path": "target/debug/native",
+      "text": "native-intermediate\n"
+    },
+    {
+      "path": "node_modules/package/index.js",
+      "text": "export default 42;\n"
+    }
   ],
-  "hardlink": { "source": "apps/🧪️app/dist/value.txt", "path": "tools/dist/shared.txt" },
-  "symlink": { "source": "outside", "path": "apps/🧪️app/dist/escape" },
-  "invalid": ["", ".", "..", "../outside", "/outside", "C:/outside", "app/../outside", "app\\dist", "app//dist", "app/dist/", "app/*", "{options.outputPath}", "node_modules", "target/debug", ".nx/cache", ".🧬semio/🦑️repo/⚡️cache", ".🧬semio/🦑️repo/⚡️cache/cargo/browser"],
+  "hardlink": {
+    "source": "apps/🧪️app/dist/value.txt",
+    "path": "tools/dist/shared.txt"
+  },
+  "symlink": {
+    "source": "outside",
+    "path": "apps/🧪️app/dist/escape"
+  },
+  "invalid": [
+    "",
+    ".",
+    "..",
+    "../outside",
+    "/outside",
+    "C:/outside",
+    "app/../outside",
+    "app\\dist",
+    "app//dist",
+    "app/dist/",
+    "app/*",
+    "{options.outputPath}",
+    "node_modules",
+    "target/debug",
+    ".nx/cache",
+    ".🧬semio/🦑️repo/⚡️cache",
+    ".🧬semio/🦑️repo/⚡️cache/cargo/browser"
+  ],
   "overlaps": [
-    { "owner": "other:build", "path": "apps/🧪️app/DIST" },
-    { "owner": "other:build", "path": "apps/🧪️app/dist" },
-    { "owner": "other:build", "path": "apps/🧪️app/dist/nested" },
-    { "owner": "other:build", "path": "apps/🧪️app" }
-  ]
+    {
+      "owner": "other:build",
+      "path": "apps/🧪️app/DIST"
+    },
+    {
+      "owner": "other:build",
+      "path": "apps/🧪️app/dist"
+    },
+    {
+      "owner": "other:build",
+      "path": "apps/🧪️app/dist/nested"
+    },
+    {
+      "owner": "other:build",
+      "path": "apps/🧪️app"
+    }
+  ],
+  "overlapIndex": {
+    "count": 10000,
+    "directory": "artifacts/🧪️owners",
+    "nested": [
+      "A",
+      "a/child",
+      "a-sibling",
+      "a/child/deep",
+      "a/CHILD",
+      "é",
+      "é/leaf",
+      "é-sibling"
+    ],
+    "normalizationsPerEntry": 100
+  }
 }

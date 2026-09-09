@@ -234,39 +234,6 @@ impl ProgramDiff {
             if let Some(delta) = &self.traces {
                 apply_collection_delta(&mut next.traces, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["traces"]))?;
             }
-            if let Some(v) = &self.selected_ids {
-                next.selected_ids = v.values.clone();
-            }
-            if let Some(v) = &self.active_register {
-                next.active_register = v.clone();
-            }
-            if let Some(v) = &self.adjacency_kind_filter {
-                next.adjacency_kind_filter = v.clone();
-            }
-            if let Some(v) = &self.active_report_json {
-                next.active_report_json = v.clone();
-            }
-            if let Some(v) = &self.search_query {
-                next.search_query = v.clone();
-            }
-            if let Some(v) = &self.search_history_json {
-                next.search_history_json = v.clone();
-            }
-            if let Some(v) = &self.last_result_json {
-                next.last_result_json = v.clone();
-            }
-            if let Some(v) = &self.last_analysis_json {
-                next.last_analysis_json = v.clone();
-            }
-            if let Some(v) = &self.graph_camera_x {
-                next.graph_camera_x = *v;
-            }
-            if let Some(v) = &self.graph_camera_y {
-                next.graph_camera_y = *v;
-            }
-            if let Some(v) = &self.graph_camera_zoom {
-                next.graph_camera_zoom = *v;
-            }
             next
         })
     }
@@ -1131,17 +1098,6 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                 None => self.traces = Some(delta),
             }
         }
-        absorb_opt!(selected_ids);
-        absorb_opt!(active_register);
-        absorb_opt!(adjacency_kind_filter);
-        absorb_opt!(active_report_json);
-        absorb_opt!(search_query);
-        absorb_opt!(search_history_json);
-        absorb_opt!(last_result_json);
-        absorb_opt!(last_analysis_json);
-        absorb_opt!(graph_camera_x);
-        absorb_opt!(graph_camera_y);
-        absorb_opt!(graph_camera_zoom);
     }
 }
 

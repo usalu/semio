@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -12,14 +11,8 @@ async fn shooting_config_default_matches_the_existing_action_arg_sticky_defaults
 /// 🎞️ A fixture exercising every field — the dsl/pack round-trip law for `ShootingConfig`.
 #[semio_framework_async_macros::async_test]
 async fn shooting_config_dsl_pack_round_trip() {
-    let config = ShootingConfig {
-        selected_shot_ids: vec!["s1".into()],
-        center_model: false,
-        fit_revision: 3,
-        camera_draft_label: "Hero".into(),
-        camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() },
-        ..ShootingConfig::default()
-    };
+    let config =
+        ShootingConfig { selected_shot_ids: vec!["s1".into()], center_model: false, fit_revision: 3, camera_draft_label: "Hero".into(), camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() }, ..ShootingConfig::default() };
     store::os_store::test_support::assert_dsl_pack_equivalence(&config);
 }
 

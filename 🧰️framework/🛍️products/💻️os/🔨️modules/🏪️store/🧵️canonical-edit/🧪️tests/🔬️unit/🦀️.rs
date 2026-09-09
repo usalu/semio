@@ -322,7 +322,7 @@ fn canonical_sealer_checkpoint_maximum_accepts_exact_framing_and_identity_overhe
     checkpoint.phase = 6;
     checkpoint.canonical_bytes = CANONICAL_EDIT_MAXIMUM_BYTES;
     checkpoint.completed_bytes = 2 * CANONICAL_EDIT_MAXIMUM_BYTES + CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES;
-    assert!(CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES > 1_024);
+    const { assert!(CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES > 1_024) };
     owner.restore_checkpoint(checkpoint).unwrap();
     checkpoint.completed_bytes += 1;
     assert!(owner.restore_checkpoint(checkpoint).is_err());

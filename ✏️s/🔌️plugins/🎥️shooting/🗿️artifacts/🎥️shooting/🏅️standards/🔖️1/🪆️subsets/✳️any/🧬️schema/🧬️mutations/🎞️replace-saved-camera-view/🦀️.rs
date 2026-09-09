@@ -1,8 +1,8 @@
 //! 🎞️ Shooting mutation payload — `ReplaceSavedCameraView`. Whole-value swap of a saved camera's `camera` pose — overwrites rather than merges, so this is a `replace`, not a `change`.
 
-use crate::{ShootingCamera, ShootingSnapshot};
 use crate::diff::ShootingDiff;
 use crate::mutations::ShootingMutation;
+use crate::{ShootingCamera, ShootingSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

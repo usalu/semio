@@ -114,7 +114,7 @@ fn reorder_named<T>(items: Vec<T>, order: Option<&[String]>, id: impl for<'a> Fn
 }
 
 impl CurationDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document fields onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &CurationArtifact) -> protocol::MutationApplyResult<CurationArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -129,12 +129,6 @@ impl CurationDiff {
             }
             if let Some(delta) = &self.curated {
                 next.curated = apply_curated_delta(&next.curated, delta).map_err(|error| error.under(["curated"]))?;
-            }
-            if let Some(filters) = &self.filters {
-                next.filters = filters.clone();
-            }
-            if let Some(value) = &self.contributions_json {
-                next.contributions_json = value.clone();
             }
             next
         })
@@ -178,8 +172,6 @@ impl MutationDiff<CurationSnapshot> for CurationDiff {
             };
         }
         take!(catalog);
-        take!(filters);
-        take!(contributions_json);
         match (&mut self.stock_extra, other.stock_extra) {
             (Some(dst), Some(src)) => {
                 dst.added.extend(src.added);

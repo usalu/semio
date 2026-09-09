@@ -1,7 +1,6 @@
 //! 🔌️ Space composition of independently packaged Home and Space Index artifacts.
 
 #![allow(async_fn_in_trait)]
-extern crate infinite_canvas as infinite_board_port_directed_dag;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -203,7 +202,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
         HomeViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_space_home::viewer::home::HomeViewer>>),
         SpaceIndexEditor(VcsArtifactApp<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>>),
         SpaceIndexViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>>),
-        Studio(VcsArtifactApp<crate::engine::space::SpaceApp>),
+        Studio(VcsArtifactApp<engine::space::SpaceApp>),
     }
 }
 
@@ -238,8 +237,8 @@ pub fn plugin() -> Result<Plugin<SpaceApps>, PluginAssemblyError> {
         .editor_mutation_roster::<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>()
         .viewer::<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>(semio_s_artifact_space_space::viewer::space_index::create_space_index_viewer())
         .viewer_mutation_roster::<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>()
-        .document_app::<crate::engine::space::SpaceApp>(resolve_ready(crate::engine::space::create_space_app()))
-        .foreign_document_codec::<crate::engine::space::SpaceApp>(OS_SPACE_SCHEMA)
+        .document_app::<engine::space::SpaceApp>(resolve_ready(engine::space::create_space_app()))
+        .foreign_document_codec::<engine::space::SpaceApp>(OS_SPACE_SCHEMA)
         .activation(ActivationEvent::OnArtifactKind { kind: resolve_ready(semio_s_artifact_space_home::artifact_kind()).id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_space_space::artifact_kind().id })
         .execution(ExecutionMode::Isolated)

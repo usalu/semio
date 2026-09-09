@@ -7,12 +7,6 @@ type DrawingArtifact {
   layers: [DrawingLayerNode!]! @state(class: ARTIFACT)
   assets: [DrawingImageAssetEntry!]! @state(class: ARTIFACT)
   artboard: DrawingArtboard @state(class: ARTIFACT)
-  selectedIds: [String!]! @state(class: PRESENCE)
-  engagementInput: String! @state(class: CONFIG)
-  cameraX: Float! @state(class: CONFIG)
-  cameraY: Float! @state(class: CONFIG)
-  cameraZoom: Float! @state(class: CONFIG)
-  hoveredId: String @state(class: ARTIFACT)
 }
 
 type DrawingLayerNode {

@@ -1,10 +1,10 @@
 //! 📥️ 📥️ Remodeling play app commands command — `add-stream`.
 
+use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::mutations::create_stream;
 use crate::op::RemodelingMutation;
 use crate::schema::next_remodeling_id;
 use crate::{MediaKind, MediaStream, RemodelingSnapshot};
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

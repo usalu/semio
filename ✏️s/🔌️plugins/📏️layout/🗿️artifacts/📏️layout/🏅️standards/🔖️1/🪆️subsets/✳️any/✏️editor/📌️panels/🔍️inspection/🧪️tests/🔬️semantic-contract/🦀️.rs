@@ -1,4 +1,3 @@
-
 use super::*;
 #[test]
 fn layout_inspection_summary_matches_the_json_oracle() {

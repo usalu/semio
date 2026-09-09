@@ -1,6 +1,5 @@
 //! 💪 `change-fu-mpa` — sets the En 1994 shear stud ultimate tensile strength f_u [MPa] scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

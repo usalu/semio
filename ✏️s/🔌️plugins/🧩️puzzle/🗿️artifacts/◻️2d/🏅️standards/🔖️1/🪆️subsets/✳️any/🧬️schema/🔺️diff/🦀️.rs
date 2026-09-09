@@ -22,46 +22,6 @@ pub struct Puzzle2dDiff {
     pub edges: Option<Puzzle2dEdgesDelta>,
     #[state(artifact)]
     pub meta: Option<Puzzle2dMeta>,
-    #[state(presence)]
-    pub selected_ids: Option<Puzzle2dStringList>,
-    #[state(presence)]
-    pub active_utility_id: Option<String>,
-    #[state(config)]
-    pub camera_x: Option<f64>,
-    #[state(config)]
-    pub camera_y: Option<f64>,
-    #[state(config)]
-    pub camera_zoom: Option<f64>,
-    #[state(config)]
-    pub selection_method: Option<String>,
-    #[state(config)]
-    pub grid_snap_enabled: Option<bool>,
-    #[state(config)]
-    pub grid_factor: Option<f64>,
-    #[state(config)]
-    pub suggestion_offset: Option<f64>,
-    #[state(config)]
-    pub fill_count: Option<u32>,
-    #[state(config)]
-    pub brush_candidate_index: Option<u32>,
-    #[state(config)]
-    pub brush_candidate_source_handle_id: Option<String>,
-    #[state(config)]
-    pub lod_mode_by_pane_json: Option<String>,
-    #[state(config)]
-    pub engagement_input_by_pane_json: Option<String>,
-    #[state(config)]
-    pub brush_candidates_json: Option<String>,
-    #[state(config)]
-    pub node_kind_weights_json: Option<String>,
-    #[state(config)]
-    pub handle_kind_weights_json: Option<String>,
-    #[state(config)]
-    pub active_utility_by_window_id_json: Option<String>,
-    #[state(artifact)]
-    pub hovered_node_id: Option<Option<String>>,
-    #[state(artifact)]
-    pub preview_seq: Option<i64>,
 }
 //#endregion 🔖️Diff
 

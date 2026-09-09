@@ -1,7 +1,7 @@
 //! Serialize stdio.ifc to stdio.binary.
 
-use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use crate::IfcSnapshot;
+use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 
 //#region Codec
 /// Register serializer hooks.

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{NOTE_DOCUMENT_SCHEMA, NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun};
+use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
 
 #[semio_framework_async_macros::async_test]
@@ -72,7 +71,7 @@ async fn pack_round_trips_representative_document() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::io::mutations::text::NoteMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, ArtifactStore, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let initial = crate::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
     let envelope = create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None);

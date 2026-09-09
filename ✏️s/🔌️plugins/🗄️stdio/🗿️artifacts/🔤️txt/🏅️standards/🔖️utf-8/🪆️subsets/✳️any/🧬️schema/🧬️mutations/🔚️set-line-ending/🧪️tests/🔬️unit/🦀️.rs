@@ -1,5 +1,4 @@
-
-use super::super::{TxtMutation, apply_txt_mutation};
+use super::super::{apply_txt_mutation, TxtMutation};
 use super::*;
 use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 

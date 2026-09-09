@@ -27,10 +27,7 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveMediaAnnotation {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfEMutation> {
-        support::media_annotation(base, &self.subtype, &self.title)
-            .map(|_| PdfEMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() }))
-            .into_iter()
-            .collect()
+        support::media_annotation(base, &self.subtype, &self.title).map(|_| PdfEMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() })).into_iter().collect()
     }
 
     fn label(&self) -> String {

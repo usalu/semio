@@ -113,15 +113,15 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "change-rule-layout-point/nudges-the-capsule-var-off-the-shaft: produced diff differs from the committed 🔺️diff/🔣️.json");
     let typed: RewritingDiff = pack::from_json_str(DIFF).expect("committed diff decodes into RewritingDiff");
     let layout = typed.rule_layout.as_ref().expect("change-rule-layout-point's delta carries a rule_layout map");
-    assert_eq!(layout.len(), 1, "a single-var move must appear in the delta as exactly one entry, got {layout:?}");
-    assert_eq!(layout.get("c"), Some(&Some(LayoutPoint { x: 24.0, y: 16.5 })), "the delta maps the addressed var to Some(new point)");
+    assert_eq!(layout.entries().len(), 1, "a single-var move must appear in the delta as exactly one entry, got {layout:?}");
+    assert_eq!(layout.entries().get("c").map(|entry| entry.operation()), Some(&replication::MapEntryOperation::Set(LayoutPoint { x: 24.0, y: 16.5 })), "the delta sets the addressed var to its new point");
     assert!(typed.parameter_bindings.is_none(), "change-rule-layout-point must never reach the parameter_bindings slot");
     assert!(typed.lhs_json.is_none() && typed.rhs_json.is_none() && typed.before_fixture_json.is_none(), "a layout move must not disturb any authored body");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own `RewritingDiff`.
 /// `RewritingDiff` carries a container-level `#[serde(default)]` and NO per-field
-/// `skip_serializing_if`, so all nine sparse slots — including the presence/config-lane ones
+/// `skip_serializing_if`, so all five document slots, including those
 /// `change-rule-layout-point` never touches — must be present as `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
@@ -131,7 +131,7 @@ async fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "change-rule-layout-point/nudges-the-capsule-var-off-the-shaft: committed diff JSON is not canonical");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     let slots = committed.as_object().expect("the committed diff is a JSON object");
-    assert_eq!(slots.len(), 9, "RewritingDiff emits all nine sparse slots, got {slots:?}");
+    assert_eq!(slots.len(), 5, "RewritingDiff emits all five document slots, got {slots:?}");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a

@@ -55,9 +55,20 @@ export function createArtifactRegistry(declarations: readonly ArtifactDeclaratio
     });
   }
   const deliverables = [...entries.values()];
-  for (let index = 0; index < deliverables.length; index++) for (const other of deliverables.slice(index + 1)) {
-    const entry = deliverables[index];
-    if (contains(portablePath(entry.path), portablePath(other.path)) || contains(portablePath(other.path), portablePath(entry.path))) findings.push({ rule: "CACHE-03", owner: other.owner, path: other.path, evidence: `Output overlaps ${entry.owner} at ${entry.path}` });
+  const paths = deliverables.map((entry, index) => ({ index, parts: portablePath(entry.path).split("/") })).sort((a, b) => a.parts.length - b.parts.length || a.index - b.index);
+  const ownersByPath = new Map<string, number[]>(), collisions: [number, number][] = [];
+  for (const { index, parts } of paths) {
+    let path = "";
+    for (const part of parts) {
+      path = path ? `${path}/${part}` : part;
+      for (const other of ownersByPath.get(path) ?? []) collisions.push(index < other ? [index, other] : [other, index]);
+    }
+    if (!ownersByPath.has(path)) ownersByPath.set(path, []);
+    ownersByPath.get(path)!.push(index);
+  }
+  for (const [first, second] of collisions.sort((a, b) => a[0] - b[0] || a[1] - b[1])) {
+    const entry = deliverables[first], other = deliverables[second];
+    findings.push({ rule: "CACHE-03", owner: other.owner, path: other.path, evidence: `Output overlaps ${entry.owner} at ${entry.path}` });
   }
   for (const [owner, path, category] of stores) entries.set(JSON.stringify([owner, path]), {
     owner, path, category, producer: null, consumers: [], cacheability: false, portability: "host",

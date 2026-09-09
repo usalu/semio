@@ -1,0 +1,17 @@
+{
+  "schema": "semio.rewriting.document-retirement/v1",
+  "budgets": [{ "items": 1, "bytes": 1 }, { "items": 3, "bytes": 5 }],
+  "snapshots": [
+    { "id": "empty", "value": { "beforeFixtureJson": "", "lhsJson": "", "rhsJson": "", "parameterBindings": {}, "ruleLayout": {} }, "bytes": 0 },
+    { "id": "nested-properties-and-layout", "value": { "beforeFixtureJson": "B", "lhsJson": "L", "rhsJson": "R", "parameterBindings": { "a": ["Ü", true, 4, null, { "nested": "😀" }] }, "ruleLayout": { "node": { "x": 1, "y": 2 } } }, "bytes": 45 }
+  ],
+  "mutations": [
+    { "value": { "mutation": "editBeforeFixture", "newBeforeFixtureJson": "Ü" }, "bytes": 2 },
+    { "value": { "mutation": "editLhs", "newLhsJson": "abc" }, "bytes": 3 },
+    { "value": { "mutation": "editRhs", "newRhsJson": "😀" }, "bytes": 4 },
+    { "value": { "mutation": "changeParameterBinding", "key": "a", "newValue": ["Ü", true, 4, null, { "nested": "😀" }] }, "bytes": 22 },
+    { "value": { "mutation": "removeParameterBinding", "key": "abc" }, "bytes": 3 },
+    { "value": { "mutation": "changeRuleLayoutPoint", "key": "node", "newPoint": { "x": 1, "y": 2 } }, "bytes": 20 },
+    { "value": { "mutation": "removeRuleLayoutPoint", "key": "node" }, "bytes": 4 }
+  ]
+}

@@ -7,11 +7,7 @@
 //! artifact's `⚙️engine`. This file is a routing table: `handle` → `NoteCommand::dispatch`, `render` →
 //! body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::op::NoteMutation;
-use crate::schema::empty_note_snapshot;
-use crate::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use crate::editor::note::commands::ink_apply_events;
-use crate::editor::note::commands::set_active_utility;
 use crate::editor::note::commands::{add_block, delete_block, delete_selection, duplicate_block, duplicate_selection, move_block, patch_blocks};
 use crate::editor::note::commands::{engagement_input, engagement_submit, navigator_engagement_input};
 use crate::editor::note::commands::{load_request, save_download};
@@ -27,11 +23,14 @@ use crate::editor::note::modes::edit::windows::{composite, navigator};
 use crate::editor::note::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::note::presence::{NotePresence, NotePresenceMutation};
 use crate::editor::note::terminology::note_play_labels;
+use crate::op::NoteMutation;
+use crate::schema::empty_note_snapshot;
+use crate::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactView, ConfigView, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UtilityCategory, UtilityDefinition, WindowEngagement,
-    WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
+    WindowMeasure,
 };
 use std::collections::HashMap;
 use store::EngineHandles;
@@ -155,7 +154,6 @@ semio_framework_plugin::app_commands! {
         "nudgeSelectionRightFast" as "nudge-selection-right-fast" => nudge_selection_right_fast::NudgeSelectionRightFast,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
-        "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "navigatorEngagementInput" as "navigator-engagement-input" => navigator_engagement_input::NavigatorEngagementInput,
         "saveDownload" as "save-download" => save_download::SaveDownload,
@@ -203,7 +201,6 @@ impl ArtifactEditor for NotePlayApp {
             "setGridSpacing" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "setCamera" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "setCameraZoom" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
-            "setActiveUtility" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "engagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "navigatorEngagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "loadRequest" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
@@ -245,7 +242,8 @@ impl ArtifactEditor for NotePlayApp {
         command: &NoteCommand,
         doc: &ArtifactView<'_, NoteSnapshot>,
         cfg: &ConfigView<'_, NoteConfig>,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
@@ -266,19 +264,22 @@ impl ArtifactEditor for NotePlayApp {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = note_play_labels(view_state);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectDirect");
         match body_key {
-            NOTE_PLAY_BODY_COMPOSITE => composite::render(document, config),
-            NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, config),
+            NOTE_PLAY_BODY_COMPOSITE => composite::render(document, config, active_utility),
+            NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, config, active_utility),
             NOTE_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             NOTE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            NOTE_PLAY_BODY_PROPERTIES => inspection_panel::render(document, &config.active_utility_id, labels),
+            NOTE_PLAY_BODY_PROPERTIES => inspection_panel::render(document, active_utility, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note diagnostic text admission failed")),
-        }.map(semio_framework_plugin::built_to_component_tree)
+        }
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 
     fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
-        HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.engagement_input)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::engagement(&config.active_utility_id))])
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectDirect");
+        HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.engagement_input)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::engagement(active_utility))])
     }
 
     fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -315,7 +316,7 @@ pub fn create_note_app() -> AppDefinition {
             .mutation("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"))
             // ➕️ Palette-visible block insertion (P1) with a staged argument form.
             .mutation("addBlock", LocalizedLabel::native("Add Block", "Block hinzufügen"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             // 🐚️ Import/export footer actions → panel Shell actions emitting host effects (S).
             .shell_action("loadRequest", LocalizedLabel::native("Import", "Importieren"))
             .shell_action("saveDownload", LocalizedLabel::native("Export", "Exportieren"))
@@ -351,11 +352,10 @@ pub fn create_note_app() -> AppDefinition {
             .action_with(note_internal_action("nudgeSelectionRightFast", LocalizedLabel::native("Nudge Selection Right Fast", "Auswahl schnell nach rechts verschieben"), ActionKind::Mutation))
             // 👁️ Ephemeral view state — engagement/camera scratch, never a document operation. Selection/
             // hover are no longer declared here: framework-owned, injected via `.interaction(...)` below.
-            .action_with(note_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
             .action_with(note_internal_action("navigatorEngagementInput", LocalizedLabel::native("Navigator Engagement Input", "Navigator-Eingabe"), ActionKind::View))
-            .action_with(note_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(note_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
-            .action_with(note_internal_action(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Werkzeug festlegen"), ActionKind::View))
             // 📝️ Staged argument forms for the palette-eligible actions.
             .action_args("addBlock", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Typ"), vec![
@@ -405,7 +405,6 @@ pub fn create_note_app() -> AppDefinition {
             .action_interactive_job("nudgeSelectionRightFast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setCameraZoom", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveUtility", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("navigatorEngagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("saveDownload", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)

@@ -25,11 +25,7 @@ pub fn app_schema_descriptor() -> ::semio_framework_schema::AppSchemaDescriptor 
     ::semio_framework_schema::AppSchemaDescriptor {
         id: "s.fem.3d",
         config: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         presence: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),

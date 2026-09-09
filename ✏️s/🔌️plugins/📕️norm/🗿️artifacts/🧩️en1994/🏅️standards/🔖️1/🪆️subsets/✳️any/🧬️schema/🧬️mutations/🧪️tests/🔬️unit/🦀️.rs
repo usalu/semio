@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::document::AnnexChoice;
 use protocol::{Mutation, MutationDiff, SemanticMutation};

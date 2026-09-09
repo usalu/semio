@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::forms::FormsCommand;
 use crate::editor::forms::commands::remove_question_option::RemoveQuestionOption;
 use crate::editor::forms::testkit::{dispatch, forms_app};
+use crate::editor::forms::FormsCommand;
 use AddQuestionOption;
 
 async fn single_or_multi_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {

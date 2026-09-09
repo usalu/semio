@@ -1,8 +1,8 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.artifact;
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
 
-// 🧬️ Rewriting artifact schema — every field with its state class.
-
+// 🧬️ Rewriting's durable document contract.
 message RewritingArtifact {
   // @state artifact
   string before_fixture_json = 1;
@@ -11,24 +11,9 @@ message RewritingArtifact {
   // @state artifact
   string rhs_json = 3;
   // @state artifact
-  map<string, string> parameter_bindings = 4;
+  map<string, semio.framework.value.DslValue> parameter_bindings = 4;
   // @state artifact
   map<string, LayoutPoint> rule_layout = 5;
-  // @state config
-  map<string, string> lod_mode_by_window = 9;
-  // @state config
-  Camera before_pane_camera = 10;
-  // @state config
-  // @state config
 }
 
-message LayoutPoint {
-  double x = 1;
-  double y = 2;
-}
-
-message Camera {
-  double x = 1;
-  double y = 2;
-  double zoom = 3;
-}
+message LayoutPoint { double x = 1; double y = 2; }

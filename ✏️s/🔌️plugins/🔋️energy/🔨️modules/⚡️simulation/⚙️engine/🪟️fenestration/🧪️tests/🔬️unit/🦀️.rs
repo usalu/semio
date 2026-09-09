@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn double_glazing() -> WindowModel {

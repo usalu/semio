@@ -40,8 +40,6 @@ pub struct Block5dDiff {
     pub camera3d: Option<BlockCamera3d>,
     #[state(artifact)]
     pub meta: Option<BlockMeta>,
-    #[state(presence)]
-    pub selected_ids: Option<Block5dStringList>,
 }
 //#endregion 🔖️Diff
 

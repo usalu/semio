@@ -272,7 +272,7 @@ pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, PaintBucket, U
 #[cfg(feature = "wgpu-engine")]
 pub use events::{resolve_overlay_placement, CaptureKind, DismissPolicy, DragGhost, DragPayload, DragSession, EventModifiers, ImeEvent, OpenOverlay, OverlayAnchor, OverlayKind, OverlayPlacement, PointerButton, ScrollAxis, UiCommand, UiEvent};
 #[cfg(feature = "wgpu-engine")]
-pub use scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot, SlotContent};
+pub use scene_slots::{SceneHost, ScenePaintCursor, ScenePaintCursorError, ScenePaintStep, SceneSlot, SlotContent};
 #[cfg(feature = "wgpu-engine")]
 pub use shell::{Shell, ShellEvent};
 // 🧵️ W2 wiring: the retained-mode façade itself (`engine::Ui` — `apply_tree`/`frame`/

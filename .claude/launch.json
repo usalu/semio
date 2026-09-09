@@ -50,9 +50,9 @@
       "name": "puzzle3d-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
-        "3d"
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:dev-puzzle3d-react-dev"
       ],
       "port": 6013,
       "env": {
@@ -64,9 +64,11 @@
       "name": "puzzle3d-wgpu",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
-        "3d"
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:dev",
+        "--",
+        "puzzle3d"
       ],
       "port": 6113,
       "env": {
@@ -197,6 +199,11 @@
         "@semio-tech/mit-bestand-demonstrator:dev"
       ],
       "port": 6029
+    },
+    {
+      "name": "puzzle3d-react-attach",
+      "url": "http://localhost:6013",
+      "port": 6013
     }
   ]
 }

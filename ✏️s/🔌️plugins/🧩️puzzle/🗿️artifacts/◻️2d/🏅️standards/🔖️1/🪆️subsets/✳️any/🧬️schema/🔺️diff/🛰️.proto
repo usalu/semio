@@ -16,48 +16,8 @@ message Puzzle2dDiff {
   optional Puzzle2dEdgesDelta edges = 5;
   // @state artifact
   optional Puzzle2dMeta meta = 6;
-  // @state presence
-  optional Puzzle2dStringList selected_ids = 7;
-  // @state presence
-  optional string active_utility_id = 8;
-  // @state config
-  optional double camera_x = 9;
-  // @state config
-  optional double camera_y = 10;
-  // @state config
-  optional double camera_zoom = 11;
-  // @state config
-  optional string selection_method = 12;
-  // @state config
-  optional bool grid_snap_enabled = 13;
-  // @state config
-  optional double grid_factor = 14;
-  // @state config
-  optional double suggestion_offset = 15;
-  // @state config
-  optional uint32 fill_count = 16;
-  // @state config
-  optional uint32 brush_candidate_index = 17;
-  // @state config
-  optional string brush_candidate_source_handle_id = 18;
   // @state config
   // @state config
-  // @state config
-  optional string lod_mode_by_pane_json = 21;
-  // @state config
-  optional string engagement_input_by_pane_json = 22;
-  // @state config
-  optional string brush_candidates_json = 23;
-  // @state config
-  optional string node_kind_weights_json = 24;
-  // @state config
-  optional string handle_kind_weights_json = 25;
-  // @state config
-  optional string active_utility_by_window_id_json = 26;
-  // @state artifact
-  optional string hovered_node_id = 27;
-  // @state artifact
-  optional int64 preview_seq = 28;
 }
 
 message Puzzle2dArtifact { string schema = 1; }

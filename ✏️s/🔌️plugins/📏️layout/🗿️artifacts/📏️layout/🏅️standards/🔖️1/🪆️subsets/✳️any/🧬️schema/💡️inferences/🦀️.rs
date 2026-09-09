@@ -8,7 +8,7 @@ use crate::LayoutSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_layout_topology};
+use super::topology::compute_layout_topology;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a layout snapshot. One field per named inference under
@@ -64,13 +64,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::LayoutBuil
 pub fn layout_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.layout.layout.inference",
-        inference: schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

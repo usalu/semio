@@ -14,7 +14,7 @@ use crate::schema::diff::*;
 
 //#region 🔖️Apply
 impl SequenceDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document fields onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &SequenceArtifact) -> protocol::MutationApplyResult<SequenceArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -26,15 +26,6 @@ impl SequenceDiff {
             }
             if let Some(content) = &self.content {
                 next.content = content.clone();
-            }
-            if let Some(value) = &self.last_run_json {
-                next.last_run_json = value.clone();
-            }
-            if let Some(value) = &self.orientation {
-                next.orientation = value.clone();
-            }
-            if let Some(value) = &self.camera {
-                next.camera = value.clone();
             }
             next
         })
@@ -71,9 +62,6 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
         }
         take!(schema);
         take!(content);
-        take!(last_run_json);
-        take!(orientation);
-        take!(camera);
     }
 }
 //#endregion 🔖️Apply

@@ -1,8 +1,8 @@
 //! ✅️ Remodeling play app panel — the Quality tab: the whole-run QC report, including the watertight
 //! sub-report.
 
-use crate::RemodelingSnapshot;
 use crate::editor::remodeling::terminology::RemodelingLabels;
+use crate::RemodelingSnapshot;
 use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
 
 //#region 🔖️Constants

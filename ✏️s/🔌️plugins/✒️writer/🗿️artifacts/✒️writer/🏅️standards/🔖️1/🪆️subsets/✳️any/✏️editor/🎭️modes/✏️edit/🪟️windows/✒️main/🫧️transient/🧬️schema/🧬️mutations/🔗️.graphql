@@ -1,0 +1,4 @@
+union WriterMainWindowTransientMutation = SetWriterEditorSelection | SetWriterLintGeneration | SetWriterEngagementInput
+type SetWriterEditorSelection { selection: WriterEditorSelection }
+type SetWriterLintGeneration { value: Int! }
+type SetWriterEngagementInput { value: String! }

@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::mutations::create_shape_model::CreateShapeModel;
-use crate::{CAD_DOCUMENT_SCHEMA, empty_cad_snapshot, testkit::sample_model_child};
-use store::{ArtifactCommand, create_document_envelope};
+use crate::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
+use store::{create_document_envelope, ArtifactCommand};
 
 #[semio_framework_async_macros::async_test]
 async fn encode_decode_op_round_trips_a_representative_operation() {

@@ -8,24 +8,24 @@
 //! scalar/inline — no `mode_def`/`window_kind_def` object is built anywhere in the pre-migration code).
 
 use crate::app_surface::{DisplayMode, ResultDisplay};
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
-use crate::Fem2dSnapshot;
 use crate::editor::fem2d::commands::{
-    add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera,     set_result_display, set_self_weight,
+    add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera,
+    set_result_display, set_self_weight,
 };
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::editor::fem2d::modes::edit;
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
 use crate::editor::fem2d::modes::edit::windows::results as results_window;
 use crate::model::{Dof, ElementResult};
+use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::Fem2dSnapshot;
+use dsl::json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{
     built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
-    ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView,
-    DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
+    ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
 };
-use dsl::json::Value;
 use std::collections::HashMap;
 use store::EngineHandles;
 
@@ -77,8 +77,25 @@ semio_framework_plugin::app_commands! {
 /// route table and `create_fem2d_app`'s `Migrated` classification list are the same nineteen ids
 /// (pinned by `retained_routes_cover_every_command_exactly_once`).
 const FEM2D_RETAINED_TOOL_IDS: &[&str] = &[
-    "addNode", "addBar", "addBeam", "addMaterial", "addSection", "addSupport", "addNodalLoad", "addMemberUdl", "addAreaLoad", "addRegion", "addLoadCase", "addCombination", "setSelfWeight", "setAnalysisSettings", "removeSelection", "setActiveExample", "setCamera",
-    "setResultDisplay", ];
+    "addNode",
+    "addBar",
+    "addBeam",
+    "addMaterial",
+    "addSection",
+    "addSupport",
+    "addNodalLoad",
+    "addMemberUdl",
+    "addAreaLoad",
+    "addRegion",
+    "addLoadCase",
+    "addCombination",
+    "setSelfWeight",
+    "setAnalysisSettings",
+    "removeSelection",
+    "setActiveExample",
+    "setCamera",
+    "setResultDisplay",
+];
 const FEM2D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.2d.tool-command.v1";
 const FEM2D_RETAINED_RAW_BYTES: usize = 65_536;
 const FEM2D_RETAINED_WORK_ITEMS: usize = 4_096;
@@ -141,8 +158,10 @@ fn fem2d_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, NoDraftMutation>, Fault> {
-    if !FEM2D_RETAINED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("fem2d-command-retained-route-rejected")); }
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    if !FEM2D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::from("fem2d-command-retained-route-rejected"));
+    }
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 struct Fem2dRetainedCommandJobFactory {
@@ -216,7 +235,9 @@ fn fem2d_config_publication_bytes(mutation: &Fem2dConfigMutation) -> Result<usiz
         Fem2dConfigMutation::SetResultDisplay { source_id, mode, .. } => source_id.as_ref().map_or(0, String::len).saturating_add(mode.len()),
         Fem2dConfigMutation::SetCamera { .. } => 0,
     };
-    if bytes > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("fem2d-config-text-envelope".into()); }
+    if bytes > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES {
+        return Err("fem2d-config-text-envelope".into());
+    }
     Ok(FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES)
 }
 
@@ -230,14 +251,28 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem2dConfig, Fem2dConfigMutat
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: fem2d_config_publication_bytes(mutation)? })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Fem2dConfig, Fem2dConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Fem2dConfig, Fem2dConfigMutation>> {
-        if request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > 64 || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err() || fem2d_config_text_bytes(request.base.get()) > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Fem2dConfig, Fem2dConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Fem2dConfig, Fem2dConfigMutation>> {
+        if request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > 64
+            || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+            || fem2d_config_text_bytes(request.base.get()) > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES
+        {
             return Err(request);
         }
         Ok(Box::new(Fem2dConfigPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
         }))
     }
 }
@@ -257,8 +292,12 @@ struct Fem2dConfigPreparation {
 
 impl store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation> for Fem2dConfigPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || grant.maximum_bytes < FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.checkpoint.cursor != 0 { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if !grant.permits_one() || grant.maximum_bytes < FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.checkpoint.cursor != 0 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
         let base = self.base.as_ref().ok_or_else(|| "fem2d-config-base-owner-missing".to_string())?;
         let mutation = self.mutation.as_ref().ok_or_else(|| "fem2d-config-mutation-owner-missing".to_string())?;
         let mut next = base.get().clone();
@@ -268,22 +307,44 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation> fo
                 Fem2dConfigMutation::Snapshot { config: base.get().clone() }
             }
             Fem2dConfigMutation::SetResultDisplay { source_id, mode, mode_index } => {
-                next.result_source_id = source_id.clone(); next.result_mode = mode.clone(); next.result_mode_index = *mode_index;
+                next.result_source_id = source_id.clone();
+                next.result_mode = mode.clone();
+                next.result_mode_index = *mode_index;
                 Fem2dConfigMutation::SetResultDisplay { source_id: base.get().result_source_id.clone(), mode: base.get().result_mode.clone(), mode_index: base.get().result_mode_index }
             }
-            Fem2dConfigMutation::SetCamera { camera } => { next.camera = camera.clone(); Fem2dConfigMutation::SetCamera { camera: base.get().camera.clone() } }
+            Fem2dConfigMutation::SetCamera { camera } => {
+                next.camera = camera.clone();
+                Fem2dConfigMutation::SetCamera { camera: base.get().camera.clone() }
+            }
         };
-        if fem2d_config_text_bytes(&next) > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("fem2d-config-post-text-envelope".into()); }
+        if fem2d_config_text_bytes(&next) > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES {
+            return Err("fem2d-config-post-text-envelope".into());
+        }
         let authority = self.authority.as_ref().ok_or_else(|| "fem2d-config-authority-missing".to_string())?;
         let id = format!("fem2d-config-{}", authority.next_sequence_number());
         let edit = protocol::Edit {
-            id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![mutation.clone()], inverse: vec![inverse],
+            id: id.clone(),
+            actor: Some(authority.actor().to_string()),
+            forwards: vec![mutation.clone()],
+            inverse: vec![inverse],
             mutation_meta: vec![protocol::MutationMeta {
-                mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-                author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())),
+                timestamp: authority.next_clock(),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: None,
+                origin: Default::default(),
             }],
-            description: self.description.clone(), coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+            description: self.description.clone(),
+            coalesce_key: None,
+            sequence_number: authority.next_sequence_number(),
+            started_at: String::new(),
+            finished_at: None,
         };
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(next))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
@@ -291,22 +352,38 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation> fo
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem2dConfig, Fem2dConfigMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem2dConfig, Fem2dConfigMutation>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem2dConfig, Fem2dConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem2dConfig, Fem2dConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
         if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("fem2d-config-base-retirement-rejected".into()); }
+            if !base.return_to_registry() {
+                return Err("fem2d-config-base-retirement-rejected".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if self.authority.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES }); }
+        if self.authority.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
+        }
         Ok(store::SnapshotRetirementStep::Complete)
     }
 
@@ -364,8 +441,14 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation>
             return Err(request);
         }
         Ok(Box::new(Fem2dArtifactPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
         }))
     }
 }
@@ -386,13 +469,28 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
         let authority = self.authority.as_ref().ok_or_else(|| "fem2d-artifact-authority-missing".to_string())?;
         let id = format!("fem2d-retained-{}", authority.next_sequence_number());
         let edit = protocol::Edit {
-            id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![mutation], inverse,
+            id: id.clone(),
+            actor: Some(authority.actor().to_string()),
+            forwards: vec![mutation],
+            inverse,
             mutation_meta: vec![protocol::MutationMeta {
-                mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-                author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())),
+                timestamp: authority.next_clock(),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: None,
+                origin: Default::default(),
             }],
-            description: self.description.take(), coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+            description: self.description.take(),
+            coalesce_key: None,
+            sequence_number: authority.next_sequence_number(),
+            started_at: String::new(),
+            finished_at: None,
         };
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
@@ -400,11 +498,21 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
         if !self.closing || grant.maximum_items == 0 {
@@ -414,11 +522,15 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("fem2d-artifact-base-retirement-rejected".into()); }
+            if !base.return_to_registry() {
+                return Err("fem2d-artifact-base-retirement-rejected".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.authority = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
         }
@@ -574,8 +686,8 @@ fn fem2d_dofs(value: Option<&str>) -> Vec<crate::FemDof> {
 //#endregion 🔖️ActionArgHelpers
 
 //#region 🔖️Fem2dPlayApp
-/// 🧪️ B1: unit struct — every former `Fem2dPlayApp` `RefCell` field (`result_display`, `camera`) plus
-/// the deleted `ViewModel::locale` now live in `crate::editor::fem2d::config::Fem2dConfig`, written
+/// 🧪️ B1: unit struct — every former `Fem2dPlayApp` `RefCell` field (`result_display`, `camera`) now
+/// lives in `crate::editor::fem2d::config::Fem2dConfig`, written
 /// through `Fem2dConfigMutation`s. v0 design unchanged: results are never persisted or cached —
 /// `fem2d_solve`/`fem2d_solve_all` run fresh inside `render()`/`export_media` whenever the results
 /// window is drawn or the `"results:out"` port is read.
@@ -660,7 +772,17 @@ impl ArtifactEditor for Fem2dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: None,
+                operation: operation_context,
+                completion: request.completion,
+            },
             Fem2dCommand::command_id,
             FEM2D_RETAINED_RAW_BYTES,
             FEM2D_RETAINED_WORK_ITEMS,
@@ -781,8 +903,12 @@ impl ArtifactEditor for Fem2dPlayApp {
         let list = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_array).map(|items| items.iter().filter_map(dsl::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
         match action {
             "addNode" => Ok(Fem2dCommand::AddNode(add_node::AddNode { x: number("x").unwrap_or_default(), y: number("y").unwrap_or_default() })),
-            "addBar" => Ok(Fem2dCommand::AddBar(add_bar::AddBar { start: text("start").unwrap_or_default(), end: text("end").unwrap_or_default(), material_id: text("materialId").unwrap_or_default(), section_id: text("sectionId").unwrap_or_default() })),
-            "addBeam" => Ok(Fem2dCommand::AddBeam(add_beam::AddBeam { start: text("start").unwrap_or_default(), end: text("end").unwrap_or_default(), material_id: text("materialId").unwrap_or_default(), section_id: text("sectionId").unwrap_or_default() })),
+            "addBar" => {
+                Ok(Fem2dCommand::AddBar(add_bar::AddBar { start: text("start").unwrap_or_default(), end: text("end").unwrap_or_default(), material_id: text("materialId").unwrap_or_default(), section_id: text("sectionId").unwrap_or_default() }))
+            }
+            "addBeam" => {
+                Ok(Fem2dCommand::AddBeam(add_beam::AddBeam { start: text("start").unwrap_or_default(), end: text("end").unwrap_or_default(), material_id: text("materialId").unwrap_or_default(), section_id: text("sectionId").unwrap_or_default() }))
+            }
             "addMaterial" => Ok(Fem2dCommand::AddMaterial(add_material::AddMaterial { name: text("name").unwrap_or_default(), e: number("e").unwrap_or(2.1e11) })),
             "addSection" => Ok(Fem2dCommand::AddSection(add_section::AddSection { name: text("name").unwrap_or_default(), area: number("area").unwrap_or_default(), iy: number("iy").unwrap_or_default() })),
             "addSupport" => Ok(Fem2dCommand::AddSupport(add_support::AddSupport { node_id: text("nodeId").unwrap_or_default(), fixed: fem2d_dofs(text("fixed").as_deref()) })),
@@ -798,11 +924,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 wy: number("wy").unwrap_or_default(),
                 case_id: text("caseId").filter(|id| !id.is_empty()),
             })),
-            "addAreaLoad" => Ok(Fem2dCommand::AddAreaLoad(add_area_load::AddAreaLoad {
-                region_id: text("regionId").unwrap_or_default(),
-                pressure: number("pressure").unwrap_or_default(),
-                case_id: text("caseId").filter(|id| !id.is_empty()),
-            })),
+            "addAreaLoad" => Ok(Fem2dCommand::AddAreaLoad(add_area_load::AddAreaLoad { region_id: text("regionId").unwrap_or_default(), pressure: number("pressure").unwrap_or_default(), case_id: text("caseId").filter(|id| !id.is_empty()) })),
             "addRegion" => Ok(Fem2dCommand::AddRegion(add_region::AddRegion {
                 x: number("x").unwrap_or_default(),
                 y: number("y").unwrap_or_default(),
@@ -836,7 +958,8 @@ impl ArtifactEditor for Fem2dPlayApp {
         command: &Fem2dCommand,
         doc: &ArtifactView<'_, Fem2dSnapshot>,
         cfg: &ConfigView<'_, Fem2dConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -855,7 +978,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let camera = &cfg.snapshot.camera;
         match body_key {
             model_window::BODY_KEY => crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual)),
@@ -1003,8 +1126,8 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::number("deformationScale", LocalizedLabel::native("Deformation Scale", "Verformungsmaßstab")),
             ])
             .mutation("removeSelection", LocalizedLabel::native("Remove Selection", "Auswahl entfernen"))
-            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             // 📚️ The option id is the bundled example's own `ExampleSource` id, because the shell's
             // navbar switcher dispatches `setActiveExample { exampleId }` straight from
             // `PluginManifest.examples` (`ShellHost`'s `dispatchActiveExample`) — a select option that

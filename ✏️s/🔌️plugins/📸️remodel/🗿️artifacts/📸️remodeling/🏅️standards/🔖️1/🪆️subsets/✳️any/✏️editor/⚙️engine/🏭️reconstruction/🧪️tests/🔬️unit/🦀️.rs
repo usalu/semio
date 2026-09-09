@@ -1,4 +1,3 @@
-
 use super::*;
 
 // #region 🔖️TestFixtures
@@ -103,7 +102,11 @@ fn norm3(a: [f64; 3]) -> f64 {
 }
 fn normalize3(a: [f64; 3]) -> [f64; 3] {
     let n = norm3(a);
-    if n < 1e-15 { [0.0, 0.0, 0.0] } else { scale3(a, 1.0 / n) }
+    if n < 1e-15 {
+        [0.0, 0.0, 0.0]
+    } else {
+        scale3(a, 1.0 / n)
+    }
 }
 
 /// 🎥️ Look-at camera pose (world→camera), mirroring `remodeling_mesh`'s own test helper of the same

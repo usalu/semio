@@ -17,40 +17,6 @@
     "generation": {
       "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/GenerationPlayState",
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/Generation2dStringList",
-      "x-semio-state": "presence"
-    },
-    "graphCamera": {
-      "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/CameraJson",
-      "x-semio-state": "config"
-    },
-    "showMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectedGenerationId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "presence"
-    },
-    "generationPreviewText": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {
@@ -60,10 +26,7 @@
       "additionalProperties": false,
       "required": [
         "fixture",
-        "generation",
-        "selectedIds",
-        "graphCamera",
-        "showMode"
+        "generation"
       ],
       "properties": {
         "fixture": {
@@ -71,24 +34,6 @@
         },
         "generation": {
           "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/GenerationPlayState"
-        },
-        "selectedIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "graphCamera": {
-          "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/CameraJson"
-        },
-        "showMode": {
-          "type": "string"
-        },
-        "selectedGenerationId": {
-          "type": "string"
-        },
-        "generationPreviewText": {
-          "type": "string"
         }
       }
     }

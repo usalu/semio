@@ -1,18 +1,12 @@
 //! 🧮️ Trinity Jack app — view-state config + config operations.
 
-use crate::Camera;
-use std::collections::BTreeMap;
-
-/// 🧮️ Jack editor configuration contains authored query and window configuration.
+/// 🧮️ Jack editor configuration contains the authored shared query workspace.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.jackcfg")]
 #[dsl(layout = "lines")]
 pub struct JackConfig {
-    #[dsl(block)]
-    pub camera: Camera,
     pub jack_query: String,
-    pub lod_mode_by_window: BTreeMap<String, String>,
 }
 
 //#region 🔖️ArtifactCodec
@@ -61,11 +55,7 @@ impl store::ArtifactPack for JackConfig {
 
 impl Default for JackConfig {
     fn default() -> Self {
-        Self {
-            camera: Camera::default(),
-            jack_query: String::new(),
-            lod_mode_by_window: BTreeMap::new(),
-        }
+        Self { jack_query: String::new() }
     }
 }
 

@@ -18,9 +18,9 @@
 //! `PdfObject`'s real shape field-for-field instead of inventing a parallel vocabulary.
 
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPredictor, PdfSnapshot};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 use std::collections::{HashMap, HashSet};
 //#region 🔖️PageDiff
 /// 📄️ Sparse per-field patch for one `PdfPage` (a WEAK entity per the recipe -- a value struct,
@@ -1790,9 +1790,6 @@ pub(crate) fn dec_box_bin(reader: &mut store::ByteReader<'_>) -> Result<[f64; 4]
     Ok([read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?])
 }
 
-
-
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_dict_entry_bin(e: &PdfDictEntry, out: &mut Vec<u8>) {
     write_str_lp(out, &e.key);
@@ -1934,7 +1931,6 @@ pub(crate) fn dec_pdf_info_bin(reader: &mut store::ByteReader<'_>) -> Result<Pdf
     let mut read_opt = || -> Result<Option<String>, String> { Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) };
     Ok(PdfInfo { title: read_opt()?, author: read_opt()?, subject: read_opt()?, keywords: read_opt()?, creator: read_opt()?, producer: read_opt()? })
 }
-
 
 //#endregion 🔖️ObjectValueBinaryCodecs
 
@@ -2612,6 +2608,6 @@ mod tests;
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::standards::v1_7::subsets::base::schema::snapshot::ObjRef;
-pub use crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter;
 pub use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
+pub use crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter;
 //#endregion 🔁️Re-exports

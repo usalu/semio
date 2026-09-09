@@ -5,11 +5,10 @@
   "oneOf": [
     {
       "type": "object",
-      "required": ["kind", "request", "locale", "checkpointToken", "zoneTimestepMinutes", "systemTimestepMinutes", "warmupDays", "runPeriodStartMonth", "runPeriodStartDay", "runPeriodEndMonth", "runPeriodEndDay"],
+      "required": ["kind", "request", "checkpointToken", "zoneTimestepMinutes", "systemTimestepMinutes", "warmupDays", "runPeriodStartMonth", "runPeriodStartDay", "runPeriodEndMonth", "runPeriodEndDay"],
       "properties": {
         "kind": { "const": "start" },
         "request": { "type": "integer", "minimum": 1 },
-        "locale": { "enum": ["en", "de"] },
         "zoneTimestepMinutes": { "type": "integer", "minimum": 1, "maximum": 60 },
         "systemTimestepMinutes": { "type": "integer", "minimum": 1, "maximum": 60 },
         "warmupDays": { "type": "integer", "minimum": 0, "maximum": 365 },

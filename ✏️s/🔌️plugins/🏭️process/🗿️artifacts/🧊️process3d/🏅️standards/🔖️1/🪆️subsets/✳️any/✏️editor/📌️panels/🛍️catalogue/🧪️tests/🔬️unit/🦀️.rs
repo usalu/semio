@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::process3d::testkit;
 
@@ -50,7 +49,7 @@ async fn catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one() {
             ],
         }],
     };
-    let labels = crate::editor::process3d::terminology::process3d_labels(&crate::editor::process3d::config::Process3dConfig::default());
+    let labels = crate::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::default());
     let node = render(&fixture, "[]", labels).expect("catalogue renders");
     let rendered = serde_json::to_string(&node).expect("render json");
     assert!(rendered.contains("process3d-catalogue.saw.shallowCrosscut"), "expected the violated capability item: {rendered}");

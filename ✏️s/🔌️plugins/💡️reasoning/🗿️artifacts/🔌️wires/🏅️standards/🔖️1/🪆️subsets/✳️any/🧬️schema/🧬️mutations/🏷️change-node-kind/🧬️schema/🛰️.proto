@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.mutation.change_node_kind;
+
+message ChangeNodeKind {
+  string node_id = 1;
+  string new_node_kind = 2;
+}

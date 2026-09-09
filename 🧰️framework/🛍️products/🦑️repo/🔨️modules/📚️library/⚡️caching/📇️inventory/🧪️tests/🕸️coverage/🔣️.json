@@ -1,0 +1,6 @@
+{
+  "projects": ["repo", "@semio-tech/flow-core"],
+  "tags": ["type:test"],
+  "uncachedExecutors": ["@nx/js:release-publish"],
+  "properties": ["executor", "cache", "continuous", "inputs", "outputs", "dependsOn", "configurations"]
+}

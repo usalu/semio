@@ -43,8 +43,6 @@ pub struct Din18599Diff {
     pub energy_carrier: Option<String>,
     #[state(artifact)]
     pub reference_q_p_kwh: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

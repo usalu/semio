@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn test_bundle() -> Plugin<DemonstratorApps> {

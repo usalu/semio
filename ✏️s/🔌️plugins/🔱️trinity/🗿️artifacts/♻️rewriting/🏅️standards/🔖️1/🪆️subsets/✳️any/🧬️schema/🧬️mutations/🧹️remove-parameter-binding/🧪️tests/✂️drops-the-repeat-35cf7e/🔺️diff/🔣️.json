@@ -3,9 +3,15 @@
   "lhsJson": null,
   "rhsJson": null,
   "parameterBindings": {
-    "repeat": null
+    "entries": [
+      {
+        "key": "repeat",
+        "precondition": "present",
+        "operation": {
+          "kind": "remove"
+        }
+      }
+    ]
   },
-  "ruleLayout": null,
-  "lodModeByWindow": null,
-  "beforePaneCamera": null
+  "ruleLayout": null
 }

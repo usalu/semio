@@ -10,8 +10,8 @@
 //! convention for its own structured (non-child) fields.
 
 use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
-use dsl::{FromValue, ToValue};
 use ::semio_framework_schema::ArtifactSchema;
+use dsl::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 
 //#region 🔹Snapshot
@@ -45,16 +45,9 @@ pub struct GisMapSnapshot {
     pub value: GisMapValueChild,
 }
 
-/// 🧮️ A deterministic descriptor key retained for content comparison; child membership does not
-/// derive identity from this value.
-pub(crate) fn gis_map_content_key(positions: &[MapFeature], routes: &[MapFeature], regions: &[MapFeature]) -> String {
-    dsl::os_pack::json::to_json_string(&(positions.to_vec(), routes.to_vec(), regions.to_vec()))
-}
-
 impl Default for GisMapSnapshot {
     fn default() -> Self {
-        let content_key = gis_map_content_key(&[], &[], &[]);
-        Self { positions: Vec::new(), routes: Vec::new(), regions: Vec::new(), drawing: gis_map_drawing_child_handle(&content_key), image: None, value: gis_map_value_child_handle(&content_key) }
+        Self { positions: Vec::new(), routes: Vec::new(), regions: Vec::new(), drawing: gis_map_drawing_child_handle(), image: None, value: gis_map_value_child_handle() }
     }
 }
 //#endregion 🔹Snapshot

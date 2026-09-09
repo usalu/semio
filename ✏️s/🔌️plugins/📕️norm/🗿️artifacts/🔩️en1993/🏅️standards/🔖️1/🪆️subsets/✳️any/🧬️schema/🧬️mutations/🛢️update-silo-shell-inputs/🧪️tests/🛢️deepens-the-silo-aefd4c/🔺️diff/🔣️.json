@@ -28,12 +28,12 @@
   "stainlessFYMpa": null,
   "platedLambdaP": null,
   "platedSigmaEdMpa": null,
-  "siloTMm": 12.0,
-  "siloRMm": 3500.0,
-  "shellSigmaXEdMpa": 190.0,
+  "siloTMm": 12,
+  "siloRMm": 3500,
+  "shellSigmaXEdMpa": 190,
   "siloK": 0.625,
-  "siloGammaKnM3": 22.0,
-  "siloDepthM": 8.0,
+  "siloGammaKnM3": 22,
+  "siloDepthM": 8,
   "boltFEdKn": null,
   "boltNBolts": null,
   "boltASMm2": null,
@@ -73,6 +73,5 @@
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

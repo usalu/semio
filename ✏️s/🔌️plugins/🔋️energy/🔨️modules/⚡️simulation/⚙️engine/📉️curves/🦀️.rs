@@ -1,8 +1,8 @@
 //! 📈️ Equipment performance curves: polynomials, biquadratics, triquadratics, lookup tables.
 
 use crate::error::{Diagnostics, Error, Severity};
-use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 pub use crate::num::{biquadratic, lerp, poly_eval, LookupTable2D};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️CurveKind
 /// 📈️ Polynomial curve degree for performance functions.

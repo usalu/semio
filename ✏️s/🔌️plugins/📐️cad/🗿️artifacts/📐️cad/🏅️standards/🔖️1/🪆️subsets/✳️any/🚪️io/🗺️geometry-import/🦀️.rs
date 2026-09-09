@@ -12,10 +12,10 @@
 //! rule for `EngineRep`-class types — the same class of transient bridge this module's sibling
 //! (`step_text` ↔ `SemioBrepSnapshot`, in `🚪️io/🦀️.rs`) already uses for STEP.
 
+use protocol::DslValue;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
-use protocol::DslValue;
 use std::collections::HashMap;
 // 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
 // hand-rolled `v`/`f`-only OBJ writer this file used to feed the kernel's own `import_obj` reader

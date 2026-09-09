@@ -1,14 +1,13 @@
-
 use super::*;
 use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
 use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
 use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_xlsx, sniff_xlsx_bytes};
 use crate::standards::v_ecma_376::subsets::base::io::{
-    REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART, WORKSHEET_CONTENT_TYPE, XlsxError,
-    column_index, column_letter,
+    column_index, column_letter, XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART,
+    WORKSHEET_CONTENT_TYPE,
 };
 use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
-use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn cell(row: u32, col: u32, value: XlsxCellValue) -> XlsxCell {

@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn snapshot_with_text(text: &str) -> WriterSnapshot {

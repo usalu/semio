@@ -29,9 +29,7 @@
 /// 🧱 Vertex positions with outer and inner vertex loops for each face.
 pub type SolidFaceLoops = (Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>);
 
-
 use std::collections::HashMap;
-
 
 #[path = "📦️mesh-io/🦀️.rs"]
 mod mesh_io;
@@ -63,19 +61,17 @@ use crate::standards::v1::subsets::brep::schema::inferences::validation_report::
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, coons_patch_nurbs, interpolate_curve, interpolate_surface_grid, ParamMethod};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv as surface_closest_uv_fn;
 use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv as surface_closest_uv_fn;
 use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3 as NativeVec3};
-use mesh_io::{export_solid_mesh, export_solid_glb, export_solid_obj, export_solid_stl, import_mesh_to_body, import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer};
 use contract::Vec3 as EVec3;
+use mesh_io::{export_solid_glb, export_solid_mesh, export_solid_obj, export_solid_stl, import_glb_to_body, import_mesh_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer};
 use step::{read_step, write_step};
-
-
 
 // #region 🔖️ContractTypes
 

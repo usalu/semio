@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::EntityId;
 use crate::kernel::{EntityHeader, TextField};
 use crate::registers::{AuditAction, AuditEvent};
 use crate::sample_plugin;
+use crate::EntityId;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_text_editor_surface_and_body_key() {

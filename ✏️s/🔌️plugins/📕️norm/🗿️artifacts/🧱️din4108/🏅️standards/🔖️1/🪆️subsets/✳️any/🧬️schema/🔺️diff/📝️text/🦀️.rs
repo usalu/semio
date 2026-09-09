@@ -73,9 +73,6 @@ impl Din4108Diff {
             if let Some(value) = &self.declared_application_class {
                 next.declared_application_class = value.clone();
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -175,7 +172,6 @@ impl MutationDiff<Din4108Snapshot> for Din4108Diff {
         take!(bb2_details_conform);
         take!(application_type);
         take!(declared_application_class);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

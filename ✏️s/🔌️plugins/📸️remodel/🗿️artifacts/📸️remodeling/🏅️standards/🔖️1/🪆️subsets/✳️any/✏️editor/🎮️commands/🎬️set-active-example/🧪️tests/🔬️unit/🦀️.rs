@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::remodeling::RemodelingCommand;
 use crate::editor::remodeling::examples::REMODELING_EXAMPLES;
 use crate::editor::remodeling::testkit::{app, dispatch};
+use crate::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn every_registered_example_id_resolves_to_committed_text() {

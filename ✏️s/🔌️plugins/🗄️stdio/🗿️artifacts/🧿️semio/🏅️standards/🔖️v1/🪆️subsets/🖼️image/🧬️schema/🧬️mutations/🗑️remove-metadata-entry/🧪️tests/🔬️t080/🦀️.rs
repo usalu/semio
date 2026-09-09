@@ -5,11 +5,11 @@
 //! so no index is transported and the surviving entries keep their order. The two-entry
 //! before-snapshot is what makes "keeps the author entry" a real claim rather than a tautology.
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
+use crate::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
 use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-use crate::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
-use crate::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.target-missing`
@@ -34,7 +34,9 @@ fn mutation() -> SemioImageMutation {
     dsl::json::from_json_str(MUTATION).expect("remove-metadata-entry mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key }) = mutation() else { panic!("remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: the committed mutation must be the remove-metadata-entry variant") };
+    let SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key }) = mutation() else {
+        panic!("remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: the committed mutation must be the remove-metadata-entry variant")
+    };
     leaf_diff::diff(&before(), key)
 }
 

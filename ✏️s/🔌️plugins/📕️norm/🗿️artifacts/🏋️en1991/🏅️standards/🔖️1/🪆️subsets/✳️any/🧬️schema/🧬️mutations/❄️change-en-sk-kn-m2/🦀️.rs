@@ -1,6 +1,5 @@
 //! ☃️ `change-en-sk-kn-m2` — sets the En1991 characteristic snow load scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

@@ -138,7 +138,7 @@ fn fixture() -> Value {
     serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
 }
 fn hex(value: &str) -> Vec<u8> {
-    value.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
+    value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
 }
 fn selection_history() -> Vec<u8> {
     let fixture: Value = serde_json::from_str(include_str!("../../../🧫️fixture/🔣️.json")).unwrap();

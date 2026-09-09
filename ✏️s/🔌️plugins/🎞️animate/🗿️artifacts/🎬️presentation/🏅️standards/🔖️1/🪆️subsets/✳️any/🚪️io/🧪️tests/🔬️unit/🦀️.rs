@@ -1,6 +1,5 @@
-
 use super::*;
-use semio_framework_os_kernel::json::{Object, Value, object};
+use semio_framework_os_kernel::json::{object, Object, Value};
 
 #[test]
 fn title_cards_match_the_neutral_xml_oracle() {

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/os/store/retirement/schema.json",
   "title": "Store Retirement",
+  "$ref": "#/$defs/OwnedRetirement",
   "$defs": {
     "OwnedRetirement": {
       "type": "object",
@@ -18,8 +19,8 @@
         },
         "cases": {
           "type": "array",
-          "minItems": 7,
-          "maxItems": 7,
+          "minItems": 9,
+          "maxItems": 9,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -39,7 +40,9 @@
                   "string",
                   "strings",
                   "optionalString",
-                  "pair"
+                  "pair",
+                  "stringMap",
+                  "value"
                 ]
               },
               "value": {
@@ -49,6 +52,9 @@
                   },
                   {
                     "type": "null"
+                  },
+                  {
+                    "type": "object"
                   },
                   {
                     "type": "array",

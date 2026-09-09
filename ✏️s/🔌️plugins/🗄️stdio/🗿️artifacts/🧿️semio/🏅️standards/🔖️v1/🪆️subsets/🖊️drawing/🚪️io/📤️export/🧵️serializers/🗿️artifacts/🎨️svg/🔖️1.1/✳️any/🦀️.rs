@@ -12,12 +12,12 @@
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioRgba, SemioTransform};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_svg::{
     schema::snapshot::{svg_element_to_xml_node, CommonAttrs, Matrix2D, PathCommand, PresentationAttrs, SvgElement, TransformOp, ViewBox},
     SvgSnapshot,
 };
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };

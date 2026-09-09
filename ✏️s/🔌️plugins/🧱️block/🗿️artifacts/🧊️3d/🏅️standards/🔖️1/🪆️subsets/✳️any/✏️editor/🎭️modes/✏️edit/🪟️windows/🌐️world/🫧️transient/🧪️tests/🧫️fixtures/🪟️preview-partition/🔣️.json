@@ -1,0 +1,29 @@
+{
+  "steps": [
+    {
+      "windowId": "world-a",
+      "preview": {
+        "position": [1.0, 2.0, 3.0],
+        "direction": [0.0, 1.0, 0.0]
+      }
+    },
+    {
+      "windowId": "world-b",
+      "preview": {
+        "position": [-4.0, 5.0, 6.0],
+        "direction": [0.0, 0.0, -1.0]
+      }
+    },
+    {
+      "windowId": "world-a",
+      "preview": null
+    }
+  ],
+  "expected": {
+    "world-a": null,
+    "world-b": {
+      "position": [-4.0, 5.0, 6.0],
+      "direction": [0.0, 0.0, -1.0]
+    }
+  }
+}

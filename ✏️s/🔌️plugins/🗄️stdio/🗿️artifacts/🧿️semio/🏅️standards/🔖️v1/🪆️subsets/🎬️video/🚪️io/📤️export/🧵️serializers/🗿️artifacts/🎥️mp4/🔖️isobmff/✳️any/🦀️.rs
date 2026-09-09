@@ -9,10 +9,10 @@
 //!
 //! The bridge emits the supported logical AVC variant and never retains an opaque sample-entry box.
 
-use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
-use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
+use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };

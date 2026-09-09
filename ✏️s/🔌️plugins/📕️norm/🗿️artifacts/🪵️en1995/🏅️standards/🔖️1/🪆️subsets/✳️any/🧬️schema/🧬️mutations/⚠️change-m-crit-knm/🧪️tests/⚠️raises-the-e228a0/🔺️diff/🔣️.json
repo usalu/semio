@@ -12,13 +12,12 @@
   "fC0K": null,
   "serviceClass": null,
   "loadDuration": null,
-  "mCritKnm": 96.0,
+  "mCritKnm": 96,
   "fEdKn": null,
   "aEfMm2": null,
   "fVK": null,
   "fireDurationMin": null,
   "sectionDepthMm": null,
   "aVertMS2": null,
-  "nCyclesBridge": null,
-  "selectedCheckIndex": null
+  "nCyclesBridge": null
 }

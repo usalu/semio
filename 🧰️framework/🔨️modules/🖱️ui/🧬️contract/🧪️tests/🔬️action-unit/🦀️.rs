@@ -123,7 +123,7 @@ fn every_trigger_variant_round_trips() {
 fn fixed_page_max_plus_one_returns_the_exact_untransferred_owner() {
     let mut arena = UiValueArena::default();
     let handle = arena.reserve_collection(UiCollectionKind::List).expect("fixed list authority");
-    for index in 0..UI_VALUE_MAX_ITEMS {
+    for index in 0..UI_VALUE_AGGREGATE_ITEMS {
         arena.try_push_page(handle, UiPageValue::List(UiValue::Number(index as f64))).expect("fixed page admission");
     }
     let refused = UiPageValue::List(UiValue::Text(ui_text("exact-refusal-owner")));
@@ -169,4 +169,11 @@ fn arena_initialization_is_a_fixed_control_and_page_taxonomy() {
     assert_eq!(arena.free_page_count, UI_VALUE_AGGREGATE_ITEMS);
     assert_eq!(arena.free_collection_count, UI_VALUE_ADMISSION_SLOTS);
     assert!(started.elapsed() < std::time::Duration::from_millis(8));
+    eprintln!(
+        "[DEBUG] arena pages={UI_VALUE_AGGREGATE_ITEMS} page-bytes={} collections={UI_VALUE_ADMISSION_SLOTS} collection-bytes={} aggregate-bytes={UI_VALUE_AGGREGATE_BYTES} backing-bytes={} elapsed-ms={}",
+        size_of::<UiPageSlot>(),
+        size_of::<UiCollectionSlot>(),
+        resident_static_backing_bytes(),
+        started.elapsed().as_millis()
+    );
 }

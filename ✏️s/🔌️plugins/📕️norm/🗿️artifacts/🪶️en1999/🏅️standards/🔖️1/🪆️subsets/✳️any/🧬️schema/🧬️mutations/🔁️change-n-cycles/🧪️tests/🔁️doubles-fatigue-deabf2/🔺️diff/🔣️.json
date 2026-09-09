@@ -12,7 +12,7 @@
   "deltaSigmaEd": null,
   "deltaSigmaC": null,
   "fatigueM": null,
-  "nCycles": 2000000.0,
+  "nCycles": 2000000,
   "vWeldEdKn": null,
   "weldThroatMm": null,
   "weldLengthMm": null,
@@ -25,6 +25,5 @@
   "shellTMm": null,
   "shellRMm": null,
   "sigmaEdShellMpa": null,
-  "annex": null,
-  "selectedCheckIndex": null
+  "annex": null
 }

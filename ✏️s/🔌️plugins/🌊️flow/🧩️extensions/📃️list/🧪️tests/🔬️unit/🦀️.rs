@@ -1,6 +1,5 @@
-
 use super::*;
-use flow_extension_sdk::{FlowExtensionCommand, build_manifest_json, evaluate_json};
+use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionCommand};
 
 fn sample_list() -> Dictionary {
     Dictionary::with_schema("list").insert("0", Value::Dictionary(number_dictionary(1.0))).insert("1", Value::Dictionary(number_dictionary(2.0))).insert("2", Value::Dictionary(number_dictionary(3.0)))

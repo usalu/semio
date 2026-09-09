@@ -1,4 +1,3 @@
-
 use super::*;
 #[semio_framework_async_macros::async_test]
 async fn descriptor_is_versioned_and_cacheable() {

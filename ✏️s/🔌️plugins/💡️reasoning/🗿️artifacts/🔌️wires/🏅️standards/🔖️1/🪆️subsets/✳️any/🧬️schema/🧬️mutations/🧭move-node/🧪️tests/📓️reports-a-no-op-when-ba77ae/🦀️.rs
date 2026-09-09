@@ -112,8 +112,7 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "move-node/reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
-/// 🔣️ The committed diff is canonical and decodes to `WiresDiff`, whose drag slots stay `null` —
-/// `move-node` is the persisted reposition, not the ephemeral canvas drag.
+/// 🔣️ The canonical document diff excludes window drag state.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: WiresDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
@@ -121,7 +120,7 @@ async fn committed_diff_is_canonical() {
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "move-node/reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero: committed diff JSON is not canonical");
     for slot in ["dragNodeId", "dragLastX", "dragLastY"] {
-        assert!(original.get(slot).is_some_and(serde_json::Value::is_null), "move-node must leave the ephemeral drag slot {slot} alone");
+        assert!(original.get(slot).is_none(), "document diffs must not expose the ephemeral drag slot {slot}");
     }
 }
 

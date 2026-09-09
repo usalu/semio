@@ -33,26 +33,26 @@ use protocol::OpBinary;
 use protocol::OpText;
 
 //#region 🔖️Mutations
+#[path = "🧱add-element/🦀️.rs"]
+pub mod add_element;
+#[path = "💬insert-comment/🦀️.rs"]
+pub mod insert_comment;
+#[path = "📥insert-row/🦀️.rs"]
+pub mod insert_row;
+#[path = "🗑️remove-comment/🦀️.rs"]
+pub mod remove_comment;
+#[path = "🚮remove-element/🦀️.rs"]
+pub mod remove_element;
+#[path = "📤remove-row/🦀️.rs"]
+pub mod remove_row;
+#[path = "🎚️set-format/🦀️.rs"]
+pub mod set_format;
+#[path = "🏷️set-row-property/🦀️.rs"]
+pub mod set_row_property;
 /// 📐️ Typed content mutation for `stdio.ply`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🎚️set-format/🦀️.rs"]
-pub mod set_format;
-#[path = "💬insert-comment/🦀️.rs"]
-pub mod insert_comment;
-#[path = "🗑️remove-comment/🦀️.rs"]
-pub mod remove_comment;
-#[path = "🧱add-element/🦀️.rs"]
-pub mod add_element;
-#[path = "🚮remove-element/🦀️.rs"]
-pub mod remove_element;
-#[path = "📥insert-row/🦀️.rs"]
-pub mod insert_row;
-#[path = "📤remove-row/🦀️.rs"]
-pub mod remove_row;
-#[path = "🏷️set-row-property/🦀️.rs"]
-pub mod set_row_property;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -207,7 +207,9 @@ fn print_ply_mutation(m: &PlyMutation) -> String {
         PlyMutation::RemoveElement(remove_element::RemoveElement { name }) => format!("remove-element name={}", enc_str(name)),
         PlyMutation::InsertRow(insert_row::InsertRow { element_name, index, row }) => format!("insert-row element-name={} index={index} row={}", enc_str(element_name), enc_row(row)),
         PlyMutation::RemoveRow(remove_row::RemoveRow { element_name, index }) => format!("remove-row element-name={} index={index}", enc_str(element_name)),
-        PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name, row_index, property_name, value }) => format!("set-row-property element-name={} row-index={row_index} property-name={} value={}", enc_str(element_name), enc_str(property_name), enc_value(value),),
+        PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name, row_index, property_name, value }) => {
+            format!("set-row-property element-name={} row-index={row_index} property-name={} value={}", enc_str(element_name), enc_str(property_name), enc_value(value),)
+        }
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -225,7 +227,9 @@ fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
         "remove-element" => Ok(PlyMutation::RemoveElement(remove_element::RemoveElement { name: dec_str(arg("name")?)? })),
         "insert-row" => Ok(PlyMutation::InsertRow(insert_row::InsertRow { element_name: dec_str(arg("element-name")?)?, index: usize_arg("index")?, row: dec_row(arg("row")?)? })),
         "remove-row" => Ok(PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: dec_str(arg("element-name")?)?, index: usize_arg("index")? })),
-        "set-row-property" => Ok(PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: dec_str(arg("element-name")?)?, row_index: usize_arg("row-index")?, property_name: dec_str(arg("property-name")?)?, value: dec_value(arg("value")?)? })),
+        "set-row-property" => {
+            Ok(PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: dec_str(arg("element-name")?)?, row_index: usize_arg("row-index")?, property_name: dec_str(arg("property-name")?)?, value: dec_value(arg("value")?)? }))
+        }
         other => Err(format!("ply mutation: unknown keyword {other:?}")),
     }
 }

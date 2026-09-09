@@ -843,27 +843,8 @@ function notifyOneInteractiveJobObserver() {
   setTimeout(notifyOneInteractiveJobObserver, 0);
 }
 
-/* ../../../../../../🧑‍💻dev/🤖️generated/🟦️session.ts */
-var PLAYGROUND_SESSION = {
-  variant: "generation3d",
-  registryPluginId: "procedural",
-  defaultAppId: "s.procedural.generation3d@1/*#editor",
-  hostMode: false,
-  host: undefined,
-  plugins: [
-    { pluginId: "flow", moduleUrl: "/🔌️plugin-modules/🌊️flow/🌉️bridge.js", contributes: [], consumes: ["flow.extension"], dependencies: [] },
-    { pluginId: "flow-extension-bim", moduleUrl: "/🧩️extension-modules/🏘️flow-extension-bim/🌉️bridge.js", contributes: ["flow.extension"], consumes: [], dependencies: [{ pluginId: "flow", version: "*" }] },
-    { pluginId: "flow-extension-brep", moduleUrl: "/🧩️extension-modules/🧊️flow-extension-brep/🌉️bridge.js", contributes: ["flow.extension", "flow.extension"], consumes: [], dependencies: [{ pluginId: "flow", version: "*" }] },
-    { pluginId: "flow-extension-dictionary", moduleUrl: "/🧩️extension-modules/📚️flow-extension-dictionary/🌉️bridge.js", contributes: ["flow.extension", "flow.extension"], consumes: [], dependencies: [{ pluginId: "flow", version: "*" }] },
-    { pluginId: "flow-extension-draw", moduleUrl: "/🧩️extension-modules/🎨️flow-extension-draw/🌉️bridge.js", contributes: ["flow.extension"], consumes: [], dependencies: [{ pluginId: "flow", version: "*" }] },
-    { pluginId: "flow-extension-list", moduleUrl: "/🧩️extension-modules/📃️flow-extension-list/🌉️bridge.js", contributes: ["flow.extension", "flow.extension"], consumes: [], dependencies: [{ pluginId: "flow", version: "*" }] },
-    { pluginId: "flow-extension-logic", moduleUrl: "/🧩️extension-modules/🔀️flow-extension-logic/🌉️bridge.js", contributes: ["flow.extension", "flow.extension"], consumes: [], dependencies: [{ pluginId: "flow", version: "*" }] },
-    { pluginId: "flow-extension-math", moduleUrl: "/🧩️extension-modules/🧮️flow-extension-math/🌉️bridge.js", contributes: ["flow.extension", "flow.extension"], consumes: [], dependencies: [{ pluginId: "flow", version: "*" }] },
-    { pluginId: "flow-extension-primitive", moduleUrl: "/🧩️extension-modules/🔤️flow-extension-primitive/🌉️bridge.js", contributes: ["flow.extension", "flow.extension"], consumes: [], dependencies: [{ pluginId: "flow", version: "*" }] },
-    { pluginId: "flow-extension-text", moduleUrl: "/🧩️extension-modules/📝️flow-extension-text/🌉️bridge.js", contributes: ["flow.extension", "flow.extension"], consumes: [], dependencies: [{ pluginId: "flow", version: "*" }] },
-    { pluginId: "procedural", moduleUrl: "/🔌️plugin-modules/🌀️procedural/🌉️bridge.js", contributes: [], consumes: ["forms.questionKind", "flow.extension"], dependencies: [] }
-  ]
-};
+/* ../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts */
+var DEFAULT_HOST_VARIANT = "s";
 
 /* ../../🚀️browser-boot/🟦️.ts */
 var RENDERER_MODULE_URL = new URL("./semio-framework-os-renderer-wgpu.js", import.meta.url).href;
@@ -891,7 +872,7 @@ function bootDescriptor() {
   const params = new URLSearchParams(window.location.search);
   const hubUrl = params.get("hub");
   return {
-    pluginVariant: bounded(params.get("plugin") ?? PLAYGROUND_SESSION.variant, "plugin"),
+    pluginVariant: bounded(params.get("plugin") ?? DEFAULT_HOST_VARIANT, "plugin"),
     appRole: params.get("role") === "viewer" ? "viewer" : "editor",
     ...hubUrl ? { hub: { hubUrl: bounded(hubUrl, "hub"), user: bounded(params.get("user") ?? "", "user"), dataDir: bounded(params.get("dataDir") ?? "", "dataDir") } } : {}
   };

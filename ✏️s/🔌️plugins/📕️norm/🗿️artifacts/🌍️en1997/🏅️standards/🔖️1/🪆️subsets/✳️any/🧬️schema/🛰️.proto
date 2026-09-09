@@ -47,6 +47,4 @@ message En1997Artifact {
   uint32 pile_n_profiles = 21;
   // @state artifact
   double z_investigated_m = 22;
-  // @state presence
-  optional uint32 selected_check_index = 23;
 }

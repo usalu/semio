@@ -3,6 +3,8 @@
 use crate::schema::diff::GltfDiff;
 use crate::GltfSnapshot;
 
+pub use super::add_required_extension::AddRequiredExtensionMutation;
+pub use super::add_used_extension::AddUsedExtensionMutation;
 pub use super::bind_default_scene::BindDefaultSceneMutation;
 pub use super::bind_morph_target_attribute::BindMorphTargetAttributeMutation;
 pub use super::bind_node_camera::BindNodeCameraMutation;
@@ -29,6 +31,7 @@ pub use super::change_node_extension_data::ChangeNodeExtensionDataMutation;
 pub use super::change_node_extra_data::ChangeNodeExtraDataMutation;
 pub use super::change_node_morph_weights::ChangeNodeMorphWeightsMutation;
 pub use super::change_node_name::ChangeNodeNameMutation;
+pub use super::change_node_transform::ChangeNodeTransformMutation;
 pub use super::change_primitive_extension_data::ChangePrimitiveExtensionDataMutation;
 pub use super::change_primitive_extra_data::ChangePrimitiveExtraDataMutation;
 pub use super::change_primitive_topology_mode::ChangePrimitiveTopologyModeMutation;
@@ -50,7 +53,6 @@ pub use super::create_sampler::CreateSamplerMutation;
 pub use super::create_scene::CreateSceneMutation;
 pub use super::create_skin::CreateSkinMutation;
 pub use super::create_texture::CreateTextureMutation;
-pub use super::add_used_extension::AddUsedExtensionMutation;
 pub use super::delete_accessor::DeleteAccessorMutation;
 pub use super::delete_animation::DeleteAnimationMutation;
 pub use super::delete_buffer::DeleteBufferMutation;
@@ -78,6 +80,7 @@ pub use super::move_morph_target::MoveMorphTargetMutation;
 pub use super::move_morph_target_attribute::MoveMorphTargetAttributeMutation;
 pub use super::move_node::MoveNodeMutation;
 pub use super::move_node_child::MoveNodeChildMutation;
+pub use super::move_node_parent::MoveNodeParentMutation;
 pub use super::move_primitive::MovePrimitiveMutation;
 pub use super::move_primitive_attribute::MovePrimitiveAttributeMutation;
 pub use super::move_required_extension::MoveRequiredExtensionMutation;
@@ -87,6 +90,8 @@ pub use super::move_scene_root_node::MoveSceneRootNodeMutation;
 pub use super::move_skin::MoveSkinMutation;
 pub use super::move_texture::MoveTextureMutation;
 pub use super::move_used_extension::MoveUsedExtensionMutation;
+pub use super::remove_required_extension::RemoveRequiredExtensionMutation;
+pub use super::remove_used_extension::RemoveUsedExtensionMutation;
 pub use super::reorder_accessors::ReorderAccessorsMutation;
 pub use super::reorder_animations::ReorderAnimationsMutation;
 pub use super::reorder_buffer_views::ReorderBufferViewsMutation;
@@ -108,9 +113,6 @@ pub use super::reorder_scenes::ReorderScenesMutation;
 pub use super::reorder_skins::ReorderSkinsMutation;
 pub use super::reorder_textures::ReorderTexturesMutation;
 pub use super::reorder_used_extensions::ReorderUsedExtensionsMutation;
-pub use super::move_node_parent::MoveNodeParentMutation;
-pub use super::add_required_extension::AddRequiredExtensionMutation;
-pub use super::change_node_transform::ChangeNodeTransformMutation;
 pub use super::unbind_default_scene::UnbindDefaultSceneMutation;
 pub use super::unbind_morph_target_attribute::UnbindMorphTargetAttributeMutation;
 pub use super::unbind_node_camera::UnbindNodeCameraMutation;
@@ -121,8 +123,6 @@ pub use super::unbind_primitive_attribute::UnbindPrimitiveAttributeMutation;
 pub use super::unbind_primitive_indices::UnbindPrimitiveIndicesMutation;
 pub use super::unbind_primitive_material::UnbindPrimitiveMaterialMutation;
 pub use super::unbind_scene_root_node::UnbindSceneRootNodeMutation;
-pub use super::remove_required_extension::RemoveRequiredExtensionMutation;
-pub use super::remove_used_extension::RemoveUsedExtensionMutation;
 
 /// 🧬️ The complete glTF 2.0 semantic mutation vocabulary.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
@@ -253,7 +253,9 @@ pub enum GltfMutation {
 
 pub fn apply_gltf_mutation(snapshot: &mut GltfSnapshot, mutation: &GltfMutation) -> protocol::MutationOutcome<GltfDiff> {
     let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, snapshot);
-    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), snapshot) { *snapshot = next; }
+    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        *snapshot = next;
+    }
     outcome
 }
 

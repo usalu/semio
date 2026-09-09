@@ -1,11 +1,14 @@
 //! 🔍️ DAG play app panel — the per-node inspector (name/kind/id plus slider-specific fields).
 
-use crate::DagSnapshot;
-use crate::editor::dag::{dag_action, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::dag::terminology::DagPlayLabels;
+use crate::editor::dag::{dag_action, ui_value_list, ui_value_map, ui_value_text};
+use crate::DagSnapshot;
 use semio_framework_artifact_infinite_dag::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
-use semio_framework_plugin::{ui_inspector_mixed_number, ui_inspector_mixed_text, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER};
 use semio_framework_plugin::plugin_app_close_prelude::{column, field, input, section, text, Buildable, BuiltNode, HasBase, HasChildren, InputKind, Label, Trigger, UiText};
+use semio_framework_plugin::{
+    ui_inspector_mixed_number, ui_inspector_mixed_text, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    UI_INSPECTOR_MIXED_PLACEHOLDER,
+};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_INSPECTOR: &str = "dag.play.inspection";
@@ -81,14 +84,27 @@ pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabel
     if nodes.iter().all(|node| matches!(node.kind, DagNodeKind::Slider { .. })) {
         let mut fields = Vec::new();
         for (name, title) in [("value", labels.field_value), ("min", labels.field_min), ("max", labels.field_max)] {
-            let values = nodes.iter().filter_map(|node| match node.kind {
-                DagNodeKind::Slider { value, min, max, .. } => Some(match name { "min" => min, "max" => max, _ => value }),
-                _ => None,
-            }).collect::<Vec<_>>();
+            let values = nodes
+                .iter()
+                .filter_map(|node| match node.kind {
+                    DagNodeKind::Slider { value, min, max, .. } => Some(match name {
+                        "min" => min,
+                        "max" => max,
+                        _ => value,
+                    }),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
             let mixed = ui_inspector_mixed_number(&values);
-            fields.push(input_field(&format!("dag-play-inspector.slider-{name}"), title.as_str(), InputKind::Number,
+            fields.push(input_field(
+                &format!("dag-play-inspector.slider-{name}"),
+                title.as_str(),
+                InputKind::Number,
                 &if mixed.uniform { mixed.value.to_string() } else { String::new() },
-                (!mixed.uniform).then_some(UI_INSPECTOR_MIXED_PLACEHOLDER), "patchDagNodes", patch_args(&node_ids, name)?)?);
+                (!mixed.uniform).then_some(UI_INSPECTOR_MIXED_PLACEHOLDER),
+                "patchDagNodes",
+                patch_args(&node_ids, name)?,
+            )?);
         }
         groups.push(group_node("dag-play-inspector.kind.slider", labels.slider_group.as_str(), fields)?);
     }

@@ -1,4 +1,3 @@
-
 #[semio_framework_async_macros::async_test]
 async fn sequence_viewer_never_mutates() {
     semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::sequence::SequenceViewer>().await;

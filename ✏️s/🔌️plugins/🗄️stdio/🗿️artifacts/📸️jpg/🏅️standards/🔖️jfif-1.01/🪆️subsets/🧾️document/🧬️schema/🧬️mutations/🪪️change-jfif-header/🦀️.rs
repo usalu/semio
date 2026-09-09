@@ -36,13 +36,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeJfifHeaderMutati
             return Vec::new();
         }
         {
-            vec![JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation {
-                version: base.jfif_version,
-                density_units: base.jfif_density_units,
-                x_density: base.jfif_x_density,
-                y_density: base.jfif_y_density,
-                thumbnail: base.jfif_thumbnail.clone(),
-            })]
+            vec![JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation { version: base.jfif_version, density_units: base.jfif_density_units, x_density: base.jfif_x_density, y_density: base.jfif_y_density, thumbnail: base.jfif_thumbnail.clone() })]
         }
     }
     fn label(&self) -> String {

@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `AddNodeProperty`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{SemioGraphMutation, remove_node_property};
+use crate::standards::v1::subsets::graph::schema::mutations::{remove_node_property, SemioGraphMutation};
 use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse

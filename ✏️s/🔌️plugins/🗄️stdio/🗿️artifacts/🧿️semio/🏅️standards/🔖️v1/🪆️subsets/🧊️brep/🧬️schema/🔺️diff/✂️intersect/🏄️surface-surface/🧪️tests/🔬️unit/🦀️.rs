@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn assert_on_both(curve: &IntCurve, a: &Surface, b: &Surface, samples: usize, tol: f64) {

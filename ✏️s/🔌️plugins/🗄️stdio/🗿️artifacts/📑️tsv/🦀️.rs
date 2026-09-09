@@ -38,14 +38,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution {
-        identity: "tsv",
-        schema: ARTIFACT_DEFINITION_SCHEMA,
-        definition,
-        assembly,
-        formats,
-        native_codecs,
-    }
+    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "tsv", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️ArtifactKind
@@ -78,8 +71,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// 🗂️ Registers this artifact's IO composer + the handcrafted grammar/protocol `LanguageSpec` —
 /// dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
 /// MACHINES). `tsv` is one of stdio's 10 deliberate imperative-`register()` artifacts (never
-/// converted to the `ArtifactDeclaration` builder pattern, per `crate::plugin()`'s own call —
-/// unchanged in call order/behavior, only the function's file moved with the deleted directory).
+/// converted to the `ArtifactDeclaration` builder pattern; this package's contribution invokes it
+/// directly with the established call order and behavior).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
     standards::iana::subsets::any::io::register();

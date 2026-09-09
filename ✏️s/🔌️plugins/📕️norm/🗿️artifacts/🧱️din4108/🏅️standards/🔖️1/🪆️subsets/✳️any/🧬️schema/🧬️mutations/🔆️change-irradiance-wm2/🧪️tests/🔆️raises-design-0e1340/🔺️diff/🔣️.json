@@ -11,12 +11,11 @@
   "airtightnessClass": null,
   "tIntC": null,
   "solarAbsorptance": null,
-  "irradianceWM2": 750.0,
+  "irradianceWM2": 750,
   "moistureMuExterior": null,
   "moistureMuInterior": null,
   "envelopeAreaM2": null,
   "bb2DetailsConform": null,
   "applicationType": null,
-  "declaredApplicationClass": null,
-  "selectedCheckIndex": null
+  "declaredApplicationClass": null
 }

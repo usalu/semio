@@ -1,7 +1,5 @@
 //! 📏 `update-through-thickness-inputs` — atomically updates the through-thickness-inputs facet (t10_steel_subgrade, t10_actual_thickness_mm, t10_t_ed_c are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

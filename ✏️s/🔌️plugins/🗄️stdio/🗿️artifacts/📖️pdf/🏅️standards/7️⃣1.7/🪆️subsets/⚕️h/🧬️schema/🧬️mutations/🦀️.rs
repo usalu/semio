@@ -4,26 +4,26 @@
 use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 
 //#region 🔖️Leaves
-#[path = "🏷️set-info-title/🦀️.rs"]
-pub mod set_info_title;
-#[path = "👤️set-info-author/🦀️.rs"]
-pub mod set_info_author;
-#[path = "📜️insert-javascript-action/🦀️.rs"]
-pub mod insert_javascript_action;
-#[path = "🚫️remove-javascript-action/🦀️.rs"]
-pub mod remove_javascript_action;
-#[path = "🚀️insert-launch-action/🦀️.rs"]
-pub mod insert_launch_action;
-#[path = "🛬️remove-launch-action/🦀️.rs"]
-pub mod remove_launch_action;
-#[path = "✒️insert-signature-field/🦀️.rs"]
-pub mod insert_signature_field;
-#[path = "✂️remove-signature-field/🦀️.rs"]
-pub mod remove_signature_field;
 #[path = "🔤️embed-font-file/🦀️.rs"]
 pub mod embed_font_file;
+#[path = "📜️insert-javascript-action/🦀️.rs"]
+pub mod insert_javascript_action;
+#[path = "🚀️insert-launch-action/🦀️.rs"]
+pub mod insert_launch_action;
+#[path = "✒️insert-signature-field/🦀️.rs"]
+pub mod insert_signature_field;
 #[path = "🧺️remove-font-file/🦀️.rs"]
 pub mod remove_font_file;
+#[path = "🚫️remove-javascript-action/🦀️.rs"]
+pub mod remove_javascript_action;
+#[path = "🛬️remove-launch-action/🦀️.rs"]
+pub mod remove_launch_action;
+#[path = "✂️remove-signature-field/🦀️.rs"]
+pub mod remove_signature_field;
+#[path = "👤️set-info-author/🦀️.rs"]
+pub mod set_info_author;
+#[path = "🏷️set-info-title/🦀️.rs"]
+pub mod set_info_title;
 
 pub use embed_font_file::EmbedFontFile;
 pub use insert_javascript_action::InsertJavascriptAction;
@@ -57,10 +57,10 @@ pub enum PdfHMutation {
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Codecs
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
 //#endregion 🔖️Codecs
 
 //#region 🔖️Delegation

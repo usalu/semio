@@ -1,7 +1,6 @@
 //! 🏛️ `change-permanent-action` — sets the EN 1990 document's permanent action characteristic
 //! value `G_k` (self-weight and other permanent actions, combined per Eq. 6.10/6.10a/6.10b).
 
-
 use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload

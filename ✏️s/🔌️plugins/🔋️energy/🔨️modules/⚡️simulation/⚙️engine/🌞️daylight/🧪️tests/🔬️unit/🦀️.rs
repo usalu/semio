@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn sample_zone() -> DaylightZone {

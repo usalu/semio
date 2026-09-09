@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::standards::v1::subsets::text::schema::snapshot::{STDIO_SEMIOTEXT_DOCUMENT_SCHEMA, SemioTextMarkKind};
+use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use protocol::DiffCodec;
 
 #[semio_framework_async_macros::async_test]

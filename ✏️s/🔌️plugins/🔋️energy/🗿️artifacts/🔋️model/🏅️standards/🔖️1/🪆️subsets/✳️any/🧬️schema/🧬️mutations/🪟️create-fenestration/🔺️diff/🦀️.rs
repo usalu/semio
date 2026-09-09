@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateFenestration` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateFenestration, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -38,7 +38,27 @@ pub fn diff(payload: &super::CreateFenestration, base: &EnergyModelSnapshot) -> 
     }
     let mut model = base.model.clone();
     let position = model.fenestrations.iter().position(|item| item.id > payload.id).unwrap_or(model.fenestrations.len());
-    model.fenestrations.insert(position, crate::model::Fenestration { id: payload.id, name: payload.name.clone(), surface_id: payload.surface_id, u_value_w_m2k: payload.u_value_w_m2k, shgc: payload.shgc, vlt: payload.vlt, area_m2: payload.area_m2, height_m: payload.height_m, sill_height_m: payload.sill_height_m, frame_conductance_w_k: payload.frame_conductance_w_k, divider_conductance_w_k: payload.divider_conductance_w_k, overhang_depth_m: payload.overhang_depth_m, overhang_offset_m: payload.overhang_offset_m, fin_depth_m: payload.fin_depth_m, fin_offset_m: payload.fin_offset_m, glazing_construction_id: payload.glazing_construction_id });
+    model.fenestrations.insert(
+        position,
+        crate::model::Fenestration {
+            id: payload.id,
+            name: payload.name.clone(),
+            surface_id: payload.surface_id,
+            u_value_w_m2k: payload.u_value_w_m2k,
+            shgc: payload.shgc,
+            vlt: payload.vlt,
+            area_m2: payload.area_m2,
+            height_m: payload.height_m,
+            sill_height_m: payload.sill_height_m,
+            frame_conductance_w_k: payload.frame_conductance_w_k,
+            divider_conductance_w_k: payload.divider_conductance_w_k,
+            overhang_depth_m: payload.overhang_depth_m,
+            overhang_offset_m: payload.overhang_offset_m,
+            fin_depth_m: payload.fin_depth_m,
+            fin_offset_m: payload.fin_offset_m,
+            glazing_construction_id: payload.glazing_construction_id,
+        },
+    );
     protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

@@ -1,6 +1,5 @@
 //! 💧 `change-rh-int` — sets the DIN 4108 `rh_int` scalar.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

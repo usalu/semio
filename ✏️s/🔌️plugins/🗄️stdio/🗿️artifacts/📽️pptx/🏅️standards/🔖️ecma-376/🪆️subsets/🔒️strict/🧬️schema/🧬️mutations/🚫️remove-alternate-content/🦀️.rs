@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveAlternateContent {
-        pub(crate) path: String,
-    }
+    pub(crate) path: String,
+}
 
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for RemoveAlternateContent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "alternate-content", kind: "remove-alternate-content", record: "RemoveAlternateContent" };

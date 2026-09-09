@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreateNode`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{SemioGraphMutation, delete_node};
+use crate::standards::v1::subsets::graph::schema::mutations::{delete_node, SemioGraphMutation};
 use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse

@@ -1,11 +1,12 @@
 syntax = "proto3";
 package semio.s.raster.raster.snapshot;
-message JsonSnapshot {
-  string schema = 1;
-  string value_wire = 2;
-}
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
 message RasterSnapshot {
-  optional string schema = 1;
-  optional string value = 2;
+  string schema = 1;
+  string id = 2;
+  optional string title = 3;
+  repeated semio.s.raster.raster.artifact.RasterLayerNode layers = 4;
+  map<string, semio.os.store.ArtifactChild> assets = 5;
 }

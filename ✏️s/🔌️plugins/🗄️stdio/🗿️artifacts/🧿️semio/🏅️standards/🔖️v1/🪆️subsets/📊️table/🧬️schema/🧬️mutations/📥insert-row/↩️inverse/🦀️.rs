@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `InsertRow`.
 
-use crate::standards::v1::subsets::table::schema::mutations::{SemioTableMutation, remove_row};
+use crate::standards::v1::subsets::table::schema::mutations::{remove_row, SemioTableMutation};
 use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Inverse

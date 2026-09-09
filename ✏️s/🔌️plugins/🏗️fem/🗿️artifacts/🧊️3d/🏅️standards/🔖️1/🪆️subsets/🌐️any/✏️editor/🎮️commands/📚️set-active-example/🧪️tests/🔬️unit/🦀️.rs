@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::ActionKind;
@@ -18,7 +17,7 @@ fn set_active_example_loads_default_fixture_3d() {
     let (snapshot, history) = empty_view();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = Fem3dConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = handle(&SetActiveExample { example_id: crate::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
@@ -49,7 +48,7 @@ fn set_active_example_resets_config_without_a_whole_snapshot_row() {
     let (snapshot, history) = empty_view();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = Fem3dConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = handle(&SetActiveExample { example_id: crate::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
     assert_eq!(emit.config_mutations.len(), 2);
     assert!(!emit.config_mutations.iter().any(|mutation| matches!(mutation, Fem3dConfigMutation::Snapshot { .. })));
@@ -65,7 +64,7 @@ fn set_active_example_unknown_id_resets_to_empty_document() {
     let (snapshot, history) = empty_view();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = Fem3dConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = handle(&SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");

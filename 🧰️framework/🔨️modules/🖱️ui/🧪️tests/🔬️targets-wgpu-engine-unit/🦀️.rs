@@ -419,7 +419,7 @@ impl SceneHost for RecordingSceneHost {
         match cursor.bind(slot.node) {
             Ok(true) => {}
             Ok(false) => return ScenePaintStep::Pending,
-            Err(()) => return ScenePaintStep::Fault,
+            Err(_) => return ScenePaintStep::Fault,
         }
         self.paint_calls += 1;
         self.last_surface_id = slot.surface().map(|(surface_id, _)| surface_id.to_string());

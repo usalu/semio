@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::PLAYBOOK_DOCUMENT_SCHEMA;
 use crate::empty_playbook_snapshot;
+use crate::PLAYBOOK_DOCUMENT_SCHEMA;
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_the_empty_snapshot() {
@@ -25,9 +24,9 @@ async fn facade_generator_example_pack_agrees_with_dsl() {
 
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::op::{PlaybookMutation, change_title_operation};
+    use crate::op::{change_title_operation, PlaybookMutation};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, ArtifactStore, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<PlaybookSnapshot, PlaybookMutation> = ArtifactStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook-demo", empty_playbook_snapshot(), None)).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![change_title_operation(Some("Recipe".into()))], description: None }).await.expect("apply");

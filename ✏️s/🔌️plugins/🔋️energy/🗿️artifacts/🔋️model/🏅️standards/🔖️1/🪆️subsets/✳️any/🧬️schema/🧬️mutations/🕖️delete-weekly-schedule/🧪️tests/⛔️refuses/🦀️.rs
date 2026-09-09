@@ -22,15 +22,36 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 1.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 0.5 });
     model.schedules.daily.push(crate::schedule::DailySchedule { id: crate::model::ScheduleId(10), hourly_values: [20.0; 24], interpolation: crate::schedule::ScheduleInterpolation::Continuous, limits: None });
-    model.schedules.daily.push(crate::schedule::DailySchedule { id: crate::model::ScheduleId(11), hourly_values: [27.0; 24], interpolation: crate::schedule::ScheduleInterpolation::Discrete, limits: Some(crate::schedule::ScheduleLimits { min: 0.0, max: 100.0 }) });
+    model.schedules.daily.push(crate::schedule::DailySchedule {
+        id: crate::model::ScheduleId(11),
+        hourly_values: [27.0; 24],
+        interpolation: crate::schedule::ScheduleInterpolation::Discrete,
+        limits: Some(crate::schedule::ScheduleLimits { min: 0.0, max: 100.0 }),
+    });
     model.schedules.daily.push(crate::schedule::DailySchedule { id: crate::model::ScheduleId(12), hourly_values: [1.0; 24], interpolation: crate::schedule::ScheduleInterpolation::Continuous, limits: None });
     model.schedules.weekly.push(crate::schedule::WeeklySchedule { id: crate::model::ScheduleId(20), daily_schedule_ids: [crate::model::ScheduleId(10); 7] });
-    model.schedules.annual.push(crate::schedule::AnnualSchedule { id: crate::model::ScheduleId(30), rules: vec![crate::schedule::CompactScheduleRule { start_month: 1, start_day: 1, end_month: 6, end_day: 30, daily_schedule_id: crate::model::ScheduleId(10) }, crate::schedule::CompactScheduleRule { start_month: 7, start_day: 1, end_month: 12, end_day: 31, daily_schedule_id: crate::model::ScheduleId(11) }], default_daily_schedule_id: crate::model::ScheduleId(11), holiday_daily_schedule_id: None, holiday_dates: vec![(2026, 12, 25)] });
+    model.schedules.annual.push(crate::schedule::AnnualSchedule {
+        id: crate::model::ScheduleId(30),
+        rules: vec![
+            crate::schedule::CompactScheduleRule { start_month: 1, start_day: 1, end_month: 6, end_day: 30, daily_schedule_id: crate::model::ScheduleId(10) },
+            crate::schedule::CompactScheduleRule { start_month: 7, start_day: 1, end_month: 12, end_day: 31, daily_schedule_id: crate::model::ScheduleId(11) },
+        ],
+        default_daily_schedule_id: crate::model::ScheduleId(11),
+        holiday_daily_schedule_id: None,
+        holiday_dates: vec![(2026, 12, 25)],
+    });
     model.schedules.time_series.push(crate::schedule::TimeSeriesSchedule { id: crate::model::ScheduleId(40), values: vec![1.0, 0.5, 0.25], timestep_seconds: 3600 });
     model.shw_systems.push(crate::model::ShwSystemConfig { id: crate::model::EntityId(400), heater_capacity_w: 4500.0, storage_volume_m3: 0.3, setpoint_c: 55.0, schedule_id: crate::model::ScheduleId(1) });
     model.water_systems.push(crate::model::WaterSystemConfig { id: crate::model::EntityId(430), fixture_count: 6, peak_flow_l_s: 0.25, schedule_id: crate::model::ScheduleId(20) });
     model.refrigeration_systems.push(crate::model::RefrigerationConfig { id: crate::model::EntityId(420), case_count: 4, design_load_w: 12000.0, defrost_schedule_id: crate::model::ScheduleId(30) });
-    model.mechanical_ventilations.push(crate::model::MechanicalVentilation { id: crate::model::EntityId(60), zone_id: crate::model::EntityId(1), schedule_id: crate::model::ScheduleId(40), design_flow_m3_s: 0.05, fan_total_efficiency: 0.7, fan_delta_pressure_pa: 300.0 });
+    model.mechanical_ventilations.push(crate::model::MechanicalVentilation {
+        id: crate::model::EntityId(60),
+        zone_id: crate::model::EntityId(1),
+        schedule_id: crate::model::ScheduleId(40),
+        design_flow_m3_s: 0.05,
+        fan_total_efficiency: 0.7,
+        fan_delta_pressure_pa: 300.0,
+    });
     (snapshot(model), super::delete_weekly_schedule(crate::model::ScheduleId(20)))
 }
 

@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn text(value: &protocol::os_pack::json::Value) -> String {
@@ -6,7 +5,7 @@ fn text(value: &protocol::os_pack::json::Value) -> String {
 }
 
 fn presence(case: &protocol::os_pack::json::Value) -> CadPresence {
-    CadPresence { active_utility_id: text(&case["activeUtility"]), engagement_step: text(&case["engagementStep"]), engagement_pane: (!case["engagementPane"].is_null()).then(|| text(&case["engagementPane"])), ..CadPresence::default() }
+    CadPresence { engagement_step: text(&case["engagementStep"]), engagement_pane: (!case["engagementPane"].is_null()).then(|| text(&case["engagementPane"])), ..CadPresence::default() }
 }
 
 #[test]
@@ -15,7 +14,7 @@ fn retained_cad_presence_close_preserves_shared_roots_and_byte_grants() {
     for case in fixture["cases"].as_array().unwrap() {
         let value = presence(case);
         let oracle = value.clone();
-        let expected = oracle.active_utility_id.len() + oracle.engagement_step.len() + oracle.engagement_pane.as_deref().map_or(0, str::len);
+        let expected = oracle.engagement_step.len() + oracle.engagement_pane.as_deref().map_or(0, str::len);
         assert_eq!(expected, case["expectedBytes"].as_u64().unwrap() as usize);
         let root = Arc::new(value);
         let reader = root.clone();
@@ -47,7 +46,7 @@ fn retained_cad_presence_close_preserves_shared_roots_and_byte_grants() {
 /// 🧪️ Reclaims the one raw Arc ownership count preserved by the cursor's ManuallyDrop field during unwind.
 #[test]
 fn retained_cad_presence_close_worker_unwind_preserves_the_original_panic() {
-    let root = Arc::new(CadPresence { active_utility_id: String::new(), engagement_step: String::new(), engagement_pane: None, ..CadPresence::default() });
+    let root = Arc::new(CadPresence { engagement_step: String::new(), engagement_pane: None, ..CadPresence::default() });
     let pointer = Arc::into_raw(root);
     let result = std::panic::catch_unwind(|| {
         let mut retained = CadPresenceRetirement { root: ManuallyDrop::new(None), owned: ManuallyDrop::new(None), bytes: ManuallyDrop::new(None), field: 0 };

@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::fem3d::Fem3dCommand;
 use crate::editor::fem3d::commands::{add_combination, add_load_case, add_member_udl, add_node, set_self_weight};
-use crate::editor::fem3d::testkit::{Fem3dApp, dispatch, fem3d_empty_app};
+use crate::editor::fem3d::testkit::{dispatch, fem3d_empty_app, Fem3dApp};
+use crate::editor::fem3d::Fem3dCommand;
 
 async fn app_with_load_case() -> Fem3dApp {
     let mut app = fem3d_empty_app().await;

@@ -10,28 +10,10 @@
   ],
   "properties": {
     "dialect": {
-      "title": "ArtifactDialect",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "artifactKind",
-        "standard",
-        "subset"
-      ],
-      "properties": {
-        "artifactKind": {
-          "type": "string"
-        },
-        "standard": {
-          "type": "string"
-        },
-        "subset": {
-          "type": "string"
-        }
-      }
+      "$ref": "https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactDialect"
     },
     "role": {
-      "type": "string"
+      "$ref": "https://semio.tech/schema/framework/manifest/schema.json#/$defs/AppRole"
     }
   }
 }

@@ -16,7 +16,13 @@ impl protocol::MutationKind<RemodelingConfig, RemodelingConfigMutation> for SetR
         next.report_table = self.table.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &RemodelingConfig) -> Vec<RemodelingConfigMutation> { vec![RemodelingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Set Report Table".into() }
-    fn target(&self) -> Vec<String> { vec!["report-table".into()] }
+    fn inverse(&self, base: &RemodelingConfig) -> Vec<RemodelingConfigMutation> {
+        vec![RemodelingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Report Table".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["report-table".into()]
+    }
 }

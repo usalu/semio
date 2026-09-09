@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/writer/main-window/transient/schema.json",
+  "title": "WriterMainWindowTransient",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["editorSelection", "lintGeneration", "engagementInput"],
+  "properties": {
+    "editorSelection": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["start", "end"],
+          "properties": {
+            "start": { "type": "integer", "minimum": 0 },
+            "end": { "type": "integer", "minimum": 0 }
+          }
+        },
+        { "type": "null" }
+      ],
+      "x-semio-state": "transient",
+      "x-semio-owner": "window"
+    },
+    "lintGeneration": { "type": "integer", "minimum": 0, "x-semio-state": "transient", "x-semio-owner": "window" },
+    "engagementInput": { "type": "string", "maxLength": 4096, "x-semio-state": "transient", "x-semio-owner": "window" }
+  }
+}

@@ -585,7 +585,8 @@
               "profile",
               "target",
               "component",
-              "support"
+              "support",
+              "tooling"
             ],
             "properties": {
               "profile": {
@@ -602,6 +603,11 @@
               },
               "support": {
                 "type": "string"
+              },
+              "tooling": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "type": "string" }
               }
             }
           }

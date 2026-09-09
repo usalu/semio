@@ -87,12 +87,6 @@
             "fov"
           ],
           "additionalProperties": false
-        },
-        "activeUtilityId": {
-          "type": "string"
-        },
-        "locale": {
-          "type": "string"
         }
       },
       "required": [
@@ -103,9 +97,7 @@
         "centerModel",
         "fitRevision",
         "cameraDraftLabel",
-        "camera",
-        "activeUtilityId",
-        "locale"
+        "camera"
       ],
       "additionalProperties": false
     }

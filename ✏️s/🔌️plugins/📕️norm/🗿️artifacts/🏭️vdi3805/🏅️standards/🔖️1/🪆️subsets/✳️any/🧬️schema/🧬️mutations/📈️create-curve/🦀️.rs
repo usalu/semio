@@ -1,6 +1,5 @@
 //! 📈️ `create-curve` — brings a new id-keyed characteristic curve into existence.
 
-
 use crate::{CharacteristicCurve, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

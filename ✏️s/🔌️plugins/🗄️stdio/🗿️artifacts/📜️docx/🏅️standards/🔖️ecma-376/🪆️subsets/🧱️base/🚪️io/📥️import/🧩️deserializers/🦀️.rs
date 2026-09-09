@@ -203,11 +203,7 @@ pub fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, DocxError> {
     // 🏅️ Both conformance classes, exactly as the `officeDocument` lookup above: a Strict package
     // types its styles relationship `http://purl.oclc.org/ooxml/…/styles`, and resolving only the
     // transitional type silently decoded such a package with NO styles at all.
-    let styles = match opc
-        .resolve_relationship(&main_path, REL_TYPE_STYLES)
-        .or_else(|| opc.resolve_relationship(&main_path, STRICT_REL_TYPE_STYLES))
-        .and_then(|p| opc.part_bytes(&p).map(|b| (p, b.to_vec())))
-    {
+    let styles = match opc.resolve_relationship(&main_path, REL_TYPE_STYLES).or_else(|| opc.resolve_relationship(&main_path, STRICT_REL_TYPE_STYLES)).and_then(|p| opc.part_bytes(&p).map(|b| (p, b.to_vec()))) {
         Some((styles_path, styles_bytes)) => {
             let text = String::from_utf8(styles_bytes).map_err(|_| DocxError::Xml { part: styles_path.clone(), detail: "not valid utf-8".into() })?;
             let xml = xml_document_from_text(&text).map_err(|e| DocxError::Xml { part: styles_path.clone(), detail: e })?;

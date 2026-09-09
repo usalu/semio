@@ -1,0 +1,6 @@
+# 🧬️ ChangeNodeKind mutation payload.
+
+type ChangeNodeKind {
+  nodeId: String!
+  newNodeKind: String!
+}

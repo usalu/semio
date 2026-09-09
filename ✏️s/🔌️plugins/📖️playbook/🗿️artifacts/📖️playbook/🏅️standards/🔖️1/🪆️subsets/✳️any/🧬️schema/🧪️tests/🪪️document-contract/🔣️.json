@@ -1,0 +1,56 @@
+{
+  "document": {
+    "schema": "playbook.program",
+    "id": "playbook",
+    "version": "1",
+    "title": null,
+    "document": {
+      "childId": "playbook-document",
+      "target": {
+        "artifactId": "playbook-document",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "document"
+        }
+      }
+    },
+    "flow": {
+      "childId": "playbook-flow",
+      "target": {
+        "artifactId": "playbook-flow",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "flow"
+        }
+      }
+    }
+  },
+  "invalidDocumentFields": {
+    "steps": [],
+    "value": "opaque",
+    "contributionsJson": "[]",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "invalidChildren": [
+    null,
+    {
+      "childId": "missing-target"
+    },
+    {
+      "childId": "x",
+      "target": {
+        "artifactId": "x",
+        "dialect": {
+          "artifactKind": "x",
+          "standard": "1"
+        }
+      }
+    }
+  ]
+}

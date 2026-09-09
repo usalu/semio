@@ -1,12 +1,13 @@
-# 🧬️ Wires mutation schema — every field with its state class.
+# 🧩️ Wires mutation union references its leaf-owned payload contracts.
+# import DisconnectNodes from "./✂️disconnect-nodes/🧬️schema/🔗️.graphql"
+# import EditNodeText from "./✏️edit-node-text/🧬️schema/🔗️.graphql"
+# import CreateNode from "./🌱create-node/🧬️schema/🔗️.graphql"
+# import ChangeNodeKind from "./🏷️change-node-kind/🧬️schema/🔗️.graphql"
+# import ResizeNode from "./📐resize-node/🧬️schema/🔗️.graphql"
+# import ChangeNodeShape from "./🔷change-node-shape/🧬️schema/🔗️.graphql"
+# import DeleteNode from "./🗑️delete-node/🧬️schema/🔗️.graphql"
+# import SetNodeRoot from "./🚩set-node-root/🧬️schema/🔗️.graphql"
+# import ConnectNodes from "./🤝️connect-nodes/🧬️schema/🔗️.graphql"
+# import MoveNode from "./🧭move-node/🧬️schema/🔗️.graphql"
 
-scalar DslValue
-
-type WiresMutation {
-  wiresFixture: DslValue! @state(class: ARTIFACT)
-  boardFixture: DslValue! @state(class: ARTIFACT)
-}
-
-type WiresStringList {
-  values: [String!]!
-}
+union WiresMutation = DisconnectNodes | EditNodeText | CreateNode | ChangeNodeKind | ResizeNode | ChangeNodeShape | DeleteNode | SetNodeRoot | ConnectNodes | MoveNode

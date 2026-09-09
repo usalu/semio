@@ -7,7 +7,7 @@
   "aggregateVariant": "SetEditorSelection",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-editor-selection",
-  "binaryTag": 2,
+  "binaryTag": 1,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
   "outcomeClasses": ["applied"],

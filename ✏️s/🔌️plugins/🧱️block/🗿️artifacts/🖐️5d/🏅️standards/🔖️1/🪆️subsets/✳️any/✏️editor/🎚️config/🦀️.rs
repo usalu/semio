@@ -7,8 +7,7 @@
 use protocol::Mutation;
 
 //#region 🔖️Config
-/// 🧮️ `Block5dPlayApp`'s real `ArtifactApp::Config` — B1 pure-trait conversion. Absorbs the former
-/// `Block5dPlayApp::selected_ids` `RefCell` field plus the locale this app resolves itself.
+/// 🧮️ `Block5dPlayApp`'s empty artifact config; selection and locale live in the shared view model.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
@@ -16,9 +15,7 @@ use protocol::Mutation;
 #[dsl(extension = "block5dcfg")]
 #[dsl(id = "block5d.config")]
 #[dsl(layout = "lines")]
-pub struct Block5dConfig {
-    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel.locale`.
-}
+pub struct Block5dConfig {}
 
 //#region 🔖️ArtifactCodec
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
@@ -66,7 +63,7 @@ impl store::ArtifactPack for Block5dConfig {
 
 impl Default for Block5dConfig {
     fn default() -> Self {
-        Self { }
+        Self {}
     }
 }
 
@@ -150,9 +147,22 @@ impl Mutation<Block5dConfig> for Block5dConfigMutation {
     /// PROVISIONAL: neither `owner` path below names a directory that exists on disk — this enum
     /// has no `🧬️mutations/<slug>` leaf triads of its own, so both entries are metadata
     /// placeholders to satisfy `protocol::Mutation`, matching puzzle5d's config precedent.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
+        semantic_kind: "snapshot",
+        display_name: "Snapshot",
+        emoji: "📄",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
@@ -160,12 +170,10 @@ impl Mutation<Block5dConfig> for Block5dConfigMutation {
         }
     }
 
-    fn diff(&self, base: &Block5dConfig) -> protocol::MutationOutcome<Block5dConfig> {
-        let mut next = base.clone();
+    fn diff(&self, _base: &Block5dConfig) -> protocol::MutationOutcome<Block5dConfig> {
         match self {
-            Block5dConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
+            Block5dConfigMutation::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
         }
-        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &Block5dConfig) -> Vec<Self> {

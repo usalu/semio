@@ -12,7 +12,6 @@ pub type SurfaceControlStrip = (f64, f64, KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f6
 /// 🗺️ Parameter bounds and spatial bounds for a surface patch.
 pub type SurfacePatchBounds = (f64, f64, f64, f64, (Pnt3, Pnt3));
 
-
 use super::Surface;
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::{insert_knot, KnotVector};
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
@@ -362,9 +361,7 @@ fn patch_seeds(u0: f64, u1: f64, v0: f64, v1: f64) -> [(f64, f64); 25] {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn closest_on_nurbs_surface(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, tol: f64) -> ClosestUv {
-    let Surface::Nurbs { u_knots, v_knots, controls, weights } = surface else {
-        unreachable!("closest_on_nurbs_surface called on a non-NURBS surface")
-    };
+    let Surface::Nurbs { u_knots, v_knots, controls, weights } = surface else { unreachable!("closest_on_nurbs_surface called on a non-NURBS surface") };
     let mut patches: Vec<(f64, f64, f64, f64, f64)> = bezier_patches(u_knots, v_knots, controls, weights)
         .into_iter()
         .filter(|(u0, u1, v0, v1, _)| *u1 > (domain.0).0 - 1e-12 && *u0 < (domain.0).1 + 1e-12 && *v1 > (domain.1).0 - 1e-12 && *v0 < (domain.1).1 + 1e-12)

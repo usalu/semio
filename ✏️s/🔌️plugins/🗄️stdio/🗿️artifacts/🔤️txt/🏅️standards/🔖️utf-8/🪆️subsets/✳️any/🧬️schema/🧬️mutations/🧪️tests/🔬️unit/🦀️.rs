@@ -1,4 +1,3 @@
-
 use super::*;
 use dsl::FromValue;
 use protocol::SemanticMutation;

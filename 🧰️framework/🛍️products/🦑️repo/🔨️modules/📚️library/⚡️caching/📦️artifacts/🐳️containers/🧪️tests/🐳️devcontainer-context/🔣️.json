@@ -1,0 +1,8 @@
+{
+  "compose": ".devcontainer/docker-compose.yml",
+  "service": "compose",
+  "context": ".",
+  "dockerfile": "Dockerfile",
+  "ignored": ["node_modules/dependency/index.js", ".nx/cache/task/output", ".🧬semio/🦑️repo/⚡️cache/rust/target/debug/binary", "app/dist/main.js", "user-data/data.db", "post-create.sh", "nested/🧫️fixture/data.json"],
+  "patterns": ["**"]
+}

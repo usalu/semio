@@ -4,49 +4,49 @@
 use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 
 //#region 🔖️Leaves
-#[path = "🔒️insert-encryption-dictionary/🦀️.rs"]
-pub mod insert_encryption_dictionary;
-#[path = "🔓️remove-encryption-dictionary/🦀️.rs"]
-pub mod remove_encryption_dictionary;
-#[path = "🏳️set-output-intent/🦀️.rs"]
-pub mod set_output_intent;
-#[path = "🧽️remove-output-intent/🦀️.rs"]
-pub mod remove_output_intent;
-#[path = "📐️set-trim-box/🦀️.rs"]
-pub mod set_trim_box;
-#[path = "✂️remove-trim-box/🦀️.rs"]
-pub mod remove_trim_box;
 #[path = "🔤️embed-font-file/🦀️.rs"]
 pub mod embed_font_file;
-#[path = "🧺️remove-font-file/🦀️.rs"]
-pub mod remove_font_file;
+#[path = "🔒️insert-encryption-dictionary/🦀️.rs"]
+pub mod insert_encryption_dictionary;
 #[path = "📜️insert-javascript-action/🦀️.rs"]
 pub mod insert_javascript_action;
-#[path = "🚫️remove-javascript-action/🦀️.rs"]
-pub mod remove_javascript_action;
 #[path = "🚀️insert-launch-action/🦀️.rs"]
 pub mod insert_launch_action;
-#[path = "🛬️remove-launch-action/🦀️.rs"]
-pub mod remove_launch_action;
 #[path = "🎬️insert-media-annotation/🦀️.rs"]
 pub mod insert_media_annotation;
+#[path = "🔓️remove-encryption-dictionary/🦀️.rs"]
+pub mod remove_encryption_dictionary;
+#[path = "🧺️remove-font-file/🦀️.rs"]
+pub mod remove_font_file;
+#[path = "🚫️remove-javascript-action/🦀️.rs"]
+pub mod remove_javascript_action;
+#[path = "🛬️remove-launch-action/🦀️.rs"]
+pub mod remove_launch_action;
 #[path = "⏹️remove-media-annotation/🦀️.rs"]
 pub mod remove_media_annotation;
+#[path = "🧽️remove-output-intent/🦀️.rs"]
+pub mod remove_output_intent;
+#[path = "✂️remove-trim-box/🦀️.rs"]
+pub mod remove_trim_box;
+#[path = "🏳️set-output-intent/🦀️.rs"]
+pub mod set_output_intent;
+#[path = "📐️set-trim-box/🦀️.rs"]
+pub mod set_trim_box;
 
-pub use insert_encryption_dictionary::InsertEncryptionDictionary;
-pub use remove_encryption_dictionary::RemoveEncryptionDictionary;
-pub use set_output_intent::SetOutputIntent;
-pub use remove_output_intent::RemoveOutputIntent;
-pub use set_trim_box::SetTrimBox;
-pub use remove_trim_box::RemoveTrimBox;
 pub use embed_font_file::EmbedFontFile;
-pub use remove_font_file::RemoveFontFile;
+pub use insert_encryption_dictionary::InsertEncryptionDictionary;
 pub use insert_javascript_action::InsertJavascriptAction;
-pub use remove_javascript_action::RemoveJavascriptAction;
 pub use insert_launch_action::InsertLaunchAction;
-pub use remove_launch_action::RemoveLaunchAction;
 pub use insert_media_annotation::InsertMediaAnnotation;
+pub use remove_encryption_dictionary::RemoveEncryptionDictionary;
+pub use remove_font_file::RemoveFontFile;
+pub use remove_javascript_action::RemoveJavascriptAction;
+pub use remove_launch_action::RemoveLaunchAction;
 pub use remove_media_annotation::RemoveMediaAnnotation;
+pub use remove_output_intent::RemoveOutputIntent;
+pub use remove_trim_box::RemoveTrimBox;
+pub use set_output_intent::SetOutputIntent;
+pub use set_trim_box::SetTrimBox;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
@@ -73,10 +73,10 @@ pub enum PdfXMutation {
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Codecs
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
 //#endregion 🔖️Codecs
 
 //#region 🔖️Delegation

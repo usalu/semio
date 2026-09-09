@@ -6,9 +6,9 @@
 //! `🧬️schema/🦀️component.rs` (pure document helper); `fem2d_io`/its ports live in
 //! `🎛️apps/◻️2d/🦀️.rs` (app-facing `AppIo` surface).
 
-use crate::{Fem2dSnapshot, FemLoad};
 use crate::fem2d_engine::meshing::{area_load_nodal_loads, build_nodes_and_elements, self_weight_nodal_loads, GRAVITY_G};
 use crate::model::{MemberUdl, NodalLoad, Support};
+use crate::{Fem2dSnapshot, FemLoad};
 use std::collections::HashMap;
 
 // #region 🔖️Errors

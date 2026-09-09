@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/writer/main-window/transient/mutations.json",
+  "title": "WriterMainWindowTransientMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "selection"],
+      "properties": {
+        "kind": { "const": "set-editor-selection" },
+        "selection": { "$ref": "schema.json#/properties/editorSelection" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "const": "set-lint-generation" },
+        "value": { "type": "integer", "minimum": 0 }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "const": "set-engagement-input" },
+        "value": { "type": "string", "maxLength": 4096 }
+      }
+    }
+  ]
+}

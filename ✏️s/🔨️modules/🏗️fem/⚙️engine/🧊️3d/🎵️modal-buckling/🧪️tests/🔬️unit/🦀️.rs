@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::artifacts::fem3d::{FemAnalysisSettings, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
+use crate::{FemAnalysisSettings, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
 
 fn cantilever_fixture() -> Fem3dSnapshot {
     let (e, g, a, iy, iz, j, l, p) = (210e9, 80.77e9, 0.00538, 0.0000369, 0.0000133, 0.00000060, 3.0, 5000.0);
@@ -11,7 +10,7 @@ fn cantilever_fixture() -> Fem3dSnapshot {
         sections: vec![FemSection { id: "hea200".into(), name: "HEA200".into(), area: a, iy, iz, j }],
         solids: vec![],
         supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() }],
-        load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![crate::artifacts::fem3d::FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -p }], self_weight: false }],
+        load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![crate::FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -p }], self_weight: false }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
     }

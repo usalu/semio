@@ -11,7 +11,7 @@
         "operator": "Equal",
         "value": {
           "kind": "decimal",
-          "value": 600.0
+          "value": 600
         }
       }
     ],
@@ -20,6 +20,5 @@
   "partNumberRule": null,
   "partNumberInputs": null,
   "scriptLimits": null,
-  "exchangeProcess": null,
-  "selectedCheckIndex": null
+  "exchangeProcess": null
 }

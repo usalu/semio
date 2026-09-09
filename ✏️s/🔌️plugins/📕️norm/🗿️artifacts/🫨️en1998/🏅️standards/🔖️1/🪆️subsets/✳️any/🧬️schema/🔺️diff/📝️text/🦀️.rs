@@ -166,9 +166,6 @@ impl En1998Diff {
             if let Some(value) = &self.wall_h_rd_kn {
                 next.wall_h_rd_kn = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -392,7 +389,6 @@ impl MutationDiff<En1998Snapshot> for En1998Diff {
         take!(wall_soil_gamma_kn_m3);
         take!(wall_r);
         take!(wall_h_rd_kn);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

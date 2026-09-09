@@ -7,17 +7,6 @@ export interface Generation2dDiff {
   fixture?: FlowFixture;
   /** @state artifact */
   generation?: GenerationPlayState;
-  /** @state presence */
-  selectedIds?: Generation2dStringList;
-  /** @state config */
-  graphCamera?: CameraJson;
-  /** @state config */
-  showMode?: string;
-  /** @state presence */
-  selectedGenerationId?: string | null;
-  /** @state artifact */
-  generationPreviewText?: string | null;
-  /** @state config */
 }
 
 export type Generation2dStringList = { values: string[] };

@@ -1,13 +1,13 @@
 //! 🔤️ Main-window option — the font-size slider. Its command handler lives in
 //! `🎮️commands/⚙️set-font-px::set_font_px`.
 
-use crate::editor::writer::config::WriterConfig;
+use crate::editor::writer::modes::edit::windows::main::config::WriterMainWindowConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::editor::writer::writer_action;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
+pub fn measure(config: &WriterMainWindowConfig, labels: &WriterPlayLabels) -> WindowMeasure {
     let settings = &config.editor_settings;
     WindowMeasure::Slider {
         id: "writer-font-size-measure".into(),

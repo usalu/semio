@@ -1,6 +1,5 @@
 //! ⛰️ `change-snow-altitude-m` — sets the En1991 snow altitude scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

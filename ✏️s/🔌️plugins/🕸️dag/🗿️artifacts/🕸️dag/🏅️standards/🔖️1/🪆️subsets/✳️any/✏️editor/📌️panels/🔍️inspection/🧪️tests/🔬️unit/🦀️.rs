@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::dag::testkit::{new_app, render as render_body};
 
@@ -24,7 +23,7 @@ async fn renders_the_select_a_node_placeholder_when_nothing_is_selected() {
 async fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
     let document = crate::default_snapshot();
     let node_id = document.nodes().first().map(|node| node.id.clone()).expect("node");
-    let labels = crate::editor::dag::terminology::dag_play_labels(&crate::editor::dag::config::DagConfig::default());
+    let labels = crate::editor::dag::terminology::dag_play_labels(&semio_framework_plugin::ViewModel::default());
     let node = render(&document, &[node_id.clone()], labels).expect("inspector component tree");
     let json = serde_json::to_string(&node).unwrap();
     assert!(json.contains(&node_id));

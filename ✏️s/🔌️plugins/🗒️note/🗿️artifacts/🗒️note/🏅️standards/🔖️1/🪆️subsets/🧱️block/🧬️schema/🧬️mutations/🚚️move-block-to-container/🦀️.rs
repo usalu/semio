@@ -1,10 +1,10 @@
 //! 🚚 Note mutation — `MoveBlockToContainer`: reparents a block into a new container at an index (hierarchy move).
 
-use crate::{NoteDiff, NoteSnapshot};
 use crate::schema::mutations::NoteMutation;
+use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🚚 `move-block-to-container` payload — reparents a block into a new container at an index (hierarchy move).

@@ -5,7 +5,7 @@ use framework_schema::ArtifactSchema;
 use store::ArtifactDsl;
 
 //#region 🔖️Artifact
-/// 🧬️ Full sequence artifact state across the artifact, presence and config lanes. Ticket
+/// 🧬️ sequence document artifact state. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`sequence→C:flow`): `steps`/`edges` are replaced
 /// by the same composed `content` CHILD slot `SequenceSnapshot` carries, mirroring `WriterArtifact`/
 /// `FlowArtifact`'s precedent so `to_snapshot`/`from_snapshot`/`set_snapshot` stay consistent.
@@ -18,25 +18,13 @@ pub struct SequenceArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub content: SequenceContentChild,
-    #[state(config)]
-    pub last_run_json: String,
-    #[state(config)]
-    pub orientation: String,
-    #[state(config)]
-    pub camera: SequenceCamera,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for SequenceArtifact {
     fn default() -> Self {
-        Self {
-            schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
-            content: crate::sequence_content_child_with_owner(Vec::new(), Vec::new()),
-            last_run_json: String::new(),
-            orientation: "leftRight".into(),
-            camera: SequenceCamera::default(),
-        }
+        Self { schema: SEQUENCE_DOCUMENT_SCHEMA.into(), content: crate::sequence_content_child_with_owner(Vec::new(), Vec::new()) }
     }
 }
 
@@ -46,9 +34,9 @@ impl SequenceArtifact {
         SequenceSnapshot { schema: self.schema.clone(), content: self.content.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: SequenceSnapshot) -> Self {
-        Self { schema: snapshot.schema, content: snapshot.content, last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default() }
+        Self { schema: snapshot.schema, content: snapshot.content }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -64,13 +52,7 @@ impl SequenceArtifact {
 pub fn sequence_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.sequence.sequence",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

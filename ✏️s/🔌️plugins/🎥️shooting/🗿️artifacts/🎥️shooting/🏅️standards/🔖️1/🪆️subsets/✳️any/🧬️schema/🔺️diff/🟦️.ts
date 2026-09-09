@@ -1,5 +1,7 @@
 /** 🧬️ Shooting diff schema — sparse field delta over the artifact. */
 
+import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+
 export interface ShootingDiff {
   /** @state artifact */
   artifact?: ShootingArtifact;
@@ -17,25 +19,8 @@ export interface ShootingDiff {
   activeShotId?: string;
   /** @state artifact */
   activeAssetId?: string;
-  /** @state presence */
-  selectedShotIds?: ShootingStringList;
-  /** @state presence */
-  activeUtilityId?: string;
-  /** @state config */
-  defaultShotFormat?: string;
-  /** @state config */
-  defaultShotShape?: string;
-  /** @state config */
-  defaultAssetFormat?: string;
-  /** @state config */
-  centerModel?: boolean;
-  /** @state config */
-  fitRevision?: number;
-  /** @state config */
-  cameraDraftLabel?: string;
-  /** @state config */
-  camera?: ShootingCamera;
-  /** @state config */
+  /** @state artifact @child kind=s.stdio.semio.image */
+  emblem?: ArtifactChild | null;
 }
 
 export interface ShootingStringList {
@@ -107,15 +92,7 @@ export interface ShootingArtifact {
   shots: ShootingShot[];
   activeShotId: string;
   activeAssetId: string;
-  selectedShotIds: string[];
-  activeUtilityId: string;
-  defaultShotFormat: string;
-  defaultShotShape: string;
-  defaultAssetFormat: string;
-  centerModel: boolean;
-  fitRevision: number;
-  cameraDraftLabel: string;
-  camera: ShootingCamera;
+  emblem?: ArtifactChild;
 }
 
 export interface ShootingCamera {
@@ -130,7 +107,6 @@ export interface ShootingCamera {
 export interface ShootingSavedCamera {
   id: string;
   label: string;
-  camera: ShootingCamera;
 }
 
 export interface ShootingAsset {

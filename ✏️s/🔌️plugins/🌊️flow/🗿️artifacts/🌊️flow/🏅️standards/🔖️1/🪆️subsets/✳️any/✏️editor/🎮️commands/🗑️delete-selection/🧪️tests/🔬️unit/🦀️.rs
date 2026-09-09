@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::editor::flow::testkit::{dispatch, dispatch_with_registry, flow_app_with_registry, select_graph};
-use crate::editor::flow::{FLOW_PLAY_BODY_MAIN, FlowCommand};
+use crate::editor::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
 
 #[semio_framework_async_macros::async_test]
 async fn delete_selection_deletes_the_widgets_picked_via_interaction_select() {

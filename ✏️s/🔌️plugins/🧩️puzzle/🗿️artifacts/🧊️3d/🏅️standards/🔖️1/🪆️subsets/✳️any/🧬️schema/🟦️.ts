@@ -15,69 +15,6 @@ export interface Puzzle3dArtifact {
   targetVolumes: Puzzle3dTargetVolume[];
   /** @state artifact */
   references: Puzzle3dReference[];
-  /** @state presence */
-  selectedObjectIds: string[];
-  /** @state presence */
-  selectedVortexIds: string[];
-  /** @state presence */
-  selectedAttractionIds: string[];
-  /** @state presence */
-  selectedTargetVolumeIds: string[];
-  /** @state presence */
-  selectedReferenceIds: string[];
-  /** @state presence */
-  activeUtilityId: string;
-  /** @state config */
-  cameraPositionX: number;
-  /** @state config */
-  cameraPositionY: number;
-  /** @state config */
-  cameraPositionZ: number;
-  /** @state config */
-  cameraTargetX: number;
-  /** @state config */
-  cameraTargetY: number;
-  /** @state config */
-  cameraTargetZ: number;
-  /** @state config */
-  cameraZoom: number;
-  /** @state config */
-  selectionMethod: string;
-  /** @state config */
-  selectionModeDefault: string;
-  /** @state config */
-  engagementInput: string;
-  /** @state config */
-  gridVisible: boolean;
-  /** @state config */
-  gridSnapEnabled: boolean;
-  /** @state config */
-  gridSpacing: number;
-  /** @state config */
-  overlapBudget: number;
-  /** @state config */
-  fillCount: number;
-  /** @state config */
-  brushCandidateIndex: number;
-  /** @state config */
-  lodAutomatic: boolean;
-  /** @state config */
-  lodDepthVariable: boolean;
-  /** @state config */
-  lodManual: number;
-  /** @state config */
-  proximityRadius: number;
-  /** @state config */
-  /** @state config */
-  runtimeExtrasJson: string;
-  /** @state artifact */
-  hoveredObjectId?: string;
-  /** @state artifact */
-  hoveredVortexFullId?: string;
-  /** @state artifact */
-  hoveredKindId?: string;
-  /** @state artifact */
-  previewSeq: number;
 }
 
 export type Puzzle3dObjectAnchor = "fixed" | "derived";
@@ -252,37 +189,6 @@ export function parsePuzzle3dArtifact(value: unknown, at = "$"): Puzzle3dArtifac
     attractions: puzzlePuzzle3dArtifactGuardArray(row["attractions"], `${at}.attractions`).map((item, index) => parsePuzzle3dAttraction(item, `${at}.attractions[${index}]`)),
     targetVolumes: puzzlePuzzle3dArtifactGuardArray(row["targetVolumes"], `${at}.targetVolumes`).map((item, index) => parsePuzzle3dTargetVolume(item, `${at}.targetVolumes[${index}]`)),
     references: puzzlePuzzle3dArtifactGuardArray(row["references"], `${at}.references`).map((item, index) => parsePuzzle3dReference(item, `${at}.references[${index}]`)),
-    selectedObjectIds: puzzlePuzzle3dArtifactGuardArray(row["selectedObjectIds"], `${at}.selectedObjectIds`).map((item, index) => puzzlePuzzle3dArtifactGuardString(item, `${at}.selectedObjectIds[${index}]`)),
-    selectedVortexIds: puzzlePuzzle3dArtifactGuardArray(row["selectedVortexIds"], `${at}.selectedVortexIds`).map((item, index) => puzzlePuzzle3dArtifactGuardString(item, `${at}.selectedVortexIds[${index}]`)),
-    selectedAttractionIds: puzzlePuzzle3dArtifactGuardArray(row["selectedAttractionIds"], `${at}.selectedAttractionIds`).map((item, index) => puzzlePuzzle3dArtifactGuardString(item, `${at}.selectedAttractionIds[${index}]`)),
-    selectedTargetVolumeIds: puzzlePuzzle3dArtifactGuardArray(row["selectedTargetVolumeIds"], `${at}.selectedTargetVolumeIds`).map((item, index) => puzzlePuzzle3dArtifactGuardString(item, `${at}.selectedTargetVolumeIds[${index}]`)),
-    selectedReferenceIds: puzzlePuzzle3dArtifactGuardArray(row["selectedReferenceIds"], `${at}.selectedReferenceIds`).map((item, index) => puzzlePuzzle3dArtifactGuardString(item, `${at}.selectedReferenceIds[${index}]`)),
-    activeUtilityId: puzzlePuzzle3dArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
-    cameraPositionX: puzzlePuzzle3dArtifactGuardNumber(row["cameraPositionX"], `${at}.cameraPositionX`),
-    cameraPositionY: puzzlePuzzle3dArtifactGuardNumber(row["cameraPositionY"], `${at}.cameraPositionY`),
-    cameraPositionZ: puzzlePuzzle3dArtifactGuardNumber(row["cameraPositionZ"], `${at}.cameraPositionZ`),
-    cameraTargetX: puzzlePuzzle3dArtifactGuardNumber(row["cameraTargetX"], `${at}.cameraTargetX`),
-    cameraTargetY: puzzlePuzzle3dArtifactGuardNumber(row["cameraTargetY"], `${at}.cameraTargetY`),
-    cameraTargetZ: puzzlePuzzle3dArtifactGuardNumber(row["cameraTargetZ"], `${at}.cameraTargetZ`),
-    cameraZoom: puzzlePuzzle3dArtifactGuardNumber(row["cameraZoom"], `${at}.cameraZoom`),
-    selectionMethod: puzzlePuzzle3dArtifactGuardString(row["selectionMethod"], `${at}.selectionMethod`),
-    selectionModeDefault: puzzlePuzzle3dArtifactGuardString(row["selectionModeDefault"], `${at}.selectionModeDefault`),
-    engagementInput: puzzlePuzzle3dArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),
-    gridVisible: puzzlePuzzle3dArtifactGuardBoolean(row["gridVisible"], `${at}.gridVisible`),
-    gridSnapEnabled: puzzlePuzzle3dArtifactGuardBoolean(row["gridSnapEnabled"], `${at}.gridSnapEnabled`),
-    gridSpacing: puzzlePuzzle3dArtifactGuardNumber(row["gridSpacing"], `${at}.gridSpacing`),
-    overlapBudget: puzzlePuzzle3dArtifactGuardNumber(row["overlapBudget"], `${at}.overlapBudget`),
-    fillCount: puzzlePuzzle3dArtifactGuardInteger(row["fillCount"], `${at}.fillCount`, {"minimum": 0}),
-    brushCandidateIndex: puzzlePuzzle3dArtifactGuardInteger(row["brushCandidateIndex"], `${at}.brushCandidateIndex`, {"minimum": 0}),
-    lodAutomatic: puzzlePuzzle3dArtifactGuardBoolean(row["lodAutomatic"], `${at}.lodAutomatic`),
-    lodDepthVariable: puzzlePuzzle3dArtifactGuardBoolean(row["lodDepthVariable"], `${at}.lodDepthVariable`),
-    lodManual: puzzlePuzzle3dArtifactGuardNumber(row["lodManual"], `${at}.lodManual`),
-    proximityRadius: puzzlePuzzle3dArtifactGuardNumber(row["proximityRadius"], `${at}.proximityRadius`),
-    runtimeExtrasJson: puzzlePuzzle3dArtifactGuardString(row["runtimeExtrasJson"], `${at}.runtimeExtrasJson`),
-    hoveredObjectId: row["hoveredObjectId"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["hoveredObjectId"], `${at}.hoveredObjectId`),
-    hoveredVortexFullId: row["hoveredVortexFullId"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["hoveredVortexFullId"], `${at}.hoveredVortexFullId`),
-    hoveredKindId: row["hoveredKindId"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["hoveredKindId"], `${at}.hoveredKindId`),
-    previewSeq: puzzlePuzzle3dArtifactGuardInteger(row["previewSeq"], `${at}.previewSeq`),
   };
 }
 

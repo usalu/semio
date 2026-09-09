@@ -3,11 +3,11 @@
   "dataLimits": { "hotMessageBytes": 262144, "snapshotMessageBytes": 4194304, "pendingBytes": 1048576, "pendingMessages": 64, "snapshotTransport": "cold-pair" },
   "cases": [
     {
-      "id": "first-bind",
+      "id": "instance-zero-first-bind",
       "initial": { "generation": "0", "uri": null },
-      "command": { "schema": "semio.plugin.document-backbone-binding.v1", "operation": "bind", "instanceId": 7, "bindingGeneration": "1", "uri": "actor://v1:7:3:space-amap" },
-      "receipt": { "schema": "semio.plugin.document-backbone-binding-receipt.v1", "operation": "bound", "instanceId": 7, "bindingGeneration": "1", "uri": "actor://v1:7:3:space-amap" },
-      "final": { "generation": "1", "uri": "actor://v1:7:3:space-amap" }
+      "command": { "schema": "semio.plugin.document-backbone-binding.v1", "operation": "bind", "instanceId": 0, "bindingGeneration": "1", "uri": "actor://v1:0:3:space-amap" },
+      "receipt": { "schema": "semio.plugin.document-backbone-binding-receipt.v1", "operation": "bound", "instanceId": 0, "bindingGeneration": "1", "uri": "actor://v1:0:3:space-amap" },
+      "final": { "generation": "1", "uri": "actor://v1:0:3:space-amap" }
     },
     {
       "id": "duplicate-bind-replays-receipt",
@@ -82,7 +82,6 @@
     { "id": "unknown-command-field", "value": { "schema": "semio.plugin.document-backbone-binding.v1", "operation": "bind", "instanceId": 7, "bindingGeneration": "1", "uri": "actor://a", "actor": "secret" } },
     { "id": "wrong-command-schema", "value": { "schema": "semio.plugin.document-backbone-binding/v1", "operation": "bind", "instanceId": 7, "bindingGeneration": "1", "uri": "actor://a" } },
     { "id": "numeric-generation", "value": { "schema": "semio.plugin.document-backbone-binding.v1", "operation": "bind", "instanceId": 7, "bindingGeneration": 1, "uri": "actor://a" } },
-    { "id": "zero-instance", "value": { "schema": "semio.plugin.document-backbone-binding.v1", "operation": "bind", "instanceId": 0, "bindingGeneration": "1", "uri": "actor://a" } },
     { "id": "empty-uri", "value": { "schema": "semio.plugin.document-backbone-binding.v1", "operation": "bind", "instanceId": 7, "bindingGeneration": "1", "uri": "" } },
     { "id": "refused-without-code", "value": { "schema": "semio.plugin.document-backbone-binding-receipt.v1", "operation": "refused", "instanceId": 7, "bindingGeneration": "1", "uri": "actor://a" } },
     { "id": "bound-with-code", "value": { "schema": "semio.plugin.document-backbone-binding-receipt.v1", "operation": "bound", "instanceId": 7, "bindingGeneration": "1", "uri": "actor://a", "code": "plugin.document-backbone.unexpected" } },

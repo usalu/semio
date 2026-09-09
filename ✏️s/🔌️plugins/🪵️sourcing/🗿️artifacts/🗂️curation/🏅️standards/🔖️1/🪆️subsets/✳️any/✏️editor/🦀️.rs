@@ -263,7 +263,7 @@ fn sourcing_curation_retained_reduce(
 ) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, NoDraftMutation>, Fault> {
     if !SOURCING_CURATION_BOUNDED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("sourcing-curation-retained-route-mismatch")); }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     command.dispatch(&doc, &cfg)
 }
 
@@ -1105,7 +1105,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .window_kind_interactions(grid::SOURCING_CURATION_WINDOW_GRID, vec![InteractionRef::new("rows")])
             // 🔧️ Curation counts/stock edits are persisted in `CurationSnapshot`, so each arm emits a
             // whole-document `SetArtifact` operation and is declared as a Mutation, never a View.
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .mutation("stockFromCatalogue", LocalizedLabel::native("Stock From Catalogue", "Bestand aus Katalog"))
             .action_with(hidden_operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen")))
             .action_with(hidden_operation("curationAdd", LocalizedLabel::native("Curation Add", "Kuratierung hinzufügen")))

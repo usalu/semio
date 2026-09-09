@@ -13,33 +13,6 @@ export interface FlowDiff {
   synapses?: FlowSynapsesDelta;
   /** @state artifact */
   layout?: FlowLayoutMapDelta;
-  /** @state presence */
-  selectedNodeIds?: FlowStringList;
-  /** @state presence */
-  selectedEdgeIds?: FlowStringList;
-  /** @state presence */
-  selectedHandleIds?: FlowStringList;
-  /** @state presence */
-  previewOffNodeIds?: FlowStringList;
-  /** @state config */
-  lodMode?: string;
-  /** @state config */
-  proximityDistance?: number;
-  /** @state config */
-  gridVisible?: boolean;
-  /** @state config */
-  gridSnapEnabled?: boolean;
-  /** @state config */
-  gridFactor?: number;
-  /** @state config */
-  catalogueSectionsJson?: string;
-  /** @state config */
-  automationEnabledJson?: string;
-  /** @state config */
-  contributionsJson?: string;
-  /** @state config */
-  generationJson?: string;
-  /** @state config */
 }
 
 export interface CameraJson {
@@ -70,19 +43,6 @@ export interface FlowArtifact {
   widgets: Widget[];
   synapses: SynapseSpec[];
   layout: Record<string, WidgetLayout>;
-  selectedNodeIds: string[];
-  selectedEdgeIds: string[];
-  selectedHandleIds: string[];
-  previewOffNodeIds: string[];
-  lodMode: string;
-  proximityDistance: number;
-  gridVisible: boolean;
-  gridSnapEnabled: boolean;
-  gridFactor: number;
-  catalogueSectionsJson: string;
-  automationEnabledJson: string;
-  contributionsJson: string;
-  generationJson: string;
 }
 
 export interface FlowStringList {

@@ -20,8 +20,50 @@ pub const UI_FIXED_LIST_ITEMS: usize = 32;
 pub const UI_FIXED_BYTES: usize = 32 * 1_024;
 pub const UI_VALUE_PAGE_ITEMS: usize = 1;
 pub const UI_VALUE_MAX_ITEMS: usize = 256;
-pub const UI_VALUE_ADMISSION_SLOTS: usize = 256;
-pub const UI_VALUE_AGGREGATE_ITEMS: usize = 256;
+/// 🪆️ Nesting levels one authored [`UiValue`] may carry, and therefore frames the retained comparison
+/// walks it with. A value's depth is a property of what an author writes, not of how many collections
+/// the arena admits — keeping the two apart is what lets the arena grow while
+/// [`UiComponentComparisonCursor`] stays inside its fixed byte envelope.
+pub const UI_VALUE_NESTING_DEPTH: usize = 256;
+/// 🔑️ Entries the widest authored action argument carries: the four-key maps every interactive panel row
+/// binds — `domainId`/`merge`/`method`/`targets` for an interaction pick, `entity`/`flag`/`ids`/`value`
+/// for a selection-flag row action.
+pub const UI_VALUE_ARGUMENT_ENTRIES: usize = 4;
+/// 🔘️ Inline row actions one interactive row authors beside its own activation binding — a visibility
+/// toggle and a lock toggle, each carrying one argument map plus the single-id list nested inside it.
+pub const UI_VALUE_ROW_ACTIONS: usize = 2;
+/// 🎟️ Arena collections one interactive row owns: its activation binding's argument map, plus a map and
+/// one nested id list for each inline row action.
+pub const UI_VALUE_ROW_COLLECTIONS: usize = 1 + 2 * UI_VALUE_ROW_ACTIONS;
+/// 📄️ Arena pages one interactive row owns: every argument map's entries, plus the single id each row
+/// action's nested list carries.
+pub const UI_VALUE_ROW_ITEMS: usize = (1 + UI_VALUE_ROW_ACTIONS) * UI_VALUE_ARGUMENT_ENTRIES + UI_VALUE_ROW_ACTIONS;
+/// 🧾️ Interactive rows one virtualised panel page materialises: [`crate::UI_BUILT_CHILDREN_MAX`] children
+/// per node is the built-children contract and the last of them carries the continuation row, so a page is
+/// exactly one node's worth of interactive rows — which is also the order of magnitude a panel viewport
+/// shows at once. Every section of a panel body, and every row nested under a row, draws on this same
+/// page, so a four-section outliner shows a proportionally shorter slice of each.
+///
+/// Why one node's worth and not one per section, measured rather than assumed: this arena's whole backing
+/// is charged against the resident authority's aggregate ceiling (see [`UI_VALUE_LIVE_PAGES`]), and at
+/// [`UI_VALUE_ROW_ITEMS`] pages of roughly a kilobyte each, a four-section page would claim ~1.8 MiB of
+/// payload the live surfaces need — enough to regress `semio-framework-ui-runtime`'s resident-credit laws.
+/// This page holds them exactly at their baseline.
+pub const UI_VALUE_PAGE_ROWS: usize = crate::UI_BUILT_CHILDREN_MAX - 1;
+/// 🪟️ Panel pages the arena admits at once — **one**, and deliberately so. This arena's whole backing is
+/// charged against the resident authority's aggregate ceiling
+/// (`crate::UI_RESIDENT_AGGREGATE_BYTES`, whose authored law is exactly four resident surfaces and whose
+/// fixture declares `staticCountsAgainstAggregate`), so every page of headroom reserved here is payload
+/// the live surfaces cannot have. A second panel assembling beside the first therefore does not get a page
+/// of its own: it reads [`ui_value_headroom`] and pages against what is left, which is what makes a
+/// virtualised author total rather than fatal. A memoized page costs nothing on top —
+/// `credited_clone` aliases the very collections the build already admitted, so a retained tree and its
+/// live original share one page's credit.
+pub const UI_VALUE_LIVE_PAGES: usize = 1;
+pub const UI_VALUE_ADMISSION_SLOTS: usize = UI_VALUE_LIVE_PAGES * UI_VALUE_PAGE_ROWS * UI_VALUE_ROW_COLLECTIONS;
+pub const UI_VALUE_AGGREGATE_ITEMS: usize = UI_VALUE_LIVE_PAGES * UI_VALUE_PAGE_ROWS * UI_VALUE_ROW_ITEMS;
+/// 📮️ Ready-bit words the handback mailbox needs to cover [`UI_VALUE_ADMISSION_SLOTS`] one bit each.
+pub(crate) const UI_VALUE_HANDBACK_WORDS: usize = UI_VALUE_ADMISSION_SLOTS.div_ceil(64);
 const UI_VALUE_NONE: usize = usize::MAX;
 
 #[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -847,7 +889,7 @@ pub(crate) const fn resident_static_backing_bytes() -> usize {
     size_of::<LazyLock<Mutex<UiValueArena>>>()
         + UI_VALUE_AGGREGATE_ITEMS * (size_of::<UiPageSlot>() + size_of::<usize>())
         + UI_VALUE_ADMISSION_SLOTS * (size_of::<UiCollectionSlot>() + size_of::<usize>())
-        + size_of::<UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, 4>>()
+        + size_of::<UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS>>()
 }
 
 fn with_ui_value_arena<T>(f: impl FnOnce(&mut UiValueArena) -> T) -> T {
@@ -972,6 +1014,29 @@ impl UiValueArena {
 
 pub fn close_ui_value_page_one() -> bool {
     close_ui_value_page_with_grant(1, 4096).expect("exact UI value retirement queue remains valid").complete
+}
+
+/// 🎟️ Free admission credit in the process-wide `UiValue` arena, read without admitting anything. The
+/// arena is sized for [`UI_VALUE_LIVE_PAGES`] panel pages, so an author walking a document larger than
+/// [`UI_VALUE_PAGE_ROWS`] reads this before materialising one more interactive row and stops with a
+/// continuation row rather than failing an admission mid-build.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct UiValueHeadroom {
+    pub collections: usize,
+    pub items: usize,
+}
+
+impl UiValueHeadroom {
+    /// 🧾️ Interactive rows this headroom still admits, each costing [`UI_VALUE_ROW_COLLECTIONS`]
+    /// collections and [`UI_VALUE_ROW_ITEMS`] pages.
+    pub fn rows(self) -> usize {
+        (self.collections / UI_VALUE_ROW_COLLECTIONS).min(self.items / UI_VALUE_ROW_ITEMS)
+    }
+}
+
+/// 🎟️ Reads [`UiValueHeadroom`]; never admits, never retires.
+pub fn ui_value_headroom() -> UiValueHeadroom {
+    with_ui_value_arena(|arena| UiValueHeadroom { collections: arena.free_collection_count, items: arena.free_page_count })
 }
 
 #[path = "../../♻️retirement/🦀️.rs"]

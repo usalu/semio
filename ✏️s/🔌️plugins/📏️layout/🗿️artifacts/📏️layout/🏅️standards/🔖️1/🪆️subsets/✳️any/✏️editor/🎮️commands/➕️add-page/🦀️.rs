@@ -1,9 +1,9 @@
 //! ✏️ ✏️ Layout play app commands command — `add-page`.
 
+use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::mutations::create_page::CreatePage;
 use crate::mutations::LayoutMutation;
 use crate::{LayoutSnapshot, PageColumns, PageMargins};
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -42,5 +42,9 @@ pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
     // rather than reproduced as a meaningless `interactionSelect` (ticket
     // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `setActivePage` still switches the Blueprint
     // surface to the new page.
-    Ok(Emit { artifact_mutations: vec![LayoutMutation::CreatePage(CreatePage { page, index: Some(index) })], config_mutations: vec![LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id: page_id })], ..Default::default() })
+    Ok(Emit {
+        artifact_mutations: vec![LayoutMutation::CreatePage(CreatePage { page, index: Some(index) })],
+        config_mutations: vec![LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id })],
+        ..Default::default()
+    })
 }

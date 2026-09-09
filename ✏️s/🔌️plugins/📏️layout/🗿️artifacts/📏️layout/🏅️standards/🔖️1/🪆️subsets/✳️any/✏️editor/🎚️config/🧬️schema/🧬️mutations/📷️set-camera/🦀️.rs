@@ -18,7 +18,13 @@ impl protocol::MutationKind<LayoutConfig, LayoutConfigMutation> for SetCamera {
         next.camera = self.camera.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &LayoutConfig) -> Vec<LayoutConfigMutation> { vec![LayoutConfigMutation::SetCamera(Self { camera: base.camera.clone() })] }
-    fn label(&self) -> String { "Set Camera".into() }
-    fn target(&self) -> Vec<String> { vec!["camera".into()] }
+    fn inverse(&self, base: &LayoutConfig) -> Vec<LayoutConfigMutation> {
+        vec![LayoutConfigMutation::SetCamera(Self { camera: base.camera.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Camera".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["camera".into()]
+    }
 }

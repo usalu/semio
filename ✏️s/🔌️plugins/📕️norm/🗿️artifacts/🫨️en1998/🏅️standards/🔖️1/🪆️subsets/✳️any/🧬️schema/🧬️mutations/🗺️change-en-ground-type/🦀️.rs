@@ -1,9 +1,8 @@
 //! ⛰️ `change-en-ground-type` payload — changes the En1998 document's `en_ground_type` (EN ground type).
 
-
-use crate::En1998Snapshot;
 use crate::diff::En1998Diff;
 use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 //#region 🔖️ChangeEnGroundType
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

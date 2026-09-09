@@ -1,9 +1,9 @@
 //! 👁️ Generation2d play app — the preview window: the evaluated 2D canvas.
 
-use crate::standards::v1::subsets::any::schema::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
-use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
+use crate::standards::v1::subsets::any::schema::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
+use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 

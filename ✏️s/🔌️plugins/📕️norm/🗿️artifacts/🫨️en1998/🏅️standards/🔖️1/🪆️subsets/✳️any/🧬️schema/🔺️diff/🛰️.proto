@@ -103,6 +103,4 @@ message En1998Diff {
   optional double wall_r = 49;
   // @state artifact
   optional double wall_h_rd_kn = 50;
-  // @state presence
-  optional uint32 selected_check_index = 51;
 }

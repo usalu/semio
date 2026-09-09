@@ -1,7 +1,6 @@
 //! 🔀️ `reorder-layers` — repositions one construction layer within the build-up order (never
 //! spatial — `LayerDocument` carries no position of its own, only build-up sequence).
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

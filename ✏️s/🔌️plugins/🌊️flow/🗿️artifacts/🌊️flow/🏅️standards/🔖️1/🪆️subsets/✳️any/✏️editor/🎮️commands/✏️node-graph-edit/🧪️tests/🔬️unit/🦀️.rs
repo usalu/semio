@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::flow::FlowCommand;
 use crate::editor::flow::testkit::{dispatch, flow_app_with_registry, render, select_graph};
+use crate::editor::flow::FlowCommand;
 
 /// 🎯️ The batched `DeleteSelection` sub-op must clear the node selection (visible on the rendered
 /// scene) while leaving the widget count intact when nothing resolves — the behavior that

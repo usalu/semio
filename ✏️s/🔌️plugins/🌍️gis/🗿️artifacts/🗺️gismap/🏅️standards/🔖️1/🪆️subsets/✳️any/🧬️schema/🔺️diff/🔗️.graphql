@@ -5,34 +5,12 @@ type GisMapDiff {
   positions: GisMapFeaturesDelta @state(class: ARTIFACT)
   routes: GisMapFeaturesDelta @state(class: ARTIFACT)
   regions: GisMapFeaturesDelta @state(class: ARTIFACT)
-  selectedIds: GisMapStringList @state(class: PRESENCE)
-  featureSelectionJson: String @state(class: PRESENCE)
-  layerVisibility: GisMapBoolMapDelta @state(class: PRESENCE)
-  layerStrokeScale: GisMapNumberMapDelta @state(class: PRESENCE)
-  cameraJson: String @state(class: CONFIG)
-  renderMode: String @state(class: CONFIG)
-  vectorStyle: String @state(class: CONFIG)
-  lodMode: String @state(class: CONFIG)
-  hoverJson: String @state(class: CONFIG)
-  selectionMethod: String @state(class: CONFIG)
-  selectionMode: String @state(class: CONFIG)
 }
 
 type GisMapArtifact {
   positions: [GisMapFeature!]!
   routes: [GisMapFeature!]!
   regions: [GisMapFeature!]!
-  selectedIds: [String!]!
-  featureSelectionJson: String!
-  layerVisibility: [GisMapBoolEntry!]!
-  layerStrokeScale: [GisMapNumberEntry!]!
-  cameraJson: String!
-  renderMode: String!
-  vectorStyle: String!
-  lodMode: String!
-  hoverJson: String!
-  selectionMethod: String!
-  selectionMode: String!
 }
 
 type GisMapFeature { id: String! data: String! }

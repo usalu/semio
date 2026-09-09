@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn checkerboard_sample(size: usize) -> Sample2d {
@@ -54,23 +53,25 @@ fn extracted_model_relations_match_von_neumann_stencil() {
 
 #[test]
 fn periodic_sample_solves_on_a_same_size_wrapped_grid() {
-    // The canonical WFC sanity check: a periodic training sample's own tiling must remain a
-    // satisfiable solution of the extracted model on a same-size, wrap-boundary grid — if
-    // extraction/compatibility were buggy, even the sample's own arrangement could become
-    // unsolvable.
     use crate::wfc_engine::grid2d::{Boundary, Grid2dTopology};
     use crate::wfc_engine::solver_grid2d::Grid2dSolverBuilder;
-
-    let size = 4;
-    let sample = checkerboard_sample(size);
-    let cfg = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None };
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔍️decoding-and-graphs/🔣️.json")).unwrap();
+    let row = &oracle["sample"];
+    let size = row["size"].as_u64().unwrap() as usize;
+    let tiles: Vec<TileId> = serde_json::from_value::<Vec<u32>>(row["tiles"].clone()).unwrap().into_iter().map(TileId).collect();
+    let sample = Sample2d::new(size, size, tiles);
+    let cfg = Extract2dConfig { window: row["window"].as_u64().unwrap() as usize, periodic_input: true, symmetry: SymmetryGroup2d::None };
     let extracted = extract_2d(&[sample], &cfg).unwrap();
-
+    assert_eq!(extracted.decoder.window(), cfg.window);
+    let anchor = (0..extracted.model.pattern_count()).map(PatternId::from_index).find(|&pattern| extracted.decoder.anchor_tile(pattern) == TileId(row["tiles"][0].as_u64().unwrap() as u32)).unwrap();
     let relations = Stencil2d::VonNeumann.offsets().iter().enumerate().map(|(i, _)| crate::wfc_engine::ids::RelationId(i as u32)).collect::<Vec<_>>();
     let topo = Grid2dTopology::new(size, size, &Stencil2d::VonNeumann, relations, Boundary::Wrap, Boundary::Wrap, None).unwrap();
-    let mut solver = Grid2dSolverBuilder::new(extracted.model, topo).build().unwrap();
-    let outcome = solver.solve(1);
-    assert!(matches!(outcome, crate::wfc_engine::outcome::SolveOutcome::Solved(_)), "extracted model must remain solvable on a same-size wrapped grid");
+    let mut solver = Grid2dSolverBuilder::new(extracted.model, topo).fix(0, 0, anchor).unwrap().build().unwrap();
+    let crate::wfc_engine::outcome::SolveOutcome::Solved(solution) = solver.solve(1) else {
+        panic!("periodic sample must remain solvable");
+    };
+    let decoded: Vec<u32> = extracted.decoder.decode(&solution.assignment).into_iter().map(TileId::get).collect();
+    assert_eq!(serde_json::to_value(decoded).unwrap(), row["tiles"]);
 }
 
 #[test]

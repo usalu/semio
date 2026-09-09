@@ -7,28 +7,6 @@ export interface Generation3dDiff {
   fixture?: FlowFixture;
   /** @state artifact */
   generation?: GenerationPlayState;
-  /** @state presence */
-  selectedNodeIds?: Generation3dStringList;
-  /** @state config */
-  lodMode?: string;
-  /** @state config */
-  showMode?: string;
-  /** @state config */
-  selectionMethod?: string;
-  /** @state artifact */
-  hoveredNodeId?: string | null;
-  /** @state config */
-  graphCamera?: CameraJson;
-  /** @state config */
-  previewCamera?: Generation3dPreviewCamera;
-  /** @state config */
-  sunJson?: string;
-  /** @state presence */
-  selectedGenerationId?: string | null;
-  /** @state artifact */
-  generationPreviewText?: string | null;
-  /** @state presence */
-  /** @state config */
 }
 
 export type Generation3dStringList = { values: string[] };

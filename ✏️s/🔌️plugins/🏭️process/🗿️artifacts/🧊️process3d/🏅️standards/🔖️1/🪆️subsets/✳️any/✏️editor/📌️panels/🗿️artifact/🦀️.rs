@@ -1,12 +1,10 @@
 //! 📄️ Process 3d play app panel — the document tree: stock + ordered process steps.
 
-use crate::Process3dSnapshot;
 use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::{process3d_measure_icon, Process3dLabels};
 use crate::editor::process3d::PROCESS3D_INTERACTION_DOMAIN;
-use semio_framework_plugin::{
-    tree_item, ActionBinding, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use crate::Process3dSnapshot;
+use semio_framework_plugin::{tree_item, ActionBinding, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_DOCUMENT: &str = "process.play.document";
@@ -46,20 +44,15 @@ pub fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> semio_fr
     let mut step_items = semio_framework_plugin::UiFixedList::default();
     for (index, step) in fixture.step_payloads.iter().enumerate() {
         let mut item = tree_item(&step.id, crate::editor::process3d::ui_label(&step.label)?)?;
-        let icon = semio_framework_plugin::UiText::try_from_str(process3d_measure_icon(&step.measure))
-            .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.icon", "fixed document icon admission failed"))?;
-        let enabled_args = crate::editor::process3d::ui_value_map([
-            ("enabled", crate::editor::process3d::ui_value_bool(!step.enabled)),
-            ("id", crate::editor::process3d::ui_value_text(&step.id)?),
-        ])?;
+        let icon = semio_framework_plugin::UiText::try_from_str(process3d_measure_icon(&step.measure)).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.icon", "fixed document icon admission failed"))?;
+        let enabled_args = crate::editor::process3d::ui_value_map([("enabled", crate::editor::process3d::ui_value_bool(!step.enabled)), ("id", crate::editor::process3d::ui_value_text(&step.id)?)])?;
         let (enabled_action, enabled_args) = process3d_action("setStepEnabled", Some(enabled_args))?;
         let remove_args = crate::editor::process3d::ui_value_map([("id", crate::editor::process3d::ui_value_text(&step.id)?)])?;
         let (remove_action, remove_args) = process3d_action("removeStep", Some(remove_args))?;
         let mut row_actions = semio_framework_plugin::UiFixedList::default();
         row_actions
             .try_push(RowAction {
-                icon: semio_framework_plugin::UiText::try_from_str(if step.enabled { "eye" } else { "eye-off" })
-                    .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.action-icon", "fixed row action icon admission failed"))?,
+                icon: semio_framework_plugin::UiText::try_from_str(if step.enabled { "eye" } else { "eye-off" }).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.action-icon", "fixed row action icon admission failed"))?,
                 label: Some(crate::editor::process3d::ui_label(labels.enabled.as_str())?),
                 action: ActionBinding { trigger: Trigger::Activate, action: enabled_action, args: enabled_args, capability: None },
                 placement: RowActionPlacement::Row,
@@ -67,8 +60,7 @@ pub fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> semio_fr
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.row-actions", "fixed row action admission failed"))?;
         row_actions
             .try_push(RowAction {
-                icon: semio_framework_plugin::UiText::try_from_str("trash")
-                    .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.action-icon", "fixed row action icon admission failed"))?,
+                icon: semio_framework_plugin::UiText::try_from_str("trash").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.action-icon", "fixed row action icon admission failed"))?,
                 label: Some(crate::editor::process3d::ui_label(labels.remove.as_str())?),
                 action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None },
                 placement: RowActionPlacement::Menu,

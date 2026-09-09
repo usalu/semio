@@ -1,10 +1,10 @@
 //! ⬆️ Note mutation — `RemoveTableRow`: removes a table block's last row (a table always keeps at least one row).
 
-use crate::{NoteDiff, NoteSnapshot};
 use crate::schema::mutations::NoteMutation;
+use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// ⬆️ `remove-table-row` payload — removes a table block's last row (a table always keeps at least one row).

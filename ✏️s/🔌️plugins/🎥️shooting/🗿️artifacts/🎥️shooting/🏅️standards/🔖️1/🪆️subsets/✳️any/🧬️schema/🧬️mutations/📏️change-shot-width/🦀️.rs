@@ -1,8 +1,8 @@
 //! 📏 Shooting mutation payload — `ChangeShotWidth`. Sets a shot's render `width`.
 
-use crate::ShootingSnapshot;
 use crate::diff::ShootingDiff;
 use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

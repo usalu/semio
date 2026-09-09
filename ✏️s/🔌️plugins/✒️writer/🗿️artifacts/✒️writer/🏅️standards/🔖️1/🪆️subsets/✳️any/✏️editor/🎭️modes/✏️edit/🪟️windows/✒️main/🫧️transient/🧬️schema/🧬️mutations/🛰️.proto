@@ -1,0 +1,13 @@
+syntax = "proto3";
+package semio.writer.main_window.transient.mutations.v1;
+
+message WriterMainWindowTransientMutation {
+  oneof mutation {
+    SetEditorSelection set_editor_selection = 1;
+    SetLintGeneration set_lint_generation = 2;
+    SetEngagementInput set_engagement_input = 3;
+  }
+}
+message SetEditorSelection { optional bytes selection = 1; }
+message SetLintGeneration { uint32 value = 1; }
+message SetEngagementInput { string value = 1; }

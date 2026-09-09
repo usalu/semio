@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetArithmetic {
-        pub(crate) arithmetic: bool,
-    }
+    pub(crate) arithmetic: bool,
+}
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetArithmetic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "arithmetic", kind: "set-arithmetic", record: "SetArithmetic" };

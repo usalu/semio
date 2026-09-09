@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v_ap214::engine::ladder::{ceiling_type_of, has_product_definition_chain, ladder_rung_of, ladder_violations, shape_representation_row};
 use crate::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};

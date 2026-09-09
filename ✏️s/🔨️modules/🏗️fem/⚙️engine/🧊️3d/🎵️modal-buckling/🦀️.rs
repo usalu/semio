@@ -2,9 +2,9 @@
 //! artifact tree).
 
 use crate::analyses;
-use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::fem3d_engine::{meshing, Fem3dError};
 use crate::model::{Dof, Element, Elements, Node};
+use crate::Fem3dSnapshot;
 
 /// 🔢️ Node-major, active-DOF-filtered ordering matching `crate::analyses::ModalResult`/
 /// `BucklingResult`'s documented shape-vector layout — mirrors `fem_2d`'s identically named helper

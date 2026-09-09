@@ -2,8 +2,8 @@
 
 use crate::schema::snapshot::XlsxWorkbook;
 use crate::XlsxSnapshot;
-use semio_s_artifact_stdio_zip::opc::OpcPackage;
 use framework_schema::ArtifactSchema;
+use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
 //#region Artifact
 /// 🧬️ Full `stdio.xlsx` artifact state.
@@ -58,13 +58,7 @@ impl XlsxArtifact {
 pub fn xlsx_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.xlsx",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

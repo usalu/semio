@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::diff::DxfEntitiesDiff;
 use crate::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};

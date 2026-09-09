@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::NoteBlockNode;
-use crate::editor::note::NoteCommand;
 use crate::editor::note::testkit::{dispatch, note_app};
+use crate::editor::note::NoteCommand;
 use crate::schema::{block_id, find_block};
+use crate::NoteBlockNode;
 
 #[semio_framework_async_macros::async_test]
 async fn add_block_action_emits_one_op_and_grows_projection() {

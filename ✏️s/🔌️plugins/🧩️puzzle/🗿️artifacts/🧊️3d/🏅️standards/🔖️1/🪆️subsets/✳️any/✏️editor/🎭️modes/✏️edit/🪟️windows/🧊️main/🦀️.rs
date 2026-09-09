@@ -15,8 +15,8 @@ use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
 use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use crate::editor::puzzle3d::terminology::{puzzle3d_localized, Puzzle3dLabels};
 use crate::editor::puzzle3d::{
-    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_vortex_full_id, quat_rotate_vector, resolve_object_mesh_url, target_volume_scale_json, Puzzle3dFixture, Puzzle3dFixtureMeta, Puzzle3dObject, Puzzle3dScene, Puzzle3dVortex,
-    PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_VORTEX_SHOW_ALWAYS,
+    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_vortex_full_id, quat_rotate_vector, resolve_object_mesh_url, target_volume_scale_json, Puzzle3dFixture, Puzzle3dFixtureMeta, Puzzle3dInteractionSnapshot, Puzzle3dObject,
+    Puzzle3dScene, Puzzle3dVortex, PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_VORTEX_SHOW_ALWAYS,
 };
 use semio_framework_plugin::{
     world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, WindowEngagement,
@@ -52,7 +52,7 @@ pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKi
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
         actions: Vec::new(),
         utilities: vec![utilities::transform::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::volume_brush::UTILITY_ID.into(), utilities::world_relocate::UTILITY_ID.into()],
-        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle3d::PUZZLE3D_INTERACTION_DOMAIN)],
+        interactions: vec![semio_framework_plugin::InteractionRef::new(PUZZLE3D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -62,8 +62,9 @@ pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKi
 }
 
 /// 🎚️ The live chrome measures for one window instance, collected from the mode's `☑️options/*`
-/// components plus this window's own `🪛️utilities/*` option groups.
-pub fn window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
+/// components plus this window's own `🪛️utilities/*` option groups. `interaction` is the live
+/// `vortex`-domain read the Brush placement picker gates itself on.
+pub fn window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels, interaction: &Puzzle3dInteractionSnapshot) -> Vec<WindowMeasure> {
     vec![
         options::projection::measure(&envelope.runtime),
         options::vortex::show_measure(&envelope.runtime, labels),
@@ -73,7 +74,7 @@ pub fn window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecompute
         options::select::measure(&envelope.runtime, labels),
         options::sun::measure(&envelope.runtime),
         utilities::transform::options(&envelope.runtime, labels),
-        utilities::brush::options(envelope, precompute, labels),
+        utilities::brush::options(envelope, precompute, labels, interaction),
         utilities::volume_brush::options(&envelope.runtime, labels),
     ]
 }
@@ -105,14 +106,13 @@ pub fn transform_utility_active(active_utility: &str) -> bool {
     transform_handle(active_utility).is_some()
 }
 
-/// 🕹️ Whether the world gumball should render for the current selection and utility. 🕹️ ticket
-/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection is framework-owned and
-/// `ArtifactApp::render` (this fn's only caller) never gained an `InteractionView` parameter, so this
-/// can no longer see whether anything is selected — see `panels::inspection::render`'s doc comment
-/// for the framework-level gap this is downstream of. Defaults to "never render an unattached
-/// gumball" rather than always-on.
-pub fn gumball_active(_runtime: &Puzzle3dRuntime, _active_utility: &str) -> bool {
-    false
+/// 🕹️ Whether the world gumball should render: the transform utility is active, at least one handle
+/// flag is on (`setTransformGumballFlag` — an all-off gumball would draw nothing to grab), and the
+/// live `vortex` selection holds at least one object or target volume to move. Selection comes from
+/// the framework-owned domain via [`Puzzle3dInteractionSnapshot`], never from stored app state
+/// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+pub fn gumball_active(runtime: &Puzzle3dRuntime, active_utility: &str, interaction: &Puzzle3dInteractionSnapshot) -> bool {
+    transform_utility_active(active_utility) && (runtime.transform_move || runtime.transform_rotate) && !(interaction.selected_object_ids().is_empty() && interaction.selected_target_volume_ids().is_empty())
 }
 //#endregion 🔖️SceneMode
 
@@ -224,19 +224,20 @@ fn catalog_entry_field(meta: &Puzzle3dFixtureMeta, section: &str, kind_id: Optio
     fallback.into()
 }
 
-/// 👁️ True when this object's vortices should render — always when `vortex_show` is Always. 🕹️
-/// ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: used to also show when the
-/// parent object (or any of its vortices) was hovered/selected, but `render` has no live
-/// selection/hover to check (see `gumball_active`'s doc comment) — `PUZZLE3D_VORTEX_SHOW_SELECTED`
-/// mode's markers are unreachable until that framework gap closes.
-fn object_vortices_visible(_object: &Puzzle3dObject, runtime: &Puzzle3dRuntime) -> bool {
-    runtime.vortex_show == PUZZLE3D_VORTEX_SHOW_ALWAYS
+/// 👁️ True when this object's vortices should render — always when `vortex_show` is Always, otherwise
+/// only while the object itself (or one of its own vortex markers) is selected or hovered in the
+/// framework-owned `vortex` domain, which is what the `PUZZLE3D_VORTEX_SHOW_SELECTED` mode means.
+fn object_vortices_visible(object: &Puzzle3dObject, runtime: &Puzzle3dRuntime, interaction: &Puzzle3dInteractionSnapshot) -> bool {
+    runtime.vortex_show == PUZZLE3D_VORTEX_SHOW_ALWAYS || interaction.touches_object(object)
 }
 
-pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> String {
+/// 🌀️ Per-vortex marker records. `selected`/`hovered` are painted from the live `vortex` domain —
+/// `WorldVortexMarkers` reads them off each record (its own palette lookup), not off `selectionJson`.
+pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime, interaction: &Puzzle3dInteractionSnapshot) -> String {
+    let selected_vortices = interaction.selected_vortex_ids();
     let mut records = Vec::new();
     for object in &fixture.objects {
-        if !object_vortices_visible(object, runtime) {
+        if !object_vortices_visible(object, runtime, interaction) {
             continue;
         }
         for vortex in &object.vortices {
@@ -252,6 +253,8 @@ pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime)
                 "radius": vortex.radius.unwrap_or(0.36),
                 "color": vortex_color(&fixture.meta, vortex.vortex_kind.as_deref()),
                 "displayDirection": runtime.vortex_direction,
+                "selected": selected_vortices.iter().any(|id| id == &full_id),
+                "hovered": interaction.hovered.iter().any(|id| id == &full_id),
             }));
         }
     }
@@ -313,7 +316,7 @@ pub fn world_references_json(fixture: &Puzzle3dFixture) -> String {
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession) -> String {
+pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession, interaction: &Puzzle3dInteractionSnapshot) -> String {
     let runtime = &envelope.runtime;
     let suggestion_menu = runtime.suggestion_menu.as_ref().map(|menu| {
         let (pending, candidates) = (!menu.vortex_full_id.is_empty())
@@ -362,7 +365,7 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
     // `world_instances_geometry_json`) below this value are shown, the rest (already planned, not yet
     // committed) stay hidden until the host commits a higher value or the live drag store overrides
     // it locally. Keyed so future reveal-driven measures/tools can share the same channel.
-    json!({
+    let mut value = json!({
         "activeUtility": scene_mode(&envelope.active_utility),
         "brushCandidateIndex": runtime.brush_candidate_index,
         "voxelDims": runtime.voxel_dims,
@@ -370,8 +373,14 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
         "suggestionMenu": suggestion_menu,
         "fillBuild": fill_build,
         "revealCutoffs": { "puzzle3d-fill": runtime.fill_count },
-    })
-    .to_string()
+    });
+    // 🐁️ `hoveredVortexFullId` is the host's Alt+right-click suggestion target and its context-menu
+    // priority key (`resolveWorldContextMenuTarget`) — it lives on the interaction record, not on
+    // `selectionJson`, so it is projected from the live `vortex`-domain hover here.
+    if let (Some(object), Some(hovered)) = (value.as_object_mut(), interaction.hovered_vortex_full_id(&envelope.fixture)) {
+        object.insert("hoveredVortexFullId".into(), json!(hovered));
+    }
+    value.to_string()
 }
 
 pub fn world3d_lod_json(runtime: &Puzzle3dRuntime) -> String {
@@ -388,15 +397,19 @@ pub fn world3d_lod_json(runtime: &Puzzle3dRuntime) -> String {
 
 /// 👻️ Ghost placement for the brush utility, or for a one-shot context-menu / Alt+right-click
 /// suggestion popup (`suggestion_menu`) that must not switch the host-owned active utility into brush.
-pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) -> Option<String> {
+pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot) -> Option<String> {
     if envelope.active_utility != utilities::brush::UTILITY_ID && envelope.runtime.suggestion_menu.is_none() {
         return None;
     }
-    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: the suggestion-menu
-    // path has a real target (`menu.vortex_full_id`, stored explicitly now); the plain brush-utility
-    // hover path has no live hover to read here (see `puzzle3d_brush_target_vortex`'s doc comment)
-    // until `render` gains an `InteractionView`.
-    let vortex_id = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.clone()).filter(|id| !id.is_empty())?;
+    // 🕹️ The one-shot suggestion menu pins its own explicit target (`menu.vortex_full_id`); the plain
+    // brush-utility path follows the live selection/hover through `puzzle3d_brush_target_vortex`.
+    let vortex_id = envelope
+        .runtime
+        .suggestion_menu
+        .as_ref()
+        .map(|menu| menu.vortex_full_id.clone())
+        .filter(|id| !id.is_empty())
+        .or_else(|| crate::editor::puzzle3d::puzzle3d_brush_target_vortex(envelope, interaction))?;
     let preview = session.brush_preview(&vortex_id, envelope.runtime.brush_candidate_index)?;
     let color = object_kind_color(&envelope.fixture.meta, Some(preview.object_kind_id.as_str()));
     let mut value = dsl::ToValue::to_value(&preview);
@@ -416,15 +429,18 @@ pub fn world_fill_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &P
     session.fill_preview_json_page(&color, labels.fill_progress.as_str())
 }
 
-/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection/hover ids,
-/// merge mode, active-object id, and the gumball target/active flag all used to come from
-/// `runtime.selection`/`hovered_*`, now dissolved into the framework-owned `vortex` interaction
-/// domain. `render` never gained an `InteractionView` parameter (see `gumball_active`'s doc comment),
-/// so this payload carries no live ids at all until that framework gap closes — the world-3d host
-/// renders an always-empty selection/hover overlay in the meantime.
-pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
+/// 🕹️ The host's `WorldSelectionRecord` (`World3dHost/🟦️.tsx` `parseSelection`) for this window: the
+/// framework-owned `vortex` domain projected onto exactly the field names that parser reads —
+/// `ids`/`activeObjectId` (object instances), `targetVolumeIds`, `referenceSelectedId`,
+/// `hoveredId`/`hoveredKindId`, plus the gumball descriptor. Vortex selection/hover is deliberately
+/// NOT here: `WorldSelectionRecord` has no vortex field, so a marker's own `selected`/`hovered` flags
+/// travel on `vorticesJson` (see `world_vortices_json`), which is where `WorldVortexMarkers` reads
+/// them. Ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
+pub fn world_selection_json(envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot) -> String {
     let runtime = &envelope.runtime;
-    let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
+    let object_ids = interaction.selected_object_ids();
+    let hovered_id = interaction.hovered_object_id(&envelope.fixture).map(str::to_string).or_else(|| interaction.hovered_reference_id(&envelope.fixture).map(|id| format!("reference:{id}")));
+    let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", object_ids, hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
@@ -437,8 +453,16 @@ pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
                 "face": false,
             }),
         );
-        object.insert("targetVolumeIds".into(), json!([]));
-        object.insert("vortexIds".into(), json!([]));
+        object.insert("targetVolumeIds".into(), json!(interaction.selected_target_volume_ids()));
+        if let Some(id) = object_ids.first() {
+            object.insert("activeObjectId".into(), json!(id));
+        }
+        if let Some(id) = interaction.selected_reference_ids().first() {
+            object.insert("referenceSelectedId".into(), json!(id));
+        }
+        if let Some(kind) = hovered_kind_id(&envelope.fixture, interaction) {
+            object.insert("hoveredKindId".into(), json!(kind));
+        }
         if let Some(transform_mode) = transform_handle(&envelope.active_utility) {
             object.insert("transformMode".into(), json!(transform_mode));
             object.insert(
@@ -453,9 +477,17 @@ pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
                 }),
             );
         }
-        object.insert("gumballActive".into(), json!(gumball_active(runtime, &envelope.active_utility)));
+        object.insert("gumballActive".into(), json!(gumball_active(runtime, &envelope.active_utility, interaction)));
     }
     value.to_string()
+}
+
+/// 🎨️ The hovered CATALOGUE kind id, when the `kind` granularity is what the pointer is over — the
+/// host highlights every instance sharing that `objectKind` from this one field.
+fn hovered_kind_id<'a>(fixture: &Puzzle3dFixture, interaction: &'a Puzzle3dInteractionSnapshot) -> Option<&'a str> {
+    let catalogs = fixture.meta.kind_catalogs.as_ref()?;
+    let entries = catalogs.get("objects").and_then(|value| value.as_array())?;
+    interaction.hovered.iter().find(|id| entries.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).map(String::as_str)
 }
 
 //#endregion 🔖️SceneJson
@@ -463,25 +495,26 @@ pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
 //#region 🔖️Render
 /// 🖼️ The world-3d surface node for this window — `instances_json`/`meshes_json` come pre-computed
 /// from `Puzzle3dPlayApp`'s geometry cache (they only change with the fixture's geometry fingerprint).
-pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels, instances_json: String, meshes_json: String) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let brush_preview = world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json(precompute, envelope));
-    let mut scene = World3dScene::base(camera_json(&envelope.runtime), meshes_json, instances_json, world_selection_json(envelope));
-    scene.vortices_json = Some(world_vortices_json(&envelope.fixture, &envelope.runtime));
+pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels, instances_json: String, meshes_json: String, interaction: &Puzzle3dInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let brush_preview = world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json(precompute, envelope, interaction));
+    let mut scene = World3dScene::base(camera_json(&envelope.runtime), meshes_json, instances_json, world_selection_json(envelope, interaction));
+    scene.vortices_json = Some(world_vortices_json(&envelope.fixture, &envelope.runtime, interaction));
     scene.attractions_json = Some(world_attractions_json(&envelope.fixture));
     scene.target_volumes_json = Some(world_target_volumes_json(&envelope.fixture));
     scene.references_json = Some(world_references_json(&envelope.fixture));
     scene.brush_preview_json = brush_preview;
-    scene.interaction_json = Some(world_interaction_json(envelope, precompute));
+    scene.interaction_json = Some(world_interaction_json(envelope, precompute, interaction));
     scene.lod_json = Some(world3d_lod_json(&envelope.runtime));
     scene.chunking_json = Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired here — this app
-    // already emits its own `interactionSelect`/`interactionHover` for `PUZZLE3D_INTERACTION_DOMAIN`
-    // ("vortex") from bespoke vortex-fit pick logic elsewhere in this crate, independent of the
-    // OS `♾️infinite` surface's generic `pick_select_action`/`pick_hover_action`; binding this
-    // scene's plain-pick fallback to the same domain without first confirming the two paths
-    // can't double-emit is left as a follow-up, not attempted here.
-    scene.domain_id = None;
+    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): bound, so `World3dHost`'s generic
+    // dispatch path emits `interactionSelect`/`interactionHover` for this domain
+    // (`world3dSelectionActionArgs`/`world3dHoverActionArgs`) instead of the legacy
+    // `worldPick`/`worldSelect`/`setHover` verbs this crate has no handler for. Granularity is
+    // declared explicitly because the host's own default (`"handle"`) is not one of this domain's
+    // granularities and `validate_state` would prune every id picked under it.
+    scene.domain_id = Some(PUZZLE3D_INTERACTION_DOMAIN.into());
+    scene.domain_granularity_id = Some(crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT.into());
     semio_framework_plugin::scene_surface(SURFACE_VIEWPORT, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
 }
 

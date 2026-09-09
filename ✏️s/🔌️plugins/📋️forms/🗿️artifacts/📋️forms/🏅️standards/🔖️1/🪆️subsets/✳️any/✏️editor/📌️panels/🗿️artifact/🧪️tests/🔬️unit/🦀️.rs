@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::forms::FORMS_PLAY_BODY_DOCUMENT as BODY_DOCUMENT;
 use crate::editor::forms::testkit::{forms_app, render as render_body};
+use crate::editor::forms::FORMS_PLAY_BODY_DOCUMENT as BODY_DOCUMENT;
 
 #[semio_framework_async_macros::async_test]
 async fn document_tree_declares_drop_action() {

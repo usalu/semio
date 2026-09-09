@@ -1,12 +1,12 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `add-rule-clause-command`.
 
-use semio_s_artifact_trinity_jack::PropertyValue;
 use crate::rewriting_snapshot_mutations;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
-use crate::standards::v1::subsets::any::schema::{ParameterKind, Rhs};
+use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
 use crate::RewritingSnapshot;
-use crate::editor::rewriting::config::RewritingConfigMutation;
+use semio_framework_graph::manifest::PropertyValue;
 use semio_framework_plugin::Emit;
+use semio_framework_plugin::NoConfigMutation;
 
 fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
     let Ok(mut lhs) = pack::from_json_str::<schema::Lhs>(&state.lhs_json) else {
@@ -55,7 +55,7 @@ fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
     }
     changed
 }
-pub(crate) fn add_rule_clause_command(state: &RewritingSnapshot, kind: &str) -> Emit<RewriteRuleMutation, RewritingConfigMutation> {
+pub(crate) fn add_rule_clause_command(state: &RewritingSnapshot, kind: &str) -> Emit<RewriteRuleMutation, NoConfigMutation> {
     let mut next = state.clone();
     if add_rule_clause(&mut next, kind) {
         Emit::mutations(rewriting_snapshot_mutations(state, &next))

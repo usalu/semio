@@ -30,9 +30,9 @@
 use crate::standards::v2x3::mvd;
 use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use semio_s_artifact_stdio_step::engine::part21::Part21Value;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
+use semio_s_artifact_stdio_step::engine::part21::Part21Value;
 
 pub use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
 
@@ -94,18 +94,18 @@ pub struct SavGroupAssignment {
     pub relating_group: u64,
 }
 
+#[path = "🧮️set-analysis-model/🦀️.rs"]
+pub mod set_analysis_model;
+#[path = "👥️set-group-assignment/🦀️.rs"]
+pub mod set_group_assignment;
+#[path = "🏋️set-load-group/🦀️.rs"]
+pub mod set_load_group;
 /// 📐️ Typed Structural Analysis View mutation for `stdio.ifc.2x3`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "👁️set-view-definition/🦀️.rs"]
 pub mod set_view_definition;
-#[path = "🧮️set-analysis-model/🦀️.rs"]
-pub mod set_analysis_model;
-#[path = "🏋️set-load-group/🦀️.rs"]
-pub mod set_load_group;
-#[path = "👥️set-group-assignment/🦀️.rs"]
-pub mod set_group_assignment;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -242,54 +242,54 @@ fn edit(base: &Ifc2x3Snapshot, mutation: &Ifc2x3SavMutation) -> Result<Ifc2x3Sna
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &Ifc2x3SavMutation, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
-        match this {
-            Ifc2x3SavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
-                Ok(()) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot)),
-                Err(message) => rejected(message),
-            },
-            _ => match edit(base, this) {
-                Ok(next) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, &next)),
-                Err(message) => rejected(message),
-            },
-        }
+    match this {
+        Ifc2x3SavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
+            Ok(()) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot)),
+            Err(message) => rejected(message),
+        },
+        _ => match edit(base, this) {
+            Ok(next) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, &next)),
+            Err(message) => rejected(message),
+        },
     }
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &Ifc2x3SavMutation, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3SavMutation> {
-        match this {
-            Ifc2x3SavMutation::SetSnapshot(_) => vec![Ifc2x3SavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-            Ifc2x3SavMutation::SetViewDefinition(_) => vec![Ifc2x3SavMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: mvd::view_definition_name(base).unwrap_or_default() })],
-            Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id, .. }) => {
-                let model = base.document.instance(*id).filter(|instance| instance.is_type(ANALYSIS_MODEL)).map(|_| SavAnalysisModel {
-                    global_id: text_argument(base, *id, 0),
-                    owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
-                    name: text_argument(base, *id, NAME_INDEX),
-                    predefined_type: enum_argument(base, *id, PREDEFINED_TYPE_INDEX),
-                });
-                vec![Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: *id, model })]
-            }
-            Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id, .. }) => {
-                let group = base.document.instance(*id).filter(|instance| instance.is_type(LOAD_GROUP)).map(|_| SavLoadGroup {
-                    global_id: text_argument(base, *id, 0),
-                    owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
-                    name: text_argument(base, *id, NAME_INDEX),
-                    predefined_type: enum_argument(base, *id, PREDEFINED_TYPE_INDEX),
-                    action_type: enum_argument(base, *id, ACTION_TYPE_INDEX),
-                    action_source: enum_argument(base, *id, ACTION_SOURCE_INDEX),
-                });
-                vec![Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: *id, group })]
-            }
-            Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id, .. }) => {
-                let assignment = base.document.instance(*id).filter(|instance| instance.is_type(GROUP_ASSIGNMENT)).map(|_| SavGroupAssignment {
-                    global_id: text_argument(base, *id, 0),
-                    owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
-                    related_objects: mvd::reference_list_ids(mvd::argument(base, *id, RELATED_OBJECTS_INDEX)),
-                    relating_group: mvd::reference_argument(base, *id, RELATING_GROUP_INDEX).unwrap_or_default(),
-                });
-                vec![Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id: *id, assignment })]
-            }
+    match this {
+        Ifc2x3SavMutation::SetSnapshot(_) => vec![Ifc2x3SavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        Ifc2x3SavMutation::SetViewDefinition(_) => vec![Ifc2x3SavMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: mvd::view_definition_name(base).unwrap_or_default() })],
+        Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id, .. }) => {
+            let model = base.document.instance(*id).filter(|instance| instance.is_type(ANALYSIS_MODEL)).map(|_| SavAnalysisModel {
+                global_id: text_argument(base, *id, 0),
+                owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
+                name: text_argument(base, *id, NAME_INDEX),
+                predefined_type: enum_argument(base, *id, PREDEFINED_TYPE_INDEX),
+            });
+            vec![Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: *id, model })]
+        }
+        Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id, .. }) => {
+            let group = base.document.instance(*id).filter(|instance| instance.is_type(LOAD_GROUP)).map(|_| SavLoadGroup {
+                global_id: text_argument(base, *id, 0),
+                owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
+                name: text_argument(base, *id, NAME_INDEX),
+                predefined_type: enum_argument(base, *id, PREDEFINED_TYPE_INDEX),
+                action_type: enum_argument(base, *id, ACTION_TYPE_INDEX),
+                action_source: enum_argument(base, *id, ACTION_SOURCE_INDEX),
+            });
+            vec![Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: *id, group })]
+        }
+        Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id, .. }) => {
+            let assignment = base.document.instance(*id).filter(|instance| instance.is_type(GROUP_ASSIGNMENT)).map(|_| SavGroupAssignment {
+                global_id: text_argument(base, *id, 0),
+                owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
+                related_objects: mvd::reference_list_ids(mvd::argument(base, *id, RELATED_OBJECTS_INDEX)),
+                relating_group: mvd::reference_argument(base, *id, RELATING_GROUP_INDEX).unwrap_or_default(),
+            });
+            vec![Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id: *id, assignment })]
         }
     }
+}
 
 fn text_argument(snapshot: &Ifc2x3Snapshot, id: u64, index: usize) -> String {
     mvd::argument(snapshot, id, index).and_then(Part21Value::as_str).unwrap_or_default().to_string()

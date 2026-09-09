@@ -7,8 +7,8 @@ services:
     image: compose
     container_name: compose
     build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     shm_size: 1gb
     environment:
       DEVCONTAINER: "true"

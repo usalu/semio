@@ -27,7 +27,9 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 }
 
 fn case() -> Case {
-    Case { kind: "change-daylight-zone-window-transmittance", directory: "🥃️change-daylight-zone-window-transmittance/🧪️tests/✅️darkens-the-glass", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case {
+        kind: "change-daylight-zone-window-transmittance", directory: "🥃️change-daylight-zone-window-transmittance/🧪️tests/✅️darkens-the-glass", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
+    }
 }
 
 #[semio_framework_async_macros::async_test]

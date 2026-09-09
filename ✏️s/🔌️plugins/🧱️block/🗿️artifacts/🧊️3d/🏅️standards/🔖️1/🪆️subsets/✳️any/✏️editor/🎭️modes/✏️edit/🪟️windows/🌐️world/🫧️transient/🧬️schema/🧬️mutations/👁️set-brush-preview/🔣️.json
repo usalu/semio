@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🧬️schema/🧬️mutations/👁️set-brush-preview",
+  "semanticKind": "set-brush-preview",
+  "displayName": "Set Brush Preview",
+  "emoji": "👁️",
+  "aggregateVariant": "SetBrushPreview",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-brush-preview",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "text", "binary", "json-schema"]
+}

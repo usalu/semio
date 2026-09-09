@@ -11,7 +11,7 @@
   "rhoL": null,
   "nEdKn": null,
   "pKn": null,
-  "aCMm2": 168750.0,
+  "aCMm2": 168750,
   "useFem": null,
   "spanM": null,
   "udlKnM": null,
@@ -34,6 +34,5 @@
   "anchorDMm": null,
   "anchorC1Mm": null,
   "anchorNEdKn": null,
-  "anchorVEdKn": null,
-  "selectedCheckIndex": null
+  "anchorVEdKn": null
 }

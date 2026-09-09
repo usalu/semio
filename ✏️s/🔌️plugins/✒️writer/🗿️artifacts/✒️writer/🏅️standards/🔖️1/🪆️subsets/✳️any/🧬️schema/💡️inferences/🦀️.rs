@@ -5,11 +5,11 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
 use crate::WriterSnapshot;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
+use semio_s_artifact_trinity_jack::core::{example_graph, lint};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use semio_s_artifact_trinity_jack::core::{example_graph, lint};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a writer snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir) — writer is a
@@ -69,16 +69,10 @@ impl ArtifactInferrer for WriterInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.writer.writer.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `writer_artifact_schema_descriptor`'s registration.
-pub fn writer_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn writer_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.writer.writer.inference",
-        inference: schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

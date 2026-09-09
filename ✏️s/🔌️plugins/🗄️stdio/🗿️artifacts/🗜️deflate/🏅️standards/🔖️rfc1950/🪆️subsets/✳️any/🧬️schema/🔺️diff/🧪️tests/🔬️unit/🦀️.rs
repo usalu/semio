@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
-use crate::schema::mutations::{DeflateMutation, apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, set_snapshot};
+use crate::schema::mutations::{apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, set_snapshot, DeflateMutation};
 use crate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
+use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 use protocol::{DiffCodec, Mutation};
 
 //#region Fixtures

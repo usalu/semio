@@ -8,8 +8,8 @@
 //! `ArtifactStore::reset`, outside history.
 
 use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot};
-use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
+use protocol::MutationDiff;
 
 //#region 🔖️NodeList
 /// 📋 Whole-list wrapper for the `nodes` field diff — every mutation triad rebuilds the full

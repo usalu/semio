@@ -1,0 +1,60 @@
+{
+  "lanes": [
+    {
+      "name": "artifact",
+      "tag": 0
+    },
+    {
+      "name": "config",
+      "tag": 1
+    },
+    {
+      "name": "draft",
+      "tag": 2
+    },
+    {
+      "name": "presence",
+      "tag": 3
+    },
+    {
+      "name": "transient",
+      "tag": 4
+    },
+    {
+      "name": "child",
+      "tag": 5
+    },
+    {
+      "name": "effect",
+      "tag": 6
+    },
+    {
+      "name": "event",
+      "tag": 7
+    },
+    {
+      "name": "ui",
+      "tag": 8
+    },
+    {
+      "name": "download",
+      "tag": 9
+    },
+    {
+      "name": "terminal",
+      "tag": 10
+    },
+    {
+      "name": "fault",
+      "tag": 11
+    },
+    {
+      "name": "interaction",
+      "tag": 12
+    }
+  ],
+  "invalidTags": [
+    13,
+    255
+  ]
+}

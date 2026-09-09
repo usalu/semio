@@ -55,9 +55,6 @@ impl Din18599Diff {
             if let Some(value) = &self.reference_q_p_kwh {
                 next.reference_q_p_kwh = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -130,7 +127,6 @@ impl MutationDiff<Din18599Snapshot> for Din18599Diff {
         take!(annual_limit_kwh);
         take!(energy_carrier);
         take!(reference_q_p_kwh);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

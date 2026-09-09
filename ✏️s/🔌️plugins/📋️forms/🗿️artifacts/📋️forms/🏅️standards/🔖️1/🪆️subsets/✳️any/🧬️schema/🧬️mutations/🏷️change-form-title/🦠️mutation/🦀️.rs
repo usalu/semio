@@ -8,8 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🖋️ChangeFormTitle
 /// 🖋️ Sets the document's `title` scalar.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[derive(dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeFormTitle {
     pub new_title: Option<String>,

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::GENERATION_3D_SCHEMA;
 use semio_framework_os_kernel::os_store::test_support;
@@ -32,7 +31,7 @@ fn dsl_round_trip_every_bundled_example() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, ArtifactStore, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<Generation3dSnapshot, Generation3dMutation> = ArtifactStore::new(create_document_envelope(GENERATION_3D_SCHEMA, "generation3d", Generation3dSnapshot::default(), None)).await.expect("valid artifact store fixture");
     use crate::standards::v1::subsets::any::schema::mutations::create_widget::CreateWidget;

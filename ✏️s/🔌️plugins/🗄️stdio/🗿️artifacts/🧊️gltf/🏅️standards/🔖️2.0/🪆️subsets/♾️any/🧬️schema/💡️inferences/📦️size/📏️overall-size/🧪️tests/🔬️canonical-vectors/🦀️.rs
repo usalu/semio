@@ -1,4 +1,3 @@
-
 #[derive(value_derive::FromValue)]
 struct Vector {
     value: Option<f64>,

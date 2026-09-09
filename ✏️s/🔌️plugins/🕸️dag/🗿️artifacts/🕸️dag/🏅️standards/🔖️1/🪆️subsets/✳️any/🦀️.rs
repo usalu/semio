@@ -7,8 +7,8 @@
 //! plugin TOP level in `🦀️.rs`, NOT nested under `artifacts::dag::…` (recipe-subset.md §5
 //! gotcha 1).
 
-use crate::standards::v1::subsets::any::{io, schema};
 use crate::editor::dag as editor;
+use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::dag as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;

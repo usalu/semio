@@ -24,7 +24,17 @@ pub struct CreatePeopleGain {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_people_gain(index: u32, id: crate::model::EntityId, zone_id: crate::model::EntityId, schedule_id: crate::model::ScheduleId, activity_schedule_id: crate::model::ScheduleId, people_per_area: f64, sensible_fraction: f64, latent_fraction: f64, radiant_fraction: f64) -> EnergyModelMutation {
+pub fn create_people_gain(
+    index: u32,
+    id: crate::model::EntityId,
+    zone_id: crate::model::EntityId,
+    schedule_id: crate::model::ScheduleId,
+    activity_schedule_id: crate::model::ScheduleId,
+    people_per_area: f64,
+    sensible_fraction: f64,
+    latent_fraction: f64,
+    radiant_fraction: f64,
+) -> EnergyModelMutation {
     EnergyModelMutation::CreatePeopleGain(CreatePeopleGain { index, id, zone_id, schedule_id, activity_schedule_id, people_per_area, sensible_fraction, latent_fraction, radiant_fraction })
 }
 

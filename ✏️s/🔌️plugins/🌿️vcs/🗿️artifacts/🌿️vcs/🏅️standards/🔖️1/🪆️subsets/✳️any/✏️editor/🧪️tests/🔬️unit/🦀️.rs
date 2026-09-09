@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::editor::vcs::testkit::{action_args, app, dispatch, no_args, seeded_envelope};
-use semio_framework_plugin::PluginApp;
 use semio_framework_plugin::testkit::meta;
-use serde_json::{Value, from_str as parse};
+use semio_framework_plugin::PluginApp;
+use serde_json::{from_str as parse, Value};
 use store::HistoryColumn;
 
 const RETAINED_LIMITS: &str = include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
@@ -39,11 +38,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
-        let expected = if id == "noMutation" {
-            "no-operation".to_string()
-        } else {
-            id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect()
-        };
+        let expected = if id == "noMutation" { "no-operation".to_string() } else { id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect() };
         let printed = protocol::OpText::print_op(&command);
         assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
     }
@@ -121,6 +116,9 @@ fn one_item_store_preparation_rejects_non_document_lanes() {
     let config = VcsOneItemPreparationFactory::<VcsDemoConfig, VcsDemoConfigMutation>::new(store::HistoryLane::Document);
     assert!(artifact.preflight(&crate::mutations::change_counter(1), None, store::HistoryLane::Document).is_ok());
     assert!(artifact.preflight(&crate::mutations::change_counter(1), None, store::HistoryLane::Interaction).is_err());
+    let mutation = VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig::default() };
+    assert!(config.preflight(&mutation, None, store::HistoryLane::Document).is_ok());
+    assert!(config.preflight(&mutation, None, store::HistoryLane::Interaction).is_err());
 }
 
 #[test]

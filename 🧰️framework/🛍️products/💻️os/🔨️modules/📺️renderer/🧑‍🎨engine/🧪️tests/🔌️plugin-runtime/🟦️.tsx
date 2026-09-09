@@ -106,11 +106,13 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         let generation = 1n;
         let captures = 0;
         let guardedTurns = 0;
+        const disposed = new Set<string>();
+        const dispose = (actor: string) => { if (!disposed.has(actor)) { disposed.add(actor); hooks.dispose?.(actor); } };
         const dispatch = async (actor: string, events: readonly ShardEventEnvelope[]) => {
           if (events.some(event => event.kind === "instance-open")) { await hooks.open?.(actor); return idle; }
           return turn(actor, events);
         };
-        testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actor: string) => hooks.activate?.(actor), touch: () => {}, cancel: () => {} } as unknown as ActivationRegistry;
+        testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actor: string) => hooks.activate?.(actor), touch: () => {}, cancel: dispose } as unknown as ActivationRegistry;
         testState.sharedShardClient = {
           turn: dispatch,
           captureInstanceLifecycle: (actorId: string, instanceId: number) => {
@@ -142,7 +144,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
               bindHostRetirement: () => {},
               captureUiPatchAuthority: () => { throw new Error("fixture-native-ui-not-configured"); },
               submitUiAcknowledgement: async () => { throw new Error("fixture-native-ui-not-configured"); },
-              dispose: () => hooks.dispose?.(actorId),
+              dispose: () => dispose(actorId),
               progress: () => ({ kind: phase, failure: null }),
             };
           },
@@ -151,7 +153,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             const activationGeneration = generation;
             return { actorId, activationGeneration, assertActive: () => { if (generation !== activationGeneration) throw new Error("actor-activation.revoked"); }, turn: (events: readonly ShardEventEnvelope[]) => { guardedTurns += 1; return dispatch(actorId, events); } };
           },
-          dispose: (actor: string) => { hooks.dispose?.(actor); },
+          dispose,
         } as unknown as ShardClient;
         globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "extension-requester", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
         let handle: PluginWasmHandle | undefined;
@@ -193,7 +195,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   
       it("reconciles failed actual actor bindings without giving a successor stale control", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json");
-        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts");
+        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
         for (const row of fixture.bindingRetirement) {
           const commands: string[] = [];
           let instance = 0, current = true;
@@ -229,7 +231,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("binds the actual actor document port and retires it before guest disposal", async () => {
-        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts");
+        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
         const { encodeBackboneMessage } = await import("@semio-tech/framework-os");
         const outgoing = encodeBackboneMessage({ kind: "ack", opIds: ["operation"] });
         let outgoingUri = "actor://map";
@@ -270,7 +272,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       it("awaits actual actor handle disposal until its exact document retirement settles", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json");
         const { default: deepEqual } = await import("fast-deep-equal");
-        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts");
+        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
         let release!: () => void, entered!: () => void;
         const gate = new Promise<void>(resolve => { release = resolve; });
         const retiring = new Promise<void>(resolve => { entered = resolve; });
@@ -324,7 +326,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             try {
               expect(closing).toBeInstanceOf(Promise);
               let settled = false;
-              void closing.then(() => { settled = true; });
+              void closing.then(() => { settled = true; }, () => {});
               await Promise.resolve();
               expect(settled).toBe(false);
               expect(target).not.toBe(original);
@@ -370,9 +372,14 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           const completion = handle.captureExtensionCompletion!(instance, BigInt(fixture.requestId)).complete({ ok: encodePackValue(fixture.response) });
           const observed = expect(completion).rejects.toThrow("no actor");
           await entered.promise;
-          await handle.destroyApp(instance);
+          const retiring = handle.destroyApp(instance);
+          let retired = false;
+          void retiring.then(() => { retired = true; });
+          await Promise.resolve();
+          expect(retired).toBe(false);
           result.resolve({ uiPatches: [], effects: [{ tag: "notify", val: { message: fixture.completion.notification } }], nextWake: null, status: { tag: "idle" } });
           await observed;
+          await retiring;
           expect(turns).toBe(1);
           expect(retainedWindowByActor.has(`extension-requester#${instance}`)).toBe(false);
         });
@@ -598,6 +605,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         contextMenu: async () => [],
         readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
         readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
+        readWindowConfigPacks: async () => [],
+        loadWindowConfigPack: async () => {},
         documentPack: (instanceId) => (options.pack !== undefined ? options.pack : { pack: new Uint8Array([1]), spr: new Uint8Array([instanceId]) }),
         transactionPrepare: async (instanceId, _txnId, _request) => {
           calls.push(`${pluginId}:${instanceId}:prepare`);
@@ -898,6 +907,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           contextMenu: async () => [],
           readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
           readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
+          readWindowConfigPacks: async () => [],
+          loadWindowConfigPack: async () => {},
           documentPack: () => ({ pack: new Uint8Array([1]), spr: new Uint8Array([2]) }),
           transactionPrepare: async (instanceId) => {
             calls.push(`chain:${instanceId}:prepare`);
@@ -1046,6 +1057,10 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
                 if ("ReadDocument" in command) {
                   return [encodeAppFrame({ Document: { in_reply_to: command.ReadDocument.seq, pack: [5, 5], spr: [6], ops: "" } })];
                 }
+                if ("ReadWindowConfigs" in command) {
+                  return [encodeAppFrame({ WindowConfigs: { in_reply_to: command.ReadWindowConfigs.seq, entries: [{ window_id: "graph-a", window_kind_id: "graph", envelope_pack: [7] }] } })];
+                }
+                if ("LoadWindowConfig" in command) return [encodeAppFrame({ Done: { in_reply_to: command.LoadWindowConfig.seq } })];
                 throw new Error(`unexpected command ${JSON.stringify(command)}`);
               });
               turnBroadcast.push({ instanceId, frames });
@@ -1071,6 +1086,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         await handle.transactionRollback(instanceId, "txn-2");
         await handle.transactionUndo(instanceId, "grp-1");
         await handle.transactionRedo(instanceId, "grp-1");
+        expect(await handle.readWindowConfigPacks(instanceId)).toEqual([{ window_id: "graph-a", window_kind_id: "graph", envelope_pack: [7] }]);
+        await handle.loadWindowConfigPack(instanceId, { window_id: "graph-b", window_kind_id: "graph", envelope_pack: [8] });
   
         expect(seenCommands).toEqual([
           { transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.b#mutate", payload: [1], prepared_ops: [], label: "", origin: [] } },
@@ -1078,6 +1095,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           { transactionRollback: { seq: 3, txn_id: "txn-2" } },
           { transactionUndo: { seq: 4, group_id: "grp-1" } },
           { transactionRedo: { seq: 5, group_id: "grp-1" } },
+          { ReadWindowConfigs: { seq: 6 } },
+          { LoadWindowConfig: { seq: 7, entry: { window_id: "graph-b", window_kind_id: "graph", envelope_pack: [8] } } },
         ]);
       });
   

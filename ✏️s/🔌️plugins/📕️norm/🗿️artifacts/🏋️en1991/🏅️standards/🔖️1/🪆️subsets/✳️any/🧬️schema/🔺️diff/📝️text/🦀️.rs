@@ -115,9 +115,6 @@ impl En1991Diff {
             if let Some(value) = &self.c_d {
                 next.c_d = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -273,7 +270,6 @@ impl MutationDiff<En1991Snapshot> for En1991Diff {
         take!(silo_k);
         take!(c_s);
         take!(c_d);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

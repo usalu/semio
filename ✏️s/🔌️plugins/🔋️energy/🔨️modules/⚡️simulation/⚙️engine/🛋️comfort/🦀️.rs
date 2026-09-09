@@ -1,8 +1,8 @@
 //! 😌️ Thermal comfort: PMV, PPD, operative temperature, MRT, adaptive models.
 
 use crate::props::saturation_pressure_pa;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️ComfortInput
 /// 🧍️ Inputs for comfort evaluation per ISO 7730 / ASHRAE 55.

@@ -5,7 +5,7 @@
 //! engagement input: a viewer has none of those and emits no mutations by construction (`ViewEmit`).
 
 use crate::NoteSnapshot;
-use semio_framework_plugin::{InkCanvasScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, InkCanvasScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "note-view-composite";

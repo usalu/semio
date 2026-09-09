@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -31,7 +30,7 @@ async fn flow_config_dsl_pack_round_trip() {
         contributions_json: "[]".into(),
         generation_json: "{\"generations\":[]}".into(),
         duplicate_widget_progress_json: String::new(),
-        };
+    };
     store::os_store::test_support::assert_dsl_pack_equivalence(&config);
 }
 

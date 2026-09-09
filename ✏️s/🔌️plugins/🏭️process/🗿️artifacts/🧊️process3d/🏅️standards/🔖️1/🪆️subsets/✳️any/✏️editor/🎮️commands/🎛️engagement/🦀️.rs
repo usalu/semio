@@ -1,10 +1,10 @@
 //! 🎛️ Process 3d play app commands — the engagement command-line input (a separate system from the
 //! utility bar switcher): submit / edit / abort.
 
-use crate::mutations::change_cursor::ChangeCursor;
-use crate::{op::Process3dMutation, Process3dSnapshot};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::set_active_utility_effect;
+use crate::mutations::change_cursor::ChangeCursor;
+use crate::{op::Process3dMutation, Process3dSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

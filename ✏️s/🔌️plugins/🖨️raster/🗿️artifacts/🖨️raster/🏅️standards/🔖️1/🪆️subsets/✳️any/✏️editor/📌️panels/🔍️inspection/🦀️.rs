@@ -1,9 +1,9 @@
 //! 🔍️ Raster play app panel — the selected-layer(s) inspector.
 
-use crate::RasterSnapshot as RasterDocument;
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
 use crate::editor::raster::ui_label;
+use crate::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants

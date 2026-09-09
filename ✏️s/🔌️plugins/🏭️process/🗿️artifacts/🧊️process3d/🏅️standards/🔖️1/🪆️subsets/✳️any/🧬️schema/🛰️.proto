@@ -19,43 +19,7 @@ message Process3dArtifact {
   // @state artifact
   optional uint32 resolved_up_to = 10;
   // @state presence
-  optional string selected_id = 11;
-  // @state presence
-  optional uint32 selected_face_id = 12;
-  // @state presence
   // @state config
-  string selection_method = 14;
-  // @state config
-  string engagement_input = 15;
-  // @state config
-  double camera_position_x = 16;
-  // @state config
-  double camera_position_y = 17;
-  // @state config
-  double camera_position_z = 18;
-  // @state config
-  double camera_target_x = 19;
-  // @state config
-  double camera_target_y = 20;
-  // @state config
-  double camera_target_z = 21;
-  // @state config
-  double camera_fov = 22;
-  // @state config
-  bool sun_enabled = 23;
-  // @state config
-  double sun_azimuth = 24;
-  // @state config
-  double sun_elevation = 25;
-  // @state config
-  double sun_intensity = 26;
-  // @state config
-  string sun_color = 27;
-  // @state config
-  // @state config
-  string contributions_json = 29;
-  // @state artifact
-  optional string hovered_id = 30;
 }
 
 message Process3dWorkshop {}

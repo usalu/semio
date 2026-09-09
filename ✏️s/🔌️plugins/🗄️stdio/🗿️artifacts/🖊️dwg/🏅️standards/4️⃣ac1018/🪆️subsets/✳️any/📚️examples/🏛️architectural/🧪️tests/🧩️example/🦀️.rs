@@ -1,6 +1,5 @@
 //! 🧪️ Tests for example `🏛️architectural` — real fixture, real D1/D2 decode assertions.
 
-use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use crate::examples::architectural::{source, FIXTURE_BYTES};
 use crate::schema::diff::DwgDiff;
 use crate::schema::mutations::{apply_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
@@ -11,6 +10,7 @@ use crate::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
 use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use store::{ArtifactDsl, ArtifactPack};
 
 async fn assert_fixture_bytes(actual: &[u8], label: &str) {

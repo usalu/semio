@@ -1,11 +1,10 @@
-
 use crate::standards::v1::subsets::any::io::{export::serializers::artifacts as export, import::deserializers::artifacts as import};
 use crate::{SequenceFixture, SequenceSnapshot};
 use dsl::os_pack as pack;
 use semio_framework::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload;
 use semio_s_artifact_stdio_csv::CsvSnapshot;
-use semio_s_artifact_stdio_md::{MdSnapshot, schema::snapshot::MdBlock};
+use semio_s_artifact_stdio_md::{schema::snapshot::MdBlock, MdSnapshot};
 
 #[semio_framework_async_macros::async_test]
 async fn sequence_carrier_contracts_match_the_json_oracle() {

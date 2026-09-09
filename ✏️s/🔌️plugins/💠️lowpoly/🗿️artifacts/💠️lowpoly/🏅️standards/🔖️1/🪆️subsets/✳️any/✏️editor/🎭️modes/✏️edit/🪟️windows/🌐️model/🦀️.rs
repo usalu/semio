@@ -2,12 +2,12 @@
 //! transform/UV-unwrap operation runs here; paint operations are scoped on BOTH this window and the UV
 //! window since the paint utilities apply to both).
 
-use crate::schema::mesh_data_from_transfer;
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{euler_degrees_to_quaternion, resolve_active_object_id, LowpolyView};
 use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
+use crate::schema::mesh_data_from_transfer;
 use semio_framework_plugin::{scene_surface, world3d_camera_json, world3d_scene, InteractionRef, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use std::collections::HashMap;
 
@@ -116,10 +116,7 @@ fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String, Stri
             let id = item.get("id")?.as_str()?;
             let tessellation = item.get("tessellation")?;
             let texture = texture_cache.get(id).cloned();
-            Some(dsl::DslValue::object([
-                ("id".to_string(), dsl::DslValue::String(id.to_string())),
-                ("data".to_string(), dsl::ToValue::to_value(&mesh_data_from_transfer(tessellation, texture))),
-            ]))
+            Some(dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(id.to_string())), ("data".to_string(), dsl::ToValue::to_value(&mesh_data_from_transfer(tessellation, texture)))]))
         })
         .collect();
     dsl::json::to_json_string(&meshes)

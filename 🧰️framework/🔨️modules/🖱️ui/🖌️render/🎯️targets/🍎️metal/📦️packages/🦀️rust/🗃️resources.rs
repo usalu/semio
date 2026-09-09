@@ -104,7 +104,7 @@ impl GpuResources {
         for op in ops {
             match op {
                 ResourceOp::UploadAtlas { id, width, height, pixels } => self.upload_atlas(device, *id, *width, *height, pixels)?,
-                ResourceOp::UploadTexture { id, width, height, pixels } => self.upload_texture(device, *id, *width, *height, pixels)?,
+                ResourceOp::UploadTexture { id, width, height, pixels } => self.upload_texture(device, *id, *width, *height, pixels),
                 ResourceOp::CreateOrUpdateMesh { id, positions, normals, indices } => self.create_or_update_mesh(device, *id, positions, normals, indices)?,
                 ResourceOp::EvictTexture(id) => {
                     self.raster_textures.remove(id);
@@ -145,16 +145,15 @@ impl GpuResources {
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn upload_texture(&mut self, device: &Device, id: TextureId, width: u32, height: u32, pixels: &[u8]) -> Result<(), MetalGraphicsError> {
+    fn upload_texture(&mut self, device: &Device, id: TextureId, width: u32, height: u32, pixels: &[u8]) {
         if width == 0 || height == 0 {
             self.known_textures.insert(id);
-            return Ok(());
+            return;
         }
         let texture = create_texture(device, MTLPixelFormat::RGBA8Unorm_sRGB, width, height, 1, "raster_texture");
         replace_region(&texture, width, height, pixels, width * 4);
         self.raster_textures.insert(id, texture);
         self.known_textures.insert(id);
-        Ok(())
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

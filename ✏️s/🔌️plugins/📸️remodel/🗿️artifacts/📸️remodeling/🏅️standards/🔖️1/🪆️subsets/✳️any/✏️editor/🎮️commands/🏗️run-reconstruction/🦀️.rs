@@ -1,14 +1,12 @@
 //! 🚀️ Remodeling reconstruction as a generation-tagged, bounded continuation.
 
-use crate::mutations::{commit_reconstruction, create_asset, replace_job, CommitReconstruction, ReconstructionAssetCommit};
-use crate::op::RemodelingMutation;
-use crate::schema::next_remodeling_id;
-use crate::{
-    CameraPosePreview, CameraTrajectory, FrameRef, GeoProducts, ImageAsset, MeshSource, PackedF32, QcReportSnapshot, ReconstructionJob, ReconstructionStage, RemodelingMesh, RemodelingSnapshot, SparseCloud, WatertightReportSnapshot,
-};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::editor::remodeling::engine::images::{BoundedDecodeProgress, BoundedStillDecoder, CompressedChunkRope};
 use crate::editor::remodeling::engine::{build_engine_params, camera_pose_preview, reconstruction as remodeling_engine, watertight_snapshot, RasterPngPreparation, RasterPngProgress};
+use crate::mutations::{commit_reconstruction, create_asset, replace_job, CommitReconstruction, ReconstructionAssetCommit};
+use crate::op::RemodelingMutation;
+use crate::schema::next_remodeling_id;
+use crate::{CameraPosePreview, CameraTrajectory, FrameRef, GeoProducts, ImageAsset, MeshSource, PackedF32, QcReportSnapshot, ReconstructionJob, ReconstructionStage, RemodelingMesh, RemodelingSnapshot, SparseCloud, WatertightReportSnapshot};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, RequestId};
 use semio_framework_value_derive::{FromValue, ToValue};

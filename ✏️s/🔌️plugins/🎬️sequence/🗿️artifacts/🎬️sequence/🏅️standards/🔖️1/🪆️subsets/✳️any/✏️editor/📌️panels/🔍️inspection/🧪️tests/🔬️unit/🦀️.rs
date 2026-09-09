@@ -1,6 +1,4 @@
-
 use super::*;
-use crate::editor::sequence::config::SequenceConfig;
 use crate::editor::sequence::terminology::sequence_play_labels;
 use crate::editor::sequence::testkit::{new_app, render as render_body};
 

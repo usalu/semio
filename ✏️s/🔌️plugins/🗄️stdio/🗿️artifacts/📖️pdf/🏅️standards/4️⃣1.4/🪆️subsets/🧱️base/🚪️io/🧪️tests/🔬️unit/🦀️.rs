@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1_4::subsets::base::schema::snapshot::demo_pdf_snapshot;
 

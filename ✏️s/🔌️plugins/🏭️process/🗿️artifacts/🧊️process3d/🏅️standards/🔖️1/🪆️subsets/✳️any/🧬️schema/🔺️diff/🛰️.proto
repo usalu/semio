@@ -21,43 +21,7 @@ message Process3dDiff {
   // @state artifact
   optional uint32 resolved_up_to = 11;
   // @state presence
-  optional string selected_id = 12;
-  // @state presence
-  optional uint32 selected_face_id = 13;
-  // @state presence
   // @state config
-  optional string selection_method = 15;
-  // @state config
-  optional string engagement_input = 16;
-  // @state config
-  optional double camera_position_x = 17;
-  // @state config
-  optional double camera_position_y = 18;
-  // @state config
-  optional double camera_position_z = 19;
-  // @state config
-  optional double camera_target_x = 20;
-  // @state config
-  optional double camera_target_y = 21;
-  // @state config
-  optional double camera_target_z = 22;
-  // @state config
-  optional double camera_fov = 23;
-  // @state config
-  optional bool sun_enabled = 24;
-  // @state config
-  optional double sun_azimuth = 25;
-  // @state config
-  optional double sun_elevation = 26;
-  // @state config
-  optional double sun_intensity = 27;
-  // @state config
-  optional string sun_color = 28;
-  // @state config
-  // @state config
-  optional string contributions_json = 30;
-  // @state artifact
-  optional string hovered_id = 31;
 }
 
 message Process3dArtifact {}

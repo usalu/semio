@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎯️set-selected-generation",
+  "semanticKind": "set-selected-generation",
+  "displayName": "Set Selected Generation",
+  "emoji": "🎯️",
+  "aggregateVariant": "SetSelectedGeneration",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema"]
+}
+

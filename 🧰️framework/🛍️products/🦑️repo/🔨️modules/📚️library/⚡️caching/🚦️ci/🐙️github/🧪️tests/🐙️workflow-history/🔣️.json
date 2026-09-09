@@ -1,0 +1,16 @@
+{
+  "request": { "repository": "semio/fixture", "repositoryId": 41, "runId": 500, "branch": "integration/⛳️ wip&x=1" },
+  "current": { "id": 500, "workflow_id": 73, "repository": { "id": 41 } },
+  "run": { "id": 400, "run_number": 60, "workflow_id": 73, "head_branch": "integration/⛳️ wip&x=1", "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "event": "push", "status": "completed", "conclusion": "success", "head_repository": { "id": 41 } },
+  "foreignRepositoryId": 99,
+  "unavailableStatuses": [401, 403, 404, 429, 500],
+  "invalidRequests": [
+    { "repository": "owner/../repo" },
+    { "repository": "../repo" },
+    { "repository": "owner/.." },
+    { "repository": "https://example.org/repo" },
+    { "repositoryId": 0 },
+    { "runId": 1.5 },
+    { "branch": "bad\nbranch" }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/directory/session-authority/v1.json",
+  "title": "Directory Session Authority V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "sessionBindingSha256", "authorizationGeneration", "userId", "email", "displayName", "expiresAt", "sessionKind"],
+  "properties": {
+    "schema": { "const": "semio.directory.session-authority.v1" },
+    "sessionBindingSha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "authorizationGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "userId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$" },
+    "email": { "type": "string", "minLength": 1, "maxLength": 320, "pattern": "^(?! )(?!.*[\\u0000-\\u001f\\u007f-\\u009f\\ud800-\\udfff]).*[^ ]$" },
+    "displayName": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?! )(?!.*[\\u0000-\\u001f\\u007f-\\u009f\\ud800-\\udfff]).*[^ ]$" },
+    "expiresAt": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "sessionKind": { "enum": ["external", "development-local"] }
+  }
+}

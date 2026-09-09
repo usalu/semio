@@ -19,15 +19,6 @@ export interface JackDiff {
   edges?: JackEdgesDelta;
   /** @state artifact */
   rootNodeId?: string | null;
-  /** @state config */
-  jackQuery?: string;
-  /** @state config */
-  lodModeByWindow?: Record<string, string | null>;
-  /** @state config */
-  viewportCamera?: Camera;
-  /** @state config */
-  /** @state config */
-  editorSelection?: JackEditorSelection | null;
 }
 
 export interface JackNodesDelta {
@@ -74,10 +65,6 @@ export interface JackArtifact {
   edges: Edge[];
 }
 
-export interface JackEditorSelection {
-  start: number;
-  end: number;
-}
 
 export interface Camera {
   x: number;

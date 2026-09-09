@@ -1,0 +1,6 @@
+{
+  "tools": ["wasm-pack", "wasm-bindgen", "wasm-opt", "trunk"],
+  "unavailable": ["wasm-pack", "wasm-bindgen", "trunk"],
+  "command": "fingerprint",
+  "maximumImports": 12
+}

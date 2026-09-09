@@ -30,19 +30,26 @@ class ChildIdentityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/📜️script.ts");
     const receipts = await runExactCargoLaws({
-      cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: 3_600_000,
-      groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: [
-        "scene_identity_matches_node_crypto_and_adopts_the_exact_root",
-        "every_artifact_variant_matches_serde_bytes_including_nested_chrome",
-        "large_unicode_key_and_label_scene_matches_serde_without_an_ordinal_map_scan",
-        "flow_parent_projection_and_child_identity_match_neutral_corpus",
-        "flow_store_owners_retire_all_durable_lanes_with_neutral_byte_grants",
-        "flow_presence_store_owners_preserve_readers_and_retire_neutral_byte_grants",
-        "flow_empty_transient_close_matches_neutral_trace_and_exact_owner",
-        "flow_viewer_member_factory_and_full_store_close_match_neutral_contract",
-        "flow_actual_surface_factories_close_all_owners_under_neutral_grants",
-        "flow_render_fixture_projection_retires_populated_and_rejected_pages",
-      ] }],
+      cwd: this.repoRoot,
+      cargoArgs: segments,
+      groups: [
+        {
+          package: "semio-s-artifact-flow-flow",
+          target: { kind: "lib" },
+          laws: [
+            "scene_identity_matches_node_crypto_and_adopts_the_exact_root",
+            "every_artifact_variant_matches_serde_bytes_including_nested_chrome",
+            "large_unicode_key_and_label_scene_matches_serde_without_an_ordinal_map_scan",
+            "flow_parent_projection_and_child_identity_match_neutral_corpus",
+            "flow_store_owners_retire_all_durable_lanes_with_neutral_byte_grants",
+            "flow_presence_store_owners_preserve_readers_and_retire_neutral_byte_grants",
+            "flow_empty_transient_close_matches_neutral_trace_and_exact_owner",
+            "flow_viewer_member_factory_and_full_store_close_match_neutral_contract",
+            "flow_render_fixture_projection_retires_populated_and_rejected_pages",
+          ],
+        },
+        { package: "semio-s-plugin-flow", target: { kind: "lib" }, laws: ["flow_actual_surface_factories_close_all_owners_under_neutral_grants"] },
+      ],
     });
     console.log(`[DEBUG] Flow child identity native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
@@ -52,10 +59,9 @@ class ChildEditCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/📜️script.ts");
     const receipts = await runExactCargoLaws({
-      cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: 3_600_000,
-      groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: [
-        "add_widget_dispatches_one_typed_child_edit_without_repointing_parent_content",
-      ] }],
+      cwd: this.repoRoot,
+      cargoArgs: segments,
+      groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["add_widget_dispatches_one_typed_child_edit_without_repointing_parent_content"] }],
     });
     console.log(`[DEBUG] Flow typed child edit native law: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
@@ -77,25 +83,26 @@ class AddWidgetRetainedCheckScript extends BundleScript {
       const textBytes = Buffer.byteLength(request.command.kind) + Buffer.byteLength(request.command.neuronKind ?? "");
       const finite = (value: unknown) => typeof value === "number" && Number.isFinite(value);
       const dialect = request.child.dialect;
-      const admitted = request.controller === fixture.registration.controller
-        && request.tool === fixture.registration.tool
-        && request.schema === fixture.registration.schema
-        && request.rawBytes <= fixture.limits.rawBytes
-        && request.checkpointBytes <= fixture.limits.checkpointBytes
-        && request.wire === "canonical"
-        && textBytes <= fixture.limits.textBytes
-        && finite(request.command.x)
-        && finite(request.command.y)
-        && request.child.present
-        && request.child.slot === "content"
-        && request.child.id === request.parent.childId
-        && dialect.artifactKind === "s.stdio.semio"
-        && dialect.standard === "v1"
-        && dialect.subset === "flow"
-        && request.child.nodes <= fixture.limits.childItems
-        && request.child.edges <= fixture.limits.childItems
-        && request.owner === "ready"
-        && request.cancel !== "before-work";
+      const admitted =
+        request.controller === fixture.registration.controller &&
+        request.tool === fixture.registration.tool &&
+        request.schema === fixture.registration.schema &&
+        request.rawBytes <= fixture.limits.rawBytes &&
+        request.checkpointBytes <= fixture.limits.checkpointBytes &&
+        request.wire === "canonical" &&
+        textBytes <= fixture.limits.textBytes &&
+        finite(request.command.x) &&
+        finite(request.command.y) &&
+        request.child.present &&
+        request.child.slot === "content" &&
+        request.child.id === request.parent.childId &&
+        dialect.artifactKind === "s.stdio.semio" &&
+        dialect.standard === "v1" &&
+        dialect.subset === "flow" &&
+        request.child.nodes <= fixture.limits.childItems &&
+        request.child.edges <= fixture.limits.childItems &&
+        request.owner === "ready" &&
+        request.cancel !== "before-work";
       if (!admitted) return deny;
       if (!["neuron", "inputSlider", "inputNote", "inputImage", "outputPreview", "outputAction", "outputExport", "variable"].includes(request.command.kind)) {
         return { accepted: false, sessionCalls: 1, parentMutations: 0, childGroups: 0, visibleGroups: 0 };
@@ -152,7 +159,8 @@ class AddWidgetRetainedCheckScript extends BundleScript {
       "ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES",
       "FlowCommand::AddWidget(payload)",
       "semio_framework_plugin::InteractiveJobClassification::Migrated",
-    ]) assert(source.includes(witness), `missing retained addWidget source witness: ${witness}`);
+    ])
+      assert(source.includes(witness), `missing retained addWidget source witness: ${witness}`);
     assert(source.includes('dialect.artifact_kind != "s.stdio.semio"') && source.includes('dialect.standard != "v1"') && source.includes('dialect.subset != "flow"'), "retained addWidget must bind the exact captured child dialect");
     assert(source.includes("add_widget::handle(payload, &view") && source.includes("FlowInstanceOperationOwner"), "retained addWidget must reuse the typed child planner under the instance session owner");
     const retainedCommandSource = await Bun.file(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs")).text();
@@ -167,11 +175,9 @@ class AddWidgetRetainedCheckScript extends BundleScript {
     await this.oracle();
     if (segments.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({
-      cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: 3_600_000,
-      groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: [
-        "retained_add_widget_factory_is_exact_child_only_and_legacy_closed",
-        "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires",
-      ] }],
+      cwd: this.repoRoot,
+      cargoArgs: segments,
+      groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["retained_add_widget_factory_is_exact_child_only_and_legacy_closed", "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires"] }],
     });
     console.log(`[DEBUG] Flow retained addWidget native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
@@ -187,6 +193,13 @@ class DescribeScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("child-identity-check", ChildIdentityCheckScript).register("child-edit-check", ChildEditCheckScript).register("add-widget-retained-check", AddWidgetRetainedCheckScript).register("describe", DescribeScript);
+const router = new ScriptRouter(import.meta.dir)
+  .register("check", CheckScript)
+  .register("test", TestScript)
+  .register("test-source", SourceTestScript)
+  .register("child-identity-check", ChildIdentityCheckScript)
+  .register("child-edit-check", ChildEditCheckScript)
+  .register("add-widget-retained-check", AddWidgetRetainedCheckScript)
+  .register("describe", DescribeScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

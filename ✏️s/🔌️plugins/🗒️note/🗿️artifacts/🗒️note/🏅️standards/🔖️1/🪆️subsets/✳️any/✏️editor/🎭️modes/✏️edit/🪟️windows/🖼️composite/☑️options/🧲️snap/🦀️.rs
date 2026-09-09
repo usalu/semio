@@ -1,8 +1,8 @@
 //! 🧲️ Composite-window option — snap-to-grid enabled/spacing.
 //! Its command handlers live in `🎮️commands/🧲️snap`.
 
-use crate::NoteSnapshot;
 use crate::editor::note::terminology::NotePlayLabels;
+use crate::NoteSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

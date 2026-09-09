@@ -4,16 +4,6 @@
   "title": "Block2dConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "selectedIds"
-  ],
-  "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    }
-  }
+  "required": [],
+  "properties": {}
 }

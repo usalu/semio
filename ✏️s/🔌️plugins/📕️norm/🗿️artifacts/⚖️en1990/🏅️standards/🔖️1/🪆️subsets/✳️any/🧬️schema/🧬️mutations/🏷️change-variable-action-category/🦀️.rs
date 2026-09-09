@@ -1,7 +1,6 @@
 //! 🏷️ `change-variable-action-category` — sets one `q_k` table entry's `category` label, addressed
 //! by BASE-state index.
 
-
 use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload

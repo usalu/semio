@@ -1,0 +1,6 @@
+[
+  {"id":"latest-object","initial":{"kind":"base"},"patches":[{"data":{"kind":"boundary"}},{"data":{"kind":"district"}}],"expected":{"kind":"district"}},
+  {"id":"trailing-empty","initial":"base","patches":[{"data":"updated"},{}],"expected":"updated"},
+  {"id":"leading-empty","initial":"base","patches":[{},{"data":[1,2]}],"expected":[1,2]},
+  {"id":"all-empty","initial":{"kind":"base"},"patches":[{},{}],"expected":{"kind":"base"}}
+]

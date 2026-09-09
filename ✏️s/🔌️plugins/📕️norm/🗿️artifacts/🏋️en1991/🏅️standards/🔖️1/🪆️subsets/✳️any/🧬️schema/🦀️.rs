@@ -75,8 +75,6 @@ pub struct En1991Artifact {
     pub c_s: f64,
     #[state(artifact)]
     pub c_d: f64,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -120,7 +118,7 @@ impl En1991Artifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::En1991Snapshot) -> Self {
         Self {
             area_m2: snapshot.area_m2,
@@ -155,14 +153,11 @@ impl En1991Artifact {
             silo_k: snapshot.silo_k,
             c_s: snapshot.c_s,
             c_d: snapshot.c_d,
-            selected_check_index: None,
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
     pub fn set_snapshot(&mut self, snapshot: crate::En1991Snapshot) {
-        let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
-        self.selected_check_index = selected;
     }
 }
 
@@ -173,13 +168,7 @@ impl En1991Artifact {
 pub fn en1991_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1991",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

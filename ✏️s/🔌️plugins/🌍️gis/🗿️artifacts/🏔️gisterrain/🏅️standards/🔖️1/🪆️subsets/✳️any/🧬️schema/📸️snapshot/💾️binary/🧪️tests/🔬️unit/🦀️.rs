@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::dsl;
+use crate::standards::v1::subsets::any::schema::snapshot::text as dsl;
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_terrain_document_pack_agrees_with_dsl_for_bundled_reuse_example() {

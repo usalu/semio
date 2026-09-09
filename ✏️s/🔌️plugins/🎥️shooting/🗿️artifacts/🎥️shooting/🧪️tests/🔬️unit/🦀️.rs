@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` ("shooting.scene") is deliberately NOT

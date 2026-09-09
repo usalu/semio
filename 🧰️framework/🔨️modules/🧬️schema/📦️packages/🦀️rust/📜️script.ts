@@ -4,10 +4,11 @@
  * into its TypeScript, Rust and Go consumers. Every projection carries the same provenance header and
  * the same FIRST-WINS emoji index. */
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts";
 import { entityKindIndexByEmoji, parseEntityKindCatalog, type EntityKindCatalog } from "../../🟦️.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
@@ -180,8 +181,7 @@ class GenerateScript extends BundleScript {
     const repoRoot = getWorkspaceRoot();
     const source = readEntityCatalog(repoRoot);
     for (const target of generatedTargets(repoRoot, source)) {
-      mkdirSync(dirname(target.path), { recursive: true });
-      writeFileSync(target.path, target.content);
+      writeGeneratedFileIfChanged(target.path, target.content);
     }
     const shadowed = source.kinds.length - entityKindIndexByEmoji(source.kinds).size;
     console.log(`entity catalog refreshed (${source.kinds.length} entity kinds, ${shadowed} emoji-shadowed, sha256 ${source.sha256}) -> 🤖️generated/🟦️entity-kinds.ts, ⌨️cli/🐹️entity_kinds.g.go, 🤖️generated.rs`);

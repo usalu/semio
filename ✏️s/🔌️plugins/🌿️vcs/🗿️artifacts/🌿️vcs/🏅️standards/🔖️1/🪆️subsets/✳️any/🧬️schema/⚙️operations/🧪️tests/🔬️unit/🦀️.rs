@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::mutations::{AddTag, RemoveTag, add_tag, change_counter, change_notes, register_vcs_demo_mutation_descriptors, remove_tag, rename_vcs};
+use crate::mutations::{add_tag, change_counter, change_notes, register_vcs_demo_mutation_descriptors, remove_tag, rename_vcs, AddTag, RemoveTag};
 use crate::standards::v1::subsets::any::schema::empty_vcs_snapshot;
 use protocol::{Mutation, MutationDiff, MutationKind, SemanticMutation};
 use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};

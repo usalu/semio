@@ -1,8 +1,8 @@
 //! ✳️ Writer subset `any` root — mounts `schema`/`io`/`viewer`/`editor`/`examples` and exports the
 //! one `subset() -> SubsetDeclaration` this owner is responsible for (design.md §1).
 
-use crate::standards::v1::subsets::any::{io, schema};
 use crate::editor::writer as editor;
+use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::writer as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
@@ -16,25 +16,21 @@ fn examples() -> &'static [ExampleSource] {
 //#endregion 🔖️Examples
 
 //#region 🔖️Inferences
-fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::writer_artifact_inference_descriptor()]).as_slice()
 }
 //#endregion 🔖️Inferences
 
 //#region 🔖️Subset
-pub fn subset() -> SubsetDeclaration<crate::plugin::WriterApps> {
+pub fn subset<A: crate::WriterApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
         dialect: crate::WRITER_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::writer_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::WriterViewer, crate::plugin::WriterApps>(viewer::create_writer_viewer()),
-        editor: editor_surface::<editor::WriterPlayApp, crate::plugin::WriterApps>(editor::create_writer_app()),
+        viewer: viewer_surface::<viewer::WriterViewer, A>(viewer::create_writer_viewer()),
+        editor: editor_surface::<editor::WriterPlayApp, A>(editor::create_writer_app()),
         examples: examples(),
     }
 }
 //#endregion 🔖️Subset
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

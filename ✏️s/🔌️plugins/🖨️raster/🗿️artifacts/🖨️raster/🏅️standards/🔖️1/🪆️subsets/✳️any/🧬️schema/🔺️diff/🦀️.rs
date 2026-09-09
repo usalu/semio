@@ -1,6 +1,6 @@
 //! 🧬️ Raster diff schema — sparse field delta over the artifact.
 
-use crate::{RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterViewportSize};
+use crate::{RasterImageAsset, RasterLayerNode, RasterLayerPatch};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -22,22 +22,6 @@ pub struct RasterDiff {
     pub layers: Option<RasterLayersDelta>,
     #[state(artifact)]
     pub assets: Option<RasterAssetsDelta>,
-    #[state(presence)]
-    pub selected_ids: Option<RasterStringList>,
-    #[state(config)]
-    pub brush_size: Option<f64>,
-    #[state(config)]
-    pub brush_opacity: Option<f64>,
-    #[state(config)]
-    pub composite_viewport: Option<Option<RasterViewportSize>>,
-    #[state(config)]
-    pub camera_x: Option<f64>,
-    #[state(config)]
-    pub camera_y: Option<f64>,
-    #[state(config)]
-    pub camera_zoom: Option<f64>,
-    #[state(artifact)]
-    pub hovered_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 
@@ -47,13 +31,6 @@ pub struct RasterDiff {
 #[value(rename_all = "camelCase", default)]
 pub struct RasterAssetsDelta {
     pub entries: BTreeMap<String, Option<RasterImageAsset>>,
-}
-
-/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct RasterStringList {
-    pub values: Vec<String>,
 }
 
 /// 🧩 Identified-collection delta for `layers` — every entry is tree-aware (`parent_id: None` means

@@ -62,9 +62,7 @@ mod quick {
         JobTurn { job: 44, operation: JobOperation::from_job(operation), step_sequence }
     }
 
-    fn bridge_now_us() -> Option<u64> {
-        Some(10)
-    }
+    const BRIDGE_NOW_US: fn() -> Option<u64> = || Some(10);
 
     #[derive(Default)]
     struct ScriptJob {
@@ -163,7 +161,7 @@ mod quick {
         let mut bridge = JobTurnBridge::new(operation);
         let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield, JobStepOutcome::Yield]), calls: 0, ..Default::default() };
         let publication = bridge
-            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.one-step", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), bridge_now_us)
+            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.one-step", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), BRIDGE_NOW_US)
             .expect("first job turn");
         assert_eq!(job.calls, 1);
         assert!(matches!(publication.outcome, JobStepOutcome::Yield));
@@ -176,7 +174,7 @@ mod quick {
         let checkpoint = JobCheckpoint { state: vec![4, 5, 6], applied_progress: 73 };
         let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::CheckpointReady { checkpoint: checkpoint.clone() }]), calls: 0, ..Default::default() };
         let pending = bridge
-            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.checkpoint", job::InteractiveStage::BackgroundStep, job::StepBudget::new(100, 20), job::root_cancel_token(), bridge_now_us)
+            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.checkpoint", job::InteractiveStage::BackgroundStep, job::StepBudget::new(100, 20), job::root_cancel_token(), BRIDGE_NOW_US)
             .expect("checkpoint projection admission");
         assert!(matches!(pending.outcome, JobStepOutcome::Yield));
         let publication = bridge
@@ -190,7 +188,7 @@ mod quick {
                 job::InteractiveStage::BackgroundStep,
                 job::StepBudget::new(100, 20),
                 job::root_cancel_token(),
-                bridge_now_us,
+                BRIDGE_NOW_US,
             )
             .expect("checkpoint publication");
         assert_eq!(publication.outcome, JobStepOutcome::CheckpointReady { checkpoint: checkpoint.clone() });
@@ -205,7 +203,7 @@ mod quick {
         cancel.cancel().await;
         let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield]), calls: 0, ..Default::default() };
         let publication = bridge
-            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.cancel", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), cancel, bridge_now_us)
+            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.cancel", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), cancel, BRIDGE_NOW_US)
             .expect("cancel publication");
         assert_eq!(job.calls, 0);
         assert!(matches!(publication.outcome, JobStepOutcome::Cancelled));
@@ -220,7 +218,7 @@ mod quick {
                 job::InteractiveStage::InteractiveStep,
                 job::StepBudget::new(100, 20),
                 job::root_cancel_token(),
-                bridge_now_us
+                BRIDGE_NOW_US
             ),
             Err(JobPublicationError::Terminal)
         ));
@@ -232,7 +230,7 @@ mod quick {
         let mut bridge = JobTurnBridge::new(operation);
         let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![1], output: vec![2] } }]), calls: 0, ..Default::default() };
         let result =
-            bridge.step(&mut job, bridge_turn(0, 0), operation.operation, job::RevisionId(8), operation.generation, "actor.job.stale", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), bridge_now_us);
+            bridge.step(&mut job, bridge_turn(0, 0), operation.operation, job::RevisionId(8), operation.generation, "actor.job.stale", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), BRIDGE_NOW_US);
         assert!(matches!(result, Err(JobPublicationError::Stale { live_revision: 8, live_generation: 3 })));
         assert_eq!(job.calls, 0);
     }
@@ -253,7 +251,7 @@ mod quick {
                 job::InteractiveStage::InteractiveStep,
                 job::StepBudget::new(100, 20),
                 job::root_cancel_token(),
-                bridge_now_us,
+                BRIDGE_NOW_US,
             ),
             Err(JobPublicationError::Stale { .. })
         ));
@@ -275,7 +273,7 @@ mod quick {
                 job::InteractiveStage::InteractiveStep,
                 job::StepBudget::new(100, 20),
                 job::root_cancel_token(),
-                bridge_now_us,
+                BRIDGE_NOW_US,
             ),
             Err(JobPublicationError::PreviewSequence { before: 0, after: 0 })
         ));
@@ -301,7 +299,7 @@ mod quick {
             let mut turn = bridge_turn(0, 0);
             loop {
                 let publication = bridge
-                    .step(&mut job, turn, operation.operation, operation.base_revision, operation.generation, "actor.job.replay", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), bridge_now_us)
+                    .step(&mut job, turn, operation.operation, operation.base_revision, operation.generation, "actor.job.replay", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), BRIDGE_NOW_US)
                     .expect("replay publication");
                 let terminal = matches!(&publication.outcome, JobStepOutcome::Complete { .. });
                 turn = JobTurn { step_sequence: publication.turn.step_sequence + 1, ..publication.turn };
@@ -312,11 +310,11 @@ mod quick {
                     _ => std::ptr::null(),
                 };
                 let mut preview_sequence = publication.turn.operation.preview_sequence;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
                 log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count, worker_slot, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("capture admission");
                 loop {
                     let mut preview_sequence = turn.operation.preview_sequence;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
                     if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                         break;
                     }
@@ -370,29 +368,29 @@ mod quick {
                         job::InteractiveStage::InteractiveStep,
                         job::StepBudget::new(100, 20),
                         job::root_cancel_token(),
-                        bridge_now_us,
+                        BRIDGE_NOW_US,
                     )
                     .expect("replayed live publication");
                 assert_eq!(log.expected_turn(), Some(publication.turn));
                 let terminal = matches!(&publication.outcome, JobStepOutcome::Complete { .. });
                 replay_turn = JobTurn { step_sequence: publication.turn.step_sequence + 1, ..publication.turn };
                 let mut preview_sequence = publication.turn.operation.preview_sequence;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
                 log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count, worker_slot, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("replay capture admission");
                 loop {
                     let mut preview_sequence = replay_turn.operation.preview_sequence;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
                     if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                         break;
                     }
                 }
                 drop(log.take_captured_publication().expect("matched replay publication"));
                 let mut preview_sequence = replay_turn.operation.preview_sequence;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
                 log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("matched replay policy");
                 while log.has_pending_work() {
                     let mut preview_sequence = replay_turn.operation.preview_sequence;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
                     let _ = log.maintenance_step(&mut context);
                 }
                 if terminal {
@@ -404,13 +402,13 @@ mod quick {
             log.begin_close();
             while !log.terminal_is_empty() {
                 let mut preview_sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
                 let _ = log.close_step(&mut context);
             }
             digests
         }
 
-        let host_default = u16::try_from(std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)).unwrap_or(u16::MAX);
+        let host_default = u16::try_from(std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)).unwrap_or(u16::MAX);
         for worker_count in [1, 2, 4, host_default] {
             assert_eq!(run(worker_count, 0), run(worker_count, 0), "1/2/4/default worker replay preserves the exact ordered publication identity");
         }
@@ -425,19 +423,19 @@ mod quick {
         for replaying in [false, true] {
             let publication = JobPublication { turn, outcome: JobStepOutcome::Cancelled };
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
             log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("cancel capture admission");
             loop {
                 let mut sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
                 if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                     break;
                 }
             }
-            assert_eq!(log.record_header(0).expect("cancel record").cancellation_observed, true);
+            assert!(log.record_header(0).expect("cancel record").cancellation_observed);
             assert!(matches!(log.take_captured_publication().expect("exact cancelled owner").outcome, JobStepOutcome::Cancelled));
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
             log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("cancel ACK");
             if !replaying {
                 log.begin_replay(operation.generation.0).expect("cancel replay generation");
@@ -447,7 +445,7 @@ mod quick {
         log.begin_close();
         while !log.terminal_is_empty() {
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
             let _ = log.close_step(&mut context);
         }
     }
@@ -467,7 +465,7 @@ mod quick {
         let cancel = job::root_cancel_token();
         cancel.cancel_now();
         let mut sequence = 0;
-        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), cancel, bridge_now_us, &mut sequence);
+        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), cancel, BRIDGE_NOW_US, &mut sequence);
         let cancelled = log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, cancelled).expect_err("cancelled capture refuses before transfer").into_publication();
         assert!(matches!(&cancelled.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == cancelled_identity));
 
@@ -477,7 +475,7 @@ mod quick {
             _ => unreachable!(),
         };
         let mut sequence = 0;
-        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 10), job::root_cancel_token(), bridge_now_us, &mut sequence);
+        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 10), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
         let expired = log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, expired).expect_err("expired capture refuses before transfer").into_publication();
         assert!(matches!(&expired.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == expired_identity));
 
@@ -487,7 +485,7 @@ mod quick {
             _ => unreachable!(),
         };
         let mut sequence = 0;
-        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
+        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
         let stale = log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, stale).expect_err("stale capture refuses before transfer").into_publication();
         assert!(matches!(&stale.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == stale_identity));
         assert_eq!(log.sealed_records(), 0);
@@ -509,11 +507,11 @@ mod quick {
                 _ => unreachable!(),
             };
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
             log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("fault capture admission");
             loop {
                 let mut sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
                 if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                     break;
                 }
@@ -521,7 +519,7 @@ mod quick {
             let publication = log.take_captured_publication().expect("exact fault owner");
             assert!(matches!(&publication.outcome, JobStepOutcome::Fault { detail } if detail.as_ptr() == payload_identity && detail.as_slice() == [109, 113, 127]));
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
             log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("fault ACK");
             if !replaying {
                 log.begin_replay(operation.generation.0).expect("fault replay generation");
@@ -531,7 +529,7 @@ mod quick {
         log.begin_close();
         while !log.terminal_is_empty() {
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
             let _ = log.close_step(&mut context);
         }
     }
@@ -1416,13 +1414,11 @@ mod quick {
     //#endregion 🔖️ShardTable
 
     //#region 🔖️JobProgressOverlay
-    fn progress_now_us() -> Option<u64> {
-        Some(0)
-    }
+    const PROGRESS_NOW_US: fn() -> Option<u64> = || Some(0);
 
     fn with_progress_context<T>(operation: u64, generation: u64, cancel: job::CancelToken, run: impl FnOnce(&mut job::StepContext<'_>) -> T) -> T {
         let mut preview_sequence = 0;
-        let mut context = job::StepContext::new(job::OperationId(operation), job::Generation(generation), job::StepBudget::new(8, 10), cancel, progress_now_us, &mut preview_sequence);
+        let mut context = job::StepContext::new(job::OperationId(operation), job::Generation(generation), job::StepBudget::new(8, 10), cancel, PROGRESS_NOW_US, &mut preview_sequence);
         run(&mut context)
     }
 

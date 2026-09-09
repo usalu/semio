@@ -1,7 +1,6 @@
 type DrawingConfig {
   engagementInput: String! @state(class: CONFIG)
   camera: DrawingCamera! @state(class: CONFIG)
-  activeUtilityId: String! @state(class: CONFIG)
   tracePointerGeneration: Float! @state(class: CONFIG)
   tracePointerCompletedWork: Float! @state(class: CONFIG)
   tracePointerPendingWork: Float! @state(class: CONFIG)

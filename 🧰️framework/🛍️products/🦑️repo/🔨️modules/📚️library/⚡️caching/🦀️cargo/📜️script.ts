@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import assert from "node:assert/strict";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join, resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -19,8 +19,8 @@ export function startNativeProgress(label: string, intervalMs = 10_000, output: 
 }
 
 /** 🏃️ Runs a bounded owned command with progress and process-tree cancellation. */
-async function runOwnedCommand(command: string, args: string[], cwd: string, label: string, timeoutMs = buildBudgetMs()): Promise<void> {
-  const child = spawn(command, args, { cwd, env: process.env, detached: process.platform !== "win32", stdio: "inherit", windowsHide: true });
+export async function runOwnedCommand(command: string, args: string[], cwd: string, label: string, timeoutMs = buildBudgetMs(), options: { stdout?: "inherit" | "ignore" } = {}): Promise<void> {
+  const child = spawn(command, args, { cwd, env: process.env, detached: process.platform !== "win32", stdio: ["inherit", options.stdout ?? "inherit", "inherit"], windowsHide: true });
   let stopped = "", forceKill: ReturnType<typeof setTimeout> | undefined;
   const terminate = (reason: string): void => {
     stopped ||= reason;
@@ -72,6 +72,9 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
   const sourceRoot = dirname(path);
   const staging = resolve(sourceRoot, options.output ?? "dist/build");
   if (!staging.startsWith(sourceRoot + sep)) throw new Error("Cargo deliverables must belong to their source project");
+  const captureParent = process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(process.env.SEMIO_TEST_ARTIFACT_DIR) : dirname(staging);
+  mkdirSync(captureParent, { recursive: true });
+  const capture = mkdtempSync(join(captureParent, "cargo-artifacts-"));
   const owner = slash(relative(repoRoot, path));
   const files = new Map<string, string>();
   const dependencies = new Map<string, string>();
@@ -96,124 +99,56 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
   const stopProgress = startNativeProgress(`artifact-rust:${owner}:build`);
   const status = new Promise<number>((accept) => { child.once("error", (error) => { console.error(error.message); accept(1); }); child.once("close", (code) => accept(code ?? 1)); });
   try {
-    for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) {
-      let message;
-      try { message = JSON.parse(line); } catch { process.stdout.write(line + "\n"); continue; }
-      if (message.reason !== "compiler-artifact" || message.target?.kind?.includes("custom-build")) continue;
-      const packageUrl = message.package_id?.split("#")[0]?.replace(/^path\+/, "");
-      const bin = args.indexOf("--bin"), example = args.indexOf("--example");
-      const selected = bin >= 0 ? message.target?.kind?.includes("bin") && message.target.name === args[bin + 1] : example >= 0 ? message.target?.kind?.includes("example") && message.target.name === args[example + 1] : args.includes("--bins") ? message.target?.kind?.includes("bin") : true;
-      const primary = selected && packageUrl?.startsWith("file:") && resolve(fileURLToPath(packageUrl)) === sourceRoot;
-      for (const file of message.filenames ?? []) {
-        if (file.endsWith(".d")) continue;
-        const library = primary && file.endsWith(".rmeta") ? message.filenames.find((path: string) => path.endsWith(".rlib")) : undefined;
-        const name = (library ? library.replace(/\.rlib$/, ".rmeta") : file).split(/[\\/]/).at(-1)!;
-        if (primary) { files.set(name, file); hasLibrary ||= file.endsWith(".rlib"); }
-        else if (/\.(rlib|rmeta|so|dylib|dll|lib)$/.test(file)) dependencies.set(`deps/${name}`, file);
-      }
-    }
-    if (await status !== 0 || cancelled) throw new Error(`Cargo artifact build ${cancelled ? "cancelled" : "failed"}: ${owner}`);
-  } finally { stopProgress(); if (forceKill) clearTimeout(forceKill); process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
-  if (files.size === 0) throw new Error(`Cargo emitted no final artifacts for ${owner}`);
-  if (hasLibrary) for (const [name, file] of dependencies) files.set(name, file);
-  options.validate?.(files);
-  stageArtifacts(staging, owner, files);
-  console.log(`[nx-native] staged ${files.size} deliverables in ${slash(relative(repoRoot, staging))}`);
+    try {
+      try {
+        for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) {
+          let message;
+          try { message = JSON.parse(line); } catch { process.stdout.write(line + "\n"); continue; }
+          if (message.reason !== "compiler-artifact" || message.target?.kind?.includes("custom-build")) continue;
+          const packageUrl = message.package_id?.split("#")[0]?.replace(/^path\+/, "");
+          const bin = args.indexOf("--bin"), example = args.indexOf("--example");
+          const selected = bin >= 0 ? message.target?.kind?.includes("bin") && message.target.name === args[bin + 1] : example >= 0 ? message.target?.kind?.includes("example") && message.target.name === args[example + 1] : args.includes("--bins") ? message.target?.kind?.includes("bin") : true;
+          const primary = selected && packageUrl?.startsWith("file:") && resolve(fileURLToPath(packageUrl)) === sourceRoot;
+          for (const file of message.filenames ?? []) {
+            if (file.endsWith(".d")) continue;
+            const library = primary && file.endsWith(".rmeta") ? message.filenames.find((path: string) => path.endsWith(".rlib")) : undefined;
+            const name = (library ? library.replace(/\.rlib$/, ".rmeta") : file).split(/[\\/]/).at(-1)!;
+            const key = primary ? name : /\.(rlib|rmeta|so|dylib|dll|lib)$/.test(file) ? `deps/${name}` : undefined;
+            if (!key) continue;
+            const captured = join(capture, key);
+            mkdirSync(dirname(captured), { recursive: true });
+            copyFileSync(file, captured);
+            chmodSync(captured, lstatSync(file).mode & 0o777);
+            if (primary) { files.set(key, captured); hasLibrary ||= file.endsWith(".rlib"); }
+            else dependencies.set(key, captured);
+          }
+        }
+      } catch (error) { cancel(); await status; throw error; }
+      if (await status !== 0 || cancelled) throw new Error(`Cargo artifact build ${cancelled ? "cancelled" : "failed"}: ${owner}`);
+    } finally { stopProgress(); if (forceKill) clearTimeout(forceKill); process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
+    if (files.size === 0) throw new Error(`Cargo emitted no final artifacts for ${owner}`);
+    if (hasLibrary) for (const [name, file] of dependencies) files.set(name, file);
+    options.validate?.(files);
+    stageArtifacts(staging, owner, files);
+    console.log(`[nx-native] staged ${files.size} deliverables in ${slash(relative(repoRoot, staging))}`);
+  } finally {
+    rmSync(capture, { recursive: true, force: true });
+  }
 }
 
-/** 📦️ Runs an independently owned Rust artifact package through the shared Nx-native contract. */
-export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string): Promise<void> {
-  class BuildScript extends BundleScript {
-    async run(segments: string[]): Promise<void> {
-      const { cargoArgs } = artifactRustCargoArguments("build", segments);
-      await buildCargoArtifacts(relative(this.repoRoot, resolve(this.root, "Cargo.toml")), cargoArgs, this.repoRoot);
-    }
-  }
-  class CheckScript extends BundleScript {
-    async run(segments: string[]): Promise<void> {
-      const { cargoArgs } = artifactRustCargoArguments("check", segments);
-      await runOwnedCommand("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml"), ...cargoArgs], this.repoRoot, `artifact-rust:${cargoName}:check`);
-    }
-  }
-  class TestScript extends BundleScript {
-    async run(segments: string[]): Promise<void> {
-      const { cargoArgs, testLevel } = artifactRustCargoArguments("test", segments);
-      if (testLevel) process.env.SEMIO_TEST_LEVEL = testLevel;
-      await runOwnedCommand("cargo", ["test", "--locked", "-p", cargoName, ...cargoArgs], this.repoRoot, `artifact-rust:${cargoName}:test`);
-    }
-  }
-  const packageRouter = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
-  const segments = process.argv.slice(2);
-  await packageRouter.run(segments.length ? segments : ["test"]);
-}
-
-/** 🟦️ Builds and resolves a declaration-only TypeScript artifact package from its taxonomy source. */
-export async function runArtifactTypeScriptPackageMain(packageRoot: string, packageName: string): Promise<void> {
-  const source = resolve(packageRoot, "../../🟦️.ts"), output = resolve(packageRoot, "dist");
-  const typeScript = async (entry: string, args: string[], skipLibraries = true): Promise<void> => {
-    await runOwnedCommand(process.execPath, ["x", "tsc", entry, ...args, "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", ...(skipLibraries ? ["--skipLibCheck"] : []), "--target", "ES2022"], getWorkspaceRoot(), `artifact-typescript:${packageName}:tsc`, 120_000);
-  };
-  const copyDeclarationAssets = (): number => {
-    const declaration = join(output, "🟦️.d.ts"), compiler = createRequire(import.meta.url)("typescript");
-    const copied = new Set<string>();
-    for (const imported of compiler.preProcessFile(readFileSync(declaration, "utf8"), true, true).importedFiles) {
-      if (!imported.fileName.startsWith(".")) continue;
-      const sourceImport = resolve(dirname(source), imported.fileName);
-      const candidates = imported.fileName.endsWith(".json") || /\.d\.[cm]?ts$/.test(imported.fileName) ? [[sourceImport, imported.fileName]] : [
-        [sourceImport.replace(/\.(?:[cm]?[jt]s)$/, ".d.ts"), imported.fileName.replace(/\.(?:[cm]?[jt]s)$/, ".d.ts")],
-        [`${sourceImport}.d.ts`, `${imported.fileName}.d.ts`],
-      ];
-      const selected = candidates.find(([from]) => existsSync(from));
-      if (!selected) continue;
-      const [from, destination] = selected, to = resolve(dirname(declaration), destination), local = relative(output, to);
-      if (local === ".." || local.startsWith(`..${sep}`)) throw new Error(`Declaration asset escapes ${packageName}: ${imported.fileName}`);
-      mkdirSync(dirname(to), { recursive: true });
-      copyFileSync(from, to);
-      copied.add(to);
-    }
-    return copied.size;
-  };
-  const build = async (): Promise<void> => {
-    rmSync(output, { recursive: true, force: true });
-    mkdirSync(output, { recursive: true });
-    const result = await Bun.build({ entrypoints: [source], outdir: output, naming: "🟦️.js", target: "bun", format: "esm", minify: false });
-    if (!result.success) throw new AggregateError(result.logs, `Failed to build ${packageName}`);
-    await typeScript(source, ["--declaration", "--emitDeclarationOnly", "--outDir", output]);
-    const assets = copyDeclarationAssets();
-    console.log(`[artifact-typescript] built ${packageName} outputs=${result.outputs.length + 1 + assets}`);
-  };
-  class BuildScript extends BundleScript { async run(): Promise<void> { await build(); } }
-  class CheckScript extends BundleScript {
-    async run(): Promise<void> {
-      const result = await Bun.build({ entrypoints: [source], write: false, target: "bun", format: "esm" });
-      if (!result.success) throw new AggregateError(result.logs, `Failed to check ${packageName}`);
-      await typeScript(source, ["--noEmit"]);
-      console.log(`[artifact-typescript] checked ${packageName}`);
-    }
-  }
-  class TestScript extends BundleScript {
-    async run(): Promise<void> {
-      await build();
-      const artifact = await import(packageName);
-      const probe = join(output, "🧪️consumer.ts"), typeRoots = join(output, "🧪️types");
-      mkdirSync(typeRoots);
-      const assertion = Object.hasOwn(artifact, "definition") ? "const definitionId: typeof artifact.definition.id = artifact.definition.id;\nvoid definitionId;" : `const artifactModule: typeof import(${JSON.stringify(packageName)}) = artifact;\nvoid artifactModule;`;
-      writeFileSync(probe, `import * as artifact from ${JSON.stringify(packageName)};\n${assertion}\n`);
-      try { await typeScript(probe, ["--noEmit", "--typeRoots", typeRoots], false); } finally { rmSync(probe, { force: true }); rmSync(typeRoots, { recursive: true, force: true }); }
-      assert.equal(typeof artifact, "object", `${packageName} did not resolve as an ES module`);
-      console.log(`[artifact-typescript] tested ${packageName} exports=${Object.keys(artifact).length}`);
-    }
-  }
-  const router = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
-  const segments = process.argv.slice(2);
-  await router.run(segments.length ? segments : ["test"]);
-}
 
 class NativeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [tool, operation] = args;
     const index = args.indexOf("--manifest");
     const manifest = index >= 0 ? args[index + 1] : undefined;
+    if (tool === "cargo" && operation === "metadata") {
+      if (index !== 2 || args.length !== 4 || !manifest) throw new Error("native cargo metadata --manifest <Cargo.toml>");
+      const path = resolve(this.repoRoot, manifest);
+      await runOwnedCommand("cargo", ["metadata", "--locked", "--format-version=1", "--manifest-path", path], dirname(path), "cargo:locked-metadata", buildBudgetMs(), { stdout: "ignore" });
+      console.log("[cargo:locked-metadata] dependency lock validated");
+      return;
+    }
     if (tool === "component") {
       if (!["dev", "release"].includes(operation) || index !== 2 || args.length !== 4 || !manifest) throw new Error("native component dev|release --manifest <Cargo.toml>");
       const cargo = createRequire(import.meta.url)("@iarna/toml").parse(readFileSync(resolve(this.repoRoot, manifest), "utf8"));

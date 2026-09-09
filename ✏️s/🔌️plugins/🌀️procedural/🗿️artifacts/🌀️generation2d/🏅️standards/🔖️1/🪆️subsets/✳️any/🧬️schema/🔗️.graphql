@@ -3,11 +3,6 @@
 type Generation2dArtifact {
   fixture: FlowFixture! @state(class: ARTIFACT)
   generation: GenerationPlayState! @state(class: ARTIFACT)
-  selectedIds: [String!]! @state(class: PRESENCE)
-  graphCamera: CameraJson! @state(class: CONFIG)
-  showMode: String! @state(class: CONFIG)
-  selectedGenerationId: String @state(class: PRESENCE)
-  generationPreviewText: String @state(class: ARTIFACT)
 }
 
 type CameraJson {

@@ -229,10 +229,5 @@
         "only two streams observe gcp-south-pier"
       ]
     }
-  },
-  "selection": null,
-  "reportTable": null,
-  "frameCursor": null,
-  "camera": null,
-  "layers": null
+  }
 }

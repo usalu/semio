@@ -124,9 +124,6 @@ impl En1992Diff {
             if let Some(value) = &self.anchor_v_ed_kn {
                 next.anchor_v_ed_kn = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -294,7 +291,6 @@ impl MutationDiff<En1992Snapshot> for En1992Diff {
         take!(anchor_c1_mm);
         take!(anchor_n_ed_kn);
         take!(anchor_v_ed_kn);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

@@ -10,13 +10,13 @@ fn fixture() -> serde_json::Value {
 fn retained_component_compare_frame_storage_matches_exact_bounded_domains() {
     let fixture = fixture();
     let frame = &fixture["frame"];
-    assert_eq!(UI_VALUE_ADMISSION_SLOTS, frame["logicalDepth"].as_u64().unwrap() as usize);
+    assert_eq!(UI_VALUE_NESTING_DEPTH, frame["logicalDepth"].as_u64().unwrap() as usize);
     assert_eq!(UI_VALUE_AGGREGATE_ITEMS, frame["pageCount"].as_u64().unwrap() as usize);
     assert_eq!(UI_TEXT_MAX_BYTES, frame["maximumTextBytes"].as_u64().unwrap() as usize);
     assert_eq!(size_of::<ValueFrame>(), frame["bytes"].as_u64().unwrap() as usize);
     assert!(size_of::<UiComponentComparisonCursor>() <= frame["maximumCursorBytes"].as_u64().unwrap() as usize);
     assert_eq!(ValueFrame::checked_page(UI_VALUE_NONE).unwrap(), u16::MAX);
-    assert_eq!(ValueFrame::checked_page(UI_VALUE_AGGREGATE_ITEMS - 1).unwrap(), 255);
+    assert_eq!(ValueFrame::checked_page(UI_VALUE_AGGREGATE_ITEMS - 1).unwrap(), 433);
     for index in [UI_VALUE_AGGREGATE_ITEMS, usize::from(u16::MAX), usize::from(u16::MAX) + 1] {
         assert!(ValueFrame::checked_page(index).is_err());
     }
@@ -28,7 +28,7 @@ fn retained_component_compare_frame_storage_matches_exact_bounded_domains() {
     for position in [2 * UI_TEXT_MAX_BYTES + 1, usize::from(u16::MAX) + 1, usize::MAX] {
         assert!(ValueFrame::checked_position(position).is_err());
     }
-    eprintln!("[DEBUG] comparison-frame bytes={} depth={} cursor={}", size_of::<ValueFrame>(), UI_VALUE_ADMISSION_SLOTS, size_of::<UiComponentComparisonCursor>());
+    eprintln!("[DEBUG] comparison-frame bytes={} depth={} cursor={}", size_of::<ValueFrame>(), UI_VALUE_NESTING_DEPTH, size_of::<UiComponentComparisonCursor>());
 }
 fn close(owner: &mut UiComponentCompare) {
     for _ in 0..500_000 {

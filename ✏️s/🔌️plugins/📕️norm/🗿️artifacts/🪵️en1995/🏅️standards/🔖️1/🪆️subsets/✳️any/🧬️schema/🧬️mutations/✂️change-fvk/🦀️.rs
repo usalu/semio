@@ -1,9 +1,8 @@
 //! 🔧 `change-f-v-k` payload — changes the En1995 document's `f_v_k` (EN 1995 input).
 
-
-use crate::En1995Snapshot;
 use crate::diff::En1995Diff;
 use crate::mutations::En1995Mutation;
+use crate::En1995Snapshot;
 //#region 🔖️ChangeFVK
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

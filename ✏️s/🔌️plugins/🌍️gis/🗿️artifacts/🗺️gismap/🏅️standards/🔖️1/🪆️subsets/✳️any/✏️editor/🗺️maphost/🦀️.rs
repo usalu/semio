@@ -4,9 +4,9 @@
 //! app-only view state (`Gis2dConfig`), and an artifact must never depend on an app. Every
 //! `🎮️commands/*` node that has to hit-test, frame or query the live map goes through here.
 
+use crate::editor::gis2d::config::Gis2dConfig;
 use crate::schema::gis_map_descriptor_json;
 use crate::GisMapSnapshot;
-use crate::editor::gis2d::config::Gis2dConfig;
 use semio_framework_surface::tiled_map::MapHost;
 use serde_json::Value;
 

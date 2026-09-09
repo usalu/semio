@@ -8,7 +8,7 @@ use crate::ProcedureSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_procedure_topology};
+use super::topology::compute_procedure_topology;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an imperative snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
@@ -66,13 +66,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ProcedureB
 pub fn procedure_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.imperative.procedure.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

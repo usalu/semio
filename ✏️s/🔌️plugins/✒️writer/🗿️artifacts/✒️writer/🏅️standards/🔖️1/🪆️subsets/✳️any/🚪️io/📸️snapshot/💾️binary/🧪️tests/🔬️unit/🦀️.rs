@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema;
 
@@ -28,7 +27,7 @@ async fn writer_projection_dsl_pack_equivalence() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::op::WriterMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, ArtifactStore, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<WriterSnapshot, WriterMutation> = ArtifactStore::new(create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(schema::mutations::EditText { text: "hello".into() })], description: None }).await.expect("apply");

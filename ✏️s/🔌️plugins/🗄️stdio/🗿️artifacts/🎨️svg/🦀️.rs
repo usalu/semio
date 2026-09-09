@@ -51,14 +51,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution {
-        identity: "svg",
-        schema: ARTIFACT_DEFINITION_SCHEMA,
-        definition,
-        assembly,
-        formats,
-        native_codecs,
-    }
+    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "svg", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Dialect
@@ -136,12 +129,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
-        .get_or_init(|| {
-            vec![
-                semio_framework_plugin::subset_validator_entry_of::<standards::v1_1::subsets::tiny::io::SvgTinyValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<standards::v1_1::subsets::basic::io::SvgBasicValidator>(),
-            ]
-        })
+        .get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v1_1::subsets::tiny::io::SvgTinyValidator>(), semio_framework_plugin::subset_validator_entry_of::<standards::v1_1::subsets::basic::io::SvgBasicValidator>()])
         .as_slice()
 }
 
@@ -300,26 +288,26 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📣️set-declaration/🦀️.rs"]
-                        pub mod set_declaration;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📜️set-doctype/🦀️.rs"]
-                        pub mod set_doctype;
+                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📥️insert-element/🦀️.rs"]
                         pub mod insert_element;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗑️remove-element/🦀️.rs"]
                         pub mod remove_element;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔤️set-element-name/🦀️.rs"]
-                        pub mod set_element_name;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🏷️set-attribute/🦀️.rs"]
                         pub mod set_attribute;
+                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📣️set-declaration/🦀️.rs"]
+                        pub mod set_declaration;
+                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📜️set-doctype/🦀️.rs"]
+                        pub mod set_doctype;
+                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔤️set-element-name/🦀️.rs"]
+                        pub mod set_element_name;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/✍️set-text/🦀️.rs"]
                         pub mod set_text;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🖼️set-view-box/🦀️.rs"]
-                        pub mod set_view_box;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔄️set-transform/🦀️.rs"]
                         pub mod set_transform;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🖼️set-view-box/🦀️.rs"]
+                        pub mod set_view_box;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
                     }

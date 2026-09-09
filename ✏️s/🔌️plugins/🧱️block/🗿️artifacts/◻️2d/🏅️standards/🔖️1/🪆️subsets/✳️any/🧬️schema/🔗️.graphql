@@ -11,7 +11,6 @@ type Block2dArtifact {
   authors: [BlockAuthor!]! @state(class: ARTIFACT)
   camera2d: BlockCamera2d! @state(class: ARTIFACT)
   meta: BlockMeta! @state(class: ARTIFACT)
-  selectedIds: [String!]! @state(class: PRESENCE)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }

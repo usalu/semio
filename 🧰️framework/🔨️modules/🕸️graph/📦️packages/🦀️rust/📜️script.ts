@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 /** 📜️ `@semio-tech/framework-graph` — the semio graph crate: graph-manifest codegen, cargo test and clippy gates. */
-import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmdirSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmdirSync, statSync, unlinkSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, resolveTestLevel, runCmd } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts";
 import { loadTaxonomy, pathEmojiStatuteFindings, pathIsExcluded } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 interface GraphOutputCatalog {
@@ -383,7 +384,7 @@ export function writeGraphArtifacts(outDir: string, artifacts: readonly GraphArt
   for (const entry of stale.filter((entry) => entry.nodeKind === "file")) unlinkSync(join(outDir, entry.path));
   for (const entry of stale.filter((entry) => entry.nodeKind === "directory").sort((left, right) => right.path.length - left.path.length)) rmdirSync(join(outDir, entry.path));
   for (const entry of expected.filter((entry) => entry.nodeKind === "directory")) mkdirSync(join(outDir, entry.path), { recursive: true });
-  for (const artifact of artifacts) writeFileSync(artifact.path, artifact.content, "utf8");
+  for (const artifact of artifacts) writeGeneratedFileIfChanged(artifact.path, artifact.content);
 }
 
 class GenerateScript extends BundleScript {

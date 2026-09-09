@@ -5,9 +5,9 @@
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
 use crate::schema::default_terrain_document;
-use crate::{GisTerrainSnapshot, GISTERRAIN_DIALECT, GIS_3D_TERRAIN_SCHEMA};
 use crate::viewer::gisterrain::modes::view;
 use crate::viewer::gisterrain::modes::view::windows::terrain;
+use crate::{GisTerrainSnapshot, GISTERRAIN_DIALECT, GIS_3D_TERRAIN_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

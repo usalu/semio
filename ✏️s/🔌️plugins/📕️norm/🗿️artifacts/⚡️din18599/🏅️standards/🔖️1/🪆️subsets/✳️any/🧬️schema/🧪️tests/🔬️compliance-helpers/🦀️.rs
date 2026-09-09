@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn reference_100m2_inputs() -> BalancingInputs {

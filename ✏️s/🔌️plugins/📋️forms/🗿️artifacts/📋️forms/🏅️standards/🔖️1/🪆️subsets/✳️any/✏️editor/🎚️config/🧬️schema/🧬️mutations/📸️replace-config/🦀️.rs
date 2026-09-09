@@ -15,7 +15,13 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for ReplaceConfig 
     fn diff(&self, _base: &FormsConfig) -> protocol::MutationOutcome<FormsConfig> {
         protocol::MutationOutcome::new(self.config.clone())
     }
-    fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> { vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Replace Config".into() }
-    fn target(&self) -> Vec<String> { vec!["config".into()] }
+    fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> {
+        vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Config".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["config".into()]
+    }
 }

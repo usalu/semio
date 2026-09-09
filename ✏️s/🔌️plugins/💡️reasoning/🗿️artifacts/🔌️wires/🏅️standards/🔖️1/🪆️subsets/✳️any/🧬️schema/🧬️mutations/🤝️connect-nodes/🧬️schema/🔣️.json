@@ -10,10 +10,10 @@
   ],
   "properties": {
     "edge": {
-      "description": "any JSON value"
+      "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/DslValue"
     },
     "relationship": {
-      "description": "any JSON value"
+      "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/DslValue"
     }
   }
 }

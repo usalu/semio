@@ -13,48 +13,6 @@ export interface Puzzle2dDiff {
   edges?: Puzzle2dEdgesDelta;
   /** @state artifact */
   meta?: Puzzle2dMeta;
-  /** @state presence */
-  selectedIds?: Puzzle2dStringList;
-  /** @state presence */
-  activeUtilityId?: string;
-  /** @state config */
-  cameraX?: number;
-  /** @state config */
-  cameraY?: number;
-  /** @state config */
-  cameraZoom?: number;
-  /** @state config */
-  selectionMethod?: string;
-  /** @state config */
-  gridSnapEnabled?: boolean;
-  /** @state config */
-  gridFactor?: number;
-  /** @state config */
-  suggestionOffset?: number;
-  /** @state config */
-  fillCount?: number;
-  /** @state config */
-  brushCandidateIndex?: number;
-  /** @state config */
-  brushCandidateSourceHandleId?: string;
-  /** @state config */
-  /** @state config */
-  /** @state config */
-  lodModeByPaneJson?: string;
-  /** @state config */
-  engagementInputByPaneJson?: string;
-  /** @state config */
-  brushCandidatesJson?: string;
-  /** @state config */
-  nodeKindWeightsJson?: string;
-  /** @state config */
-  handleKindWeightsJson?: string;
-  /** @state config */
-  activeUtilityByWindowIdJson?: string;
-  /** @state artifact */
-  hoveredNodeId?: string | null;
-  /** @state artifact */
-  previewSeq?: number;
 }
 
 export interface Puzzle2dStringList { values: string[]; }

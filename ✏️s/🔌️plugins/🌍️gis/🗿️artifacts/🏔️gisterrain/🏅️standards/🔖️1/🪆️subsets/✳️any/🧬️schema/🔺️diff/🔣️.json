@@ -20,15 +20,6 @@
       "type": "string",
       "contentMediaType": "application/json",
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "$ref": "#/$defs/GisTerrainStringList",
-      "x-semio-state": "presence"
-    },
-    "cameraJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

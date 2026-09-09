@@ -30,7 +30,7 @@ pub fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>)
 
 //#region 🔖️Apply
 impl DagDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document fields onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &DagArtifact) -> protocol::MutationApplyResult<DagArtifact> {
         Ok({
             let mut next = artifact.clone();
@@ -39,12 +39,6 @@ impl DagDiff {
             }
             if let Some(content) = &self.content {
                 next.content = content.clone();
-            }
-            if let Some(list) = &self.selected_node_ids {
-                next.selected_node_ids = list.values.clone();
-            }
-            if let Some(value) = &self.camera {
-                next.camera = value.clone();
             }
             next
         })
@@ -74,8 +68,6 @@ impl MutationDiff<DagSnapshot> for DagDiff {
         }
         take!(schema);
         take!(content);
-        take!(selected_node_ids);
-        take!(camera);
     }
 }
 //#endregion 🔖️Apply

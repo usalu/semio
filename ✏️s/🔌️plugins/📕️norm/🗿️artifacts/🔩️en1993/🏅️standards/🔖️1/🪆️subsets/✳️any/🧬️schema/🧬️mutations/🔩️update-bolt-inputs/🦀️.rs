@@ -1,7 +1,5 @@
 //! 🔩 `update-bolt-inputs` — atomically updates the bolt-inputs facet (bolt_f_ed_kn, bolt_n_bolts, bolt_a_s_mm2, bolt_e1_mm, bolt_e2_mm, bolt_d0_mm, bolt_d_mm, bolt_t_mm, bolt_f_u_mpa, bolt_f_ub_mpa are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

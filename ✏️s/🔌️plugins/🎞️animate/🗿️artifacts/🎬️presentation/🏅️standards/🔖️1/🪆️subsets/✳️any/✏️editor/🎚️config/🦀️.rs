@@ -3,7 +3,7 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/`
 //! because nothing in it survives into the `.presentation` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`), so selection/engagement/locale edits are VCS'd exactly
+//! `ArtifactStore` (with a real `backwards`), so engagement edits are VCS'd exactly
 //! like document content.
 
 #[cfg(test)]
@@ -11,9 +11,8 @@ use protocol::Mutation;
 
 //#region 🔖️Config
 /// 🧮️ B1: animate presentation's real `ArtifactApp::Config` — absorbs every former
-/// `AnimatePresentationPlayRuntime` field (`selected_ids`/`engagement_input`) plus the locale the pre-B1
-/// host-pushed `ViewModel` used to carry (see `crate::editor::animate::terminology`) — same "absorb every
-/// runtime field" shape `shooting_engine::ShootingConfig` established for the pilot.
+/// `AnimatePresentationPlayRuntime` field (`engagement_input`). Locale and terminology come from the
+/// shared host `ViewModel` (see `crate::editor::animate::terminology`).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "presentcfg")]
@@ -70,7 +69,7 @@ impl store::ArtifactPack for PresentationConfig {
 
 impl Default for PresentationConfig {
     fn default() -> Self {
-        Self { engagement_input: String::new(), }
+        Self { engagement_input: String::new() }
     }
 }
 

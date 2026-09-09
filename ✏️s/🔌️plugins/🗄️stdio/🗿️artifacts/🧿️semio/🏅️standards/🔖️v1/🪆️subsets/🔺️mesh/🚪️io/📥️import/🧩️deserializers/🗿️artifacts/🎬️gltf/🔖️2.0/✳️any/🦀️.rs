@@ -20,12 +20,12 @@
 //!   access, matching the gltf engine's own `resolve_document_buffers` precedent for external
 //!   buffer uris.
 
-use semio_s_artifact_stdio_gltf::engine::{decode_accessor, decode_data_uri, GltfComponentType};
-use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfDocument, GltfImage, GltfPrimitive};
-use semio_s_artifact_stdio_gltf::GltfSnapshot;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_gltf::engine::{decode_accessor, decode_data_uri, GltfComponentType};
+use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfDocument, GltfImage, GltfPrimitive};
+use semio_s_artifact_stdio_gltf::GltfSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };

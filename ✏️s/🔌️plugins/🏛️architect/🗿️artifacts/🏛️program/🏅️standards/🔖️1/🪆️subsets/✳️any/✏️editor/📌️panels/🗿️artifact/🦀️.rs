@@ -1,14 +1,14 @@
 //! 📄️ Architect document panel — program meta, per-register counts and the element list.
 
-use crate::standards::v1::subsets::any::schema::inferences::status_summary;
-use crate::ProgramSnapshot;
 use crate::editor::architect::catalog::register_len;
 use crate::editor::architect::config::{active_register, ArchitectConfig};
+use crate::editor::architect::ui_label;
 use crate::editor::architect::ARCHITECT_INTERACTION_PROGRAM;
 use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
-use crate::editor::architect::ui_label;
+use crate::standards::v1::subsets::any::schema::inferences::status_summary;
+use crate::ProgramSnapshot;
 use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action,  LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    tree_item_desc, tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 
 //#region 🔖️Constants
@@ -52,8 +52,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framewo
     ] {
         meta.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect metadata row admission failed"))?;
     }
-    let mut tree = PanelTreeBuilder::new("architect-document")?
-        .section("architect-document.meta", Some(ui_label("ProgramSnapshot")?), true, meta)?;
+    let mut tree = PanelTreeBuilder::new("architect-document")?.section("architect-document.meta", Some(ui_label("ProgramSnapshot")?), true, meta)?;
     for (page, registers) in summary.by_register.chunks(semio_framework_ui_contract::UI_FIXED_LIST_ITEMS).enumerate() {
         let mut items = UiFixedList::default();
         for row in registers {
@@ -65,10 +64,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framewo
         let end = start + registers.len() - 1;
         tree = tree.section(format!("architect-document.registers.{page}"), Some(ui_label(format!("Registers {start}–{end}"))?), true, items)?;
     }
-    tree
-        .section_or_placeholder("architect-document.elements", Some(ui_label("Elements")?), true, element_items, ui_label("(none)")?)?
-        .interaction_domain(ARCHITECT_INTERACTION_PROGRAM)?
-        .build()
+    tree.section_or_placeholder("architect-document.elements", Some(ui_label("Elements")?), true, element_items, ui_label("(none)")?)?.interaction_domain(ARCHITECT_INTERACTION_PROGRAM)?.build()
 }
 //#endregion 🔖️Render
 

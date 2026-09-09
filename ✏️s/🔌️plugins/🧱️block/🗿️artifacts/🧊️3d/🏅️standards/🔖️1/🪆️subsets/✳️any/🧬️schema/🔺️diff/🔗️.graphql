@@ -12,16 +12,6 @@ type Block3dDiff {
   authors: Block3dAuthorList @state(class: ARTIFACT)
   camera3d: BlockCamera3d @state(class: ARTIFACT)
   meta: BlockMeta @state(class: ARTIFACT)
-  selectedIds: Block3dStringList @state(class: PRESENCE)
-  activeRepresentationId: String @state(class: PRESENCE)
-  wantedTags: Block3dStringList @state(class: PRESENCE)
-  windows: Block3dWindowsList @state(class: CONFIG)
-  brushVortexKindId: String @state(class: CONFIG)
-  brushRadius: Float @state(class: CONFIG)
-  brushFlip: Boolean @state(class: CONFIG)
-  brushPreview: Block3dBrushPreview @state(class: ARTIFACT)
-  camera: BlockCamera3d @state(class: CONFIG)
-  hoveredVortexFullId: String @state(class: ARTIFACT)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }
@@ -44,7 +34,6 @@ type BlockMeta { _placeholder: Boolean }
 
 type Block3dWindowView { _placeholder: Boolean }
 
-type Block3dBrushPreview { _placeholder: Boolean }
 
 type Block3dStringList {
   values: [String!]!

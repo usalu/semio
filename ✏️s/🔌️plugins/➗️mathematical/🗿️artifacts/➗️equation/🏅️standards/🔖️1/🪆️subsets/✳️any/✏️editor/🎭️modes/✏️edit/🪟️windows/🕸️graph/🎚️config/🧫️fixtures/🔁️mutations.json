@@ -1,0 +1,52 @@
+[
+  {
+    "base": {
+      "camera": {
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
+      }
+    },
+    "mutation": {
+      "kind": "set-camera",
+      "camera": {
+        "x": 4.0,
+        "y": 5.0,
+        "zoom": 3.0
+      }
+    },
+    "after": {
+      "camera": {
+        "x": 4.0,
+        "y": 5.0,
+        "zoom": 3.0
+      }
+    },
+    "kind": "set-camera"
+  },
+  {
+    "base": {
+      "camera": {
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
+      }
+    },
+    "mutation": {
+      "kind": "set-camera",
+      "camera": {
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
+      }
+    },
+    "after": {
+      "camera": {
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
+      }
+    },
+    "kind": "set-camera"
+  }
+]

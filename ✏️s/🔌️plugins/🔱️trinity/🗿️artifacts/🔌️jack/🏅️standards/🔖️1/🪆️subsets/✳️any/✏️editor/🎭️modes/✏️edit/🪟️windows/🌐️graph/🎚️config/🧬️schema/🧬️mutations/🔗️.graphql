@@ -1,0 +1,4 @@
+input SetJackGraphWindowCamera { camera: JackGraphWindowCameraInput }
+input JackGraphWindowCameraInput { x: Float!, y: Float!, zoom: Float! }
+input SetJackGraphWindowLodMode { value: String! }
+input JackGraphWindowConfigMutation @oneOf { setCamera: SetJackGraphWindowCamera, setLodMode: SetJackGraphWindowLodMode }

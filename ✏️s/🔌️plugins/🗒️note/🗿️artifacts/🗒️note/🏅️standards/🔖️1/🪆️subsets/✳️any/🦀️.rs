@@ -3,8 +3,8 @@
 //! `crate::viewer::note` (top-level plugin mounts, NOT `crate::…::editor` —
 //! `📓️recipe-subset.md` §5 gotcha 1, a pre-existing structural fact this pass did not change).
 
-use crate::standards::v1::subsets::any::{io, schema};
 use crate::editor::note as editor;
+use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::note as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;

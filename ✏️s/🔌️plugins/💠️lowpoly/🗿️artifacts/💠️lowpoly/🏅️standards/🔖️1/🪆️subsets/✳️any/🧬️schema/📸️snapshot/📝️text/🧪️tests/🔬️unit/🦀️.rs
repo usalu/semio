@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🕸️ The live half-edge mesh JSON is not a field of `LowpolyObject` at all (round 2 of this

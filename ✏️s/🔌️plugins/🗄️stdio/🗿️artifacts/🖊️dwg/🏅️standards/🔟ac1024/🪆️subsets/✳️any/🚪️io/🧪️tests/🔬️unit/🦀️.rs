@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::DwgSnapshot;
 use crate::STDIO_DWG_DOCUMENT_SCHEMA;
@@ -367,7 +366,7 @@ async fn real_fixture_page_directory_matches_header_cross_check() {
 #[semio_framework_async_macros::async_test]
 async fn well_known_fixture_lossless_system_roundtrip() {
     use crate::schema::diff::DwgDiff;
-    use crate::schema::mutations::{DwgMutation, apply_dwg_mutation, set_snapshot, set_version_info};
+    use crate::schema::mutations::{apply_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
     use crate::schema::snapshot::encode_dwg;
     use protocol::command::DiffAlgebra;
     use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};

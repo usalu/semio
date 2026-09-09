@@ -7,7 +7,7 @@
   "rhPercent": null,
   "airSpeedMS": null,
   "thetaRmC": null,
-  "co2Ppm": 950.0,
+  "co2Ppm": 950,
   "dfPercent": null,
   "lAeqDb": null,
   "persons": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

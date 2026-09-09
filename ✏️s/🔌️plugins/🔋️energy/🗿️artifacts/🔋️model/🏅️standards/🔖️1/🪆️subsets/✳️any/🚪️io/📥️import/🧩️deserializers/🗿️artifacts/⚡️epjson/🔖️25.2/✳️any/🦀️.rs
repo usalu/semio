@@ -19,9 +19,12 @@
 //! @see ../../../../../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/📓️w6-epjson-io.md
 use crate::air_exchange::InfiltrationMethod;
 use crate::io::export::serializers::artifacts::epjson::v25_2::any::{glazing_construction_name, surface_normal, EpJsonDiagnostic, CONTRACT_OUTPUT_VARIABLES, DUAL_SETPOINT_CONTROL_SCHEDULE};
-use crate::EnergyModelSnapshot;
-use crate::model::{Construction, EntityId, EquipmentGain, Fenestration, GroundTemperatureConfig, IdealLoadsSystem, Infiltration, LightingGain, Material, Model, OutputReportFrequency, OutputVariableSpec, OutsideBoundary, PeopleGain, ScheduleId, Site, Space, Surface, SurfaceClass, Thermostat, Zone};
+use crate::model::{
+    Construction, EntityId, EquipmentGain, Fenestration, GroundTemperatureConfig, IdealLoadsSystem, Infiltration, LightingGain, Material, Model, OutputReportFrequency, OutputVariableSpec, OutsideBoundary, PeopleGain, ScheduleId, Site, Space,
+    Surface, SurfaceClass, Thermostat, Zone,
+};
 use crate::schedule::{ConstantSchedule, DailySchedule, ScheduleInterpolation};
+use crate::EnergyModelSnapshot;
 use pack::json::{Object, Value};
 
 //#region 🔖️Bases
@@ -319,7 +322,9 @@ fn decode_constructions(root: &Object, model: &mut Model, material_names: &[Stri
         for (index, layer) in layers.iter().enumerate() {
             match material_names.iter().position(|material| material == layer) {
                 Some(position) => ids.push(EntityId(MATERIAL_BASE + position as u32)),
-                None => diagnostics.push(EpJsonDiagnostic::new("epjson.construction.unknown-layer", name, format!("layer {index} names {layer:?}, which this document does not define as a Material, Material:NoMass or WindowMaterial:SimpleGlazingSystem"))),
+                None => {
+                    diagnostics.push(EpJsonDiagnostic::new("epjson.construction.unknown-layer", name, format!("layer {index} names {layer:?}, which this document does not define as a Material, Material:NoMass or WindowMaterial:SimpleGlazingSystem")))
+                }
             }
         }
         model.constructions.push(Construction { id: EntityId(next), name: name.to_string(), layer_material_ids: ids });
@@ -408,7 +413,11 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
         };
         let construction = text(fields, "construction_name").unwrap_or_default();
         let Some((_, u_value, shgc, vlt)) = glazing.iter().find(|(candidate, _, _, _)| candidate == construction) else {
-            diagnostics.push(EpJsonDiagnostic::new("epjson.fenestration.unknown-glazing", name, format!("construction {construction:?} is not a single-layer WindowMaterial:SimpleGlazingSystem, which is the only glazing a semio Fenestration can carry")));
+            diagnostics.push(EpJsonDiagnostic::new(
+                "epjson.fenestration.unknown-glazing",
+                name,
+                format!("construction {construction:?} is not a single-layer WindowMaterial:SimpleGlazingSystem, which is the only glazing a semio Fenestration can carry"),
+            ));
             continue;
         };
         let corners = aperture_corners(fields);
@@ -585,7 +594,11 @@ fn decode_hvac(root: &Object, model: &mut Model, zone_names: &[String], diagnost
         });
         let Some(equipment) = equipment else { continue };
         if text(equipment, "zone_equipment_object_type") != Some("ZoneHVAC:IdealLoadsAirSystem") {
-            diagnostics.push(EpJsonDiagnostic::new("epjson.zone-equipment.unsupported-type", name, format!("zone equipment {:?} has no semio counterpart; only ZoneHVAC:IdealLoadsAirSystem decodes", text(equipment, "zone_equipment_object_type").unwrap_or("?"))));
+            diagnostics.push(EpJsonDiagnostic::new(
+                "epjson.zone-equipment.unsupported-type",
+                name,
+                format!("zone equipment {:?} has no semio counterpart; only ZoneHVAC:IdealLoadsAirSystem decodes", text(equipment, "zone_equipment_object_type").unwrap_or("?")),
+            ));
             continue;
         }
         let Some((_, system)) = systems.iter().find(|(candidate, _)| Some(*candidate) == text(equipment, "zone_equipment_name")) else { continue };

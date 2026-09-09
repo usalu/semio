@@ -1,22 +1,16 @@
 //! 🫧️ Jack transient mutation aggregate.
 
-use super::{JackEditorSelection, JackTransient};
+use super::JackTransient;
 
 #[path = "📊️replace-query-result/🦀️.rs"]
 mod replace_query_result;
 pub use replace_query_result::ReplaceQueryResult;
-
-#[path = "../../../../../🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧬️schema/🧬️mutations/🔤️set-editor-selection/🦀️.rs"]
-mod set_editor_selection;
-pub use set_editor_selection::SetEditorSelection;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = JackTransient, diff = JackTransient, schema = "trinity.jacktransient")]
 pub enum JackTransientMutation {
     #[dsl(key = "replace-query-result")]
     ReplaceQueryResult(ReplaceQueryResult),
-    #[dsl(key = "set-editor-selection")]
-    SetEditorSelection(SetEditorSelection),
 }
 
 impl protocol::OpText for JackTransientMutation {

@@ -1,8 +1,8 @@
 //! 🎯 Shooting mutation payload — `SetActiveShot`. A narrow addressed single-field setter on the document root (taxonomy's `set` verb; NOT the banned whole-document `set-snapshot`).
 
-use crate::ShootingSnapshot;
 use crate::diff::ShootingDiff;
 use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

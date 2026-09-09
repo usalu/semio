@@ -2,7 +2,7 @@ mod tests {
     use crate::editor::puzzle2d::engine::board_host::testkit::*;
     use crate::editor::puzzle2d::engine::canvas::Point;
     use crate::editor::puzzle2d::engine::{handle_position_on_circle, BoardHost, HandleDescJson, NodeDescJson, SceneDescriptorJson};
-    use infinite_canvas::{BoardFillCaptureStep, BoardFillJob};
+    use crate::editor::puzzle2d::engine::{BoardFillCaptureStep, BoardFillJob};
     use semio_framework_job::{BatchDriveConfig, BatchJobParams, InteractiveStage, Operation, StepOutcome, WorkerJobPoll};
     use serde_json::json;
 
@@ -24,7 +24,7 @@ mod tests {
         y: f64,
     }
 
-    fn capture_fill_snapshot(host: &BoardHost) -> infinite_canvas::BoardFillSnapshot {
+    fn capture_fill_snapshot(host: &BoardHost) -> crate::editor::puzzle2d::engine::BoardFillSnapshot {
         let mut capture = host.begin_board_fill_snapshot();
         for _ in 0..FILL_TEST_PUMP_LIMIT {
             match capture.step(host) {
@@ -82,7 +82,7 @@ mod tests {
         panic!("detached fill close exceeded bounded opportunities");
     }
 
-    fn adopt_fill_checkpoint(session: &mut semio_framework_job::MountedWorkerJobSession<BoardFillJob>, checkpoint: infinite_canvas::BoardFillCheckpoint) {
+    fn adopt_fill_checkpoint(session: &mut semio_framework_job::MountedWorkerJobSession<BoardFillJob>, checkpoint: crate::editor::puzzle2d::engine::BoardFillCheckpoint) {
         let Some(job) = session.checked_out_job_mut() else {
             close_fill_job(checkpoint.into_closing_job());
             panic!("checkpoint job owner missing");
@@ -103,12 +103,12 @@ mod tests {
         close_fill_job(checkpoint.into_closing_job());
     }
 
-    fn run_fill_job(host: &BoardHost, count: u32, operation: Operation, worker_count: usize) -> (Vec<FillPlacementWitness>, Vec<u64>, infinite_canvas::BoardFillResult) {
+    fn run_fill_job(host: &BoardHost, count: u32, operation: Operation, worker_count: usize) -> (Vec<FillPlacementWitness>, Vec<u64>, crate::editor::puzzle2d::engine::BoardFillResult) {
         let job = BoardFillJob::with_operation(capture_fill_snapshot(host), count, operation);
         run_mounted_fill_job(job, worker_count)
     }
 
-    fn run_mounted_fill_job(job: BoardFillJob, worker_count: usize) -> (Vec<FillPlacementWitness>, Vec<u64>, infinite_canvas::BoardFillResult) {
+    fn run_mounted_fill_job(job: BoardFillJob, worker_count: usize) -> (Vec<FillPlacementWitness>, Vec<u64>, crate::editor::puzzle2d::engine::BoardFillResult) {
         let operation = job.operation();
         let cancel = semio_framework_job::root_cancel_token();
         let params = BatchJobParams {
@@ -160,7 +160,7 @@ mod tests {
                             session.resume().expect("checkpoint resume");
                         }
                         StepOutcome::Complete(candidate) => {
-                            let candidate = infinite_canvas::BoardFillCommitCandidate::from_commit_candidate(candidate).expect("typed full fill candidate");
+                            let candidate = crate::editor::puzzle2d::engine::BoardFillCommitCandidate::from_commit_candidate(candidate).expect("typed full fill candidate");
                             if let Some(placement) = candidate.placement {
                                 placements.push(FillPlacementWitness {
                                     node_kind: placement.node_kind.as_str().to_string(),
@@ -197,7 +197,7 @@ mod tests {
         (placements, previews, result)
     }
 
-    fn take_first_fill_checkpoint(job: BoardFillJob) -> infinite_canvas::BoardFillCheckpoint {
+    fn take_first_fill_checkpoint(job: BoardFillJob) -> crate::editor::puzzle2d::engine::BoardFillCheckpoint {
         let operation = job.operation();
         let params = BatchJobParams {
             operation: operation.operation,
@@ -785,7 +785,7 @@ mod tests {
     fn board_fill_job_large_host_has_no_step_at_or_above_eight_ms() {
         let mut host = frontier_fill_host();
         let mut descriptor = link_test_scene_no_edge();
-        let remaining_capacity = infinite_canvas::BOARD_FILL_NODE_CAPACITY - descriptor.nodes.len();
+        let remaining_capacity = crate::editor::puzzle2d::engine::BOARD_FILL_NODE_CAPACITY - descriptor.nodes.len();
         for index in 0..remaining_capacity {
             let node_id = format!("stress.{index}");
             descriptor.nodes.push(NodeDescJson {
@@ -835,7 +835,7 @@ mod tests {
         let mut host = BoardHost::new();
         let mut descriptor = link_test_scene_no_edge();
         let prototype = descriptor.nodes[0].clone();
-        while descriptor.nodes.len() <= infinite_canvas::BOARD_FILL_NODE_CAPACITY {
+        while descriptor.nodes.len() <= crate::editor::puzzle2d::engine::BOARD_FILL_NODE_CAPACITY {
             let index = descriptor.nodes.len();
             let mut node = prototype.clone();
             node.id = format!("capture-capacity.{index}");
@@ -845,14 +845,14 @@ mod tests {
         host.sync_descriptor(&descriptor).unwrap();
         let mut capture = host.begin_board_fill_snapshot();
         let mut fault = None;
-        let capture_opportunities = infinite_canvas::BOARD_FILL_NODE_CAPACITY.saturating_mul(3).saturating_add(3);
+        let capture_opportunities = crate::editor::puzzle2d::engine::BOARD_FILL_NODE_CAPACITY.saturating_mul(3).saturating_add(3);
         for _ in 0..capture_opportunities {
             if let BoardFillCaptureStep::Fault(found) = capture.step(&host) {
                 fault = Some(found);
                 break;
             }
         }
-        assert_eq!(fault, Some(infinite_canvas::BoardFillCaptureFault::NodeCapacity));
+        assert_eq!(fault, Some(crate::editor::puzzle2d::engine::BoardFillCaptureFault::NodeCapacity));
         capture.begin_close();
         for _ in 0..FILL_TEST_PUMP_LIMIT {
             if matches!(capture.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && capture.terminal_is_empty() {
@@ -887,19 +887,19 @@ mod tests {
                         StepOutcome::PreviewReady(_) => {
                             let job = session.checked_out_job_mut().expect("field cursor job");
                             match job.stage() {
-                                infinite_canvas::BoardFillStage::AcceptNodeId => seen[0] = true,
-                                infinite_canvas::BoardFillStage::AcceptEdgeId => seen[1] = true,
-                                infinite_canvas::BoardFillStage::AcceptEdgeKind => seen[2] = true,
-                                infinite_canvas::BoardFillStage::AcceptNodeKind => seen[3] = true,
-                                infinite_canvas::BoardFillStage::AcceptSourceHandle => seen[4] = true,
-                                infinite_canvas::BoardFillStage::AcceptTargetHandle => seen[5] = true,
-                                infinite_canvas::BoardFillStage::AcceptIcon => seen[6] = true,
-                                infinite_canvas::BoardFillStage::AcceptVirtualNode => seen[7] = true,
-                                infinite_canvas::BoardFillStage::AcceptSourceConnection => seen[8] = true,
-                                infinite_canvas::BoardFillStage::AcceptHandles => seen[9] = true,
-                                infinite_canvas::BoardFillStage::AcceptHandleId => seen[10] = true,
-                                infinite_canvas::BoardFillStage::AcceptHandleVirtual => seen[11] = true,
-                                infinite_canvas::BoardFillStage::AcceptHandlePublish => seen[12] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptNodeId => seen[0] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptEdgeId => seen[1] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptEdgeKind => seen[2] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptNodeKind => seen[3] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptSourceHandle => seen[4] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptTargetHandle => seen[5] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptIcon => seen[6] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptVirtualNode => seen[7] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptSourceConnection => seen[8] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptHandles => seen[9] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptHandleId => seen[10] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptHandleVirtual => seen[11] = true,
+                                crate::editor::puzzle2d::engine::BoardFillStage::AcceptHandlePublish => seen[12] = true,
                                 _ => {}
                             }
                             let _ = job.take_preview().expect("field cursor preview");

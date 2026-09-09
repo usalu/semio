@@ -1,10 +1,10 @@
 //! 🖱️ 🖱️ Drawing play app commands command — `canvas-pointer-down`.
 
+use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
+use crate::editor::drawing::{DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY};
 use crate::op::DrawingMutation;
 use crate::schema::{create_drawing_path_layer, create_drawing_trace_layer, layer_id};
 use crate::{DrawingCamera, DrawingLayerNode, DrawingSnapshot, PathSegment};
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
-use crate::editor::drawing::{DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY};
 use semio_framework_plugin::{kernel::Effect, ArtifactView, ConfigView, Emit, Fault, RequestId, UiFixedList};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -98,11 +98,7 @@ pub(crate) fn interaction_select_effect_from_targets(targets: String, merge: &st
 pub(crate) fn interaction_hover_effect_from_targets(targets: String) -> Effect {
     request_interaction_action(
         semio_framework::INTERACTION_HOVER_ACTION_ID,
-        dsl::DslValue::object([
-            ("domainId".to_string(), dsl::DslValue::String(DRAWING_INTERACTION_DOMAIN.to_string())),
-            ("channel".to_string(), dsl::DslValue::String("pointer".to_string())),
-            ("targets".to_string(), dsl::DslValue::String(targets)),
-        ]),
+        dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(DRAWING_INTERACTION_DOMAIN.to_string())), ("channel".to_string(), dsl::DslValue::String("pointer".to_string())), ("targets".to_string(), dsl::DslValue::String(targets))]),
     )
 }
 
@@ -487,7 +483,22 @@ impl TracePointerJob {
     fn new_bound(generation: u64, document: &DrawingSnapshot, world: [f64; 2], base_revision: String) -> Self {
         let mut work = UiFixedList::default();
         let _ = work.try_push(TracePointerWork::Roots { next: document.layers.len() });
-        Self { app_instance_id: 0, document_id: document.id.clone(), operation_id: 0, generation, base_revision, world, tolerance: 0.0, include_control_points: false, marquee: None, work, best: None, hits: UiFixedList::default(), completed_work: 0, overflowed: false }
+        Self {
+            app_instance_id: 0,
+            document_id: document.id.clone(),
+            operation_id: 0,
+            generation,
+            base_revision,
+            world,
+            tolerance: 0.0,
+            include_control_points: false,
+            marquee: None,
+            work,
+            best: None,
+            hits: UiFixedList::default(),
+            completed_work: 0,
+            overflowed: false,
+        }
     }
 
     fn new_operation(operation: &semio_framework_plugin::AppOperationContext, document: &DrawingSnapshot, world: [f64; 2]) -> Self {
@@ -620,9 +631,9 @@ fn consider_trace_candidate(job: &mut TracePointerJob, layer: &DrawingLayerNode,
             4
         } else {
             match layer {
-            DrawingLayerNode::Group(_) => 0,
-            DrawingLayerNode::Boolean(_) | DrawingLayerNode::Trace(_) => 1,
-            _ => 2,
+                DrawingLayerNode::Group(_) => 0,
+                DrawingLayerNode::Boolean(_) | DrawingLayerNode::Trace(_) => 1,
+                _ => 2,
             }
         },
         layer_id: layer_id(layer).to_string(),
@@ -749,6 +760,7 @@ pub struct DrawingSession {
     preview_seq: u64,
     /// 🕹️ Current `"strokes"` selection — set by `ArtifactApp::handle` before every dispatch.
     pub(crate) interaction: DrawingInteractionSnapshot,
+    pub(crate) active_utility_id: String,
     pub(crate) trace_pointer: Option<TracePointerJob>,
     pub(crate) point_query: Option<DrawingPointQuery>,
     pub(crate) draft_query: Option<DrawingDraftQuery>,
@@ -870,11 +882,23 @@ impl DrawingDraftQuery {
 impl Default for DrawingSession {
     fn default() -> Self {
         let mut sink: Vec<fsm::Command<drawing_gesture::DrawingGesture>> = Vec::new();
-        Self { gesture: fsm::init::<drawing_gesture::DrawingGesture>((), &mut sink), preview_seq: 0, interaction: DrawingInteractionSnapshot::default(), trace_pointer: None, point_query: None, draft_query: None }
+        Self {
+            gesture: fsm::init::<drawing_gesture::DrawingGesture>((), &mut sink),
+            preview_seq: 0,
+            interaction: DrawingInteractionSnapshot::default(),
+            active_utility_id: crate::editor::drawing::DRAWING_DEFAULT_UTILITY.into(),
+            trace_pointer: None,
+            point_query: None,
+            draft_query: None,
+        }
     }
 }
 
 impl DrawingSession {
+    pub(crate) fn with_active_utility(active_utility_id: impl Into<String>) -> Self {
+        Self { active_utility_id: active_utility_id.into(), ..Self::default() }
+    }
+
     fn retain_trace_pointer(&mut self, job: TracePointerJob) -> Result<(), TracePointerJob> {
         if self.trace_pointer.is_some() {
             return Err(job);
@@ -892,10 +916,7 @@ impl DrawingSession {
     }
 
     pub(crate) fn cancel_trace_pointer(&mut self, app_instance_id: u32, document_id: &str, generation: u64) -> bool {
-        let matches = self
-            .trace_pointer
-            .as_ref()
-            .is_some_and(|job| job.app_instance_id == app_instance_id && job.document_id == document_id && generation != 0 && job.generation == generation);
+        let matches = self.trace_pointer.as_ref().is_some_and(|job| job.app_instance_id == app_instance_id && job.document_id == document_id && generation != 0 && job.generation == generation);
         if matches {
             self.trace_pointer = None;
         }
@@ -915,13 +936,7 @@ impl DrawingSession {
         DrawingGesturePreview { sequence: self.preview_seq, phase, context: self.gesture.context.clone() }
     }
 
-    pub(crate) fn step_gesture_retained(
-        &mut self,
-        command_id: &'static str,
-        event: drawing_gesture::Event,
-        document: &DrawingSnapshot,
-        config: &DrawingConfig,
-    ) -> Option<Emit<DrawingMutation, DrawingConfigMutation>> {
+    pub(crate) fn step_gesture_retained(&mut self, command_id: &'static str, event: drawing_gesture::Event, document: &DrawingSnapshot, config: &DrawingConfig) -> Option<Emit<DrawingMutation, DrawingConfigMutation>> {
         let mut sink: Vec<fsm::Command<drawing_gesture::DrawingGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
         self.preview_seq = self.preview_seq.wrapping_add(1);
@@ -988,7 +1003,6 @@ impl DrawingSession {
             None => Emit::default(),
         }
     }
-
 }
 //#endregion 🔖️DrawingSession
 
@@ -1069,7 +1083,7 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawingSnapsho
         let Some(base_revision) = payload.base_revision.as_deref() else { return Ok(Emit::default()) };
         if base_revision.len() != 64
             || payload.parent_document_id.as_ref().is_some_and(|id| id.len() > 256)
-            || cfg.snapshot.active_utility_id != "trace"
+            || session.active_utility_id != "trace"
             || cfg.snapshot.trace_pointer_generation != generation
             || payload.app_instance_id != Some(operation.app_instance_id)
             || payload.parent_document_id.as_deref() != Some(operation.parent_document_id.as_str())
@@ -1088,7 +1102,7 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawingSnapsho
     }
     let config = cfg.snapshot;
     let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
-    let active_utility = config.active_utility_id.clone();
+    let active_utility = session.active_utility_id.clone();
     if active_utility == "trace" {
         session.cancel_trace_pointer(operation.app_instance_id, &operation.parent_document_id, config.trace_pointer_generation);
         let mut sink: Vec<fsm::Command<drawing_gesture::DrawingGesture>> = Vec::new();

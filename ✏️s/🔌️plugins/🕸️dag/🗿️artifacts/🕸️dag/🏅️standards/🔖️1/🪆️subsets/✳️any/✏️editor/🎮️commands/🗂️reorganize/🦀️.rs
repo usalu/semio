@@ -1,9 +1,9 @@
 //! 🕸️ 🕸️ DAG play app commands command — `reorganize`.
 
+use crate::editor::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use crate::mutations::dag_snapshot_mutations;
 use crate::op::DagMutation;
 use crate::DagSnapshot;
-use crate::editor::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use infinite_board_port_directed_dag::{DagHost, DagLayoutOptions};
 use semio_framework_artifact_infinite_dag::{dag_fixture_from_document, DagFixture};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

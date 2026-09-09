@@ -1,0 +1,447 @@
+{
+  "cases": [
+    {
+      "name": "null stays present",
+      "before": {},
+      "source": [
+        {
+          "key": "key",
+          "precondition": "any",
+          "operation": {
+            "kind": "set",
+            "value": null
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "key",
+            "precondition": "any",
+            "operation": {
+              "kind": "set",
+              "value": null
+            }
+          }
+        ]
+      },
+      "after": {
+        "key": null
+      }
+    },
+    {
+      "name": "strict missing removal rejects",
+      "before": {},
+      "source": [
+        {
+          "key": "key",
+          "precondition": "present",
+          "operation": {
+            "kind": "remove"
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "key",
+            "precondition": "present",
+            "operation": {
+              "kind": "remove"
+            }
+          }
+        ]
+      },
+      "error": "mutation.apply.missing-target"
+    },
+    {
+      "name": "set then remove accepts absent base",
+      "before": {},
+      "source": [
+        {
+          "key": "key",
+          "precondition": "any",
+          "operation": {
+            "kind": "set",
+            "value": "new"
+          }
+        },
+        {
+          "key": "key",
+          "precondition": "present",
+          "operation": {
+            "kind": "remove"
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "key",
+            "precondition": "any",
+            "operation": {
+              "kind": "remove"
+            }
+          }
+        ]
+      },
+      "after": {}
+    },
+    {
+      "name": "set then remove accepts present base",
+      "before": {
+        "key": "old"
+      },
+      "source": [
+        {
+          "key": "key",
+          "precondition": "any",
+          "operation": {
+            "kind": "set",
+            "value": "new"
+          }
+        },
+        {
+          "key": "key",
+          "precondition": "present",
+          "operation": {
+            "kind": "remove"
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "key",
+            "precondition": "any",
+            "operation": {
+              "kind": "remove"
+            }
+          }
+        ]
+      },
+      "after": {}
+    },
+    {
+      "name": "remove then set keeps presence requirement",
+      "before": {},
+      "source": [
+        {
+          "key": "key",
+          "precondition": "present",
+          "operation": {
+            "kind": "remove"
+          }
+        },
+        {
+          "key": "key",
+          "precondition": "any",
+          "operation": {
+            "kind": "set",
+            "value": null
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "key",
+            "precondition": "present",
+            "operation": {
+              "kind": "set",
+              "value": null
+            }
+          }
+        ]
+      },
+      "error": "mutation.apply.missing-target"
+    },
+    {
+      "name": "remove then set permits present null",
+      "before": {
+        "key": null
+      },
+      "source": [
+        {
+          "key": "key",
+          "precondition": "present",
+          "operation": {
+            "kind": "remove"
+          }
+        },
+        {
+          "key": "key",
+          "precondition": "any",
+          "operation": {
+            "kind": "set",
+            "value": null
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "key",
+            "precondition": "present",
+            "operation": {
+              "kind": "set",
+              "value": null
+            }
+          }
+        ]
+      },
+      "after": {
+        "key": null
+      }
+    },
+    {
+      "name": "double remove is unsatisfiable",
+      "before": {
+        "key": "old"
+      },
+      "source": [
+        {
+          "key": "key",
+          "precondition": "present",
+          "operation": {
+            "kind": "remove"
+          }
+        },
+        {
+          "key": "key",
+          "precondition": "present",
+          "operation": {
+            "kind": "remove"
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "key",
+            "precondition": "never",
+            "operation": {
+              "kind": "reject"
+            }
+          }
+        ]
+      },
+      "error": "mutation.apply.unsatisfiable-precondition"
+    },
+    {
+      "name": "remove set remove keeps original requirement",
+      "before": {
+        "key": "old"
+      },
+      "source": [
+        {
+          "key": "key",
+          "precondition": "present",
+          "operation": {
+            "kind": "remove"
+          }
+        },
+        {
+          "key": "key",
+          "precondition": "any",
+          "operation": {
+            "kind": "set",
+            "value": "new"
+          }
+        },
+        {
+          "key": "key",
+          "precondition": "present",
+          "operation": {
+            "kind": "remove"
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "key",
+            "precondition": "present",
+            "operation": {
+              "kind": "remove"
+            }
+          }
+        ]
+      },
+      "after": {}
+    },
+    {
+      "name": "absent requirement permits create",
+      "before": {},
+      "source": [
+        {
+          "key": "key",
+          "precondition": "absent",
+          "operation": {
+            "kind": "set",
+            "value": false
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "key",
+            "precondition": "absent",
+            "operation": {
+              "kind": "set",
+              "value": false
+            }
+          }
+        ]
+      },
+      "after": {
+        "key": false
+      }
+    },
+    {
+      "name": "absent requirement rejects overwrite",
+      "before": {
+        "key": null
+      },
+      "source": [
+        {
+          "key": "key",
+          "precondition": "absent",
+          "operation": {
+            "kind": "set",
+            "value": false
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "key",
+            "precondition": "absent",
+            "operation": {
+              "kind": "set",
+              "value": false
+            }
+          }
+        ]
+      },
+      "error": "mutation.apply.target-precondition"
+    },
+    {
+      "name": "two-key failure is atomic",
+      "before": {},
+      "source": [
+        {
+          "key": "a",
+          "precondition": "any",
+          "operation": {
+            "kind": "set",
+            "value": "new"
+          }
+        },
+        {
+          "key": "z",
+          "precondition": "present",
+          "operation": {
+            "kind": "remove"
+          }
+        }
+      ],
+      "compact": {
+        "entries": [
+          {
+            "key": "a",
+            "precondition": "any",
+            "operation": {
+              "kind": "set",
+              "value": "new"
+            }
+          },
+          {
+            "key": "z",
+            "precondition": "present",
+            "operation": {
+              "kind": "remove"
+            }
+          }
+        ]
+      },
+      "error": "mutation.apply.missing-target"
+    },
+    {
+      "name": "empty delta is identity",
+      "before": {
+        "key": null
+      },
+      "source": [],
+      "compact": {
+        "entries": []
+      },
+      "after": {
+        "key": null
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "entries": [
+        {
+          "key": "key",
+          "precondition": "any",
+          "operation": {
+            "kind": "set"
+          }
+        }
+      ]
+    },
+    {
+      "entries": [
+        {
+          "key": "key",
+          "precondition": "any",
+          "operation": {
+            "kind": "remove",
+            "value": null
+          }
+        }
+      ]
+    },
+    {
+      "entries": [
+        {
+          "key": "key",
+          "precondition": "never",
+          "operation": {
+            "kind": "set",
+            "value": null
+          }
+        }
+      ]
+    },
+    {
+      "entries": [
+        {
+          "key": "key",
+          "precondition": "any",
+          "operation": {
+            "kind": "reject"
+          }
+        }
+      ]
+    },
+    {
+      "entries": [
+        {
+          "key": "key",
+          "precondition": "any",
+          "operation": {
+            "kind": "set",
+            "value": null
+          }
+        }
+      ],
+      "locale": "de"
+    }
+  ]
+}

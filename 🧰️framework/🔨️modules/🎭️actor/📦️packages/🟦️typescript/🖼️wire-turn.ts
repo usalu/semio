@@ -48,31 +48,50 @@ export function coerceWireBytes(raw: unknown): Uint8Array {
 export type WireVariant<T = unknown> = { readonly tag?: string; readonly val?: T };
 
 export type WireUiPatch = {
-  readonly surface?: { readonly instance?: number; readonly surface?: string };
+  readonly surface?: { readonly instance?: number | bigint; readonly surface?: string };
   readonly kind?: string;
-  readonly revision?: number;
-  readonly baseRevision?: number;
+  readonly revision?: number | bigint;
+  readonly baseRevision?: number | bigint;
   readonly ops?: readonly WireVariant[];
 };
 
 export type WireTurnResult = {
+  readonly original?: object;
+  readonly lifecycleReceipt?: Uint8Array;
+  readonly uiPatchReceipt?: Uint8Array;
   readonly uiPatches: readonly WireUiPatch[];
   readonly effects: readonly WireVariant[];
   readonly nextWake: number | null;
+  readonly status?: unknown;
   readonly commandIngress?: WireVariant;
   readonly coldPairIngress: ColdPairIngressStatus;
 };
 
 /** 📥️ Defensive parse of `ShardClient.turn()`'s opaque `unknown` return into the fields a caller
- * needs, tolerating a missing/differently-shaped field rather than throwing mid-turn. */
+ * needs. Private lifecycle and UI-patch receipts retain their exact byte owner and the original turn
+ * identity; malformed receipt carriers fail before any renderer can project a patch without authority. */
 export function coerceTurnResult(raw: unknown): WireTurnResult {
   const record = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const uiPatches = Array.isArray(record.uiPatches) ? (record.uiPatches as WireUiPatch[]) : [];
   const effects = Array.isArray(record.effects) ? (record.effects as WireVariant[]) : [];
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
+  const lifecycleReceipt = record.lifecycleReceipt;
+  if (lifecycleReceipt !== undefined && lifecycleReceipt !== null && !(lifecycleReceipt instanceof Uint8Array)) throw new Error("actor-lifecycle.receipt-bytes");
+  const uiPatchReceipt = record.uiPatchReceipt;
+  if (uiPatchReceipt !== undefined && uiPatchReceipt !== null && !(uiPatchReceipt instanceof Uint8Array)) throw new Error("actor-ui-patch.receipt-bytes");
   const commandIngress = record.commandIngress && typeof record.commandIngress === "object" ? (record.commandIngress as WireVariant) : undefined;
   const coldPairIngress = parseWitColdPairIngressStatus(record.coldPairIngress);
-  return { uiPatches, effects, nextWake, commandIngress, coldPairIngress };
+  return {
+    original: raw !== null && typeof raw === "object" ? raw : undefined,
+    lifecycleReceipt: lifecycleReceipt ?? undefined,
+    uiPatchReceipt: uiPatchReceipt ?? undefined,
+    uiPatches,
+    effects,
+    nextWake,
+    status: record.status,
+    commandIngress,
+    coldPairIngress,
+  };
 }
 
 /** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps —

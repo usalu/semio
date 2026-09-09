@@ -1,16 +1,19 @@
 //! 🧬️ Generation3d artifact schema — every field of the artifact with its state class.
 
-use crate::standards::v1::subsets::any::schema::snapshot::text::{GENERATION3D_EXAMPLE_BOX_FILLET_TEXT, GENERATION3D_EXAMPLE_BOX_SHELL_TEXT, GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT, GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT, GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT};
+use crate::standards::v1::subsets::any::schema::snapshot::text::{
+    GENERATION3D_EXAMPLE_BOX_FILLET_TEXT, GENERATION3D_EXAMPLE_BOX_SHELL_TEXT, GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT, GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT, GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT,
+    GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT,
+};
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
-use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use crate::widget_id;
+use semio_framework_artifact_playbook_playbook::selected_generation;
+use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture as apply_generation_values_to_fixture_json;
-use semio_framework_artifact_playbook_playbook::selected_generation;
 
+use ::semio_framework_schema::ArtifactSchema;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
-use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
 
@@ -25,26 +28,6 @@ pub struct Generation3dArtifact {
     pub fixture: FlowFixture,
     #[state(artifact)]
     pub generation: GenerationPlayRoot,
-    #[state(presence)]
-    pub selected_node_ids: Vec<String>,
-    #[state(config)]
-    pub lod_mode: String,
-    #[state(config)]
-    pub show_mode: String,
-    #[state(config)]
-    pub selection_method: String,
-    #[state(artifact)]
-    pub hovered_node_id: Option<String>,
-    #[state(config)]
-    pub graph_camera: CameraJson,
-    #[state(config)]
-    pub preview_camera: Generation3dPreviewCamera,
-    #[state(config)]
-    pub sun_json: String,
-    #[state(presence)]
-    pub selected_generation_id: Option<String>,
-    #[state(artifact)]
-    pub generation_preview_text: Option<String>,
 }
 //#endregion 🔖️Generation3dArtifact
 
@@ -71,20 +54,7 @@ impl Default for Generation3dPreviewCamera {
 
 impl Default for Generation3dArtifact {
     fn default() -> Self {
-        Self {
-            fixture: FlowFixture::default(),
-            generation: GenerationPlayState::default().into(),
-            selected_node_ids: Vec::new(),
-            lod_mode: String::new(),
-            show_mode: "shaded".into(),
-            selection_method: "rectangle".into(),
-            hovered_node_id: None,
-            graph_camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
-            preview_camera: Generation3dPreviewCamera::default(),
-            sun_json: dsl::json::to_json_string(&semio_framework_plugin::WorldSunConfig::default()),
-            selected_generation_id: None,
-            generation_preview_text: None,
-        }
+        Self { fixture: FlowFixture::default(), generation: GenerationPlayState::default().into() }
     }
 }
 
@@ -94,7 +64,7 @@ impl Generation3dArtifact {
         Generation3dSnapshot { fixture: self.fixture.clone(), generation: self.generation.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Generation3dSnapshot) -> Self {
         Self { fixture: snapshot.fixture, generation: snapshot.generation, ..Self::default() }
     }
@@ -112,11 +82,7 @@ pub fn generation3d_artifact_schema_descriptor() -> ::semio_framework_schema::Ar
     ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.procedural.generation3d",
         artifact: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
@@ -496,28 +462,17 @@ pub fn gumball_rotate_params_json(axis: [f64; 3], angle: f64) -> String {
                 ("z".to_string(), dsl::DslValue::float(axis[2])),
             ]),
         ),
-        (
-            "angle".to_string(),
-            dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("number".into())), ("value".to_string(), dsl::DslValue::float(angle))]),
-        ),
+        ("angle".to_string(), dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("number".into())), ("value".to_string(), dsl::DslValue::float(angle))])),
     ]))
 }
 
 #[cfg(feature = "component-app-assembly")]
 pub fn gumball_scale_params_json(factor: f64) -> String {
     dsl::json::to_json_string(&dsl::DslValue::object([
-        (
-            "factor".to_string(),
-            dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("number".into())), ("value".to_string(), dsl::DslValue::float(factor))]),
-        ),
+        ("factor".to_string(), dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("number".into())), ("value".to_string(), dsl::DslValue::float(factor))])),
         (
             "center".to_string(),
-            dsl::DslValue::object([
-                ("$schema".to_string(), dsl::DslValue::String("point".into())),
-                ("x".to_string(), dsl::DslValue::float(0.0)),
-                ("y".to_string(), dsl::DslValue::float(0.0)),
-                ("z".to_string(), dsl::DslValue::float(0.0)),
-            ]),
+            dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("point".into())), ("x".to_string(), dsl::DslValue::float(0.0)), ("y".to_string(), dsl::DslValue::float(0.0)), ("z".to_string(), dsl::DslValue::float(0.0))]),
         ),
     ]))
 }
@@ -558,7 +513,7 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use semio_framework_artifact_flow_flow::CameraJson;
-pub use semio_framework_artifact_flow_flow::Widget;
 pub use semio_framework_artifact_flow_flow::FlowFixture;
+pub use semio_framework_artifact_flow_flow::Widget;
 pub use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 //#endregion 🔁️Re-exports

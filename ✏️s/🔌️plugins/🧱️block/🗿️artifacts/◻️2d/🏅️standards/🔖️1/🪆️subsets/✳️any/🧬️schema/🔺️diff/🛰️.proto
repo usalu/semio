@@ -26,8 +26,6 @@ message Block2dDiff {
   optional BlockCamera2d camera2d = 10;
   // @state artifact
   optional BlockMeta meta = 11;
-  // @state presence
-  optional Block2dStringList selected_ids = 12;
   // @state config
 }
 

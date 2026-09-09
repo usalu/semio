@@ -4,50 +4,8 @@
  * Untagged-by-variant-name on the wire (`serde`'s default externally-tagged enum representation —
  * `{ "MoveObject": { … } }`, confirmed against the committed `🧪️tests/…/🦠️mutation/🔣️.json`
  * fixtures across every mutation family), never a `{ mutation, payload }` envelope. */
-
-export interface LowpolyTransform {
-  position: [number, number, number];
-  rotation: [number, number, number];
-  scale: [number, number, number];
-}
-
-export interface LowpolyPaintLayer {
-  name: string;
-  visible: boolean;
-  opacity: number;
-  blendMode: string;
-  /** base64-encoded RGBA bytes */
-  pixels: string;
-}
-
-/** 🕸️ Owned CHILD handle for an object's mesh slot (`store::ArtifactChild<SemioMeshSnapshot>`);
- * `target` is the full `ArtifactRef`, never the flattened URI string — confirmed against the
- * `create-mesh` mutation/diff fixtures. */
-export interface LowpolyMeshHandle {
-  childId: string;
-  target: ArtifactRef;
-}
-
-export interface LowpolyObject {
-  id: string;
-  name: string;
-  transform: LowpolyTransform;
-  smoothShading: boolean;
-  /** `null` when the object owns no mesh yet — confirmed against the `create-object` mutation fixture. */
-  mesh: LowpolyMeshHandle | null;
-  paintLayers: LowpolyPaintLayer[];
-}
-
-export interface ArtifactDialect {
-  artifactKind: string;
-  standard: string;
-  subset: string;
-}
-
-export interface ArtifactRef {
-  artifactId: string;
-  dialect: ArtifactDialect;
-}
+import type { ArtifactRef } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { LowpolyObject, LowpolyPaintLayer } from "../🟦️.ts";
 
 /** One contiguous run of RGBA bytes written into a paint-layer pixel buffer at `offset`. */
 export interface PixelRun {

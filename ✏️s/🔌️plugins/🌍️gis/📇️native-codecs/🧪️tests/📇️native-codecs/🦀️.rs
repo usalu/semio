@@ -82,11 +82,7 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
         let files = genesis(document_id, &dialect).await.expect("package-owned GIS genesis");
         match identity.schema {
             "gis.map" => assert_zero_history(store::parse_document_pack::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(&files.pack, &files.spr).await.unwrap(), document_id, &dialect),
-            "gis.terrain" => assert_zero_history(
-                store::parse_document_pack::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(&files.pack, &files.spr).await.unwrap(),
-                document_id,
-                &dialect,
-            ),
+            "gis.terrain" => assert_zero_history(store::parse_document_pack::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(&files.pack, &files.spr).await.unwrap(), document_id, &dialect),
             _ => unreachable!(),
         }
         let hostile = semio_framework::ArtifactDialect { artifact_kind: dialect.artifact_kind.clone(), standard: dialect.standard.clone(), subset: "strict".into() };

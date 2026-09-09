@@ -1,0 +1,1 @@
+type ArtifactChild { childId: String! target: ArtifactRef! }

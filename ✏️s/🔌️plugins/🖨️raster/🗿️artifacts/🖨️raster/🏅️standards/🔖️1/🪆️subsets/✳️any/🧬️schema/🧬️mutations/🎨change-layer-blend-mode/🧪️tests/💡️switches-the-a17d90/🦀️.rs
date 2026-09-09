@@ -93,7 +93,6 @@ async fn produces_committed_diff() {
     assert_eq!(delta.patched.len(), 1, "change-layer-blend-mode/switches-the-glow-layer-to-screen: exactly one layer is patched");
     assert_eq!(delta.patched[0].patch.blend_mode.as_deref(), Some("screen"), "change-layer-blend-mode/switches-the-glow-layer-to-screen: the patch must carry the new blend mode");
     assert_eq!(delta.patched[0].patch.opacity, None, "change-layer-blend-mode/switches-the-glow-layer-to-screen: the patch must leave `opacity` to change-layer-opacity");
-    assert!(produced.diff().locale.is_none(), "change-layer-blend-mode/switches-the-glow-layer-to-screen: a blend-mode change never writes a config-class field");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.

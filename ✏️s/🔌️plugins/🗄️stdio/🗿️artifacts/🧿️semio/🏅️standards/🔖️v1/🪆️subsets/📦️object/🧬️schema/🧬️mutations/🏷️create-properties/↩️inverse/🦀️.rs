@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreateProperties`.
 
-use crate::standards::v1::subsets::object::schema::mutations::{SemioObjectMutation, delete_properties};
+use crate::standards::v1::subsets::object::schema::mutations::{delete_properties, SemioObjectMutation};
 use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Inverse

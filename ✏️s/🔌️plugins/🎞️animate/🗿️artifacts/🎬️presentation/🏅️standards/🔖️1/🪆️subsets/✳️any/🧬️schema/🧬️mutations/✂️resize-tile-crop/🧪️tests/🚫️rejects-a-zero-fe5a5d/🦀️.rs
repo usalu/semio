@@ -127,5 +127,9 @@ fn inverse_restores_the_healthy_base_crop_not_the_refused_rect() {
 fn semantics_bind_this_fixture_to_resize_tile_crop() {
     let semantics = <PresentationMutation as protocol::SemanticMutation<PresentationSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("resize", "tile-crop", "resize-tile-crop", "ResizedTileCrop"), "the fixture must be bound to resize-tile-crop's own descriptor");
-    assert_eq!(<PresentationMutation as protocol::SemanticMutation<PresentationSnapshot>>::target(&mutation()), vec!["tiles".to_string(), "t-hero".to_string(), "crop".to_string()], "resize-tile-crop addresses the collection, the tile, and the crop field");
+    assert_eq!(
+        <PresentationMutation as protocol::SemanticMutation<PresentationSnapshot>>::target(&mutation()),
+        vec!["tiles".to_string(), "t-hero".to_string(), "crop".to_string()],
+        "resize-tile-crop addresses the collection, the tile, and the crop field"
+    );
 }

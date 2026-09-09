@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use crate::standards::v1::subsets::any::schema;
+use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use crate::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
-use store::{ArtifactCommand, create_document_envelope};
+use store::{create_document_envelope, ArtifactCommand};
 
 fn simply_supported_beam_doc() -> crate::Fem2dSnapshot {
     crate::Fem2dSnapshot {

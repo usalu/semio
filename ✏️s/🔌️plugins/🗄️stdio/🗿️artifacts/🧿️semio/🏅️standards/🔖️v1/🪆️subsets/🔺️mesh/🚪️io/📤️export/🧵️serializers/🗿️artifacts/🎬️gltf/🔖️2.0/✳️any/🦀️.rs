@@ -13,12 +13,12 @@
 //! just unreferenced, exactly mirroring what the deserializer harvests independently of material
 //! texture refs. `SemioMeshSnapshot` has no scene graph -- `scenes`/`nodes` are left empty.
 
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_gltf::engine::{encode_data_uri, GltfAccessorType, GltfComponentType};
 use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfAlphaMode, GltfBuffer, GltfBufferView, GltfDocument, GltfImage, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness, GltfPrimitive, GltfSourceForm, GltfTexture};
 use semio_s_artifact_stdio_gltf::GltfSnapshot;
 use semio_s_artifact_stdio_gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::HashMap;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };

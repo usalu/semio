@@ -29,64 +29,6 @@
     "layout": {
       "$ref": "#/$defs/FlowLayoutMapDelta",
       "x-semio-state": "artifact"
-    },
-    "selectedNodeIds": {
-      "$ref": "#/$defs/FlowStringList",
-      "x-semio-state": "presence"
-    },
-    "selectedEdgeIds": {
-      "$ref": "#/$defs/FlowStringList",
-      "x-semio-state": "presence"
-    },
-    "selectedHandleIds": {
-      "$ref": "#/$defs/FlowStringList",
-      "x-semio-state": "presence"
-    },
-    "previewOffNodeIds": {
-      "$ref": "#/$defs/FlowStringList",
-      "x-semio-state": "presence"
-    },
-    "lodMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "proximityDistance": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "gridVisible": {
-      "type": "boolean",
-      "x-semio-state": "config"
-    },
-    "gridSnapEnabled": {
-      "type": "boolean",
-      "x-semio-state": "config"
-    },
-    "gridFactor": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "catalogueSectionsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "automationEnabledJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "contributionsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "generationJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
     }
   },
   "$defs": {
@@ -99,20 +41,7 @@
         "camera",
         "widgets",
         "synapses",
-        "layout",
-        "selectedNodeIds",
-        "selectedEdgeIds",
-        "selectedHandleIds",
-        "previewOffNodeIds",
-        "lodMode",
-        "proximityDistance",
-        "gridVisible",
-        "gridSnapEnabled",
-        "gridFactor",
-        "catalogueSectionsJson",
-        "automationEnabledJson",
-        "contributionsJson",
-        "generationJson"
+        "layout"
       ],
       "properties": {
         "schema": {
@@ -138,63 +67,6 @@
           "additionalProperties": {
             "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/WidgetLayout"
           }
-        },
-        "selectedNodeIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "selectedEdgeIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "selectedHandleIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "previewOffNodeIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "lodMode": {
-          "type": "string"
-        },
-        "proximityDistance": {
-          "type": "number",
-          "format": "double"
-        },
-        "gridVisible": {
-          "type": "boolean"
-        },
-        "gridSnapEnabled": {
-          "type": "boolean"
-        },
-        "gridFactor": {
-          "type": "number",
-          "format": "double"
-        },
-        "catalogueSectionsJson": {
-          "type": "string",
-          "contentMediaType": "application/json"
-        },
-        "automationEnabledJson": {
-          "type": "string",
-          "contentMediaType": "application/json"
-        },
-        "contributionsJson": {
-          "type": "string",
-          "contentMediaType": "application/json"
-        },
-        "generationJson": {
-          "type": "string",
-          "contentMediaType": "application/json"
         }
       }
     },

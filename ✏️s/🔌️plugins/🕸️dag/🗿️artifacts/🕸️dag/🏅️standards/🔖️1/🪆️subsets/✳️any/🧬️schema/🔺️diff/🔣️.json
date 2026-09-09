@@ -30,14 +30,6 @@
     "setEdges": {
       "$ref": "#/$defs/DagFixtureEdgeList",
       "x-semio-state": "artifact"
-    },
-    "selectedNodeIds": {
-      "$ref": "#/$defs/DagStringList",
-      "x-semio-state": "presence"
-    },
-    "camera": {
-      "$ref": "https://semio.tech/schema/s/dag/dag/artifact.json#/$defs/DagCamera",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

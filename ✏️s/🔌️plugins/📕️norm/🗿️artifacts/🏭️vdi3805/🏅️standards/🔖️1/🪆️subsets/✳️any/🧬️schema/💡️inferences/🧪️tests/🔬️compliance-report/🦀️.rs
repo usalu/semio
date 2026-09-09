@@ -1,4 +1,3 @@
-
 use super::*;
 use std::collections::BTreeSet;
 
@@ -20,27 +19,27 @@ async fn evaluate_reaches_operative_sheet_families() {
 async fn reserved_sheet_returns_not_applicable() {
     let doc = Vdi3805Snapshot::default();
     let result = part_15::check(&doc);
-    assert_eq!(result.status, crate::document::CheckStatus::NotApplicable);
+    assert_eq!(result.status, document::CheckStatus::NotApplicable);
     let result = part_67::check(&doc);
-    assert_eq!(result.status, crate::document::CheckStatus::NotApplicable);
+    assert_eq!(result.status, document::CheckStatus::NotApplicable);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn historical_part_check_respects_strict_mode() {
     let mut doc = Vdi3805Snapshot { strict_mode: true, ..Vdi3805Snapshot::default() };
     let result = part_12::check(&doc);
-    assert_eq!(result.status, crate::document::CheckStatus::Fail);
+    assert_eq!(result.status, document::CheckStatus::Fail);
 
     doc.strict_mode = false;
     let result = part_12::check(&doc);
-    assert_eq!(result.status, crate::document::CheckStatus::Pass);
+    assert_eq!(result.status, document::CheckStatus::Pass);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn multi_profile_part_check_reports_metadata_when_no_product() {
     let doc = Vdi3805Snapshot::default();
     let result = part_08::check(&doc);
-    assert_eq!(result.status, crate::document::CheckStatus::Pass);
+    assert_eq!(result.status, document::CheckStatus::Pass);
 }
 
 #[semio_framework_async_macros::async_test]

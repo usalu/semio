@@ -1,7 +1,6 @@
 //! 📦️ `create-product` — brings a new id-keyed catalogue product into existence, addressed by its
 //! article number (`identity.article_number`, the format's native product key).
 
-
 use crate::{CatalogueProduct, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

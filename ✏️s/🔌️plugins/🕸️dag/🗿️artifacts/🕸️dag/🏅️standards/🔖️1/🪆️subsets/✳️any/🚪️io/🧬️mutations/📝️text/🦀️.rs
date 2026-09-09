@@ -18,8 +18,8 @@ use crate::mutations::{
 };
 use crate::{DagNodeKind, DagNodeSpec};
 use graph::manifest::PropertyBag;
-use semio_framework_artifact_infinite_dag::EdgeRouteStyle;
 use protocol::OpText;
+use semio_framework_artifact_infinite_dag::EdgeRouteStyle;
 
 //#region 🔖️OpText
 /// ✂️ Local DSL-only mirror of `DagMutation` — every real variant flattened into its own keyworded

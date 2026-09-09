@@ -10,7 +10,7 @@
   "fireResistanceMin": null,
   "fireMemberCapacityC": null,
   "snowZone": null,
-  "snowAltitudeM": 780.0,
+  "snowAltitudeM": 780,
   "enSKKnM2": null,
   "windZone": null,
   "enVBMS": null,
@@ -31,6 +31,5 @@
   "siloMu": null,
   "siloK": null,
   "cS": null,
-  "cD": null,
-  "selectedCheckIndex": null
+  "cD": null
 }

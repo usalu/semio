@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::default_presentation_snapshot;
 use crate::op::PresentationMutation;

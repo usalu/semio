@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteEdge`.
 
-use crate::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, create_edge, delete_edge};
+use crate::standards::v1::subsets::brep::schema::mutations::{create_edge, delete_edge, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse
@@ -10,14 +10,8 @@ pub fn inverse(payload: &super::DeleteEdge, base: &SemioBrepSnapshot) -> Vec<Sem
         return Vec::new();
     };
     let tail = &base.edges[index..];
-    let mut undo: Vec<SemioBrepMutation> = tail
-        .iter()
-        .skip(1)
-        .map(|x| SemioBrepMutation::DeleteEdge(delete_edge::DeleteEdge { id: x.id.clone() }))
-        .collect();
-    undo.extend(tail.iter().map(|x| {
-        SemioBrepMutation::CreateEdge(create_edge::CreateEdge { id: x.id.clone(), start_vertex: x.start_vertex.clone(), end_vertex: x.end_vertex.clone(), curve: x.curve.clone() })
-    }));
+    let mut undo: Vec<SemioBrepMutation> = tail.iter().skip(1).map(|x| SemioBrepMutation::DeleteEdge(delete_edge::DeleteEdge { id: x.id.clone() })).collect();
+    undo.extend(tail.iter().map(|x| SemioBrepMutation::CreateEdge(create_edge::CreateEdge { id: x.id.clone(), start_vertex: x.start_vertex.clone(), end_vertex: x.end_vertex.clone(), curve: x.curve.clone() })));
     undo
 }
 //#endregion 🔖️Inverse

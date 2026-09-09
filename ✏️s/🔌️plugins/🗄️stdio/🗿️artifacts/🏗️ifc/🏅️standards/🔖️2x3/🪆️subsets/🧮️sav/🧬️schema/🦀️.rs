@@ -14,14 +14,14 @@ pub mod mutations;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
-    use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, upsert_instance, Ifc2x3Mutation};
     #[cfg(test)]
-    use crate::standards::v2x3::subsets::base::schema::mutations::{remove_instance};
+    use crate::standards::v2x3::subsets::base::schema::mutations::remove_instance;
+    use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, upsert_instance, Ifc2x3Mutation};
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::sav::schema::check_sav_conformance;
-    use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
+    use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {

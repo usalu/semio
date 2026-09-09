@@ -1,3 +1,5 @@
+import type { ArtifactDialect } from "../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { AppRole, AppRef } from "../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
 /** 🧬️ Canonical OS configuration schemas. */
 
 import uiPreferencesSchema from "./🎨️ui-preferences/🔣️.json" with { type: "json" };
@@ -94,19 +96,6 @@ export function parseUiPreferences(value: unknown): UiPreferences {
   }); } catch { problems.push("value.keybindingOverrides is invalid"); }
   if (problems.length > 0) throw new OsConfigSchemaError("UiPreferences", problems);
   return value as unknown as UiPreferences;
-}
-
-export interface ArtifactDialect {
-  artifactKind: string;
-  standard: string;
-  subset: string;
-}
-
-export type AppRole = "viewer" | "editor";
-
-export interface AppRef {
-  pluginId: string;
-  appId: string;
 }
 
 export interface DefaultApp {

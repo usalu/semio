@@ -4,7 +4,8 @@ use super::{Gis2dPresence, Gis2dPresenceDiff};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Leaves
-#[path = "🎥️set-camera/🦀️.rs"] mod set_camera;
+#[path = "🎥️set-camera/🦀️.rs"]
+mod set_camera;
 pub use set_camera::SetCamera;
 //#endregion 🧬️Leaves
 

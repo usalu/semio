@@ -32,7 +32,7 @@
         "kind": "required",
         "connection": "direct",
         "separations": [],
-        "weight": 0.0,
+        "weight": 0,
         "rationale": null,
         "distanceMaxM": null,
         "distanceMinM": null,
@@ -111,16 +111,5 @@
   "knowledge": null,
   "benchmarks": null,
   "traces": null,
-  "governance": null,
-  "selectedIds": null,
-  "activeRegister": null,
-  "adjacencyKindFilter": null,
-  "activeReportJson": null,
-  "searchQuery": null,
-  "searchHistoryJson": null,
-  "lastResultJson": null,
-  "lastAnalysisJson": null,
-  "graphCameraX": null,
-  "graphCameraY": null,
-  "graphCameraZoom": null
+  "governance": null
 }

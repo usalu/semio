@@ -5,55 +5,8 @@ use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
-//#region 🔖️ArtifactHelpers
-/// 🎯️ Component-level selection for World3d overlays (artifact-owned mirror of app config).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct CadSelectionTargets {
-    pub mesh: bool,
-    pub vertex: bool,
-    pub edge: bool,
-    pub face: bool,
-}
-
-impl Default for CadSelectionTargets {
-    fn default() -> Self {
-        Self { mesh: true, vertex: false, edge: true, face: false }
-    }
-}
-
-/// 🎯️ Component selection record.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct CadComponentSelection {
-    pub targets: CadSelectionTargets,
-    pub mode: String,
-    pub ids: Vec<u32>,
-}
-
-impl Default for CadComponentSelection {
-    fn default() -> Self {
-        Self { targets: CadSelectionTargets::default(), mode: "mesh".into(), ids: Vec::new() }
-    }
-}
-
-/// 🎛️ Per-pane dislocate handle groups.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct CadDislocateOptions {
-    pub move_enabled: bool,
-    pub rotate_enabled: bool,
-}
-
-impl Default for CadDislocateOptions {
-    fn default() -> Self {
-        Self { move_enabled: true, rotate_enabled: true }
-    }
-}
-//#endregion 🔖️ArtifactHelpers
-
 //#region 🔖️Artifact
-/// 🧬️ Full cad artifact state across the artifact, presence and config lanes.
+/// 🧬️ cad document artifact state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad")]
@@ -83,72 +36,6 @@ pub struct CadArtifact {
     pub nodes: Vec<CadNode>,
     #[state(artifact)]
     pub active_model_definition_id: String,
-    #[state(presence)]
-    pub selected_object_ids: Vec<String>,
-    #[state(presence)]
-    pub selected_node_ids: Vec<String>,
-    #[state(presence)]
-    pub active_object_id: Option<String>,
-    #[state(presence)]
-    pub component_selection: CadComponentSelection,
-    #[state(presence)]
-    pub selected_reference_model_definition_id: Option<String>,
-    #[state(presence)]
-    pub selected_reference_id: Option<String>,
-    #[state(presence)]
-    pub selected_primitive_id: Option<String>,
-    #[state(presence)]
-    pub selected_primitive_kind: Option<String>,
-    #[state(presence)]
-    pub active_example_id: Option<String>,
-    #[state(config)]
-    pub selection_method: String,
-    #[state(config)]
-    pub engagement_input: String,
-    #[state(config)]
-    pub engagement_step: String,
-    #[state(config)]
-    pub engagement_pane: Option<String>,
-    #[state(config)]
-    pub engagement_session_json: Option<String>,
-    #[state(config)]
-    pub last_finalized_interaction_id: Option<String>,
-    #[state(config)]
-    pub sun_enabled: bool,
-    #[state(config)]
-    pub sun_azimuth: f64,
-    #[state(config)]
-    pub sun_elevation: f64,
-    #[state(config)]
-    pub sun_intensity: f64,
-    #[state(config)]
-    pub sun_color: String,
-    #[state(config)]
-    pub camera: CadCamera,
-    #[state(config)]
-    pub camera_building: CadCamera,
-    #[state(config)]
-    pub camera_energy: CadCamera,
-    #[state(config)]
-    pub camera_structure_classic: CadCamera,
-    #[state(config)]
-    pub dislocate_shape: CadDislocateOptions,
-    #[state(config)]
-    pub dislocate_building: CadDislocateOptions,
-    #[state(config)]
-    pub dislocate_energy: CadDislocateOptions,
-    #[state(config)]
-    pub dislocate_structure_classic: CadDislocateOptions,
-    #[state(config)]
-    pub contributions_json: String,
-    #[state(artifact)]
-    pub hovered_object_id: Option<String>,
-    #[state(artifact)]
-    pub hovered_target_object_id: Option<String>,
-    #[state(artifact)]
-    pub hovered_target_mode: Option<String>,
-    #[state(artifact)]
-    pub hovered_target_id: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -176,7 +63,7 @@ impl CadArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: CadSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -189,39 +76,6 @@ impl CadArtifact {
             references_by_model_definition_id: snapshot.references_by_model_definition_id,
             nodes: snapshot.nodes,
             active_model_definition_id: snapshot.active_model_definition_id,
-            selected_object_ids: Vec::new(),
-            selected_node_ids: Vec::new(),
-            active_object_id: None,
-            component_selection: CadComponentSelection::default(),
-            selected_reference_model_definition_id: None,
-            selected_reference_id: None,
-            selected_primitive_id: None,
-            selected_primitive_kind: None,
-            active_example_id: None,
-            selection_method: "rectangle".into(),
-            engagement_input: String::new(),
-            engagement_step: "Idle".into(),
-            engagement_pane: None,
-            engagement_session_json: None,
-            last_finalized_interaction_id: None,
-            sun_enabled: false,
-            sun_azimuth: 45.0,
-            sun_elevation: 35.0,
-            sun_intensity: 0.85,
-            sun_color: "#ffffff".into(),
-            camera: CadCamera::default(),
-            camera_building: CadCamera::default(),
-            camera_energy: CadCamera::default(),
-            camera_structure_classic: CadCamera::default(),
-            dislocate_shape: CadDislocateOptions::default(),
-            dislocate_building: CadDislocateOptions::default(),
-            dislocate_energy: CadDislocateOptions::default(),
-            dislocate_structure_classic: CadDislocateOptions::default(),
-            contributions_json: "[]".into(),
-            hovered_object_id: None,
-            hovered_target_object_id: None,
-            hovered_target_mode: None,
-            hovered_target_id: None,
         }
     }
 
@@ -246,13 +100,7 @@ impl CadArtifact {
 pub fn cad_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.cad.cad",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -420,8 +268,8 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports
+pub use crate::CadCamera;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::CadNode;
 pub use crate::CadReferenceList;
-pub use crate::CadCamera;
 //#endregion 🔁️Re-exports

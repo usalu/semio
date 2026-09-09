@@ -106,13 +106,7 @@ pub fn remove_instance(snapshot: &mut Ifc2x3Snapshot, id: u64, expect: &[&str]) 
 
 /// 🧭️ Ids of every instance whose leading type name is one of `types`, in document order.
 pub fn ids_of_types(snapshot: &Ifc2x3Snapshot, types: &[&str]) -> Vec<u64> {
-    snapshot
-        .document
-        .instances
-        .iter()
-        .filter(|instance| instance.primary().is_some_and(|(name, _)| types.iter().any(|expected| name.eq_ignore_ascii_case(expected))))
-        .map(|instance| instance.id)
-        .collect()
+    snapshot.document.instances.iter().filter(|instance| instance.primary().is_some_and(|(name, _)| types.iter().any(|expected| name.eq_ignore_ascii_case(expected)))).map(|instance| instance.id).collect()
 }
 
 /// 🔗️ A `(#a,#b,...)` reference list argument.

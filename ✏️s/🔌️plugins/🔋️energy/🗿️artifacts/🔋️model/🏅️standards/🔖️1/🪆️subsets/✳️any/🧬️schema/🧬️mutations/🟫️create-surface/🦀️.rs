@@ -26,7 +26,19 @@ pub struct CreateSurface {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_surface(id: crate::model::EntityId, name: String, zone_id: crate::model::EntityId, class: crate::model::SurfaceClass, vertices_m: Vec<[f64; 3]>, construction_id: crate::model::EntityId, boundary: crate::model::OutsideBoundaryKind, interzone_surface_id: Option<crate::model::EntityId>, sun_exposed: bool, wind_exposed: bool, multiplier: u32) -> EnergyModelMutation {
+pub fn create_surface(
+    id: crate::model::EntityId,
+    name: String,
+    zone_id: crate::model::EntityId,
+    class: crate::model::SurfaceClass,
+    vertices_m: Vec<[f64; 3]>,
+    construction_id: crate::model::EntityId,
+    boundary: crate::model::OutsideBoundaryKind,
+    interzone_surface_id: Option<crate::model::EntityId>,
+    sun_exposed: bool,
+    wind_exposed: bool,
+    multiplier: u32,
+) -> EnergyModelMutation {
     EnergyModelMutation::CreateSurface(CreateSurface { id, name, zone_id, class, vertices_m, construction_id, boundary, interzone_surface_id, sun_exposed, wind_exposed, multiplier })
 }
 

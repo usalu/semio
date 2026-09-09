@@ -19,10 +19,10 @@
 
 use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, PptxDiff, PptxOpcDiff, PptxOpcRelDiff, PptxOpcRelListDiff, PptxOpcRelationshipsDiff};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxSnapshot, PptxXmlPart};
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
-use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional PresentationML main namespace.
@@ -48,21 +48,21 @@ pub const RELATIONSHIP_NAMESPACES: [&str; 2] = [TRANSITIONAL_REL, STRICT_REL];
 //#endregion 🔖️Dialect
 
 //#region 🔖️Mutations
+#[path = "🏷️remove-conformance-attribute/🦀️.rs"]
+pub mod remove_conformance_attribute;
+#[path = "🔖️set-conformance-attribute/🦀️.rs"]
+pub mod set_conformance_attribute;
+#[path = "🎨️set-drawing-namespace/🦀️.rs"]
+pub mod set_drawing_namespace;
+#[path = "🏛️set-main-namespace/🦀️.rs"]
+pub mod set_main_namespace;
+#[path = "🔗️set-relationship-base/🦀️.rs"]
+pub mod set_relationship_base;
 /// 📐️ Typed conformance-class mutation for `stdio.pptx` under ISO/IEC 29500-4
 /// Transitional. Every variant addresses ONE axis of the class; none addresses document content.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🏛️set-main-namespace/🦀️.rs"]
-pub mod set_main_namespace;
-#[path = "🎨️set-drawing-namespace/🦀️.rs"]
-pub mod set_drawing_namespace;
-#[path = "🔗️set-relationship-base/🦀️.rs"]
-pub mod set_relationship_base;
-#[path = "🔖️set-conformance-attribute/🦀️.rs"]
-pub mod set_conformance_attribute;
-#[path = "🏷️remove-conformance-attribute/🦀️.rs"]
-pub mod remove_conformance_attribute;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -270,42 +270,42 @@ fn diff_conformance_attribute(base: &PptxSnapshot, value: Option<&str>) -> PptxD
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &PptxTransitionalMutation, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
-        protocol::MutationOutcome::new(match this {
-            PptxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <PptxDiff as DiffAlgebra<PptxSnapshot>>::between(base, snapshot),
-            PptxTransitionalMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
-            PptxTransitionalMutation::SetDrawingNamespace(set_drawing_namespace::SetDrawingNamespace { namespace }) => diff_retarget_namespace(base, DRAWING_NAMESPACES, namespace),
-            PptxTransitionalMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }) => diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, target),
-            PptxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
-            PptxTransitionalMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
-        })
-    }
+    protocol::MutationOutcome::new(match this {
+        PptxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <PptxDiff as DiffAlgebra<PptxSnapshot>>::between(base, snapshot),
+        PptxTransitionalMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
+        PptxTransitionalMutation::SetDrawingNamespace(set_drawing_namespace::SetDrawingNamespace { namespace }) => diff_retarget_namespace(base, DRAWING_NAMESPACES, namespace),
+        PptxTransitionalMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }) => diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, target),
+        PptxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
+        PptxTransitionalMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
+    })
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &PptxTransitionalMutation, base: &PptxSnapshot) -> Vec<PptxTransitionalMutation> {
-        vec![match this {
-            PptxTransitionalMutation::SetSnapshot(_) => PptxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            PptxTransitionalMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
-                Some(namespace) => PptxTransitionalMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
-                None => return Vec::new(),
-            },
-            PptxTransitionalMutation::SetDrawingNamespace(_) => match declared_pair_member(base, DRAWING_NAMESPACES) {
-                Some(namespace) => PptxTransitionalMutation::SetDrawingNamespace(set_drawing_namespace::SetDrawingNamespace { namespace }),
-                None => return Vec::new(),
-            },
-            PptxTransitionalMutation::SetRelationshipBase(_) => match declared_relationship_base(base, RELATIONSHIP_NAMESPACES) {
-                Some(target) => PptxTransitionalMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }),
-                None => return Vec::new(),
-            },
-            PptxTransitionalMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
-                Some(value) => PptxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-                None => PptxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-            },
-            PptxTransitionalMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
-                Some(value) => PptxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-                None => return Vec::new(),
-            },
-        }]
-    }
+    vec![match this {
+        PptxTransitionalMutation::SetSnapshot(_) => PptxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        PptxTransitionalMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
+            Some(namespace) => PptxTransitionalMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
+            None => return Vec::new(),
+        },
+        PptxTransitionalMutation::SetDrawingNamespace(_) => match declared_pair_member(base, DRAWING_NAMESPACES) {
+            Some(namespace) => PptxTransitionalMutation::SetDrawingNamespace(set_drawing_namespace::SetDrawingNamespace { namespace }),
+            None => return Vec::new(),
+        },
+        PptxTransitionalMutation::SetRelationshipBase(_) => match declared_relationship_base(base, RELATIONSHIP_NAMESPACES) {
+            Some(target) => PptxTransitionalMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }),
+            None => return Vec::new(),
+        },
+        PptxTransitionalMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
+            Some(value) => PptxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
+            None => PptxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
+        },
+        PptxTransitionalMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
+            Some(value) => PptxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
+            None => return Vec::new(),
+        },
+    }]
+}
 //#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests

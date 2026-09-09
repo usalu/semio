@@ -5,9 +5,9 @@
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
 use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
-use crate::GltfMutation;
 use crate::viewer::gltf::modes::view;
 use crate::viewer::gltf::modes::view::windows::main;
+use crate::GltfMutation;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 use store::EngineHandles;
@@ -61,7 +61,14 @@ impl ArtifactViewer for GltfAnyViewer {
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(
+        _command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 

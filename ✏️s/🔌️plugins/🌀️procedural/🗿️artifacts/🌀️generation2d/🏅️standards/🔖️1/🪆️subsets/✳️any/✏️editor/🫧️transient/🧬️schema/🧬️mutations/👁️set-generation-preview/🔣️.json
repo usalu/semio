@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/👁️set-generation-preview",
+  "semanticKind": "set-generation-preview",
+  "displayName": "Set Generation Preview",
+  "emoji": "👁️",
+  "aggregateVariant": "SetGenerationPreview",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-generation-preview",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "text", "binary", "json-schema"]
+}
+

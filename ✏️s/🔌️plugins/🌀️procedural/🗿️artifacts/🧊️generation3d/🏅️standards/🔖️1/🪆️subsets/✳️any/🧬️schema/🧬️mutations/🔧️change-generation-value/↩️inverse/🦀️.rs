@@ -12,6 +12,8 @@ pub fn inverse(payload: &ChangeGenerationValue, base: &Generation3dSnapshot) -> 
         .generations
         .iter()
         .find(|entry| entry.id == payload.id)
-        .map(|entry| vec![Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), new_value: entry.values.get(&payload.question_id).cloned().unwrap_or(dsl::DslValue::Null) })])
+        .map(|entry| {
+            vec![Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), new_value: entry.values.get(&payload.question_id).cloned().unwrap_or(dsl::DslValue::Null) })]
+        })
         .unwrap_or_default()
 }

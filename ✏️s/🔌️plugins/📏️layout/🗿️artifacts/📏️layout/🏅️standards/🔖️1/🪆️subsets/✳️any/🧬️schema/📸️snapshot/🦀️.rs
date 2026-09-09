@@ -1,9 +1,9 @@
 //! 🧬️ Layout snapshot schema — artifact-lane fields only.
 
-use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
 #[cfg(test)]
 use crate::Frame;
+use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
+use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Snapshot

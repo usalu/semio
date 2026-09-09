@@ -13,10 +13,10 @@
 //! the declaration into `🚪️io/🦀️.rs` as `io()`. See that file's own module doc for the per-format
 //! fidelity table.
 
-use crate::standards::v1::subsets::any::{io, schema};
-use crate::FEM3D_DIALECT;
 use crate::editor::fem3d as editor;
+use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::fem3d as viewer;
+use crate::FEM3D_DIALECT;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;

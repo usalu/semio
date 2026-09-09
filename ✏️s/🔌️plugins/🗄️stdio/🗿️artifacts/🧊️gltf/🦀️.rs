@@ -38,15 +38,12 @@ pub const GLTF_INFERENCE_POLICY_VERSION: u32 = 1;
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let mut executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
-    executables.extend(gltf_inference_services().into_iter().map(|service| semio_s_artifact_stdio_contract::ArtifactExecutable {
-        identity: service.metadata().inference_schema.to_owned(),
-        executable: service.executable_identity(),
-    }));
-    executables.extend([
-        "s.stdio.gltf.mutation.change-material-alpha-mode.v1",
-        "s.stdio.gltf.mutation.change-material-double-sided.v1",
-        "s.stdio.gltf.mutation.create-scene.v1",
-    ].into_iter().map(|identity| semio_s_artifact_stdio_contract::ArtifactExecutable::from_function_pointer(identity, schema::mutations::apply_gltf_mutation as *const ())));
+    executables.extend(gltf_inference_services().into_iter().map(|service| semio_s_artifact_stdio_contract::ArtifactExecutable { identity: service.metadata().inference_schema.to_owned(), executable: service.executable_identity() }));
+    executables.extend(
+        ["s.stdio.gltf.mutation.change-material-alpha-mode.v1", "s.stdio.gltf.mutation.change-material-double-sided.v1", "s.stdio.gltf.mutation.create-scene.v1"]
+            .into_iter()
+            .map(|identity| semio_s_artifact_stdio_contract::ArtifactExecutable::from_function_pointer(identity, schema::mutations::apply_gltf_mutation as *const ())),
+    );
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
 
@@ -66,14 +63,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution {
-        identity: "gltf",
-        schema: ARTIFACT_DEFINITION_SCHEMA,
-        definition,
-        assembly,
-        formats,
-        native_codecs,
-    }
+    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "gltf", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Declaration
@@ -776,6 +766,10 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/➕️add/🦀️.rs"]
+                        pub mod add_required_extension;
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/➕️add/🦀️.rs"]
+                        pub mod add_used_extension;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏠️default-scene/🔗️bind/🦀️.rs"]
                         pub mod bind_default_scene;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🔗️bind/🦀️.rs"]
@@ -828,6 +822,8 @@ pub mod standards {
                         pub mod change_node_morph_weights;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename/🦀️.rs"]
                         pub mod change_node_name;
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/📐️transform/🦀️.rs"]
+                        pub mod change_node_transform;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🧩️change-extensions/🦀️.rs"]
                         pub mod change_primitive_extension_data;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📝️change-extras/🦀️.rs"]
@@ -840,6 +836,9 @@ pub mod standards {
                         pub mod change_scene_extra_data;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🏷️rename/🦀️.rs"]
                         pub mod change_scene_name;
+                        #[cfg(test)]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧪️tests/🔬️contract/🦀️.rs"]
+                        pub(crate) mod contract_tests;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🌱️create/🦀️.rs"]
                         pub mod create_accessor;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎞️animation/🌱️create/🦀️.rs"]
@@ -870,8 +869,6 @@ pub mod standards {
                         pub mod create_skin;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎨️texture/🌱️create/🦀️.rs"]
                         pub mod create_texture;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/➕️add/🦀️.rs"]
-                        pub mod add_used_extension;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🗑️delete/🦀️.rs"]
                         pub mod delete_accessor;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎞️animation/🗑️delete/🦀️.rs"]
@@ -926,6 +923,8 @@ pub mod standards {
                         pub mod move_node;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌿️node-child/🚚️move/🦀️.rs"]
                         pub mod move_node_child;
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🌿️reparent/🦀️.rs"]
+                        pub mod move_node_parent;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🚚️move/🦀️.rs"]
                         pub mod move_primitive;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🚚️move/🦀️.rs"]
@@ -944,6 +943,10 @@ pub mod standards {
                         pub mod move_texture;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/🚚️move/🦀️.rs"]
                         pub mod move_used_extension;
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/➖️remove/🦀️.rs"]
+                        pub mod remove_required_extension;
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/➖️remove/🦀️.rs"]
+                        pub mod remove_used_extension;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🔀️reorder/🦀️.rs"]
                         pub mod reorder_accessors;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎞️animation/🔀️reorder/🦀️.rs"]
@@ -986,12 +989,6 @@ pub mod standards {
                         pub mod reorder_textures;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/🔀️reorder/🦀️.rs"]
                         pub mod reorder_used_extensions;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🌿️reparent/🦀️.rs"]
-                        pub mod move_node_parent;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/➕️add/🦀️.rs"]
-                        pub mod add_required_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/📐️transform/🦀️.rs"]
-                        pub mod change_node_transform;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏠️default-scene/✂️unbind/🦀️.rs"]
                         pub mod unbind_default_scene;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/✂️unbind/🦀️.rs"]
@@ -1012,10 +1009,6 @@ pub mod standards {
                         pub mod unbind_primitive_material;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/✂️unbind/🦀️.rs"]
                         pub mod unbind_scene_root_node;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/➖️remove/🦀️.rs"]
-                        pub mod remove_required_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/➖️remove/🦀️.rs"]
-                        pub mod remove_used_extension;
                     }
                     #[path = "."]
                     pub mod modules {
@@ -1033,10 +1026,10 @@ pub mod standards {
                             pub mod material_animation;
                             #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧬️mutation-support/🧱️structure-geometry/🦀️.rs"]
                             pub mod structure_geometry;
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧬️mutation-support/🗂️top-level-collections/🦀️.rs"]
-                            pub mod top_level_collections;
                             #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧬️mutation-support/📚️top-level/🦀️.rs"]
                             pub mod top_level;
+                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧬️mutation-support/🗂️top-level-collections/🦀️.rs"]
+                            pub mod top_level_collections;
                         }
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧮️vector-operations/🦀️.rs"]
                         pub mod vector_operations;

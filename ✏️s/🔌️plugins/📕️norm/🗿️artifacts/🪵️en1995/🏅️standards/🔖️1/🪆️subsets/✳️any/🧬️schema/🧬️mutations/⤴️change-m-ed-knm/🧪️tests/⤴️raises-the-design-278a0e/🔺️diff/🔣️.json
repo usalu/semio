@@ -1,7 +1,7 @@
 {
   "artifact": null,
   "annex": null,
-  "mEdKnm": 32.0,
+  "mEdKnm": 32,
   "nEdKn": null,
   "vEdKn": null,
   "wMm3": null,
@@ -19,6 +19,5 @@
   "fireDurationMin": null,
   "sectionDepthMm": null,
   "aVertMS2": null,
-  "nCyclesBridge": null,
-  "selectedCheckIndex": null
+  "nCyclesBridge": null
 }

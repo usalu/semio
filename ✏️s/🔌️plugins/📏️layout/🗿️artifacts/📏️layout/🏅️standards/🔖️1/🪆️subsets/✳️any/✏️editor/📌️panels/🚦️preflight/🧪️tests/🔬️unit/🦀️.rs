@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::layout::testkit::{layout_app, render as render_body};
 use semio_framework_plugin::AppLabels;

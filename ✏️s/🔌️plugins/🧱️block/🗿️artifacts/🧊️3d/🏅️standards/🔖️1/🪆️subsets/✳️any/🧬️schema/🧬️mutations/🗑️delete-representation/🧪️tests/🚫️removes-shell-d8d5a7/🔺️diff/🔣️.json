@@ -16,15 +16,5 @@
   "attributes": null,
   "authors": null,
   "camera3d": null,
-  "meta": null,
-  "selectedIds": null,
-  "activeRepresentationId": null,
-  "wantedTags": null,
-  "windows": null,
-  "brushVortexKindId": null,
-  "brushRadius": null,
-  "brushFlip": null,
-  "brushPreview": null,
-  "camera": null,
-  "hoveredVortexFullId": null
+  "meta": null
 }

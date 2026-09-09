@@ -3,8 +3,8 @@
 use crate::coils::{heating_coil_output_w, CoilAirState, HeatingCoil};
 use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan};
 use crate::units::RHO_AIR_REF;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️AirTerminal
 /// 🌬️ Zone air terminal unit types.

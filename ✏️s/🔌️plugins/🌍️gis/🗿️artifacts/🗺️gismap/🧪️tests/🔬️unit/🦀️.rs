@@ -1,4 +1,3 @@
-
 use super::*;
 use geo::BoundingRect;
 use semio_framework_plugin::{ArtifactInferenceExecutionRequest, ArtifactInferenceServiceRegistry, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
@@ -39,7 +38,7 @@ async fn the_map_snapshot_defaults_to_empty_feature_collections() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn declaration_exposes_one_executable_whole_map_inference() {
+async fn inference_service_exposes_whole_map_metadata() {
     let service = gis_map_inference_service();
     let metadata = service.metadata();
     assert_eq!(metadata.owner, "gis");
@@ -48,6 +47,12 @@ async fn declaration_exposes_one_executable_whole_map_inference() {
     assert_eq!(metadata.inference_schema, "s.gis.gismap.inference");
     let mut registry = ArtifactInferenceServiceRegistry::new();
     registry.register(service).expect("service registers");
+    definition().expect("service-bearing definition builds");
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[semio_framework_async_macros::async_test]
+async fn declaration_exposes_one_executable_whole_map_inference() {
     declaration().expect("service-bearing declaration builds");
 }
 
@@ -66,10 +71,9 @@ async fn language_neutral_vectors_match_geo_bounding_rect_oracle_and_stable_payl
         assert_eq!(first.validity, "valid");
         assert_eq!(first.quality, "exact");
         assert!(first.complete);
-        let inference = <standards::v1::subsets::any::schema::inferences::GisMapInference as semio_framework_os_kernel::FromValue>::from_value(
-            semio_framework_os_kernel::pack_rt::decode_wire_value(&first.canonical_payload).expect("canonical inference payload"),
-        )
-        .expect("typed inference");
+        let inference =
+            <standards::v1::subsets::any::schema::inferences::GisMapInference as semio_framework_os_kernel::FromValue>::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&first.canonical_payload).expect("canonical inference payload"))
+                .expect("typed inference");
         let expected = &case["expected"];
         assert_eq!(inference.position_count as u64, expected["positionCount"].as_u64().expect("position count"));
         assert_eq!(inference.route_count as u64, expected["routeCount"].as_u64().expect("route count"));

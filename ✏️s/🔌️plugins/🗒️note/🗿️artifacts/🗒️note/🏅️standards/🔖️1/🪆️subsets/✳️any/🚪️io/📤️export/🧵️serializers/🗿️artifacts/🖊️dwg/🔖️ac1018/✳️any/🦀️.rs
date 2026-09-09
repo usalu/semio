@@ -18,7 +18,9 @@ impl Serializer<NoteSnapshot> for NoteIntoDwg {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
         let (svg, _w, _h) = crate::io::note_document_to_svg(from).map_err(|error| IoError { message: format!("NoteIntoDwg: svg bridge: {error}"), diagnostics: Vec::new() })?;
-        let raw = semio_framework_os::svg_to_polylines(&svg).and_then(|paths| semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::polylines_to_dwg_bytes(paths.iter().map(|path| (path.layer.as_str(), path.vertices.as_slice(), path.closed)))).map_err(|error| IoError { message: format!("NoteIntoDwg: svg_to_dwg: {error}"), diagnostics: Vec::new() })?;
+        let raw = semio_framework_os::svg_to_polylines(&svg)
+            .and_then(|paths| semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::polylines_to_dwg_bytes(paths.iter().map(|path| (path.layer.as_str(), path.vertices.as_slice(), path.closed))))
+            .map_err(|error| IoError { message: format!("NoteIntoDwg: svg_to_dwg: {error}"), diagnostics: Vec::new() })?;
         let drawing = decode_dwg(&raw).map_err(|error| IoError { message: format!("NoteIntoDwg: decode: {error}"), diagnostics: Vec::new() })?;
         let bytes = encode_dwg(&drawing).map_err(|error| IoError { message: format!("NoteIntoDwg: encode: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))

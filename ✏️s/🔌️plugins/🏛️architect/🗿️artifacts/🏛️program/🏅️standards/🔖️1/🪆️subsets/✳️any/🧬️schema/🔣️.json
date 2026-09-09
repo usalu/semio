@@ -74,17 +74,7 @@
     "knowledge",
     "benchmarks",
     "traces",
-    "governance",
-    "selectedIds",
-    "activeRegister",
-    "activeReportJson",
-    "searchQuery",
-    "searchHistoryJson",
-    "lastResultJson",
-    "lastAnalysisJson",
-    "graphCameraX",
-    "graphCameraY",
-    "graphCameraZoom"
+    "governance"
   ],
   "properties": {
     "schema": {
@@ -564,60 +554,6 @@
     "governance": {
       "$ref": "#/$defs/Governance",
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "activeRegister": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "adjacencyKindFilter": {
-      "$ref": "#/$defs/AdjacencyKind",
-      "x-semio-state": "presence"
-    },
-    "activeReportJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "presence"
-    },
-    "searchQuery": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "searchHistoryJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "lastResultJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "lastAnalysisJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "graphCameraX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "graphCameraY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "graphCameraZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

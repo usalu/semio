@@ -3,11 +3,34 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, linkSync, symlinkS
 import { dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
 
+/** 🌳️ Checks indexed ownership collisions against Python's pairwise oracle and a linear normalization budget. */
+export async function testArtifactOverlapIndex(workspace: string): Promise<void> {
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🧫️fixtures/artifact-registry/🔣️.json"), "utf8")).overlapIndex;
+  const { createArtifactRegistry } = await import("../../📦️artifacts/📇️registry/🟦️.ts");
+  const declarations = fixture.nested.map((path: string, index: number) => ({ owner: `owner-${index}:build`, path: `${fixture.directory}/${path}` }));
+  const python = Bun.which("python3") ?? Bun.which("python"); assert.ok(python);
+  const program = "import json,sys,unicodedata\nd=sorted(json.loads(sys.argv[1]),key=lambda x:(x['path'],x['owner']));out=[]\nf=lambda p:unicodedata.normalize('NFC',p).lower()\nfor i,a in enumerate(d):\n for b in d[i+1:]:\n  x,y=f(a['path']),f(b['path'])\n  if x==y or x.startswith(y+'/') or y.startswith(x+'/'):out.append({'rule':'CACHE-03','owner':b['owner'],'path':b['path'],'evidence':'Output overlaps '+a['owner']+' at '+a['path']})\nprint(json.dumps(out))";
+  const oracle = Bun.spawnSync([python, "-c", program, JSON.stringify(declarations)], { cwd: workspace, stdout: "pipe", stderr: "pipe", timeout: 30000 });
+  assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
+  assert.deepEqual(createArtifactRegistry(declarations).findings, JSON.parse(oracle.stdout.toString()));
+  const scale = Array.from({ length: fixture.count }, (_, index) => ({ owner: `owner-${index}:build`, path: `${fixture.directory}/${index}/dist` }));
+  const normalize = String.prototype.normalize; let calls = 0;
+  try {
+    String.prototype.normalize = function (form?: string): string {
+      assert.ok(++calls <= fixture.count * fixture.normalizationsPerEntry, "Artifact overlap indexing must normalize paths linearly");
+      return normalize.call(this, form);
+    };
+    assert.deepEqual(createArtifactRegistry(scale).findings, []);
+  } finally { String.prototype.normalize = normalize; }
+  console.log(`[DEBUG] Artifact overlap index matches Python for parent, sibling, duplicate, case and Unicode paths; ${fixture.count} owners use ${calls} normalizations PASS`);
+}
+
 /** 📇️ Verifies artifact ownership and retained-byte accounting against JSON Schema and native Python. */
 export async function testArtifactRegistry(workspace: string, output: string): Promise<void> {
   const require = createRequire(join(workspace, "package.json")), validate = require("jsonschema").validate;
   const fixtureRoot = resolve(import.meta.dirname, "../../🧫️fixtures/artifact-registry"), fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   assert.equal(validate(fixture, JSON.parse(readFileSync(join(fixtureRoot, "🛂️schema/🔣️.json"), "utf8"))).valid, true);
+  await testArtifactOverlapIndex(workspace);
   const { createArtifactRegistry, measureArtifactRegistry } = await import("../../📦️artifacts/📇️registry/🟦️.ts");
   const registry = createArtifactRegistry(fixture.declarations);
   assert.equal(validate(registry, JSON.parse(readFileSync(resolve(import.meta.dirname, "../../📦️artifacts/📇️registry/🧬️schema/🔣️.json"), "utf8"))).valid, true);

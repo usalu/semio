@@ -4,17 +4,6 @@ type GisMapArtifact {
   positions: [GisMapFeature!]! @state(class: ARTIFACT)
   routes: [GisMapFeature!]! @state(class: ARTIFACT)
   regions: [GisMapFeature!]! @state(class: ARTIFACT)
-  selectedIds: [String!]! @state(class: PRESENCE)
-  featureSelectionJson: String! @state(class: PRESENCE)
-  layerVisibility: [GisMapBoolEntry!]! @state(class: PRESENCE)
-  layerStrokeScale: [GisMapNumberEntry!]! @state(class: PRESENCE)
-  cameraJson: String! @state(class: CONFIG)
-  renderMode: String! @state(class: CONFIG)
-  vectorStyle: String! @state(class: CONFIG)
-  lodMode: String! @state(class: CONFIG)
-  hoverJson: String! @state(class: CONFIG)
-  selectionMethod: String! @state(class: CONFIG)
-  selectionMode: String! @state(class: CONFIG)
 }
 
 type GisMapFeature {

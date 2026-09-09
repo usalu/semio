@@ -8,7 +8,7 @@ use crate::ShootingSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_shooting_topology};
+use super::topology::compute_shooting_topology;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a shooting snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — the ONLY
@@ -64,13 +64,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ShootingBu
 pub fn shooting_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.shooting.shooting.inference",
-        inference: schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

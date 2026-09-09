@@ -1,4 +1,5 @@
 # 🧬️ Shooting diff schema — sparse field delta over the artifact.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 
 type ShootingDiff {
   artifact: ShootingArtifact @state(class: ARTIFACT)
@@ -9,15 +10,7 @@ type ShootingDiff {
   shots: ShootingShotsDelta @state(class: ARTIFACT)
   activeShotId: String @state(class: ARTIFACT)
   activeAssetId: String @state(class: ARTIFACT)
-  selectedShotIds: ShootingStringList @state(class: PRESENCE)
-  activeUtilityId: String @state(class: PRESENCE)
-  defaultShotFormat: String @state(class: CONFIG)
-  defaultShotShape: String @state(class: CONFIG)
-  defaultAssetFormat: String @state(class: CONFIG)
-  centerModel: Boolean @state(class: CONFIG)
-  fitRevision: Int @state(class: CONFIG)
-  cameraDraftLabel: String @state(class: CONFIG)
-  camera: ShootingCamera @state(class: CONFIG)
+  emblem: ArtifactChild @state(class: ARTIFACT)
 }
 
 type ShootingStringList {
@@ -89,15 +82,7 @@ type ShootingArtifact {
   shots: [ShootingShot!]!
   activeShotId: String!
   activeAssetId: String!
-  selectedShotIds: [String!]!
-  activeUtilityId: String!
-  defaultShotFormat: String!
-  defaultShotShape: String!
-  defaultAssetFormat: String!
-  centerModel: Boolean!
-  fitRevision: Int!
-  cameraDraftLabel: String!
-  camera: ShootingCamera!
+  emblem: ArtifactChild
 }
 
 type ShootingCamera {

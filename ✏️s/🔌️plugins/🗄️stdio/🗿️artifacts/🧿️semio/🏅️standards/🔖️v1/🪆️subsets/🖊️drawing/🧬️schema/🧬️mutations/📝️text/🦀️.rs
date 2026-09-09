@@ -9,9 +9,8 @@ pub use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingM
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
 use crate::standards::v1::subsets::drawing::schema::mutations::{
-    change_stroke_color::ChangeStrokeColor, change_stroke_width::ChangeStrokeWidth, create_layer::CreateLayer, create_node::CreateNode, delete_layer::DeleteLayer, delete_node::DeleteNode,
-    drag_nodes::DragNodes, flatten_node::FlattenNode, group_nodes::GroupNodes, move_node::MoveNode, reorder_nodes::ReorderNodes, replace_fill::ReplaceFill, replace_path::ReplacePath,
-    rotate_node::RotateNode, scale_node::ScaleNode, unflatten_node::UnflattenNode, ungroup_node::UngroupNode,
+    change_stroke_color::ChangeStrokeColor, change_stroke_width::ChangeStrokeWidth, create_layer::CreateLayer, create_node::CreateNode, delete_layer::DeleteLayer, delete_node::DeleteNode, drag_nodes::DragNodes, flatten_node::FlattenNode,
+    group_nodes::GroupNodes, move_node::MoveNode, reorder_nodes::ReorderNodes, replace_fill::ReplaceFill, replace_path::ReplacePath, rotate_node::RotateNode, scale_node::ScaleNode, unflatten_node::UnflattenNode, ungroup_node::UngroupNode,
 };
 use crate::standards::v1::subsets::drawing::schema::snapshot::{
     dec_layer, dec_list, dec_node, dec_path_segment, dec_point2, dec_point3, dec_quaternion, dec_rgba, dec_str, dec_transform, decode_option, enc_layer, enc_list, enc_node, enc_path_segment, enc_point2, enc_point3, enc_quaternion, enc_rgba, enc_str,

@@ -1,6 +1,5 @@
 //! 🗑️ `delete-geometry` — removes an id-keyed parametric geometry definition.
 
-
 use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

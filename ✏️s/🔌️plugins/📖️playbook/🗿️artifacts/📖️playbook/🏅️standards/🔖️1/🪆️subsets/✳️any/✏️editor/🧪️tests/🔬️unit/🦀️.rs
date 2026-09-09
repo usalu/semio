@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::playbook::testkit::{dispatch, playbook_app};
 use crate::op::AddBlock;
@@ -120,7 +119,7 @@ async fn interaction_topology_covers_every_step_and_block() {
     let history = semio_framework_plugin::HistoryView::empty();
     let cfg = PlaybookConfig::default();
     let doc = ArtifactView::new(&spec, &history);
-    let topology = PlaybookPlayApp::interaction_topology(&doc, &ConfigView { snapshot: &cfg });
+    let topology = PlaybookPlayApp::interaction_topology(&doc, &ConfigView { snapshot: &cfg, window: None });
     let blocks = topology.domains.get(PLAYBOOK_INTERACTION_BLOCKS).expect("blocks domain present in topology");
     assert!(blocks.ordered.iter().any(|node| node.id == step_id && node.granularity == PLAYBOOK_INTERACTION_GRANULARITY_STEP && node.parent.is_none()));
     assert!(blocks.ordered.iter().any(|node| node.id == block_id && node.granularity == PLAYBOOK_INTERACTION_GRANULARITY_BLOCK && node.parent.as_deref() == Some(step_id.as_str())));

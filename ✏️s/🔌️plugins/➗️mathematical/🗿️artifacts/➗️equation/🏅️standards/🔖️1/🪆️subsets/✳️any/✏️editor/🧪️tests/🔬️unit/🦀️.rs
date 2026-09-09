@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::equation::testkit::{math_app, math_app_with_registry};
 
@@ -14,7 +13,7 @@ fn graph_with_shape(node_count: usize, edge_count: usize) -> EquationGraph {
 }
 
 fn drive_retained(work: &mut EquationRetainedCommandWork, command: &EquationCommand, snapshot: &EquationSnapshot, operation: &AppOperationContext) -> protocol::DslValue {
-    let config = EquationConfig::default();
+    let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -99,7 +98,7 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     let extent = equation_command_extent(&command, &snapshot).expect("retained extent");
     let identity = equation_operation_identity("nodeGraphEdit", &operation);
     let mut uninterrupted = EquationRetainedCommandWork::new("nodeGraphEdit", identity, extent);
-    let config = EquationConfig::default();
+    let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -157,7 +156,7 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
     let operation = retained_operation(23);
     let extent = equation_command_extent(&command, &snapshot).expect("maximum retained extent");
     let mut work = EquationRetainedCommandWork::new("nodeGraphEdit", equation_operation_identity("nodeGraphEdit", &operation), extent);
-    let config = EquationConfig::default();
+    let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();

@@ -12,11 +12,11 @@
   "chi": null,
   "aNetMm2": null,
   "tensionNEdKn": null,
-  "fireThicknessMm": 32.0,
+  "fireThicknessMm": 32,
   "fireRating": "r90",
-  "fireMassivity": 175.0,
+  "fireMassivity": 175,
   "fireMu0": 0.625,
-  "fireDesignTemperatureC": 620.0,
+  "fireDesignTemperatureC": 620,
   "cfBBarMm": null,
   "cfTMm": null,
   "cfKSigma": null,
@@ -73,6 +73,5 @@
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

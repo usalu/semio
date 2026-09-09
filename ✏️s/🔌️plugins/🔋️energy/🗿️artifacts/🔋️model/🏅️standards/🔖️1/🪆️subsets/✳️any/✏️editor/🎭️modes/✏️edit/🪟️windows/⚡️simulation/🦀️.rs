@@ -1,7 +1,7 @@
 //! ⚡️ Accessible Energy simulation window: run settings, four-tier progress, cancellation and the
 //! live result meters of the mounted `🧵️simulation-session` worker. Every label is authored in
-//! English AND German with no default — the active language comes from the session's own
-//! `EnergySimulationConfigProjection::locale_de`, which `configure-energy-simulation` sets.
+//! English and German with no default. The editor supplies the active OS-owned locale through the
+//! shared `ViewModel` when it renders this window.
 
 use crate::energy_simulation_session::{EnergySimulationConfigProjection, EnergySimulationProjection, EnergySimulationStatus};
 use crate::{EnergyJobStage, EnergyQualityTier};
@@ -77,7 +77,6 @@ pub fn definition() -> WindowKindDefinition {
                 "Configure run",
                 "Lauf konfigurieren",
                 vec![
-                    ActionArgDef::text("locale", LocalizedLabel::native("Language", "Sprache")).required(),
                     ActionArgDef::slider("zoneTimestepMinutes", LocalizedLabel::native("Zone timestep (min)", "Zonen-Zeitschritt (min)"), 1.0, 60.0).required(),
                     ActionArgDef::slider("systemTimestepMinutes", LocalizedLabel::native("System timestep (min)", "Anlagen-Zeitschritt (min)"), 1.0, 60.0).required(),
                     ActionArgDef::slider("warmupDays", LocalizedLabel::native("Warmup days", "Einschwingtage"), 0.0, 365.0).required(),
@@ -97,8 +96,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🗣️Language
-/// 🗣️ Picks one of the two authored languages. There is no default language: every caller passes the
-/// session's explicit `locale_de`, which `configure-energy-simulation` requires as `en` or `de`.
+/// 🗣️ Picks one of the two authored languages from the shared view context supplied by the caller.
 fn say(german: bool, en: &'static str, de: &'static str) -> &'static str {
     if german {
         de
@@ -175,14 +173,10 @@ fn settings_nodes(settings: EnergySimulationConfigProjection, model: &crate::mod
         id: "energy-settings".into(),
         label: format!("{} · {CONFIGURE_ACTION_ID} · set-run-period", say(german, "Run settings (editable)", "Laufeinstellungen (bearbeitbar)")),
         children: vec![
-            leaf("energy-setting-locale", format!("{}: {}", say(german, "Language", "Sprache"), if settings.locale_de { "de" } else { "en" })),
             leaf("energy-setting-zone-timestep", format!("{}: {} min", say(german, "Zone timestep", "Zonen-Zeitschritt"), settings.zone_timestep_minutes)),
             leaf("energy-setting-system-timestep", format!("{}: {} min", say(german, "System timestep", "Anlagen-Zeitschritt"), settings.system_timestep_minutes)),
             leaf("energy-setting-warmup-days", format!("{}: {}", say(german, "Warmup days", "Einschwingtage"), settings.warmup_days)),
-            leaf(
-                "energy-setting-run-period",
-                format!("{}: {:02}-{:02} → {:02}-{:02}", say(german, "Run period (month-day)", "Simulationszeitraum (Monat-Tag)"), run_period.start_month, run_period.start_day, run_period.end_month, run_period.end_day),
-            ),
+            leaf("energy-setting-run-period", format!("{}: {:02}-{:02} → {:02}-{:02}", say(german, "Run period (month-day)", "Simulationszeitraum (Monat-Tag)"), run_period.start_month, run_period.start_day, run_period.end_month, run_period.end_day)),
             leaf("energy-setting-weather", format!("{}: {}", say(german, "Weather file", "Wetterdatei"), say(german, "bound through the model's weather link", "über die Wetterverknüpfung des Modells gebunden"))),
         ],
     }

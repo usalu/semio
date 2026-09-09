@@ -1,4 +1,3 @@
-
 use super::*;
 
 define_id!(TestId, "test");

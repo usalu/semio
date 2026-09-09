@@ -1,17 +1,9 @@
-
 use super::*;
 use protocol::Mutation;
 
 #[semio_framework_async_macros::async_test]
-async fn jack_config_default_has_default_camera() {
-    let config = JackConfig::default();
-    assert_eq!(config.camera, Camera::default());
-}
-
-#[semio_framework_async_macros::async_test]
 async fn jack_config_dsl_round_trips() {
-    let mut config = JackConfig { jack_query: "MATCH (a:Piece) RETURN a".into(), ..JackConfig::default() };
-    config.lod_mode_by_window.insert("trinity-jack-graph".into(), "compact".into());
+    let config = JackConfig { jack_query: "MATCH (a:Piece) RETURN a".into() };
     ::store::os_store::test_support::assert_dsl_round_trip(&config);
     ::store::os_store::test_support::assert_dsl_pack_equivalence(&config);
 }
@@ -29,6 +21,5 @@ async fn jack_config_operation_backwards_restores_prior_snapshot() {
 
 #[semio_framework_async_macros::async_test]
 async fn jack_config_operation_text_round_trips() {
-    ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetLodMode(SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() }));
     ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetQuery(SetQuery { value: "RETURN 1".into() }));
 }

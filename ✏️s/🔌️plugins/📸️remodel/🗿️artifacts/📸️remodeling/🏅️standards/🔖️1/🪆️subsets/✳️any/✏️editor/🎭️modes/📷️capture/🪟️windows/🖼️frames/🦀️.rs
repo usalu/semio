@@ -1,14 +1,14 @@
 //! 🖼️ Remodeling play app — the Frames window: a Canvas2d view of the currently cursored frame, with any
 //! ground control point observations planted on it.
 
-use crate::RemodelingSnapshot;
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingFrameCursor};
+use crate::RemodelingSnapshot;
 use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use pack::JsonValue;
+use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
 pub const REMODELING_PLAY_WINDOW_FRAMES: &str = "remodeling-frames";

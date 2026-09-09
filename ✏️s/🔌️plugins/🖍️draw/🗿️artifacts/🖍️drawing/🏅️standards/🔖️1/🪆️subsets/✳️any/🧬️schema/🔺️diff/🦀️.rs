@@ -5,8 +5,8 @@
 
 use crate::schema::{insert_layer, layer_base_mut, remove_layer_from_tree, update_layer_in_tree, DrawingArtifact};
 use crate::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
-use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
+use protocol::MutationDiff;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
@@ -31,18 +31,6 @@ pub struct DrawingDiff {
     pub assets: Option<DrawingAssetsDelta>,
     #[state(artifact)]
     pub artboard: Option<Option<DrawingArtboard>>,
-    #[state(presence)]
-    pub selected_ids: Option<DrawingStringList>,
-    #[state(config)]
-    pub engagement_input: Option<String>,
-    #[state(config)]
-    pub camera_x: Option<f64>,
-    #[state(config)]
-    pub camera_y: Option<f64>,
-    #[state(config)]
-    pub camera_zoom: Option<f64>,
-    #[state(artifact)]
-    pub hovered_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 
@@ -125,7 +113,7 @@ pub struct DrawingLayerPatch {
 
 //#region 🔖️Apply
 impl DrawingDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &DrawingArtifact) -> protocol::MutationApplyResult<DrawingArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -149,24 +137,6 @@ impl DrawingDiff {
             }
             if let Some(artboard) = &self.artboard {
                 next.artboard = artboard.clone();
-            }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
-            }
-            if let Some(value) = &self.engagement_input {
-                next.engagement_input = value.clone();
-            }
-            if let Some(value) = self.camera_x {
-                next.camera_x = value;
-            }
-            if let Some(value) = self.camera_y {
-                next.camera_y = value;
-            }
-            if let Some(value) = self.camera_zoom {
-                next.camera_zoom = value;
-            }
-            if let Some(value) = &self.hovered_id {
-                next.hovered_id = value.clone();
             }
             next
         })
@@ -409,12 +379,6 @@ impl MutationDiff<DrawingSnapshot> for DrawingDiff {
         take!(id);
         take!(title);
         take!(artboard);
-        take!(selected_ids);
-        take!(engagement_input);
-        take!(camera_x);
-        take!(camera_y);
-        take!(camera_zoom);
-        take!(hovered_id);
         match (&mut self.layers, other.layers) {
             (Some(dst), Some(src)) => {
                 dst.added.extend(src.added);
@@ -533,11 +497,6 @@ fn layer_base_patch(layer_id: &str, patch: DrawingLayerPatch) -> DrawingDiff {
 /// 🧬️ Whole-snapshot replacement when a sparse delta cannot express a tree edit.
 pub fn diff_from_snapshot(snapshot: DrawingSnapshot) -> DrawingDiff {
     diff_set_snapshot(&snapshot)
-}
-
-/// 📋 Selected-ids UI delta helper.
-pub fn diff_selected_ids(ids: Vec<String>) -> DrawingDiff {
-    DrawingDiff { selected_ids: Some(DrawingStringList { values: ids }), ..Default::default() }
 }
 
 /// 🗂️ Assets delta helper.

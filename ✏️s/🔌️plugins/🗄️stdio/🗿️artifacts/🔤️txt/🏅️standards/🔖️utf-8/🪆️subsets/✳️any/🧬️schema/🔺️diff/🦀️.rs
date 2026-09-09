@@ -2,14 +2,14 @@
 //! `lines` triple. No `snapshot: Option<TxtSnapshot>` full-replace slot anywhere, incl. SetSnapshot
 //! (its diff is `TxtDiff::between(base, next)`, field-by-field, same as every other mutation).
 
-use crate::TxtSnapshot;
 use crate::schema::snapshot::LineEnding;
+use crate::TxtSnapshot;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
 // still-public `os_spr::command` path instead of touching that framework facade file.
-use protocol::os_spr::command::DiffAlgebra;
 use framework_schema::ArtifactSchema;
+use protocol::os_spr::command::DiffAlgebra;
 use std::collections::HashSet;
 
 //#region 🔖️LinesDiff
@@ -271,7 +271,11 @@ impl MutationDiff<TxtSnapshot> for TxtDiff {
             (None, Some(l2)) => Some(l2),
             (Some(l1), Some(l2)) => {
                 let merged = absorb_pair(&l1, &l2);
-                if merged.is_empty() { None } else { Some(merged) }
+                if merged.is_empty() {
+                    None
+                } else {
+                    Some(merged)
+                }
             }
         };
     }

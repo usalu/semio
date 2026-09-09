@@ -1,7 +1,5 @@
 //! 🔥 `update-fire-inputs` — atomically updates the fire-inputs facet (fire_thickness_mm, fire_rating, fire_massivity, fire_mu_0, fire_design_temperature_c are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

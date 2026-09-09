@@ -1,10 +1,11 @@
-
 use super::*;
 use store::{ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory};
 
 #[test]
 fn admitted_maximum_and_production_grant_make_bounded_progress() {
     let factory = Fem2dConfigPreparationFactory;
+    let maximum = Fem2dConfigMutation::SetResultDisplay { source_id: Some("x".repeat(FEM2D_CONFIG_TEXT_MAXIMUM_BYTES)), mode: String::new(), mode_index: 0 };
+    let overflow = Fem2dConfigMutation::SetResultDisplay { source_id: Some("x".repeat(FEM2D_CONFIG_TEXT_MAXIMUM_BYTES + 1)), mode: String::new(), mode_index: 0 };
     assert_eq!(factory.preflight(&maximum, None, store::HistoryLane::Document).expect("maximum admission").retained_bytes, 4_096);
     assert!(factory.preflight(&overflow, None, store::HistoryLane::Document).is_err());
     assert!(factory.preflight(&maximum, Some(&"x".repeat(65)), store::HistoryLane::Document).is_err());

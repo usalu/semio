@@ -25,7 +25,18 @@ pub struct CreateMaterial {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_material(index: u32, id: crate::model::EntityId, name: String, thickness_m: f64, conductivity_w_m_k: f64, density_kg_m3: f64, specific_heat_j_kg_k: f64, thermal_absorptance: f64, solar_absorptance: f64, visible_absorptance: f64) -> EnergyModelMutation {
+pub fn create_material(
+    index: u32,
+    id: crate::model::EntityId,
+    name: String,
+    thickness_m: f64,
+    conductivity_w_m_k: f64,
+    density_kg_m3: f64,
+    specific_heat_j_kg_k: f64,
+    thermal_absorptance: f64,
+    solar_absorptance: f64,
+    visible_absorptance: f64,
+) -> EnergyModelMutation {
     EnergyModelMutation::CreateMaterial(CreateMaterial { index, id, name, thickness_m, conductivity_w_m_k, density_kg_m3, specific_heat_j_kg_k, thermal_absorptance, solar_absorptance, visible_absorptance })
 }
 

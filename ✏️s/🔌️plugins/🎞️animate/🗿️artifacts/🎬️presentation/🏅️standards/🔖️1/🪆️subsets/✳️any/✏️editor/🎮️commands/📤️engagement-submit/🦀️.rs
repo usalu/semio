@@ -2,13 +2,13 @@
 
 #![allow(clippy::result_large_err)]
 
+use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
+use crate::editor::animate::{interaction_select_effect, new_tile_id, tile_morph_prompt_effect, PresentationDispatchCtx};
 use crate::mutations::create_tile::CreateTile;
 use crate::mutations::replace_tiles::ReplaceTiles;
 use crate::op::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
-use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{interaction_select_effect, new_tile_id, tile_morph_prompt_effect, PresentationDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -49,7 +49,9 @@ pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentationSna
             effects: vec![interaction_select_effect(&[], "replace")],
             ..Default::default()
         }),
-        "copy" | "copy prompt" => Ok(Emit { config_mutations: vec![PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: String::new() })], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() }),
+        "copy" | "copy prompt" => {
+            Ok(Emit { config_mutations: vec![PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: String::new() })], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() })
+        }
         _ => Ok(Emit::default()),
     }
 }

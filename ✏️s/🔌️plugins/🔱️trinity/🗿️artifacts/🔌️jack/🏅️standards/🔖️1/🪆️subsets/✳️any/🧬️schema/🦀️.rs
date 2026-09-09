@@ -3,12 +3,11 @@
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` replaced by a single
 //! composed `content: JackContentChild` slot, matching `DagArtifact`'s own field swap exactly.
 
-use crate::{JackContentChild};
+use crate::JackContentChild;
 use ::semio_framework_schema::ArtifactSchema;
-use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
-/// 🧬️ Full jack artifact state across the artifact and local config lanes.
+/// 🧬️ Jack document state owned by the artifact.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.trinity.jack")]
 pub struct JackArtifact {
@@ -27,14 +26,6 @@ pub struct JackArtifact {
     pub content: JackContentChild,
     #[state(artifact)]
     pub root_node_id: Option<String>,
-    #[state(config)]
-    pub jack_query: String,
-    #[state(config)]
-    pub lod_mode_by_window: BTreeMap<String, String>,
-    #[state(config)]
-    pub viewport_camera: Camera,
-    #[state(config)]
-    pub editor_selection: Option<JackEditorSelection>,
 }
 //#endregion 🔖️Artifact
 
@@ -55,10 +46,6 @@ impl dsl::ToValue for JackArtifact {
             ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
             ("content".to_string(), dsl::to_dsl_value(&self.content).expect("ArtifactChild serializes")),
             ("rootNodeId".to_string(), dsl::ToValue::to_value(&self.root_node_id)),
-            ("jackQuery".to_string(), dsl::ToValue::to_value(&self.jack_query)),
-            ("lodModeByWindow".to_string(), dsl::ToValue::to_value(&self.lod_mode_by_window)),
-            ("viewportCamera".to_string(), dsl::ToValue::to_value(&self.viewport_camera)),
-            ("editorSelection".to_string(), dsl::ToValue::to_value(&self.editor_selection)),
         ])
     }
 }
@@ -75,41 +62,15 @@ impl dsl::FromValue for JackArtifact {
             camera: dsl::FromValue::from_value(field("camera")?)?,
             content: dsl::from_dsl_value(field("content")?).map_err(dsl::ValueError::new)?,
             root_node_id: dsl::FromValue::from_value(field("rootNodeId")?)?,
-            jack_query: dsl::FromValue::from_value(field("jackQuery")?)?,
-            lod_mode_by_window: dsl::FromValue::from_value(field("lodModeByWindow")?)?,
-            viewport_camera: dsl::FromValue::from_value(field("viewportCamera")?)?,
-            editor_selection: dsl::FromValue::from_value(field("editorSelection")?)?,
         })
     }
 }
 //#endregion 🔖️ValueCodec
 
-//#region 🔖️Helpers
-/// 🎯️ Ephemeral editor selection range (offsets into the jack query text).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct JackEditorSelection {
-    pub start: u64,
-    pub end: u64,
-}
-//#endregion 🔖️Helpers
-
 //#region 🔖️Conversions
 impl Default for JackArtifact {
     fn default() -> Self {
-        Self {
-            schema: crate::TRINITY_GRAPH_SCHEMA.into(),
-            name: String::new(),
-            manifest_id: None,
-            manifest: Manifest::default(),
-            camera: Camera::default(),
-            content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()),
-            root_node_id: None,
-            jack_query: String::new(),
-            lod_mode_by_window: BTreeMap::new(),
-            viewport_camera: Camera::default(),
-            editor_selection: None,
-        }
+        Self { schema: crate::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()), root_node_id: None }
     }
 }
 
@@ -127,10 +88,9 @@ impl JackArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the artifact from its document snapshot.
     pub fn from_snapshot(snapshot: crate::JackSnapshot) -> Self {
-        let viewport_camera = snapshot.camera.clone();
-        Self { schema: snapshot.schema, name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, content: snapshot.content, root_node_id: snapshot.root_node_id, viewport_camera, ..Self::default() }
+        Self { schema: snapshot.schema, name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, content: snapshot.content, root_node_id: snapshot.root_node_id }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -162,11 +122,7 @@ pub fn jack_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSc
     ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.trinity.jack",
         artifact: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/reasoning/wires/canvas-window-transient/mutation/set-drag/schema.json",
+  "title": "SetDrag",
+  "type": "object",
+  "properties": {
+    "nodeId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lastX": {
+      "type": "number"
+    },
+    "lastY": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "nodeId",
+    "lastX",
+    "lastY"
+  ],
+  "additionalProperties": false
+}

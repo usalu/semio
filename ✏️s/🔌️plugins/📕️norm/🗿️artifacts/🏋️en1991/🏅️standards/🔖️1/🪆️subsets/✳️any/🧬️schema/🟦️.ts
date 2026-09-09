@@ -65,6 +65,4 @@ export interface En1991Artifact {
   cS: number;
   /** @state artifact */
   cD: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

@@ -1,7 +1,6 @@
 //! 📉️ `replace-curve-points` — whole-value swap of a curve's interpolation point list, addressed
 //! by id.
 
-
 use crate::{CurvePoint, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

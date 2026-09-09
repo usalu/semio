@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use crate::standards::v1::subsets::any::schema;
+use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use crate::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
-use store::{ArtifactCommand, create_document_envelope};
+use store::{create_document_envelope, ArtifactCommand};
 
 fn cantilever_fixture() -> crate::Fem3dSnapshot {
     crate::Fem3dSnapshot {

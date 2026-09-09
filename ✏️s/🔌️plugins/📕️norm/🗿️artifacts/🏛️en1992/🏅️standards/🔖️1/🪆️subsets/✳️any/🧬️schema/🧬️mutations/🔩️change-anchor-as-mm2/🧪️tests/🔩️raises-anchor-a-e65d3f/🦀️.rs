@@ -96,14 +96,12 @@ async fn change_anchor_as_mm2_produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is canonical and decodes back into `En1992Diff` with `anchorASMm2` set.
-/// `selected_check_index` stays unset on purpose: it is an `Option<Option<u32>>` whose `None` and
-/// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-anchor-as-mm2`
-/// never writes it anyway.
+/// 🕹️ Presence selection is absent from the artifact diff encoding.
 #[semio_framework_async_macros::async_test]
 async fn change_anchor_as_mm2_committed_diff_is_canonical() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-anchor-as-mm2 committed diff decodes");
     assert_eq!(decoded.anchor_a_s_mm2, Some(157.0), "change-anchor-as-mm2/raises-anchor-a-s-mm2-to-157-0: the committed diff must carry anchor_a_s_mm2 at 157.0");
-    assert!(decoded.selected_check_index.is_none(), "change-anchor-as-mm2/raises-anchor-a-s-mm2-to-157-0: the committed diff must leave the presence-lane selected_check_index unset");
+    assert!(serde_json::to_value(&decoded).expect("diff JSON").get("selectedCheckIndex").is_none(), "change-anchor-as-mm2/raises-anchor-a-s-mm2-to-157-0: the committed diff must leave the presence-lane selectedCheckIndex absent");
     let reencoded = serde_json::to_value(&decoded).expect("change-anchor-as-mm2 committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-anchor-as-mm2 committed diff reparses");
     assert_eq!(reencoded, original, "change-anchor-as-mm2/raises-anchor-a-s-mm2-to-157-0: committed diff JSON is not canonical");

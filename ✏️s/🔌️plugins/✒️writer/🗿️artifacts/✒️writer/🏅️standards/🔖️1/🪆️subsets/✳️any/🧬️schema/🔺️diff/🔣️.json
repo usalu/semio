@@ -4,84 +4,25 @@
   "title": "WriterDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": ["artifact", "schema", "id", "languageId", "uri", "document"],
   "properties": {
     "artifact": {
-      "title": "WriterArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "id": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "languageId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "uri": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "text": {
-      "$ref": "https://semio.tech/schema/s/writer/writer/artifact.json#/$defs/WriterTextDelta",
-      "x-semio-state": "artifact"
-    },
-    "editorSelection": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "https://semio.tech/schema/s/writer/writer/artifact.json#/$defs/WriterEditorSelection"
-        }
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "https://semio.tech/schema/s/writer/writer/artifact.json" }
       ],
-      "x-semio-state": "presence"
+      "x-semio-state": "artifact"
     },
-    "editorSettings": {
-      "$ref": "https://semio.tech/schema/s/writer/writer/artifact.json#/$defs/WriterEditorSettings",
-      "x-semio-state": "presence"
-    },
-    "formatSignal": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "lintSignal": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "revision": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "cameraX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
+    "schema": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "id": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "languageId": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "uri": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "document": {
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "https://semio.tech/schema/os/store/child.json" }
+      ],
+      "x-semio-state": "artifact"
     }
   }
 }

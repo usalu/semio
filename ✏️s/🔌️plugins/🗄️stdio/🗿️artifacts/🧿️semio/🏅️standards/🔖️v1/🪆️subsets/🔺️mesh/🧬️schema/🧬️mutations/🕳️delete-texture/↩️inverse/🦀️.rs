@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteTexture`.
 
-use crate::standards::v1::subsets::mesh::schema::mutations::{SemioMeshMutation, create_texture};
+use crate::standards::v1::subsets::mesh::schema::mutations::{create_texture, SemioMeshMutation};
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Inverse

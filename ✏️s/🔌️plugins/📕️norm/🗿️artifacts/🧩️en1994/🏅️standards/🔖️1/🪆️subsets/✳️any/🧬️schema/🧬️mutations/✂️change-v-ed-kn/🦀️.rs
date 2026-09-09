@@ -1,6 +1,5 @@
 //! ✂️ `change-v-ed-kn` — sets the En 1994 design shear force V_Ed [kN] scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

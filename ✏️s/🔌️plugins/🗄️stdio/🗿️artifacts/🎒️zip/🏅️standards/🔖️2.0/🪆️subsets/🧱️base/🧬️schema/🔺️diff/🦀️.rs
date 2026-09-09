@@ -1,10 +1,10 @@
 //! 🔺️ Sparse logical ZIP diffs over member names, decompressed payloads, ordering, and archive comment.
 
-use std::collections::{HashMap, HashSet};
 use crate::ZipSnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
+use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Model
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

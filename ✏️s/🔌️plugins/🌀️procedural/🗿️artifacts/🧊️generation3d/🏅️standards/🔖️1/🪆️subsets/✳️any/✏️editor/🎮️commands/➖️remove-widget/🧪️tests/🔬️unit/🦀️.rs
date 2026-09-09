@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::generation3d::Generation3dCommand;
 use crate::editor::generation3d::commands::{add_widget, patch_flow_widgets};
 use crate::editor::generation3d::testkit::{app, dispatch};
+use crate::editor::generation3d::Generation3dCommand;
 use semio_framework_artifact_flow_flow::Widget;
 
 #[semio_framework_async_macros::async_test]

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_planar_face_from_points, make_rectangle_wire, make_regular_polygon_wire};
 use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;

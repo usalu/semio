@@ -1,8 +1,8 @@
 //! 🧬️ Sequence play app — the compiled-DAG window: the read-only wire literal of the current fixture.
 
-use crate::SequenceSnapshot;
 use crate::editor::sequence::host_from_snapshot;
-use semio_framework_plugin::{LocalizedLabel, SurfaceKind, TextEditorScene, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use crate::SequenceSnapshot;
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";

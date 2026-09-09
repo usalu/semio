@@ -24,34 +24,34 @@
 use crate::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
 use crate::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
 use crate::SvgSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use protocol::Mutation;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
 //#region 🔖️Mutations
-/// 📐️ Typed content mutation for `stdio.svg` 1.1/🔰️basic. Nodes are addressed by `NodePath`; clip
-/// paths are addressed by their `id`, because that is how a `clip-path="url(#id)"` reference names
-/// them and the profile's whole clip-path rule is about what a reference resolves to.
-//#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "🪧stamp-base-profile/🦀️.rs"]
-pub mod stamp_base_profile;
 #[path = "➕insert-basic-element/🦀️.rs"]
 pub mod insert_basic_element;
+#[path = "📎insert-clip-path-shape/🦀️.rs"]
+pub mod insert_clip_path_shape;
 #[path = "➖remove-element/🦀️.rs"]
 pub mod remove_element;
 #[path = "🏷️set-basic-attribute/🦀️.rs"]
 pub mod set_basic_attribute;
 #[path = "✂️set-clip-path-reference/🦀️.rs"]
 pub mod set_clip_path_reference;
-#[path = "📎insert-clip-path-shape/🦀️.rs"]
-pub mod insert_clip_path_shape;
+/// 📐️ Typed content mutation for `stdio.svg` 1.1/🔰️basic. Nodes are addressed by `NodePath`; clip
+/// paths are addressed by their `id`, because that is how a `clip-path="url(#id)"` reference names
+/// them and the profile's whole clip-path rule is about what a reference resolves to.
+//#region 🔖️Leaves
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 #[path = "✍️set-text/🦀️.rs"]
 pub mod set_text;
-#[path = "🖼️set-view-box/🦀️.rs"]
-pub mod set_view_box;
 #[path = "🔄set-transform/🦀️.rs"]
 pub mod set_transform;
+#[path = "🖼️set-view-box/🦀️.rs"]
+pub mod set_view_box;
+#[path = "🪧stamp-base-profile/🦀️.rs"]
+pub mod stamp_base_profile;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -228,10 +228,7 @@ fn prior_attribute(base: &SvgSnapshot, path: &[usize], name: &str) -> Option<Str
 }
 
 fn insert_child_diff(parent: &[usize], index: usize, node: &XmlNode) -> SvgDiff {
-    diff_at_path(
-        parent,
-        SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![SvgChildAdded { index, item: node.clone() }] }) }),
-    )
+    diff_at_path(parent, SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![SvgChildAdded { index, item: node.clone() }] }) }))
 }
 
 fn remove_child_diff(parent: &[usize], index: usize) -> SvgDiff {
@@ -321,8 +318,12 @@ pub(crate) fn agg_inverse(this: &SvgBasicMutation, base: &SvgSnapshot) -> Vec<Sv
             },
             _ => Vec::new(),
         },
-        SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path, name, .. }) => vec![SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name) })],
-        SvgBasicMutation::SetClipPathReference(set_clip_path_reference::SetClipPathReference { path, .. }) => vec![SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: path.clone(), name: "clip-path".into(), value: prior_attribute(base, path, "clip-path") })],
+        SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path, name, .. }) => {
+            vec![SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name) })]
+        }
+        SvgBasicMutation::SetClipPathReference(set_clip_path_reference::SetClipPathReference { path, .. }) => {
+            vec![SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: path.clone(), name: "clip-path".into(), value: prior_attribute(base, path, "clip-path") })]
+        }
         SvgBasicMutation::InsertClipPathShape(insert_clip_path_shape::InsertClipPathShape { clip_path_id, index, .. }) => match path_of_id(base, clip_path_id) {
             Some(target) => vec![SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: target, index: *index })],
             None => Vec::new(),
@@ -334,8 +335,12 @@ pub(crate) fn agg_inverse(this: &SvgBasicMutation, base: &SvgSnapshot) -> Vec<Sv
             };
             vec![SvgBasicMutation::SetText(set_text::SetText { path: path.clone(), text: old })]
         }
-        SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path, .. }) => vec![SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path: path.clone(), view_box: prior_attribute(base, path, "viewBox").and_then(|v| parse_view_box(&v).ok()) })],
-        SvgBasicMutation::SetTransform(set_transform::SetTransform { path, .. }) => vec![SvgBasicMutation::SetTransform(set_transform::SetTransform { path: path.clone(), transform: prior_attribute(base, path, "transform").and_then(|v| parse_transform_list(&v).ok()) })],
+        SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path, .. }) => {
+            vec![SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path: path.clone(), view_box: prior_attribute(base, path, "viewBox").and_then(|v| parse_view_box(&v).ok()) })]
+        }
+        SvgBasicMutation::SetTransform(set_transform::SetTransform { path, .. }) => {
+            vec![SvgBasicMutation::SetTransform(set_transform::SetTransform { path: path.clone(), transform: prior_attribute(base, path, "transform").and_then(|v| parse_transform_list(&v).ok()) })]
+        }
     }
 }
 //#endregion 🔖️MutationTrait

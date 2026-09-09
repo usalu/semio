@@ -89,7 +89,7 @@ fn apply_attributes_delta(items: &[BlockAttribute], delta: &Block2dAttributesDel
 }
 
 impl Block2dDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &Block2dArtifact) -> protocol::MutationApplyResult<Block2dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -125,9 +125,6 @@ impl Block2dDiff {
             }
             if let Some(meta) = &self.meta {
                 next.meta = meta.clone();
-            }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
             }
             next
         })
@@ -192,7 +189,6 @@ impl MutationDiff<Block2dSnapshot> for Block2dDiff {
         take!(authors);
         take!(camera2d);
         take!(meta);
-        take!(selected_ids);
         fn absorb_delta<D, F>(target: &mut Option<D>, incoming: Option<D>, merge: F)
         where
             F: FnOnce(&mut D, D),

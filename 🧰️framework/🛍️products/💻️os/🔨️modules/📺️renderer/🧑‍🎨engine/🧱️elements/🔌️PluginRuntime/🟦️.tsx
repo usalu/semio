@@ -45,7 +45,7 @@ import {
   panelViewContext,
   windowViewContext,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
 import {
   DOCUMENT_BACKBONE_RETENTION_LIMITS,
   decodeLocalInteractionCaptureJson,
@@ -94,7 +94,7 @@ import { wireExtensionInvocation } from "../../../../../../../🔨️modules/�
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, decodeBackboneMessage } from "@semio-tech/framework-os";
-import { ActorDocumentBindingV1, type ActorDocumentMessagePortV1, type ActorDocumentSourceV1, encodeDocumentBackboneControlV1 } from "./📡️backbone/🟦️.ts";
+import { ActorDocumentBindingV1, type ActorDocumentMessagePortV1, type ActorDocumentSourceV1, encodeDocumentBackboneControlV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️plugin-runtime
@@ -149,6 +149,10 @@ export type PluginWasmHandle = {
   readonly readAppDocumentPack?: (instanceId: number) => Promise<{ readonly pack: Uint8Array; readonly spr: Uint8Array } | null>;
   /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
+  /** 🪟️ Reads every concrete window's persisted-local config envelope. */
+  readonly readWindowConfigPacks: (instanceId: number) => Promise<readonly WindowConfigPackEntry[]>;
+  /** 🪟️ Restores one concrete window config envelope before its first render. */
+  readonly loadWindowConfigPack: (instanceId: number, entry: WindowConfigPackEntry) => Promise<void>;
   readonly bindDocumentPort?: (instanceId: number, binding: PluginDocumentBindingV1) => Promise<ActorDocumentMessagePortV1>;
   /** 👥️ `interaction` (contract-freeze §C7.6) is the app's own declared-broadcast selection/hover
    * slice — `encode_presence_interaction` output, empty when no domain is declared or broadcasting
@@ -997,14 +1001,42 @@ function hasRequiredUiPatches(results: readonly WireTurnResult[], requiredSurfac
 
 const PLUGIN_UI_CONTINUATION_LIMIT = 4_096;
 const PLUGIN_UI_CONTINUATION_BATCH_SIZE = 8;
+/** 📏️ Steps the native intake may take for one surface patch. The retained-UI wire decoder advances one
+ * phase per step (a LEB128 byte, a text body, an attach), so a fixed step ceiling was a hard cap of a few
+ * kilobytes per surface; the budget therefore scales with the patch's wire bytes (≤ 8 phases per byte)
+ * above the base continuation limit, which alone still bounds an empty or malformed patch. */
+function pluginUiIntakeBudget(patch: WireUiPatch): number {
+  let bytes = 0;
+  const measure = (value: unknown, depth: number): void => {
+    if (value instanceof Uint8Array || value instanceof ArrayBuffer) bytes += value.byteLength;
+    else if (typeof value === "string") bytes += value.length;
+    else if (Array.isArray(value)) { if (depth < 4) for (const item of value) measure(item, depth + 1); }
+    else if (value && typeof value === "object" && depth < 4) for (const item of Object.values(value)) measure(item, depth + 1);
+  };
+  measure(patch.ops ?? [], 0);
+  return PLUGIN_UI_CONTINUATION_LIMIT + Math.max(bytes, (patch.ops?.length ?? 0) * 4096) * 8;
+}
 type PluginPatchAcceptance = Readonly<{
   acknowledgements: readonly ShardEventEnvelope[];
   turns: readonly WireTurnResult[];
 }>;
 function isPluginPatchAcceptance(value: readonly ShardEventEnvelope[] | PluginPatchAcceptance): value is PluginPatchAcceptance { return !Array.isArray(value); }
 
+/** 🪃️ Macrotask yield for the UI continuation loops. A `setTimeout(0)` chain is throttled to one tick
+ * per second in a hidden tab (once per minute under Chrome's intensive throttling), which turned a few
+ * thousand intake steps into minutes of silence; a `MessageChannel` message is a macrotask that is never
+ * throttled by page visibility. */
+const pluginUiContinuationChannel = new MessageChannel();
+const pluginUiContinuationWaiters: (() => void)[] = [];
+pluginUiContinuationChannel.port1.onmessage = () => {
+  const waiters = pluginUiContinuationWaiters.splice(0);
+  for (const resume of waiters) resume();
+};
 async function yieldPluginUiContinuation(): Promise<void> {
-  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  await new Promise<void>((resolve) => {
+    pluginUiContinuationWaiters.push(resolve);
+    pluginUiContinuationChannel.port2.postMessage(null);
+  });
 }
 
 /** 🔄️ Drives a reactor-owned continuation until its requested patch set is published or it
@@ -1185,7 +1217,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const uiIntakesByInstance = new Map<number, Set<OwnedUiPatchIntake>>();
   const uiReadsByInstance = new Map<number, Set<Promise<unknown>>>();
   let eventSeq = 0;
-  const uiGrant = Object.freeze({ maxItems: 1, maxBytes: 4096 });
+  /** 🎟️ Per-step intake slice. One item per step made the 4 096-step continuation budget a hard
+   * 4 096-item ceiling on a single surface patch (a 180-object world scene exhausts it); 256 items /
+   * 64 KiB per step keeps each slice sub-millisecond while the budget bounds a patch at ~1 M items. */
+  const uiGrant = Object.freeze({ maxItems: 256, maxBytes: 65_536 });
   const yieldUi = async (step: number): Promise<void> => { if (step % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0) await yieldPluginUiContinuation(); };
   const closeIntake = async (instanceId: number, intake: OwnedUiPatchIntake): Promise<void> => {
     intake.beginClose();
@@ -1212,8 +1247,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const intakes = uiIntakesByInstance.get(instanceId) ?? new Set<OwnedUiPatchIntake>();
       intakes.add(intake); uiIntakesByInstance.set(instanceId, intakes);
       let token: OwnedUiPatchAcknowledgement | null = null;
+      const intakeBudget = pluginUiIntakeBudget(patch);
       for (let step = 1; token === null; step += 1) {
-        if (step > PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("plugin-ui.intake-budget-exhausted");
+        if (step > intakeBudget) throw new Error(`plugin-ui.intake-budget-exhausted:${surfaceId}:${intakeBudget}`);
         const current = intake.advance(uiGrant);
         token = intake.peekAcknowledgement();
         if (current.kind === "rejected") throw new Error(`plugin-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
@@ -1223,7 +1259,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "issued-ui-ack", source, token }, "Interactive");
       if (!intake.acceptAcknowledgement(acknowledged.submission)) throw new Error("plugin-ui.acknowledgement-refused");
       for (let step = 1; ; step += 1) {
-        if (step > PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("plugin-ui.publication-close-budget-exhausted");
+        if (step > intakeBudget) throw new Error(`plugin-ui.publication-close-budget-exhausted:${surfaceId}:${intakeBudget}`);
         const current = intake.advance(uiGrant);
         if (current.kind === "ready") break;
         if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`plugin-ui.intake-${current.kind}:${current.phase}`);
@@ -1328,6 +1364,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     if (turn.uiPatches.length > 0 || turn.uiPatchReceipt !== undefined) throw new Error("plugin-ui.patch-after-lifecycle-close");
   };
   const retireInstanceLifecycle = async (instanceId: number, lease: ShardInstanceLifecycleLease, owner: OwnedUiInstance): Promise<void> => {
+    const captured = lease.pendingReceipt;
+    if (captured?.kind === "captured") {
+      const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "receipt-ack", receipt: captured }, "Interactive");
+      assertClosingTurn(acknowledged.turn);
+    }
     lease.beginClose();
     for (let step = 1; lease.progress().kind !== "complete"; step += 1) {
       if (step > PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("plugin-ui.lifecycle-close-budget-exhausted");
@@ -1924,6 +1965,8 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
       if (errorFrame) throw new Error(`[DEBUG] loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
+    readWindowConfigPacks: (instanceId) => requireChannel(instanceId).readWindowConfigs(),
+    loadWindowConfigPack: (instanceId, entry) => requireChannel(instanceId).loadWindowConfig(entry),
     // 🚧️ Same channel-v12 retirement as `attachBackbone`/`detachBackbone` above: the old
     // `AppFrame::Ephemeral` poll was the literal empty-batch drain design-abi.md §4 names as
     // retired outright — `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s native twin (`ephemeral_snapshot`) stubs the

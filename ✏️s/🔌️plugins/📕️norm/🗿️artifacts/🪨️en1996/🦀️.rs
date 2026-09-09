@@ -20,7 +20,6 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
     semio_s_artifact_norm_contract::package_from_schema(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-
 //#region 🔖️Types
 /// 🧱️ Masonry manufacturing-control class underlying the EN-recommended γ_M table (EN 1996-1-1 Table 2.1-style).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
@@ -263,222 +262,222 @@ pub mod standards {
                         pub mod text;
                         #[path = "."]
                         pub mod change_m_ed_knm {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_n_ed_kn {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_v_ed_kn {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_h_ed_kn {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_z_mm3 {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-z-mm3/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-z-mm3/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-z-mm3/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-z-mm3/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_area_mm2 {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-area-mm2/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-area-mm2/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-area-mm2/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-area-mm2/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_shear_area_mm2 {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-shear-area-mm2/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-shear-area-mm2/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-shear-area-mm2/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-shear-area-mm2/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_f_k_mpa {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-fk-mpa/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-fk-mpa/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-fk-mpa/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-fk-mpa/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_f_vk_mpa {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_annex {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_masonry_class {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-masonry-class/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-masonry-class/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-masonry-class/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-masonry-class/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_design_situation {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-design-situation/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-design-situation/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-design-situation/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-design-situation/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_mu {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-mu/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-mu/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-mu/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-mu/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_wall_thickness_mm {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-wall-thickness-mm/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-wall-thickness-mm/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-wall-thickness-mm/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-wall-thickness-mm/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_fire_resistance_min {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-resistance-min/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-resistance-min/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-resistance-min/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-resistance-min/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_unit {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-unit/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-unit/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-unit/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-unit/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_exposure {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-exposure/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-exposure/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-exposure/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-exposure/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_mortar {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-mortar/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-mortar/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-mortar/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-mortar/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_bed_joint_thickness_mm {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥪️change-bed-joint-thickness-mm/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥪️change-bed-joint-thickness-mm/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥪️change-bed-joint-thickness-mm/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥪️change-bed-joint-thickness-mm/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_storeys {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-storeys/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-storeys/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-storeys/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-storeys/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_h_ef_mm {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-h-ef-mm/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-h-ef-mm/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-h-ef-mm/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-h-ef-mm/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_t_ef_mm {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-t-ef-mm/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-t-ef-mm/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-t-ef-mm/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-t-ef-mm/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                     }

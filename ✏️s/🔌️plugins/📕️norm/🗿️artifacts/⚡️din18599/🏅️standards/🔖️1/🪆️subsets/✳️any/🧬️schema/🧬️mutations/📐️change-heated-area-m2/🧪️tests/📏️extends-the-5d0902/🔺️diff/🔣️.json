@@ -1,6 +1,6 @@
 {
   "useClass": null,
-  "heatedAreaM2": 160.0,
+  "heatedAreaM2": 160,
   "occupants": null,
   "hT": null,
   "hV": null,
@@ -11,6 +11,5 @@
   "renewableKwh": null,
   "annualLimitKwh": null,
   "energyCarrier": null,
-  "referenceQPKwh": null,
-  "selectedCheckIndex": null
+  "referenceQPKwh": null
 }

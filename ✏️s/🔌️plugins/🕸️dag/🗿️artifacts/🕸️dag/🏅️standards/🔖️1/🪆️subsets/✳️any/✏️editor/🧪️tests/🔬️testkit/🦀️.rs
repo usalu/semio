@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::testkit::new_app_with_registry as framework_new_app_with_registry;
 use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel};

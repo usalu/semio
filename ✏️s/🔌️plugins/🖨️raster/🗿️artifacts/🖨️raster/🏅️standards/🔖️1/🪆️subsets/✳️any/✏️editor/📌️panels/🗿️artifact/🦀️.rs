@@ -1,12 +1,14 @@
 //! 📄️ Raster play app panel — the layer tree.
 
-use crate::standards::v1::subsets::any::schema::layer_name;
-use crate::standards::v1::subsets::any::schema::layer_visible;
-use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
 use crate::editor::raster::{layer_row_id, raster_action, ui_label, ui_value_map, ui_value_text, RASTER_TREE_PREFIX};
-use semio_framework_plugin::{tree_item_desc, tree_item_with_action, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use crate::standards::v1::subsets::any::schema::layer_name;
+use crate::standards::v1::subsets::any::schema::layer_visible;
+use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
+use semio_framework_plugin::{
+    tree_item_desc, tree_item_with_action, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+};
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_BODY_LAYERS: &str = "raster.play.layers";

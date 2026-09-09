@@ -19,6 +19,5 @@
   "fireDurationMin": null,
   "sectionDepthMm": null,
   "aVertMS2": null,
-  "nCyclesBridge": 2000000.0,
-  "selectedCheckIndex": null
+  "nCyclesBridge": 2000000
 }

@@ -447,6 +447,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { ReadDocument: { seq: 9 } },
       { LoadConfig: { seq: 10, pack: [1], spr: [2] } },
       { ReadConfig: { seq: 11 } },
+      { LoadWindowConfig: { seq: 12, entry: { window_id: "w1", window_kind_id: "graph", envelope_pack: [1, 2] } } },
+      { ReadWindowConfigs: { seq: 13 } },
       { MediaIn: { seq: 14, port: "in-1", descriptor: [1], data: [2, 3] } },
       { MediaOut: { seq: 15, port: "out-1", request: [4] } },
       { MediaFingerprint: { seq: 16, port: "fp-1" } },
@@ -477,6 +479,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { Invocation: { in_reply_to: 2, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [9], mutations: [10], inverse_group: [11] } },
       { DocumentChanged: { envelopes: [[1, 2]], origin: "remote" } },
       { Document: { in_reply_to: 6, pack: [1, 2], spr: [3, 4], ops: "op-log" } },
+      { WindowConfigs: { in_reply_to: 6, entries: [{ window_id: "w1", window_kind_id: "graph", envelope_pack: [1, 2] }] } },
       { ContextMenu: { in_reply_to: 7, items: [1, 2, 3] } },
       { Media: { in_reply_to: 8, port: "out-1", descriptor: [1], data: [2] } },
       { MediaFingerprint: { in_reply_to: 9, port: "fp-1", fingerprint: [1, 2, 3, 4] } },
@@ -534,7 +537,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(decodeAppFrame(encodeAppFrame(frame))).toEqual(frame);
     });
 
-    it("tags every AppCommand variant per the agreed contract order (ConfigCommand=0 ... presence=28)", () => {
+    it("tags every AppCommand variant per the agreed contract order", () => {
       expect(encodeAppCommand({ ConfigCommand: { seq: 0, command: [] } })[0]).toBe(0);
       expect(encodeAppCommand({ Command: { seq: 0, command: [], view_state: [] } })[0]).toBe(1);
       expect(encodeAppCommand({ ReadChildren: { seq: 0 } })[0]).toBe(15);
@@ -551,9 +554,12 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppCommand({ resolveConflict: { seq: 0, conflict_id: "", resolution: 0 } })[0]).toBe(26);
       expect(encodeAppCommand({ readConflicts: { seq: 0 } })[0]).toBe(27);
       expect(encodeAppCommand({ presence: { seq: 0, own_color: null, peers: [] } })[0]).toBe(28);
+      expect(encodeAppCommand({ LocalInteractionQuery: { seq: 0, command: { kind: "read", requestId: 0 } } })[0]).toBe(29);
+      expect(encodeAppCommand({ LoadWindowConfig: { seq: 0, entry: { window_id: "", window_kind_id: "", envelope_pack: [] } } })[0]).toBe(30);
+      expect(encodeAppCommand({ ReadWindowConfigs: { seq: 0 } })[0]).toBe(31);
     });
 
-    it("tags every AppFrame variant per the agreed contract order (Done=0 ... UiSnapshotEnd=22)", () => {
+    it("tags every AppFrame variant per the agreed contract order", () => {
       expect(encodeAppFrame({ Done: { in_reply_to: 0 } })[0]).toBe(0);
       expect(encodeAppFrame({ Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } })[0]).toBe(1);
       expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [], report: [] } })[0]).toBe(9);
@@ -567,6 +573,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppFrame({ Conflicts: { in_reply_to: null, conflicts: [] } })[0]).toBe(20);
       expect(encodeAppFrame({ UiPatch: { in_reply_to: null, surface: "", kind: "", revision: 0, base_revision: 0, ops: [] } })[0]).toBe(21);
       expect(encodeAppFrame({ UiSnapshotEnd: { revision: 0 } })[0]).toBe(22);
+      expect(encodeAppFrame({ WindowConfigs: { in_reply_to: 0, entries: [] } })[0]).toBe(24);
     });
 
     /**
@@ -591,6 +598,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["ReadDocument", { ReadDocument: { seq: 1 } }],
         ["LoadConfig", { LoadConfig: { seq: 1, pack: [1], spr: [2] } }],
         ["ReadConfig", { ReadConfig: { seq: 1 } }],
+        ["LoadWindowConfig", { LoadWindowConfig: { seq: 1, entry: { window_id: "w1", window_kind_id: "graph", envelope_pack: [1, 2] } } }],
+        ["ReadWindowConfigs", { ReadWindowConfigs: { seq: 1 } }],
         ["MediaIn", { MediaIn: { seq: 1, port: "p", descriptor: [1], data: [2] } }],
         ["MediaOut", { MediaOut: { seq: 1, port: "p", request: [1] } }],
         ["MediaFingerprint", { MediaFingerprint: { seq: 1, port: "p" } }],
@@ -610,6 +619,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ReadDocument: "0701",
         LoadConfig: "080101010102",
         ReadConfig: "0901",
+        LoadWindowConfig: "1e01027731056772617068020102",
+        ReadWindowConfigs: "1f01",
         MediaIn: "0a01017001010102",
         MediaOut: "0b0101700101",
         MediaFingerprint: "0c010170",
@@ -624,6 +635,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["DocumentChanged", { DocumentChanged: { envelopes: [], origin: "o" } }],
         ["Document", { Document: { in_reply_to: 1, pack: [1], spr: [2], ops: "o" } }],
         ["Config", { Config: { in_reply_to: 1, pack: [1], spr: [2], ops: "c" } }],
+        ["WindowConfigs", { WindowConfigs: { in_reply_to: 1, entries: [{ window_id: "w1", window_kind_id: "graph", envelope_pack: [1, 2] }, { window_id: "w2", window_kind_id: "graph", envelope_pack: [3] }] } }],
         ["ConfigChanged", { ConfigChanged: { envelopes: [], origin: "o" } }],
         ["ContextMenu", { ContextMenu: { in_reply_to: 1, items: [1] } }],
         ["Media", { Media: { in_reply_to: 1, port: "p", descriptor: [1], data: [2] } }],
@@ -643,6 +655,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         DocumentChanged: "0200016f",
         Document: "030101010102016f",
         Config: "0401010101020163",
+        WindowConfigs: "1801020277310567726170680201020277320567726170680103",
         ConfigChanged: "0500016f",
         ContextMenu: "06010101",
         Media: "0701017001010102",
@@ -659,6 +672,29 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
       for (const [label, value] of commandFixtures) expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandGoldenHex[label]);
       for (const [label, value] of frameFixtures) expect(hex(encodeAppFrame(value)), `AppFrame::${label}`).toBe(frameGoldenHex[label]);
+    });
+
+    it("matches shared concrete-window config persistence wire vectors", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧫️fixtures", "📡️channel", "🪟️window-config.json"), "utf8")) as Record<string, string>;
+      const hex = (bytes: Uint8Array) => Buffer.from(bytes).toString("hex");
+      expect(hex(encodeAppCommand({ LoadWindowConfig: { seq: 1, entry: { window_id: "w1", window_kind_id: "graph", envelope_pack: [1, 2] } } }))).toBe(fixture.loadWindowConfig);
+      expect(hex(encodeAppCommand({ ReadWindowConfigs: { seq: 1 } }))).toBe(fixture.readWindowConfigs);
+      expect(
+        hex(
+          encodeAppFrame({
+            WindowConfigs: {
+              in_reply_to: 1,
+              entries: [
+                { window_id: "w1", window_kind_id: "graph", envelope_pack: [1, 2] },
+                { window_id: "w2", window_kind_id: "graph", envelope_pack: [3] },
+              ],
+            },
+          }),
+        ),
+      ).toBe(fixture.windowConfigs);
     });
 
     /**
@@ -1042,7 +1078,87 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(seen[2]).toEqual({ LoadDocument: { seq: 3, pack: [1], spr: [2] } });
     });
 
-    it("caches the document pack from loadDocument()'s own arguments before any reply arrives", async () => {
+    it("loads and reads exact persisted-local window config envelopes", async () => {
+      const seen: AppCommandValue[] = [];
+      const expected = [
+        { window_id: "graph-a", window_kind_id: "graph", envelope_pack: [1, 2] },
+        { window_id: "graph-b", window_kind_id: "graph", envelope_pack: [3] },
+      ];
+      const handle = fakeHandle((_instanceId, commands) => {
+        seen.push(...commands);
+        const command = commands[0]!;
+        if ("ReadWindowConfigs" in command) return [{ WindowConfigs: { in_reply_to: command.ReadWindowConfigs.seq, entries: expected } }];
+        return [{ Done: { in_reply_to: Object.values(command)[0]!.seq } }];
+      });
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
+      const source = { window_id: "graph-a", window_kind_id: "graph", envelope_pack: [1, 2] };
+      await client.loadWindowConfig(source);
+      const actual = await client.readWindowConfigs();
+      source.envelope_pack.fill(255);
+      expect(seen).toEqual([
+        { LoadWindowConfig: { seq: 1, entry: { window_id: "graph-a", window_kind_id: "graph", envelope_pack: [1, 2] } } },
+        { ReadWindowConfigs: { seq: 2 } },
+      ]);
+      expect(actual).toEqual(expected);
+    });
+
+    it("publishes only accepted document cache candidates and owns both byte arrays", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/📦️document-cache/🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
+      const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/DocumentCacheAcceptanceV1`)!;
+      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate({ ...fixture, optimistic: true })).toBe(false);
+      const pair = (value: { pack: number[]; spr: number[] }) => ({ pack: Uint8Array.from(value.pack), spr: Uint8Array.from(value.spr) });
+      for (const row of fixture.cases) {
+        const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+        let sent = 0;
+        let refuseEnqueue = false;
+        const client = new AppChannelClient({
+          outcomes: broadcast.stream,
+          enqueue: (_instanceId: number, commands: Uint8Array[]) => {
+            if (refuseEnqueue) throw new Error("document-cache.enqueue");
+            sent = Object.values(decodeAppCommand(commands[0]!))[0]!.seq;
+          },
+        }, new AppChannelRequestSequence(), 1, "cache");
+        try {
+          const seed = pair(fixture.initial);
+          const initial = client.loadDocument(seed.pack, seed.spr);
+          broadcast.push({ instanceId: 1, frames: [encodeAppFrame({ Done: { in_reply_to: sent } })] });
+          await initial;
+          expect(client.documentPack()).toEqual(pair(fixture.initial));
+          const candidate = pair(fixture.candidate);
+          refuseEnqueue = row.outcome === "enqueue";
+          const loading = client.loadDocument(candidate.pack, candidate.spr);
+          const settled = loading.then(() => "resolved", () => "rejected");
+          candidate.pack.fill(255);
+          candidate.spr.fill(255);
+          expect(client.documentPack()).toEqual(pair(fixture.initial));
+          const document = { Document: { in_reply_to: sent, pack: fixture.reply.pack, spr: fixture.reply.spr, ops: "" } };
+          const error = { Error: { in_reply_to: sent, fault: [99], report: [] } };
+          if (row.outcome === "transport") broadcast.push({ instanceId: 1, error: new Error("document-cache.transport") });
+          else if (row.outcome !== "enqueue") broadcast.push({ instanceId: 1, frames: (
+            row.outcome === "done" ? [{ Done: { in_reply_to: sent } }] :
+            row.outcome === "document" ? [document] :
+            row.outcome === "error-document" ? [document, error] : [error]
+          ).map(encodeAppFrame) });
+          await settled;
+          expect(client.documentPack()).toEqual(pair(fixture[row.expected]));
+          const exposed = client.documentPack()!;
+          exposed.pack.fill(254);
+          exposed.spr.fill(254);
+          expect(client.documentPack()).toEqual(pair(fixture[row.expected]));
+          client.dispose();
+          expect(client.documentPack()).toBeNull();
+        } finally {
+          client.dispose();
+          broadcast.complete();
+        }
+      }
+    });
+
+    it("caches the document pack from accepted loadDocument arguments without a document echo", async () => {
       const handle = fakeHandle(() => [{ Done: { in_reply_to: 1 } }]);
       const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       expect(client.documentPack()).toBeNull();
@@ -1564,6 +1680,237 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
   }
 
   describe("document backbone worker wire", () => {
+    it("admits inference opening only after its exact worker receipt", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧬️schema/🔣️.json", source.url), "utf8"));
+      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      const { InferencePortOpeningMailboxV1, parseInferencePortClosedV1, parseInferencePortOpeningResultV1 } = await import("../../🔨️modules/💡️inference/🚪️opening/🟦️.ts");
+      expect(equal(parseInferencePortClosedV1(fixture.closed), fixture.closed)).toBe(true);
+      expect(equal(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(fixture.closed)), fixture.closed)).toBe(true);
+      for (const extra of [{ authority: "forged" }, { operationEpoch: 0 }, { kind: "inference-port-opened" }]) expect(() => parseInferencePortClosedV1({ ...fixture.closed, ...extra })).toThrow();
+      const sent: unknown[] = [];
+      const mailbox = new InferencePortOpeningMailboxV1((request) => { sent.push(request); });
+      try {
+        const pending = mailbox.open(fixture.request);
+        expect(equal(sent, [fixture.request])).toBe(true);
+        expect(mailbox.settle({ ...fixture.opened, operationEpoch: 20 })).toBe(false);
+        expect(mailbox.settle({ ...fixture.opened, scope: { ...fixture.opened.scope, documentId: "foreign" } })).toBe(false);
+        await expect(mailbox.open(fixture.request)).rejects.toThrow("pending");
+        expect(mailbox.settle(fixture.opened)).toBe(true);
+        expect(equal(await pending, fixture.opened)).toBe(true);
+        expect(mailbox.settle(fixture.opened)).toBe(false);
+        await expect(mailbox.open(fixture.request)).rejects.toThrow("replayed");
+        const refused = expect(mailbox.open({ ...fixture.request, operationEpoch: 22 })).rejects.toThrow("inference.capacity");
+        expect(mailbox.settle(fixture.opened)).toBe(false);
+        expect(mailbox.settle({ ...fixture.refused, operationEpoch: 22 })).toBe(true);
+        await refused;
+        const closed = expect(mailbox.open({ ...fixture.request, operationEpoch: 23 })).rejects.toThrow("retired");
+        mailbox.close("retired");
+        await closed;
+        expect(mailbox.settle(fixture.opened)).toBe(false);
+        expect(equal(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(fixture.opened)), fixture.opened)).toBe(true);
+        for (const extra of [{ code: "inference.capacity" }, { authority: "forged" }, { operationEpoch: 0 }]) expect(() => parseInferencePortOpeningResultV1({ ...fixture.opened, ...extra })).toThrow();
+        const valid = new Ajv({ strict: true }).compile(schema);
+        for (const [field, code] of [["indeterminate", "inference.capacity"], ["refused", "inference.transport"]]) {
+          const hostile = { ...fixture[field!], code };
+          expect(() => parseInferencePortOpeningResultV1(hostile)).toThrow();
+          expect(valid({ ...fixture, [field!]: hostile })).toBe(false);
+        }
+      } finally { mailbox.close("test cleanup"); }
+    });
+
+    it("projects real browser intent publications and preserves bounded owned inference effects", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json", source.url), "utf8"));
+      const valid = new Ajv({ strict: true }).compile(schema);
+      expect(valid(fixture), JSON.stringify(valid.errors)).toBe(true);
+      const { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, encodeBrowserActorHostEffectV1, decodeBrowserActorHostEffectsV1, publishBrowserActorHostEffectsV1, requireBrowserActorCommandBackboneProjectionV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts");
+      const { encodeAppFrame, encodePackValue } = await import("../../🟦️.ts");
+      const { parseBrowserActorActionResultV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts");
+      const emit = encodeAppFrame(fixture.publication.emit);
+      expect(decodeBrowserActorIntentPublicationV1(emit)).toEqual({ kind: "emit" });
+      expect(decodeBrowserActorIntentPublicationV1(encodeAppFrame(fixture.publication.error)).kind).toBe("error");
+      expect(() => decodeBrowserActorIntentPublicationV1(encodeAppFrame({ Error: { ...fixture.publication.error.Error, in_reply_to: 0 } }))).toThrow();
+      expect(() => decodeBrowserActorIntentPublicationV1(new Uint8Array([...emit, 0]))).toThrow();
+      expect(() => decodeBrowserActorIntentPublicationV1(encodeAppFrame({ Emit: { ...fixture.publication.emit.Emit, in_reply_to: 1 } }))).toThrow();
+      const invocation = encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } });
+      const emptyInvocation = decodeBrowserActorCommandPublicationV1(invocation, fixture.commandRequest.actionSequence);
+      expect(emptyInvocation.kind).toBe("invocation");
+      if (emptyInvocation.kind !== "invocation") throw new Error("expected invocation");
+      expect(() => requireBrowserActorCommandBackboneProjectionV1(emptyInvocation, [])).not.toThrow();
+      expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Error: { in_reply_to: fixture.commandRequest.actionSequence, fault: [], report: [] } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "error", reason: "action-guest-refused" });
+      expect(() => decodeBrowserActorCommandPublicationV1(invocation, fixture.commandRequest.actionSequence + 1)).toThrow();
+      expect(() => decodeBrowserActorCommandPublicationV1(new Uint8Array([...invocation, 0]), fixture.commandRequest.actionSequence)).toThrow();
+      expect(() => decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [1], messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence)).toThrow("action-publication-unprojected");
+      const mutationId = "command-mutation-1",
+        invocationId = "command:0:1",
+        forward = [1, 2],
+        inverse = [3, 4],
+        inverseVector = [1, 2, 3, 4],
+        mutation = {
+          id: mutationId,
+          document: "0",
+          baseVersion: 0,
+          invocationId,
+          diff: { schema: "demo/v1.operation", payload: forward },
+          inverse: { targetMutation: mutationId, inverseDiff: { schema: "demo/v1.operation.inverse", payload: inverseVector }, baseVersion: 0, dependencies: [], undoPolicy: "ExactBaseOnly" },
+          dependencies: ["prior"],
+          author: "actor-1",
+          timestamp: { actor: 7, physical_ms: 8, logical: 9 },
+        },
+        inverseGroup = { invocationId, mutations: [mutationId], inverseMutations: [mutation.inverse] },
+        mutationFrame = encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: Array.from(encodePackValue([mutation])), inverse_group: Array.from(encodePackValue(inverseGroup)) } }),
+        mutationPublication = decodeBrowserActorCommandPublicationV1(mutationFrame, fixture.commandRequest.actionSequence),
+        envelope = { mutation_id: mutationId, actor: "actor-1", dependencies: ["prior"], diff: { schema: "demo/v1", payload: Uint8Array.from(forward) }, inverse: { schema: "demo/v1", payload: Uint8Array.from(inverse) }, timestamp: { actor: 7n, physical_ms: 8n, logical: 9n } };
+      expect(mutationPublication.kind).toBe("invocation");
+      if (mutationPublication.kind !== "invocation") throw new Error("expected mutation invocation");
+      expect(() => requireBrowserActorCommandBackboneProjectionV1(mutationPublication, [envelope])).not.toThrow();
+      expect(() => requireBrowserActorCommandBackboneProjectionV1(mutationPublication, [])).toThrow("action-publication-unprojected");
+      expect(() => requireBrowserActorCommandBackboneProjectionV1(mutationPublication, [{ ...envelope, diff: { ...envelope.diff, payload: Uint8Array.of(9) } }])).toThrow("action-publication-unprojected");
+      expect(() => requireBrowserActorCommandBackboneProjectionV1(mutationPublication, [{ ...envelope, inverse: { ...envelope.inverse, payload: Uint8Array.of(9) } }])).toThrow("action-publication-unprojected");
+      const encoded = encodeBrowserActorHostEffectV1(fixture.publication.hostEffect);
+      expect(equal(encoded, Array.from(encodePackValue(fixture.publication.projectedEffect)))).toBe(true);
+      expect(equal(decodeBrowserActorHostEffectsV1([encoded]), [fixture.publication.projectedEffect])).toBe(true);
+      const external = encodeBrowserActorHostEffectV1(fixture.publication.externalHostEffect);
+      expect(equal(external, Array.from(encodePackValue(fixture.publication.externalProjectedEffect)))).toBe(true);
+      expect(equal(decodeBrowserActorHostEffectsV1([external]), [fixture.publication.externalProjectedEffect])).toBe(true);
+      for (const url of ["javascript:alert(1)", "data:text/html,script", "file:///secret", "/relative", "https://user:secret@example.invalid", "https://example.invalid/\nforged", "https://example.invalid/" + "a".repeat(2048)]) {
+        expect(() => encodeBrowserActorHostEffectV1({ tag: "open-external-url", val: { url } })).toThrow();
+      }
+      const result = { ...fixture.acknowledged, hostEffects: [encoded] };
+      expect(equal(parseBrowserActorActionResultV1(result), result)).toBe(true);
+      expect(result.outcome).toBe("guest-applied");
+      expect(() => parseBrowserActorActionResultV1({ ...result, outcome: "acknowledged" })).toThrow();
+      expect(() => parseBrowserActorActionResultV1({ ...fixture.rejected, hostEffects: [encoded] })).toThrow();
+      for (const effect of [
+        { ...fixture.publication.hostEffect, val: { kind: "foreign" } },
+        { ...fixture.publication.hostEffect, val: { kind: "gis-map-bounds-region", documentId: "forged" } },
+        { tag: "invoke-extension", val: {} },
+        { tag: "publish-event", val: {} },
+      ]) expect(() => encodeBrowserActorHostEffectV1(effect)).toThrow();
+      expect(() => decodeBrowserActorHostEffectsV1([[...encoded, 0]])).toThrow();
+      expect(() => decodeBrowserActorHostEffectsV1(new Array(65).fill(encoded))).toThrow();
+      expect(() => parseBrowserActorActionResultV1({ ...result, hostEffects: [new Array(262144).fill(1), [1]] })).toThrow();
+      const published: unknown[] = [];
+      const publish = (effect: unknown) => { published.push(effect); };
+      await expect(publishBrowserActorHostEffectsV1([encoded], () => false, publish)).rejects.toThrow("retired");
+      expect(published).toEqual([]);
+      await expect(publishBrowserActorHostEffectsV1([encoded, [...encoded, 0]], () => true, publish)).rejects.toThrow();
+      expect(published).toEqual([]);
+      await publishBrowserActorHostEffectsV1([encoded], () => true, publish);
+      expect(equal(published, [fixture.publication.projectedEffect])).toBe(true);
+      await expect(publishBrowserActorHostEffectsV1([encoded, encoded], () => true, publish)).rejects.toThrow();
+      expect(equal(published, [fixture.publication.projectedEffect])).toBe(true);
+    });
+
+    it("settles only the exact live browser intent mailbox and retires pending work", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const { BrowserActorActionMailboxV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts");
+      const { actionSequence: _sequence, ...owner } = fixture.request;
+      const intent = { ...fixture.uiIntent, seq: BigInt(fixture.uiIntent.seq) };
+      const sent: any[] = [];
+      const mailbox = new BrowserActorActionMailboxV1((request) => { sent.push(request); }, 1000);
+      try {
+        const pending = mailbox.dispatchIntent(owner, "map", intent);
+        expect(sent).toHaveLength(1);
+        expect(sent[0].actionSequence).toBe(1);
+        await expect(mailbox.dispatchIntent(owner, "map", intent)).rejects.toThrow("pending");
+        for (const hostile of fixture.hostileResults.slice(0, 3)) expect(mailbox.settle({ ...hostile, actionSequence: 1 })).toBe(false);
+        expect(mailbox.settle(fixture.acknowledged)).toBe(false);
+        const acknowledged = { ...fixture.acknowledged, actionSequence: 1 };
+        expect(mailbox.settle(acknowledged)).toBe(true);
+        expect(equal(await pending, acknowledged)).toBe(true);
+        expect(mailbox.settle(acknowledged)).toBe(false);
+        const next = mailbox.dispatchIntent(owner, "map", intent);
+        const retired = expect(next).rejects.toThrow("retired");
+        expect(sent[1].actionSequence).toBe(2);
+        mailbox.close("retired");
+        await retired;
+        expect(mailbox.settle({ ...fixture.acknowledged, actionSequence: 2 })).toBe(false);
+        await expect(mailbox.dispatchIntent(owner, "map", intent)).rejects.toThrow("closed");
+      } finally {
+        mailbox.close("test cleanup");
+      }
+      const failing = new BrowserActorActionMailboxV1(() => { throw new Error("enqueue failed"); });
+      await expect(failing.dispatchIntent(owner, "map", intent)).rejects.toThrow("enqueue failed");
+      failing.close("test cleanup");
+      const retried: number[] = [];
+      const retry = new BrowserActorActionMailboxV1((request) => { retried.push(request.actionSequence); });
+      try {
+        await expect(retry.dispatchIntent(owner, "map", { ...intent, revision: 4 })).rejects.toThrow("stale surface");
+        expect(retried).toEqual([]);
+        const refused = expect(retry.dispatchIntent(owner, "map", intent)).rejects.toThrow(fixture.rejected.reason);
+        expect(retried).toEqual([2]);
+        expect(retry.settle({ ...fixture.rejected, actionSequence: 2 })).toBe(true);
+        await refused;
+        const next = retry.dispatchIntent(owner, "map", intent);
+        expect(retried).toEqual([2, 3]);
+        expect(retry.settle({ ...fixture.acknowledged, actionSequence: 3 })).toBe(true);
+        await next;
+      } finally {
+        retry.close("test cleanup");
+      }
+      vi.useFakeTimers();
+      const timed = new BrowserActorActionMailboxV1(() => {}, 10);
+      try {
+        const expired = expect(timed.dispatchIntent(owner, "map", intent)).rejects.toThrow("unconfirmed");
+        await vi.advanceTimersByTimeAsync(10);
+        await expired;
+        await expect(timed.dispatchIntent(owner, "map", intent)).rejects.toThrow("closed");
+      } finally {
+        timed.close("test cleanup");
+        vi.useRealTimers();
+      }
+    });
+
+    it("preserves the complete browser UI intent and its unsigned sequence above JSON precision", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json", source.url), "utf8"));
+      const valid = new Ajv({ strict: true }).compile(schema);
+      expect(valid(fixture), JSON.stringify(valid.errors)).toBe(true);
+      const { createBrowserActorUiIntentRequestV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts");
+      const { decodePackValue, packUInt } = await import("../../🟦️.ts");
+      const intent = { ...fixture.uiIntent, seq: BigInt(fixture.uiIntent.seq) };
+      const request = createBrowserActorUiIntentRequestV1(fixture.request, "map", intent);
+      expect(request.actionSequence).toBe(9);
+      expect(equal(decodePackValue(new Uint8Array(request.payload.bytes)), { ...intent, surface: "0:map", revision: packUInt(3n), node: packUInt(42n), action: { ...intent.action, version: packUInt(1n) }, seq: packUInt(0xffffffffffffffffn) })).toBe(true);
+      expect(intent.surface).toBe("map");
+      expect(valid({ ...fixture, uiIntent: { ...fixture.uiIntent, seq: "0" } })).toBe(true);
+      expect((decodePackValue(new Uint8Array(createBrowserActorUiIntentRequestV1(fixture.request, "map", { ...intent, seq: 0n }).payload.bytes)) as Readonly<Record<string, unknown>>).seq).toEqual(packUInt(0n));
+      for (const extra of [{ surface: "other" }, { revision: 4 }, { node: -1 }, { seq: 0x10000000000000000n }]) expect(() => createBrowserActorUiIntentRequestV1(fixture.request, "map", { ...intent, ...extra })).toThrow();
+      for (const extra of [{ activationGeneration: "18446744073709551616" }, { actionSequence: 9007199254740992 }, { surfaceRevision: 9007199254740992 }]) {
+        expect(valid({ ...fixture, request: { ...fixture.request, ...extra } })).toBe(false);
+        expect(() => createBrowserActorUiIntentRequestV1({ ...fixture.request, ...extra }, "map", intent)).toThrow();
+      }
+    });
+
+    it("admits only exact direct browser intent owners on the private worker wire", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const request = { ...fixture.request, clientInstanceId: "12345678-1234-4123-8123-123456789abc" };
+      const response = { ...fixture.acknowledged, clientInstanceId: "12345678-1234-4123-8123-123456789abc" };
+      expect(equal(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request)), request)).toBe(true);
+      expect(equal(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(response)), response)).toBe(true);
+      for (const extra of [{ clientInstanceId: "" }, { authority: "forged" }, { command: [1] }, { surfaceRevision: 0 }, { payload: { kind: "ui-intent", bytes: [] } }]) {
+        expect(() => decodeBackboneWorkerRequest(encodeBackboneWorkerRequest({ ...request, ...extra }))).toThrow();
+      }
+      for (const extra of [{ clientInstanceId: "" }, { authority: "forged" }, { outcome: "rejected" }, { actionSequence: 0 }]) {
+        expect(() => decodeBackboneWorkerResponse(encodeBackboneWorkerResponse({ ...response, ...extra }))).toThrow();
+      }
+    });
+
     const fromHex = (hex: string): Uint8Array => new Uint8Array(Buffer.from(hex, "hex"));
 
     it("retains one exact causal OpBinary through actor send and receive frames", () => {
@@ -1729,11 +2076,16 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
         componentSha256: "2".repeat(64),
         descriptorSha256: "3".repeat(64),
         browserActorSha256: "4".repeat(64),
+        activeCheckpointId: "5".repeat(64),
+        descriptorDigestV1: "6".repeat(64),
+        frontier: { documentId: "same-document", headEditOrdinal: 7, headEditId: "edit-7", lastCommitSeq: 7, chainHash: new Array(32).fill(7) },
         uiRevision: 7,
       };
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(mounted))).toEqual(mounted);
       const mountedUnknown = encodePackValue({ ...mounted, grant: "forbidden" });
       expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...mountedUnknown]))).toThrow("invalid mounted UI fields");
+      const mountedForeignFrontier = encodePackValue({ ...mounted, frontier: { ...mounted.frontier, documentId: "foreign" } });
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...mountedForeignFrontier]))).toThrow("invalid mounted UI identity");
 
       const missing = new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue({ kind: "event", documentId: "same-document", event: event.event })]);
       expect(() => decodeBackboneWorkerResponse(missing)).toThrow("invalid client instance id");

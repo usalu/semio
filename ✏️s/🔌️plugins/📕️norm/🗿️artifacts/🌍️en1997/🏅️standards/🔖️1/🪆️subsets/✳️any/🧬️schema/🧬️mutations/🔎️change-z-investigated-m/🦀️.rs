@@ -1,9 +1,8 @@
 //! 🍁 `change-z-investigated-m` payload — changes the En1997 document's `z_investigated_m` (investigated depth [m]).
 
-
-use crate::En1997Snapshot;
 use crate::diff::En1997Diff;
 use crate::mutations::En1997Mutation;
+use crate::En1997Snapshot;
 //#region 🔖️ChangeZInvestigatedM
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

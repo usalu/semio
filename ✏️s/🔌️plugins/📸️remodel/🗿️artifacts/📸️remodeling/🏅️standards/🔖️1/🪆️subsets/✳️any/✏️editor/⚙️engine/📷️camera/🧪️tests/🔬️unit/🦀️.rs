@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn lcg(state: &mut u64) -> f64 {

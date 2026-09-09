@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::algebra::{Mat3d, vec3d_cross, vec3d_normalize, vec3d_sub};
+use crate::algebra::{vec3d_cross, vec3d_normalize, vec3d_sub, Mat3d};
 use crate::lie::So3;
 use remodeling_camera::Distortion;
 use remodeling_image::{build_pyramid, scharr_gradients, warp_affine};

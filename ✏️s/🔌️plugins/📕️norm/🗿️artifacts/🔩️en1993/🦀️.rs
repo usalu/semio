@@ -5,8 +5,6 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-#[cfg(test)]
-extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -205,172 +203,172 @@ pub mod standards {
 
                         #[path = "."]
                         pub mod update_pile_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️update-pile-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️update-pile-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️update-pile-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️update-pile-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_weld_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️update-weld-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️update-weld-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️update-weld-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️update-weld-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_bridge_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️update-bridge-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️update-bridge-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️update-bridge-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️update-bridge-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_annex {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_member_properties {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️update-member-properties/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️update-member-properties/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️update-member-properties/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️update-member-properties/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_crane_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-crane-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-crane-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-crane-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-crane-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_hss_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬜️update-hss-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬜️update-hss-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬜️update-hss-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬜️update-hss-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_through_thickness_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️update-through-thickness-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️update-through-thickness-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️update-through-thickness-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️update-through-thickness-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_cold_formed_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥶️update-cold-formed-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥶️update-cold-formed-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥶️update-cold-formed-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥶️update-cold-formed-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_fatigue_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️update-fatigue-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️update-fatigue-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️update-fatigue-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️update-fatigue-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_tension_component_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️update-tension-component-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️update-tension-component-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️update-tension-component-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️update-tension-component-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_fire_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️update-fire-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️update-fire-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️update-fire-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️update-fire-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_bolt_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️update-bolt-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️update-bolt-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️update-bolt-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️update-bolt-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_tower_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️update-tower-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️update-tower-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️update-tower-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️update-tower-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_silo_shell_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️update-silo-shell-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️update-silo-shell-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️update-silo-shell-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️update-silo-shell-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_plated_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️update-plated-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️update-plated-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️update-plated-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️update-plated-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                         #[path = "."]
                         pub mod update_stainless_inputs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✨️update-stainless-inputs/🦀️.rs"]
+                            mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✨️update-stainless-inputs/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✨️update-stainless-inputs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✨️update-stainless-inputs/🦀️.rs"]
-                            mod component;
                             pub use component::*;
                         }
                     }

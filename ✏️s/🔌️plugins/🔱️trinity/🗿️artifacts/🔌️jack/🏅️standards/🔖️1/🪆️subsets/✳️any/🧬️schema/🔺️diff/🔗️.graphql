@@ -9,10 +9,6 @@ type JackDiff {
   nodes: JackNodesDelta @state(class: ARTIFACT)
   edges: JackEdgesDelta @state(class: ARTIFACT)
   rootNodeId: String @state(class: ARTIFACT)
-  jackQuery: String @state(class: CONFIG)
-  lodModeByWindow: [StringOptEntry!] @state(class: CONFIG)
-  viewportCamera: Camera @state(class: CONFIG)
-  editorSelection: JackEditorSelection @state(class: CONFIG)
 }
 
 type JackNodesDelta {
@@ -59,10 +55,6 @@ type StringOptEntry {
   value: String
 }
 
-type JackEditorSelection {
-  start: Int!
-  end: Int!
-}
 
 type Camera {
   x: Float!

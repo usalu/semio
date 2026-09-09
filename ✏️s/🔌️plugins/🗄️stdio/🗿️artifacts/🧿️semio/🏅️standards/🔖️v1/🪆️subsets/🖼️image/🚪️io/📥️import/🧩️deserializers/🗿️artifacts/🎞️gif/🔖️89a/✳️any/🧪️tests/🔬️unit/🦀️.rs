@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
 

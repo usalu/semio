@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::SHOOTING_DOCUMENT_SCHEMA;
 

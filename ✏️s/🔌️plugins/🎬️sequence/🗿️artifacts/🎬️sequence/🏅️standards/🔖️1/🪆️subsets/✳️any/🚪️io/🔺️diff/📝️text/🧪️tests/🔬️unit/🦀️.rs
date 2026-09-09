@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{SequenceStep, StepParams, default_snapshot};
+use crate::{default_snapshot, SequenceStep, StepParams};
 use protocol::Mutation;
 
 #[semio_framework_async_macros::async_test]

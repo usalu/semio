@@ -1,11 +1,11 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `patch-nodes`.
 
-use semio_s_artifact_trinity_jack::{Graph, JackSnapshot};
 use crate::rewriting_snapshot_mutations;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::RewritingSnapshot;
-use crate::editor::rewriting::config::RewritingConfigMutation;
 use semio_framework_plugin::Emit;
+use semio_framework_plugin::NoConfigMutation;
+use semio_s_artifact_trinity_jack::{Graph, JackSnapshot};
 
 fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
     let fixture = JackSnapshot::from_json(fixture_json).ok()?;
@@ -24,7 +24,7 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 
-pub(crate) fn patch_nodes(state: &RewritingSnapshot, node_ids: &[String], field: &str, value: &str) -> Emit<RewriteRuleMutation, RewritingConfigMutation> {
+pub(crate) fn patch_nodes(state: &RewritingSnapshot, node_ids: &[String], field: &str, value: &str) -> Emit<RewriteRuleMutation, NoConfigMutation> {
     let trimmed = value.trim();
     if node_ids.is_empty() || field.is_empty() || trimmed.is_empty() {
         return Emit::default();

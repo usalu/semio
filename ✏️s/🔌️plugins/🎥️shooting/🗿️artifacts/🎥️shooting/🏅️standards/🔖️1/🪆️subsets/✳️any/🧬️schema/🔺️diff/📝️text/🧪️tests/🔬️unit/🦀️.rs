@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// ⚖️ LAW: an empty diff is a no-operation on the snapshot.

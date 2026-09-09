@@ -4,9 +4,9 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact mutation. Must
 //! not import anything from the sibling mutation-capable surface.
 
-use crate::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use crate::viewer::json_i_json::modes::view;
 use crate::viewer::json_i_json::modes::view::windows::main;
+use crate::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 
 //#region 🔖️Dialect

@@ -17,7 +17,7 @@
   "deltaTK": null,
   "constructionActivity": null,
   "accidentalMassT": null,
-  "accidentalSpeedKmH": 50.0,
+  "accidentalSpeedKmH": 50,
   "bridgeLane": null,
   "bridgeSpanM": null,
   "bridgeLaneWidthM": null,
@@ -31,6 +31,5 @@
   "siloMu": null,
   "siloK": null,
   "cS": null,
-  "cD": null,
-  "selectedCheckIndex": null
+  "cD": null
 }

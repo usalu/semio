@@ -1,9 +1,9 @@
 //! 🔺️ Playbook artifact — sparse field-delta diff codec and apply/absorb.
 
+use crate::playbook::PlaybookStep;
 use crate::schema::diff::PlaybookDiff;
 use crate::schema::snapshot::PlaybookSnapshot;
 use crate::schema::PlaybookArtifact;
-use crate::playbook::PlaybookStep;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️Apply
 impl PlaybookDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &PlaybookArtifact) -> protocol::MutationApplyResult<PlaybookArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -38,12 +38,6 @@ impl PlaybookDiff {
             }
             if let Some(flow) = &self.flow {
                 next.flow = flow.clone();
-            }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
-            }
-            if let Some(value) = &self.contributions_json {
-                next.contributions_json = value.clone();
             }
             next
         })
@@ -96,8 +90,6 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
         take!(title);
         take!(document);
         take!(flow);
-        take!(selected_ids);
-        take!(contributions_json);
     }
 }
 //#endregion 🔖️Apply

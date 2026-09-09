@@ -8,7 +8,6 @@ use crate::En1997Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1997 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
@@ -55,13 +54,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1997Buil
 pub fn en1997_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1997.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor
@@ -73,12 +66,12 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::standards::v1::subsets::any::schema::{check_shallow_foundation, part_1, part_2, DesignApproach};
 /// 📋️ Full EN 1997 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1997Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport};
+use crate::standards::v1::subsets::any::schema::{check_shallow_foundation, part_1, part_2, DesignApproach};
 /// 📋️ Full EN 1997 check across bearing, sliding, settlement, pile axial (part 1), and ground investigation adequacy (part 2).
 #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
 pub fn check_full_geotechnical(

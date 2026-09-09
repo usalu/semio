@@ -4,16 +4,16 @@
 //! read-mostly for this first pass — exaggeration and the `map:in` overlay layer are the only
 //! editable/undoable document state (see `crate`).
 
+use crate::editor::gis3d::config::Gis3dConfig;
 /// ⚠️ Fixed opportunistically (was a pre-existing, ticket-predating unresolved `crate::modules`
 /// import — see `💡️inferences/🦀️.rs`'s identical fix for the full story). Real home:
 /// `crate::schema`'s `🔖️TerrainDescriptor` region.
 use crate::schema::{build_terrain_scene_json, TerrainDescriptorJson};
 use crate::standards::v1::subsets::any::schema::inferences::parse_descriptor;
 use crate::GisTerrainSnapshot;
-use crate::editor::gis3d::config::Gis3dConfig;
-use semio_framework_surface::terrain::projection;
-use semio_framework_plugin::{scene_surface, World3dScene, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
+use semio_framework_plugin::{scene_surface, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, World3dScene};
+use semio_framework_surface::terrain::projection;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants

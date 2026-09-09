@@ -2,9 +2,9 @@
   "mutation": "rotateObject",
   "id": "object-a",
   "newOrientation": [
-    0,
-    0,
-    1,
-    0
+    0.0,
+    0.0,
+    1.0,
+    0.0
   ]
 }

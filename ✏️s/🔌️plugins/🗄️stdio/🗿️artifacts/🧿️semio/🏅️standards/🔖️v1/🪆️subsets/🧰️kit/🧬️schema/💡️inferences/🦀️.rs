@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::entries::{compute_semio_kit_entries};
+use super::entries::compute_semio_kit_entries;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio kit snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃️entries/` slug dir).
@@ -69,13 +69,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::kit::schema::SemioKitBu
 pub fn semio_kit_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.kit.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

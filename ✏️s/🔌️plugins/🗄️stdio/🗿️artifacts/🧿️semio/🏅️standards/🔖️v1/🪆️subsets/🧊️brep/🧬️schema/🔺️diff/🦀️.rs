@@ -1087,7 +1087,8 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioBrepDiff> {
 
     let mut b = SemioBrepSnapshot::default();
     b.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } }, BrepVertex { tol: 1e-7, id: "v-added".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }];
-    b.edges = vec![BrepEdge { tol: 1e-7,
+    b.edges = vec![BrepEdge {
+        tol: 1e-7,
         id: "e1".into(),
         start_vertex: "v1".into(),
         end_vertex: "v-added".into(),

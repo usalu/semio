@@ -45,6 +45,4 @@ export interface En1995Diff {
   aVertMS2?: number;
   /** @state artifact */
   nCyclesBridge?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

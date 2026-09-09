@@ -2,7 +2,6 @@
 //! value) at a FINAL-state index in the EN 1990 document's `q_k` table (an intrinsically ordered,
 //! anonymous collection — no stable id on `En1990QkEntry`).
 
-
 use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload

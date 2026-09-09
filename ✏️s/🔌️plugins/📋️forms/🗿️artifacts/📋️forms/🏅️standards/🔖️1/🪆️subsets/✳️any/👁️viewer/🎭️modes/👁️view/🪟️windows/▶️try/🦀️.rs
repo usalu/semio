@@ -66,13 +66,19 @@ fn render_view_question(question: &FormQuestion) -> UiAssemblyResult<ui::BuiltNo
 
 pub fn render(document: &FormsSnapshot) -> UiAssemblyResult<ui::BuiltNode> {
     let steps = forms_steps(document);
-    if steps.is_empty() { return text("No steps in this form.", false); }
+    if steps.is_empty() {
+        return text("No steps in this form.", false);
+    }
     let mut column = admit(ui::column().try_child(text(document.title.as_deref().unwrap_or("Form"), true)?))?;
     for step in &steps {
         let mut section = admit(ui::column().try_id(format!("forms-view-try.step.{}", step.id)))?;
         section = admit(section.try_child(text(&step.title, true)?))?;
-        if let Some(description) = &step.description { section = admit(section.try_child(text(description, false)?))?; }
-        for question in &step.blocks { section = admit(section.try_child(render_view_question(question)?))?; }
+        if let Some(description) = &step.description {
+            section = admit(section.try_child(text(description, false)?))?;
+        }
+        for question in &step.blocks {
+            section = admit(section.try_child(render_view_question(question)?))?;
+        }
         column = admit(column.try_child(section))?;
     }
     admit(column.try_build())

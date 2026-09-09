@@ -17,7 +17,13 @@ impl protocol::MutationKind<RemodelingConfig, RemodelingConfigMutation> for SetC
         next.camera = self.camera.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &RemodelingConfig) -> Vec<RemodelingConfigMutation> { vec![RemodelingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Set Camera".into() }
-    fn target(&self) -> Vec<String> { vec!["camera".into()] }
+    fn inverse(&self, base: &RemodelingConfig) -> Vec<RemodelingConfigMutation> {
+        vec![RemodelingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Camera".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["camera".into()]
+    }
 }

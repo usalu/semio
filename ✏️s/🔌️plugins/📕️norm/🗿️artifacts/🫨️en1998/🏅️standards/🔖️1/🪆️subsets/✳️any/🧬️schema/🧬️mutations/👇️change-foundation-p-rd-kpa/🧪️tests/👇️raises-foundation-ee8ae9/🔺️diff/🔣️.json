@@ -39,7 +39,7 @@
   "towerQNominal": null,
   "towerMassT": null,
   "foundationAreaM2": null,
-  "foundationPRdKpa": 625.0,
+  "foundationPRdKpa": 625,
   "foundationHEdKn": null,
   "foundationHRdKn": null,
   "kFoundation": null,
@@ -48,6 +48,5 @@
   "wallPhiDeg": null,
   "wallSoilGammaKnM3": null,
   "wallR": null,
-  "wallHRdKn": null,
-  "selectedCheckIndex": null
+  "wallHRdKn": null
 }

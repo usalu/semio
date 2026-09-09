@@ -1,14 +1,12 @@
 //! 🪣️ `fill-build-tick` command.
 
-use crate::Puzzle3dMutation;
-use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation};
+use dsl::os_pack::json::Value;
 use crate::editor::puzzle3d::precompute::FILL_JOB_KIND;
 use crate::editor::puzzle3d::puzzle3d_fill_build_scope;
 use crate::editor::puzzle3d::puzzle3d_fill_tool_active;
-use crate::editor::puzzle3d::{Puzzle3dActionCtx, Puzzle3dPlayApp};
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::{Effect, JobPlacement};
-use semio_framework_plugin::Emit;
 
 /// 🪣️ No catch-up `setFillCount` dispatch here: `apply_puzzle3d_fill_count` always clamps the
 /// committed count to what's available at commit time, so `fill_count` can never run ahead of
@@ -31,28 +29,21 @@ pub fn fill_build_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
     *ctx.ui_scope = if changed || spawned { puzzle3d_fill_build_scope() } else { UiDirtyScope::None };
 }
 
-/// ♻️ Polls a restored immutable fill plan without rebuilding the document-shaped scene bridge.
-pub fn fill_build_tick_cached(app: &Puzzle3dPlayApp, config: &Puzzle3dConfig) -> Option<Emit<Puzzle3dMutation, Puzzle3dConfigMutation>> {
-    if !puzzle3d_fill_tool_active(config) {
-        return Some(Emit { ui_scope: UiDirtyScope::None, ..Default::default() });
-    }
-    let mut precompute = app.precompute.borrow_mut();
-    if !precompute.restore_persisted_fill(&config.fill_checkpoint) {
-        return None;
-    }
-    precompute.set_fill_applied_count(config.fill_applied_count);
-    let changed = precompute.poll_fill_job();
-    let spawn = precompute.enqueue_fill_job();
-    let checkpoint = precompute.fill_checkpoint_bytes();
-    drop(precompute);
-    let spawned = spawn.is_some();
-    let effects = spawn.into_iter().map(|(job, input)| Effect::SpawnJob { job, kind: FILL_JOB_KIND.into(), input, placement: JobPlacement::Isolated }).collect();
-    let config_mutations = if checkpoint == config.fill_checkpoint {
-        Vec::new()
-    } else {
-        let mut next = config.clone();
-        next.fill_checkpoint = checkpoint;
-        vec![Puzzle3dConfigMutation::Snapshot { config: next }]
+/// 🛑 `cancelFillBuild` — stops the live background fill job, and only that one: the action carries the
+/// job's own `(job, operation, generation)` triple, so a cancel dispatched against a superseded run is a
+/// no-op instead of killing the plan the user is looking at. Same convention as `🔋️energy`'s
+/// `cancel-energy-simulation` identity args feeding `Effect::CancelJob`.
+pub fn cancel_fill_build(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+    let identity = |key: &str| args.and_then(|args| args.get(key)).and_then(Value::as_u64);
+    let (Some(job), Some(operation), Some(generation)) = (identity("job"), identity("operation"), identity("generation")) else {
+        *ctx.ui_scope = UiDirtyScope::None;
+        return;
     };
-    Some(Emit { config_mutations, effects, ui_scope: if changed || spawned { puzzle3d_fill_build_scope() } else { UiDirtyScope::None }, ..Default::default() })
+    let cancelled = ctx.app.precompute.borrow_mut().cancel_fill_job_for(job, operation, generation);
+    if !cancelled {
+        *ctx.ui_scope = UiDirtyScope::None;
+        return;
+    }
+    ctx.effects.push(Effect::CancelJob { job });
+    *ctx.ui_scope = puzzle3d_fill_build_scope();
 }

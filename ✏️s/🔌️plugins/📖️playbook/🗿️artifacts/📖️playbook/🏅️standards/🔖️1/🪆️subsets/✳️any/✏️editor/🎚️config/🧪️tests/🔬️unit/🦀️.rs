@@ -1,9 +1,10 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn playbook_config_default_matches_the_existing_runtime_defaults() {
     let config = PlaybookConfig::default();
+    let contributions: serde_json::Value = serde_json::from_str(&config.contributions_json).expect("default contributions JSON");
+    assert_eq!(contributions, serde_json::json!([]));
 }
 
 #[semio_framework_async_macros::async_test]

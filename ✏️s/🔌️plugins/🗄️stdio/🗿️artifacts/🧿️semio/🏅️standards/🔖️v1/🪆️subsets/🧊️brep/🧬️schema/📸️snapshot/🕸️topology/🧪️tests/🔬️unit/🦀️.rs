@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
-use crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn null_coedge() -> CoedgeId {

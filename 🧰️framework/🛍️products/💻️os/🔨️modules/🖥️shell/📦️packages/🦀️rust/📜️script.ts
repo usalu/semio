@@ -121,11 +121,11 @@ function renderedMirrorExportIds(root: string): string[] {
   return [...readFileSync(path, "utf8").matchAll(/^export type ([A-Za-z0-9_]+)/gmu)].map((match) => match[1]!);
 }
 
-/** 🧬️ Every `parse<ExportId>` the schema module's TypeScript face exports. */
-function typescriptParserExportIds(root: string): string[] {
+/** 🧬️ Every parser covering an owned shell export; canonical config facade reexports stay external. */
+function typescriptParserExportIds(root: string, owned: readonly string[]): string[] {
   const source = readFileSync(schemaModulePath(root, "🟦️.ts"), "utf8");
   const local = [...source.matchAll(/^export const parse([A-Za-z0-9_]+) = defineParser</gmu)].map((match) => match[1]!);
-  const reexported = [...source.matchAll(/^export \{([^}]+)\} from /gmu)].flatMap((match) => match[1]!.split(",").map((name) => name.trim()).filter((name) => /^parse[A-Za-z0-9_]+$/u.test(name)).map((name) => name.slice("parse".length)));
+  const reexported = [...source.matchAll(/^export \{([^}]+)\} from /gmu)].flatMap((match) => match[1]!.split(",").map((name) => name.trim()).filter((name) => /^parse[A-Za-z0-9_]+$/u.test(name)).map((name) => name.slice("parse".length))).filter((name) => owned.includes(name));
   return [...new Set([...local, ...reexported])];
 }
 
@@ -152,7 +152,7 @@ class SchemaCheckScript extends BundleScript {
     if (declared.length === 0) problems.push("🔣️.json declares no `$defs` exports");
     problems.push(...reportSetDifference("the Rust registry in 🧬️schema/🦀️.rs", declared, rustRegistryExportIds(this.root).sort()));
     problems.push(...reportSetDifference("the rendered mirror 🤖️generated/🟦️.ts", declared, renderedMirrorExportIds(this.root).sort()));
-    problems.push(...reportSetDifference("the parsers in 🧬️schema/🟦️.ts", declared, typescriptParserExportIds(this.root).sort()));
+    problems.push(...reportSetDifference("the parsers in 🧬️schema/🟦️.ts", declared, typescriptParserExportIds(this.root, declared).sort()));
     if (problems.length > 0) {
       for (const problem of problems) console.error(`framework-os-shell schema-check: ${problem}`);
       process.exit(1);

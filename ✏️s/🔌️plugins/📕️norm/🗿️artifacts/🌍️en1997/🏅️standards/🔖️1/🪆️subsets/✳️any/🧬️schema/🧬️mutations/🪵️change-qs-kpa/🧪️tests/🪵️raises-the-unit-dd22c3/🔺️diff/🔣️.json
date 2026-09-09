@@ -16,11 +16,10 @@
   "nPileEdKn": null,
   "alphaS": null,
   "pileDM": null,
-  "qSKpa": 120.0,
+  "qSKpa": 120,
   "pileLM": null,
   "qBKpa": null,
   "pileBaseAreaM2": null,
   "pileNProfiles": null,
-  "zInvestigatedM": null,
-  "selectedCheckIndex": null
+  "zInvestigatedM": null
 }

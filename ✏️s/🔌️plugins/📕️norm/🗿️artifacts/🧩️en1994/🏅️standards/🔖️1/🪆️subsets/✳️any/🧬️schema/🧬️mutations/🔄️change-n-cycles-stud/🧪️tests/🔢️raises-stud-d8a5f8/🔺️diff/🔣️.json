@@ -20,7 +20,6 @@
   "vEdPerStudKn": null,
   "spanM": null,
   "fYMpa": null,
-  "nCyclesStud": 5000000.0,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "nCyclesStud": 5000000,
+  "deltaTauStudMpa": null
 }

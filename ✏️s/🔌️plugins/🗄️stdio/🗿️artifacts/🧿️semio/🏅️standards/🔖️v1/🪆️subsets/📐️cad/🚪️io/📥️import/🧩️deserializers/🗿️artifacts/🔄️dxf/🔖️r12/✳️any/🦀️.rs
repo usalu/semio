@@ -19,13 +19,13 @@
 //!   `unknown_group_codes` when present) — `CadEntityRecord.handle` is synthesized sequentially
 //!   (`"E{n}"` top-level, `"B{block}#{n}"` inside a block), a documented synthetic identity.
 
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_dxf::{
     schema::snapshot::{DxfBlock, DxfEntity, DxfLayer, DxfValue, DxfVertex},
     DxfSnapshot,
 };
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
@@ -33,14 +33,11 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 //#region 🔖️OtherGroupCodes
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn code_f64(codes: &[(i32, DxfValue)], code: i32) -> f64 {
-    codes
-        .iter()
-        .find(|(c, _)| *c == code)
-        .map_or(0.0, |(_, v)| match v {
-            DxfValue::Double { value } => *value,
-            DxfValue::Int { value } => *value as f64,
-            _ => 0.0,
-        })
+    codes.iter().find(|(c, _)| *c == code).map_or(0.0, |(_, v)| match v {
+        DxfValue::Double { value } => *value,
+        DxfValue::Int { value } => *value as f64,
+        _ => 0.0,
+    })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn code_str(codes: &[(i32, DxfValue)], code: i32) -> String {

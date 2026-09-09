@@ -6,17 +6,25 @@
   "additionalProperties": false,
   "required": [
     "wiresFixture",
-    "boardFixture"
+    "content",
+    "camera",
+    "meta"
   ],
   "properties": {
     "wiresFixture": {
-      "title": "DslValue",
-      "type": "object",
+      "$ref": "https://semio.tech/schema/framework/value/schema.json",
       "x-semio-state": "artifact"
     },
-    "boardFixture": {
-      "title": "DslValue",
-      "type": "object",
+    "content": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact"
+    },
+    "camera": {
+      "$ref": "https://semio.tech/schema/framework/value/schema.json",
+      "x-semio-state": "artifact"
+    },
+    "meta": {
+      "$ref": "https://semio.tech/schema/framework/value/schema.json",
       "x-semio-state": "artifact"
     }
   },

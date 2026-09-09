@@ -23,7 +23,16 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 1.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 120.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(3), value: 0.5 });
-    model.people.push(crate::model::PeopleGain { id: crate::model::EntityId(20), zone_id: crate::model::EntityId(1), schedule_id: crate::model::ScheduleId(1), activity_schedule_id: crate::model::ScheduleId(2), people_per_area: 0.05, sensible_fraction: 0.6, latent_fraction: 0.4, radiant_fraction: 0.3 });
+    model.people.push(crate::model::PeopleGain {
+        id: crate::model::EntityId(20),
+        zone_id: crate::model::EntityId(1),
+        schedule_id: crate::model::ScheduleId(1),
+        activity_schedule_id: crate::model::ScheduleId(2),
+        people_per_area: 0.05,
+        sensible_fraction: 0.6,
+        latent_fraction: 0.4,
+        radiant_fraction: 0.3,
+    });
     (snapshot(model), super::change_people_gain_schedule(crate::model::EntityId(20), crate::model::ScheduleId(3)))
 }
 

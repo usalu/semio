@@ -14,12 +14,7 @@
     "params",
     "gcps",
     "job",
-    "results",
-    "selection",
-    "reportTable",
-    "frameCursor",
-    "camera",
-    "layers"
+    "results"
   ],
   "properties": {
     "schema": {
@@ -73,26 +68,6 @@
     "results": {
       "$ref": "#/$defs/ReconstructionResults",
       "x-semio-state": "artifact"
-    },
-    "selection": {
-      "$ref": "#/$defs/RemodelingUiSelection",
-      "x-semio-state": "presence"
-    },
-    "reportTable": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "frameCursor": {
-      "$ref": "#/$defs/RemodelingUiFrameCursor",
-      "x-semio-state": "presence"
-    },
-    "camera": {
-      "$ref": "#/$defs/RemodelingUiCamera",
-      "x-semio-state": "config"
-    },
-    "layers": {
-      "$ref": "#/$defs/RemodelingUiLayers",
-      "x-semio-state": "config"
     }
   },
   "$defs": {
@@ -1207,111 +1182,6 @@
         },
         "target": {
           "$ref": "#/$defs/ArtifactRef"
-        }
-      }
-    },
-    "RemodelingUiCamera": {
-      "type": "object",
-      "title": "RemodelingUiCamera",
-      "additionalProperties": false,
-      "required": [
-        "position",
-        "target",
-        "fov"
-      ],
-      "properties": {
-        "position": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "target": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "fov": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "RemodelingUiFrameCursor": {
-      "type": "object",
-      "title": "RemodelingUiFrameCursor",
-      "additionalProperties": false,
-      "required": [
-        "streamId",
-        "frameIndex"
-      ],
-      "properties": {
-        "streamId": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "frameIndex": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        }
-      }
-    },
-    "RemodelingUiLayers": {
-      "type": "object",
-      "title": "RemodelingUiLayers",
-      "additionalProperties": false,
-      "required": [
-        "mesh",
-        "dense",
-        "sparse",
-        "cameras",
-        "gcps"
-      ],
-      "properties": {
-        "mesh": {
-          "type": "boolean"
-        },
-        "dense": {
-          "type": "boolean"
-        },
-        "sparse": {
-          "type": "boolean"
-        },
-        "cameras": {
-          "type": "boolean"
-        },
-        "gcps": {
-          "type": "boolean"
-        }
-      }
-    },
-    "RemodelingUiSelection": {
-      "type": "object",
-      "title": "RemodelingUiSelection",
-      "additionalProperties": false,
-      "required": [
-        "mode",
-        "ids"
-      ],
-      "properties": {
-        "mode": {
-          "type": "string"
-        },
-        "ids": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     },

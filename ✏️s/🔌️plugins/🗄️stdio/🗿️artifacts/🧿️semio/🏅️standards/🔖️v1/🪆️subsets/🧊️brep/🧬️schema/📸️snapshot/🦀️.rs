@@ -68,26 +68,10 @@ impl Default for BrepCurve {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum BrepCurve2 {
-    Line {
-        origin: SemioPoint2,
-        direction: SemioPoint2,
-    },
-    Circle {
-        center: SemioPoint2,
-        radius: f64,
-    },
-    Ellipse {
-        center: SemioPoint2,
-        x_axis: SemioPoint2,
-        radius_major: f64,
-        radius_minor: f64,
-    },
-    Nurbs {
-        control_points: Vec<SemioPoint2>,
-        weights: Vec<f64>,
-        degree: u32,
-        knots: Vec<f64>,
-    },
+    Line { origin: SemioPoint2, direction: SemioPoint2 },
+    Circle { center: SemioPoint2, radius: f64 },
+    Ellipse { center: SemioPoint2, x_axis: SemioPoint2, radius_major: f64, radius_minor: f64 },
+    Nurbs { control_points: Vec<SemioPoint2>, weights: Vec<f64>, degree: u32, knots: Vec<f64> },
 }
 
 /// 🩹️ See `BrepCurve`'s `Default` impl doc comment — same reason (needed only so `BrepCoedge` can
@@ -324,7 +308,17 @@ pub struct SemioBrepSnapshot {
 
 impl Default for SemioBrepSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Default::default(), edges: Default::default(), loops: Default::default(), faces: Default::default(), shells: Default::default(), solids: Default::default(), coedges: Default::default(), next_label: 0 }
+        Self {
+            schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(),
+            vertices: Default::default(),
+            edges: Default::default(),
+            loops: Default::default(),
+            faces: Default::default(),
+            shells: Default::default(),
+            solids: Default::default(),
+            coedges: Default::default(),
+            next_label: 0,
+        }
     }
 }
 //#endregion 🔖️Snapshot
@@ -1384,7 +1378,13 @@ pub(crate) fn demo_brep_snapshot() -> SemioBrepSnapshot {
     s.edges = vec![
         BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: s.vertices[0].point, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }, tol: 1e-7 },
         BrepEdge { id: "e2".into(), start_vertex: "v2".into(), end_vertex: "v3".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 4.0, y: 1.5, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.5 }, tol: 1e-7 },
-        BrepEdge { id: "e3".into(), start_vertex: "v3".into(), end_vertex: "v1".into(), curve: BrepCurve::Nurbs { control_points: vec![s.vertices[2].point, s.vertices[0].point], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] }, tol: 1e-7 },
+        BrepEdge {
+            id: "e3".into(),
+            start_vertex: "v3".into(),
+            end_vertex: "v1".into(),
+            curve: BrepCurve::Nurbs { control_points: vec![s.vertices[2].point, s.vertices[0].point], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] },
+            tol: 1e-7,
+        },
     ];
     s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }, BrepLoopEdge { edge: "e2".into(), orientation: true }, BrepLoopEdge { edge: "e3".into(), orientation: true }] }];
     // 🧱️ Coedges mirror `loops[0].edges` one-for-one, in ring order, with a p-curve stored on the

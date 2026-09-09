@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::document_dsl as dsl;
 use crate::schema::{create_drawing_boolean_layer, create_drawing_image_layer, create_drawing_path_layer, create_drawing_shape_layer_rect, create_drawing_trace_layer, default_drawing_document, default_layer_base, layer_id};
 use crate::{
-    DRAWING_DOCUMENT_SCHEMA, DrawingArtboard, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingLayerNode, DrawingLine, DrawingPolygon, DrawingShapeBody, DrawingTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle,
+    DrawingArtboard, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingLayerNode, DrawingLine, DrawingPolygon, DrawingShapeBody, DrawingTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA,
 };
 
 fn representative_drawing_document() -> DrawingSnapshot {

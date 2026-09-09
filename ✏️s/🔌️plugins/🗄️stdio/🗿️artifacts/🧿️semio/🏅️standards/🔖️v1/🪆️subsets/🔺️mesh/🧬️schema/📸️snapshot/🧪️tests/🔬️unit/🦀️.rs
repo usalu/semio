@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🌱 Reuses `demo_mesh_snapshot()` (single source of truth, also feeds the shipped fixtures

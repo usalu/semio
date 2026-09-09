@@ -67,15 +67,11 @@
             "fov"
           ],
           "additionalProperties": false
-        },
-        "activeUtilityId": {
-          "type": "string"
         }
       },
       "required": [
         "selectedShotIds",
-        "camera",
-        "activeUtilityId"
+        "camera"
       ],
       "additionalProperties": false
     }

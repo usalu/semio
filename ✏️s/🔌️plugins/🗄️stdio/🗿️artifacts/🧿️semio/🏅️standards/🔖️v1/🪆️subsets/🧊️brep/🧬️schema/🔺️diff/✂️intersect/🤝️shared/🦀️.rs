@@ -9,7 +9,6 @@
 /// 📐 Knot vector and indexed basis coefficients for fitting.
 pub type SplineFitBasis = (KnotVector, Vec<(usize, Vec<f64>)>);
 
-
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::bezier::RationalBezier3;
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::{basis_functions, insert_knot, KnotVector};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3, NurbsCurve3};

@@ -23,19 +23,29 @@ struct FlowPresenceRetirement {
 
 impl ErasedSnapshotRetirement for FlowPresenceRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(SnapshotRetirementStep::Blocked); }
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(SnapshotRetirementStep::Blocked);
+        }
         if let Some(root) = self.root.take() {
-            if let Some(value) = Arc::into_inner(root) { self.domain.push(FlowOwner::Strings(value.preview_off_node_ids)); }
+            if let Some(value) = Arc::into_inner(root) {
+                self.domain.push(FlowOwner::Strings(value.preview_off_node_ids));
+            }
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         self.domain.close_step(1, maximum_bytes)
     }
 
-    fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.domain.is_empty() }
+    fn terminal_is_empty(&self) -> bool {
+        self.root.is_none() && self.domain.is_empty()
+    }
 }
 
 impl Drop for FlowPresenceRetirement {
-    fn drop(&mut self) { if !std::thread::panicking() { assert!(self.terminal_is_empty(), "Flow presence must return every retained owner before drop"); } }
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            assert!(self.terminal_is_empty(), "Flow presence must return every retained owner before drop");
+        }
+    }
 }
 
 pub fn store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<FlowPresence, FlowPresenceMutation>>> {

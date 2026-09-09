@@ -3,9 +3,9 @@
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted(["semio-framework-value-derive"], this.repoRoot, rest);
+    await runCargoTestBudgeted(["semio-framework-value-derive"], this.repoRoot, rest);
   }
 }
 

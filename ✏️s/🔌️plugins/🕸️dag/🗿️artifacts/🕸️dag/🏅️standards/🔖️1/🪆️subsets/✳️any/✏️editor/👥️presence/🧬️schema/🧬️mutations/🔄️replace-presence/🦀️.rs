@@ -10,13 +10,21 @@ use super::{DagPresence, DagPresenceMutation};
 #[mutation_leaf(contract = ::protocol)]
 pub struct ReplacePresence {
     #[dsl(block)]
-    pub presence: DagPresence
+    pub presence: DagPresence,
 }
 
 impl protocol::MutationKind<DagPresence, DagPresenceMutation> for ReplacePresence {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "presence", kind: "replace-presence", record: "ReplacePresence" };
-    fn diff(&self, _base: &DagPresence) -> protocol::MutationOutcome<DagPresence> { protocol::MutationOutcome::new(self.presence.clone()) }
-    fn inverse(&self, base: &DagPresence) -> Vec<DagPresenceMutation> { vec![DagPresenceMutation::ReplacePresence(ReplacePresence { presence: base.clone() })] }
-    fn label(&self) -> String { "Replace Presence".into() }
-    fn target(&self) -> Vec<String> { vec!["presence".into()] }
+    fn diff(&self, _base: &DagPresence) -> protocol::MutationOutcome<DagPresence> {
+        protocol::MutationOutcome::new(self.presence.clone())
+    }
+    fn inverse(&self, base: &DagPresence) -> Vec<DagPresenceMutation> {
+        vec![DagPresenceMutation::ReplacePresence(ReplacePresence { presence: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Presence".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["presence".into()]
+    }
 }

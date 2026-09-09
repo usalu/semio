@@ -1,6 +1,5 @@
 //! 💨 `change-en-vbms` — sets the En1991 basic wind velocity scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

@@ -22,5 +22,3 @@ type CadReferenceList { values: [String!]! }
 type CadReferenceListEntry { key: String! value: CadReferenceList! }
 type CadGeometry { anchorsJson: String }
 type CadCamera { zoom: Float }
-type CadComponentSelection { mode: String! }
-type CadDislocateOptions { moveEnabled: Boolean! rotateEnabled: Boolean! }

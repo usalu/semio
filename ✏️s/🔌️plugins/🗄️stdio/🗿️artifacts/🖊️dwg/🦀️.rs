@@ -9,7 +9,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub(crate) use semio_s_artifact_stdio_contract::{impl_serde_op_codec};
+pub(crate) use semio_s_artifact_stdio_contract::impl_serde_op_codec;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
@@ -58,14 +58,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution {
-        identity: "dwg",
-        schema: ARTIFACT_DEFINITION_SCHEMA,
-        definition,
-        assembly,
-        formats,
-        native_codecs,
-    }
+    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "dwg", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Declaration
@@ -129,13 +122,7 @@ fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::Composer
     use semio_framework_plugin::ComposerEntry;
     static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     ENTRIES
-        .get_or_init(|| {
-            standards::v_ac1018::engine::io_registry::entries()
-                .iter()
-                .chain(standards::v_ac1024::engine::io_registry::entries().iter())
-                .map(|e| ComposerEntry { writes: e.writes, reads: e.reads, compose: e.compose })
-                .collect()
-        })
+        .get_or_init(|| standards::v_ac1018::engine::io_registry::entries().iter().chain(standards::v_ac1024::engine::io_registry::entries().iter()).map(|e| ComposerEntry { writes: e.writes, reads: e.reads, compose: e.compose }).collect())
         .as_slice()
 }
 

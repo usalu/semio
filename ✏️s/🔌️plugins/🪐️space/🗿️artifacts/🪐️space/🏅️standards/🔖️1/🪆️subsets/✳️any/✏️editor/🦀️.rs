@@ -168,7 +168,7 @@ fn space_index_retained_reduce(
     if space_index_retained_extent(command, snapshot, interaction).is_none() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.index.retained.route"), "the bounded space index reducer rejects an unregistered tool"));
     }
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 pub struct SpaceIndexRetainedCommandJobFactory {
@@ -361,7 +361,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
             main::BODY_KEY => Ok(built_to_component_tree(main::render(doc.snapshot, cfg.snapshot)?)),
             members_panel::SPACE_INDEX_BODY_MEMBERS => Ok(built_to_component_tree(members_panel::render(cfg.snapshot)?)),

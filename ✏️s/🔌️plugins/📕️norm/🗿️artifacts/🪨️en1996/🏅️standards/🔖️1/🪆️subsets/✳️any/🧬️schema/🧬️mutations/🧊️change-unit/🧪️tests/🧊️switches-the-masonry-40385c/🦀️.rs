@@ -85,7 +85,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, r#"change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: `change-unit` has no numeric-finiteness guard at all — only the equality guard — and "calcium_silicate" differs from the committed committed "clay", so `mutation.no-op` must not fire"#);
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        r#"change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: `change-unit` has no numeric-finiteness guard at all — only the equality guard — and "calcium_silicate" differs from the committed committed "clay", so `mutation.no-op` must not fire"#
+    );
     assert!(produced.messages().is_empty(), "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: an accepted change-unit emits no diagnostics at all");
 }
 

@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::Din18599Snapshot;
 use crate::mutations::change_heated_area_m2;
+use crate::Din18599Snapshot;
 
 fn sample_mutation() -> Din18599Mutation {
     Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 })

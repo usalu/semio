@@ -228,7 +228,8 @@ pub fn section_breach(section: &FemSection) -> Option<String> {
     if !(section.area.is_finite() && section.iy.is_finite() && section.iz.is_finite() && section.j.is_finite()) {
         return Some(format!("Section \"{}\" must carry finite properties.", section.id));
     }
-    (section.area <= 0.0 || section.iy <= 0.0 || section.iz <= 0.0 || section.j <= 0.0).then(|| format!("Section \"{}\" must carry a positive area, iy, iz and j, got area={}, iy={}, iz={}, j={}.", section.id, section.area, section.iy, section.iz, section.j))
+    (section.area <= 0.0 || section.iy <= 0.0 || section.iz <= 0.0 || section.j <= 0.0)
+        .then(|| format!("Section \"{}\" must carry a positive area, iy, iz and j, got area={}, iy={}, iz={}, j={}.", section.id, section.area, section.iy, section.iz, section.j))
 }
 
 /// 📏️ Twice the signed area of a closed ring (the shoelace sum, halved) — negative when the ring
@@ -395,14 +396,14 @@ pub fn fem3d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
     let report = dsl::DslValue::object([
-    ("base".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&base))),
-    ("expectedSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&expected))),
-    ("snapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&applied))),
-    ("diff".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.diff()))),
-    ("messages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.messages()))),
-    ("inverseSteps".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse))),
-    ("inverseSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&undone))),
-    ("inverseMessages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse_messages))),
+        ("base".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&base))),
+        ("expectedSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&expected))),
+        ("snapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&applied))),
+        ("diff".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.diff()))),
+        ("messages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.messages()))),
+        ("inverseSteps".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse))),
+        ("inverseSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&undone))),
+        ("inverseMessages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse_messages))),
     ]);
     Ok(dsl::json::to_json_string(&report))
 }

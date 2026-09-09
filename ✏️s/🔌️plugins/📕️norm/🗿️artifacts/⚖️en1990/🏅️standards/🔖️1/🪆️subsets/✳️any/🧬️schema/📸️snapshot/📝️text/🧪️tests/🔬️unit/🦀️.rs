@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::document::AnnexChoice;
 
@@ -25,7 +24,7 @@ async fn high_consequence_office_example_fixture_parses_and_round_trips() {
     // bridge pattern every other wave-4 composed-child exemplar uses (see
     // `🗿️artifacts/⚖️en1990/🦀️.rs`'s `🔖️WorkingScene` doc comment for the staleness
     // gap this depends on).
-    let _ = crate::examples::art_en1990_high_consequence_office::reference_snapshot();
+    let _ = crate::standards::v1::subsets::any::examples::high_consequence_office::reference_snapshot();
     let document = parse_dsl(EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT).expect("parse high consequence office example");
     assert_eq!(document.consequence_class, 3);
     assert_eq!(document.annex, AnnexChoice::En);

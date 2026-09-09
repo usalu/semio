@@ -1,6 +1,5 @@
 //! 🧊 `change-f-ck-mpa` — sets the En 1994 concrete characteristic cylinder strength f_ck [MPa] scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

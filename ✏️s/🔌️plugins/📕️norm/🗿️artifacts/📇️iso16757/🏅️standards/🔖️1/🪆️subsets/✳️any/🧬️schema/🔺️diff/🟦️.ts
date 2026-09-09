@@ -19,8 +19,6 @@ export interface Iso16757Diff {
   scriptLimits?: string;
   /** @state artifact */
   exchangeProcess?: string;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 
 export interface Iso16757Artifact {
@@ -32,5 +30,4 @@ export interface Iso16757Artifact {
   partNumberInputs: Record<string, string>;
   scriptLimits: string;
   exchangeProcess: string;
-  selectedCheckIndex?: number | null;
 }

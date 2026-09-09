@@ -20,12 +20,14 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, DocxDiff, DocxOpcContentTypesDiff, DocxOpcCtEntriesDiff, DocxOpcDiff, DocxOpcPartDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff};
+use crate::standards::v_ecma_376::subsets::base::schema::diff::{
+    DocxDiff, DocxOpcContentTypesDiff, DocxOpcCtEntriesDiff, DocxOpcDiff, DocxOpcPartDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff, NamedModified, NamedTripleDiff,
+};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPart};
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPart};
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional WordprocessingML main namespace.
@@ -55,27 +57,27 @@ pub const ALTERNATE_CONTENT_ELEMENT: &str = "mc:AlternateContent";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Mutations
+#[path = "🪆️insert-alternate-content/🦀️.rs"]
+pub mod insert_alternate_content;
+#[path = "✒️insert-vml-part/🦀️.rs"]
+pub mod insert_vml_part;
+#[path = "📤️remove-alternate-content/🦀️.rs"]
+pub mod remove_alternate_content;
+#[path = "🚫️remove-conformance-attribute/🦀️.rs"]
+pub mod remove_conformance_attribute;
+#[path = "🧹️remove-vml-part/🦀️.rs"]
+pub mod remove_vml_part;
+#[path = "✅️set-conformance-attribute/🦀️.rs"]
+pub mod set_conformance_attribute;
+#[path = "🌐️set-main-namespace/🦀️.rs"]
+pub mod set_main_namespace;
+#[path = "🔗️set-relationship-base/🦀️.rs"]
+pub mod set_relationship_base;
 /// 📐️ Typed conformance-class mutation for `stdio.docx` under ISO/IEC 29500-1
 /// Strict. Every variant addresses ONE axis of the class; none addresses document content.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🌐️set-main-namespace/🦀️.rs"]
-pub mod set_main_namespace;
-#[path = "🔗️set-relationship-base/🦀️.rs"]
-pub mod set_relationship_base;
-#[path = "✅️set-conformance-attribute/🦀️.rs"]
-pub mod set_conformance_attribute;
-#[path = "🚫️remove-conformance-attribute/🦀️.rs"]
-pub mod remove_conformance_attribute;
-#[path = "✒️insert-vml-part/🦀️.rs"]
-pub mod insert_vml_part;
-#[path = "🧹️remove-vml-part/🦀️.rs"]
-pub mod remove_vml_part;
-#[path = "🪆️insert-alternate-content/🦀️.rs"]
-pub mod insert_alternate_content;
-#[path = "📤️remove-alternate-content/🦀️.rs"]
-pub mod remove_alternate_content;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -97,7 +99,8 @@ pub enum DocxStrictMutation {
 /// 🧾️ Kebab-case spelling of every `DocxStrictMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `docx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-main-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "insert-alternate-content", "remove-alternate-content"];
+pub const KINDS: &[&str] =
+    &["no-mutation", "set-snapshot", "set-main-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "insert-alternate-content", "remove-alternate-content"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -177,9 +180,7 @@ fn declares_namespace(node: &XmlNode, value: &str) -> bool {
 /// 🔎️ Which member of a `[transitional, strict]` pair the package actually declares.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_pair_member(base: &DocxSnapshot, pair: [&str; 2]) -> Option<String> {
-    pair.into_iter()
-        .find(|candidate| base.opc.parts.iter().filter(|part| is_xml_part(&part.path)).filter_map(parse_part).any(|document| document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate))))
-        .map(str::to_string)
+    pair.into_iter().find(|candidate| base.opc.parts.iter().filter(|part| is_xml_part(&part.path)).filter_map(parse_part).any(|document| document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate)))).map(str::to_string)
 }
 
 /// 🔎️ The relationship-type base the package's own relationships are built on.
@@ -412,48 +413,48 @@ fn diff_root_children(base: &DocxSnapshot, path: &str, edit: impl FnOnce(&mut Ve
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &DocxStrictMutation, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
-        protocol::MutationOutcome::new(match this {
-            DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, snapshot),
-            DocxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
-            DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }) => diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, target),
-            DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
-            DocxStrictMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
-            DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, markup }) => diff_insert_vml_part(base, path, markup),
-            DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => diff_remove_vml_part(base, path),
-            DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => diff_append_alternate_content(base, path),
-            DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => diff_strip_alternate_content(base, path),
-        })
-    }
+    protocol::MutationOutcome::new(match this {
+        DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, snapshot),
+        DocxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
+        DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }) => diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, target),
+        DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
+        DocxStrictMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
+        DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, markup }) => diff_insert_vml_part(base, path, markup),
+        DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => diff_remove_vml_part(base, path),
+        DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => diff_append_alternate_content(base, path),
+        DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => diff_strip_alternate_content(base, path),
+    })
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &DocxStrictMutation, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
-        vec![match this {
-            DocxStrictMutation::SetSnapshot(_) => DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            DocxStrictMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
-                Some(namespace) => DocxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
-                None => return Vec::new(),
-            },
-            DocxStrictMutation::SetRelationshipBase(_) => match declared_relationship_base(base, RELATIONSHIP_NAMESPACES) {
-                Some(target) => DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }),
-                None => return Vec::new(),
-            },
-            DocxStrictMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
-                Some(value) => DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-                None => DocxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-            },
-            DocxStrictMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
-                Some(value) => DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-                None => return Vec::new(),
-            },
-            DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, .. }) => DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() }),
-            DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match part_text(base, path) {
-                Some(markup) => DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), markup }),
-                None => return Vec::new(),
-            },
-            DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.clone() }),
-            DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: path.clone() }),
-        }]
-    }
+    vec![match this {
+        DocxStrictMutation::SetSnapshot(_) => DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        DocxStrictMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
+            Some(namespace) => DocxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
+            None => return Vec::new(),
+        },
+        DocxStrictMutation::SetRelationshipBase(_) => match declared_relationship_base(base, RELATIONSHIP_NAMESPACES) {
+            Some(target) => DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }),
+            None => return Vec::new(),
+        },
+        DocxStrictMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
+            Some(value) => DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
+            None => DocxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
+        },
+        DocxStrictMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
+            Some(value) => DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
+            None => return Vec::new(),
+        },
+        DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, .. }) => DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() }),
+        DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match part_text(base, path) {
+            Some(markup) => DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), markup }),
+            None => return Vec::new(),
+        },
+        DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.clone() }),
+        DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: path.clone() }),
+    }]
+}
 //#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests

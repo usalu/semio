@@ -72,13 +72,7 @@ fn declared_outcome_holds() {
     let declared: Vec<(String, String)> =
         outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Generation3dMutation as protocol::Mutation<Generation3dSnapshot>>::diff(&mutation(), &before());
-    let produced: Vec<(String, String)> = raised
-        .messages()
-        .iter()
-        .map(|message| {
-            (format!("{:?}", message.level).to_lowercase(), message.code.0.clone())
-        })
-        .collect();
+    let produced: Vec<(String, String)> = raised.messages().iter().map(|message| (format!("{:?}", message.level).to_lowercase(), message.code.0.clone())).collect();
     assert_eq!(produced, declared, "delete-widget-position/unpins-the-node-a-position: raised diagnostics differ from the committed 🎯️outcome messages");
     let mut snapshot = before();
     let applied = apply_generation3d_mutation(&mut snapshot, &mutation()).is_ok();

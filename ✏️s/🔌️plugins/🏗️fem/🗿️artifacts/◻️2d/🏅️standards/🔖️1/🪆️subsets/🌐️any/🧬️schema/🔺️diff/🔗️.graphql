@@ -11,12 +11,6 @@ type Fem2dDiff {
   loadCases: Fem2dLoadCasesDelta @state(class: ARTIFACT)
   combinations: Fem2dCombinationsDelta @state(class: ARTIFACT)
   analysis: FemAnalysisSettings @state(class: ARTIFACT)
-  resultSourceId: String @state(class: PRESENCE)
-  resultMode: String @state(class: PRESENCE)
-  resultModeIndex: Int @state(class: PRESENCE)
-  camera: FemCamera @state(class: CONFIG)
-  solverResultsJson: String @state(class: ARTIFACT)
-  meshPreviewJson: String @state(class: ARTIFACT)
 }
 
 type Fem2dNodesDelta {

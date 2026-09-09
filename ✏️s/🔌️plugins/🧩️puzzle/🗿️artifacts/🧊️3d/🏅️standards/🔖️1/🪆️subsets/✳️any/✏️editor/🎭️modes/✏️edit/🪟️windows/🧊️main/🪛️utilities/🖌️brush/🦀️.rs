@@ -5,7 +5,7 @@
 
 use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_brush_target_vortex, puzzle3d_distribution_group, Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_brush_target_vortex, puzzle3d_distribution_group, Puzzle3dInteractionSnapshot, Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{LocalizedLabel, MeasureSelectItem, UtilityDefinition, WindowMeasure};
 
 pub const UTILITY_ID: &str = "brush";
@@ -18,7 +18,7 @@ pub fn definition(label: LocalizedLabel) -> UtilityDefinition {
 /// 🖌️ Utility Options for the Brush utility. Tagged with this utility's id as a routing envelope
 /// only; `partition_window_measures` unwraps the children so the utility bar shows the option tree
 /// directly (no nested "Brush"/"Pinsel" header — the utility toggle already owns that row).
-pub fn options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> WindowMeasure {
+pub fn options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels, interaction: &Puzzle3dInteractionSnapshot) -> WindowMeasure {
     let mut children = vec![
         WindowMeasure::Slider {
             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-overlap-budget"),
@@ -37,7 +37,7 @@ pub fn options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession,
         puzzle3d_distribution_group(envelope, labels, Some(false)),
     ];
     if envelope.active_utility == UTILITY_ID {
-        if let Some(target) = puzzle3d_brush_target_vortex(envelope) {
+        if let Some(target) = puzzle3d_brush_target_vortex(envelope, interaction) {
             let candidates = precompute.brush_candidates(&target).free;
             if !candidates.is_empty() {
                 let items: Vec<MeasureSelectItem> = candidates

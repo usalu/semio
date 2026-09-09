@@ -24,10 +24,17 @@
       "nx.json",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🔣️schema.json",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs"
-    ]
+    ],
+    "storage": {
+      "data": ".nx/workspace-data",
+      "cache": ".nx/cache",
+      "sentinel": "foreign fixture storage must remain intact\n"
+    }
   },
   "cancellation": {
     "actors": [

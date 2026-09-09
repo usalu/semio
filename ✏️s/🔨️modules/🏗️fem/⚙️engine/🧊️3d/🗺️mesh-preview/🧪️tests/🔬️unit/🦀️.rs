@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::artifacts::fem3d::{FemAnalysisSettings, FemDof, FemLoadCase, FemMaterial, FemNode, FemSolid, FemSupport};
+use crate::{FemAnalysisSettings, FemDof, FemLoadCase, FemMaterial, FemNode, FemSolid, FemSupport};
 
 fn solid_slab_doc() -> Fem3dSnapshot {
     Fem3dSnapshot {
@@ -38,7 +37,7 @@ fn fem3d_mesh_preview_returns_solid_tets_and_boundary() {
 #[test]
 fn fem3d_nodal_von_mises_returns_finite_values_for_solid() {
     let mut doc = solid_slab_doc();
-    doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "Pressure".into(), loads: vec![crate::artifacts::fem3d::FemLoad::Area { id: "a1".into(), solid_id: "sol1".into(), pressure: 8000.0 }], self_weight: false }];
+    doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "Pressure".into(), loads: vec![crate::FemLoad::Area { id: "a1".into(), solid_id: "sol1".into(), pressure: 8000.0 }], self_weight: false }];
     let averaged = fem3d_nodal_von_mises(&doc, "pressure").expect("nodal von mises solves");
     assert!(!averaged.is_empty());
     for v in averaged.values() {

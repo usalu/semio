@@ -1,6 +1,5 @@
 
 use super::*;
-use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::testkit::{new_app, render as render_body};
 
 /// 🧬️ Direct unit coverage for `render`'s own id-lookup logic — the app-level call site always

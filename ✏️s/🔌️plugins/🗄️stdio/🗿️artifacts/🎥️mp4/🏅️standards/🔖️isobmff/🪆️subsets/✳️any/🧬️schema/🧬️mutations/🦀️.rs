@@ -11,24 +11,24 @@ use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "🏷️set-ftyp/🦀️.rs"]
-pub mod set_ftyp;
-#[path = "➕insert-track/🦀️.rs"]
-pub mod insert_track;
-#[path = "➖remove-track/🦀️.rs"]
-pub mod remove_track;
-#[path = "📐set-track-dimensions/🦀️.rs"]
-pub mod set_track_dimensions;
-#[path = "🎛️set-track-codec/🦀️.rs"]
-pub mod set_track_codec;
 #[path = "🧱insert-sample/🦀️.rs"]
 pub mod insert_sample;
+#[path = "➕insert-track/🦀️.rs"]
+pub mod insert_track;
 #[path = "🗑️remove-sample/🦀️.rs"]
 pub mod remove_sample;
+#[path = "➖remove-track/🦀️.rs"]
+pub mod remove_track;
+#[path = "🏷️set-ftyp/🦀️.rs"]
+pub mod set_ftyp;
 #[path = "⭐set-sample-sync/🦀️.rs"]
 pub mod set_sample_sync;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
+#[path = "🎛️set-track-codec/🦀️.rs"]
+pub mod set_track_codec;
+#[path = "📐set-track-dimensions/🦀️.rs"]
+pub mod set_track_dimensions;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`

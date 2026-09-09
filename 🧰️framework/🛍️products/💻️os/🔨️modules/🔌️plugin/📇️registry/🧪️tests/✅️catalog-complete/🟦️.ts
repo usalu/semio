@@ -133,7 +133,7 @@ async function syntheticDescriptor(pluginId: string, raw: Uint8Array, core: Uint
     role: "plugin",
     manifest: { pluginId, label: pluginId, version: "1.0.0", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [] },
     execution: "isolated",
-    executionProtocol: { appChannelVersion: 14 },
+    executionProtocol: { appChannelVersion: 15 },
     quotas: {},
     contributions: {},
     hashes: { wasmSha256: await sha256(raw), coreWasmSha256: await sha256(core), descriptorSha256: "" },

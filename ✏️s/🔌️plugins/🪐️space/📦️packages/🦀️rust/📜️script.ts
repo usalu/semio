@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 
 /** 🧵️ Keeps compiler worker stacks bounded while retaining the native laws' deeper runtime stack. */
@@ -27,8 +27,9 @@ function compileRetainedCommandLimits(repoRoot: string, scopeRoot: string, expor
 }
 
 class TestScript extends BundleScript {
-  run(_segments: string[]): void {
-    runCargoTestBudgeted(["semio-s-plugin-space"], this.repoRoot);
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted(["semio-s-plugin-space"], this.repoRoot, rest);
   }
 }
 

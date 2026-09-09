@@ -1,0 +1,62 @@
+{
+  "windowKindId": "trinity-rewriting-before",
+  "leftWindowId": "before-left",
+  "rightWindowId": "before-right",
+  "base": {
+    "camera": null,
+    "lodMode": "automatic"
+  },
+  "cases": [
+    {
+      "windowId": "before-left",
+      "mutation": {
+        "kind": "set-camera",
+        "camera": {
+          "x": 10,
+          "y": 20,
+          "zoom": 2
+        }
+      },
+      "expected": {
+        "before-left": {
+          "camera": {
+            "x": 10,
+            "y": 20,
+            "zoom": 2
+          },
+          "lodMode": "automatic"
+        },
+        "before-right": {
+          "camera": null,
+          "lodMode": "automatic"
+        }
+      }
+    },
+    {
+      "windowId": "before-right",
+      "mutation": {
+        "kind": "set-lod-mode",
+        "value": "compact"
+      },
+      "expected": {
+        "before-left": {
+          "camera": {
+            "x": 10,
+            "y": 20,
+            "zoom": 2
+          },
+          "lodMode": "automatic"
+        },
+        "before-right": {
+          "camera": null,
+          "lodMode": "compact"
+        }
+      }
+    }
+  ],
+  "expectedAppConfig": {},
+  "expectedWindowGenerations": {
+    "before-left": 1,
+    "before-right": 1
+  }
+}

@@ -8,13 +8,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 pub use crate::schema::diff::*;
 
-use crate::schema::FlowArtifact;
 use crate::FlowSnapshot;
 use protocol::MutationDiff;
 
 //#region 🔹Apply
 impl FlowDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &FlowArtifact) -> protocol::MutationApplyResult<FlowArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -29,45 +28,6 @@ impl FlowDiff {
             }
             if let Some(content) = &self.content {
                 next.content = content.clone();
-            }
-            if let Some(list) = &self.selected_node_ids {
-                next.selected_node_ids = list.values.clone();
-            }
-            if let Some(list) = &self.selected_edge_ids {
-                next.selected_edge_ids = list.values.clone();
-            }
-            if let Some(list) = &self.selected_handle_ids {
-                next.selected_handle_ids = list.values.clone();
-            }
-            if let Some(list) = &self.preview_off_node_ids {
-                next.preview_off_node_ids = list.values.clone();
-            }
-            if let Some(value) = &self.lod_mode {
-                next.lod_mode = value.clone();
-            }
-            if let Some(value) = self.proximity_distance {
-                next.proximity_distance = value;
-            }
-            if let Some(value) = self.grid_visible {
-                next.grid_visible = value;
-            }
-            if let Some(value) = self.grid_snap_enabled {
-                next.grid_snap_enabled = value;
-            }
-            if let Some(value) = self.grid_factor {
-                next.grid_factor = value;
-            }
-            if let Some(value) = &self.catalogue_sections_json {
-                next.catalogue_sections_json = value.clone();
-            }
-            if let Some(value) = &self.automation_enabled_json {
-                next.automation_enabled_json = value.clone();
-            }
-            if let Some(value) = &self.contributions_json {
-                next.contributions_json = value.clone();
-            }
-            if let Some(value) = &self.generation_json {
-                next.generation_json = value.clone();
             }
             next
         })
@@ -108,19 +68,6 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
         take!(schema);
         take!(camera);
         take!(content);
-        take!(selected_node_ids);
-        take!(selected_edge_ids);
-        take!(selected_handle_ids);
-        take!(preview_off_node_ids);
-        take!(lod_mode);
-        take!(proximity_distance);
-        take!(grid_visible);
-        take!(grid_snap_enabled);
-        take!(grid_factor);
-        take!(catalogue_sections_json);
-        take!(automation_enabled_json);
-        take!(contributions_json);
-        take!(generation_json);
     }
 }
 //#endregion 🔹Apply

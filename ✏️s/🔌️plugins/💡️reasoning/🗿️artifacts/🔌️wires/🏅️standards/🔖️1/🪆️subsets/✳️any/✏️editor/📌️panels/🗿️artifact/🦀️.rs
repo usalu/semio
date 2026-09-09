@@ -1,9 +1,9 @@
 //! 📄️ Wires play app panel — the document tree: identities and relationships of the current fixture.
 
-use crate::schema::{dsl_id, fixture_edges, wires_identities, wires_relationships};
-use crate::WiresSnapshot;
 use crate::editor::wires::terminology::WiresLabels;
 use crate::editor::wires::{ui_value_map, ui_value_text, wires_action, WIRES_GRANULARITY_EDGE, WIRES_GRANULARITY_NODE, WIRES_INTERACTION_GRAPH};
+use crate::schema::{dsl_id, fixture_edges, wires_identities, wires_relationships};
+use crate::WiresSnapshot;
 use semio_framework_plugin::{
     tree_item_with_action, BuiltNode, InteractionTarget, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
     INTERACTION_SELECT_ACTION_ID,
@@ -56,12 +56,7 @@ fn wires_relationship_document_label(wires: &dsl::DslValue, edge_id: &str, label
 
 fn selection_args(id: &str, granularity: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
     let targets = dsl::os_pack::json::to_json_string(&[InteractionTarget { granularity: granularity.into(), id: id.into() }]);
-    ui_value_map([
-        ("domainId", ui_value_text(WIRES_INTERACTION_GRAPH)?),
-        ("merge", ui_value_text("replace")?),
-        ("method", ui_value_text("pick")?),
-        ("targets", ui_value_text(targets)?),
-    ])
+    ui_value_map([("domainId", ui_value_text(WIRES_INTERACTION_GRAPH)?), ("merge", ui_value_text("replace")?), ("method", ui_value_text("pick")?), ("targets", ui_value_text(targets)?)])
 }
 
 /// 🕹️ Row `id` is the BARE identity/edge id (not a namespaced row id) — the framework's

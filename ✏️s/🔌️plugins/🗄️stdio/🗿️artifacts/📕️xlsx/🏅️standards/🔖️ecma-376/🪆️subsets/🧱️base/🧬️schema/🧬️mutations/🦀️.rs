@@ -10,14 +10,30 @@ use crate::schema::diff::{
 use crate::schema::snapshot::XlsxCell;
 use crate::schema::snapshot::{XlsxCellValue, XlsxSheet, XlsxWorkbook};
 use crate::XlsxSnapshot;
+use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
 #[cfg(test)]
 use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
-use protocol::OpBinary;
-use protocol::{Mutation, OpText};
 use std::collections::HashMap;
 
 //#region 🔖️Mutations
+#[path = "📥️insert-shared-string/🦀️.rs"]
+pub mod insert_shared_string;
+#[path = "➕insert-sheet/🦀️.rs"]
+pub mod insert_sheet;
+#[path = "🧽️remove-cell/🦀️.rs"]
+pub mod remove_cell;
+#[path = "📤️remove-shared-string/🦀️.rs"]
+pub mod remove_shared_string;
+#[path = "➖remove-sheet/🦀️.rs"]
+pub mod remove_sheet;
+#[path = "🏷️rename-sheet/🦀️.rs"]
+pub mod rename_sheet;
+#[path = "✍️set-cell/🦀️.rs"]
+pub mod set_cell;
+#[path = "🔤️set-shared-string/🦀️.rs"]
+pub mod set_shared_string;
 /// 📐️ Typed content mutation for `stdio.xlsx`. Beyond the baseline `{NoMutation, SetSnapshot}`,
 /// this addresses sheets by NAME (identity), cells by `(sheet name, row, col)`, and shared
 /// strings by index.
@@ -39,22 +55,6 @@ use std::collections::HashMap;
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "➕insert-sheet/🦀️.rs"]
-pub mod insert_sheet;
-#[path = "➖remove-sheet/🦀️.rs"]
-pub mod remove_sheet;
-#[path = "🏷️rename-sheet/🦀️.rs"]
-pub mod rename_sheet;
-#[path = "✍️set-cell/🦀️.rs"]
-pub mod set_cell;
-#[path = "🧽️remove-cell/🦀️.rs"]
-pub mod remove_cell;
-#[path = "📥️insert-shared-string/🦀️.rs"]
-pub mod insert_shared_string;
-#[path = "📤️remove-shared-string/🦀️.rs"]
-pub mod remove_shared_string;
-#[path = "🔤️set-shared-string/🦀️.rs"]
-pub mod set_shared_string;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires

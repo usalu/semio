@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn board(nodes: &[&str], edges: &[(&str, &str)]) -> DslValue {

@@ -1,4 +1,3 @@
-
 #[semio_framework_async_macros::async_test]
 async fn cad_plugin_assembles_with_editor_and_viewer_apps() {
     let bundle = super::plugin().expect("cad plugin() must assemble; see require_declared_capability_or_record for the exact missing/misdeclared capability claim");

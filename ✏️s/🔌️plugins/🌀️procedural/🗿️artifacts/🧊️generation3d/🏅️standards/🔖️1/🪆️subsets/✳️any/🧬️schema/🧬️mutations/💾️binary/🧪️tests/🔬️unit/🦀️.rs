@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::{GENERATION_3D_SCHEMA, Generation3dSnapshot};
+use crate::{Generation3dSnapshot, GENERATION_3D_SCHEMA};
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_os_kernel::os_store::test_support;
-use store::{ArtifactCommand, create_document_envelope};
+use store::{create_document_envelope, ArtifactCommand};
 
 #[test]
 fn op_text_round_trip_create_widget() {

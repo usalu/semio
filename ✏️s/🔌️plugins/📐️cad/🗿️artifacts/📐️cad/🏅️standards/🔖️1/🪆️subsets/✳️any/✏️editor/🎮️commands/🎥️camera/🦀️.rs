@@ -1,15 +1,15 @@
 //! 🎥️ CAD play app commands — the per-pane camera pose and its classical-projection configuration. All three are config-only: a camera move never records a VCS edit.
 
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::CadDispatchCtx;
+use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_camera_runtime_mut, cad_pane_id_from_surface_id, cad_pane_suffix, runtime_of, snapshot_of};
 use crate::op::CadMutation;
 use crate::standards::v1::subsets::any::schema::inferences::{cad_camera_distance, cad_camera_projection_config, cad_camera_set_projection_config};
 use crate::CadSnapshot;
 use crate::{CadCamera, CadPaneId};
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_camera_runtime_mut, cad_pane_id_from_surface_id, cad_pane_suffix, runtime_of, snapshot_of};
+use protocol::DslValue;
 use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use protocol::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetCamera
@@ -59,11 +59,7 @@ pub mod set_projection {
         // `🔌️plugin/🦀️.rs`) take `Option<&dsl::os_pack::json::Value>` — a genuine framework
         // boundary, bridged once here from a `DslValue` built the normal way.
         let value = payload.value_str.clone().map(DslValue::String).or_else(|| payload.value_num.map(DslValue::float)).unwrap_or(DslValue::Null);
-        let dsl_args = DslValue::object([
-            ("field".to_string(), payload.field.clone().map_or(DslValue::Null, DslValue::String)),
-            ("value".to_string(), value),
-            ("param".to_string(), payload.param.clone().map_or(DslValue::Null, DslValue::String)),
-        ]);
+        let dsl_args = DslValue::object([("field".to_string(), payload.field.clone().map_or(DslValue::Null, DslValue::String)), ("value".to_string(), value), ("param".to_string(), payload.param.clone().map_or(DslValue::Null, DslValue::String))]);
         let args_value = protocol::json::from_dsl_value(&dsl_args);
         let args = Some(&args_value);
         let moves_pose = world3d_projection_action_moves_pose("setProjection", args);
@@ -103,11 +99,7 @@ pub mod set_projection_param {
         // `🔌️plugin/🦀️.rs`) take `Option<&dsl::os_pack::json::Value>` — a genuine framework
         // boundary, bridged once here from a `DslValue` built the normal way.
         let value = payload.value_str.clone().map(DslValue::String).or_else(|| payload.value_num.map(DslValue::float)).unwrap_or(DslValue::Null);
-        let dsl_args = DslValue::object([
-            ("field".to_string(), payload.field.clone().map_or(DslValue::Null, DslValue::String)),
-            ("value".to_string(), value),
-            ("param".to_string(), payload.param.clone().map_or(DslValue::Null, DslValue::String)),
-        ]);
+        let dsl_args = DslValue::object([("field".to_string(), payload.field.clone().map_or(DslValue::Null, DslValue::String)), ("value".to_string(), value), ("param".to_string(), payload.param.clone().map_or(DslValue::Null, DslValue::String))]);
         let args_value = protocol::json::from_dsl_value(&dsl_args);
         let args = Some(&args_value);
         let moves_pose = world3d_projection_action_moves_pose("setProjectionParam", args);

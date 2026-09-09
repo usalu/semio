@@ -2,13 +2,13 @@
 
 use crate::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
 use framework_schema::ArtifactSchema;
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
 
 //#region 🔖️Artifact
-/// 🧬️ Full process3d artifact state across the artifact, presence and config lanes.
+/// 🧬️ process3d document artifact state.
 /// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: mirrors `Process3dSnapshot`'s
 /// flattened `stock_*`/composed-child field shape exactly, so `to_snapshot`/`from_snapshot` stay a
 /// plain field-for-field copy.
@@ -39,42 +39,6 @@ pub struct Process3dArtifact {
     pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
     pub resolved_up_to: Option<usize>,
-    #[state(presence)]
-    pub selected_id: Option<String>,
-    #[state(presence)]
-    pub selected_face_id: Option<usize>,
-    #[state(config)]
-    pub selection_method: String,
-    #[state(config)]
-    pub engagement_input: String,
-    #[state(config)]
-    pub camera_position_x: f64,
-    #[state(config)]
-    pub camera_position_y: f64,
-    #[state(config)]
-    pub camera_position_z: f64,
-    #[state(config)]
-    pub camera_target_x: f64,
-    #[state(config)]
-    pub camera_target_y: f64,
-    #[state(config)]
-    pub camera_target_z: f64,
-    #[state(config)]
-    pub camera_fov: f64,
-    #[state(config)]
-    pub sun_enabled: bool,
-    #[state(config)]
-    pub sun_azimuth: f64,
-    #[state(config)]
-    pub sun_elevation: f64,
-    #[state(config)]
-    pub sun_intensity: f64,
-    #[state(config)]
-    pub sun_color: String,
-    #[state(config)]
-    pub contributions_json: String,
-    #[state(artifact)]
-    pub hovered_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -93,24 +57,6 @@ impl Default for Process3dArtifact {
             step_payloads: base.step_payloads,
             tool_solids: base.tool_solids,
             resolved_up_to: None,
-            selected_id: None,
-            selected_face_id: None,
-            selection_method: "rectangle".into(),
-            engagement_input: String::new(),
-            camera_position_x: 3.0,
-            camera_position_y: -3.0,
-            camera_position_z: 2.0,
-            camera_target_x: 0.0,
-            camera_target_y: 0.0,
-            camera_target_z: 0.0,
-            camera_fov: 45.0,
-            sun_enabled: false,
-            sun_azimuth: 45.0,
-            sun_elevation: 35.0,
-            sun_intensity: 0.85,
-            sun_color: "#ffffff".into(),
-            contributions_json: "[]".into(),
-            hovered_id: None,
         }
     }
 }
@@ -132,7 +78,7 @@ impl Process3dArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::Process3dSnapshot) -> Self {
         Self {
             workshop: snapshot.workshop,
@@ -168,13 +114,7 @@ impl Process3dArtifact {
 pub fn process3d_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.process.process3d",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

@@ -67,14 +67,30 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale
-/// 🗣️ Resolves the German branch from the canonical host view.
-pub fn puzzle5d_is_de_locale(view_state: &semio_framework_plugin::ViewModel) -> bool {
-    view_state.locale == Locale::De
+/// 🚦️ The only label axes this app admits: the four region-tolerant locale tags it has authored an
+/// `app_labels!` cell for, crossed with the two terminology ids. Every other tag is refused — per
+/// CLAUDE.md this UI has no default language, so an unauthored axis must never fall back to English
+/// or to native terminology, and the caller has to surface `ui.localization.unsupported` instead.
+pub fn puzzle5d_label_axes(locale_tag: &str, terminology_tag: &str) -> Option<(Locale, Terminology)> {
+    match (locale_tag, terminology_tag) {
+        ("en" | "en-US", "native") => Some((Locale::En, Terminology::Native)),
+        ("en" | "en-US", "reuse") => Some((Locale::En, Terminology::Reuse)),
+        ("de" | "de-DE", "native") => Some((Locale::De, Terminology::Native)),
+        ("de" | "de-DE", "reuse") => Some((Locale::De, Terminology::Reuse)),
+        _ => None,
+    }
 }
 
-/// 🗣️ Resolves the active label set from the canonical host view axes.
-pub fn puzzle5d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Puzzle5dLabels {
-    semio_framework_plugin::resolve_labels::<Puzzle5dLabels>(view_state)
+/// 🗣️ Resolves the German branch from the admitted host axes; an unauthored axis has no branch at all.
+pub fn puzzle5d_is_de_locale(view_state: &semio_framework_plugin::ViewModel) -> Option<bool> {
+    Some(puzzle5d_label_axes(view_state.locale.as_str(), view_state.terminology.as_str())?.0 == Locale::De)
+}
+
+/// 🗣️ Resolves the active label set from the canonical host view axes, failing closed through
+/// [`puzzle5d_label_axes`] whenever the host names an axis this app never authored.
+pub fn puzzle5d_labels(view_state: &semio_framework_plugin::ViewModel) -> Option<&'static Puzzle5dLabels> {
+    let (locale, terminology) = puzzle5d_label_axes(view_state.locale.as_str(), view_state.terminology.as_str())?;
+    Some(Puzzle5dLabels::labels(locale, terminology))
 }
 
 /// 🗺️ Lifts a `Puzzle5dLabels` field accessor into a full manifest-level `LocalizedLabel` matrix —

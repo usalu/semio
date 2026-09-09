@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{WorkingSolid, brep_snapshot_for_working_solid};
+use crate::{brep_snapshot_for_working_solid, WorkingSolid};
 
 #[semio_framework_async_macros::async_test]
 async fn default_box_stock_bounds_are_unit_cube() {

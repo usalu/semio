@@ -22,7 +22,8 @@ pub fn change_ideal_loads_system_min_cooling_supply_air_temp(id: crate::model::E
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeIdealLoadsSystemMinCoolingSupplyAirTemp {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "ideal-loads-system", kind: "change-ideal-loads-system-min-cooling-supply-air-temp", record: "ChangedIdealLoadsSystemMinCoolingSupplyAirTemp" };
+    const SEMANTICS: protocol::SemanticDescriptor =
+        protocol::SemanticDescriptor { verb: "change", entity: "ideal-loads-system", kind: "change-ideal-loads-system-min-cooling-supply-air-temp", record: "ChangedIdealLoadsSystemMinCoolingSupplyAirTemp" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)

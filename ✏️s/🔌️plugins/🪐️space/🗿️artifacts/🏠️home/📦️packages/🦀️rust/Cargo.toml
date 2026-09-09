@@ -45,6 +45,7 @@ semio-framework-os = { workspace = true, features = ["space-guest"], optional = 
 semio-framework-os = { workspace = true, features = ["os-host-full"], optional = true }
 
 [dev-dependencies]
+semio-framework-hash = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

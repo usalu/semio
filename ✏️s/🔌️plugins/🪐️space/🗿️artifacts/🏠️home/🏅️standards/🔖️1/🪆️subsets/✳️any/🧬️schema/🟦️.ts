@@ -5,9 +5,6 @@ export interface SHomeArtifact {
   schema: string;
   /** @state artifact */
   catalogGeneration: number;
-  /** @state config */
-  activePanelTab: string;
-  /** @state config */
 }
 
 //#region 🚪️Parsers
@@ -62,6 +59,5 @@ export function parseSHomeArtifact(value: unknown, at = "$"): SHomeArtifact {
   return {
     schema: spaceHomeArtifactGuardString(row["schema"], `${at}.schema`),
     catalogGeneration: spaceHomeArtifactGuardInteger(row["catalogGeneration"], `${at}.catalogGeneration`, {"minimum": 0}),
-    activePanelTab: spaceHomeArtifactGuardString(row["activePanelTab"], `${at}.activePanelTab`),
   };
 }

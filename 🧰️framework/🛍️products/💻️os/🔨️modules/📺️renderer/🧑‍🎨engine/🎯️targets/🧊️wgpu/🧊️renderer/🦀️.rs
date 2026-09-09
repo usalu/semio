@@ -3117,6 +3117,7 @@ mod renderer_io_retained_tests;
 /// through `Kernel` + `GuestRuntime`/`WasmtimeRuntime` + `ParallelRuntime` on pool workers, never
 /// in-process on the winit thread.
 #[cfg(not(target_arch = "wasm32"))]
+#[path = "."]
 pub(crate) mod kernel_runtime {
     use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, JobPlacement, MessageEndpoint, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
     use semio_framework_actor::{
@@ -4876,7 +4877,7 @@ pub(crate) mod kernel_runtime {
                 attempt: body[24],
             };
             let lane = body[25];
-            if lane > 11 {
+            if lane > 12 {
                 return None;
             }
             let len = u32::from_le_bytes(body[26..30].try_into().ok()?) as usize;
@@ -4897,6 +4898,10 @@ pub(crate) mod kernel_runtime {
             bytes
         }
     }
+
+    #[cfg(test)]
+    #[path = "../../../🧪️tests/🗞️typed-result-page/🦀️.rs"]
+    mod typed_result_page_tests;
 
     /// 🎯️ Object-safe renderer boundary for one retained page and its exact ACK token.
     /// The installed plugin host keeps the original owner until `acknowledge` succeeds.
@@ -11332,8 +11337,8 @@ impl FrameTransaction {
                 }
                 let controller_id = surface.controller_id.clone();
                 match engine_canvas::drive_board_authority_step(&surface_id, context) {
-                    puzzle::editor::puzzle2d::engine::BoardAuthorityStep::Pending => AppFrameTransactionStep::Pending,
-                    puzzle::editor::puzzle2d::engine::BoardAuthorityStep::Cancelled => {
+                    infinite_canvas::BoardAuthorityStep::Pending => AppFrameTransactionStep::Pending,
+                    infinite_canvas::BoardAuthorityStep::Cancelled => {
                         if let Err(fault) = engine_canvas::release_board_pointer_claim(&surface_id, &mut app.input) {
                             app.input.record_action_fault(fault);
                             runtime.record_frame_fault("board cancelled claim release faulted");
@@ -11343,13 +11348,13 @@ impl FrameTransaction {
                         self.board_authority_cursor += 1;
                         AppFrameTransactionStep::Pending
                     }
-                    puzzle::editor::puzzle2d::engine::BoardAuthorityStep::Fault => {
+                    infinite_canvas::BoardAuthorityStep::Fault => {
                         let _ = engine_canvas::release_board_pointer_claim(&surface_id, &mut app.input);
                         runtime.record_frame_fault("board retained authority faulted");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         AppFrameTransactionStep::Fault
                     }
-                    puzzle::editor::puzzle2d::engine::BoardAuthorityStep::Complete => match engine_canvas::publish_board_pointer_step(&surface_id, &mut app.input) {
+                    infinite_canvas::BoardAuthorityStep::Complete => match engine_canvas::publish_board_pointer_step(&surface_id, &mut app.input) {
                         Ok(true) => {
                             self.phase = AppFrameTransactionPhase::InputEvents;
                             AppFrameTransactionStep::Pending

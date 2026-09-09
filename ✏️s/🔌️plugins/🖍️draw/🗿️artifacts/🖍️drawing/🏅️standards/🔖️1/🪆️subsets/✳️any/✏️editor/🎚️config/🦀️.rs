@@ -7,9 +7,7 @@ use protocol::Mutation;
 //#region 🔖️Config
 /// 🧮️ B1: drawing's real `ArtifactApp::Config` — absorbs every former `DrawingInteractionState`
 /// (`ui`-crate `RefCell`) field (selection, hover, in-progress engagement-input text, the
-/// session-only free viewport camera) plus the two former `ViewModel`-driven fields the drawing UI
-/// actually reads (`active_utility_id`/`locale` — mirrors `shooting_engine::ShootingConfig`'s
-/// identical B1 migration) — session view state now round-trips through the config `ArtifactStore`
+/// session-only free viewport camera). Session view state round-trips through the config `ArtifactStore`
 /// exactly like document content, with a real `backwards` per `DrawingConfigMutation` instead of
 /// never being VCS'd at all.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
@@ -24,10 +22,6 @@ pub struct DrawingConfig {
     /// `DrawingInteractionState::camera`.
     #[dsl(block)]
     pub camera: DrawingCamera,
-    /// 🧰️ The active canvas utility — was read off `view_state.active_utility_id` (host-pushed
-    /// `ViewModel`, deleted by B1). Default mirrors the pre-migration `DRAWING_DEFAULT_UTILITY`
-    /// (`"selectDirect"`).
-    pub active_utility_id: String,
     /// 🧵️ Latest trace-pointer generation; zero means no live trace continuation.
     pub trace_pointer_generation: u64,
     /// ⏱️ Completed bounded trace work units for observable progress.
@@ -82,14 +76,7 @@ impl store::ArtifactPack for DrawingConfig {
 
 impl Default for DrawingConfig {
     fn default() -> Self {
-        Self {
-            engagement_input: String::new(),
-            camera: DrawingCamera::default(),
-            active_utility_id: "selectDirect".into(),
-            trace_pointer_generation: 0,
-            trace_pointer_completed_work: 0,
-            trace_pointer_pending_work: 0,
-        }
+        Self { engagement_input: String::new(), camera: DrawingCamera::default(), trace_pointer_generation: 0, trace_pointer_completed_work: 0, trace_pointer_pending_work: 0 }
     }
 }
 
@@ -117,8 +104,6 @@ pub enum DrawingConfigMutation {
         #[dsl(block)]
         camera: DrawingCamera,
     },
-    #[dsl(key = "active-utility")]
-    SetActiveUtility { utility_id: String },
     #[dsl(key = "trace-pointer-progress")]
     SetTracePointerProgress { generation: u64, completed_work: u64, pending_work: u64 },
 }
@@ -185,11 +170,70 @@ impl Mutation<DrawingConfig> for DrawingConfigMutation {
     /// ⚠️ PROVISIONAL: no `owner` leaf directory below exists on disk — placeholders that satisfy
     /// `protocol::Mutation`, not real registrations.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⌨️engagement-input", semantic_kind: "engagement-input", display_name: "Set Engagement Input", emoji: "⌨️", aggregate_variant: "SetEngagementInput", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎥️camera", semantic_kind: "camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🛠️active-utility", semantic_kind: "active-utility", display_name: "Set Active Utility", emoji: "🛠️", aggregate_variant: "SetActiveUtility", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📶️trace-pointer-progress", semantic_kind: "trace-pointer-progress", display_name: "Set Trace Pointer Progress", emoji: "📶️", aggregate_variant: "SetTracePointerProgress", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
+            semantic_kind: "snapshot",
+            display_name: "Snapshot",
+            emoji: "📄",
+            aggregate_variant: "Snapshot",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⌨️engagement-input",
+            semantic_kind: "engagement-input",
+            display_name: "Set Engagement Input",
+            emoji: "⌨️",
+            aggregate_variant: "SetEngagementInput",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎥️camera",
+            semantic_kind: "camera",
+            display_name: "Set Camera",
+            emoji: "🎥️",
+            aggregate_variant: "SetCamera",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📶️trace-pointer-progress",
+            semantic_kind: "trace-pointer-progress",
+            display_name: "Set Trace Pointer Progress",
+            emoji: "📶️",
+            aggregate_variant: "SetTracePointerProgress",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -197,8 +241,7 @@ impl Mutation<DrawingConfig> for DrawingConfigMutation {
             DrawingConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
             DrawingConfigMutation::SetEngagementInput { .. } => &Self::DESCRIPTORS[1],
             DrawingConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[2],
-            DrawingConfigMutation::SetActiveUtility { .. } => &Self::DESCRIPTORS[3],
-            DrawingConfigMutation::SetTracePointerProgress { .. } => &Self::DESCRIPTORS[4],
+            DrawingConfigMutation::SetTracePointerProgress { .. } => &Self::DESCRIPTORS[3],
         }
     }
 
@@ -208,12 +251,6 @@ impl Mutation<DrawingConfig> for DrawingConfigMutation {
             DrawingConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             DrawingConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
             DrawingConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            DrawingConfigMutation::SetActiveUtility { utility_id } => {
-                next.active_utility_id = utility_id.clone();
-                next.trace_pointer_generation = 0;
-                next.trace_pointer_completed_work = 0;
-                next.trace_pointer_pending_work = 0;
-            }
             DrawingConfigMutation::SetTracePointerProgress { generation, completed_work, pending_work } => {
                 next.trace_pointer_generation = *generation;
                 next.trace_pointer_completed_work = *completed_work;

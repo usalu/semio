@@ -9,7 +9,7 @@
   "cancelFrontiers": [0, 1, 2, 5, 16, 64, 128],
   "differentBackingMayBeEqual": true,
   "contendedProgress": false,
-  "frame": {"logicalDepth":256,"pageCount":256,"maximumTextBytes":512,"maximumPosition":1024,"none":65535,"bytes":8,"maximumCursorBytes":4096,"littleEndian":"ff00000000040000"},
+  "frame": {"logicalDepth":256,"pageCount":434,"maximumTextBytes":512,"maximumPosition":1024,"none":65535,"bytes":8,"maximumCursorBytes":4096,"littleEndian":"b101000000040000"},
   "cases": [
     {"left": {"type":"text","value":"same"}, "right": {"type":"text","value":"same"}, "equal":true},
     {"left": {"type":"text","value":"same"}, "right": {"type":"text","value":"diff"}, "equal":false},

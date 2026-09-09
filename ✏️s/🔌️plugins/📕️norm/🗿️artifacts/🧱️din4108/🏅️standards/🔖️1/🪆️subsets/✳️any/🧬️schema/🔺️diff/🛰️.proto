@@ -40,8 +40,6 @@ message Din4108Diff {
   optional string application_type = 18;
   // @state artifact
   optional string declared_application_class = 19;
-  // @state presence
-  optional uint32 selected_check_index = 20;
 }
 
 message Din4108Artifact {
@@ -63,7 +61,6 @@ message Din4108Artifact {
   bool bb2_details_conform = 16;
   string application_type = 17;
   string declared_application_class = 18;
-  optional uint32 selected_check_index = 19;
 }
 
 message Din4108LayerList { repeated string values = 1; }

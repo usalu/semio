@@ -17,7 +17,13 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetCamer
         next.camera_draft_label = self.value.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> { vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Set Camera Draft Label".into() }
-    fn target(&self) -> Vec<String> { vec!["camera_draft_label".into()] }
+    fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> {
+        vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Camera Draft Label".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["camera_draft_label".into()]
+    }
 }

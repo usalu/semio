@@ -2,13 +2,13 @@
 //! feature's opaque payload (`MapFeature::data` is deliberately untyped, so a partial `change`
 //! isn't expressible — this is a `replace`, per the taxonomy's "large structured sub-payload" rule).
 
-use crate::GisMapSnapshot;
 use crate::diff::GisMapDiff;
 use crate::mutations::GisMapMutation;
+use crate::GisMapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔹Payload
 /// 🔁️ Replaces the `data` payload of the `regions` entry addressed by `id`. Diff/inverse

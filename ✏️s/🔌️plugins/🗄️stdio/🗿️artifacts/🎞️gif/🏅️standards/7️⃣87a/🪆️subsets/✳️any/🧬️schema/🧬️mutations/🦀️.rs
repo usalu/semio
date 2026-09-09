@@ -30,30 +30,30 @@ use protocol::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutations
+#[path = "🖼️insert-image/🦀️.rs"]
+pub mod insert_image;
+#[path = "🔀move-image/🦀️.rs"]
+pub mod move_image;
+#[path = "🗑️remove-image/🦀️.rs"]
+pub mod remove_image;
+#[path = "🖌️set-background-color-index/🦀️.rs"]
+pub mod set_background_color_index;
+#[path = "🎨set-global-color-table/🦀️.rs"]
+pub mod set_global_color_table;
+#[path = "📍set-image-geometry/🦀️.rs"]
+pub mod set_image_geometry;
+#[path = "🪜set-image-interlace/🦀️.rs"]
+pub mod set_image_interlace;
+#[path = "🎞️set-image-pixels/🦀️.rs"]
+pub mod set_image_pixels;
+#[path = "📏set-pixel-aspect-ratio/🦀️.rs"]
+pub mod set_pixel_aspect_ratio;
+#[path = "📐set-screen-size/🦀️.rs"]
+pub mod set_screen_size;
 /// 📐️ Typed content mutation for `stdio.gif` (87a).
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "📐set-screen-size/🦀️.rs"]
-pub mod set_screen_size;
-#[path = "🎨set-global-color-table/🦀️.rs"]
-pub mod set_global_color_table;
-#[path = "🖌️set-background-color-index/🦀️.rs"]
-pub mod set_background_color_index;
-#[path = "📏set-pixel-aspect-ratio/🦀️.rs"]
-pub mod set_pixel_aspect_ratio;
-#[path = "🖼️insert-image/🦀️.rs"]
-pub mod insert_image;
-#[path = "🗑️remove-image/🦀️.rs"]
-pub mod remove_image;
-#[path = "🔀move-image/🦀️.rs"]
-pub mod move_image;
-#[path = "📍set-image-geometry/🦀️.rs"]
-pub mod set_image_geometry;
-#[path = "🎞️set-image-pixels/🦀️.rs"]
-pub mod set_image_pixels;
-#[path = "🪜set-image-interlace/🦀️.rs"]
-pub mod set_image_interlace;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
@@ -81,7 +81,8 @@ pub enum GifMutation {
 /// ids are measured against. `kinds_match_enum_variants_and_manifest_catalog` below is what keeps
 /// this list honest against the enum — the framework never parses Rust, so nothing else notices if
 /// this list and the enum drift apart.
-pub const KINDS: &[&str] = &["set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"];
+pub const KINDS: &[&str] =
+    &["set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"];
 //#endregion 🔖️Mutations
 
 /// 🧪️ P2-FG2: representative `GifMutation` cases for `ops_grammar_conformance_law`/
@@ -140,7 +141,9 @@ pub(crate) fn agg_diff(this: &GifMutation, base: &GifSnapshot) -> protocol::Muta
         GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct }) => GifDiff { gct: (*gct != base.gct).then_some(gct.clone()), ..Default::default() },
         GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index }) => GifDiff { background_color_index: (*index != base.background_color_index).then_some(*index), ..Default::default() },
         GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio }) => GifDiff { pixel_aspect_ratio: (*ratio != base.pixel_aspect_ratio).then_some(*ratio), ..Default::default() },
-        GifMutation::InsertImage(insert_image::InsertImage { index, image }) => GifDiff { images: Some(GifImagesDiff { added: vec![GifImageAdded { index: (*index).min(base.images.len()), image: image.clone() }], ..Default::default() }), ..Default::default() },
+        GifMutation::InsertImage(insert_image::InsertImage { index, image }) => {
+            GifDiff { images: Some(GifImagesDiff { added: vec![GifImageAdded { index: (*index).min(base.images.len()), image: image.clone() }], ..Default::default() }), ..Default::default() }
+        }
         GifMutation::RemoveImage(remove_image::RemoveImage { index }) => GifDiff { images: Some(GifImagesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
         GifMutation::MoveImage(move_image::MoveImage { from, to }) => {
             let mut images = base.images.clone();

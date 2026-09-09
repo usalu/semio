@@ -17,8 +17,7 @@
   "aEfMm2": null,
   "fVK": null,
   "fireDurationMin": null,
-  "sectionDepthMm": 360.0,
+  "sectionDepthMm": 360,
   "aVertMS2": null,
-  "nCyclesBridge": null,
-  "selectedCheckIndex": null
+  "nCyclesBridge": null
 }

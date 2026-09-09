@@ -22,7 +22,7 @@
 use crate::standards::v1::subsets::any::schema::diff::JackDiff;
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
-use crate::{materialize_jack_content, jack_working_scene, Edge, EntityRef, JackSnapshot, PropertyBag};
+use crate::{jack_working_scene, materialize_jack_content, Edge, EntityRef, JackSnapshot, PropertyBag};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -146,12 +146,12 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "remove-data-property/keeps-an-edge-without-the-property-it-never-had: produced diff differs from the committed 🔺️diff/🔣️.json");
     let typed: JackDiff = pack::from_json_str(DIFF).expect("committed diff decodes into JackDiff");
     assert!(typed.content.is_none(), "the committed diff must leave the composed content slot untouched — a set `content` would be exactly the re-minted DefaultHasher handle this case exists to avoid");
-    assert_eq!(typed, JackDiff::default(), "remove-data-property's no-op delta is the artifact's Default diff, every one of its nineteen slots left None");
+    assert_eq!(typed, JackDiff::default(), "remove-data-property's no-op delta is the artifact's Default diff, every one of its seven document slots left None");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own `JackDiff`. `JackDiff`
 /// carries a container-level `#[serde(default)]` and NO per-field `skip_serializing_if`, so all
-/// nineteen sparse slots — artifact, presence and config lanes alike — must be present as `null`.
+/// seven document slots — must be present as `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: JackDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
@@ -160,7 +160,7 @@ async fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "remove-data-property/keeps-an-edge-without-the-property-it-never-had: committed diff JSON is not canonical");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     let slots = committed.as_object().expect("the committed diff is a JSON object");
-    assert_eq!(slots.len(), 19, "JackDiff emits all nineteen sparse slots, got {slots:?}");
+    assert_eq!(slots.len(), 7, "JackDiff emits all seven document slots, got {slots:?}");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`. For a no-op that

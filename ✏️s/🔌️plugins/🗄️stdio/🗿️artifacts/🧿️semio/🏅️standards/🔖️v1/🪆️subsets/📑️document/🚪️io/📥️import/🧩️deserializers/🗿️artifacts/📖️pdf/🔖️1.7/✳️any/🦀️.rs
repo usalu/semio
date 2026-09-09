@@ -16,9 +16,9 @@
 //! - No paragraph/heading/list/table distinction inside a page — PDF's content-stream text has no
 //!   such markup at the level `PdfPage::text` models it.
 
-use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 
 //#region 🔖️Deserializer
 pub struct SemioDocumentFromPdf;

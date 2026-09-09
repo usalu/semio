@@ -1,10 +1,10 @@
 //! 🛍️ Animate presentation app panel — the catalogue: tile-seeding templates and the active figure source.
 
-use crate::PresentationSnapshot;
 use crate::editor::animate::terminology::AnimatePresentationLabels;
+use crate::editor::animate::{animate_presentation_action, ui_capacity_error, ui_children, ui_label, ui_map, ui_node, ui_text};
+use crate::PresentationSnapshot;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use semio_framework_ui_contract::{button, column, field, input, section, text, BuiltNode, HasBase, InputKind, Trigger, UiValue};
-use crate::editor::animate::{animate_presentation_action, ui_capacity_error, ui_children, ui_label, ui_map, ui_node, ui_text};
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_BODY_CATALOGUE: &str = "animate.presentation.play.catalogue";
@@ -29,7 +29,8 @@ fn catalogue_button(id: &str, label: &str, action: &str, args: Option<UiValue>) 
     let builder = match args {
         Some(args) => builder.try_on_with(Trigger::Activate, action, args),
         None => builder.try_on(Trigger::Activate, action),
-    }.map_err(|_| ui_capacity_error())?;
+    }
+    .map_err(|_| ui_capacity_error())?;
     ui_node(builder, id)
 }
 
@@ -37,8 +38,12 @@ fn source_args() -> semio_framework_plugin::UiAssemblyResult<UiValue> {
     let source = crate::default_figure_tile_source();
     let frame = ui_map([("height", UiValue::Number(source.frame.height)), ("width", UiValue::Number(source.frame.width)), ("x", UiValue::Number(source.frame.x)), ("y", UiValue::Number(source.frame.y))])?;
     let mut entries = vec![("frame", frame), ("kind", UiValue::Text(ui_text(&source.kind)?))];
-    if let Some(value) = source.pdf_page { entries.push(("pdfPage", UiValue::Number(f64::from(value)))); }
-    if let Some(value) = source.source_aspect { entries.push(("sourceAspect", UiValue::Number(value))); }
+    if let Some(value) = source.pdf_page {
+        entries.push(("pdfPage", UiValue::Number(f64::from(value))));
+    }
+    if let Some(value) = source.source_aspect {
+        entries.push(("sourceAspect", UiValue::Number(value)));
+    }
     entries.push(("src", UiValue::Text(ui_text(&source.src)?)));
     ui_map([("source", ui_map(entries)?)])
 }

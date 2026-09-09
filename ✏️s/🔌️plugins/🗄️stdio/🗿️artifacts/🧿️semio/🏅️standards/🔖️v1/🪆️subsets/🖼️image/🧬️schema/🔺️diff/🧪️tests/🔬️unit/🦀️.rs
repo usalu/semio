@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA;
 

@@ -24,8 +24,6 @@ message Block2dArtifact {
   BlockCamera2d camera2d = 9;
   // @state artifact
   BlockMeta meta = 10;
-  // @state presence
-  repeated string selected_ids = 11;
   // @state config
 }
 

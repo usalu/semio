@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::standards::v1::subsets::table::schema::snapshot::{STDIO_SEMIOTABLE_DOCUMENT_SCHEMA, SemioTableCellKind, SemioTableColumn, SemioTableRow};
+use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
 use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 

@@ -1,10 +1,10 @@
 //! 🖊️ 🖊️ Note play app command command — `ink-apply-events`.
 
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::schema::mutations::{change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, edit_block_ink_stroke, move_block, rename_block, replace_asset_payload, resize_block};
 use crate::schema::{block_bounds, block_id, block_locked, block_name, block_visible, find_block, insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::{NoteBlockNode, NoteCamera, NoteImageAsset, NoteSnapshot};
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

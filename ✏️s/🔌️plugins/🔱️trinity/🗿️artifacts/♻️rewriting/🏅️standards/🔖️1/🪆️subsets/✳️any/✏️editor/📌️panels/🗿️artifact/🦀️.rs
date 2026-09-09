@@ -1,11 +1,11 @@
 //! 📄️ Trinity Rewriting app — Document panel (before-fixture node tree).
 
-use crate::RewritingSnapshot;
-use crate::editor::rewriting::config::RewritingConfig;
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
+use crate::RewritingSnapshot;
+use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::{tree_item_desc, PanelTreeBuilder};
 
-pub(crate) fn render(state: &RewritingSnapshot, _cfg: &RewritingConfig, labels: &TrinityRewritingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render(state: &RewritingSnapshot, _cfg: &NoConfig, labels: &TrinityRewritingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(fixture) = crate::editor::rewriting::parse_fixture_json(&state.before_fixture_json) else {
         return Err(semio_framework_plugin::PluginAssemblyError::new("trinity.fixture.invalid", "invalid Trinity fixture"));
     };

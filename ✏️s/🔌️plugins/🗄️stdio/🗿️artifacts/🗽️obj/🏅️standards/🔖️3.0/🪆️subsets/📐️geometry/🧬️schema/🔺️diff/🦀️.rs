@@ -34,13 +34,13 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type NamedDiffParts<D, T> = (Vec<String>, Vec<(String, D)>, Vec<(usize, T)>);
 
-use std::collections::{BTreeSet, HashMap, HashSet};
 use crate::schema::snapshot::{ObjFace, ObjGroup, ObjNormal, ObjObject, ObjTexCoord, ObjVertex};
 use crate::ObjSnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 //#region IndexCollectionCore
 /// 🧮 Per-item sparse-diff behavior shared by the four flat, position-keyed collections. `Diff`
@@ -120,14 +120,7 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// algorithm, generic over `T: ObjIndexElem` instead of `String`.
 #[allow(clippy::type_complexity)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn generic_absorb_pair<T: ObjIndexElem>(
-    d1_removed: &[usize],
-    d1_modified: &[(usize, T::Diff)],
-    d1_added: &[(usize, T)],
-    d2_removed: &[usize],
-    d2_modified: &[(usize, T::Diff)],
-    d2_added: &[(usize, T)],
-) -> IndexedDiffParts<T::Diff, T> {
+fn generic_absorb_pair<T: ObjIndexElem>(d1_removed: &[usize], d1_modified: &[(usize, T::Diff)], d1_added: &[(usize, T)], d2_removed: &[usize], d2_modified: &[(usize, T::Diff)], d2_added: &[(usize, T)]) -> IndexedDiffParts<T::Diff, T> {
     let max_ref =
         d1_removed.iter().copied().chain(d1_modified.iter().map(|(i, _)| *i)).chain(d1_added.iter().map(|(i, _)| *i)).chain(d2_removed.iter().copied()).chain(d2_modified.iter().map(|(i, _)| *i)).chain(d2_added.iter().map(|(i, _)| *i)).max();
     let l1 = max_ref.map_or(0, |m| m + 2);
@@ -1961,11 +1954,7 @@ fn enc_index_triple_bin<T, D>(removed: &[usize], modified: &[(usize, D)], added:
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_index_triple_bin<T, D>(
-    reader: &mut store::ByteReader<'_>,
-    dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
-    dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<IndexedDiffParts<D, T>, String> {
+fn dec_index_triple_bin<T, D>(reader: &mut store::ByteReader<'_>, dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<IndexedDiffParts<D, T>, String> {
     let removed = read_vec_bin(reader, read_usize_bin)?;
     let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
@@ -1998,11 +1987,7 @@ fn enc_named_triple_bin<T, D>(removed: &[String], modified: &[(String, D)], adde
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_named_triple_bin<T, D>(
-    reader: &mut store::ByteReader<'_>,
-    dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
-    dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<NamedDiffParts<D, T>, String> {
+fn dec_named_triple_bin<T, D>(reader: &mut store::ByteReader<'_>, dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<NamedDiffParts<D, T>, String> {
     let removed = read_vec_bin(reader, read_str_bin)?;
     let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
@@ -2459,7 +2444,7 @@ mod tests;
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::schema::snapshot::ObjFaceVertex;
-pub use crate::schema::snapshot::ObjUsemtlRange;
 pub use crate::schema::snapshot::ObjSmoothingRange;
 pub use crate::schema::snapshot::ObjUnknownStatement;
+pub use crate::schema::snapshot::ObjUsemtlRange;
 //#endregion 🔁️Re-exports

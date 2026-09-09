@@ -11,5 +11,14 @@
     "update": "full-reload",
     "changedFile": "index.html",
     "contents": "<!doctype html><title>Updated artifact fixture</title>"
+  },
+  "storage": {
+    "package": {
+      "private": true,
+      "type": "module"
+    },
+    "modules": "node_modules",
+    "config": "node_modules/.vite-temp",
+    "optimizer": "node_modules/.vite"
   }
 }

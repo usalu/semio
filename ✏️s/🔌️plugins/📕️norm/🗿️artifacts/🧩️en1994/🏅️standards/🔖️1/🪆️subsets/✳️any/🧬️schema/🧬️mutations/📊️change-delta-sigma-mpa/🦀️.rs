@@ -1,6 +1,5 @@
 //! 📊 `change-delta-sigma-mpa` — sets the En 1994 bridge fatigue stress range Δσ [MPa] scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

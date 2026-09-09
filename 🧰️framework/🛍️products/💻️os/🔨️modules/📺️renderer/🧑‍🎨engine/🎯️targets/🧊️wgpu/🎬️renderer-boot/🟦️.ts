@@ -114,7 +114,7 @@ export async function buildIconAtlas(): Promise<{
  * best-effort cleanup, not a full runtime teardown: the mount keeps rendering into a detached canvas
  * until the page unloads.
  */
-export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = {}): Promise<() => void> {
+export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = {}): Promise<() => Promise<void>> {
   const rootId = options.rootId ?? "root";
   const root = document.getElementById(rootId);
   if (!root) throw new Error(`missing #${rootId}`);
@@ -149,8 +149,10 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
     rendererModule.uploadIconAtlas(iconAtlas.width, iconAtlas.height, iconAtlas.pixels, JSON.stringify(iconAtlas.entries));
   }
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-  return () => {
+  return async () => {
     root.replaceChildren();
-    for (const handle of loadedHandles) handle.dispose();
+    const results = await Promise.allSettled(loadedHandles.map((handle) => handle.dispose()));
+    const failures = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+    if (failures.length) throw new AggregateError(failures.map((result) => result.reason), "wgpu-renderer.retirement-failed");
   };
 }

@@ -1,6 +1,13 @@
 {
   "name": "abstraction-ownership-validation",
   "targets": {
+    "reset-document-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts reset-document-ownership"
+      }
+    },
     "resolved-host-test": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -106,11 +113,39 @@
         "command": "bun ./📜️script.ts cargo check semio-s-artifact-lowpoly-lowpoly"
       }
     },
+    "block3d-window-transient-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts block3d-window-transient native"
+      }
+    },
+    "returned-snapshot-read-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts returned-snapshot-read native"
+      }
+    },
+    "procedural-preview-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts procedural-preview native"
+      }
+    },
     "jack-check": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts cargo check semio-s-artifact-trinity-jack"
+      }
+    },
+    "writer-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cargo check semio-s-artifact-writer-writer"
       }
     },
     "context-menu-view-test": {
@@ -120,11 +155,305 @@
         "command": "bun ./📜️script.ts surface-view-context menu"
       }
     },
+    "jack-query-oracle-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts jack-query-ownership oracle"
+      }
+    },
     "jack-query-ownership-test": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts jack-query-ownership"
+      }
+    },
+    "host-ownership-native-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts host-ownership native"
+      }
+    },
+    "window-action-context": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts window-action-context"
+      }
+    },
+    "window-action-context-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts window-action-context oracle"
+      }
+    },
+    "framework-plugin-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cargo check semio-framework-plugin"
+      }
+    },
+    "artifact-contract-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts artifact-contract-ownership"
+      }
+    },
+    "artifact-contract-ownership-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts artifact-contract-ownership test"
+      }
+    },
+    "enforce": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts abstraction-ownership"
+      }
+    },
+    "rewriting-window-config": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts rewriting-window-config"
+      }
+    },
+    "rewriting-window-config-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts rewriting-window-config oracle"
+      }
+    },
+    "window-config-channel-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts window-config-channel native"
+      }
+    },
+    "window-config-channel-typescript": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts window-config-channel typescript"
+      }
+    },
+    "jack-window-config-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts jack-window-config oracle"
+      }
+    },
+    "jack-window-config-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts jack-window-config native"
+      }
+    },
+    "writer-window-state-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts writer-window-state oracle"
+      }
+    },
+    "writer-window-state-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts writer-window-state native"
+      }
+    },
+    "retained-window-input": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts retained-window-input"
+      }
+    },
+    "retained-window-input-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts retained-window-input oracle"
+      }
+    },
+    "wires-window-transient": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wires-window-transient"
+      }
+    },
+    "document-retirement": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ../../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts document-retirement-check"
+      }
+    },
+    "document-retirement-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ../../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts document-retirement-check --oracle-only"
+      }
+    },
+    "shared-artifact-addressing": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts shared-artifact-addressing"
+      }
+    },
+    "shared-artifact-addressing-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts shared-artifact-addressing oracle"
+      }
+    },
+    "wires-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wires-document-contract"
+      }
+    },
+    "wires-document-contract-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wires-document-contract oracle"
+      }
+    },
+    "artifact-field-parity-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts artifact-field-parity test"
+      }
+    },
+    "artifact-field-parity-report": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts artifact-field-parity report"
+      }
+    },
+    "artifact-field-parity-enforce": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts artifact-field-parity enforce"
+      }
+    },
+    "rewriting-map-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts rewriting-map-ownership"
+      }
+    },
+    "rewriting-map-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts rewriting-map-ownership oracle"
+      }
+    },
+    "shared-dynamic-value": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts shared-dynamic-value"
+      }
+    },
+    "rewriting-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts rewriting-document-contract"
+      }
+    },
+    "forms-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts forms-document-contract"
+      }
+    },
+    "playbook-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts playbook-document-contract"
+      }
+    },
+    "shared-map-delta": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts shared-map-delta"
+      }
+    },
+    "shared-map-delta-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts shared-map-delta oracle"
+      }
+    },
+    "equation-window-config-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts equation-window-config check"
+      }
+    },
+    "equation-window-config-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts equation-window-config oracle"
+      }
+    },
+    "equation-window-config-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts equation-window-config native"
+      }
+    },
+    "shared-value-clone": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts shared-value-clone"
+      }
+    },
+    "shared-value-canonical-json": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts shared-value-canonical-json"
+      }
+    },
+    "wires-pointer-move": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wires-pointer-move"
       }
     }
   }

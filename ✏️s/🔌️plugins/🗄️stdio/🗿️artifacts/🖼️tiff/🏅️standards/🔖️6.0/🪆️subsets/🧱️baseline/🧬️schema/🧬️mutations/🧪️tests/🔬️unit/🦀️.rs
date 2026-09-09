@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::standards::v6_0::subsets::baseline::schema::{CODE_MISSING_STRIP_OFFSETS, CODE_TILED_NOT_BASELINE, CODE_UNSUPPORTED_BITS_PER_SAMPLE, CODE_UNSUPPORTED_COMPRESSION, CODE_UNSUPPORTED_PHOTOMETRIC, check_tiff_baseline_conformance};
+use crate::standards::v6_0::subsets::baseline::schema::{check_tiff_baseline_conformance, CODE_MISSING_STRIP_OFFSETS, CODE_TILED_NOT_BASELINE, CODE_UNSUPPORTED_BITS_PER_SAMPLE, CODE_UNSUPPORTED_COMPRESSION, CODE_UNSUPPORTED_PHOTOMETRIC};
 use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffIfd};
 
 fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {

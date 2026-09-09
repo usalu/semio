@@ -14,14 +14,14 @@
 //!   (tEXt/zTXt/iTXt)/`compressed`/`language_tag`/`translated_keyword` have no home on
 //!   `SemioImageMetadataEntry` and are dropped on import.
 
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 #[cfg(test)]
 use semio_s_artifact_stdio_png::schema::snapshot::{PngChunkMarker, PngTextKind};
 use semio_s_artifact_stdio_png::{
     schema::snapshot::{PngColorType, PngTextChunk},
     PngSnapshot,
 };
-use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };

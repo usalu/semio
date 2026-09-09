@@ -1,4 +1,3 @@
-
 //! 🧪️ Every registered hop, exercised end to end. The four `🧫️fixtures/` files are authored by
 //! `🐍️w6-io-fixtures.py` (Python stdlib `struct`/`zlib` and hand-written text only, never by this
 //! repo's own encoders), so reading one back is a genuine cross-implementation check rather than a
@@ -22,7 +21,11 @@ const PNG_FIXTURE: &[u8] = include_bytes!("../../🧫️fixtures/📷️two-by-t
 /// flatten face corners into a non-indexed soup ("empty `indices` means sequential"), while its ply
 /// leaf keeps the source's shared index list. Both are legal inputs here.
 fn triangle_count(mesh: &MeshData) -> usize {
-    if mesh.indices.is_empty() { mesh.positions.len() / 9 } else { mesh.indices.len() / 3 }
+    if mesh.indices.is_empty() {
+        mesh.positions.len() / 9
+    } else {
+        mesh.indices.len() / 3
+    }
 }
 
 /// ☁️ A cloud-only scene: `results.mesh` is reset to the EMPTY handle so `scene_mesh_or_cloud_semio`

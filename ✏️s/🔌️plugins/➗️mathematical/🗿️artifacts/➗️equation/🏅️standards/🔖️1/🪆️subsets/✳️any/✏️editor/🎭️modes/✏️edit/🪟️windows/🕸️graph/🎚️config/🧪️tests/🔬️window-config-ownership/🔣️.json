@@ -1,0 +1,26 @@
+{
+  "windowKindId": "math-graph",
+  "leftWindowId": "equation-graph-left",
+  "rightWindowId": "equation-graph-right",
+  "base": { "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 } },
+  "cases": [
+    {
+      "windowId": "equation-graph-left",
+      "mutation": { "kind": "set-camera", "camera": { "x": 12.0, "y": -4.0, "zoom": 1.5 } },
+      "expected": {
+        "equation-graph-left": { "camera": { "x": 12.0, "y": -4.0, "zoom": 1.5 } },
+        "equation-graph-right": { "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 } }
+      }
+    },
+    {
+      "windowId": "equation-graph-right",
+      "mutation": { "kind": "set-camera", "camera": { "x": -8.0, "y": 3.0, "zoom": 2.0 } },
+      "expected": {
+        "equation-graph-left": { "camera": { "x": 12.0, "y": -4.0, "zoom": 1.5 } },
+        "equation-graph-right": { "camera": { "x": -8.0, "y": 3.0, "zoom": 2.0 } }
+      }
+    }
+  ],
+  "expectedGenerations": { "equation-graph-left": 1, "equation-graph-right": 1 },
+  "expectedAppConfig": {}
+}

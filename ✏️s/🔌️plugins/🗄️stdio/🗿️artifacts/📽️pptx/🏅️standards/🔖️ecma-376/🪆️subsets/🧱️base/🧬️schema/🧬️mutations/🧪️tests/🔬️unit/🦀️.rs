@@ -1,11 +1,10 @@
-
 use super::*;
 use crate::schema::diff::{PptxOpcPartDiff, PptxShapeDiff};
 use crate::schema::snapshot::{PptxPresentation, PptxRun, PptxXmlPart};
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn other(name: &str) -> PptxShape {

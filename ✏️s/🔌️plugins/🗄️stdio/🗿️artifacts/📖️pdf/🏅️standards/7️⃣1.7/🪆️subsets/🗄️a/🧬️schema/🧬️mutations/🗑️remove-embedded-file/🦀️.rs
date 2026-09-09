@@ -26,10 +26,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEmbeddedFile {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfAMutation> {
-        support::file_spec_named(base, &self.file_name)
-            .map(|_| PdfAMutation::InsertEmbeddedFile(InsertEmbeddedFile { file_name: self.file_name.clone() }))
-            .into_iter()
-            .collect()
+        support::file_spec_named(base, &self.file_name).map(|_| PdfAMutation::InsertEmbeddedFile(InsertEmbeddedFile { file_name: self.file_name.clone() })).into_iter().collect()
     }
 
     fn label(&self) -> String {

@@ -1,4 +1,3 @@
-
 use super::*;
 
 trait Din18599ChildOwnerOracle {

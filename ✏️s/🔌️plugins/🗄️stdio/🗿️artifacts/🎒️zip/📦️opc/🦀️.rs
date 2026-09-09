@@ -8,9 +8,9 @@
 
 use std::collections::HashMap;
 
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use crate::schema::snapshot::ZipEntry;
 use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 
 //#region 🔖️Error
 /// ⚠️ Typed OPC decode/encode failure — an unreadable or non-conformant container never silently

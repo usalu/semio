@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{SequenceStep, SlotRef, StepParams, default_snapshot};
+use crate::{default_snapshot, SequenceStep, SlotRef, StepParams};
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_default_snapshot() {

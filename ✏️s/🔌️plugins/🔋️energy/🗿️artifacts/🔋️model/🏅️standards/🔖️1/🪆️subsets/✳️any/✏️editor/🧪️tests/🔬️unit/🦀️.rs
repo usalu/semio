@@ -1,4 +1,3 @@
-
 use super::*;
 use std::collections::BTreeSet;
 
@@ -301,7 +300,7 @@ async fn dispatchable_app() -> semio_framework_plugin::VcsArtifactApp<EditorApp<
 #[semio_framework_async_macros::async_test]
 async fn every_declared_verb_dispatches_without_an_interactive_job_fault() {
     use semio_framework_plugin::PluginApp as _;
-    use semio_framework_plugin::{DslValue, effective_action_args};
+    use semio_framework_plugin::{effective_action_args, DslValue};
     let definition = create_energy_model_editor();
     let mut app = dispatchable_app().await;
     let mut reached = 0;

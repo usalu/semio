@@ -5,7 +5,7 @@
   "nEdKn": null,
   "vEdKn": null,
   "wMm3": null,
-  "aMm2": 72000.0,
+  "aMm2": 72000,
   "bMm": null,
   "hMm": null,
   "fMK": null,
@@ -19,6 +19,5 @@
   "fireDurationMin": null,
   "sectionDepthMm": null,
   "aVertMS2": null,
-  "nCyclesBridge": null,
-  "selectedCheckIndex": null
+  "nCyclesBridge": null
 }

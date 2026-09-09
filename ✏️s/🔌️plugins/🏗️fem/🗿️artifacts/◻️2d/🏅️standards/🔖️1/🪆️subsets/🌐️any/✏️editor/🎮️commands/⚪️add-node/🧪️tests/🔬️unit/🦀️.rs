@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::fem2d::Fem2dCommand;
 use crate::editor::fem2d::commands::{add_bar, add_beam, add_material, add_region, add_section, add_support};
 use crate::editor::fem2d::testkit::{dispatch, fem2d_app};
+use crate::editor::fem2d::Fem2dCommand;
 use crate::{FemDof, FemElement};
 
 #[semio_framework_async_macros::async_test]

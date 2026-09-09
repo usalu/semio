@@ -27,7 +27,7 @@
   "stainlessWPlMm3": null,
   "stainlessFYMpa": null,
   "platedLambdaP": 1.25,
-  "platedSigmaEdMpa": 275.0,
+  "platedSigmaEdMpa": 275,
   "siloTMm": null,
   "siloRMm": null,
   "shellSigmaXEdMpa": null,
@@ -73,6 +73,5 @@
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

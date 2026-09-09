@@ -1,0 +1,41 @@
+syntax = "proto3";
+package semio.s.puzzle.puzzle5d.window;
+
+message Puzzle5dCamera2d {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message Puzzle5dCamera3d {
+  repeated double position = 1;
+  repeated double target = 2;
+  double zoom = 3;
+}
+
+message Puzzle5dWorldSunConfig {
+  bool enabled = 1;
+  double azimuth = 2;
+  double elevation = 3;
+  double intensity = 4;
+  string color = 5;
+}
+
+message Puzzle5dBoardWindowConfig {
+  Puzzle5dCamera2d camera2d = 1;
+  uint32 fill_count = 2;
+  string lod_mode = 3;
+  double suggestion_offset = 4;
+  bool grid_snap_enabled = 5;
+  double grid_factor = 6;
+}
+
+message Puzzle5dWorldWindowConfig {
+  Puzzle5dCamera3d camera3d = 1;
+  Puzzle5dWorldSunConfig sun = 2;
+}
+
+message Puzzle5dWindowTransient {
+  string engagement_input = 1;
+  uint64 brush_candidate_index = 2;
+}

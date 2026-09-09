@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveFrameComponent {
-        pub(crate) id: u8,
-    }
+    pub(crate) id: u8,
+}
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for RemoveFrameComponent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "frame-component", kind: "remove-frame-component", record: "RemoveFrameComponent" };

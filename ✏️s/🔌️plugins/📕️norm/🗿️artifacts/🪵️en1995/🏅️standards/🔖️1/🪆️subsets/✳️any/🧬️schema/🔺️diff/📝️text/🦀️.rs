@@ -79,9 +79,6 @@ impl En1995Diff {
             if let Some(value) = &self.n_cycles_bridge {
                 next.n_cycles_bridge = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -189,7 +186,6 @@ impl MutationDiff<En1995Snapshot> for En1995Diff {
         take!(section_depth_mm);
         take!(a_vert_m_s2);
         take!(n_cycles_bridge);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

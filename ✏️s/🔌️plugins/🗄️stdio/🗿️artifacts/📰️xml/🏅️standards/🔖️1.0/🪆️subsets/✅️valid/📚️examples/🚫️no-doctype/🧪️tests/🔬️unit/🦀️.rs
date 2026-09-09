@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
 use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;

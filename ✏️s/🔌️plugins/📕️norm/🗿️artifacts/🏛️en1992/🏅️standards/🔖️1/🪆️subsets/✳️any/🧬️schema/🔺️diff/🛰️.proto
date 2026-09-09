@@ -74,8 +74,6 @@ message En1992Diff {
   optional double anchor_n_ed_kn = 35;
   // @state artifact
   optional double anchor_v_ed_kn = 36;
-  // @state presence
-  optional uint32 selected_check_index = 37;
 }
 
 message En1992Artifact {
@@ -114,7 +112,6 @@ message En1992Artifact {
   double anchor_c1_mm = 33;
   double anchor_n_ed_kn = 34;
   double anchor_v_ed_kn = 35;
-  optional uint32 selected_check_index = 36;
 }
 
 message En1992StringList { repeated string values = 1; }

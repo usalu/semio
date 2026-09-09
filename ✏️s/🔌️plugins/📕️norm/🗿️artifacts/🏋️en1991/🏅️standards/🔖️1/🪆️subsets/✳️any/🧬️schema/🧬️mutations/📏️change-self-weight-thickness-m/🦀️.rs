@@ -1,6 +1,5 @@
 //! 📏 `change-self-weight-thickness-m` — sets the En1991 self-weight thickness scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

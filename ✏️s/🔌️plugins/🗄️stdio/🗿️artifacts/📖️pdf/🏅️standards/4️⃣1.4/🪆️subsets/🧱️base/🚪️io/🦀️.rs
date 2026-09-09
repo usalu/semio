@@ -25,9 +25,7 @@
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); registration otherwise flows through
 //! `crate::declaration_1_4()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
 
-use crate::standards::v1_4::subsets::base::schema::{
-    snapshot::{PageDoc, PdfSnapshot},
-};
+use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use crate::STDIO_PDF_DOCUMENT_SCHEMA;
 use std::collections::{HashMap, HashSet};
 
@@ -273,11 +271,8 @@ fn rescued_trailer(data: &[u8]) -> Vec<PdfDictEntry> {
 /// 📇️ The object index, table first and rescan second.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn build_index(data: &[u8]) -> Xref {
-    let from_table = find_last_subslice(data, b"startxref")
-        .and_then(|at| read_uint(data, at + b"startxref".len()))
-        .and_then(|(offset, _)| usize::try_from(offset).ok())
-        .filter(|offset| *offset < data.len())
-        .and_then(|offset| read_classic_xref(data, offset));
+    let from_table =
+        find_last_subslice(data, b"startxref").and_then(|at| read_uint(data, at + b"startxref".len())).and_then(|(offset, _)| usize::try_from(offset).ok()).filter(|offset| *offset < data.len()).and_then(|offset| read_classic_xref(data, offset));
     match from_table {
         Some(xref) => xref,
         None => {

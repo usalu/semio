@@ -9,7 +9,6 @@
     "worldCameraTarget",
     "worldCameraFov",
     "frameIndex",
-    "activeUtilityId",
     "reportTable"
   ],
   "properties": {
@@ -42,10 +41,6 @@
     "frameIndex": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "reportTable": {

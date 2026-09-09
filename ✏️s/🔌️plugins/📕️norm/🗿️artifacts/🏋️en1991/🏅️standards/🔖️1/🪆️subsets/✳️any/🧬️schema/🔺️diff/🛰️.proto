@@ -68,8 +68,6 @@ message En1991Diff {
   optional double c_s = 32;
   // @state artifact
   optional double c_d = 33;
-  // @state presence
-  optional uint32 selected_check_index = 34;
 }
 
 message En1991Artifact {
@@ -105,7 +103,6 @@ message En1991Artifact {
   double silo_k = 30;
   double c_s = 31;
   double c_d = 32;
-  optional uint32 selected_check_index = 33;
 }
 
 message En1991StringList { repeated string values = 1; }

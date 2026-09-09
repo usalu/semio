@@ -14,9 +14,9 @@
 
 use crate::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
 use crate::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
-use semio_framework_artifact_flow_flow::Widget;
-use protocol::Identified;
 use flow::OrderedMap;
+use protocol::Identified;
+use semio_framework_artifact_flow_flow::Widget;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::schema::mutations::*;
-use crate::{Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, WorkingSolid, brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot};
+use crate::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, WorkingSolid};
 use protocol::Mutation;
 
 fn cut_step(id: &str) -> ProcessStep {

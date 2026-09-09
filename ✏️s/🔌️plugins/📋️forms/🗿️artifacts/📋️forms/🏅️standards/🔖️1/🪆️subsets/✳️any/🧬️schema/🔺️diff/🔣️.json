@@ -3,13 +3,75 @@
   "$id": "https://semio.tech/schema/s/forms/forms/diff.json",
   "title": "FormsDiff",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "schema": {
-      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "x-semio-state": "artifact"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
-    "value": {
-      "type": "string",
+    "id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "x-semio-state": "artifact"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "version": {
+      "anyOf": [
+        {
+          "type": "string",
+          "x-semio-state": "artifact"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "structure": {
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json",
+          "x-semio-state": "artifact",
+          "x-semio-child-kind": "s.stdio.semio.value"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "results": {
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json",
+          "x-semio-state": "artifact",
+          "x-semio-child-kind": "s.stdio.semio.table"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     }
   }

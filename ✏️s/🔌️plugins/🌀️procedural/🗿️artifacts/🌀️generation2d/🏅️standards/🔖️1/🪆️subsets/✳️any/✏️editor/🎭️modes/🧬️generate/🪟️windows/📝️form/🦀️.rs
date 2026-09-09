@@ -1,10 +1,10 @@
 //! 📝️ Generation2d play app — the generation input-form window (generate mode).
 
-use crate::Generation2dSnapshot;
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;
+use crate::Generation2dSnapshot;
 use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
+use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;
 use semio_framework_plugin::{built_text_node, BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

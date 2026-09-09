@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::standards::v_ap214::engine::ladder::{ShapeRepresentationRow, has_product_definition_chain, ladder_violations};
+use crate::standards::v_ap214::engine::ladder::{has_product_definition_chain, ladder_violations, ShapeRepresentationRow};
 use crate::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 use crate::standards::v_ap214::subsets::cc1::schema::check_cc1_conformance;
 

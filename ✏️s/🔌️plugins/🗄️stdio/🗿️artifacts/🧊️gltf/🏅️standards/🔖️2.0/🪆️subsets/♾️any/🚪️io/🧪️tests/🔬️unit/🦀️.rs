@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -341,8 +340,8 @@ async fn gltf_json_serialize_embeds_glb_sourced_buffer_as_data_uri() {
 mod conformance_laws {
     use super::*;
     use crate::io::mutations as mutation_transport;
-    use crate::schema::mutations::GltfMutation;
     use crate::schema::mutations::change_material_alpha_mode::{ChangeMaterialAlphaModeMutation, GltfChangeMaterialAlphaModePayload};
+    use crate::schema::mutations::GltfMutation;
     use crate::schema::snapshot::GltfAlphaMode;
     use crate::schema::{diff, snapshot};
     use protocol::{DiffCodec, Mutation, OpBinary, OpText};

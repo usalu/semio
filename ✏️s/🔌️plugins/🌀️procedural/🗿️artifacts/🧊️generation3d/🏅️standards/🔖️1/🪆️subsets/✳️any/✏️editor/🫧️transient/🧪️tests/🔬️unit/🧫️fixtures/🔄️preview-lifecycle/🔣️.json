@@ -1,0 +1,8 @@
+{
+  "steps": [
+    { "previewText": "{\"mesh\":\"first\"}" },
+    { "previewText": "{\"mesh\":\"second\"}" },
+    { "previewText": null }
+  ],
+  "expected": { "generationPreviewText": null }
+}

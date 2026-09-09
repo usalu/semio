@@ -5,11 +5,11 @@
 type StressContourTriangle = ([(f64, f64); 3], [f64; 3]);
 
 use crate::app_surface::{hex_to_rgb01, normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
-use crate::{element_id, Fem2dSnapshot, FemCamera};
 use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers, find_node_2d, screen_2d, MOMENT_SCALE_2D};
 use crate::model::ElementResult;
-use semio_framework_plugin::{built_text_node, BuiltNode, Canvas2dScene, Label};
+use crate::{element_id, Fem2dSnapshot, FemCamera};
 use dsl::json::Value;
+use semio_framework_plugin::{built_text_node, BuiltNode, Canvas2dScene, Label};
 use std::collections::HashMap;
 
 //#region 🔖️Constants

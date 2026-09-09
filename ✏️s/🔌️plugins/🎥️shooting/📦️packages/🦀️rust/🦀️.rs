@@ -8,11 +8,6 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
-extern crate semio_framework_value_derive as value_derive;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault>`, the exact signature
 // `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
@@ -21,21 +16,26 @@ extern crate semio_framework_value_derive as value_derive;
 // creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
 //#region 🗿️Artifacts
-mod artifacts { pub use semio_s_artifact_shooting_shooting as shooting; }
+mod artifacts {
+    pub use semio_s_artifact_shooting_shooting as shooting;
+}
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_shooting_shooting::editor::*; }
+mod editor {
+    pub use semio_s_artifact_shooting_shooting::editor::*;
+}
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_shooting_shooting::viewer::*; }
+mod viewer {
+    pub use semio_s_artifact_shooting_shooting::viewer::*;
+}
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ShootingApps);
-
 
 //#endregion 🔖️Plugin

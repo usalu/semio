@@ -17,9 +17,6 @@ async fn inference_determinism_law() {
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     use protocol::Inference;
-    assert_eq!(
-        crate::standards::v1::subsets::any::schema::inferences::GisTerrainInference::infer(&crate::GisTerrainSnapshot::default()),
-        crate::standards::v1::subsets::any::schema::inferences::GisTerrainInference::default(),
-    );
+    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::GisTerrainInference::infer(&crate::GisTerrainSnapshot::default()), crate::standards::v1::subsets::any::schema::inferences::GisTerrainInference::default(),);
 }
 //#endregion 🧪️InferenceLaws

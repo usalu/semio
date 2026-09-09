@@ -14,28 +14,28 @@
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 // (clippy::result_large_err is allowed crate-wide from the plugin root 🦀️.rs.)
 
-use crate::mutations::change_data_fields::ChangeDataFields;
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
+use crate::editor::layout::engine::export::LayoutExportJobFactory;
+use crate::editor::layout::engine::export::LayoutMediaExportJobFactory;
 use crate::editor::layout::modes::edit;
 use crate::editor::layout::modes::edit::windows::{blueprint, preview};
 use crate::editor::layout::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, preflight as preflight_panel};
 use crate::editor::layout::terminology::{layout_labels, LayoutLabels};
+use crate::mutations::change_data_fields::ChangeDataFields;
+use crate::mutations::LayoutMutation;
+use crate::LayoutSnapshot;
 use semio_framework::kernel::Effect;
 use semio_framework::{Dialect, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_plugin::{AppOperationContext, ArtifactToolPublicationContract, ArtifactToolPublicationLane};
-use crate::editor::layout::engine::export::LayoutExportJobFactory;
-use crate::editor::layout::engine::export::LayoutMediaExportJobFactory;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedToolJobRequest, ArtifactReservedToolJob, ArtifactToolFactoryRegistry};
+#[cfg(test)]
+use semio_framework_plugin::App;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
     WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
 };
-#[cfg(test)]
-use semio_framework_plugin::App;
+use semio_framework_plugin::{AppOperationContext, ArtifactToolPublicationContract, ArtifactToolPublicationLane};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use store::EngineHandles;
@@ -190,7 +190,8 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::editor::layout::commands::{
     add_frame, add_page, canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, engagement_input, engagement_submit, export_package, export_pdf, export_png, export_svg, focus_preflight_issue,
-    patch_frame, patch_page, set_active_page, set_camera, };
+    patch_frame, patch_page, set_active_page, set_camera,
+};
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
@@ -203,8 +204,6 @@ fn layout_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(LAYOUT_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
 }
 
-
-
 fn layout_retained_reduce(
     command: &LayoutCommand,
     snapshot: &LayoutSnapshot,
@@ -215,8 +214,10 @@ fn layout_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<LayoutPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<LayoutMutation, LayoutConfigMutation, NoDraftMutation>, Fault> {
-    if !LAYOUT_RETAINED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("layout-command-retained-route-rejected")); }
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    if !LAYOUT_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::from("layout-command-retained-route-rejected"));
+    }
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 struct LayoutRetainedCommandJobFactory {
@@ -333,7 +334,9 @@ fn layout_config_publication_bytes(mutation: &LayoutConfigMutation) -> Result<us
         LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value }) => value.len(),
         LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { .. }) | LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { .. }) => 0,
     };
-    if bytes > LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES { return Err("layout-config-text-envelope".into()); }
+    if bytes > LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES {
+        return Err("layout-config-text-envelope".into());
+    }
     Ok(LAYOUT_CONFIG_PUBLICATION_MAXIMUM_BYTES)
 }
 
@@ -347,14 +350,28 @@ impl store::ArtifactStoreOneItemPreparationFactory<LayoutConfig, LayoutConfigMut
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: layout_config_publication_bytes(mutation)? })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<LayoutConfig, LayoutConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<LayoutConfig, LayoutConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<LayoutConfig, LayoutConfigMutation>> {
-        if request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > 64 || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err() || layout_config_text_bytes(request.base.get()) > LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<LayoutConfig, LayoutConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<LayoutConfig, LayoutConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<LayoutConfig, LayoutConfigMutation>> {
+        if request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > 64
+            || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+            || layout_config_text_bytes(request.base.get()) > LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES
+        {
             return Err(request);
         }
         Ok(Box::new(LayoutConfigPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
         }))
     }
 }
@@ -374,29 +391,65 @@ struct LayoutConfigPreparation {
 
 impl store::ArtifactStoreOneItemPreparation<LayoutConfig, LayoutConfigMutation> for LayoutConfigPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || grant.maximum_bytes < LAYOUT_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.checkpoint.cursor != 0 { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if !grant.permits_one() || grant.maximum_bytes < LAYOUT_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.checkpoint.cursor != 0 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
         let base = self.base.as_ref().ok_or_else(|| "layout-config-base-owner-missing".to_string())?;
         let mutation = self.mutation.as_ref().ok_or_else(|| "layout-config-mutation-owner-missing".to_string())?;
         let mut next = base.get().clone();
         let inverse = match mutation {
-            LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id }) => { next.active_page_id = page_id.clone(); LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id: base.get().active_page_id.clone() }) }
-            LayoutConfigMutation::SetDropPreview(crate::editor::layout::config::SetDropPreview { preview }) => { next.drop_preview = preview.clone(); LayoutConfigMutation::SetDropPreview(crate::editor::layout::config::SetDropPreview { preview: base.get().drop_preview.clone() }) }
-            LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value }) => { next.engagement_input = value.clone(); LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value: base.get().engagement_input.clone() }) }
-            LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { camera }) => { next.camera = camera.clone(); LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { camera: base.get().camera.clone() }) }
-            LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { camera }) => { next.preview_camera = camera.clone(); LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { camera: base.get().preview_camera.clone() }) }
+            LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id }) => {
+                next.active_page_id = page_id.clone();
+                LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id: base.get().active_page_id.clone() })
+            }
+            LayoutConfigMutation::SetDropPreview(crate::editor::layout::config::SetDropPreview { preview }) => {
+                next.drop_preview = preview.clone();
+                LayoutConfigMutation::SetDropPreview(crate::editor::layout::config::SetDropPreview { preview: base.get().drop_preview.clone() })
+            }
+            LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value }) => {
+                next.engagement_input = value.clone();
+                LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value: base.get().engagement_input.clone() })
+            }
+            LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { camera }) => {
+                next.camera = camera.clone();
+                LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { camera: base.get().camera.clone() })
+            }
+            LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { camera }) => {
+                next.preview_camera = camera.clone();
+                LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { camera: base.get().preview_camera.clone() })
+            }
         };
-        if layout_config_text_bytes(&next) > LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES { return Err("layout-config-post-text-envelope".into()); }
+        if layout_config_text_bytes(&next) > LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES {
+            return Err("layout-config-post-text-envelope".into());
+        }
         let authority = self.authority.as_ref().ok_or_else(|| "layout-config-authority-missing".to_string())?;
         let id = format!("layout-config-{}", authority.next_sequence_number());
         let edit = protocol::Edit {
-            id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![mutation.clone()], inverse: vec![inverse],
+            id: id.clone(),
+            actor: Some(authority.actor().to_string()),
+            forwards: vec![mutation.clone()],
+            inverse: vec![inverse],
             mutation_meta: vec![protocol::MutationMeta {
-                mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-                author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())),
+                timestamp: authority.next_clock(),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: None,
+                origin: Default::default(),
             }],
-            description: self.description.clone(), coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+            description: self.description.clone(),
+            coalesce_key: None,
+            sequence_number: authority.next_sequence_number(),
+            started_at: String::new(),
+            finished_at: None,
         };
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(next))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: LAYOUT_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
@@ -404,22 +457,38 @@ impl store::ArtifactStoreOneItemPreparation<LayoutConfig, LayoutConfigMutation> 
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<LayoutConfig, LayoutConfigMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<LayoutConfig, LayoutConfigMutation>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<LayoutConfig, LayoutConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<LayoutConfig, LayoutConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < LAYOUT_CONFIG_PUBLICATION_MAXIMUM_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < LAYOUT_CONFIG_PUBLICATION_MAXIMUM_BYTES {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
         if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: LAYOUT_CONFIG_PUBLICATION_MAXIMUM_BYTES });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("layout-config-base-retirement-rejected".into()); }
+            if !base.return_to_registry() {
+                return Err("layout-config-base-retirement-rejected".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if self.authority.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES }); }
+        if self.authority.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
+        }
         Ok(store::SnapshotRetirementStep::Complete)
     }
 
@@ -436,26 +505,25 @@ mod layout_config_preparation_laws;
 //#endregion 📬️ConfigStorePreparation
 
 fn layout_build_export_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<LayoutPlayApp>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        use crate::editor::layout::engine::export::{LayoutExportKind, LayoutExportRequest, LayoutExportToolPayload};
-        let (kind, page_id) = match *request.command {
-            LayoutCommand::ExportPng(payload) => (LayoutExportKind::Png, payload.page_id.or_else(|| Some(request.config.active_page_id.clone()))),
-            LayoutCommand::ExportSvg(payload) => (LayoutExportKind::Svg, payload.page_id.or_else(|| Some(request.config.active_page_id.clone()))),
-            LayoutCommand::ExportPdf(payload) => (LayoutExportKind::Pdf, payload.page_id.or_else(|| Some(request.config.active_page_id.clone()))),
-            LayoutCommand::ExportPackage(_) => (LayoutExportKind::Package, None),
-            _ => return Ok(None),
-        };
-        if request.tool_id != kind.tool_id() {
-            return Err(Fault::from("layout-export-command-tool-mismatch"));
-        }
-        let canonical_base_revision_hex = request.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
-        let payload = LayoutExportToolPayload {
-            request: LayoutExportRequest { kind, page_id, snapshot: request.snapshot, preflight_json: None, parent_document_id: request.parent_document_id, canonical_base_revision_hex },
-            output_chunks: request.output_chunks,
-            completion: Some(request.completion),
-        };
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    use crate::editor::layout::engine::export::{LayoutExportKind, LayoutExportRequest, LayoutExportToolPayload};
+    let (kind, page_id) = match *request.command {
+        LayoutCommand::ExportPng(payload) => (LayoutExportKind::Png, payload.page_id.or_else(|| Some(request.config.active_page_id.clone()))),
+        LayoutCommand::ExportSvg(payload) => (LayoutExportKind::Svg, payload.page_id.or_else(|| Some(request.config.active_page_id.clone()))),
+        LayoutCommand::ExportPdf(payload) => (LayoutExportKind::Pdf, payload.page_id.or_else(|| Some(request.config.active_page_id.clone()))),
+        LayoutCommand::ExportPackage(_) => (LayoutExportKind::Package, None),
+        _ => return Ok(None),
+    };
+    if request.tool_id != kind.tool_id() {
+        return Err(Fault::from("layout-export-command-tool-mismatch"));
     }
-
+    let canonical_base_revision_hex = request.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
+    let payload = LayoutExportToolPayload {
+        request: LayoutExportRequest { kind, page_id, snapshot: request.snapshot, preflight_json: None, parent_document_id: request.parent_document_id, canonical_base_revision_hex },
+        output_chunks: request.output_chunks,
+        completion: Some(request.completion),
+    };
+    Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+}
 
 //#region 🔖️WindowEngagement
 fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutLabels) -> WindowEngagement {
@@ -555,7 +623,17 @@ impl ArtifactEditor for LayoutPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: None,
+                operation: operation_context,
+                completion: request.completion,
+            },
             LayoutCommand::command_id,
             LAYOUT_RETAINED_RAW_BYTES,
             LAYOUT_RETAINED_WORK_ITEMS,
@@ -580,7 +658,8 @@ impl ArtifactEditor for LayoutPlayApp {
         command: &LayoutCommand,
         doc: &ArtifactView<'_, LayoutSnapshot>,
         cfg: &ConfigView<'_, LayoutConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
@@ -595,10 +674,7 @@ impl ArtifactEditor for LayoutPlayApp {
         match port {
             "document:out" => {
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
-                Ok(Media {
-                    media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-                    payload: MediaPayload::Structured { schema: crate::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: crate::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "layout:out" => Err(MediaError::NotImplemented),
             _ => Err(MediaError::NotImplemented),
@@ -636,7 +712,8 @@ impl ArtifactEditor for LayoutPlayApp {
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
             LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
-        }.map(semio_framework_plugin::built_to_component_tree)
+        }
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 
     fn window_engagements(_doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
@@ -704,13 +781,13 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             // `interactionSelect`/`interactionHover`/`clearSelection` auto-inject below.
             .action_with(layout_internal_action("setActivePage", LocalizedLabel::native("Set Active Page", "Aktive Seite festlegen"), ActionKind::View))
             .action_with(layout_internal_action("focusPreflightIssue", LocalizedLabel::native("Focus Preflight Issue", "Preflight-Problem fokussieren"), ActionKind::View))
-            .action_with(layout_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
-            .action_with(layout_internal_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::View))
-            .action_with(layout_internal_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View))
-            .action_with(layout_internal_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::View))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::View, "mouse-pointer") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View, "mouse-pointer") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::View, "mouse-pointer") })
             .action_with(layout_internal_action("canvasDragOver", LocalizedLabel::native("Canvas Drag Over", "Ziehen über Leinwand"), ActionKind::View))
             .action_with(layout_internal_action("canvasDragLeave", LocalizedLabel::native("Canvas Drag Leave", "Ziehen verlässt Leinwand"), ActionKind::View))
-            .action_with(layout_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             // 🐚️ Engagement submit — routes typed export intents through the host, emits only shell effects.
             .action_with(layout_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Shell))
             .action_interactive_job("setActivePage", InteractiveJobClassification::Migrated)

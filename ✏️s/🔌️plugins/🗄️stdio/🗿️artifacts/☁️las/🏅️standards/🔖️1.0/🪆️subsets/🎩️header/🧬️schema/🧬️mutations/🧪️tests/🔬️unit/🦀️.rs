@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::schema::diff::{LasPointsDiff, LasVlrsDiff};
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 use protocol::{OpBinary, OpText};
 
 //#region 🔖️mutation_diff_law

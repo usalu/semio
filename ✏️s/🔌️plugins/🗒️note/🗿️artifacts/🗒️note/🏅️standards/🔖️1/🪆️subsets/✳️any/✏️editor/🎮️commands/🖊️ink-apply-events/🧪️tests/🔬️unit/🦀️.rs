@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::note::NoteCommand;
 use crate::editor::note::testkit::{dispatch, note_app};
+use crate::editor::note::NoteCommand;
 use crate::schema::{block_id, create_block_by_kind};
 use semio_framework_plugin::PluginApp;
 use serde_json::json;

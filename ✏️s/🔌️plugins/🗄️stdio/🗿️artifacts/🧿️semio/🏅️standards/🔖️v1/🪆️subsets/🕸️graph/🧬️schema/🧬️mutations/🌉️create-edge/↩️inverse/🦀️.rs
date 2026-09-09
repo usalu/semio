@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreateEdge`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{SemioGraphMutation, delete_edge};
+use crate::standards::v1::subsets::graph::schema::mutations::{delete_edge, SemioGraphMutation};
 use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse

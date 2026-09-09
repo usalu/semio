@@ -80,7 +80,10 @@ pub fn catalogue_json(registry: &Registry) -> String {
             ("inputs".to_string(), array(info.inputs.iter().map(|channel| object([("name".to_string(), JsonValue::from(channel.name.as_str())), ("code".to_string(), JsonValue::from(channel.code.as_str()))])))),
         ])
     }));
-    to_string(&object([("schema".to_string(), JsonValue::from("imperative.catalogue")), ("sections".to_string(), array([object([("id".to_string(), JsonValue::from("text")), ("title".to_string(), JsonValue::from("Text")), ("items".to_string(), items)])]))]))
+    to_string(&object([
+        ("schema".to_string(), JsonValue::from("imperative.catalogue")),
+        ("sections".to_string(), array([object([("id".to_string(), JsonValue::from("text")), ("title".to_string(), JsonValue::from("Text")), ("items".to_string(), items)])])),
+    ]))
 }
 
 pub fn module_registry() -> Registry {

@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::default_presentation_snapshot;
-use crate::standards::v1::subsets::any::schema::{FigureTileGridSeedSpec, populate_tile_drafts_from_grid};
+use crate::standards::v1::subsets::any::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use store::os_store::test_support;
 
 #[test]

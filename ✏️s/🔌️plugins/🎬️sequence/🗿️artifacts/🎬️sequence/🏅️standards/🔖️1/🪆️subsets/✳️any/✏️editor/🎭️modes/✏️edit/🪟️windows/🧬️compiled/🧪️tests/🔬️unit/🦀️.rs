@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::sequence::testkit::{new_app, render as render_body};
 

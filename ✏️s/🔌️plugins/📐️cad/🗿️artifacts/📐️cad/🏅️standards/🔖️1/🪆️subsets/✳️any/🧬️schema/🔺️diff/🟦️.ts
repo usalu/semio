@@ -29,75 +29,6 @@ export interface CadDiff {
   structureClassicGeometry?: CadGeometry | null;
   /** @state artifact */
   activeModelDefinitionId?: string;
-  /** @state presence */
-  selectedObjectIds?: CadStringList;
-  /** @state presence */
-  selectedNodeIds?: CadStringList;
-  /** @state presence */
-  activeObjectId?: string | null;
-  /** @state presence */
-  componentSelection?: CadComponentSelection;
-  /** @state presence */
-  selectedReferenceModelDefinitionId?: string | null;
-  /** @state presence */
-  selectedReferenceId?: string | null;
-  /** @state presence */
-  selectedPrimitiveId?: string | null;
-  /** @state presence */
-  selectedPrimitiveKind?: string | null;
-  /** @state presence */
-  /** @state presence */
-  activeExampleId?: string | null;
-  /** @state config */
-  selectionMethod?: string;
-  /** @state config */
-  engagementInput?: string;
-  /** @state config */
-  engagementStep?: string;
-  /** @state config */
-  engagementPane?: string | null;
-  /** @state config */
-  engagementSessionJson?: string | null;
-  /** @state config */
-  lastFinalizedInteractionId?: string | null;
-  /** @state config */
-  sunEnabled?: boolean;
-  /** @state config */
-  sunAzimuth?: number;
-  /** @state config */
-  sunElevation?: number;
-  /** @state config */
-  sunIntensity?: number;
-  /** @state config */
-  sunColor?: string;
-  /** @state config */
-  camera?: CadCamera;
-  /** @state config */
-  cameraBuilding?: CadCamera;
-  /** @state config */
-  cameraEnergy?: CadCamera;
-  /** @state config */
-  cameraStructureClassic?: CadCamera;
-  /** @state config */
-  dislocateShape?: CadDislocateOptions;
-  /** @state config */
-  dislocateBuilding?: CadDislocateOptions;
-  /** @state config */
-  dislocateEnergy?: CadDislocateOptions;
-  /** @state config */
-  dislocateStructureClassic?: CadDislocateOptions;
-  /** @state config */
-  /** @state config */
-  /** @state config */
-  contributionsJson?: string;
-  /** @state artifact */
-  hoveredObjectId?: string | null;
-  /** @state artifact */
-  hoveredTargetObjectId?: string | null;
-  /** @state artifact */
-  hoveredTargetMode?: string | null;
-  /** @state artifact */
-  hoveredTargetId?: number | null;
 }
 
 export interface CadStringList { values: string[]; }
@@ -111,7 +42,5 @@ export interface CadNode { id: string; [key: string]: unknown }
 export interface CadReferenceList { values: unknown[] }
 export interface CadGeometry { [key: string]: unknown }
 export interface CadCamera { [key: string]: unknown }
-export interface CadComponentSelection { [key: string]: unknown }
-export interface CadDislocateOptions { moveEnabled: boolean; rotateEnabled: boolean }
 
 export interface CadArtifact { [key: string]: unknown }

@@ -32,16 +32,16 @@ use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutations
+#[path = "➕insert-triangle/🦀️.rs"]
+pub mod insert_triangle;
+#[path = "➖remove-triangle/🦀️.rs"]
+pub mod remove_triangle;
 /// 📐️ Typed content mutation for `stdio.stl`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🏷️set-solid-name/🦀️.rs"]
 pub mod set_solid_name;
-#[path = "➕insert-triangle/🦀️.rs"]
-pub mod insert_triangle;
-#[path = "➖remove-triangle/🦀️.rs"]
-pub mod remove_triangle;
 #[path = "🧭set-triangle-normal/🦀️.rs"]
 pub mod set_triangle_normal;
 #[path = "📐set-triangle-vertices/🦀️.rs"]

@@ -1,7 +1,5 @@
 //! 🗼 `update-tower-inputs` — atomically updates the tower-inputs facet (tower_wind_factor, tower_n_ed_kn are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

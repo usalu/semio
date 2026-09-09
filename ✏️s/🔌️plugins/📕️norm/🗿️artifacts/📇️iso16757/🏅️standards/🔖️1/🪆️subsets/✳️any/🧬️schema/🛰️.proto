@@ -20,6 +20,4 @@ message Iso16757Artifact {
   string script_limits = 7;
   // @state artifact
   string exchange_process = 8;
-  // @state presence
-  optional uint32 selected_check_index = 9;
 }

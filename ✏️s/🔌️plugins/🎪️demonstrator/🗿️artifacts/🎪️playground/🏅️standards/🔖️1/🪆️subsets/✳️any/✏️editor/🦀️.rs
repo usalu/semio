@@ -7,22 +7,22 @@
 //! framework's `NoConfig`/`NoPresence`/`NoTransient` — a single-field metadata document needs no
 //! persisted per-session view state.
 
+use crate::editor::playground::commands::change_schema;
+use crate::editor::playground::modes::edit;
+use crate::editor::playground::modes::edit::windows::main;
 use crate::standards::v1::subsets::any::schema::empty_playground_snapshot;
 use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use crate::{PLAYGROUND_DIALECT, PLAYGROUND_DOCUMENT_SCHEMA};
-use crate::editor::playground::commands::change_schema;
-use crate::editor::playground::modes::edit;
-use crate::editor::playground::modes::edit::windows::main;
+#[cfg(test)]
+use dsl::os_pack::json::{parse, Value};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, LocalizedLabel,
-    NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit,
+    Fault, InteractiveJobClassification, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
 };
-#[cfg(test)]
-use dsl::os_pack::json::{parse, Value};
 use store::EngineHandles;
 
 //#region 🔖️Commands
@@ -65,7 +65,7 @@ fn playground_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PlaygroundEditor>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PlaygroundMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 struct PlaygroundCommandJobFactory {
@@ -120,8 +120,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for PlaygroundCommandJo
     type Owner = EditorApp<PlaygroundEditor>;
     const TOOL_IDS: &'static [&'static str] = PLAYGROUND_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] =
-        &[ArtifactToolPublicationContract { tool_id: "changeSchema", lanes: &[ArtifactToolPublicationLane::Artifact] }];
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "changeSchema", lanes: &[ArtifactToolPublicationLane::Artifact] }];
 }
 //#endregion 🧵️RetainedCommands
 
@@ -348,7 +347,17 @@ impl ArtifactEditor for PlaygroundEditor {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             PlaygroundCommand::command_id,
             PLAYGROUND_RETAINED_RAW_BYTES,
             PLAYGROUND_RETAINED_WORK_ITEMS,
@@ -388,14 +397,15 @@ impl ArtifactEditor for PlaygroundEditor {
         command: &PlaygroundCommand,
         doc: &ArtifactView<'_, PlaygroundSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<PlaygroundMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, PlaygroundSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PlaygroundSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

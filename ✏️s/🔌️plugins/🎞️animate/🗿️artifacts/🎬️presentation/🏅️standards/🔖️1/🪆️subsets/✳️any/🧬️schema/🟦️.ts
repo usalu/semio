@@ -3,8 +3,6 @@ export interface PresentationArtifact {
   /** @state artifact */ schema: string;
   /** @state artifact */ source: FigureTileSource;
   /** @state artifact */ tiles: FigureTileDraft[];
-  /** @state presence */ selectedIds: string[];
-  /** @state config */ engagementInput: string;
 }
 export interface FigureTileFrame { x: number; y: number; width: number; height: number; }
 export interface FigureTileSource { src: string; kind: string; frame: FigureTileFrame; sourceAspect?: number | null; pdfPage?: number | null; }
@@ -63,8 +61,6 @@ export function parsePresentationArtifact(value: unknown, at = "$"): Presentatio
     schema: animatePresentationArtifactGuardString(row["schema"], `${at}.schema`),
     source: parseFigureTileSource(row["source"], `${at}.source`),
     tiles: animatePresentationArtifactGuardArray(row["tiles"], `${at}.tiles`).map((item, index) => parseFigureTileDraft(item, `${at}.tiles[${index}]`)),
-    selectedIds: animatePresentationArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => animatePresentationArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    engagementInput: animatePresentationArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),
   };
 }
 

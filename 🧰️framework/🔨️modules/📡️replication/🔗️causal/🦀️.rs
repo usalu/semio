@@ -362,6 +362,7 @@ impl Drop for MutationDag {
 
 /// @emoji 🚦️ The outcome of one `MutationDag::insert` call.
 #[derive(Debug, PartialEq)]
+#[cfg_attr(target_pointer_width = "64", expect(clippy::large_enum_variant, reason = "Duplicate admission returns the exact envelope owner without allocating on refusal."))]
 pub enum InsertResult {
     Applied,
     Pending,
@@ -419,6 +420,7 @@ pub enum MutationDagCloseOwner {
     Identity(String),
 }
 
+#[cfg_attr(target_pointer_width = "64", expect(clippy::large_enum_variant, reason = "Each bounded drain step transfers an existing envelope owner without allocating a wrapper."))]
 pub enum MutationDagAppliedStep {
     Envelope(MutationEnvelope),
     SeededIdentity,

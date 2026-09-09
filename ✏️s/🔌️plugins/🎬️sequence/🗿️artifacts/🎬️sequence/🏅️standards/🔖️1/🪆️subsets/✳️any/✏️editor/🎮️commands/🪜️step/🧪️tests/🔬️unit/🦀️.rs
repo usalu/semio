@@ -1,6 +1,5 @@
-
-use crate::editor::sequence::SequenceCommand;
 use crate::editor::sequence::testkit::{dispatch, new_app, new_app_with_registry_wired, select_steps};
+use crate::editor::sequence::SequenceCommand;
 
 use super::add_step::AddStep;
 use super::delete_selection::DeleteSelection;

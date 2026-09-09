@@ -67,10 +67,11 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
     }
     let boundary_vertices = context.edge_faces.iter().filter(|(_, faces)| faces.len() == 1).flat_map(|((first, second), _)| [*first, *second]).collect::<BTreeSet<_>>();
     let gaussian_values = (0..context.sample_count)
-        .filter(|&index| vertex_areas[index] > 0.0).map(|index| {
-                let target = if boundary_vertices.contains(&index) { std::f64::consts::PI } else { 2.0 * std::f64::consts::PI };
-                (target - angle_sums[index]) / vertex_areas[index]
-            })
+        .filter(|&index| vertex_areas[index] > 0.0)
+        .map(|index| {
+            let target = if boundary_vertices.contains(&index) { std::f64::consts::PI } else { 2.0 * std::f64::consts::PI };
+            (target - angle_sums[index]) / vertex_areas[index]
+        })
         .collect::<Vec<_>>();
     GltfCurvatureRaw { edge_curvatures, gaussian_values, sharp_feature_proportion: if edge_length > 0.0 { sharp_length / edge_length } else { 0.0 } }
 }

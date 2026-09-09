@@ -128,9 +128,9 @@ export interface InitOutput {
     readonly kernelhost_submit: (a: number, b: number, c: number) => number;
     readonly kernelhost_tick: (a: number, b: bigint) => number;
     readonly initialize_browser_clock: () => void;
-    readonly __wasm_bindgen_func_elem_16864: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_16866: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_13549: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_16860: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_16862: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_13545: (a: number, b: number, c: number) => void;
     readonly __wbindgen_export: (a: number, b: number) => number;
     readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_export3: (a: number) => void;

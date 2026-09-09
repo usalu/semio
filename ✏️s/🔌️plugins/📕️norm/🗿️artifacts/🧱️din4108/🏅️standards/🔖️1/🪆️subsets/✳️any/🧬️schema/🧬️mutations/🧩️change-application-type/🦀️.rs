@@ -1,6 +1,5 @@
 //! 🗂️ `change-application-type` — sets the DIN 4108 `application_type` scalar.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

@@ -5,8 +5,6 @@ export interface ProcedureDiff {
   /** @state artifact */ schema?: string;
   /** @state artifact */ path?: ProcedurePathDelta;
   /** @state artifact */ seed?: Record<string, unknown>;
-  /** @state presence */ selectedStepIds?: ProcedureStringList;
-  /** @state config */ contributionsJson?: string;
 }
 
 export interface ProcedureStringList {
@@ -50,9 +48,6 @@ export interface ProcedureArtifact {
   schema: string;
   path: ProcedurePath;
   seed: Record<string, unknown>;
-  selectedStepIds: string[];
-  contributionsJson: string;
-  runOutputJson: string;
 }
 
 //#region 🚪️Parsers
@@ -109,8 +104,6 @@ export function parseProcedureDiff(value: unknown, at = "$"): ProcedureDiff {
     schema: row["schema"] === undefined ? undefined : imperativeImperativeDiffGuardString(row["schema"], `${at}.schema`),
     path: row["path"] === undefined ? undefined : parseProcedurePathDelta(row["path"], `${at}.path`),
     seed: row["seed"] === undefined ? undefined : imperativeImperativeDiffGuardObject(row["seed"], `${at}.seed`),
-    selectedStepIds: row["selectedStepIds"] === undefined ? undefined : parseProcedureStringList(row["selectedStepIds"], `${at}.selectedStepIds`),
-    contributionsJson: row["contributionsJson"] === undefined ? undefined : imperativeImperativeDiffGuardString(row["contributionsJson"], `${at}.contributionsJson`),
   };
 }
 

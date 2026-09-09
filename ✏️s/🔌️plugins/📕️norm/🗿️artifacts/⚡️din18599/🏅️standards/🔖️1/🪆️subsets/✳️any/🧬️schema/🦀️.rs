@@ -42,8 +42,6 @@ pub struct Din18599Artifact {
     pub energy_carrier: String,
     #[state(artifact)]
     pub reference_q_p_kwh: f64,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -68,7 +66,7 @@ impl Din18599Artifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::Din18599Snapshot) -> Self {
         Self {
             use_class: snapshot.use_class,
@@ -84,14 +82,11 @@ impl Din18599Artifact {
             annual_limit_kwh: snapshot.annual_limit_kwh,
             energy_carrier: snapshot.energy_carrier.clone(),
             reference_q_p_kwh: snapshot.reference_q_p_kwh,
-            selected_check_index: None,
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
     pub fn set_snapshot(&mut self, snapshot: crate::Din18599Snapshot) {
-        let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
-        self.selected_check_index = selected;
     }
 }
 
@@ -102,13 +97,7 @@ impl Din18599Artifact {
 pub fn din18599_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.din18599",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -248,7 +237,7 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ComplianceHelpers
-use semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::part_3::residential_ventilation_rate;
+use crate::document::{AnnexChoice, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
 /// 📐️ Pure DIN V 18599 compliance helpers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — relocated verbatim from the deleted `⚙️engine`. `part_1` through `part_12` operate on
 /// `BalancingInputs` (a type alias for `Din18599Snapshot` defined at the artifact root — see
@@ -257,9 +246,9 @@ use semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::part_3:
 /// law) live in `💡️inferences`. Depends on `din4108` and `din16798`'s relocated schema helpers for
 /// the reference-building envelope/ventilation calculations.
 use crate::BalancingInputs;
+use semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::part_3::residential_ventilation_rate;
 use semio_s_artifact_norm_din4108::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
 use semio_s_artifact_norm_din4108::standards::v1::subsets::any::schema::{R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
-use crate::document::{AnnexChoice, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
 
 // #region 🔖️Shared
 /// 🧱️ Transmission loss coefficient H_T [W/K].

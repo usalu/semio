@@ -10,11 +10,10 @@
 pub use crate::document_schema::mutations::Vdi3805Mutation;
 
 use crate::document_schema::mutations::{
-    add_geometry_connection::AddGeometryConnection, change_correction_as_of::ChangeCorrectionAsOf, change_edition_profile::ChangeEditionProfile, change_strict_mode::ChangeStrictMode,
-    create_curve::CreateCurve, create_geometry::CreateGeometry, create_product::CreateProduct, delete_curve::DeleteCurve, delete_geometry::DeleteGeometry, delete_product::DeleteProduct,
-    remove_edition_profile::RemoveEditionProfile, remove_geometry_connection::RemoveGeometryConnection, rename_product::RenameProduct, replace_curve_points::ReplaceCurvePoints,
-    replace_geometry_parameters::ReplaceGeometryParameters, replace_product_configuration::ReplaceProductConfiguration, resize_geometry::ResizeGeometry, update_limits::UpdateLimits,
-    update_manufacturer_file::UpdateManufacturerFile,
+    add_geometry_connection::AddGeometryConnection, change_correction_as_of::ChangeCorrectionAsOf, change_edition_profile::ChangeEditionProfile, change_strict_mode::ChangeStrictMode, create_curve::CreateCurve, create_geometry::CreateGeometry,
+    create_product::CreateProduct, delete_curve::DeleteCurve, delete_geometry::DeleteGeometry, delete_product::DeleteProduct, remove_edition_profile::RemoveEditionProfile, remove_geometry_connection::RemoveGeometryConnection,
+    rename_product::RenameProduct, replace_curve_points::ReplaceCurvePoints, replace_geometry_parameters::ReplaceGeometryParameters, replace_product_configuration::ReplaceProductConfiguration, resize_geometry::ResizeGeometry,
+    update_limits::UpdateLimits, update_manufacturer_file::UpdateManufacturerFile,
 };
 
 //#region 📖️SemioGrammar

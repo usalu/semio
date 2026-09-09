@@ -18,12 +18,12 @@
 
 use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
 use crate::PptxSnapshot;
+use framework_schema::ArtifactSchema;
+use protocol::command::DiffAlgebra;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 #[cfg(test)]
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
-use protocol::command::DiffAlgebra;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 use std::collections::HashMap;
 
 //#region 🔖️GenericCollectionTriples
@@ -684,7 +684,11 @@ fn diff_paragraph(old: &PptxParagraph, new: &PptxParagraph) -> Option<PptxParagr
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_paragraph(p: &mut PptxParagraph, diff: &PptxParagraphDiff) -> MutationApplyResult<()> {
     if let Some(rd) = &diff.runs {
-        apply_indexed(&mut p.runs, rd, |item, diff| { apply_run(item, diff); Ok(()) }).map_err(|error| error.under(["runs"]))?;
+        apply_indexed(&mut p.runs, rd, |item, diff| {
+            apply_run(item, diff);
+            Ok(())
+        })
+        .map_err(|error| error.under(["runs"]))?;
     }
     Ok(())
 }

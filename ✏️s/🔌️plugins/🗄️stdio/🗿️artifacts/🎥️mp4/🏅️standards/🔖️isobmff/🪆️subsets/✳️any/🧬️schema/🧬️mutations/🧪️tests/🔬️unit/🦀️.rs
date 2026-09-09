@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
 use protocol::MutationDiff;

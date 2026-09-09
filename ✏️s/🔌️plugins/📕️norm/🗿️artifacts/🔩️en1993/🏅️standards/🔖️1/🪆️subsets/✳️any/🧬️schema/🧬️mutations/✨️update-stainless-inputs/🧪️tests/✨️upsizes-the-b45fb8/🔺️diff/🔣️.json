@@ -23,9 +23,9 @@
   "cfPsi": null,
   "cfNEdKn": null,
   "cfGrossResistanceKn": null,
-  "stainlessMEdKnm": 56.0,
-  "stainlessWPlMm3": 384000.0,
-  "stainlessFYMpa": 460.0,
+  "stainlessMEdKnm": 56,
+  "stainlessWPlMm3": 384000,
+  "stainlessFYMpa": 460,
   "platedLambdaP": null,
   "platedSigmaEdMpa": null,
   "siloTMm": null,
@@ -73,6 +73,5 @@
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

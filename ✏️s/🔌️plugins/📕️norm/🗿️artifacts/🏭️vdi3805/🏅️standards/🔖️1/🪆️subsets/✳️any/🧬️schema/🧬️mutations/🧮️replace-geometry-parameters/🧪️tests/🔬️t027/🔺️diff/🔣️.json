@@ -10,9 +10,9 @@
     "geom.valve.50": {
       "id": "geom.valve.50",
       "bbox": {
-        "min_x": 0.0,
-        "min_y": 0.0,
-        "min_z": 0.0,
+        "min_x": 0,
+        "min_y": 0,
+        "min_z": 0,
         "max_x": 0.25,
         "max_y": 0.5,
         "max_z": 0.125
@@ -22,16 +22,16 @@
           "id": "in",
           "medium": "water",
           "position": [
-            0.0,
+            0,
             0.25,
             0.0625
           ],
           "direction": [
-            -1.0,
-            0.0,
-            0.0
+            -1,
+            0,
+            0
           ],
-          "diameter_mm": 50.0
+          "diameter_mm": 50
         },
         {
           "id": "out",
@@ -42,11 +42,11 @@
             0.0625
           ],
           "direction": [
-            1.0,
-            0.0,
-            0.0
+            1,
+            0,
+            0
           ],
-          "diameter_mm": 50.0
+          "diameter_mm": 50
         }
       ],
       "parameters": {
@@ -56,6 +56,5 @@
     }
   },
   "curves": null,
-  "limits": null,
-  "selectedCheckIndex": null
+  "limits": null
 }

@@ -7,9 +7,9 @@
 //! that is the shallowest taxonomy node common to every consumer — the same "put shared declarations at
 //! the shallowest common ancestor" rule the migration template states for shared window options.
 
-pub use crate::document::NormHost;
 pub use super::mutations::{change_selected_check_index::ChangeSelectedCheckIndex, NormConfigMutation};
 pub use super::schema::NormConfig;
+pub use crate::document::NormHost;
 
 //#region 🔖️Config
 //#region 🔖️ArtifactCodec

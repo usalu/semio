@@ -1,0 +1,13 @@
+{
+  "initial": { "pack": [1, 2], "spr": [3] },
+  "candidate": { "pack": [4, 5], "spr": [6] },
+  "reply": { "pack": [7, 8], "spr": [9] },
+  "cases": [
+    { "outcome": "done", "expected": "candidate" },
+    { "outcome": "document", "expected": "reply" },
+    { "outcome": "error", "expected": "initial" },
+    { "outcome": "error-document", "expected": "initial" },
+    { "outcome": "transport", "expected": "initial" },
+    { "outcome": "enqueue", "expected": "initial" }
+  ]
+}

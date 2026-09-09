@@ -6,17 +6,17 @@
 //! the sibling command/panel/window nodes moved here too, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
-use crate::op::Din4108Mutation;
-use crate::Din4108Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::editor::din4108::commands::{evaluate, selected_check, set_snapshot};
 use crate::editor::din4108::modes::edit as edit_mode;
 use crate::editor::din4108::modes::edit::windows::{inputs, results};
 use crate::editor::din4108::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use semio_framework_plugin::{NoPresence, NoPresenceMutation};
+use crate::op::Din4108Mutation;
+use crate::Din4108Snapshot;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, LocalizedLabel, Media, MediaError, NoDraft, NoDraftMutation};
 use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::{AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, LocalizedLabel, Media, MediaError, NoDraft, NoDraftMutation};
+use semio_framework_plugin::{NoPresence, NoPresenceMutation};
 // 🚧️ SDK GAP: `Dialect` is not in `semio_framework_plugin`'s curated crate-root re-export list
 // (only `ArtifactEditor`/`ArtifactViewer`/`Editor`/`Viewer`/`EditorApp`/`ViewerApp`/`ViewEmit` are,
 // per ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET W0-F gap 1) — only reachable through `app`.
@@ -50,7 +50,6 @@ semio_framework_plugin::app_commands! {
 //#region ðï¸Din4108PlayApp
 #[derive(Default)]
 pub struct Din4108PlayApp;
-
 
 impl ArtifactEditor for Din4108PlayApp {
     type Snapshot = Din4108Snapshot;
@@ -96,9 +95,6 @@ impl ArtifactEditor for Din4108PlayApp {
         tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex"]
     }
 
-
-
-
     fn config_schema() -> &'static str {
         CONFIG_SCHEMA
     }
@@ -125,14 +121,15 @@ impl ArtifactEditor for Din4108PlayApp {
         command: &Din4108Command,
         doc: &ArtifactView<'_, Din4108Snapshot>,
         cfg: &ConfigView<'_, NormConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Din4108Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Din4108Snapshot>, cfg: &ConfigView<'_, NormConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Din4108Snapshot>, cfg: &ConfigView<'_, NormConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let host = NormHost::<Din4108Family>::from_document(doc.snapshot.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.snapshot),
@@ -141,7 +138,8 @@ impl ArtifactEditor for Din4108PlayApp {
             catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(),
             inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, cfg.snapshot.selected_check_index),
             _ => crate::app_surface::render_unknown_body(body_key),
-        }.map(semio_framework_plugin::built_to_component_tree)
+        }
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 
     //#region ðï¸MediaPorts
@@ -208,7 +206,7 @@ pub fn create_din4108_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             .mutation("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"))
-            .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), semio_framework_plugin::ActionKind::View, "hash"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "AusgewÃ¤hlte PrÃ¼fung setzen"))
             .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("evaluate", InteractiveJobClassification::Migrated)

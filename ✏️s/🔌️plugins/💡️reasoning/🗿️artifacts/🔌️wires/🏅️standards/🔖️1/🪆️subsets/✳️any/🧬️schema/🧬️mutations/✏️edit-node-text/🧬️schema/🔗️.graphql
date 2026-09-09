@@ -1,0 +1,6 @@
+# 🧬️ EditNodeText mutation payload.
+
+type EditNodeText {
+  nodeId: String!
+  newText: String!
+}

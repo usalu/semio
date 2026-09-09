@@ -6,13 +6,13 @@
 //! `impl DiffAlgebra`; this standard's own diff is genuinely field-sparse instead.
 
 use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
-use semio_s_artifact_stdio_step::engine::part21::{Part21Decimal, Part21Header, Part21Instance, Part21Value};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use semio_s_artifact_stdio_step::engine::part21::{Part21Decimal, Part21Header, Part21Instance, Part21Value};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated) — reached via the still-public `os_spr::command` path
 // instead, same as `txt`'s own `🔺️diff/🦀️.rs`.
-use protocol::os_spr::command::DiffAlgebra;
 use framework_schema::ArtifactSchema;
+use protocol::os_spr::command::DiffAlgebra;
 use std::collections::{BTreeSet, HashSet};
 use std::fmt::Write as _;
 
@@ -958,9 +958,10 @@ pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
     if let Some(first) = b.document.instances.first_mut() {
         first.entities = vec![("IFCQUANTITYAREA".into(), vec![Part21Value::Real(10.5.into()), Part21Value::Enum("EDGE".into())]), ("IFCPHYSICALSIMPLEQUANTITY".into(), vec![Part21Value::Unset])];
     }
-    b.document
-        .instances
-        .push(Part21Instance { id: 300, entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]), Part21Value::Typed { name: "IFCLENGTHMEASURE".into(), items: vec![Part21Value::Real(3000.0.into())] }])] });
+    b.document.instances.push(Part21Instance {
+        id: 300,
+        entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]), Part21Value::Typed { name: "IFCLENGTHMEASURE".into(), items: vec![Part21Value::Real(3000.0.into())] }])],
+    });
     vec![Ifc2x3Diff::default(), Ifc2x3Diff::between(&a, &b), Ifc2x3Diff::between(&b, &a)]
 }
 //#endregion 🔖️DemoCases

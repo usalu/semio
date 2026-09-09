@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::shooting::ShootingCommand;
 use crate::editor::shooting::testkit::{dispatch, shooting_app};
+use crate::editor::shooting::ShootingCommand;
 
 /// 🧬️ `reset_snapshot::handle` emits a `Effect::LoadDocument` (outside undo history), not an
 /// `artifact_mutations` entry — driven directly through `handle` (not `dispatch`, which routes
@@ -17,7 +16,7 @@ async fn reset_snapshot_restores_default_snapshot() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = ShootingConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let mut ctx = ShootingDispatchCtx::default();
     let emit = reset_snapshot::handle(&reset_snapshot::ResetSnapshot {}, &doc, &cfg, &mut ctx).expect("handle");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("resetSnapshot must emit a LoadDocument effect") else {

@@ -5,7 +5,7 @@ use protocol::Mutation;
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of drawing view state (camera, active utility, rename input) — layer
+/// 👥️ Shareable live subset of drawing camera and rename input state — layer
 /// selection/hover moved to the framework's typed `PresencePeer.interaction` broadcast (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); this facet keeps only genuinely
 /// drawing-specific presence.
@@ -17,12 +17,11 @@ pub struct DrawingPresence {
     pub engagement_input: String,
     #[dsl(block)]
     pub camera: DrawingCamera,
-    pub active_utility_id: String,
 }
 
 impl Default for DrawingPresence {
     fn default() -> Self {
-        Self { engagement_input: String::new(), camera: DrawingCamera::default(), active_utility_id: "selectDirect".into() }
+        Self { engagement_input: String::new(), camera: DrawingCamera::default() }
     }
 }
 
@@ -98,9 +97,22 @@ impl Mutation<DrawingPresence> for DrawingPresenceMutation {
     /// 🧷️ Hand-written: `dsl::DslOps` supplies `DslVariants` only, not this trait's leaf metadata.
     /// ⚠️ PROVISIONAL: the `owner` leaf directory does not exist on disk — a placeholder that
     /// satisfies `protocol::Mutation`, not a real registration.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot",
+        semantic_kind: "snapshot",
+        display_name: "Snapshot",
+        emoji: "📄",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {

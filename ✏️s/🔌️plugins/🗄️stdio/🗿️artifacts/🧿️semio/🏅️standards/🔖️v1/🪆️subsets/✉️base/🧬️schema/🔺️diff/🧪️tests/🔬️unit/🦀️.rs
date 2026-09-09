@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;

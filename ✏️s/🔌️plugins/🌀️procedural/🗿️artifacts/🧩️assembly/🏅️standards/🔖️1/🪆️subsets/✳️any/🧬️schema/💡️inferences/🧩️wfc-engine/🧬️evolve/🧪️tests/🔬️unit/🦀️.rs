@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::wfc_engine::model::ModelBuilder;
 use crate::wfc_engine::outcome::SolveOutcome;
@@ -32,7 +31,7 @@ fn derive_seed_is_deterministic_and_varies_by_salt() {
 fn evolve_finds_a_solution_and_tracks_evaluated_count() {
     let (model, topo) = checkerboard(6);
     let config = SearchConfig::default();
-    let scorer = ScoreFn { name: "count_black", f: |a: &[PatternId]| a.iter().filter(|&&p| p == PatternId(0)).count() as f64 };
+    let scorer = ScoreFn { f: |a: &[PatternId]| a.iter().filter(|&&p| p == PatternId(0)).count() as f64 };
     let evolve_config = EvolveConfig { population_size: 4, generations: 3, elite_count: 2 };
 
     let result = evolve(1, evolve_config, &scorer, |seed| match search::solve(&model, &topo, &config, seed, None, &[]) {
@@ -53,7 +52,7 @@ fn evolve_prefers_higher_scores_across_generations() {
     // first.
     let (model, topo) = checkerboard(5);
     let config = SearchConfig::default();
-    let scorer = ScoreFn { name: "count_black", f: |a: &[PatternId]| a.iter().filter(|&&p| p == PatternId(0)).count() as f64 };
+    let scorer = ScoreFn { f: |a: &[PatternId]| a.iter().filter(|&&p| p == PatternId(0)).count() as f64 };
     let evolve_config = EvolveConfig { population_size: 6, generations: 10, elite_count: 3 };
 
     let result = evolve(7, evolve_config, &scorer, |seed| match search::solve(&model, &topo, &config, seed, None, &[]) {
@@ -67,7 +66,7 @@ fn evolve_prefers_higher_scores_across_generations() {
 
 #[test]
 fn evolve_reports_no_best_when_every_attempt_fails() {
-    let scorer = ScoreFn { name: "zero", f: |_: &[PatternId]| 0.0 };
+    let scorer = ScoreFn { f: |_: &[PatternId]| 0.0 };
     let evolve_config = EvolveConfig { population_size: 3, generations: 2, elite_count: 1 };
 
     let result = evolve(1, evolve_config, &scorer, |_seed| -> Option<Vec<PatternId>> { None });

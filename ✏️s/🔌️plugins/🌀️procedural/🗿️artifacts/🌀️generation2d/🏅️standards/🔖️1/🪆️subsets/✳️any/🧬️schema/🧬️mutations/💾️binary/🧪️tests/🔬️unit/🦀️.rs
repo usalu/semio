@@ -1,11 +1,10 @@
-
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::{change_schema, connect_synapse, create_generation, create_widget, delete_widget};
-use crate::{GENERATION_2D_SCHEMA, Generation2dSnapshot};
+use crate::{Generation2dSnapshot, GENERATION_2D_SCHEMA};
 use protocol::OpText;
 use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
 use semio_framework_os_kernel::os_store::test_support;
-use store::{ArtifactCommand, create_document_envelope};
+use store::{create_document_envelope, ArtifactCommand};
 
 //#region 🔖️OpTextTests
 #[test]

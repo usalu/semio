@@ -14,7 +14,6 @@
 /// 🌀 Lateral surface, four parameter curves with ranges, and orientation.
 pub type LateralSurfaceCurves = (crate::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, [(crate::standards::v1::subsets::brep::schema::snapshot::arena::Curve2Id, (f64, f64)); 4], bool);
 
-
 use std::collections::HashMap;
 use std::f64::consts::TAU;
 
@@ -202,7 +201,11 @@ fn lateral_pcurves(body: &mut Body, rev: RevSurface, range: (f64, f64), angle: f
             let (su0, sv0) = uv_at(0.0);
             let (su1, sv1) = uv_at(1.0);
             let start_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(su0, sv0), dir: Vec2::new(su1 - su0, sv1 - sv0) });
-            let end_map = |u: f64, v: f64, a: f64| { let r = (u * u + v * v).sqrt(); let base = v.atan2(u); (r * (base + a).cos(), r * (base + a).sin()) };
+            let end_map = |u: f64, v: f64, a: f64| {
+                let r = (u * u + v * v).sqrt();
+                let base = v.atan2(u);
+                (r * (base + a).cos(), r * (base + a).sin())
+            };
             let (seu0, sev0) = end_map(su0, sv0, angle);
             let (seu1, sev1) = end_map(su1, sv1, angle);
             let end_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(seu0, sev0), dir: Vec2::new(seu1 - seu0, sev1 - sev0) });
@@ -242,7 +245,13 @@ fn lateral_pcurves(body: &mut Body, rev: RevSurface, range: (f64, f64), angle: f
 fn revolve_partial(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis: Vec3, angle: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let map = Affine3::rotation_about(axis_origin, axis, angle);
     let n0 = super::core::planar_outward_normal(body, profile)?;
-    let start_frame = { let f = body.faces.get(profile).unwrap(); match body.surfaces.get(f.surface).unwrap() { Surface::Plane { frame } => *frame, _ => return Err(KernelError::InvalidInput("revolve profile face must be planar".into())) } };
+    let start_frame = {
+        let f = body.faces.get(profile).unwrap();
+        match body.surfaces.get(f.surface).unwrap() {
+            Surface::Plane { frame } => *frame,
+            _ => return Err(KernelError::InvalidInput("revolve profile face must be planar".into())),
+        }
+    };
     let travel = map.apply_point(start_frame.origin) - start_frame.origin;
     let flip_start = n0.dot(travel) > 0.0;
     let start_label = body.faces.get(profile).unwrap().label;
@@ -264,7 +273,10 @@ fn revolve_partial(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis: Ve
         let ece = body.loop_coedges(el);
         let n = sce.len();
         for k in 0..n {
-            let (edge_id, f_i) = { let c = body.coedges.get(sce[k]).unwrap(); (c.edge, c.forward) };
+            let (edge_id, f_i) = {
+                let c = body.coedges.get(sce[k]).unwrap();
+                (c.edge, c.forward)
+            };
             let (s_v0, s_v1) = body.coedge_endpoints(sce[k]).unwrap();
             let (e_v0, e_v1) = body.coedge_endpoints(ece[k]).unwrap();
             let curve = body.curves3.get(body.edges.get(edge_id).unwrap().curve).unwrap().clone();

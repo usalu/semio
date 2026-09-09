@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::En1995Snapshot;
 use crate::mutations::set_snapshot;
+use crate::En1995Snapshot;
 
 fn sample_mutation() -> En1995Mutation {
     En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En })

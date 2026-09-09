@@ -215,51 +215,27 @@ mod tests {
         // Insert+Remove-before: base has [Title] at 0; insert "New" at 1 -> [Title,New]; then
         // remove index 0 ("Title") -> [New] lands at final index 0 (the recipe's own canonical
         // shift case, on text_chunks' bespoke field-aware absorb path).
-        assert_absorb_law(
-            &base,
-            PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 1, chunk: text_chunk("New", "n") }),
-            PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: 0 }),
-        );
+        assert_absorb_law(&base, PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 1, chunk: text_chunk("New", "n") }), PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: 0 }));
 
         // Insert+Insert-same-index: both survive, later insert lands at the lower final index.
-        assert_absorb_law(
-            &base,
-            PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 1, chunk: text_chunk("F", "f") }),
-            PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 1, chunk: text_chunk("G", "g") }),
-        );
+        assert_absorb_law(&base, PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 1, chunk: text_chunk("F", "f") }), PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 1, chunk: text_chunk("G", "g") }));
 
         // Add+SetField: the second mutation patches directly into the still-pending added chunk.
-        assert_absorb_law(
-            &base,
-            PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 0, chunk: text_chunk("X", "orig") }),
-            PngMutation::ReplaceTextChunk(ReplaceTextChunkMutation { index: 0, chunk: text_chunk("X", "patched") }),
-        );
+        assert_absorb_law(&base, PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 0, chunk: text_chunk("X", "orig") }), PngMutation::ReplaceTextChunk(ReplaceTextChunkMutation { index: 0, chunk: text_chunk("X", "patched") }));
 
         // Modify+Remove: a pending field patch on a since-removed base item vanishes.
-        assert_absorb_law(
-            &base,
-            PngMutation::ReplaceTextChunk(ReplaceTextChunkMutation { index: 0, chunk: text_chunk("Title", "will-vanish") }),
-            PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: 0 }),
-        );
+        assert_absorb_law(&base, PngMutation::ReplaceTextChunk(ReplaceTextChunkMutation { index: 0, chunk: text_chunk("Title", "will-vanish") }), PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: 0 }));
 
         // Insert then annihilate the very same insert — on `unknown_chunks`, exercising the
         // SHARED weak-value index transport (`absorb_weak_index_triple`) instead of
         // text_chunks' bespoke field-aware variant.
-        assert_absorb_law(
-            &base,
-            PngMutation::InsertUnknownChunk(InsertUnknownChunkMutation { index: 0, chunk: PngChunk { kind: *b"abcd", data: vec![1] } }),
-            PngMutation::RemoveUnknownChunk(RemoveUnknownChunkMutation { index: 0 }),
-        );
+        assert_absorb_law(&base, PngMutation::InsertUnknownChunk(InsertUnknownChunkMutation { index: 0, chunk: PngChunk { kind: *b"abcd", data: vec![1] } }), PngMutation::RemoveUnknownChunk(RemoveUnknownChunkMutation { index: 0 }));
 
         // Two unrelated scalar sets absorb via LWW.
         assert_absorb_law(&base, PngMutation::ChangeGamma(ChangeGammaMutation { gama: Some(1) }), PngMutation::ChangeGamma(ChangeGammaMutation { gama: Some(2) }));
 
         // Tri-state set-then-clear: the later clear wins outright over the pending set.
-        assert_absorb_law(
-            &base,
-            PngMutation::ChangeTransparency(ChangeTransparencyMutation { trns: Some(PngTransparency::Grayscale { gray: 1 }) }),
-            PngMutation::ChangeTransparency(ChangeTransparencyMutation { trns: None }),
-        );
+        assert_absorb_law(&base, PngMutation::ChangeTransparency(ChangeTransparencyMutation { trns: Some(PngTransparency::Grayscale { gray: 1 }) }), PngMutation::ChangeTransparency(ChangeTransparencyMutation { trns: None }));
     }
 
     #[test]

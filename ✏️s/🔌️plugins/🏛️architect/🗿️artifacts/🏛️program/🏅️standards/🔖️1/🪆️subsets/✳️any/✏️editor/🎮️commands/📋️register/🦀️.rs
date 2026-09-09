@@ -2,12 +2,12 @@
 //! adding, removing and patching its rows.
 
 pub mod select_register {
-    use dsl::{FromValue, ToValue};
+    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::ProgramSnapshot;
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use dsl::{FromValue, ToValue};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    
+
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "select-register")]
     pub struct SelectRegister {
@@ -22,14 +22,14 @@ pub mod select_register {
 }
 
 pub mod add_register_item {
-    use dsl::{FromValue, ToValue};
-    use crate::op::ProgramMutation;
-    use crate::{EntityId, ProgramSnapshot};
     use crate::editor::architect::behavior::apply_template;
     use crate::editor::architect::catalog::add_register_item_operation;
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use crate::op::ProgramMutation;
+    use crate::{EntityId, ProgramSnapshot};
+    use dsl::{FromValue, ToValue};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    
+
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-register-item")]
     pub struct AddRegisterItem {
@@ -61,14 +61,14 @@ pub mod add_register_item {
 }
 
 pub mod remove_register_item {
-    use dsl::{FromValue, ToValue};
+    use crate::editor::architect::catalog::remove_register_item_operation;
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::{EntityId, ProgramSnapshot};
-    use crate::editor::architect::catalog::remove_register_item_operation;
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
+    use dsl::{FromValue, ToValue};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    
+
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "remove-register-item")]
     pub struct RemoveRegisterItem {
@@ -96,13 +96,13 @@ pub mod remove_register_item {
 }
 
 pub mod patch_register_item {
-    use dsl::{FromValue, ToValue};
-    use crate::op::ProgramMutation;
-    use crate::{EntityId, ProgramSnapshot};
     use crate::editor::architect::catalog::patch_register_item_operation;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+    use crate::op::ProgramMutation;
+    use crate::{EntityId, ProgramSnapshot};
     use dsl::DslValue as Value;
+    use dsl::{FromValue, ToValue};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "patch-register-item")]

@@ -98,7 +98,7 @@ async fn declared_outcome_holds() {
     assert_eq!(declared[0].get("code").and_then(pack::JsonValue::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
 }
 
-/// 🔺️ A no-op emits the artifact's `Default` diff — all eight slots `null`.
+/// 🔺️ A no-op emits the artifact's `Default` diff — all four artifact slots `null`.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = produced();

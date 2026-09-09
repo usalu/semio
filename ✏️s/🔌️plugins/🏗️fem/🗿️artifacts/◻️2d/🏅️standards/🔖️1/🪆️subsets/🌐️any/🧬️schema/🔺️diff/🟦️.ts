@@ -116,12 +116,6 @@ export interface Fem2dArtifact {
   loadCases: FemLoadCase[];
   combinations: FemCombination[];
   analysis: FemAnalysisSettings;
-  resultSourceId?: string;
-  resultMode: string;
-  resultModeIndex: number;
-  camera: FemCamera;
-  solverResultsJson: string;
-  meshPreviewJson: string;
 }
 //#endregion 🔖️Entities
 
@@ -146,19 +140,7 @@ export interface Fem2dDiff {
   combinations?: Fem2dCombinationsDelta;
   /** @state artifact */
   analysis?: FemAnalysisSettings;
-  /** @state presence */
-  resultSourceId?: string | null;
-  /** @state presence */
-  resultMode?: string;
-  /** @state presence */
-  resultModeIndex?: number;
   /** @state config */
-  camera?: FemCamera;
-  /** @state config */
-  /** @state artifact */
-  solverResultsJson?: string;
-  /** @state artifact */
-  meshPreviewJson?: string;
 }
 
 export interface Fem2dNodesDelta {

@@ -19,7 +19,6 @@
 /// 🪡 Loop positions, surface parameters, and boundary flags.
 pub type TessellationLoopUv = (Vec<Pnt3>, Vec<(f64, f64)>, Vec<bool>);
 
-
 use std::collections::HashMap;
 
 use crate::standards::v1::subsets::brep::schema::diff::primitives::Wire;

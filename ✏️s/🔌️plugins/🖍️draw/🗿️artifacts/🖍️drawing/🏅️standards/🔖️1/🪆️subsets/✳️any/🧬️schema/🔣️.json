@@ -8,12 +8,7 @@
     "schema",
     "id",
     "layers",
-    "assets",
-    "selectedIds",
-    "engagementInput",
-    "cameraX",
-    "cameraY",
-    "cameraZoom"
+    "assets"
   ],
   "properties": {
     "schema": {
@@ -44,36 +39,6 @@
     },
     "artboard": {
       "$ref": "#/$defs/DrawingArtboard",
-      "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "cameraX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "hoveredId": {
-      "type": "string",
       "x-semio-state": "artifact"
     }
   },

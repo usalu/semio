@@ -1,10 +1,9 @@
 //! 📄️ Writer play app panel — the document AST outline tree (nested Content/Outline sub-tabs sharing
 //! one render).
 
+use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::schema::{parse_jack_ast, JackAstNode};
 use crate::{writer_text, WriterSnapshot};
-use crate::editor::writer::config::WriterConfig;
-use crate::editor::writer::terminology::WriterPlayLabels;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::{tree_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use semio_framework_ui_contract as ui;
@@ -64,14 +63,17 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> semio_framework_plugin::UiAssemb
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "writer AST row admission failed"))
 }
 
-pub fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &WriterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if document.language_id != "jack" {
         let items = crate::editor::writer::ui_node_list([tree_item("writer-document.id", crate::editor::writer::ui_label(document.id.clone())?), tree_item("writer-document.language", crate::editor::writer::ui_label(document.language_id.clone())?)])?;
         return PanelTreeBuilder::new("writer-document")?.section("writer-document.meta", Some(crate::editor::writer::ui_label(labels.document.as_str())?), true, items)?.build();
     }
     let root = parse_jack_ast(&writer_text(document));
     let items = crate::editor::writer::ui_node_list([jack_ast_to_tree_item(&root)])?;
-    PanelTreeBuilder::new("writer-play-document")?.section_or_placeholder("writer-play-document.ast", Some(crate::editor::writer::ui_label(labels.document.as_str())?), true, items, crate::editor::writer::ui_label(labels.empty_query.as_str())?)?.interaction_domain("ast")?.build()
+    PanelTreeBuilder::new("writer-play-document")?
+        .section_or_placeholder("writer-play-document.ast", Some(crate::editor::writer::ui_label(labels.document.as_str())?), true, items, crate::editor::writer::ui_label(labels.empty_query.as_str())?)?
+        .interaction_domain("ast")?
+        .build()
 }
 //#endregion 🔖️Render
 

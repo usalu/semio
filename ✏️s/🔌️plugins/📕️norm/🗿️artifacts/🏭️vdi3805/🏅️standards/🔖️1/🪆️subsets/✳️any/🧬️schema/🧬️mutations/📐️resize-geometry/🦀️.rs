@@ -1,6 +1,5 @@
 //! 📐️ `resize-geometry` — changes a geometry's bounding-box extent, addressed by id.
 
-
 use crate::{BoundingBox, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

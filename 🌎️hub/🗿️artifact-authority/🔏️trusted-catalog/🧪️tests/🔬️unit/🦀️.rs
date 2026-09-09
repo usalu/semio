@@ -1,8 +1,8 @@
-
 use super::*;
 use crate::artifact_authority::adapters::AUTHORITY_MAX_DIAGNOSTIC_BYTES;
 #[cfg(feature = "native-artifact-execution")]
 use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
+use crate::artifact_authority::trusted_catalog::schema::{TrustedBundleCodecV1, TrustedBundleComponentV1};
 use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl};
 use directory::os_store::{ArtifactPackFiles, ArtifactTextFiles, VcsError, document_codec};
 use std::io::Write;
@@ -265,7 +265,13 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
     let selected_closure = vec![gis_identity.clone(), stdio_identity];
     let mut bundle = TrustedBundleV1 {
         schema_version: 2,
-        profiles: vec![TrustedBundleProfileV1 { id: "local-stdio-gis-open-v1".into(), selected_closure, selected_closure_sha256: "01".repeat(32), open_target: TrustedBundleProfileOpenTargetV1 { package: gis_identity, target }, generation_id: "02".repeat(32) }],
+        profiles: vec![TrustedBundleProfileV1 {
+            id: "local-stdio-gis-open-v1".into(),
+            selected_closure,
+            selected_closure_sha256: "01".repeat(32),
+            open_target: TrustedBundleProfileOpenTargetV1 { package: gis_identity, target },
+            generation_id: "02".repeat(32),
+        }],
         packages,
     };
     bundle.profiles[0].selected_closure_sha256 = hex_lower(&selected_closure_digest(&bundle.profiles[0].selected_closure).expect("closure digest"));

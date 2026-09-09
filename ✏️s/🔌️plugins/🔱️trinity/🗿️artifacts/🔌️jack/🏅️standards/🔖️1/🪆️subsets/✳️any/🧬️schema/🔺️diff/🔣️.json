@@ -56,39 +56,6 @@
         }
       ],
       "x-semio-state": "artifact"
-    },
-    "jackQuery": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "lodModeByWindow": {
-      "type": "object",
-      "additionalProperties": {
-        "oneOf": [
-          {
-            "type": "null"
-          },
-          {
-            "type": "string"
-          }
-        ]
-      },
-      "x-semio-state": "config"
-    },
-    "viewportCamera": {
-      "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera",
-      "x-semio-state": "config"
-    },
-    "editorSelection": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/JackEditorSelection"
-        }
-      ],
-      "x-semio-state": "config"
     }
   },
   "$defs": {

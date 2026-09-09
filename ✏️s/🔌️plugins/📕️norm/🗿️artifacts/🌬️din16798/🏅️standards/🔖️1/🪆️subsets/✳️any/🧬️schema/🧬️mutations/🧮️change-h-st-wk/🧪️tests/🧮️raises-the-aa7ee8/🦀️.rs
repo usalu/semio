@@ -118,14 +118,14 @@ async fn produces_committed_diff() {
     assert!(raised.diff().theta_st_c.is_none(), "change-h-st-wk/raises-the-storage-loss-coefficient-to-6-point-5-w-per-k: the sparse delta must leave thetaStC unset — a delta that rewrote it would be a bug this assertion exists to catch");
 }
 
-/// 🔣️ The committed diff is itself canonical and decodes to `Din16798Diff`. Its
-/// `selectedCheckIndex` is an `Option<Option<u32>>` and so cannot distinguish `None` from
-/// `Some(None)` across a JSON round trip — `change-h-st-wk` never writes it, so the committed
-/// `null` is unambiguously `None` here and the fixed point holds.
+/// 🔣️ The committed artifact diff is canonical and excludes presence selection.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: Din16798Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert!(decoded.selected_check_index.is_none(), "change-h-st-wk/raises-the-storage-loss-coefficient-to-6-point-5-w-per-k: change-h-st-wk is an artifact-lane edit and must never carry the presence-lane selectedCheckIndex");
+    assert!(
+        serde_json::to_value(&decoded).expect("diff JSON").get("selectedCheckIndex").is_none(),
+        "change-h-st-wk/raises-the-storage-loss-coefficient-to-6-point-5-w-per-k: change-h-st-wk is an artifact-lane edit and must never carry the presence-lane selectedCheckIndex"
+    );
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-h-st-wk/raises-the-storage-loss-coefficient-to-6-point-5-w-per-k: committed diff JSON is not canonical");

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.writer.main_window.config.v1;
+
+message WriterMainWindowConfig {
+  WriterCamera camera = 1;
+  WriterEditorSettings editor_settings = 2;
+}
+
+message WriterCamera { double x = 1; double y = 2; double zoom = 3; }
+message WriterEditorSettings { bool show_line_numbers = 1; uint32 font_px = 2; uint32 line_height = 3; uint32 tab_size = 4; }

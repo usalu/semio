@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use std::collections::BTreeMap;

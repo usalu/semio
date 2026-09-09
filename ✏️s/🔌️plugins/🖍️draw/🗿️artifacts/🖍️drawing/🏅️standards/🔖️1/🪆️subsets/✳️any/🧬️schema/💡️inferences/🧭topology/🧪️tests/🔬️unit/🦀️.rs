@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{DrawingAttributes, DrawingGroupBody, DrawingLayerBase, DrawingPathBody};
 

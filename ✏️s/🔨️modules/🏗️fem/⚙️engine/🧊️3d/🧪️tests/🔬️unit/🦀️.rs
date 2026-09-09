@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::artifacts::fem3d::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use crate::fem3d_engine::modal_buckling;
 use crate::model::{Dof, ElementResult};
+use crate::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use std::collections::BTreeMap;
 
 // #region 🔖️Fixtures
@@ -22,7 +21,7 @@ fn cantilever_fixture() -> (Fem3dSnapshot, f64, f64, f64, f64, f64) {
         sections: vec![FemSection { id: "hea200".into(), name: "HEA200".into(), area: a, iy, iz, j }],
         solids: vec![],
         supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() }],
-        load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![crate::artifacts::fem3d::FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -p }], self_weight: false }],
+        load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![crate::FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -p }], self_weight: false }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
     };
@@ -47,7 +46,7 @@ fn truss_fixture() -> Fem3dSnapshot {
             FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: FemDof::ALL.to_vec() },
             FemSupport { id: "s3".into(), node_id: "n4".into(), fixed: FemDof::ALL.to_vec() },
         ],
-        load_cases: vec![FemLoadCase { id: "drop".into(), name: "Drop".into(), loads: vec![crate::artifacts::fem3d::FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: FemDof::Tz, value: -1000.0 }], self_weight: false }],
+        load_cases: vec![FemLoadCase { id: "drop".into(), name: "Drop".into(), loads: vec![crate::FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: FemDof::Tz, value: -1000.0 }], self_weight: false }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
     }
@@ -174,7 +173,7 @@ fn fem3d_solve_unknown_case_id_errors() {
 #[test]
 fn fem3d_solve_all_returns_case_and_combination_results() {
     let (mut doc, ..) = cantilever_fixture();
-    doc.load_cases.push(FemLoadCase { id: "point2".into(), name: "Point Load 2".into(), loads: vec![crate::artifacts::fem3d::FemLoad::Nodal { id: "l2".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -2000.0 }], self_weight: false });
+    doc.load_cases.push(FemLoadCase { id: "point2".into(), name: "Point Load 2".into(), loads: vec![crate::FemLoad::Nodal { id: "l2".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -2000.0 }], self_weight: false });
     doc.combinations = vec![FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35), ("point2".into(), 1.0)]) }];
 
     let results = fem3d_solve_all(&doc).expect("solves");
@@ -217,7 +216,7 @@ fn self_weight_case_produces_nonzero_reactions() {
 fn member_udl_load_matches_total_wl() {
     let (mut doc, _e, _iy, l, _p, _iz) = cantilever_fixture();
     let w = 800.0;
-    doc.load_cases = vec![FemLoadCase { id: "udl".into(), name: "UDL".into(), loads: vec![crate::artifacts::fem3d::FemLoad::MemberUdl { id: "u1".into(), element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -w }], self_weight: false }];
+    doc.load_cases = vec![FemLoadCase { id: "udl".into(), name: "UDL".into(), loads: vec![crate::FemLoad::MemberUdl { id: "u1".into(), element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -w }], self_weight: false }];
     let results = fem3d_solve_all(&doc).expect("solves");
     let result = results.get("udl").unwrap();
     let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
@@ -244,7 +243,7 @@ fn solid_self_weight_matches_total_mass_times_gravity() {
 #[test]
 fn solid_area_load_matches_pressure_times_footprint_area() {
     let mut doc = solid_slab_doc();
-    doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "Pressure".into(), loads: vec![crate::artifacts::fem3d::FemLoad::Area { id: "a1".into(), solid_id: "sol1".into(), pressure: 8000.0 }], self_weight: false }];
+    doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "Pressure".into(), loads: vec![crate::FemLoad::Area { id: "a1".into(), solid_id: "sol1".into(), pressure: 8000.0 }], self_weight: false }];
     let results = fem3d_solve_all(&doc).expect("solid pressure load solves");
     let result = results.get("pressure").unwrap();
     let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
@@ -260,7 +259,7 @@ fn solid_area_load_matches_pressure_times_footprint_area() {
 /// `fem3d_nodal_von_mises` (`mesh_preview.rs`) and `fem3d_buckling` (`modal_buckling.rs`) together.
 #[test]
 fn example_fixture_parses() {
-    let doc: Fem3dSnapshot = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
+    let doc: Fem3dSnapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
     assert_eq!(doc.nodes.len(), 16);
     assert_eq!(doc.elements.len(), 16);
     assert_eq!(doc.solids.len(), 1);

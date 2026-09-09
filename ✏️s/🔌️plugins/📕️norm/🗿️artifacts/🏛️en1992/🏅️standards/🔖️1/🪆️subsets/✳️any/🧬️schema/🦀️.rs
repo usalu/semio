@@ -82,8 +82,6 @@ pub struct En1992Artifact {
     pub anchor_n_ed_kn: f64,
     #[state(artifact)]
     pub anchor_v_ed_kn: f64,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -130,7 +128,7 @@ impl En1992Artifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::En1992Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
@@ -168,14 +166,11 @@ impl En1992Artifact {
             anchor_c1_mm: snapshot.anchor_c1_mm,
             anchor_n_ed_kn: snapshot.anchor_n_ed_kn,
             anchor_v_ed_kn: snapshot.anchor_v_ed_kn,
-            selected_check_index: None,
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
     pub fn set_snapshot(&mut self, snapshot: crate::En1992Snapshot) {
-        let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
-        self.selected_check_index = selected;
     }
 }
 

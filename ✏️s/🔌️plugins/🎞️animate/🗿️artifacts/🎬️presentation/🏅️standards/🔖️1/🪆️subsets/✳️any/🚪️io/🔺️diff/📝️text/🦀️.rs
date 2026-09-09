@@ -27,12 +27,6 @@ impl PresentationDiff {
             if let Some(presentation) = &self.presentation {
                 next.presentation = presentation.clone();
             }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
-            }
-            if let Some(value) = &self.engagement_input {
-                next.engagement_input = value.clone();
-            }
             next
         })
     }
@@ -68,8 +62,6 @@ impl MutationDiff<PresentationSnapshot> for PresentationDiff {
         }
         take!(schema);
         take!(presentation);
-        take!(selected_ids);
-        take!(engagement_input);
     }
 }
 //#endregion 🔖️Apply

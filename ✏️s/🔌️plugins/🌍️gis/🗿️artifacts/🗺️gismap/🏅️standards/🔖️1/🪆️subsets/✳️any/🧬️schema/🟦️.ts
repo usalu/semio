@@ -7,29 +7,6 @@ export interface GisMapArtifact {
   routes: GisMapFeature[];
   /** @state artifact */
   regions: GisMapFeature[];
-  /** @state presence */
-  selectedIds: string[];
-  /** @state presence */
-  featureSelectionJson: string;
-  /** @state presence */
-  layerVisibility: Record<string, boolean>;
-  /** @state presence */
-  layerStrokeScale: Record<string, number>;
-  /** @state config */
-  cameraJson: string;
-  /** @state config */
-  renderMode: string;
-  /** @state config */
-  vectorStyle: string;
-  /** @state config */
-  lodMode: string;
-  /** @state config */
-  hoverJson: string;
-  /** @state config */
-  selectionMethod: string;
-  /** @state config */
-  selectionMode: string;
-  /** @state config */
 }
 
 export interface GisMapFeature {
@@ -90,17 +67,6 @@ export function parseGisMapArtifact(value: unknown, at = "$"): GisMapArtifact {
     positions: gisGismapArtifactGuardArray(row["positions"], `${at}.positions`).map((item, index) => parseGisMapFeature(item, `${at}.positions[${index}]`)),
     routes: gisGismapArtifactGuardArray(row["routes"], `${at}.routes`).map((item, index) => parseGisMapFeature(item, `${at}.routes[${index}]`)),
     regions: gisGismapArtifactGuardArray(row["regions"], `${at}.regions`).map((item, index) => parseGisMapFeature(item, `${at}.regions[${index}]`)),
-    selectedIds: gisGismapArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => gisGismapArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    featureSelectionJson: gisGismapArtifactGuardString(row["featureSelectionJson"], `${at}.featureSelectionJson`),
-    layerVisibility: gisGismapArtifactGuardObject(row["layerVisibility"], `${at}.layerVisibility`),
-    layerStrokeScale: gisGismapArtifactGuardObject(row["layerStrokeScale"], `${at}.layerStrokeScale`),
-    cameraJson: gisGismapArtifactGuardString(row["cameraJson"], `${at}.cameraJson`),
-    renderMode: gisGismapArtifactGuardString(row["renderMode"], `${at}.renderMode`),
-    vectorStyle: gisGismapArtifactGuardString(row["vectorStyle"], `${at}.vectorStyle`),
-    lodMode: gisGismapArtifactGuardString(row["lodMode"], `${at}.lodMode`),
-    hoverJson: gisGismapArtifactGuardString(row["hoverJson"], `${at}.hoverJson`),
-    selectionMethod: gisGismapArtifactGuardString(row["selectionMethod"], `${at}.selectionMethod`),
-    selectionMode: gisGismapArtifactGuardString(row["selectionMode"], `${at}.selectionMode`),
   };
 }
 

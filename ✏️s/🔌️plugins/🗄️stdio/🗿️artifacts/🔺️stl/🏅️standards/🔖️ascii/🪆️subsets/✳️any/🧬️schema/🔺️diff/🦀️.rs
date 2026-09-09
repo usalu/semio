@@ -26,9 +26,9 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use crate::schema::snapshot::StlTriangle;
 use crate::StlSnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 //#region 🔖️TriangleDiff

@@ -159,14 +159,14 @@ impl From<std::io::Error> for LayoutError {
 /// the app engine's `export_display_list_svg` is now a cross-module SECOND consumer — see this
 /// region's own header on the "more than one consumer" rule).
 use crate::{Frame, GridSettings, Layer, LayoutSnapshot, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
+use dsl::{DslValue as Value, FromValue, ToValue};
 use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
-use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
 #[cfg(test)]
 use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity};
+use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_svg::schema::snapshot::{write_svg_xml, SvgSnapshot};
-use dsl::{DslValue as Value, FromValue, ToValue};
 
 const DRAWING_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const SVG_FORMAT_KIND: &str = "s.stdio.svg";

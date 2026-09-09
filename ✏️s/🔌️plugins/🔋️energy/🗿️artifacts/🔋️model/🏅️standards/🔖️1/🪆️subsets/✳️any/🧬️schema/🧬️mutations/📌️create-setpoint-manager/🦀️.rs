@@ -24,7 +24,17 @@ pub struct CreateSetpointManager {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_setpoint_manager(id: crate::model::EntityId, name: String, kind: String, low_outdoor_c: f64, high_outdoor_c: f64, low_setpoint_c: f64, high_setpoint_c: f64, schedule_present: bool, schedule_id: crate::model::ScheduleId) -> EnergyModelMutation {
+pub fn create_setpoint_manager(
+    id: crate::model::EntityId,
+    name: String,
+    kind: String,
+    low_outdoor_c: f64,
+    high_outdoor_c: f64,
+    low_setpoint_c: f64,
+    high_setpoint_c: f64,
+    schedule_present: bool,
+    schedule_id: crate::model::ScheduleId,
+) -> EnergyModelMutation {
     EnergyModelMutation::CreateSetpointManager(CreateSetpointManager { id, name, kind, low_outdoor_c, high_outdoor_c, low_setpoint_c, high_setpoint_c, schedule_present, schedule_id })
 }
 

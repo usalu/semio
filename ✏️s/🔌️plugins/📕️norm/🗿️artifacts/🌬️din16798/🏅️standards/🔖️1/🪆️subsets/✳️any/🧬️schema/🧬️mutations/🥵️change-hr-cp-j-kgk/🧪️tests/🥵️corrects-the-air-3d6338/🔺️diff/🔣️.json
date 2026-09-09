@@ -31,7 +31,7 @@
   "fanEnergyReferenceKwh": null,
   "nightSetbackK": null,
   "hrMDotKgS": null,
-  "hrCpJKgk": 1010.0,
+  "hrCpJKgk": 1010,
   "hrDeltaTC": null,
   "hrTH": null,
   "hrSavingsReferenceKwh": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

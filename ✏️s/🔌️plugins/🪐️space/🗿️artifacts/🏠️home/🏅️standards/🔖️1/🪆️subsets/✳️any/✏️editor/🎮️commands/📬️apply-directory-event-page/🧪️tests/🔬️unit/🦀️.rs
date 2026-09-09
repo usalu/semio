@@ -11,7 +11,7 @@ fn dispatch(config: &HomeConfig, page: &store::os_directory::DirectoryEventPageV
     let history = semio_framework_plugin::HistoryView::empty();
     let document = SHomeSnapshot::default();
     let view = ArtifactView::new(&document, &history);
-    handle(&ApplyDirectoryEventPage { page_json: pack::to_json_string(page) }, &view, &ConfigView { snapshot: config })
+    handle(&ApplyDirectoryEventPage { page_json: pack::to_json_string(page) }, &view, &ConfigView { snapshot: config, window: None })
 }
 
 #[semio_framework_async_macros::async_test]

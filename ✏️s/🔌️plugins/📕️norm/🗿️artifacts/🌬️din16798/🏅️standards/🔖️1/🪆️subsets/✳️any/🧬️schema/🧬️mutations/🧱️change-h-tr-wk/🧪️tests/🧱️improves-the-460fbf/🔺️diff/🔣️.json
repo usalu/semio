@@ -40,7 +40,7 @@
   "infiltrationAllowanceM3H": null,
   "cellarAreaM2": null,
   "cellarVentilationM3H": null,
-  "hTrWK": 175.0,
+  "hTrWK": 175,
   "hVeWK": null,
   "thetaEC": null,
   "thetaSetC": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

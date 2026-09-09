@@ -12,28 +12,6 @@ message GisMapDiff {
   optional GisMapFeaturesDelta routes = 3;
   // @state artifact
   optional GisMapFeaturesDelta regions = 4;
-  // @state presence
-  optional GisMapStringList selected_ids = 5;
-  // @state presence
-  optional string feature_selection_json = 6;
-  // @state presence
-  optional GisMapBoolMapDelta layer_visibility = 7;
-  // @state presence
-  optional GisMapNumberMapDelta layer_stroke_scale = 8;
-  // @state config
-  optional string camera_json = 9;
-  // @state config
-  optional string render_mode = 10;
-  // @state config
-  optional string vector_style = 11;
-  // @state config
-  optional string lod_mode = 12;
-  // @state config
-  optional string hover_json = 13;
-  // @state config
-  optional string selection_method = 14;
-  // @state config
-  optional string selection_mode = 15;
   // @state config
 }
 
@@ -41,17 +19,6 @@ message GisMapArtifact {
   repeated GisMapFeature positions = 1;
   repeated GisMapFeature routes = 2;
   repeated GisMapFeature regions = 3;
-  repeated string selected_ids = 4;
-  string feature_selection_json = 5;
-  map<string, bool> layer_visibility = 6;
-  map<string, double> layer_stroke_scale = 7;
-  string camera_json = 8;
-  string render_mode = 9;
-  string vector_style = 10;
-  string lod_mode = 11;
-  string hover_json = 12;
-  string selection_method = 13;
-  string selection_mode = 14;
 }
 
 message GisMapFeature { string id = 1; string data_json = 2; }

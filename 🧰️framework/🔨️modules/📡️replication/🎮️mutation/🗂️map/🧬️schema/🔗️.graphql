@@ -1,0 +1,9 @@
+# 🗂️ Shared map changes with original-base presence requirements.
+# import DslValue from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
+enum MapPresence { ANY PRESENT ABSENT NEVER }
+type MapSet { value: DslValue }
+type MapRemove { kind: String! }
+type MapReject { kind: String! }
+union MapEntryOperation = MapSet | MapRemove | MapReject
+type MapEntryDelta { key: String!, precondition: MapPresence!, operation: MapEntryOperation! }
+type MapDelta { entries: [MapEntryDelta!]! }

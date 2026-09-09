@@ -17,7 +17,7 @@
         "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
         "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
         "descriptorSha256": "1313131313131313131313131313131313131313131313131313131313131313",
-        "executionProtocol": { "appChannelVersion": 14 },
+        "executionProtocol": { "appChannelVersion": 15 },
         "browserActor": {
           "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.27.0-jspi.v1",
           "path":"packages/gis/browser/closed-actor.mjs", "byteLength":3,
@@ -39,7 +39,7 @@
         "componentSha256": "2121212121212121212121212121212121212121212121212121212121212121",
         "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
         "descriptorSha256": "2323232323232323232323232323232323232323232323232323232323232323",
-        "executionProtocol": { "appChannelVersion": 14 },
+        "executionProtocol": { "appChannelVersion": 15 },
         "browserActor": { "kind":"none" },
         "codecCount": 26,
         "targetCount": 0
@@ -57,7 +57,7 @@
       "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
       "grant": { "read": true, "write": true, "observe": true }
     },
-    "generationId": "9d010f1a012a471c7ceaae923472b3687018b02c4aff475db7db4ee6142a2565"
+    "generationId": "e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52"
   },
   "sources": {
     "stdioReceipts": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
@@ -178,12 +178,12 @@
       { "change": "leaf-replaced-during-read", "accepted": false },
       { "change": "cancel-before-read", "accepted": false }
     ],
-    "initialGenerationId": "9d010f1a012a471c7ceaae923472b3687018b02c4aff475db7db4ee6142a2565",
+    "initialGenerationId": "e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52",
     "failedCandidateGenerationId": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",
-    "currentAfterFailedCandidate": "9d010f1a012a471c7ceaae923472b3687018b02c4aff475db7db4ee6142a2565",
+    "currentAfterFailedCandidate": "e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52",
     "nextGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
     "stalePlan": {
-      "issuedGenerationId": "9d010f1a012a471c7ceaae923472b3687018b02c4aff475db7db4ee6142a2565",
+      "issuedGenerationId": "e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52",
       "observedGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
       "expected": "stale"
     },

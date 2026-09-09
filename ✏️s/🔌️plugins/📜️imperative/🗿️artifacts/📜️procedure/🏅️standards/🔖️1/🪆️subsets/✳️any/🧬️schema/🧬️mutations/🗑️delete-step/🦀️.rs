@@ -2,7 +2,7 @@
 //! with it — no separate reconnection logic needed).
 use crate::diff::ProcedureDiff;
 use crate::mutations::ProcedureMutation;
-use crate::{ProcedureSnapshot, PathRef};
+use crate::{PathRef, ProcedureSnapshot};
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-step` payload.

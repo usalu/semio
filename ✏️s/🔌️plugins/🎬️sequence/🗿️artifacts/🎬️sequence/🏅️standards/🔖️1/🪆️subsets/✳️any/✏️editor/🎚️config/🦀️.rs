@@ -15,13 +15,11 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Config
 /// 🧮️ B1: sequence's real `ArtifactApp::Config` — absorbs every former `SequencePlayRuntime` field
 /// (`last_run_json`/`orientation`) plus the node-graph viewport camera (session-only, never a document
-/// field) and the locale the pre-B1 host-pushed `ViewModel` used to carry (see
-/// `crate::editor::sequence::terminology::sequence_play_labels`) — same "absorb every runtime field"
-/// shape `shooting_engine::ShootingConfig` established for the pilot. 🕹️ ticket
+/// field). Locale and terminology come from the shared host `ViewModel` (see
+/// `crate::editor::sequence::terminology::sequence_play_labels`). 🕹️ ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_step_ids` no longer lives here —
 /// selection is framework-owned now, read via `InteractionView::selection("steps")`.
-#[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
-#[derive(dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -89,7 +87,7 @@ impl store::ArtifactPack for SequenceConfig {
 
 impl Default for SequenceConfig {
     fn default() -> Self {
-        Self { last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), }
+        Self { last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default() }
     }
 }
 
@@ -99,7 +97,6 @@ store::impl_whole_record_config!(SequenceConfig);
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
-
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -65,7 +65,8 @@
       "required": [
         "path",
         "packages",
-        "graphSources"
+        "graphSources",
+        "storage"
       ],
       "properties": {
         "path": {
@@ -86,6 +87,29 @@
           "uniqueItems": true,
           "items": {
             "type": "string"
+          }
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "data",
+            "cache",
+            "sentinel"
+          ],
+          "properties": {
+            "data": {
+              "type": "string",
+              "minLength": 1
+            },
+            "cache": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sentinel": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         }
       }

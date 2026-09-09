@@ -132,10 +132,19 @@ pub fn from_framework_mutation(mutation: semio_framework_artifact_flow_flow::Flo
         semio_framework_artifact_flow_flow::FlowMutation::RemoveWidget(payload) => FlowMutation::DeleteWidget(super::delete_widget::DeleteWidget { id: payload.id }),
         semio_framework_artifact_flow_flow::FlowMutation::MoveWidget(payload) => FlowMutation::ReorderWidgets(super::reorder_widgets::ReorderWidgets { id: payload.id, to_index: payload.to_index as usize }),
         semio_framework_artifact_flow_flow::FlowMutation::ChangeWidget(payload) => FlowMutation::ReplaceWidget(super::replace_widget::ReplaceWidget { id: payload.id, widget: payload.widget }),
-        semio_framework_artifact_flow_flow::FlowMutation::AddSynapse(payload) => FlowMutation::ConnectWidgets(super::connect_widgets::ConnectWidgets { index: payload.index as usize, id: payload.synapse.id, from: payload.synapse.from, from_port: payload.synapse.from_port, to: payload.synapse.to, to_port: payload.synapse.to_port }),
+        semio_framework_artifact_flow_flow::FlowMutation::AddSynapse(payload) => FlowMutation::ConnectWidgets(super::connect_widgets::ConnectWidgets {
+            index: payload.index as usize,
+            id: payload.synapse.id,
+            from: payload.synapse.from,
+            from_port: payload.synapse.from_port,
+            to: payload.synapse.to,
+            to_port: payload.synapse.to_port,
+        }),
         semio_framework_artifact_flow_flow::FlowMutation::RemoveSynapse(payload) => FlowMutation::DisconnectWidgets(super::disconnect_widgets::DisconnectWidgets { id: payload.id }),
         semio_framework_artifact_flow_flow::FlowMutation::MoveSynapse(payload) => FlowMutation::ReorderSynapses(super::reorder_synapses::ReorderSynapses { id: payload.id, to_index: payload.to_index as usize }),
-        semio_framework_artifact_flow_flow::FlowMutation::ChangeSynapse(payload) => FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::UpdateSynapseEndpoints { id: payload.id, from: payload.synapse.from, from_port: payload.synapse.from_port, to: payload.synapse.to, to_port: payload.synapse.to_port }),
+        semio_framework_artifact_flow_flow::FlowMutation::ChangeSynapse(payload) => {
+            FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::UpdateSynapseEndpoints { id: payload.id, from: payload.synapse.from, from_port: payload.synapse.from_port, to: payload.synapse.to, to_port: payload.synapse.to_port })
+        }
         semio_framework_artifact_flow_flow::FlowMutation::ChangeLayout(payload) => FlowMutation::MoveWidgets(super::move_widgets::MoveWidgets { entries: payload.entries }),
         semio_framework_artifact_flow_flow::FlowMutation::ReplaceFlowFixture(_) => return None,
     })

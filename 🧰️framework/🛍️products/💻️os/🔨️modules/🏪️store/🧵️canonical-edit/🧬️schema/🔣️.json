@@ -9,13 +9,8 @@
       "required": ["schema", "sourceFixture", "grants", "expectedByteLength", "expectedJsonSha256", "lifecycle", "hostiles", "expectedRootDrops"],
       "properties": {
         "schema": { "const": "semio.store.canonical-reader.v1" },
-        "sourceFixture": { "type": "string", "minLength": 1 },
-        "grants": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": { "type": "integer", "minimum": 0 }
-        },
+        "sourceFixture": { "const": "canonical-borrowed-map" },
+        "grants": { "const": [0, 1, 7, 4096] },
         "expectedByteLength": { "type": "integer", "minimum": 0 },
         "expectedJsonSha256": { "$ref": "#/$defs/CanonicalEditDigest" },
         "lifecycle": {
@@ -196,7 +191,7 @@
           "uniqueItems": true,
           "items": { "type": "integer", "minimum": 0 }
         },
-        "longKeyBytes": { "type": "integer", "minimum": 1 },
+        "longKeyBytes": { "type": "integer", "const": 4407 },
         "edit": { "$ref": "#/$defs/CanonicalBorrowedMapEdit" },
         "expectedJson": { "type": "string" },
         "expectedDigest": { "$ref": "#/$defs/CanonicalEditDigest" },
@@ -207,7 +202,7 @@
           "properties": {
             "cancelBeforeRootDrop": { "type": "boolean" },
             "liveRootDrops": { "type": "integer", "minimum": 0 },
-            "iteratorDropsBeforeRoot": { "type": "boolean" }
+            "iteratorDropsBeforeRoot": { "type": "boolean", "const": true }
           }
         },
         "hostile": {
@@ -292,18 +287,13 @@
           "uniqueItems": true,
           "items": { "enum": ["indexed", "borrowed"] }
         },
-        "grants": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": { "type": "integer", "minimum": 0 }
-        },
+        "grants": { "const": [0, 1, 7, 256, 4096] },
         "sentinel": { "type": "integer", "minimum": 0, "maximum": 255 },
         "expectedPrefix": { "type": "string", "minLength": 1 },
-        "expectedBytes": { "type": "integer", "minimum": 0 },
+        "expectedBytes": { "type": "integer", "const": 11 },
         "expectedError": { "type": "string", "minLength": 1 },
-        "expectedComplete": { "type": "boolean" },
-        "expectedRootRetirements": { "type": "integer", "minimum": 0 },
+        "expectedComplete": { "type": "boolean", "const": false },
+        "expectedRootRetirements": { "type": "integer", "const": 1 },
         "expectedSnapshotBytes": { "type": "integer", "minimum": 0 }
       }
     },

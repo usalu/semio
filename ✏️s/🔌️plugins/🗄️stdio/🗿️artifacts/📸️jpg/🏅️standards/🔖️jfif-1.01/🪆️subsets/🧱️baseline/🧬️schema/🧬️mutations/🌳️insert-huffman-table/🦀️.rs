@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertHuffmanTable {
-        pub(crate) index: usize,
-        pub(crate) table: JpgHuffmanTable,
-    }
+    pub(crate) index: usize,
+    pub(crate) table: JpgHuffmanTable,
+}
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for InsertHuffmanTable {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "huffman-table", kind: "insert-huffman-table", record: "InsertHuffmanTable" };

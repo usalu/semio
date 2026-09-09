@@ -1,7 +1,7 @@
 //! 🌱️ Fem3d mutation — `CreateCombination` payload + `MutationKind` impl.
 
-use crate::{Fem3dSnapshot, FemCombination};
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use crate::{Fem3dSnapshot, FemCombination};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

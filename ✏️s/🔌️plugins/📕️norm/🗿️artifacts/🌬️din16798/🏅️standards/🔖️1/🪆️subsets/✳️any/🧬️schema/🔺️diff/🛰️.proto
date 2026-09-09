@@ -128,8 +128,6 @@ message Din16798Diff {
   optional double duct_test_pressure_pa = 62;
   // @state artifact
   optional double duct_leakage_m3_s_m2 = 63;
-  // @state presence
-  optional uint32 selected_check_index = 64;
 }
 
 message Din16798Artifact {
@@ -195,7 +193,6 @@ message Din16798Artifact {
   string duct_class = 60;
   double duct_test_pressure_pa = 61;
   double duct_leakage_m3_s_m2 = 62;
-  optional uint32 selected_check_index = 63;
 }
 
 message Din16798StringList { repeated string values = 1; }

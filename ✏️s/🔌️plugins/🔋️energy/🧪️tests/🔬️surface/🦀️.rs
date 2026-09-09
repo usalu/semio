@@ -1,6 +1,5 @@
-
-use semio_framework_plugin::ViewerApp;
 use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, new_viewer};
+use semio_framework_plugin::ViewerApp;
 
 /// 🧪️ Contract §2.5 — real teeth: dispatches `EnergyModelViewCommand::default()` through the full
 /// `VcsArtifactApp<ViewerApp<EnergyModelViewer>>` runtime path and asserts the document/draft

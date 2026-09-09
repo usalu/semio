@@ -20,15 +20,15 @@
         "symbol": "m3/h",
         "kind": "Volume",
         "delta": false,
-        "si_factor": 1.0
+        "si_factor": 1
       },
       "points": [
         {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0,
+          "y": 0
         },
         {
-          "x": 100.0,
+          "x": 100,
           "y": 4.5
         }
       ]
@@ -45,24 +45,23 @@
         "symbol": "kPa",
         "kind": "Pressure",
         "delta": true,
-        "si_factor": 1000.0
+        "si_factor": 1000
       },
       "points": [
         {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0,
+          "y": 0
         },
         {
-          "x": 50.0,
+          "x": 50,
           "y": 12.5
         },
         {
-          "x": 100.0,
-          "y": 25.0
+          "x": 100,
+          "y": 25
         }
       ]
     }
   },
-  "limits": null,
-  "selectedCheckIndex": null
+  "limits": null
 }

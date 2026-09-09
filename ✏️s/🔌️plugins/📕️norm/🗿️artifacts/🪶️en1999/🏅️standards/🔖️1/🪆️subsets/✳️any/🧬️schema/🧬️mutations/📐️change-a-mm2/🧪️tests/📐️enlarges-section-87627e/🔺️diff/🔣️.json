@@ -2,7 +2,7 @@
   "artifact": null,
   "nEdKn": null,
   "mEdKnm": null,
-  "aMm2": 2250.0,
+  "aMm2": 2250,
   "wElMm3": null,
   "alloy": null,
   "chi": null,
@@ -25,6 +25,5 @@
   "shellTMm": null,
   "shellRMm": null,
   "sigmaEdShellMpa": null,
-  "annex": null,
-  "selectedCheckIndex": null
+  "annex": null
 }

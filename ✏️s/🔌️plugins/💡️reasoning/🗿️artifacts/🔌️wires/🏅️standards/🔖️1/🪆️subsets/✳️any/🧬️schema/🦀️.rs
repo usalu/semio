@@ -1,11 +1,14 @@
 //! 🧬️ Wires artifact schema — every field of the artifact with its state class.
 
-use dsl::DslValue;
 use dsl::os_pack::json::Value;
+use dsl::DslValue;
 use framework_schema::ArtifactSchema;
 
+#[path = "♻️retirement/🦀️.rs"]
+pub mod retirement;
+
 //#region 🔖️Artifact
-/// 🧬️ Full wires artifact state across the artifact, presence and config lanes.
+/// 🧬️ Shared wires artifact content.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.reasoning.wires")]
@@ -19,27 +22,13 @@ pub struct WiresArtifact {
     pub camera: DslValue,
     #[state(artifact)]
     pub meta: DslValue,
-    #[state(artifact)]
-    pub drag_node_id: Option<String>,
-    #[state(artifact)]
-    pub drag_last_x: f64,
-    #[state(artifact)]
-    pub drag_last_y: f64,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for WiresArtifact {
     fn default() -> Self {
-        Self {
-            wires_fixture: crate::empty_wires_fixture(),
-            content: crate::wires_content_child_with_owner(Vec::new(), Vec::new()),
-            camera: crate::empty_camera(),
-            meta: DslValue::Null,
-            drag_node_id: None,
-            drag_last_x: 0.0,
-            drag_last_y: 0.0,
-        }
+        Self { wires_fixture: crate::empty_wires_fixture(), content: crate::wires_content_child_with_owner(Vec::new(), Vec::new()), camera: crate::empty_camera(), meta: DslValue::Null }
     }
 }
 
@@ -49,9 +38,9 @@ impl WiresArtifact {
         crate::WiresSnapshot { wires_fixture: self.wires_fixture.clone(), content: self.content.clone(), camera: self.camera.clone(), meta: self.meta.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the shared artifact from its document snapshot.
     pub fn from_snapshot(snapshot: crate::WiresSnapshot) -> Self {
-        Self { wires_fixture: snapshot.wires_fixture, content: snapshot.content, camera: snapshot.camera, meta: snapshot.meta, ..Self::default() }
+        Self { wires_fixture: snapshot.wires_fixture, content: snapshot.content, camera: snapshot.camera, meta: snapshot.meta }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -69,13 +58,7 @@ impl WiresArtifact {
 pub fn wires_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.reasoning.wires",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

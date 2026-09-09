@@ -4031,13 +4031,7 @@ const DWG_PREAMBLE_LEN: usize = 0x16;
 /// at a time, so a field added to `DwgSnapshot` later cannot quietly fall out of the question.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn is_preamble_only_document(snapshot: &DwgSnapshot) -> bool {
-    let bare = DwgSnapshot {
-        schema: snapshot.schema.clone(),
-        version: snapshot.version.clone(),
-        maintenance_version: snapshot.maintenance_version,
-        codepage: snapshot.codepage,
-        ..DwgSnapshot::default()
-    };
+    let bare = DwgSnapshot { schema: snapshot.schema.clone(), version: snapshot.version.clone(), maintenance_version: snapshot.maintenance_version, codepage: snapshot.codepage, ..DwgSnapshot::default() };
     *snapshot == bare
 }
 

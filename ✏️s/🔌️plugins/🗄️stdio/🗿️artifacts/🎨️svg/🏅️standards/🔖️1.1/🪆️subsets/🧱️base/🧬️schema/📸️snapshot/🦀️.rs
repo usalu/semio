@@ -1,8 +1,8 @@
 //! 🧬️ SvgSnapshot schema — persistent fields + real codecs.
 
 use crate::STDIO_SVG_DOCUMENT_SCHEMA;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use framework_schema::ArtifactSchema;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

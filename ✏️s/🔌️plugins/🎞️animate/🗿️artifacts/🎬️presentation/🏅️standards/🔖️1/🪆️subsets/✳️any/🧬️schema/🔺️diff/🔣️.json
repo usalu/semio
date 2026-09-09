@@ -22,14 +22,6 @@
     "tiles": {
       "$ref": "#/$defs/PresentationTilesDelta",
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "$ref": "#/$defs/PresentationStringList",
-      "x-semio-state": "presence"
-    },
-    "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

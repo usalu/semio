@@ -7,7 +7,7 @@
 use crate::TiffSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::dimensions::{compute_tiff_dimensions};
+use super::dimensions::compute_tiff_dimensions;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a tiff snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
@@ -65,13 +65,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v6_0::subset
 pub fn tiff_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.tiff.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

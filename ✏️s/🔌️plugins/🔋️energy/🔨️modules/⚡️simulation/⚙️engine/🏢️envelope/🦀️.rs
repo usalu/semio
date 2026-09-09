@@ -3,8 +3,8 @@
 use crate::material::{R_FILM_EXTERIOR_M2K_W, R_FILM_INTERIOR_M2K_W};
 use crate::num::newton_raphson;
 use crate::units::STEFAN_BOLTZMANN;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️ConvectionModels
 /// 🌬️ Exterior convection correlation (wind-adaptive McAdams-type).

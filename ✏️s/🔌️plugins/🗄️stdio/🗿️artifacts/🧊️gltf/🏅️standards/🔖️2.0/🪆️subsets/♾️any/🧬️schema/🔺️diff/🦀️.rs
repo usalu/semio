@@ -28,9 +28,9 @@ use crate::schema::snapshot::{
 // this ticket — it must be gated to its actual consumer or it warns unused on the plain `lib` build.
 #[cfg(test)]
 use crate::schema::snapshot::GltfDocument;
+use framework_schema::ArtifactSchema;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::MutationDiff;
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/

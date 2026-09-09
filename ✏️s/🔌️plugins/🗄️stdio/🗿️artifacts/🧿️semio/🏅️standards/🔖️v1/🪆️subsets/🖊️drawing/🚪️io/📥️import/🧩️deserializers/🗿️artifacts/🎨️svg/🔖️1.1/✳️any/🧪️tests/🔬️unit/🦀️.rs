@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_s_artifact_stdio_svg::schema::snapshot::{CommonAttrs, PresentationAttrs, TransformOp};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument;

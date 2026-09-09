@@ -6,7 +6,7 @@
 //! network — no external graph/flow crate, matching this crate's zero-dependency convention.
 
 use crate::wfc_engine::bitset::PatternSet;
-use crate::wfc_engine::constraint::{AdjacencyView, Constraint, Exactness, PatternSelector};
+use crate::wfc_engine::constraint::{AdjacencyView, Constraint, PatternSelector};
 use crate::wfc_engine::domain::DomainStore;
 use crate::wfc_engine::error::ConstraintError;
 use crate::wfc_engine::ids::{NodeId, PatternId};
@@ -140,14 +140,6 @@ impl FlowConstraint {
 }
 
 impl Constraint for FlowConstraint {
-    fn name(&self) -> &'static str {
-        "flow"
-    }
-
-    fn exactness(&self) -> Exactness {
-        Exactness::Exact
-    }
-
     fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
         Ok(Vec::new())
     }

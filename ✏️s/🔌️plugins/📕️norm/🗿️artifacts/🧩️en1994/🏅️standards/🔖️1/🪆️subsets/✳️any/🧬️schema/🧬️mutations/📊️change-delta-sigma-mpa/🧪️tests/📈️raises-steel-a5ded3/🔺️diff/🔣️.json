@@ -10,7 +10,7 @@
   "insulationThicknessMm": null,
   "fireRating": null,
   "deckType": null,
-  "deltaSigmaMpa": 96.0,
+  "deltaSigmaMpa": 96,
   "fatigueDetail": null,
   "dMm": null,
   "hScMm": null,
@@ -21,6 +21,5 @@
   "spanM": null,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

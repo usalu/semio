@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -23,7 +22,7 @@ async fn codec_round_trip() {
 /// the SECOND generation onward decode/encode is a true fixed point.
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
-    use crate::schema::snapshot::{DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, parse_dxf_document, print_dxf_document};
+    use crate::schema::snapshot::{parse_dxf_document, print_dxf_document, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
     let snap1 = DxfSnapshot {
         schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
         header_vars: vec![

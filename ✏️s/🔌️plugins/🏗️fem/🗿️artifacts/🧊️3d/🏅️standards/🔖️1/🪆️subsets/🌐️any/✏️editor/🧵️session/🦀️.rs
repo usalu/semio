@@ -1,11 +1,11 @@
 //! 🧵️ Mounted FEM3D visual publication on the shared bounded-job reactor.
 
 use crate::analyses::{AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, MountedAnalysisModel, MountedAnalysisSupport};
-use crate::{element_id, load_id, Fem3dSnapshot, FemElement, FemLoad};
 use crate::elements3d::Tet4;
 use crate::mesh::{MeshJob, MeshOpts, MountedPlanarDomain};
 use crate::model::{Bar3, Dof, Element, Elements, Frame3, Node};
 use crate::sparse::{Csr, LdltJob, ModalInputConstruction, MountedScalarSlots, PcgJob, PcgJobConstruction, SubspaceIterationJob};
+use crate::{element_id, load_id, Fem3dSnapshot, FemElement, FemLoad};
 use semio_framework::kernel::{Effect, JobPlacement};
 use semio_framework_job::{Generation, InteractiveJob, OperationId, RetainedJobPayload, RevisionId, StepBudget, StepContext, StepOutcome};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
@@ -14,8 +14,8 @@ use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginClos
 use semio_framework_ui_scene::world3d_snapshot_with_page;
 use semio_framework_ui_scene::{
     world3d_snapshot_abort_write, world3d_snapshot_abort_write_step, world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_close_step, world3d_snapshot_recover_lease, world3d_snapshot_recover_page,
-    world3d_snapshot_recover_write, world3d_snapshot_recovery_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_write_terminal_is_empty, World3dSnapshotDescriptor,
-    World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
+    world3d_snapshot_recover_write, world3d_snapshot_recovery_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_write_terminal_is_empty, World3dSnapshotDescriptor, World3dSnapshotItem, World3dSnapshotLease,
+    World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
 };
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -93,7 +93,6 @@ pub enum Fem3dVisualState {
     ValidatedFinal,
     FaultedCancelled,
 }
-
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Fem3dVisualField {

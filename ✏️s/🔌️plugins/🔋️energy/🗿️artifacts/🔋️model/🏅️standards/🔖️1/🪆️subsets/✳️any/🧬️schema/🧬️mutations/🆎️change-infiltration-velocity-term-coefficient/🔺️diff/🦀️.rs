@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ChangeInfiltrationVelocityTermCoefficient` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeInfiltrationVelocityTermCoefficient, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -10,7 +10,11 @@ pub fn diff(payload: &super::ChangeInfiltrationVelocityTermCoefficient, base: &E
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Infiltration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_velocity_term_coefficient.is_finite() || payload.new_velocity_term_coefficient < 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Infiltration {}: the wind velocity term coefficient C must be a finite non-negative value, got {}.", payload.id.0, payload.new_velocity_term_coefficient), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error(
+            "mutation.invariant",
+            format!("Infiltration {}: the wind velocity term coefficient C must be a finite non-negative value, got {}.", payload.id.0, payload.new_velocity_term_coefficient),
+            [payload.id.0.to_string()],
+        );
     }
     if existing.velocity_term_coefficient == payload.new_velocity_term_coefficient {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Infiltration {} already carries this the wind velocity term coefficient C: {}.", payload.id.0, payload.new_velocity_term_coefficient));

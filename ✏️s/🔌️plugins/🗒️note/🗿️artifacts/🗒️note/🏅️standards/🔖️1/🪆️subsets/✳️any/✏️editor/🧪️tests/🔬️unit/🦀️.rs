@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::editor::note::testkit::note_app;
-use semio_framework_plugin::{ActionKind as Kind, testkit};
+use semio_framework_plugin::{testkit, ActionKind as Kind};
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
@@ -14,7 +13,7 @@ async fn command_ids_are_unique_across_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 36, "every NoteCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 34, "every NoteCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -58,8 +57,6 @@ pub(super) fn every_command() -> Vec<NoteCommand> {
         NoteCommand::NudgeSelectionRightFast(nudge_selection_right_fast::NudgeSelectionRightFast {}),
         NoteCommand::SetCamera(set_camera::SetCamera { camera: crate::NoteCamera { x: 9.0, y: 9.0, zoom: 2.0 } }),
         NoteCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 1.5 }),
-        NoteCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pencil".into() }),
-        NoteCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Renaming…".into() }),
         NoteCommand::NavigatorEngagementInput(navigator_engagement_input::NavigatorEngagementInput {}),
         NoteCommand::SaveDownload(save_download::SaveDownload {}),
@@ -100,7 +97,7 @@ async fn utility_registry_declares_canvas_utilities_scoped_to_composite_window()
     assert_eq!(selects, ["selectDirect", "selectMarquee"]);
     let composite_window = definition.window_kinds.iter().find(|window| window.id == NOTE_PLAY_WINDOW_COMPOSITE).expect("composite window");
     assert_eq!(composite_window.utilities.len(), definition.utilities.len(), "every utility is scoped to the composite canvas");
-    assert!(composite_window.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, Kind::View)));
+    assert!(composite_window.actions.iter().any(|action| action.id == semio_framework::SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, Kind::View)));
 }
 //#endregion 🔖️ManifestSanity
 
@@ -126,7 +123,7 @@ async fn interaction_topology_walks_group_nesting_into_parent_links() {
     let config = NoteConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let topology = NotePlayApp::interaction_topology(&doc, &cfg);
     let blocks = topology.domains.get(NOTE_INTERACTION_BLOCKS).expect("blocks domain present in topology");
     assert!(!blocks.ordered.is_empty(), "the semio example document must produce a non-empty blocks topology");
@@ -141,7 +138,7 @@ async fn interaction_topology_is_empty_for_a_document_with_no_blocks() {
     let config = NoteConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let topology = NotePlayApp::interaction_topology(&doc, &cfg);
     assert!(topology.domains.get(NOTE_INTERACTION_BLOCKS).expect("blocks domain present in topology").ordered.is_empty());
 }

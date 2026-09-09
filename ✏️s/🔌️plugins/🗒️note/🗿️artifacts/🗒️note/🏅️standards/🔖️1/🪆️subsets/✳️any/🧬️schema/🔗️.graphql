@@ -14,13 +14,6 @@ type NoteArtifact {
   pencilWidth: Float
   eraserRadius: Float
   assets: [NoteImageAssetEntry!]!
-  selectedBlockIds: [String!]!
-  activeUtilityId: String!
-  engagementInput: String!
-  cameraX: Float!
-  cameraY: Float!
-  cameraZoom: Float!
-  hoveredBlockId: String
 }
 
 type NoteBlockNode {

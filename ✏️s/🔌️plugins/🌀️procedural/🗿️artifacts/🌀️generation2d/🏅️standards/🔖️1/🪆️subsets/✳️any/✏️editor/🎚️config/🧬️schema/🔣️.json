@@ -20,10 +20,6 @@
     "selectedGenerationId": {
       "type": "string",
       "x-semio-state": "config"
-    },
-    "generationPreviewText": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   }
 }

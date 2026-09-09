@@ -14,7 +14,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, delimiter, join, relative, sep } from "node:path";
-import { type BreachRecord, type TestLevel, Script, ScriptRouter, TEST_LEVELS, formatBreachReport, getRepoMetaDir, resolveTestLevel, runBundleScriptMain, runProbe, testLevelBudgetMs, runCmd, orchestratorBudgetOpts } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord, type TestLevel, Script, ScriptRouter, TEST_LEVELS, buildBudgetMs, formatBreachReport, getRepoMetaDir, resolveTestLevel, runBundleScriptMain, runProbe, testLevelBudgetMs, runCmd, orchestratorBudgetOpts } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import {
   type ClassifiedDependency,
   type CoverageMetrics,
@@ -351,8 +351,24 @@ function mutationBridgeFor(repoRoot: string, owner: string, manifest: MutationMa
 //#endregion 🎛️Selection
 
 //#region 🏗️Hosts
+/** 🏗️ One build step whose emitted executable becomes the native host command. */
+type HostPreparation = Readonly<{ command: string; args: readonly string[]; executableFromStdout: (stdout: string) => string | null }>;
+
 /** 🏗️ One materialized native entrypoint: where it lives and how it is launched. */
-type MaterializedHost = Readonly<{ command: string; args: readonly string[]; cwd: string; env: NodeJS.ProcessEnv; hostDir: string | null; problems: readonly string[] }>;
+type MaterializedHost = Readonly<{ command: string; args: readonly string[]; cwd: string; env: NodeJS.ProcessEnv; hostDir: string | null; problems: readonly string[]; preparation?: HostPreparation }>;
+
+/** 🦀️ Reads Cargo's machine output instead of assuming a target triple, profile directory or executable suffix. */
+function rustHostExecutableFromCargo(stdout: string): string | null {
+  let executable: string | null = null;
+  for (const line of stdout.split(/\r?\n/)) {
+    if (line.trim() === "") continue;
+    try {
+      const message = JSON.parse(line) as { reason?: string; executable?: unknown; target?: { kind?: unknown; name?: unknown } };
+      if (message.reason === "compiler-artifact" && message.target?.name === "host" && Array.isArray(message.target.kind) && message.target.kind.includes("bin") && typeof message.executable === "string") executable = message.executable;
+    } catch {}
+  }
+  return executable;
+}
 
 function hostDirFor(repoRoot: string, discovered: DiscoveredCase, role: TestRole, implementation: Implementation): string {
   const dir = join(testCacheDir(repoRoot, "hosts"), `${discovered.projectName}-${role}-${implementation}`);
@@ -476,12 +492,17 @@ function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role:
     ].join("\n"),
   );
   return {
-    command: "cargo",
-    args: ["run", "--quiet", "--manifest-path", join(dir, "Cargo.toml"), ...(sut !== null && role === "subject" ? ["--features", "sut"] : []), "--", "--plan", planPath, "--out", outPath],
+    command: "",
+    args: ["--plan", planPath, "--out", outPath],
     cwd: repoRoot,
-    env: { ...process.env, CARGO_TARGET_DIR: join(agentCacheRoot(repoRoot), "cargo-test-hosts") },
+    env: { ...process.env, CARGO_TARGET_DIR: process.env.CARGO_TARGET_DIR ?? join(agentCacheRoot(repoRoot), "cargo-test-hosts") },
     hostDir: dir,
     problems,
+    preparation: {
+      command: "cargo",
+      args: ["build", "--quiet", "--manifest-path", join(dir, "Cargo.toml"), "--message-format", "json-render-diagnostics", ...(sut !== null && role === "subject" ? ["--features", "sut"] : [])],
+      executableFromStdout: rustHostExecutableFromCargo,
+    },
   };
 }
 
@@ -680,7 +701,21 @@ function executeOne(repoRoot: string, discovered: DiscoveredCase, level: TestLev
   // 🧩️A host that could not be provisioned has not run, and an unprovisioned host must never look
   // like a case with nothing to do — the declaration is reported before anything is executed.
   if (host.problems.length > 0) return { results: [], problems: [...problems, ...host.problems] };
-  const probe = runProbe(host.command, [...host.args], { cwd: host.cwd, env: host.env, budgetMs: testLevelBudgetMs(level) });
+  let command = host.command;
+  if (host.preparation !== undefined) {
+    console.log(`[DEBUG] Preparing ${implementation} ${role} host for ${discovered.case}`);
+    const prepared = runProbe(host.preparation.command, [...host.preparation.args], { cwd: host.cwd, env: host.env, budgetMs: buildBudgetMs() });
+    if ((prepared.status ?? 1) !== 0) {
+      problems.push(`${discovered.caseDir}: ${implementation} ${role} host preparation exited ${prepared.status}`);
+      if (prepared.stdout.trim() !== "") problems.push(prepared.stdout.trimEnd());
+      if (prepared.stderr.trim() !== "") problems.push(prepared.stderr.trimEnd());
+      return { results: [], problems };
+    }
+    command = host.preparation.executableFromStdout(prepared.stdout) ?? "";
+    if (command === "") return { results: [], problems: [...problems, `${discovered.caseDir}: ${implementation} ${role} host preparation emitted no executable`] };
+    console.log(`[DEBUG] Prepared ${implementation} ${role} host for ${discovered.case}`);
+  }
+  const probe = runProbe(command, [...host.args], { cwd: host.cwd, env: host.env, budgetMs: testLevelBudgetMs(level) });
   if (probe.stdout.trim() !== "") console.log(probe.stdout.trimEnd());
   const { results, problems: readProblems } = readResults(plan.resultsPath);
   if ((probe.status ?? 1) !== 0 && results.length === 0) {

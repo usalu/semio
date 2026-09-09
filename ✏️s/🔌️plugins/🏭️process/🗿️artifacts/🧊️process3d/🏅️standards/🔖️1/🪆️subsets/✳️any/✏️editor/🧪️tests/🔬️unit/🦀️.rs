@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::editor::process3d::testkit::{action, app, app_with_registry, dispatch, dispatch_with_utility, main_window_measures, process3d_app_manifest_for_testkit, render as render_body};
-use semio_framework_plugin::{ContextMenuRequest, ContextMenuSurfaceTarget, EditorApp, HistoryView, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID, UiMenuRef, testkit};
+use semio_framework_plugin::{testkit, ContextMenuRequest, ContextMenuSurfaceTarget, EditorApp, HistoryView, PluginApp, UiMenuRef, SET_ACTIVE_UTILITY_ACTION_ID};
 
 fn production_initial_snapshot(label: &str) -> Process3dSnapshot {
     let mut snapshot = crate::empty_process3d_snapshot();
@@ -573,7 +572,7 @@ async fn world_context_menu_exposes_process_commands() {
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request).await;
+    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
     let ids: Vec<&str> = menu.iter().map(|item| item.id.as_str()).collect();
     assert!(ids.contains(&"addStep"), "right-click menu must expose the primary Process command: {ids:?}");
     assert!(ids.contains(&"undo") && ids.contains(&"redo"), "right-click menu must expose history commands: {ids:?}");
@@ -754,7 +753,7 @@ async fn world_face_drag_end_ignored_while_a_placement_utility_is_active() {
 #[semio_framework_async_macros::async_test]
 async fn toggle_sun_round_trips_through_config_and_defaults_off() {
     let mut app = app();
-    let measures = app.window_measures().await;
+    let measures = app.window_measures(&semio_framework_plugin::ViewModel::default()).await;
     let sun_group = |measures: &HashMap<String, Vec<WindowMeasure>>| {
         measures[workpiece::PROCESS_3D_PLAY_WINDOW_MAIN]
             .iter()
@@ -767,7 +766,7 @@ async fn toggle_sun_round_trips_through_config_and_defaults_off() {
     let children = sun_group(&measures);
     assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if !*pressed)));
     dispatch(&mut app, Process3dCommand::ToggleSun(toggle_sun::ToggleSun {}));
-    let measures = app.window_measures().await;
+    let measures = app.window_measures(&semio_framework_plugin::ViewModel::default()).await;
     let children = sun_group(&measures);
     assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if *pressed)));
 }

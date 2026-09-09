@@ -1,0 +1,54 @@
+{
+  "closed": {
+    "kind": "inference-port-closed",
+    "operationEpoch": 21,
+    "scope": { "spaceId": "space-a", "documentId": "map-a" }
+  },
+  "request": {
+    "kind": "inference-open",
+    "operationEpoch": 21,
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "map-a"
+    }
+  },
+  "opened": {
+    "kind": "inference-port-opened",
+    "operationEpoch": 21,
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "map-a"
+    },
+    "outcome": "opened",
+    "code": null
+  },
+  "refused": {
+    "kind": "inference-port-opened",
+    "operationEpoch": 21,
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "map-a"
+    },
+    "outcome": "refused",
+    "code": "inference.capacity"
+  },
+  "indeterminate": {
+    "kind": "inference-port-opened",
+    "operationEpoch": 21,
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "map-a"
+    },
+    "outcome": "indeterminate",
+    "code": "inference.transport"
+  },
+  "routes": [
+    "inference-open",
+    "inference-propose",
+    "inference-poll",
+    "inference-cancel",
+    "inference-approve",
+    "inference-close",
+    "inference-history-undo"
+  ]
+}

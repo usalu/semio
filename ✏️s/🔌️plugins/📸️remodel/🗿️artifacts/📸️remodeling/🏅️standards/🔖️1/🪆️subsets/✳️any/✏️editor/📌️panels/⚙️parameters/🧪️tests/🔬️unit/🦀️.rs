@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::remodeling::RemodelingCommand;
 use crate::editor::remodeling::commands::set_ingest_params::SetIngestParams;
 use crate::editor::remodeling::testkit::{app, dispatch, render as render_body};
+use crate::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn the_parameters_panel_reflects_a_live_param_edit() {

@@ -4,9 +4,9 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::{RasterSnapshot, RASTER_DIALECT, RASTER_DOCUMENT_SCHEMA};
 use crate::viewer::raster::modes::view;
 use crate::viewer::raster::modes::view::windows::{composite, navigator};
+use crate::{RasterSnapshot, RASTER_DIALECT, RASTER_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
@@ -75,8 +75,7 @@ impl ArtifactViewer for RasterViewer {
         let node = match body_key {
             composite::RASTER_VIEW_BODY_COMPOSITE => composite::render(doc.snapshot)?,
             navigator::RASTER_VIEW_BODY_NAVIGATOR => navigator::render(doc.snapshot)?,
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster viewer unknown-body label admission failed"))?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster viewer unknown-body label admission failed"))?,
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }

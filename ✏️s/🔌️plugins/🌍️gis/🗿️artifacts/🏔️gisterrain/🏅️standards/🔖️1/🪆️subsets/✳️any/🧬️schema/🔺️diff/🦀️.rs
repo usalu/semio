@@ -15,7 +15,5 @@ pub struct GisTerrainDiff {
     pub exaggeration: Option<f64>,
     #[state(artifact)]
     pub imported_features_json: Option<String>,
-    #[state(config)]
-    pub camera_json: Option<String>,
 }
 //#endregion 🔹Diff

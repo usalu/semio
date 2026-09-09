@@ -16,11 +16,11 @@
 //!   `encode_csv` layer; only the "quoted even though not structurally required" bit the
 //!   deserializer never captured in the first place is what's absent here.
 
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_csv::schema::snapshot::{CsvField, CsvRecord};
 use semio_s_artifact_stdio_csv::CsvSnapshot;
 use semio_s_artifact_stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA;
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Serializer

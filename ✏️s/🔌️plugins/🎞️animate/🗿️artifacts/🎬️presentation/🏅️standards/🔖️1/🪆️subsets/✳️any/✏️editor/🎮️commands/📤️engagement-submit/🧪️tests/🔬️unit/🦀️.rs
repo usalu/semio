@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::animate::PresentationCommand;
 use crate::editor::animate::commands::engagement_input;
 use crate::editor::animate::testkit::{dispatch, presentation_app};
+use crate::editor::animate::PresentationCommand;
 use semio_framework_plugin::Effect;
 
 #[semio_framework_async_macros::async_test]

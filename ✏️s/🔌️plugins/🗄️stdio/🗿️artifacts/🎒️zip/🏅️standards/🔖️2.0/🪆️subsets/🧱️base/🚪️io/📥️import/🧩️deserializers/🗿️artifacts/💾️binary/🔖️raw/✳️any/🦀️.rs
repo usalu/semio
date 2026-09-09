@@ -1,7 +1,7 @@
 //! Deserialize stdio.zip from stdio.binary (parse ZIP bytes).
 
-use semio_s_artifact_stdio_binary::BinarySnapshot;
 use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 //#region Codec
 /// Register deserializer hooks.

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::wfc_engine::grid3d::{Stencil3d, declare_stencil_relations_3d};
+use crate::wfc_engine::grid3d::{declare_stencil_relations_3d, Stencil3d};
 use crate::wfc_engine::model::ModelBuilder;
 use crate::wfc_engine::topology::Topology;
 
@@ -17,6 +16,10 @@ fn from_coords_dedups_and_assigns_stable_first_seen_ids() {
     assert_eq!(volume.node_of((1, 0, 0)), Some(NodeId(1)));
     assert_eq!(volume.node_of((0, 1, 0)), Some(NodeId(2)));
     assert_eq!(volume.node_of((5, 5, 5)), None);
+    assert!(volume.contains((0, 0, 0)));
+    assert!(volume.contains((1, 0, 0)));
+    assert!(volume.contains((0, 1, 0)));
+    assert!(!volume.contains((5, 5, 5)));
     assert_eq!(volume.coord_of(NodeId(1)), (1, 0, 0));
 }
 

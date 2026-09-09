@@ -1,0 +1,15 @@
+{
+  "path": ".devcontainer/post-start.sh",
+  "forbidden": [
+    "git stash clear",
+    "git reset --hard",
+    "git clean -",
+    "sudo rm -rf /var/lib/neo4j/data/",
+    "migrate_neo4j_community_graph_compose",
+    "DETACH DELETE",
+    "apoc.cypher.runFile",
+    "purge neo4j"
+  ],
+  "expected": [],
+  "volume": "source=${localWorkspaceFolderBasename}-neo4j-data,target=/var/lib/neo4j/data,type=volume"
+}

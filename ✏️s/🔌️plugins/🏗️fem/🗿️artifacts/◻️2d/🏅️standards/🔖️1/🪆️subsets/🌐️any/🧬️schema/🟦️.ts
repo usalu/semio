@@ -123,19 +123,7 @@ export interface Fem2dArtifact {
   combinations: FemCombination[];
   /** @state artifact */
   analysis: FemAnalysisSettings;
-  /** @state presence */
-  resultSourceId?: string;
-  /** @state presence */
-  resultMode: string;
-  /** @state presence */
-  resultModeIndex: number;
   /** @state config */
-  camera: FemCamera;
-  /** @state config */
-  /** @state artifact */
-  solverResultsJson: string;
-  /** @state artifact */
-  meshPreviewJson: string;
 }
 
 //#region 🚪️Parsers
@@ -197,12 +185,6 @@ export function parseFem2dArtifact(value: unknown, at = "$"): Fem2dArtifact {
     loadCases: femFem2dArtifactGuardArray(row["loadCases"], `${at}.loadCases`).map((item, index) => parseFemLoadCase(item, `${at}.loadCases[${index}]`)),
     combinations: femFem2dArtifactGuardArray(row["combinations"], `${at}.combinations`).map((item, index) => parseFemCombination(item, `${at}.combinations[${index}]`)),
     analysis: parseFemAnalysisSettings(row["analysis"], `${at}.analysis`),
-    resultSourceId: row["resultSourceId"] === undefined ? undefined : femFem2dArtifactGuardString(row["resultSourceId"], `${at}.resultSourceId`),
-    resultMode: femFem2dArtifactGuardString(row["resultMode"], `${at}.resultMode`),
-    resultModeIndex: femFem2dArtifactGuardInteger(row["resultModeIndex"], `${at}.resultModeIndex`, {"minimum": 0}),
-    camera: parseFemCamera(row["camera"], `${at}.camera`),
-    solverResultsJson: femFem2dArtifactGuardString(row["solverResultsJson"], `${at}.solverResultsJson`),
-    meshPreviewJson: femFem2dArtifactGuardString(row["meshPreviewJson"], `${at}.meshPreviewJson`),
   };
 }
 

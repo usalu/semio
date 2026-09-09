@@ -4,10 +4,10 @@
 //! `crate::viewer::equation` stay mounted at the plugin's top-level `editor`/`viewer` modules
 //! (recipe §5 gotcha 1), not here.
 
-use crate::standards::v1::subsets::any::{io, schema};
-use crate::EQUATION_DIALECT;
 use crate::editor::equation as editor;
+use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::equation as viewer;
+use crate::EQUATION_DIALECT;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;

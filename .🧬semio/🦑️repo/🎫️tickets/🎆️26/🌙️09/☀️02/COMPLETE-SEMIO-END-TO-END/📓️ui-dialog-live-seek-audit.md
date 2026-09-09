@@ -1583,3 +1583,1795 @@ route and remove it from document ingress.  Add one controlled rebootstrap
 row proving this variant leaves pending/outbox/ledger and Commands sends
 unchanged.  This finding is source-only; it does not negate the reported
 controlled raw-worker repair.
+
+### Supersession: Legacy Local Mutation Admission
+
+The owner subsequently put the Hub-bound `localMutations` branch behind the
+same `documentBackboneAdmissionReady` predicate
+([`backbone-worker:5004-5010`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5004>)).  Home reports a focused controlled
+worker law for the canonical-pair gate.  This audit did not run that law, so
+the qualification remains source-plus-owner-reported test evidence rather
+than a browser or component-runtime result.
+
+### P0: The WGPU Plugin Bridge Erases Receipt Authority and Has No Document Port
+
+The materialized component shim itself preserves both WIT receipts: its
+`createActorApi().poll` spreads the component result and replaces
+`lifecycleReceipt` and `uiPatchReceipt` with the validated/canonical bridge
+forms ([`plugin package:583-585`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts:583>)).  The direct browser-actor path also treats those fields as authority: it checks the
+captured lifecycle receipt before cold transfer
+([`backbone-worker:1423-1460`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1423>)) and decodes the raw UI-patch receipt before an
+acknowledged renderer result feeds back into the guest
+([`1543-1627`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1543>)).
+
+The parallel WGPU bridge takes a different path.  Its `submitTurn` calls the
+generic `coerceTurnResult`, whose declared result contains only patches,
+effects, wake, command ingress, and cold-pair status
+([`wire-turn:58-75`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts:58>)).  It creates a new object and drops the original turn,
+`lifecycleReceipt`, and `uiPatchReceipt`.  `runQueuedTurn` then creates a
+second aggregate of exactly those stripped fields and publishes UI patches to
+a plain retained window projection
+([`WGPU bridge:429-470`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts:429>)).  The shipped
+`frame-worker.js` contains the same stripping coercer
+([`frame worker:23193-23197`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🎞️frame-worker.js:23193>)).
+
+This is not merely a missing acknowledgement: `WgpuPluginHandle` explicitly
+excludes transactions, backbone, and presence, and exposes neither
+`loadAppDocumentPack` nor `bindDocumentPort`
+([`WGPU bridge:372-387`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts:372>)).  Therefore a WGPU producer/browser success cannot be offered as evidence for the
+receipt-owned PluginRuntime/Shell path or the raw Backbone port.  It must
+either be deliberately limited to its narrow rendering target, or use the
+same retained receipt/owned-surface/document-port protocol; preserving the
+bytes alone is insufficient.
+
+Required focused coverage for any unification is: a real component turn with
+both receipts reaches the renderer; exactly one matching lifecycle/UI ACK is
+sent; a receipt for an old instance is rejected after replacement; and a
+retire blocks both a later UI publication and raw-port send.  No existing WGPU
+test establishes those facts.
+
+### P1: Cold-Pair WIT Ingress Is Implemented in the Browser Actor, but Not in ShardClient/WGPU
+
+The WIT export deliberately has a dedicated third poll argument and an
+observable `cold-pair-ingress` result
+([`plugin WIT:1122-1205`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit:1122>)); the Rust reactor refuses an attempted event-based bypass
+([`turn:204-210`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs:204>)).  The authenticated direct browser actor uses that
+contract correctly: it passes each owned page as poll argument three, requires
+the exact accepted cursor or final applied receipt, and wipes transferred
+bytes ([`backbone-worker:1468-1510`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1468>)).
+
+By contrast, the general ShardClient `turn` message and captured activation
+only carry `events`, optional `commandPage`, and budget
+([`shard-client:360-363`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:360>),
+[`613-617`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:613>)).  The generated worker calls the materialized
+`poll` with `undefined` for its third argument on every turn
+([`plugin package:389-399`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts:389>)).  It can parse a status produced by another path, but it cannot submit a
+page.  Hence the WGPU bridge's `coldPairIngress` is necessarily `idle` for
+its own turns and cannot prove cold materialization.
+
+React Shell currently loads pack/spr on the separate AppChannel route
+([`PluginRuntime:1922-1926`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1922>),
+[`plugin Rust:28977-28989`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:28977>)).  That route may be the intended ordinary
+Shell load mechanism, but it is not evidence that the WIT cold-pair ingress
+ran or reached `Applied`.  Acceptance must choose and state one authoritative
+route: either wire an owned bounded page argument through ShardClient and
+require the final exact `Applied` receipt, or keep AppChannel load as the
+authoritative Shell mechanism and remove any claim that its test proves WIT
+cold-pair ingress.  Do not merge the two paths implicitly.
+
+### P1: AppChannel Publishes a Candidate Document Cache Before Load Confirmation
+
+`AppChannelClient.loadDocument` stores caller-owned `pack` and `spr` into the
+live cache before it sends `LoadDocument`
+([`OS channel:3280-3287`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:3280>)).  `PluginRuntime.loadAppDocumentPack` detects an
+error frame only after that call returns
+([`PluginRuntime:1922-1926`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1922>)).  A rejected load can therefore leave
+`documentPack()` exposing bytes the guest never accepted.  This cache is used
+by the transaction coordinator as its target snapshot
+([`PluginRuntime:2218-2224`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:2218>)).
+
+Keep the prior cache until a load response is conclusively non-error, then
+replace it with a defensive owned copy (or with an echoed/read-back document
+frame where the protocol supplies one).  Add a channel-level error-frame row
+that proves `documentPack()` remains the previous accepted pair, followed by
+a successful replacement row.  This is a source finding; no component or
+browser test was run here.
+
+### P0: The Mounted Browser Actor and Shell Action Actor Are Disconnected
+
+The authenticated browser actor is the source actually rendered for a mounted
+document.  The worker opens its own child at WIT instance `0`
+([`backbone-worker:1417-1460`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1417>)), transfers the verified cold pair to that child, and
+retains its patched `UiDocumentStore`.  Shell selects that store in preference
+to its ordinary window UI when the document is mounted
+([`ShellHost:8242-8271`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:8242>)).
+
+But an interpreted map action invokes the normal active Shell session's
+`plugin.handleAction(instanceId, ...)`
+([`ShellHost:5201-5211`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5201>)), which is the separate PluginRuntime/AppChannel actor.  The only renderer-to-worker
+browser-actor messages are view-state and UI-patch-result
+([`ShellHost:3585-3602`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:3585>),
+[`2183-2204`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2183>)).  Correspondingly the
+browser actor only polls `surface-visible`, `wake`, lifecycle/patch feedback,
+and cold pages; it has no action or raw Backbone delivery method
+([`backbone-worker:1468-1627`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1468>)).
+
+This leaves two separate guest states for the same mounted scope: an
+initially-rendered browser actor and the actor that receives ordinary Shell
+actions and document-port traffic.  Since the mounted actor store wins the
+render selection, a successful action on the PluginRuntime side has no
+defined incremental route to update the visible map actor.  A later bootstrap
+may replace the cold pair, but that is not an action/result correlation and
+cannot supply ordinary interactive convergence.
+
+The smallest coherent choice is one owner, not a relay of unauthenticated UI
+JSON: either bind the mounted browser actor as the actual document port/action
+actor (with its captured lifetime, raw exact Backbone ingress, and action
+receipt), or render the receipt-owned PluginRuntime surface and retire the
+parallel browser actor for this route.  Required end-to-end rows must prove:
+(1) a map UI action reaches the exact actor whose store is displayed;
+(2) its mutation/action receipt flows through the bound raw port; (3) the
+same actor receives the resulting current update and emits the next UI
+revision; and (4) a stale sibling actor cannot alter the mounted store after
+replacement.  The current cold/render fixture proves only initial mounting,
+not this interaction loop.
+
+### Decision: The Direct Browser Actor Cannot Yet Be Replaced by PluginRuntime
+
+Adding a `coldPairPage` field to generic `ShardClient` would not make it an
+equivalent replacement for the direct browser actor. The direct path is the
+only current path with both document selection and authenticated actor
+authority. `DocumentExecutionTargetLease.admitBrowserActor` captures the
+server-issued socket actor/grant and exact open binding
+([`backbone-worker:870-920`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:870>)); its reservation obtains the plan-selected browser
+bundle, hashes it, validates child `describe` against the verified descriptor,
+and refuses stale socket/lease/grant before opening WIT instance `0`
+([`1290-1395`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1290>)). It then transfers the exact verified pair
+with the third WIT poll argument ([`1468-1510`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1468>)).
+
+The ordinary React `PluginRuntime` instead obtains a module URL from the
+global development/extension source and opens a generic app instance. It has
+no `DocumentExecutionTargetLease`, socket grant, selected browser-bundle
+asset, or verified-component-derived activation source. Its attachment uses
+the separate AppChannel `loadDocumentPair`/`bindDocumentBackbone` route
+([`ShellHost:2042-2111`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2042>)), and its generated
+component worker supplies `undefined` as poll argument three
+([`plugin package:389-399`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts:389>)). No current API turns the
+lease's verified component bytes into a `ShardClient` activation.
+
+There is already a schema-first action format: [`browser-bundle/action-handoff`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts:1>) carries the exact scope,
+verified surface, execution version, activation generation, instance,
+surface revision, and action sequence. A production-source search finds no
+producer or consumer outside that module and its test. WIT already provides
+the typed ingress points: `event.ui-intent` for UI interactions and
+`event.message` for bounded endpoint payloads
+([`plugin WIT:688-695`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit:688>),
+[`757-805`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit:757>)).
+
+The smallest complete same-owner route is to keep
+`DocumentBrowserActorReservation` as the document actor, make the existing
+action-handoff tuple select its live lifetime/instance, and have that
+reservation invoke WIT `ui-intent` plus the existing bounded `message`
+ingress. Exact raw document-backbone bytes must enter and leave that same
+reservation under its current lease/socket/grant predicate; retirement must
+synchronously refuse both action and raw ingress before child/lease teardown.
+That completes the selected actor route without a JSON relay or a second
+actor.
+
+Replacing the direct child would require a new private lease-derived
+`ShardClient` activation whose executable source, descriptor, scope, socket
+actor/grant, and retirement all derive from the verified lease. Reusing
+ordinary `loadPluginModule` is insufficient and weakens selected-component
+proof. Neither route is runtime qualified by this audit.
+
+### P1: AppChannel `loadDocument` Cache Is a Pre-Commit Candidate
+
+The cache assignment still occurs before `LoadDocument` has a correlated
+successful result ([`OS channel:3280-3287`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:3280>)); `pumpOutcomes` rejects the pending caller on an
+error before it can produce a successful frame set
+([`3085-3115`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:3085>)). It is a candidate cache, not an accepted document cache.
+
+The narrow fix belongs in `AppChannelClient.loadDocument`: retain the prior
+defensive pair until its exact waiter resolves without error, then store
+copied request bytes unless a matching `AppFrame::Document` supplied accepted
+bytes. On error, channel close, decode failure, or superseded waiter it must
+leave the prior cache unchanged. The existing test owner is
+[`tests/backbone-envelope-io`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts:788>), which already exercises this cache. A
+language-neutral companion corpus should cover empty+error, accepted
+A+error/close, accepted A+success B, and an accepted `Document` echo
+overriding the candidate. No test ran in this audit.
+
+### P0 Implementation Packet: Direct Actor Action and Raw Backbone Ownership
+
+The current direct child opens WIT instance `0`
+([`backbone-worker:1416-1445`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1416>)), but the new document-backbone binding contract rejects that valid WIT
+instance at three layers: the TypeScript control and port owner require
+`instanceId >= 1` ([`PluginRuntime backbone:23-30`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts:23>),
+[`203-221`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts:203>)), the neutral
+schema has minimum `1`, and native command decoding rejects zero
+([`binding Rust:100-124`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🦀️.rs:100>)).  Make the shared domain range
+`0..=u32::MAX`: zero is a real live WIT child here, not an absent-instance
+sentinel.  The existing guest-side binding and raw delivery logic already
+works for a live numeric instance without a different code path
+([`plugin runtime:27617-27720`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:27617>)).
+
+The action handoff needs to carry the exact UI contract `UiIntent`, not an
+app-command invocation. `UiDocumentStore.buildIntent` stamps the rendered
+surface, revision, node, trigger, binding arguments/input, and its monotonic
+sequence ([`UiDocumentStore:504-521`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx:504>)).  The native reactor accepts this as
+`Event::UiIntent`, rejects a surface for another instance, enforces revision
+staleness, and routes it through the ordinary typed dispatch path
+([`reactor turn:218-230`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs:218>),
+[`654-700`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs:654>)).  Converting it to Shell's action descriptor would discard precisely
+the surface/revision evidence the direct actor needs.  The isolated
+`browser-actor-action` schema should therefore be revised in place to own
+bounded canonical intent bytes and the existing exact owner tuple; no
+compatibility second payload is needed.
+
+Add the resulting direct-action request/result variants to
+`BackboneWorkerRequest`/`BackboneWorkerResponse` and the specialized strict
+request/response parser arms in [`OS wire:721-875`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:721>).  They must join the existing direct
+TypeScript-only dispatch exception next to UI patch/view-state
+([`backbone-worker:205-248`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:205>)); otherwise an installed Rust host dispatches the unknown
+request to Rust and the reservation never receives it.  The request must
+also carry `clientInstanceId`, while the worker reconstructs the artifact
+state and validates the lease/grant/current predicate; caller bytes are not
+actor authority.
+
+`BrowserActorChild` permits exactly one active invocation
+([`child:93-102`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts:93>)).  A direct action cannot call `poll` concurrently with
+cold transfer, rendering, or patch feedback. `DocumentBrowserActorReservation`
+therefore needs one owner-local serialized turn lane covering every child
+invocation, a bounded action queue (or immediate refusal while occupied), and
+current checks before and after every await. Its close path must first refuse
+new action/raw admission, then close that lane and child.
+
+Finally, direct child results currently inspect only lifecycle/cold/UI-patch
+fields ([`backbone-worker:1255-1287`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1255>)); they do not drain `Effect::SendMessage`.
+After the exact WIT `ui-intent` poll and before reporting success, consume
+only `send-message → backbone` effects addressed to the reservation's exact
+URI, reject a foreign URI or snapshot, and feed their unchanged raw bytes to
+the existing `handleLocalMsg(documentBackbone)` admission path.  The guest
+already handles the complementary WIT messages: `Shell{0}` controls binding,
+and `Backbone{exact-uri}` receives hot raw bytes
+([`reactor turn:309-328`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs:309>)).  Reconcile the same result's UI-patch
+receipt and feedback before acknowledging the action.
+
+Minimum executable laws: direct-zero bind/bound/replay/retire; direct-zero
+raw inbound; a canonical UI intent yielding the exact raw mutation batch and
+the next accepted UI revision; wrong scope/surface/generation/sequence and
+foreign URI denial; an action during cold/patch wait is bounded and cannot
+interleave invokes; and retire prevents later action/raw admission and Hub
+send. These are design/source recommendations, not executed evidence.
+
+### Supersession: AppChannel Candidate Cache
+
+The implementation is now source-repaired. `sendCommand` captures owned
+candidate bytes in its exact waiter, and `captureDocumentFrames` replaces the
+cache only for a correlated non-error reply containing `Done` or an actual
+`Document` frame ([`OS channel:3109-3117`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:3109>),
+[`3144-3157`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:3144>)).  Disposal also clears the cache. The preceding P1 is therefore
+superseded as a source defect; this audit did not execute the newly added
+qualification tests.
+
+### Correction: Direct Instance Zero Is Now a TypeScript-Only Barrier
+
+The earlier direct-action packet overstated the scope of the zero-instance
+problem. The schema now permits `0` ([`binding schema:11-15`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json:11>)); the neutral fixture has the
+`instance-zero-first-bind` positive row ([`fixture:6-10`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🧪️fixture/🔣️.json:6>)); and the native reducer explicitly decodes and
+returns that zero owner ([`unit test:30-34`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🧪️tests/🔬️unit-standalone/🦀️.rs:30>)).
+
+Only the current TypeScript implementation excludes the authenticated direct
+child: `validateDocumentBackboneControlV1` and
+`ActorDocumentMessagePortV1` require `instanceId >= 1`
+([`PluginRuntime backbone:23-30`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts:23>),
+[`203-221`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts:203>)). The canonicalized shared binding module should instead
+admit `0..=u32::MAX` consistently. Its TypeScript law needs to execute the
+existing zero fixture through encode, decode, bind, and retire, rather than
+adding another schema variant.
+
+### P0: Displayed Direct UI Still Sends Actions Through the Wrong Contract
+
+The direct worker UI is accepted and identity-bound before it becomes
+displayable: patch handling creates the per-runtime `UiDocumentStore` only
+after scope/client/surface validation, then records a mounted identity only
+after an acknowledged revision
+([`ShellHost:2183-2225`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2183>)).
+But the selected `browserActorStore` is rendered with `onIntentStable`
+([`ShellHost:8242-8271`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:8242>)), which calls
+`uiIntentToActionDescriptor` ([`5283-5288`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5283>)). That conversion discards the
+original UI surface, revision, node key, trigger, and monotonic sequence,
+then directs the request into the unrelated normal Shell action path.
+
+The direct store must instead receive an owner-captured callback that posts
+the new strict worker `dispatchIntent` request. It must capture the exact
+mounted record (`runtimeKey`, `scope`, `clientInstanceId`, activation
+generation, instance `0`, verified surface id, and acknowledged UI revision)
+and recheck that record immediately before worker admission. The regular
+Shell store may continue using `onIntentStable`; this is not a global action
+API migration.
+
+### P0: Canonical Direct `UiIntent` Wire Must Preserve `seq` and Native Surface
+
+`UiDocumentStore.buildIntent` produces a JavaScript `bigint` sequence
+([`UiDocumentStore:504-521`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx:504>)), while native
+`UiIntent.seq` is a `u64` ([`ui action:1494-1516`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🎬️action.rs:1494>)). The direct encoder must
+encode it with `packUInt(intent.seq)`, not JSON serialization or a JS number.
+It must keep every other `UiIntent` field intact.
+
+The rendered store surface is the exposed window id (for example `map`), but
+the reactor accepts intent and patch identity only under the internal
+`"<instance>:<surface>"` format
+([`reactor pending:367-372`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/🦀️.rs:367>),
+[`turn:218-226`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs:218>)). For the direct child the sole lawful
+translation is `map` → `0:map`, performed after confirming the original
+surface equals the captured mounted window/surface. Arbitrary prefixed
+surfaces and a surface already containing `:` must be refused; otherwise the
+reactor's `parse_surface_instance` check could be satisfied for a different
+tree. The request schema should contain the original exposed intent bytes or
+its typed fields, not a pre-authorized arbitrary native surface.
+
+The minimal law is one rendered `map` intent with a sequence above
+`2^53-1`, verifying the exact Pack `UInt`, mapped `0:map`, current revision,
+and instance `0` at the guest boundary; hostile rows cover fractional/string
+sequence, `1:map`, `0:other`, stale mounted revision, and replacement client.
+
+### Cache Review: Current AppChannel Patch Is Narrowly Correct
+
+The six-row neutral fixture is at
+[`os fixtures/document-cache`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/📦️document-cache/🔣️.json), consumed by the
+`backbone-envelope-io` law
+([`1045-1099`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts:1045>)). The current source snapshots LoadDocument's
+two input arrays into its waiter ([`OS channel:3171-3184`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:3171>)); only the correlated reply is scanned
+([`3109-3117`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:3109>)); cache replacement is refused on error/disposal, requires `Done` for the
+candidate, and lets an exact returned `Document` supersede it
+([`3144-3157`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:3144>)). Returned cache bytes are copied. I found no new cache
+publication defect within that stated one-command/reply boundary.
+
+The corpus does not establish per-command attribution for a bare
+`TurnOutcome.error`: the kernel outcome type has only `{instanceId,error}`
+([`kernel:156`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts:156>)), and AppChannel currently rejects the oldest pending waiter
+([`OS channel:3088-3093`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:3088>)). That is a pre-existing channel-wide error model,
+not a regression introduced by the cache fix; without a sequence in the
+underlying error it cannot be honestly repaired as command-specific cache
+semantics. The cache law should therefore not claim concurrent error
+attribution proof.
+
+### Supersession: Canonical Binding Now Admits Direct Instance Zero
+
+The immediately preceding correction described the pre-canonicalized
+TypeScript copy. Current shared
+[`plugin/backbone/binding TypeScript`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts:23>) now accepts
+`instanceId >= 0` in both the control validator and the message-port owner
+([`203-221`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts:203>)). It agrees with the existing schema, fixture, and
+native reducer. The zero-range source defect is therefore superseded. The
+remaining obligation is an integration law that has the actual authenticated
+`DocumentBrowserActorReservation` bind, receive, and retire instance `0`;
+the existing isolated binding fixture alone cannot prove that route.
+
+### P0: Direct Browser Reservation Still Bypasses Guest Lifecycle Retirement
+
+The authenticated child does not currently shut down through the same guest
+lifecycle it opened.  `openGuest` sends `instance-open`, captures the receipt,
+and acknowledges it ([`backbone-worker:1414-1465`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1414>)), but
+`DocumentBrowserActorReservation.close` immediately sets `lifetime = null`,
+calls `child.close()`, and releases the state slot
+([`1640-1662`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1640>)).  It sends neither `instance-close` nor an
+exact lifecycle acknowledgement, and it never observes a `Retired` receipt.
+
+That is not equivalent to the native lifecycle contract.  A normal close first
+needs the exact `Accepted` acknowledgement and then a `Retired` acknowledgement
+after the guest proves its native owner empty; the native law retains the
+structural owner until that final acknowledgement
+([`reactor lifetime runtime law:36-61`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:36>)).
+The neutral lifecycle fixture also explicitly says a retired receipt alone does
+not permit host disposal ([`fixture:31`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🚪️lifetime/🧫️fixture/🔣️.json:31>)).
+
+The direct route therefore needs a retained asynchronous close owner.  Its
+synchronous entry must first mark the reservation closing and refuse all new
+cold/render/action/raw work.  The sole child poll lane then performs, in order:
+
+1. Exact document-backbone `retire` control when it was Bound.
+2. `instance-close` for the captured lifetime; receive and exactly acknowledge
+   the close receipt.
+3. Bounded empty-driving polls until the matching `Retired` receipt, then its
+   exact final acknowledgement.
+4. Only then clear the lifetime, close the child, and remove the reservation.
+
+An abort or deadline can force-kill an isolated child, but must be recorded as
+unconfirmed forced termination rather than a retirement proof.  The required
+controlled direct-child law pauses each receipt boundary, proves no later
+action/raw/cold invoke reaches the child after close admission, and distinguishes
+the forced path from a successful `Retired` witness.  This is source evidence;
+no browser-child runtime law was run in this audit.
+
+### P1: Keep Outer Action Correlation Separate From `UiIntent.seq`
+
+`UiIntent.seq` is a `u64`, whereas the new handoff's `actionSequence` decoder is
+a JavaScript safe integer ([`action handoff:70-79`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts:70>)).
+The latter must remain a distinct, bounded owner-local worker request counter;
+it must never be formed with `Number(intent.seq)`.  The actual intent body uses
+`packUInt(intent.seq)`.  Add a direct child law with `seq = 2^53 + 1`, outer
+`actionSequence = 1`, and a byte-exact guest-side decode, so these two identities
+cannot be silently conflated.
+
+### P0: Direct Worker Must Bind the Nested Intent Bytes Before Acknowledging
+
+The new producer is sound as a producer: it maps only the captured exposed
+surface to `"<instance>:<window>"` and uses `packUInt(intent.seq)`
+([`intent helper:12-30`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts:12>)).  The outer
+handoff parser, however, deliberately validates only the bounded byte-array
+shape ([`handoff parser:60-87`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts:60>)).
+That is insufficient at worker admission: worker input is an untrusted
+structured-clone value, and the reactor silently ignores a malformed Pack
+intent instead of returning a distinct action failure
+([`reactor turn:218-228`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs:218>)).
+
+Before the reservation puts a request on its sole poll lane, it must strict
+decode the nested Pack body, require canonical re-encoding byte equality, and
+then require all of the following against the captured reservation owner:
+
+- body surface is exactly `"0:<captured-window-kind>"`, not merely a prefix;
+- body revision equals the outer/mounted `surfaceRevision`;
+- node and action-version have their declared unsigned bounds; and
+- body `seq` is an actual unsigned `u64` Pack carrier, not a rounded number.
+
+Only then may the result be reported as acknowledged.  Add hostile direct
+worker rows for trailing/noncanonical body bytes, malformed Pack, `1:map`,
+`0:other`, stale revision, and a number-form sequence.  The existing producer
+law already covers the maximum valid `u64`; these are admission laws, not a
+second encoder.
+
+### Update: Direct Reservation Has Acknowledged Lifecycle Retirement, But Not Yet Full-Turn Serialization
+
+The earlier lifecycle-bypass finding is superseded in current source.  The
+reservation now has a `retireGuest` path which retires the document binding,
+sends `instance-close`, accepts the exact `Accepted` receipt, boundedly drives
+to `Retired`, and sends the final acknowledgement
+([`backbone-worker:1915-1962`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1915>)).  Importantly, a child that has
+been allocated but has no captured lifetime now reports `unconfirmed`, rather
+than falsely claiming `retired`
+([`1988-1995`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1988>)).  This is source evidence only; no browser-child
+runtime qualification was performed.
+
+The new `turnTail`/`enqueueTurn` is currently only declared
+([`1379-1408`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1379>)); it has no call site.  `invokePoll` consequently
+serializes an individual `reactor.poll`, then releases `pollTail` before
+`driveTurnResult` has consumed the returned effects or waited for its required
+UI-patch acknowledgement ([`1896-1912`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1896>)).  A peer `Commands` delivery
+([`3542-3561`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3542>)) or a host-view refresh can therefore invoke the
+same child while a prior turn is awaiting `patch-ack`.  The action path happens
+to reject while `pendingUiPatch` is set, but raw ingress and render are not
+subject to that guard.
+
+Make the *whole turn*, rather than each individual poll, the unit of the
+reservation lane: poll, exact effect admission, patch offer/settlement,
+feedback, and any `more-work` continuation must remain inside one
+`enqueueTurn` operation.  The port may retain bounded raw ingress while that
+operation is waiting, but it must not start another guest turn.  Close must
+synchronously refuse admission and reject the outstanding patch offer, then
+enqueue binding retirement and instance retirement behind the current full
+turn.  A direct-child law should pause after a patch offer, inject peer
+Commands and a view refresh, and prove neither reaches the guest until the
+matching patch feedback completes.
+
+### P0: Do Not Convert Failed Direct Effect Admission Into An Acknowledged Action
+
+`routeTurnEffects` waits for `localEffectTail`
+([`backbone-worker:1448-1475`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1448>)), but the binding sender replaces that
+tail with `work.then(() => {}, () => {})`
+([`1487-1492`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1487>)).  A rejection from `handleLocalMsg` is thus swallowed;
+the turn can return an `acknowledged` action disposition even though its exact
+outbound backbone mutations were not admitted.
+
+Keep the rejecting work as the tail through the current turn and make an
+admission failure terminal for that retained reservation (the closure sequence
+then reports only its real `Retired` witness or `unconfirmed`).  Do not retain
+a successful action disposition after guest state has emitted a payload the
+worker failed to admit.  Add a controlled `handleLocalMsg` rejection law that
+asserts no action acknowledgement, no next guest turn, and no forwarding to a
+successor binding.
+
+### P1: Bound The Socket-Facing Side Of Delayed Direct Ingress
+
+`handleHubFrame` currently awaits `reservation.receiveBackbone`
+([`3550-3557`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3550>)); a direct delivery can legitimately wait for a
+host UI acknowledgement.  Although `ActorDocumentMessagePortV1` bounds its
+own queued copies ([`252-265`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts:252>)), blocking the
+websocket frame chain first leaves later browser message events outside that
+ledger.
+
+After full-turn admission exists, `Commands` handling should synchronously
+validate/copy into the bounded port queue, attach a terminal failure handler to
+the retained owner, and advance the frame frontier without awaiting guest
+execution.  Queue-full, stale, or delivery failure must fail the exact current
+document/rebootstrap path; it must never fall back to the generic
+`documentBackbone` event.  A law needs a paused patch, more than the port
+capacity of peer batches, and verifies a bounded failure rather than an
+unbounded websocket-chain backlog.
+
+### P0: Native Actor Ready-to-Idle Handoff Can Lose I/O Readiness
+
+The retained native actor’s `Poll::Pending` path is correctly ordered: it
+stores its future, releases `scheduled`, then consumes `wake_requested`
+([`sync:3022-3026`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:3022>)).  The corresponding completed-turn path is not.  For
+both `MoreWork` and `Idle`, it consumes `wake_requested` while the runner is
+still marked scheduled, then releases that mark
+([`sync:3051-3059`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:3051>)).
+
+An `ArtifactReadinessWake` from the retained Hub read or connect future can
+therefore occur between those two atomics.  It records its flag, fails to
+enqueue because `scheduled` is still true, and is then missed by the earlier
+exchange.  If the outcome is `Idle { deadline: None }`, no timer repairs the
+loss.  Release `scheduled` before consuming the wake flag; then a wake either
+owns the new job or is observed and schedules one.  Add a deterministic native
+law that pauses exactly at this handoff, invokes a socket/connect Waker, and
+requires one subsequent poll.  The existing retained-turn fixture is the
+right colocated target
+([`native actor fixtures`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️native-actor-retained-turn-fixtures/🦀️.rs:39>)).
+
+### P0: Any Idle Wake Currently Defeats Native Reconnect Backoff
+
+`schedule_reconnect` records a future `reconnect_at`
+([`sync:2177-2183`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:2177>)), but
+`start_connect_hub` has no equivalent future-deadline refusal
+([`sync:2077-2103`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:2077>)).
+The next finite-turn cycle begins at `Connect`, whereas only the later
+`Reconnect` phase clears an expired deadline
+([`sync:1729-1778`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:1729>)).  Thus an ordinary mailbox wake, filesystem wake, or
+late socket readiness wake before the timer can start a new connection early.
+
+Refuse `start_connect_hub` while `reconnect_at > Instant::now()`; the
+`Reconnect` phase remains the only place that clears the deadline and starts
+the attempt.  A native law should schedule a reconnect, inject an unrelated
+mailbox/readiness wake before the deadline, complete one full phase rotation,
+and prove no admission/socket attempt occurs until the deadline turn.
+
+The stable readiness closure itself is appropriately weak and actor-lifetime
+scoped: it upgrades a `Weak<ActorRunner>` and calls `schedule`
+([`sync:3258-3266`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:3258>)); terminal and complete runners refuse
+the request ([`sync:2920-2926`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:2920>)), and final close removes the
+self-retain ([`sync:3168-3179`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:3168>)).  It therefore does not revive a
+cancelled/completed actor.  It should *not* instead capture the runner’s
+per-turn generation: an I/O registration valid across phase rotations would
+then discard legitimate readiness.  With the start guard above, an already
+queued old source wake is harmless scheduling work, not stale connection
+admission.  Native compilation was active during this source audit; neither
+repair is runtime-qualified here.
+
+### P0: Cancellation Must Not Start A Second Terminal Runner Beside An Active Turn
+
+`ActorRunner::cancel` calls `begin_terminal`, forcibly clears `scheduled`, and
+then enqueues a terminal close job
+([`sync:3121-3125`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:3121>)).  This is unsafe if the already scheduled
+`run_job` has taken the `Actor` or `ActorTurnFuture` out of `turn` but has not
+yet returned it.  `begin_terminal` sees no owner to transfer; the newly queued
+terminal job can see no `terminal_turn`, conclude the runner is empty, and
+clear `self_retained` ([`sync:2979-2988`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:2979>),
+[`3160-3179`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:3160>)).  When the original job next observes terminal it
+does transfer its local owner into `terminal_turn`, but its `enqueue(true)` is
+then refused because the runner is already complete.  The owner is no longer
+closed by the retained terminal progression.
+
+Do not clear `scheduled` in `cancel` when it represents an active job.  After
+`begin_terminal`, terminal work should be enqueued only when no job owns that
+slot; an active job already has the terminal branch that returns its exact
+local actor/future into terminal ownership and schedules one-close-at-a-time
+drain.  Add a controlled in-flight future law: pause after the runner has
+taken its owner, cancel from another thread, assert `complete == false` until
+the original poll transfers the owner, then prove that exact owner is drained.
+The existing cancellation test only covers a future still stored in `turn`
+([`native actor fixture:53-76`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️native-actor-retained-turn-fixtures/🦀️.rs:53>)) and cannot expose this race.
+
+### Update: Native Wake And Cancel Source Repairs Landed; Exercise The Real Enqueue Edge
+
+Current source releases `scheduled` before consuming the flag through
+`release_scheduled_after_turn_with`, guards a live Hub, live connect future, or
+future reconnect deadline at `start_connect_hub`, and no longer clears
+`scheduled` from `cancel`
+([`sync:2077-2081`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:2077>),
+[`sync:3022-3056`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:3022>),
+[`sync:3125-3128`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:3125>)).  These source changes directly address the
+three preceding defects.
+
+The new wake fixture currently writes `wake_requested` directly in its
+after-release hook ([`native actor fixture:54-65`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️native-actor-retained-turn-fixtures/🦀️.rs:54>)).  It proves the
+flag exchange, but not the real Waker property that matters: `request_wake`
+must see released `scheduled`, acquire it, and enqueue exactly one successor.
+Use a live controlled pool and invoke `request_wake(current_generation)` from
+the hook (or use an actual `ArtifactReadinessWake`); assert one subsequent
+poll/job.  Retain the separate in-flight-cancel law described above.  Native
+compilation was still active, so this is a source-only re-audit.
+
+### Update: In-Flight Cancellation Regression Exercises The Correct Interleaving
+
+The newly added cancellation law holds the pool worker, manually runs a
+future after `run_job` has taken it, calls `cancel` while `scheduled` remains
+true, and proves no terminal owner or completion appears until that poll
+returns `Pending`; only then does it release the queued terminal drain
+([`native actor fixture:93-137`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️native-actor-retained-turn-fixtures/🦀️.rs:93>)).  This exercises
+the previously missing active-local-owner race and matches the corrected
+`cancel` ordering.  A drop sentinel would make physical future destruction
+observable, but the retained `terminal_turn` and no-early-`complete` assertions
+already detect the premature-finalization failure.  Execution remains pending
+the active native compile.
+
+### P0: Direct Browser-Actor Intents Reject Every Normal Native Emit And Cannot Run GIS Host Effects
+
+The authenticated child path is not yet a complete replacement for the Shell
+action path.  Every successful `UiIntent` is framed by native
+`plugin_dispatch_intents` as `AppFrame::Emit` and then has its side effects and
+events collected ([`plugin:28721-28753`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:28721>)).  A rejected intent is similarly
+framed as `AppFrame::Error`, rather than disappearing
+([`plugin:28742`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:28742>)).  The reactor routes both frames to
+`Effect::SendMessage { Shell }`; only `UiPatch` receives its special retained
+patch route ([`reactor turn:917-949`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs:917>)).  It also admits each
+requested host effect and turns every app event into `PublishEvent`
+([`reactor turn:666-680`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs:666>)).  All of those variants survive the
+WIT turn-result boundary ([`reactor:1560-1595`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs:1560>)).
+
+`DocumentBrowserActorReservation.routeTurnEffects` currently accepts only a
+`send-message` effect aimed at the exact backbone URI.  A Shell target is
+accepted only for the bind/retire control exchange (`shellReceipts=true`), not
+for an ordinary turn ([`backbone worker:1512-1541`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1512>)).  `reconcileUiPatches` calls
+that filter *before* it captures or offers the patch
+([`backbone worker:1939-1950`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1939>)), and `dispatchIntent` acknowledges only after that
+reconciliation returns ([`backbone worker:1649-1686`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1649>)).  Consequently even a successful
+native intent reaches `foreign shell effect` on its mandatory `Emit`; a native
+fault reaches the same rejection through `Error`.  It cannot truthfully report
+an action acknowledgement today.
+
+This is immediately material for the real GIS Map: `ProposeBoundsRegion`
+emits `RequestInferenceProposal(GisMapBoundsRegion)`
+([`GIS inference command:22-28`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💡️inference/🦀️.rs:22>)), while
+`OpenSource` can emit `OpenExternalUrl`
+([`GIS Shell command:22-27`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌐️shell/🦀️.rs:22>)).  Neither is a
+backbone mutation.  There is no current `Emit::event` in the GIS Map command
+tree, but the generic native event route is active and must not be silently
+dropped when the direct path becomes the supported actor route.
+
+The existing Shell has the required semantic interpreter, but it is wired only
+to `PluginWasmHandle` action results: `applyHostEffects` owns effects such as
+`OpenExternalUrl`, and its `RequestInferenceProposal` branch resolves the one
+exact mounted document scope before opening/proposing through the worker
+([`ShellHost:4255-4401`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4255>)).  In contrast,
+`onBrowserActorIntent` only dispatches an intent and renders a generic failure
+notice; it receives no actor-side frame/effect result
+([`ShellHost:5312-5328`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5312>)).
+
+The minimal truthful replacement is a schema-owned, owner-fenced direct-turn
+output channel from the reservation to Shell, separate from the document
+binding control receipt.  It must carry the exact captured document owner
+tuple (scope, client instance, activation generation, instance `0`, surface,
+and action sequence) plus ordered raw canonical `AppFrame` bytes, the complete
+WIT `Effect` union, and `PublishEvent` records.  The Shell must first verify
+that tuple is still current, then decode/project each normal `Emit`/`Error` and
+admit each effect/event through the existing exact-owner host path.  A stale
+or failed projection is terminal for that action and must never be replayed to
+a successor.  Control exchanges must remain stricter: only their bound/retired
+receipt is legal; a normal `AppFrame`, event, or backbone mutation there is a
+protocol fault.
+
+An action may be marked acknowledged only after (1) direct backbone admission,
+(2) the matching Shell frames are projected, and (3) effects/events have been
+admitted or explicitly terminally rejected.  This does **not** require waiting
+for the eventual inference computation: `applyHostEffects` deliberately
+acknowledges the host-owned inference-port admission by posting `inference-open`
+and `inference-propose` ([`ShellHost:4391-4399`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4391>)); its durable
+completion belongs to that retained port.  Required laws are: a real native
+success with `Emit` + patch + backbone mutation; a real `Error`; GIS inference
+effect admission; GIS external-URL admission; one `PublishEvent`; stale-owner
+rejection without successor delivery; and control-frame/data mixing denial.
+This is source audit only; no browser or native execution is claimed.
+
+### P0: New Direct Host-Effect Publication Can Orphan A First Inference Operation
+
+The landed publication vocabulary currently has exactly one supported member,
+`requestInferenceProposal(gis-map-bounds-region)`
+([`publication:1-51`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts:1>)).  However, the action result admits up to 64
+canonical host-effect payloads ([`action handoff:67-81`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts:67>)), and the
+publisher intentionally invokes its callback for every member
+([`publication:53-61`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts:53>)).  Shell's current callback is a
+single-owner inference opener: every invocation increments one
+`inferencePortEpoch`, replaces `inferencePortOwnerRef`, and posts one
+`inference-open` plus `inference-propose`
+([`ShellHost:4256-4270`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4256>)).  Two valid duplicate effects from one guest
+turn therefore start two operations while immediately losing the first
+operation's retained owner; it cannot subsequently be cancelled, approved, or
+closed by the UI owner.
+
+Until host effects have per-effect request identities and independently
+retained owners, this closed vocabulary must enforce *at most one* entry in
+both the neutral schema and strict decoder (not merely a byte/count cap).  Add
+a hostile two-identical-canonical-effect row and prove no worker inference
+request is posted.  This concerns the new publication code; mandatory
+Emit/Error/effect accumulation inside the worker remains an in-flight WGPU
+change and is not characterized here as completed.
+
+### P1: Intent Error Admission Is Broader Than The Native Producer
+
+`decodeBrowserActorIntentPublicationV1` admits `AppFrame::Error` with either
+`in_reply_to: null` or `0` ([`publication:28-38`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts:28>)).  The native
+intent dispatcher creates its error using `push_app_fault(..., None, ...)`
+([`plugin:28730-28743`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:28730>)).  The direct route has no command sequence `0` to
+support; accepting it blurs the strict separation between unsolicited intent
+failure and a command-like reply.  Require `null` exactly and add the
+canonical `Some(0)` rejection row beside the existing foreign-frame cases.
+
+### P1: Worker Acknowledgement Still Precedes Shell Host-Effect Admission
+
+The mailbox resolves an acknowledged result as soon as the worker disposition
+arrives ([`action mailbox:44-60`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts:44>)).  Shell only subsequently calls
+the exact-current publication routine in the promise continuation
+([`ShellHost:5307-5331`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5307>)).  An owner replacement, missing identity, or
+publication fault in that continuation therefore leaves a worker action result
+whose `outcome: acknowledged` did not result in a Shell host-effect admission.
+If that outcome means only “the guest applied the intent,” document/name it as
+such.  If it means end-to-end action acceptance, retain the completion until a
+separate exact-owner Shell publication receipt returns; the inference's later
+computation need not be awaited, but the `inference-open`/`inference-propose`
+admission must be.  Add replacement and missing-identity rows distinguishing
+guest application from final host admission.  No runtime execution is claimed.
+
+### P0: Publication Fixture Is Not Admitted By Its Own Closed Schema
+
+The current action-handoff fixture's `publication` contains
+`externalHostEffect` and `externalProjectedEffect` in addition to the required
+inference vectors ([`fixture`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json>)).  Its schema defines `publication` with
+`additionalProperties: false` and only `emit`, `error`, `hostEffect`, and
+`projectedEffect` ([`schema`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json>)).  The colocated strict-AJV
+fixture law must consequently reject its own input.  Either declare the two
+external-URL vectors in the schema's required/properties set or move them to a
+separate fixture; do not loosen the closed object.  This is a current
+source-only defect, independently of the in-flight worker integration.
+
+### Update: Publication Schema Fixture Finding Superseded
+
+The current action-handoff schema now declares both external-URL vectors as
+required closed `publication` members
+([`action-handoff schema:357-366`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json:357>),
+[`527-568`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json:527>)).  The preceding fixture/schema mismatch was observed during a
+concurrent relocation and is no longer current; it is superseded rather than
+an outstanding defect.
+
+### P0: A Second Inference Effect Locally Aborts, But Does Not Cancel, The First Durable Job
+
+The current one-port replacement is not a server cancellation.  On any second
+`inference-open`, the worker synchronously calls `closeInferencePort` on the
+prior port before installing the successor
+([`backbone worker:4964-4977`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4964>)).  That close goes directly to
+`terminateInferencePort`, which clears the timer, aborts the local fetch,
+removes `inferencePort`, and publishes a local `inference.cancelled` failure
+([`backbone worker:4944-4953`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4944>),
+[`5177-5185`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5177>)).  It never enters
+`cancelInferenceJob`, the only function that posts the authenticated
+`/jobs/{jobId}/cancel` request and waits for the Hub-owned page
+([`backbone worker:5061-5083`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5061>)).
+
+This is reachable across *separate* otherwise valid guest actions, even after
+the per-action host-effects vector is tightened to one.  The Shell callback
+increments `inferencePortEpochRef` and overwrites
+`inferencePortOwnerRef` before it posts the new open/propose pair
+([`ShellHost:4256-4270`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4256>)).  The old
+terminal status is then deliberately ignored by the exact new-owner fence
+([`ShellHost:2255-2258`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2255>)).
+If the first job already has a receipt, the browser has lost the only private
+job id it could use to cancel it.  The Hub job continues until its own
+lifetime/worker termination; it is not cancelled by a browser abort.
+
+There is a more important submit race.  A close during `submitting` aborts the
+POST before the worker stores the receipt.  Yet the Hub has already made
+`POST /jobs` idempotent for the exact authenticated
+`(user, authorization generation, scope, requestId)` tuple
+([`inference SQLite:291-307`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🪶️sqlite/🦀️.rs:291>)), and the
+route may have persisted/installed the retained job before its response is
+lost ([`inference runtime:3203-3265`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3203>)).  The
+current worker immediately discards that exact request id with its operation;
+the public route offers only POST `/jobs`, job-id events, job-id cancel, and
+job-id approval—no request-id lookup
+([`Hub router:8051-8055`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:8051>)).  Thus a response-lost accepted job
+can be left running even though the UI has declared it cancelled and opened a
+second job.
+
+Posting an `inference-close` from Shell before overwriting the ref does **not**
+fix this: that message currently has no close receipt, performs the same local
+abort, and the next message can be processed immediately.  The correct
+bounded ownership boundary is in the worker, with Shell retaining a pending
+replacement rather than replacing its owner eagerly:
+
+1. A close of `idle` is locally terminal.  A close with a known `jobId` retains
+   the exact old operation and sends the existing job-id cancel until the
+   server returns its terminal page; only then may it release the old owner.
+2. A close during submit retains the sealed request id/body and admission
+   identity.  It must reconcile the same idempotent POST to obtain the exact
+   receipt, then use the normal cancel path.  A transport-indeterminate result
+   stays a retained `closing/indeterminate` operation; it must not create a
+   successor merely because local I/O was aborted.  This reuses the existing
+   server idempotency law rather than minting a second job or exposing a
+   private handle.
+3. `inference-open` needs an exact worker acknowledgement (opened, refused, or
+   predecessor-indeterminate) after lease validation and predecessor
+   retirement.  Shell can keep a separate pending tuple, but must set
+   `inferencePortOwnerRef`, dispatch `OPEN_INFERENCE_PORT`, and send
+   `inference-propose` only after the matching **opened** acknowledgement.
+   A status message cannot serve this purpose today because it is accepted
+   only after Shell has already installed that owner.
+
+Required controlled worker laws: (a) receipt-known running A then open B:
+exactly one A cancel HTTP call and no B submit before A terminal page; (b)
+POST A accepted at the Hub but response paused/lost, then B open: exact same A
+request id is reconciled and cancelled, never a second A POST identity; (c)
+retryable/indeterminate close: B gets no opened acknowledgement and the old
+private owner remains retained; (d) identity/document-close while A is
+submitting follows the same reconciliation rather than reporting a fabricated
+cancelled terminal; and (e) a late A page never updates B.  The existing
+worker tests cover user-initiated cancellation after an exact receipt
+([`space-artifact owner test:2017-2036`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:2017>)),
+but none of these replacement/response-loss interleavings.  This is source
+audit only; no execution claim is made.
+
+### P0: Response-Lost Inference Must Reconcile Through An Exact Reader-Bound Lookup, Not `POST /jobs`
+
+The preceding recommendation to “reconcile the same idempotent POST” is too
+weak and is superseded.  The current SQLite idempotency key omits the session
+id: it is `(user_id, authorization_generation, space_id, document_id,
+request_id)` ([`inference SQLite:11-35`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🪶️sqlite/🦀️.rs:11>),
+[`276-316`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🪶️sqlite/🦀️.rs:276>)).  A re-POST derives a new
+identity and map base before `accept`; after browser-broker rotation it may
+therefore either conflict or create a different principal's job.  It is not a
+safe cleanup operation.
+
+The existing private reader is the correct server authority boundary:
+`InferenceReaderV1::matches` compares **user, session, authorization
+generation, space, and document** ([`inference SQLite:215-226`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🪶️sqlite/🦀️.rs:215>)).  Existing
+job-id reads and cancellation already construct that reader from the current
+authenticated session and revalidate live Author authority
+([`runtime:3280-3289`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3280>),
+[`3316-3327`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3316>)).  The smallest safe missing
+route is consequently an owner-private, read-only reconcile endpoint:
+
+```
+POST /spaces/{spaceId}/documents/{documentId}/inference/gis-map/jobs/reconcile
+{ "schema": "semio.hub.inference-job-reconcile/v1", "version": 1,
+  "requestId": "<exact lower 32-hex>" }
+```
+
+It needs a closed Rust/TS/JSON `InferenceJobReconcileRequestV1` bounded below
+the existing `INFERENCE_REQUEST_MAX_BYTES` (the fixed payload itself should be
+at most 256 bytes).  The ledger operation should select only by the existing
+five-column unique prefix, decode the frozen identity, then apply
+`InferenceReaderV1::matches`; it must return the existing job receipt/id only
+on that exact match.  It must not call `accept`, select a catalog binding,
+capture a map base, or install a runtime operation.  The runtime endpoint can
+reuse `inference_context`, `authenticated_session`, `session_reader`, the
+document gate, and `check_live_inference_author`, then hand the returned job
+id to the already-correct `cancel_gis_map_job` path.  The current router has
+only submit, event, cancel, approval, and approval-undo routes
+([`Hub router:8049-8055`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:8049>)); no request-id lookup exists today.
+
+The route is safe to call with a rotated bearer because it is side-effect-free
+and the server performs the exact owner proof.  A nonmatching reader must
+produce an owner-denied result which the worker stores as **indeterminate**;
+it must never retry submit or admit a successor.  The worker currently has no
+private authenticated-session pin: `browserBrokerFetch` holds only a rotating
+capability proof, and `/auth/sessions/me` exposes the generation but no session
+binding ([`backbone worker:4908-4929`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4908>),
+[`SessionMeResponse:6488-6501`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:6488>)).
+`sessionBindingSha256` is available on authenticated directory pages, but is
+not retained as a broker identity credential; it may be a secondary local
+fence only if captured by the worker itself, never supplied by Shell.  If a
+literal client-side proof *before even the lookup POST* is required, a
+server-attested binding must be added to the original private submit receipt
+and to a broker-owned refresh response; no current API provides that proof.
+Server reader-bound reconciliation is the minimal correct current boundary.
+
+There is one important result-classification edge for that close lane.  The
+known-job cancel route first durably calls `request_cancel`, then obtains its
+HTTP page through `events` ([`runtime:3316-3340`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3316>)).
+`events` rejects `now >= expires_at` before returning a page
+([`inference SQLite:546-570`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🪶️sqlite/🦀️.rs:546>)).  Consequently a cancel
+POST can have committed its request/terminalization but still return
+`Expired`; neither that error nor a dropped response proves the final state.
+The close owner must classify both as indeterminate and keep its exact job id
+and sealed request.  The reconcile/terminal-read API should return a bounded
+owner-private state independently of the live-progress expiry gate (or invoke
+the existing retained-runtime/server recovery then return its terminal page).
+It must not report `cancelled` merely because the client issued a cancel.
+
+Worker ownership changes are correspondingly narrow: retain the sealed
+`requestId`, scope, and a close/tombstone owner until either (a) a known job-id
+is cancelled to a terminal Hub page or (b) reconcile is exact-owner denied or
+transport-indeterminate.  Do not use `docAbort` for that retained close lane:
+the current `closeArtifactRuntime` aborts it before `closeInferencePort`
+([`backbone worker:5430-5445`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5430>)),
+while `inferenceBrokerFetch` refuses any request once it is aborted
+([`backbone worker:4908-4913`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4908>)).  Artifact disposal must be two-stage:
+block new document work, drain the retained inference close/reconcile owner,
+then abort/drop the document state only after terminal proof.  A new identity
+or failed reconcile leaves a durable local tombstone and blocks a successor;
+a browser timeout is not cancellation proof.
+
+The relay also currently makes all live browser inference impossible:
+`localRelayUpstreamPath` allowlists no inference path
+([`Hub script:463-476`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:463>)),
+whereas `inferenceBrokerFetch` emits `/spaces/.../documents/.../inference/gis-map/jobs...`
+([`backbone worker:4902-4915`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4902>)).
+Add one strict decoded-and-reencoded inference route helper there: submit and
+reconcile are POST/no query; event is GET with exactly one canonical bounded
+`after` (the ledger bound is 16, not merely three decimal characters);
+cancel/approval and approval-undo are POST/no query.  Reject encoded slash,
+unknown query, malformed/zero job id, wrong method, and every other inference
+suffix.  The appropriate existing source law is
+`GisMapProposalCheckScript`/`proveGisMapProposalApprovalFixture` in
+[`🌎️hub/📦️packages/🦀️rust/📜️script.ts:7222-7377`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7222>)
+and command `gis-map-proposal-check` ([`12096-12149`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12096>)); extend its existing
+`🗺️gis-inference-job-v1` fixture with closed HTTP-route and reconcile rows,
+rather than a disconnected source oracle.
+
+Required native/browser-controlled rows are: accepted response deliberately
+lost then same-reader reconcile gives the original job id and one cancel;
+each of the five reader fields mismatching denies without a new accepted row;
+reconcile does not run the factory/install a second worker; close during submit
+keeps the close owner past document-input retirement; and A→B→C admits only C
+after A has a terminal page.  A mocked `browserBrokerFetch` alone cannot
+qualify the relay; one controlled live local-relay request must exercise its
+strict allowlist separately.
+
+### Opening Admission Update: Current Handshake Is Correctly Non-Replacing, With One Required Completion Boundary
+
+The current opening change has fixed the old eager replacement: worker
+`openInferencePort` refuses capacity before installing a new port
+([`backbone worker:4973-4990`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4973>)); Shell retains a private mailbox and
+only publishes `inferencePortOwnerRef`, `OPEN_INFERENCE_PORT`, and the propose
+request after the exact `opened` result and its current entry/client/session
+checks ([`ShellHost:4255-4291`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4255>)).
+The mailbox itself verifies exact epoch and scope before settlement
+([`opening:44-94`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts:44>)).
+
+This is a sound admission-only step, not close correctness: current worker
+open cannot yet return `indeterminate`, and `closeInferencePort` still locally
+terminates an accepted/running job without attempting the known job-id cancel
+([`backbone worker:5191-5199`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5191>)).
+When the retained predecessor/tombstone lands, keep the following invariant:
+an `opened` receipt means capacity has been freed by **terminal remote proof**
+or there was no job; `refused`/`indeterminate` must settle only the candidate
+mailbox and must not send a close to, mutate, or erase the predecessor.  The
+current Shell catch's `inference-close` is harmless only for an opened
+candidate that has not yet proposed; after a candidate can inherit/queue
+work, its close request must be exact-candidate-owned.  Add controlled rows
+for opened-then-owner-replaced (one exact candidate close), stale/foreign
+opening receipt (no port close), capacity predecessor (no candidate propose),
+and timeout after worker installation (candidate close, predecessor untouched).
+No remote/browser integration is claimed from these mailbox or mock-fetch
+laws.
+
+### P1: Opening Disposition Does Not Yet Bind Its Code To Its Semantic Class
+
+The new opening envelope correctly rejects `opened` with a non-null code, but
+both the runtime parser and neutral schema admit all remaining combinations:
+`{ outcome: "indeterminate", code: "inference.capacity" }` and
+`{ outcome: "refused", code: "inference.transport" }` pass today
+([`opening parser:35-40`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts:35>),
+[`opening schema:50-300`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🧬️schema/🔣️.json:50>)).  That distinction becomes
+security/liveness relevant once a capacity predecessor is retained: capacity,
+invalid input, and an unverified lease are exact refusals (no remote state
+unknown), while transport is the sole current indeterminate result.
+
+Make the closed mapping exact in both schema and `parse...ResultV1`:
+`opened ↔ null`; `refused ↔ capacity|invalid|lease-unverified`; and
+`indeterminate ↔ transport`.  Add the two swapped-code hostile rows plus an
+end-to-end worker-wire decode refusal in the existing
+`backbone-envelope-io` opening test
+([`test:1686-1718`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts:1686>)).  The current focused green mailbox
+law covers only foreign epoch/scope, duplicate receipt, replay, and an opened
+non-null-code hostile; it does not prove this semantic partition.
+
+### Current Relay Review: Strict Inference Allowlist Is Now Present
+
+This supersedes the earlier finding that the relay had no inference route.
+The current relay admits only the five implemented Hub operations: submit,
+owner-private event page, cancel, approval, and approval undo
+([`Hub relay:466-489`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:466>),
+[`Hub router:8049-8056`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:8049>)).
+It decodes each scope segment, requires the exact re-encoding, prohibits dot
+segments and encoded slash/control bytes, and allows only the scope grammar
+the inference schema owns (1--96 `[A-Za-z0-9._:-]` bytes)
+([`inference TS schema:28-36`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🧬️schema/🟦️.ts:28>)).
+The GET path has exactly one canonical `after` query parameter and is capped
+at 16, matching the ledger's persisted cursor bound
+([`SQLite ledger:545-549`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🪶️sqlite/🦀️.rs:545>)).
+
+The relay applies the same 1,024-byte request and 16,384-byte response caps
+to the inferred path before it forwards the bearer; it strips the browser
+proof header at the upstream boundary and returns no-store responses
+([`relay limits and proof boundary:621-706`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:621>)).
+The neutral schema independently recognizes the same method/path grammar
+([`relay schema`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🌐️relay/🔣️.json:1>)).
+Per root's reported result, `inference-relay-check` completed 34 checks
+(29 live route rows, 3 response-bound rows, 2 request-bound rows); this audit
+did not execute that gate.
+
+One bounded test gap remains, not an authorization bypass: the live relay law
+only exercises an oversized declared `Content-Length`.  The streamed reader
+does enforce its running total, but the one-time browser proof is deliberately
+ratcheted before that body is consumed, so a chunked 1,025-byte request will
+receive `413` **with** an advanced-proof header.  Add one `ReadableStream`
+no-`Content-Length` row to lock the intended behavior: upstream call count
+unchanged, 413, proof advanced exactly once, then a request with the next
+proof succeeds.  That tests the actual `readLocalRelayBody` path without
+changing its safe bounded behavior.
+
+When the owner-private request-id reconciliation route is added, it must be
+added atomically to all four current representations: the Hub router, worker
+`inferenceBrokerFetch` route permission, `localRelayInferencePath`, and the
+relay schema/fixture/live upstream assertion.  A route only in the Hub router
+will remain browser-unreachable; a broad suffix pattern would weaken the
+present strict surface.
+
+### P0: Current Two-Author Provisioning Still Mixes App Protocol 14 And 15
+
+The live OS admission authority is now channel **15**:
+[`CHANNEL_VERSION`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs:24>),
+[`DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:1130>),
+and native trusted-catalog descriptor validation
+([`trusted catalog:1145-1150`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1145>))
+all reject a selected component declared as 14.  The following acceptance
+closure still hardcodes 14, so its source fixture can be self-consistent while
+the current materialized GIS descriptor is correctly refused.
+
+Required positive-v15 reissue:
+
+- `🌎️hub/🧪️fixtures/🤝️two-author-shell-v1/🔣️.json:10` and its source
+  assertion [`script:12553-12557`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12553>) must say 15 (prefer the imported
+  directory constant in the script).  This is the registered source gate's
+  direct preflight.
+- `🌎️hub/🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json:12` must say 15;
+  its `expectedDigest` at line 25 must be regenerated through the existing
+  Rust/TS frozen-binding digest oracle.  Keep its hostile value **13** at line
+  34 unchanged: that is a deliberate rejection row.
+- The frozen inference consumer is presently itself typed as version 14:
+  [`inference schema TS:529-533`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🧬️schema/🟦️.ts:529>) and
+  [`inference JSON schema:503-507`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🧬️schema/🔣️.json:503>).  Both must become 15 before an actual
+  selected binding can be decoded in the browser/Hub inference path.
+- The trusted two-package bootstrap's GIS and Stdio package entries
+  [`bootstrap fixture:20,42`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🔣️.json:20>)
+  and the positive `generation-stage` descriptors
+  [`stage fixture:5-8`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧱️generation-stage/🔣️.json:5>)
+  must become 15.  Recompute the bootstrap profile `generationId` and the
+  rotation aliases derived from it (`initialGenerationId`,
+  `currentAfterFailedCandidate`, `stalePlan.issuedGenerationId`); its selected
+  closure hash does not encode the protocol and should not be changed merely
+  because this field changed.  Do not mechanically alter the synthetic failed
+  or next generation sentinels unless their own assertions require it.
+- The independent Hub oracle has three document-open checks hardcoded to 14
+  ([`script:4334-4339,4487-4490,4543-4546`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:4334>)),
+  plus the compiled-dependency and generation-stage positive descriptor setup
+  ([`script:9075-9079,9477-9484`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:9075>)).
+  Bind these to the imported protocol authority rather than a replacement
+  literal.  `document-open-plan-v1.json` has three positive 14 occurrences
+  ([`110,146,292`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json:110>)); after changing them,
+  regenerate its `catalogEncoding.expectedHex` and
+  `catalogEncoding.expectedGenerationId`, because the catalog framing includes
+  this four-byte field ([`script:4312-4341`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:4312>)).  Its explicit mismatch hostile
+  value **13** remains 13.
+- `browser-document-open-v1.json`'s positive installed target and plan
+  ([`33,140`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json:33>) must become 15.  Its
+  descriptor digest and receipt digest encodings do not contain protocol, so
+  they do not need invented new values merely for this transition.
+- The actual browser-host staging description and its fixture both pin 14
+  ([`browser describe schema:19-22`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧬️schema/🔣️.json:19>),
+  [`fixture:4-7`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧫️fixtures/🔣️.json:4>));
+  reissue together with the component descriptor.  The producer test fixtures
+  `fresh-component` and `catalog-complete` have positive descriptor setup at
+  lines 134 and 136 respectively and need 15.  Preserve
+  `catalog-complete`'s `{appChannelVersion: 14, extra: true}` as a malformed
+  extra-field hostile; add a plain 14 unsupported-version hostile if its
+  intent is to prove rejection of the preceding current version.
+- The MCP live-catalog schema/fixture used by the two authenticated MCP
+  readers is also fixed at 14
+  ([`MCP schema:145-159`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧬️schema/🔣️.json:145>),
+  [`fixture:10-38`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧫️fixtures/🔐️hub-live-catalog/🔣️.json:10>)).
+  Move both positive package projections to 15 and leave the hostile 13 row
+  as the mismatch proof.
+
+The generic manifest codec test's literal 14 and unrelated numeric `14`
+values are outside this acceptance closure; do not sweep them as part of the
+protocol reissue.  Conversely, the trusted-catalog `two-package` fixture is
+an active native provider fixture and its two positive package records must
+be reissued to 15 or its provider law will no longer model a selectable
+current package.
+
+### Registered Full-Browser Acceptance Invocation (Not Yet A Passing Claim)
+
+The actual launch configuration is
+[`launch.json:7870-7888`](</Users/ueli/Documents/semio/.vscode/launch.json:7870>):
+`bun nx run os-hub:trusted-stdio-gis-bundle-check -- --two-author-shell`, with
+the ticket-owned `trusted-stdio-gis-browser` artifact directory and isolated
+one-job Cargo environment.  It first runs the source fixture fences, builds
+`semio-hub` and `semio-framework-os-mcp` binaries from one target directory,
+runs the genuine checkpoint-pair native law, materializes and publishes one
+trusted current, checks the closed GIS browser actor, then passes that exact
+current/data root and binaries to the Playwright two-Shell process
+([`bundle gate:12624-12793`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12624>)).
+
+The process creates the map through Shell A before either document-scoped MCP
+or peer connection, then uses the same data root for two auth-scoped MCP
+clients, two document sockets, English Shell A and German Shell B, ordinary
+Shell proposal/approval/Undo, and a Hub restart
+([`two-Shell owner:11757-11946`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11757>)).
+Its receipt explicitly excludes browser-qualified publication, private-job
+restart recovery, WGPU rendering, external-model-provider, and collaborative
+redo; it must not be read as proof of those behaviors.
+
+Before starting that expensive command, the positive v15 closure above must
+be reissued and qualified, the current component/closed actor must be freshly
+materialized and selected, the direct authenticated actor/worker bridge must
+be integrated, and the retained inference close/reconcile path must provide
+remote terminal proof.  The source-only companion launch
+`--two-author-source` is useful for fixture topology but cannot qualify any
+of those runtime prerequisites.
+
+### Protocol 15 Derived Golden Reissue (Read-Only, 2026-09-09)
+
+This supersedes the preceding inventory's description of the positive rows as
+still being 14: the current checkout has already changed the selected
+bootstrap packages and the document-open catalog rows to 15, while their
+derived generation values remain 14-era values.  I cloned the fixture objects
+in memory, used the current producer framing exactly, and did not change
+source files or run a project target.
+
+#### Trusted Stdio + GIS bootstrap generation
+
+The canonical producer is
+[`trustedBootstrapProfileEncoding`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8273>).  Its immutable input is:
+
+1. ASCII `semio/hub/trusted-profile-generation/v1\\0`;
+2. an eight-byte big-endian length plus profile ID;
+3. a four-byte big-endian selected-closure count, followed in fixture closure
+   order by each selected package's framed plugin/package/version/role and its
+   three raw 32-byte digests;
+4. each package's protocol as `u64-be(4) || u32-be(15)`, framed browser actor,
+   UTF-8 tuple-sorted dependency vector, then the tuple-sorted native codec
+   rows `(kind, schema, raw 32-byte Pack hash)`;
+5. the one open target with the same framed 32-bit protocol and grant bytes.
+
+The exact codec projection is still 26 Stdio plus 2 GIS rows from
+[`native-codec-factories.json`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json)
+and [`native-codecs.json`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json), via
+[`projectTrustedBootstrapCodecsV1`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:9166>).  Captured generation bytes are
+3,439 bytes.  Node `createHash("sha256")` and WebCrypto `subtle.digest` agree:
+
+```text
+profile.generationId (v15): e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52
+node == webcrypto: true
+```
+
+As a formula cross-check, changing only the two package protocol fields back
+to 14 produces exactly the present stale fixture value
+`9d010f1a012a471c7ceaae923472b3687018b02c4aff475db7db4ee6142a2565`.
+The selected-closure framing deliberately excludes protocol and remains
+`848e9d6c38a1b1202398214a9138e5e289ee5564bc0bd1fdf61d622c9d4f5588`.
+Therefore update only the generation-derived aliases that denote the current
+profile (`generationId`, `rotation.initialGenerationId`,
+`rotation.currentAfterFailedCandidate`, and
+`rotation.stalePlan.issuedGenerationId`), not the closure hash or synthetic
+failed/next sentinels.
+
+#### Document-open catalog generation and exact bytes
+
+[`documentOpenCatalogEncoding`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:4323>) frames ASCII
+`semio/hub/openable-document-catalog/v1\\0`, a `u32-be` row count, then 19
+`u64-be(length)||payload` fields per catalog row.  Only field seven changes:
+the payload stays four bytes but becomes `0000000f` rather than `0000000e`.
+With the two current positive rows at 15, the 893-byte payload is:
+
+```text
+73656d696f2f6875622f6f70656e61626c652d646f63756d656e742d636174616c6f672f76310000000002000000000000000c732e6769733ae59cb0e59bb30000000000000012732e6769732e6769736d61703a636f6465630000000000000008312e302e303aceb200000000000000202222222222222222222222222222222222222222222222222222222222222222000000000000002044444444444444444444444444444444444444444444444444444444444444440000000000000020555555555555555555555555555555555555555555555555555555555555555500000000000000040000000f000000000000000c732e6769733a6769736d61700000000000000017732e6769732e6769736d617040312f2a3ae7b2bee5af8600000000000000201111111111111111111111111111111111111111111111111111111111111111000000000000000c732e6769733a6769736d617000000000000000013100000000000000012a0000000000000012737572666163652e6769732e656469746f7200000000000000076170702e676973000000000000000f77696e646f772e646f63756d656e740000000000000006656469746f72000000000000000572656163740000000000000003010101000000000000000c732e6769733ae59cb0e59bb30000000000000012732e6769732e6769736d61703a636f6465630000000000000008312e302e303aceb200000000000000202222222222222222222222222222222222222222222222222222222222222222000000000000002044444444444444444444444444444444444444444444444444444444444444440000000000000020555555555555555555555555555555555555555555555555555555555555555500000000000000040000000f000000000000000c732e6769733a6769736d61700000000000000017732e6769732e6769736d617040312f2a3ae7b2bee5af8600000000000000201111111111111111111111111111111111111111111111111111111111111111000000000000000c732e6769733a6769736d617000000000000000013100000000000000012a0000000000000012737572666163652e6769732e76696577657200000000000000076170702e676973000000000000000f77696e646f772e646f63756d656e740000000000000006766965776572000000000000000572656163740000000000000003010001
+```
+
+Both SHA-256 implementations agree on:
+
+```text
+catalogEncoding.expectedGenerationId (v15): 2bb0378fb7e9c4ae59a3c5af0d7dddcd67f27a30d8ec7aca09c8fd888ef2978f
+node == webcrypto: true
+```
+
+Changing only both protocol payloads back to 14 reconstructs both current
+stale values byte-for-byte: the fixture's existing `expectedHex` and
+`de543c145295fc3122d590888bde5e6c07439f420e17dbd31e9febdf5c2d2904`.
+The v15 generation must be propagated to both document-plan and browser-plan
+catalog fields; descriptor and plan receipt hashes are not catalog encodings
+and must not be regenerated merely for this change.
+
+#### Exact validation gates
+
+No permanent generator or migration script is warranted: the existing source
+oracles already regenerate and compare these bytes.  After applying the exact
+values, use the registered checks, in increasing runtime scope:
+
+- `bun nx run os-hub:trusted-stdio-gis-bootstrap` verifies the full profile
+  with Node and WebCrypto at [`script:8911-8918`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8911>).
+- `bun nx run os-hub:open-plan-source-check`, then
+  `bun nx run os-hub:open-plan-check`, and
+  `bun nx run os-hub:browser-document-open-check` cover the exact catalog,
+  server selection, and browser-plan propagation (registered in
+  [`Hub project.json:475-528`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📋️project.json:475>)).
+- `bun nx run os-hub:trusted-stdio-gis-bundle-check -- --source` verifies the
+  staged v15 profile and its source fences.  Native selection and full process
+  work remain separately qualified by the existing `native-catalog-selection`
+  and `--two-author-shell` launches.
+
+#### Negative-version collision audit
+
+A negative that meant “current plus one” at protocol 14 must now explicitly
+be 16 (or `CURRENT + 1`), not 15.  The active compiled-dependency mutation is
+correct in the current script: it now assigns
+`DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 + 1` at
+[`script:9107-9109`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:9107>).  The other relevant hostile fields I inspected
+are deliberately 13 and remain noncurrent: document-open mismatch
+[`fixture:469-472`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json:469>),
+MCP live-catalog [`fixture:38`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧫️fixtures/🔐️hub-live-catalog/🔣️.json:38>),
+frozen binding [`fixture:34`](</Users/ueli/Documents/semio/🌎️hub/🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json:34>),
+and trusted generation-stage mutations [`script:9540,9555-9558`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:9540>).  They are not accidental v15 admissions.  No additional current-15 negative collision was found in the audited trusted Stdio/GIS, document-open, MCP, and browser describe acceptance closure.
+
+### Native WGPU Inference Close Must Retain an Unconfirmed Submit (Read-Only, 2026-09-09)
+
+The browser worker's newly qualified cancel-pending behavior needs an equivalent native
+WGPU owner before a native execution-target lease is ever enabled.  Today no native submit
+can start: `document_execution_target_lease` is deliberately always `None`
+([`WGPU Shell:2366-2369,2864-2868`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:2366>)), and
+`execution_target_lease_verified` therefore refuses the port
+([`WGPU Shell:4517-4521`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:4517>)).  This is an honest current refusal, not runtime evidence for the lifecycle below.
+
+#### Concrete orphan seam
+
+`open_inference_port` first calls `cancel_inference_port`, then immediately admits a
+replacement ([`WGPU Shell:4531-4571`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:4531>)).  The latter simply removes the
+only `Arc<ShellInferenceRunner>` and invokes `OperationContext::cancel_now()`
+([`WGPU Shell:4589-4595`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:4589>)).
+
+That is unsafe once calls are live:
+
+- The submit turn mints `request_id` *inside* its detached I/O future, and neither the
+  runner nor the shell retains the request or a later receipt/job locator
+  ([`WGPU Shell:1439-1477`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:1439>)).
+- Completion upgrades only a `Weak<ShellInferenceRunner>`.  After close/replacement the
+  runner can be gone even when the HTTP submit already linearized remotely, so it neither
+  folds the receipt nor performs a server cancellation
+  ([`WGPU Shell:1477-1503`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:1477>)).
+- A user cancel is correctly not terminal in the pure reducer: it only becomes a
+  `Cancel { job_id }` once a receipt supplies a job id
+  ([`WGPU Shell:1296-1329`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:1296>)).  `cancel_inference_port` bypasses
+  that rule by aborting the whole context before the submit outcome is known.
+
+The native client has only submit, event-page, cancel-by-known-job, and approval calls
+([`Directory client:1063-1089`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs:1063>)).
+There is presently no owner-pinned lookup by request id.  The Hub SQLite ledger already
+keys acceptance by the identity-derived binding and supplied request bytes
+([`inference ledger:276-315`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🪶️sqlite/🦀️.rs:276>)); a cleanup replay under a replacement
+browser/session client would instead be a different authenticated request.  The WGPU shell
+also replaces/clears `directory_client` during identity bootstrap/auth failures, so a
+reconcile path must retain the original client/identity rather than dereference the current
+shell client.
+
+#### Smallest consistent lifecycle packet
+
+Keep an exact `Closing` tombstone rather than dropping `inference_port`.  It owns the
+request id minted *before* dispatch, immutable scope, original client/identity/lease owner,
+known `job_id: Option`, and the physical runner/future drain.  A replacement is refused until
+that tombstone reaches one of these proven endpoints:
+
+1. the retained submit resolves to a receipt, then the existing cancel-by-job operation
+   returns a terminal server page;
+2. a new owner-pinned **lookup-by-request-id** route says the retained request did not
+   linearize; or
+3. original authority cannot be proved, which is `indeterminate` and blocks a successor —
+   it must never resubmit the original body with a newer session/auth-generation.
+
+The typed wire body is already schema-owned as
+`InferenceJobReconcileRequestV1`/`InferenceJobReconcileResultV1`
+([`inference schema:158-176,480-497`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🧬️schema/🦀️.rs:158>)); it deliberately carries
+only `requestId`.  The still-missing runtime route and DirectoryClient method must bind that
+request to the original caller's user, authorization generation, space, and document, and return
+only the ordinary private receipt/terminal state.  There is currently no consumer outside the
+schema (`rg` finds the type only in that schema), so it cannot yet reconcile either browser or
+WGPU ownership.  After a receipt, the current `cancel_gis_map_inference_job` client method is
+the right server operation.  A cancel response remains nonterminal until the reducer sees that
+exact terminal page.  No new generic browser/native replay API is needed.
+
+Add a neutral close/reconcile corpus plus one WGPU I/O-lane law, not merely another pure
+driver test.  Required rows are: cancel before submit receipt; close after a lost submit
+receipt; close before linearization/lookup absent; identity rotation that forbids use of a
+new client; stale late terminal response; and successor admission only after exact terminal
+cleanup.  The WGPU law should pause submit after the request write, then assert exactly one
+submit, lookup using the captured client, one cancel after receipt discovery, no successor
+submit before the terminal page, and reaping of the old future.  Existing driver-only rows in
+[`WGPU command registry tests:230-352`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-command-registry/🦀️.rs:230>) do not exercise this
+transport/owner boundary.
+
+This packet is source audit only; no native WGPU inference submit or close law has been run.
+
+#### Post-apply v15 literal sweep
+
+The inspected positive fixtures now consistently carry 15: trusted bootstrap/document-open,
+browser document-open, MCP live catalog, frozen binding, and execution-target lease.  The only
+named unsupported current-plus-one mutation derives `CURRENT + 1`, hence is now 16.  No stale
+v14 positive or accidental current-15 negative was found in that closure.  One source oracle
+still compares the frozen candidate to the literal `15` rather than the exported constant
+([`Hub script:5682`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:5682>)); it is correct today but must be
+constant-derived before the next protocol increment.
+
+### Two-Author Mounted Shell Acceptance Frontier (Read-Only, 2026-09-09)
+
+The current `--two-author-shell` owner is a materially real composition candidate, not merely
+the neutral fixture: it builds the Hub/MCP bins and runs the dedicated persisted-genesis seed
+law before materializing and publishing the one current
+([`Hub script:12761-12802`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12761>)).  It starts the Hub on the
+prepared data root, creates the private space, admits Author B, has Author A create the Map
+through the ordinary dialog, and only then opens two independent MCP children, two socket
+witnesses, and the second ordinary Shell
+([`Hub script:11873-11922`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11873>)).  The two browser peers use separate
+Playwright contexts, relay credentials and client instance IDs; `waitMaps` requires two mounted
+`tiled-map` probes with the selected component/descriptor/actor hashes and equal region state
+([`Hub script:11924-11945`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11924>)).
+
+It also genuinely exercises the intended ownership split:
+
+- Author B submits through its actual MCP child, waits the inherited real-codec checkpoint,
+  cancels with its private job handle, releases the checkpoint, and polls the exact job until a
+  cancelled/no-offer page ([`Hub script:11473-11527`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11473>)).
+- Author A proposes, approves and undoes through ordinary visible Shell controls.  The harness
+  awaits two server socket controls, reads matching canonical pairs through both MCP children,
+  and requires the region appear, then disappear, on both mounted Maps
+  ([`Hub script:11947-11991`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11947>)).
+- It closes all peers, restarts the Hub against the same prepared root, reissues identities, then
+  reopens both Shells/MCP clients and requires the post-Undo canonical pair and both Map states
+  to match ([`Hub script:11992-12012`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11992>)).  The receipt correctly
+  leaves private running-job recovery and WGPU rendering as nonclaims.
+
+#### P0 acceptance-correlation gap: side witness control is not the mounted-worker ACK
+
+`changedPair` proves that two separately opened witness sockets received equal
+`RebootstrapRequired` controls and that two MCP readers see the corresponding durable pair
+([`Hub script:11947-11958`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11947>)).  Separately, `waitMaps` proves only a
+bounded probe containing scope, content hashes, `uiRevision`, and region IDs
+([`Hub script:11530-11559,11928-11945`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11530>)); its real projection reads only
+the acknowledged UI store revision and the Map document bytes
+([`ShellHost:664-709`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:664>)).  No mounted Shell probe
+contains an acknowledged checkpoint id, frontier, or control identity.  Thus the fixture claim
+`same-peer-rebootstrap-control` is not yet an exact proof that either mounted worker consumed
+*that* server control: an unrelated reload/fetch/patch producing the same regions could satisfy
+the current independent assertions.
+
+The smallest repair is to extend the existing closed, dev-only acknowledged
+`UiDocumentStore` probe with the exact applied `activeCheckpointId` and frontier (or an opaque
+control digest) *only after the worker acknowledges it*.  At each `changedPair`, assert both
+mounted probes equal the witness control's checkpoint/frontier and the MCP pair.  Add those
+fields and the equality law to the two-author neutral fixture; do not expose private job or
+undo handles.
+
+#### P1: the cancellation scene proves running/cancel, not an observed progress sample
+
+The MCP cancellation helper requires a `running` submit receipt, the FD4 callback entry, a
+cancel request, and a terminal cancelled page, but never validates a nonempty `progress` page
+or `completed > 0` ([`Hub script:11473-11527`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11473>)).  This is structural:
+the inherited checkpoint gate pauses before the outer inference callback persists its ledger
+heartbeat ([`runtime:2769-2781,3169-3180`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:2769>)).  The present test truthfully
+proves cancellable admitted computation, but not MCP progress delivery.  If the acceptance
+criterion includes progress, add a deterministic gate after a real persisted positive-progress
+heartbeat and assert its bounded page before requesting cancel; do not synthesize progress in
+the process runner.
+
+No two-author browser/native process was started by this audit.  The assertions above describe
+current source; the acceptance journey remains unqualified until its registered process target
+actually completes.
+
+### Browser Inference Retained Closing (Read-Only, 2026-09-09)
+
+The focused browser-worker test reported by the implementation owner as GREEN exercises only
+the newly added narrow closing slice.  It is **not** evidence for the three fixture scenarios
+`lost-submit`, `retired-document`, and `rotated-session`; those remain outside that focused
+selection.  The current browser worker does correctly seal `operation.request` before the first
+submit transport, keeps it through an indeterminate result, and gives the port its own abort,
+scope, original local session epoch, client id, lease snapshot, timer and one-shot cancel state
+([`backbone worker:4785-4804,5115-5149`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4785>)).  Queued broker admission checks the
+operation owner both before and after constructing a next proof
+([`backbone worker:542-576`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:542>)); it does not optimistically report a Cancel terminal.
+
+#### P0: a late approval recreates a browser-private Undo owner after document retirement
+
+`closeArtifactRuntime` deliberately retires the matching Undo owner before it drops the
+document lease and removes the artifact state
+([`backbone worker:5634-5656`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5634>)).  A pre-existing approval response, or a reconcile response, can arrive
+after that transition.  Both paths unconditionally call
+`retainInferenceApprovalUndo` ([`backbone worker:5171-5184,5320-5326`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5171>)).  That helper accepts a missing
+artifact state (`state?.browserActorReservation?...`) and installs an `awaiting-mount` owner
+using the already-retired client id
+([`backbone worker:4961-4988`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4961>)).  A normal reopen has another client id; the bind path merely returns on
+the mismatch rather than retiring that newly resurrected owner
+([`backbone worker:4920-4928`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4920>)).
+
+This is a retained private receipt/undo-handle tombstone with no presentation owner.  It is
+bounded to one owner but survives until another approval happens to replace it.  The repair must
+make the post-response handoff prove that the original document/client/session owner is still
+eligible for browser presentation; otherwise dispose only that presentation material while the
+Hub's durable fact remains authoritative.  A targeted law must pause an approval (and separately
+a recovered approval) across `closeArtifact`, then assert: no `inference-history-status`
+available message, no new undo owner, one exact port close, and no successor exposure.  The same
+row should cover session rotation, not only document deletion.
+
+#### P1: broker-proof installation lacks a post-response owner fence
+
+`browserBrokerFetch` checks `admit` before starting the network operation, clears the old proof,
+and then installs the response's successor proof without checking the owner again
+([`backbone worker:559-586`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:559>)).  During that await, a successor identity can install its own proof because
+the old slot is empty; the stale response then overwrites it.  The old inference request still
+uses its already-captured old proof, so this does not authorize it as the new user, but it loses
+the successor proof and makes the next identity's request consume an old-session proof and fail
+closed/rebootstrap.
+
+Fence proof replacement after the response with the same captured owner/session generation.
+If it changed, zero the stale `next` bytes and leave the successor's installed proof intact.
+Required deterministic row: pause reconcile/cancel after its second admission check, rotate the
+directory/identity owner and install a successor proof, release an advanced old response, then
+assert the successor proof remains and the old operation cannot post a status, Undo owner, or
+effect into the successor.
+
+#### Reconcile route is intentionally still unqualified, not a terminal-absence proof
+
+The browser/relay admission grammar permits `POST .../jobs/reconcile`
+([`backbone worker:5024-5038`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5024>)), and the SQLite reader has an exact
+reader-bound lookup ([`inference SQLite:545-651`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🪶️sqlite/🦀️.rs:545>)).  The current Hub router, however, only installs submit,
+events, cancel, approval and undo—not reconciliation
+([`Hub binary:8048-8056`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:8048>)).  This is active Home-owned work, so it is an explicit unqualified boundary rather than a
+new regression in the browser patch.
+
+Importantly, `found:false` must **not** release the browser tombstone yet.  Submit holds the
+per-document runtime gate through expensive frozen-base validation and `ledger.accept`
+([`inference runtime:3211-3253`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3211>)); a concurrent lookup can commit an empty immediate
+read before that original handler accepts.  The route needs the same causal admission fence (or
+an explicit pending result) before absence becomes terminal.  Until then, original-session loss
+correctly remains indeterminate and blocks a successor; it must not replay the sealed request
+under a newer identity.
+
+The Shell's close receipt itself is scoped correctly for a live owner: it matches operation epoch
+and exact scope before clearing UI ([`ShellHost:2261-2276`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2261>)).  Document and identity
+retirement intentionally clear that presentation owner first
+([`ShellHost:2655-2665,4904-4913`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2655>)); therefore worker-side closure/tombstone
+ownership, not a late Shell message, is the only lawful reconciliation path after retirement.
+
+#### Current-source correction and two remaining browser races
+
+The earlier P0/P1 paragraphs describe the pre-fix frontier.  Current source now refuses a late
+Undo retention unless the exact artifact state remains live with the same client and local
+directory session ([`backbone worker:4975-5003`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4975>)), and checks the captured broker owner plus
+`admit` again after the network await before installing its next proof
+([`backbone worker:545-600`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:545>)).  Those two prior races are therefore repaired in source; the
+focused test result still does not qualify the broader lost-submit/retired-document/rotated-
+session corpus.
+
+The native reconcile route is also now mounted and takes the same per-document gate as submit
+([`Hub binary:7991-8000,8080-8087`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:7991>),
+[`runtime:3203-3270,3275-3285`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3203>)).  It must nevertheless preserve
+`found:false` as *indeterminate*: a lost original POST may not yet have reached that gate, so an
+empty lookup can precede a later accepted submit.  Current browser code does preserve the sealed
+request by converting that response through `terminateInferencePort` rather than releasing it
+([`backbone worker:5176-5182,5087-5100`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5176>)).  A terminal absence needs an explicit
+request-id arrival/reservation fence in the Hub; merely sharing the gate serializes only handlers
+which have already arrived.  This is active Hub work, not an additional browser regression.
+
+**P0 — an aborted queued Undo consumes the global broker proof.**
+`browserBrokerFetch` tests an `AbortSignal` before it enters its serialized queue, but not again
+after `await prior` ([`backbone worker:545-570`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:545>)).  Undo does pass its owner abort signal but has no
+owner `admit` predicate ([`backbone worker:5056-5063`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5056>)).  Thus: keep a prior broker turn in flight; queue
+Undo; retire the document (which aborts the owner); release the prior turn.  The queued Undo
+clears the otherwise valid proof before `fetchWithTimeout` immediately observes its already
+aborted signal, then wipes its replacement proof.  It sends no stale HTTP request, but it forces
+an unrelated successor into rebootstrap.  Recheck `signal.aborted` immediately after the queue
+await, before reading or clearing the proof.  Undo should also use an exact retained owner/
+state/session admission predicate, so an identity or mount change cannot consume shared proof
+capacity.  Add the paused-turn law asserting no Undo fetch, unchanged successor proof, no status
+resurrection, and no later rebootstrap induced by the cancelled request.
+
+**Current-source correction.** The owner applied this packet after the finding: the broker now
+rechecks abort both immediately after queue admission and after next-proof derivation
+([`backbone worker:545-569`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:545>)). Undo now retains the captured local session and supplies exact
+owner/mount admission plus session-only proof retention
+([`backbone worker:4838-4856,4981-5009,5065-5080`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4838>)). The stale queued-abort
+proof-consumption defect is therefore repaired in current source. This audit did not run the
+new test command.
+
+**Qualified non-finding — `directory-close` is a stream-owner transition, not identity loss.**
+Although `closeDirectory` advances `directoryWorkerEpoch` without advancing the inference
+session, this is intentional: `openDirectoryBootstrap` calls it before every ordinary directory
+stream bootstrap ([`backbone worker:4306-4325`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4306>)).  Retiring a document inference port at
+that point would turn an unrelated stream rebootstrap into an orphaning cancel.  The epoch is
+therefore directory-operation-local; inference correctly relies on document lease and session
+ownership.  Identity/document retirement still needs to go through its own exact close paths.
+No change is recommended from this observation.
+
+### Browser Identity-to-Inference Authority Fence (Read-Only, 2026-09-09)
+
+`directorySessionEpoch` is currently a useful *local test/legacy-open* fence, but not an
+observable production authenticated-session transition. Its sole production increment is in
+the legacy `openDirectory` helper ([`backbone worker:4227-4229`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4227>)). No current Shell production emitter
+sends `directory-open`; the active Home path sends `directory-bootstrap-open`, whose
+`openDirectoryBootstrap` deliberately calls stream cleanup without advancing that epoch
+([`backbone worker:4306-4325`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4306>),
+[`ShellHost:2771-2791`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2771>)).
+
+The Shell does retire the visible inference port whenever its local identity state changes
+([`ShellHost:2655-2665`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2655>)), but it sends no worker authority-generation replacement.
+Identity changes can be delivered from the local identity document's remote mutations
+([`ShellHost:2473-2492`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2473>)). Browser-broker proof is instead read once from the
+`#semio-broker` fragment and transferred once during worker construction
+([`ShellHost:186-192,2184-2194`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:186>)); no current identity transition
+reinitializes it. Finally, `GET /auth/sessions/me` exposes only
+`userId`, `email`, `displayName`, and expiry ([`OS directory client:3674`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:3674>)); Shell reads only the user-facing
+fields ([`ShellHost:2719-2725`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2719>)). It provides no stable
+server session/generation with which the worker could prove a replacement.
+
+Consequently the current `rotated-session` row, which directly changes the worker test seam,
+is a valuable stale-owner unit law but **not** end-to-end evidence for an authenticated session
+rotation. The existing fail-closed broker behavior still prevents an old proof accepted as a
+new session after a 401; it does not give a successful successor-session handoff.
+
+The smallest sound protocol is a first-class, private browser-broker authority binding:
+
+1. after an authenticated server handoff supplies a fresh proof plus opaque server session
+   generation, Shell retires the old visible inference owner and tells the worker an exact
+   `authority-replaced` generation;
+2. the worker advances a private authority epoch, rejects queued/late prior-owner admissions,
+   and installs the replacement proof only for that generation;
+3. new work cannot open until the fresh binding is installed; a sealed old submit stays
+   indeterminate and can only reconcile/cancel with a proof of its original authority—never
+   replay under the replacement;
+4. the worker reports one exact closed terminal to the old Shell owner, while the successor
+   cannot receive its status or Undo capability.
+
+A language-neutral fixture needs at least: old queued submit plus successful new binding; late
+old advanced response; remote identity-config mutation without server binding (must not claim a
+rotation); and server 401/revocation. The browser law must use the real Shell broker-port
+handoff, not direct mutation of `directorySessionEpoch`.
+
+### Hub Inference DTO Nullability and Exact-Tag Audit (Read-Only, 2026-09-09)
+
+**P0 — the normal browser inference HTTP path rejects the normal Hub JSON it invokes.** This is
+not an MCP-only or synthetic mismatch. The protected Hub routes return their Rust DTOs without a
+translation layer: submit returns `Json(receipt)`, events/cancel return `Json(page)`, and approval
+returns `Json(receipt)` ([`Hub binary:7977-8055`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:7977>)).
+The browser worker directly feeds each successful body to the OS parsers
+([`backbone worker:5154-5156,5263-5265,5296-5298,5343-5345`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5154>)).
+
+`InferenceJobReceiptV1.proposal_hash` and `InferenceEventPageV1.proposal_hash` are bare Rust
+`Option<String>` fields, not `skip_serializing_if` fields
+([`Hub inference schema:373-383,417-432`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🧬️schema/🦀️.rs:373>)).
+Serde therefore emits required JSON `proposalHash: null` while there is no proposal. This is
+intentional and live-native test evidence: the actual authenticated submit asserts a running
+receipt with `null`, and the actual cancel response asserts `null`
+([`Hub bin unit:1377-1404`](</Users/ueli/Documents/semio/🌎️hub/🧪️tests/🔬️bin-unit/🦀️rs:1377>)).
+The normal constructors also preserve that `Option` in the submit receipt, event page, and cancel
+page ([`runtime:3288-3291,3314-3326,3342-3354`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3288>)).
+
+OS currently describes these fields as optional strings and only handles `undefined`:
+
+- `GisMapInferenceJobReceiptV1` and `GisMapInferenceEventPageV1` use `proposalHash?: string`
+  ([`OS directory schema:1639-1687`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:1639>));
+- `parseGisMapInferenceJobReceiptV1` / `parseGisMapInferenceEventPageV1` allow absence but pass
+  any present value (including `null`) to the hex-string decoder
+  ([`OS directory schema:2030-2042,2047-2093`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:2030>));
+- the OS JSON definitions also omit `proposalHash` from `required` and accept only a hex string
+  ([`OS schema:473-571`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧬️schema/🔣️.json:473>)).
+
+Thus the first successful accepted/running/cancelled response from a genuine Hub fails before the
+worker can publish its port status. Align the OS contract with the already-owned Hub schema:
+make `proposalHash` required and `hex64 | null` in both DTO types and JSON definitions; reject
+absence; preserve `null` in the parsed object and reducer. No legacy omission support is sound.
+The independent OS package oracle still casts both fields as optional strings
+([`OS TypeScript script:89-105`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts:89>)),
+so it must be changed with the production type rather than perpetuating the old wire.
+
+**Exact schema tags are another current fail-open seam.** Hub's schema establishes exact tags:
+`semio.hub.inference-job-receipt/v1`, `semio.hub.inference-job-events/v1`,
+`semio.hub.gis-map-inference-preview/v1`, and
+`semio.hub.inference-approval-receipt/v1`
+([`Hub schema JSON:205-217,326-420`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🧬️schema/🔣️.json:205>)).
+The Hub runtime emits those exact strings ([`runtime:3080,3288-3290,3314-3316,3342-3344,3382-3389`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3080>)).
+Preview is already exact in both OS parser and schema
+([`OS directory schema:1935-1956`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:1935>)); receipt, page, and approval instead accept any nonempty schema text in both the parser and
+the OS JSON schema ([`OS directory schema:2030-2109`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:2030>),
+[`OS schema:473-605`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧬️schema/🔣️.json:473>)).
+Make those three OS fields literal types/JSON `const`s and reject foreign tags before the
+state-machine transition. The current test already intends this but cannot enforce it because the
+parser does not inspect `schema` ([`space artifact creation owner test:2019-2035`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:2019>)).
+
+#### Positive old-wire inventory
+
+Only two OS sources still contain the obsolete normal tags, but they feed multiple positive
+lifecycle paths. Every following record must use the current exact tag and an explicit
+`proposalHash: null` when no proposal exists:
+
+- The worker HTTP harness factories use the obsolete receipt/page tags and omit a hash whenever
+  their optional parameter is absent
+  ([`space artifact creation owner test:1997-2017`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:1997>)).
+  Those factories cover accepted submit, running poll, cancellation, and reconciliation scenarios;
+  they are not hostile fixtures.
+- The neutral positive corpus
+  [`gis-map-inference-port-v1/🔣️.json`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json)
+  contains old tags at lines **187, 256, 280, 315, 350, 489, 513, and 564**. The omitted-null
+  positive records are `uncertainLifecycle[3] reconciliation-discovers-original-job`,
+  `successLifecycle[1] server-accepts-and-mints-the-job`,
+  `successLifecycle[2] first-bounded-progress-page`,
+  `successLifecycle[3] monotonic-progress-page`,
+  `cancelLifecycle[1] server-accepts-and-mints-the-job`,
+  `cancelLifecycle[2] first-bounded-progress-page`, and
+  `cancelLifecycle[4] server-confirms-cancellation`. `successLifecycle[4]` has an offered hash
+  but still needs the page tag changed.
+- The same corpus's `hostileTransitions` has old tags at **655, 689, 811, 909, and 980**. It
+  should not retain old tags as accidental compatibility fixtures: update the normal envelope
+  tag/null field while preserving each intended hostile transition (wrong job, illegal phase, or
+  stale offer) as the sole rejection cause.
+
+The separate `wire.receipt` / `wire.page` fixture is already the correct production shape
+(current tags plus explicit `null`) and is used by the direct OS-vs-Hub schema/parser test at
+[`space artifact creation owner test:2019-2035`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:2019>).
+It is valuable evidence of the intended contract, but current parsers cannot consume that exact
+fixture, which exposes the integration failure rather than qualifying it.
+
+#### Bounds and preview/approval parity
+
+- Hub runtime and OS parser agree on the values observed on the real route: Hub ledger admits at
+  most 16 monotonic progress cursors and returns at most 8 rows per events read
+  ([`Hub SQLite:400-424,654-701`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🪶️sqlite/🦀️.rs:400>));
+  OS limits cursor to 16, events to 8, and verifies ordered event/progress rows plus
+  `completed <= total` ([`OS directory schema:2047-2073`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:2047>)).
+  The browser body's shared cap is 16 KiB ([`backbone worker:5077-5082`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5077>)).
+- Hub's exported JSON schema is looser than its own live response law: progress cursor and
+  `nextCursor` are merely safe integers, total has no positive lower bound, and a normal events
+  page allows 16 progress items instead of the route's 8
+  ([`Hub schema JSON:370-420`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🧬️schema/🔣️.json:370>)).
+  This does not make the current Rust route emit an unparseable page, but it lets schema-only
+  consumers bless a response the browser will reject. Tightening those declared bounds to the
+  route contract is a P1 schema-parity follow-up.
+- Preview is correctly optional only as a field: when present it is strict in both owners
+  (five closed coordinates, exact `inference-{jobId}` and exact hash binding in OS; runtime only
+  emits it for a live, non-cancelled succeeded/offered job)
+  ([`OS directory schema:1935-1956,2074-2080`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:1935>),
+  [`Hub runtime:3307-3313`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3307>)).
+  The missing element is only receipt/page/approval exact-tag and nullable-hash parity, not a
+  preview format change.
+- Approval is always non-null hash and Hub makes it available only after the committed result
+  ([`Hub runtime:3358-3390`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3358>)).
+  Keep that hash required; make only its `schema` exact on the OS side. Do not incorrectly make
+  the approval receipt nullable or accept the old generic tags.
+
+No commands were run for this audit.
+
+### Broker-Port Replacement Leaves an Old `/me` Turn Authorized
+
+The new worker-side authority install correctly gives every broker request an admission object,
+serializes it, bounds its body to 2 KiB/2 seconds, and makes an authenticated replacement retire
+the old Directory/inference/Undo/artifact owners
+([`backbone worker:530-655`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:530>)).
+That protects a queued request after a *proof* replacement.  It does **not** protect a request
+after a broker-port replacement.
+
+`attachLocalBrokerPort` explicitly supports replacement by closing the preceding port, but neither
+rotates `localBrowserBrokerAdmission` nor aborts the old RPC controllers
+([`backbone worker:659-695`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:659>)).
+The older `browserBrokerFetch` therefore retains the same admission object through its delayed
+fetch/body read and `acceptBrowserSessionAuthority` accepts and assigns
+`browserSessionAuthority` after the successor port is already installed
+([`backbone worker:598-646`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:598>),
+[`backbone worker:556-574`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:556>)).
+The result is sent only to the closed old port, but the security-relevant worker mutation has
+already occurred.  The present Shell creates its production port once, so this is a replacement
+path defect rather than evidence that the ordinary initial bootstrap currently takes the bad
+branch; the replacement code itself establishes that this is a supported lifetime boundary.
+
+Required atomic boundary: when a distinct replacement port is accepted, first rotate the broker
+admission, abort and remove every old-port request controller, consume the current proof, and
+retire accepted session authority; only then close/set/start the new port.  The successor must
+initialize with a new proof.  Do not simply compare `localBrowserBrokerPort` at `postMessage`:
+that would hide the response while leaving its authority side effect live.
+
+Add one deterministic worker law: hold the old `/me` body after its request has consumed the
+proof, attach a second port, release the body, and assert that (a) no authority is installed or
+replaced by the old response, (b) the old request cannot advance a proof for the successor, and
+(c) only a fresh successor `initialize` followed by `/me` can install its authority.  This is the
+missing stale-response case alongside the existing proof-replacement/queued-turn laws in
+[`space-artifact creation owner test:2280-2334`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:2280>)).
+
+As a smaller closed-route tightening, this `accept` callback is used only for `GET
+/auth/sessions/me`, whose Hub route returns `200` on success
+([`Hub route:6515-6531`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:6515>)).
+The bounded reader already rejects non-OK responses, but permits another hypothetical 2xx status
+with a canonical authority body.  Require `response.status === 200` before parsing so a future
+relay/route drift cannot establish a session through a non-contract success response.  This is a
+P1 contract hardening; the port-replacement interleaving is the substantive stale-owner defect.
+
+No commands were run for this audit.
+
+### Two-Author Browser-Host Receipt Does Not Bind Its GIS Module Inputs
+
+After the locale selector repair, the next concrete acceptance-proof gap is in the ticket-owned
+browser-host staging receipt.  The runner correctly hashes the selected *source* GIS component
+and descriptor before and after materialization
+([`OS dev staging:461-464,483-486`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts:461>)),
+and it stages a closed module tree.  But the receipt used to authorize Vite contains only
+`selectedGis.generationId` and `selectedGis.currentSha256`; its only per-module byte identities
+are for the freshly compiled **Space** host
+([`browser-host receipt type/parser:18-78`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🟦️.ts:18>)).
+
+This is materially weaker than the later mounted-map assertions.  `closeTestBrowserHostStagingV1`
+validates the Space descriptor/core identity, then incorporates GIS only into an aggregate module
+set hash; it does not parse or rehash the staged GIS descriptor against the selected
+`componentSha256`/`descriptorSha256`
+([`browser-host close:169-210`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🟦️.ts:169>)).
+`resolveTestBrowserHostRootsV1` repeats exactly the Space-only identity check
+([`browser-host resolve:229-251`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🟦️.ts:229>)).
+The two-author runner subsequently compares the **server/open-plan-derived** mounted probe
+fields to selected-current metadata, not a GIS identity attested by the Vite host receipt
+([`Hub runner:11883-11895,11968-11991`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11883>)).
+
+Consequently a closed staged module set can be internally immutable while its GIS module/bridge is
+not demonstrated to derive from the exact selected component and descriptor.  This does not show
+that the current staging code substitutes bytes; it means a passing mounted journey must **not**
+claim that stronger browser-byte provenance yet.  The existing unit hostile substitutions only
+replace Space files after closure, so they do not exercise this missing GIS input binding
+([`browser-host staging test:88-105`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts:88>)).
+
+The smallest reliable remedy is an explicit GIS materialization receipt written by the same
+component transpilation owner and incorporated into the host receipt: selected component SHA-256,
+selected descriptor SHA-256, staged descriptor SHA-256, bridge SHA-256, and the generated core
+file digest(s), all verified before Vite serves.  A parser/hostile law must reject (1) a selected
+hash changed in the receipt and (2) a staged GIS descriptor/bridge substitution, independently of
+the aggregate module-set hash.  Do not pretend an aggregate self-hash establishes an input/output
+derivation.  This is an acceptance qualification blocker, not evidence that a presently mounted
+run has used substituted bytes.
+
+No commands were run for this audit.
+
+### Two-Author Shell Process: German Existing-Artifact Open Selector
+
+The registered `--two-author-shell` route is an actual-process candidate, not a qualified run in
+this audit.  It does materially stage selected-current GIS bytes, start a native Hub at the
+prepared same data root, launch Chromium, use local credential envelopes, create A's document
+through the ordinary Shell, then mount B and both restart peers
+([`Hub script:11866-12047`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11866>)).
+Its MCP checkpoint/socket assertions and the mounted `UiDocumentStore` probe are useful actual
+process evidence **only when the command runs**; the adjacent `--two-author-source` fixture
+checker is explicitly a source oracle and cannot qualify that journey
+([`Hub script:12659-12711`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12659>)).
+
+The first independently reproducible harness defect is the existing-artifact open control.  The
+runner deliberately locks B to German, checks `html[lang="de"]`, and runs B both on the initial
+peer join and after restart ([`Hub script:11761,11896-11900,11963-11966`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11761>)).
+Yet its existing-document branch always asks Playwright for an exact English accessible name:
+
+```ts
+artifactRow.getByRole("button", { name: "Open", exact: true }).click()
+```
+
+([`Hub script:11792-11797`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11792>)).
+This is not a theoretical translation choice: the real UI vocabulary maps the `open` command to
+English `Open` and German `Öffnen`
+([`React UI target:2211-2246`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx:2211>)).
+The very same runner already chooses the locale-specific space button (`Open Studio` vs
+`Studio öffnen`) ([`Hub script:11762-11765`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11762>)).
+
+Therefore the documented German second peer cannot truthfully complete its ordinary document-open
+path: a properly localized UI causes the candidate to time out, while an English-only button would
+mask the localization contract breach.  This is earlier than checkpoint-to-probe correlation
+(owned separately) and unrelated to progress evidence.
+
+The smallest sound repair is for this test-only process owner to select the existing artifact's
+stable action identity scoped to the already exact `[data-row-id="artifact:<documentId>"]`, if the
+row exposes one; otherwise it must take the closed locale label from the same two-language test
+contract (`Open` / `Öffnen`) and add a source/DOM hostile that swaps the locale label.  Do not
+weaken it to a text substring or a global button lookup: that could activate a different row or a
+stale dialog.  The neutral fixture already commits to A=`en`, B=`de` and both initial/restart
+mounts, so add this control identity/locale expectation there as part of the registered route
+([`two-author fixture`](</Users/ueli/Documents/semio/🌎️hub/🧪️fixtures/🤝️two-author-shell-v1/🔣️.json)).
+
+No commands were run for this audit.

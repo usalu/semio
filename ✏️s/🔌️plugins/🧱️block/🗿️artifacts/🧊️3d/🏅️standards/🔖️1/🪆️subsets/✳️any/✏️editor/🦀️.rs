@@ -18,17 +18,18 @@ use crate::editor::block3d::commands::{add_vortex, remove_vortex};
 use crate::editor::block3d::commands::{add_vortex_kind, remove_vortex_kind};
 use crate::editor::block3d::commands::{edit, set_active_example};
 use crate::editor::block3d::commands::{hover_surface, leave_surface, place_vortex, set_brush_flip, set_brush_radius, set_brush_vortex_kind};
-use crate::editor::block3d::commands::{set_active_representation, set_active_utility, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
+use crate::editor::block3d::commands::{set_active_representation, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
 use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
 use crate::editor::block3d::modes::edit as edit_mode;
 use crate::editor::block3d::modes::edit::windows::world;
+use crate::editor::block3d::modes::edit::windows::world::transient::{Block3dBrushPreview, Block3dWorldWindowTransientOwner, SetBrushPreview};
 use crate::editor::block3d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::block3d::terminology::block3d_labels;
 use crate::BlockCamera3d;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
-    ConfigView, DraftView, Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, UtilityDefinition,
+    ConfigView, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, UtilityDefinition,
 };
 // 🚧️ SDK GAP: `Dialect`/`InteractionView` are still only reachable through the `app` submodule they're
 // declared in — not (yet) in `semio_framework_plugin`'s curated crate-root re-export list, unlike
@@ -134,14 +135,8 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 }
 
 
-fn block3d_resolve_world_body(body_key: &str) -> (&str, String) {
-    if body_key == world::BLOCK3D_BODY_WORLD || body_key.starts_with(&format!("{}:", world::BLOCK3D_BODY_WORLD)) {
-        if let Some((_, window_id)) = body_key.split_once(':') {
-            return (world::BLOCK3D_BODY_WORLD, window_id.to_string());
-        }
-        return (world::BLOCK3D_BODY_WORLD, BLOCK3D_DEFAULT_WINDOW_ID.into());
-    }
-    (body_key, BLOCK3D_DEFAULT_WINDOW_ID.into())
+fn block3d_render_window_id(view_state: &semio_framework_plugin::ViewModel) -> &str {
+    view_state.window_id.as_deref().filter(|window_id| !window_id.is_empty()).unwrap_or(BLOCK3D_DEFAULT_WINDOW_ID)
 }
 
 fn f64_vec3_field(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
@@ -203,7 +198,6 @@ semio_framework_plugin::app_commands! {
         "toggleWindowRepresentation" as "toggleWindowRepresentation" => toggle_window_representation::ToggleWindowRepresentation,
         "setWindowArrangement" as "setWindowArrangement" => set_window_arrangement::SetWindowArrangement,
         "setWindowSpacing" as "setWindowSpacing" => set_window_spacing::SetWindowSpacing,
-        "setActiveUtility" as "setActiveUtility" => set_active_utility::SetActiveUtility,
         "setBrushVortexKind" as "setBrushVortexKind" => set_brush_vortex_kind::SetBrushVortexKind,
         "setBrushRadius" as "setBrushRadius" => set_brush_radius::SetBrushRadius,
         "setBrushFlip" as "setBrushFlip" => set_brush_flip::SetBrushFlip,
@@ -238,7 +232,6 @@ const BLOCK3D_RETAINED_TOOL_IDS: &[&str] = &[
     "toggleWindowRepresentation",
     "setWindowArrangement",
     "setWindowSpacing",
-    "setActiveUtility",
     "setBrushVortexKind",
     "setBrushRadius",
     "setBrushFlip",
@@ -275,15 +268,12 @@ const BLOCK3D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "toggleWindowRepresentation", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setWindowArrangement", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setWindowSpacing", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setBrushVortexKind", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setBrushRadius", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setBrushFlip", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "worldSurfaceHover", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "worldSurfaceLeave", lanes: &[ArtifactToolPublicationLane::Config] },
-    // 🖌️ The only two-lane row: `📍️place-vortex` emits the vortex-kind/vortex document mutations AND
-    // clears the brush preview in config in one `Emit`.
-    ArtifactToolPublicationContract { tool_id: "worldSurfacePlace", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "worldSurfaceHover", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "worldSurfaceLeave", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "worldSurfacePlace", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "patchRepresentation", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
@@ -311,7 +301,76 @@ fn block3d_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Block3dMutation, Block3dConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
+}
+
+struct Block3dWindowPreviewWork {
+    tool_id: &'static str,
+    consumed: bool,
+}
+
+impl Block3dWindowPreviewWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self { tool_id, consumed: false }
+    }
+}
+
+impl ArtifactCommandWork<EditorApp<Block3dPlayApp>> for Block3dWindowPreviewWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        command: &Block3dCommand,
+        _snapshot: &Block3dSnapshot,
+        _interaction: &protocol::InteractionState,
+        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block3dPlayApp>>>,
+    ) -> Option<usize> {
+        let view_state = context.and_then(|context| context.view_state.as_ref())?;
+        let targets_world = view_state.active_window_kind_id.as_deref() == Some(world::BLOCK3D_WINDOW_WORLD)
+            && view_state.window_id.as_deref().is_some_and(|window_id| !window_id.is_empty());
+        (targets_world && command.command_id() == self.tool_id).then_some(1)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Block3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Block3dPlayApp>>, Fault> {
+        if self.consumed {
+            return Err(Fault::from("block3d-window-preview-work-repeated"));
+        }
+        self.consumed = true;
+        let view_state = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("block3d-window-preview-requires-view"))?;
+        if view_state.active_window_kind_id.as_deref() != Some(world::BLOCK3D_WINDOW_WORLD) {
+            return Err(Fault::from("block3d-window-preview-kind-mismatch"));
+        }
+        let window_id = view_state.window_id.as_deref().filter(|window_id| !window_id.is_empty()).ok_or_else(|| Fault::from("block3d-window-preview-requires-concrete-window"))?;
+        let (emit, preview) = match input.command {
+            Block3dCommand::HoverSurface(payload) => (
+                Emit::default(),
+                Some(Block3dBrushPreview { position: payload.position, direction: payload.normal }),
+            ),
+            Block3dCommand::LeaveSurface(_) => (Emit::default(), None),
+            Block3dCommand::PlaceVortex(payload) => {
+                let trusted = place_vortex::PlaceVortex {
+                    window_id: window_id.to_string(),
+                    object_id: payload.object_id.clone(),
+                    position: payload.position,
+                    normal: payload.normal,
+                };
+                let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+                let cfg = ConfigView { snapshot: input.config, window: None };
+                (place_vortex::handle(&trusted, &doc, &cfg)?, None)
+            }
+            _ => return Err(Fault::from("block3d-window-preview-route-mismatch")),
+        };
+        let mutation = semio_framework_plugin::WindowTransientMutation::of::<Block3dWorldWindowTransientOwner>(
+            window_id,
+            SetBrushPreview { preview }.into(),
+        );
+        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
+            emit,
+            ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] },
+        })
+    }
 }
 
 struct Block3dRetainedCommandJobFactory {
@@ -406,7 +465,7 @@ fn admit_block3d_artifact_mutation(mutation: &Block3dMutation) -> Result<store::
     if retained_bytes > BLOCK3D_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("block3d-artifact-mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
 }
 
 struct Block3dArtifactStorePreparationFactory;
@@ -532,7 +591,7 @@ fn admit_block3d_config_mutation(mutation: &Block3dConfigMutation) -> Result<sto
     if retained_bytes > BLOCK3D_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("block3d-config-mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
 }
 
 struct Block3dConfigStorePreparationFactory;
@@ -673,11 +732,54 @@ impl ArtifactEditor for Block3dPlayApp {
     const DIALECT: Dialect = BLOCK3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
 
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::standards::v1::subsets::any::schema::retirement::document_store_owners())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(
+            semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default())
+                .expect("default Block3d presence is the exact empty terminal"),
+        ))
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Block3dArtifactStorePreparationFactory))
     }
 
-    /// 📬️ Required by the Config publication lane: 12 of the 23 retained tools are config-only, and
+    /// 📬️ Required by the Config publication lane: 11 of the 22 retained tools are config-only, and
     /// `VcsArtifactApp` rejects any tool whose declared lane has no one-item preparation factory with
     /// `interactive-job.publication-authority-missing`.
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -707,7 +809,6 @@ impl ArtifactEditor for Block3dPlayApp {
             "toggleWindowRepresentation",
             "setWindowArrangement",
             "setWindowSpacing",
-            "setActiveUtility",
             "setBrushVortexKind",
             "setBrushRadius",
             "setBrushFlip",
@@ -724,6 +825,10 @@ impl ArtifactEditor for Block3dPlayApp {
         registry.register(Block3dRetainedCommandJobFactory::new(&controller_id))
     }
 
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<Block3dWorldWindowTransientOwner>()
+    }
+
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
         if !BLOCK3D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
@@ -732,7 +837,10 @@ impl ArtifactEditor for Block3dPlayApp {
             return Err(Fault::from("block3d-retained-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, block3d_retained_reduce, block3d_retained_extent));
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match tool_id {
+            "worldSurfaceHover" | "worldSurfaceLeave" | "worldSurfacePlace" => Box::new(Block3dWindowPreviewWork::new(tool_id)),
+            _ => Box::new(BoundedArtifactCommandWork::new(tool_id, block3d_retained_reduce, block3d_retained_extent)),
+        };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -741,7 +849,7 @@ impl ArtifactEditor for Block3dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             Block3dCommand::command_id,
             BLOCK3D_RETAINED_RAW_BYTES,
             BLOCK3D_RETAINED_WORK_ITEMS,
@@ -795,7 +903,6 @@ impl ArtifactEditor for Block3dPlayApp {
             })),
             "setWindowArrangement" => Ok(Block3dCommand::SetWindowArrangement(set_window_arrangement::SetWindowArrangement { window_id: window_id_from_args(args), arrangement: str_field("value").unwrap_or_else(|| "overlap".into()) })),
             "setWindowSpacing" => Ok(Block3dCommand::SetWindowSpacing(set_window_spacing::SetWindowSpacing { window_id: window_id_from_args(args), spacing: args.and_then(|value| value.get("value")).and_then(Value::as_f64).unwrap_or(8.0) })),
-            "setActiveUtility" => Ok(Block3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { window_id: window_id_from_args(args), utility_id: str_field("utilityId").unwrap_or_else(|| BLOCK3D_UTILITY_SELECT.into()) })),
             "setBrushVortexKind" => Ok(Block3dCommand::SetBrushVortexKind(set_brush_vortex_kind::SetBrushVortexKind { vortex_kind_id: str_field("value").or_else(|| str_field("vortexKindId")) })),
             "setBrushRadius" => Ok(Block3dCommand::SetBrushRadius(set_brush_radius::SetBrushRadius { radius: args.and_then(|value| value.get("value")).and_then(Value::as_f64).unwrap_or(0.3) })),
             "setBrushFlip" => Ok(Block3dCommand::SetBrushFlip(set_brush_flip::SetBrushFlip { flip: args.and_then(|value| value.get("flip")).and_then(Value::as_bool).unwrap_or(false) })),
@@ -872,14 +979,42 @@ impl ArtifactEditor for Block3dPlayApp {
     fn render(body_key: &str, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = block3d_labels(view_state);
         let active_representation_id = cfg.snapshot.active_representation_id.as_deref();
-        let (base_body, window_id) = block3d_resolve_world_body(body_key);
-        let node = match base_body {
-            world::BLOCK3D_BODY_WORLD => world::render(doc.snapshot, cfg.snapshot, &window_id)?,
+        let node = match body_key {
+            world::BLOCK3D_BODY_WORLD => world::render(
+                doc.snapshot,
+                cfg.snapshot,
+                block3d_render_window_id(view_state),
+                view_state.active_utility_id.as_deref().unwrap_or(BLOCK3D_UTILITY_SELECT),
+                None,
+            )?,
             document_panel::BLOCK3D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels)?,
             inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block3d unknown-body label admission failed"))?,
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))
+    }
+
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Block3dSnapshot>,
+        cfg: &ConfigView<'_, Block3dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        if body_key == world::BLOCK3D_BODY_WORLD {
+            let preview = transient.window::<Block3dWorldWindowTransientOwner>().and_then(|window| window.brush_preview.as_ref());
+            let root = world::render(
+                doc.snapshot,
+                cfg.snapshot,
+                block3d_render_window_id(view_state),
+                view_state.active_utility_id.as_deref().unwrap_or(BLOCK3D_UTILITY_SELECT),
+                preview,
+            )?;
+            return Ok(semio_framework_plugin::built_to_component_tree(root));
+        }
+        Self::render(body_key, doc, cfg, view_state)
     }
 
     /// 🌉️ The flagship seam: `puzzle3d_catalog_fragment`'s first real caller. Wraps the block-3d
@@ -911,6 +1046,7 @@ impl ArtifactEditor for Block3dPlayApp {
 //#region 🔖️Manifest
 pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(BLOCK3D_DIALECT)
+        .document(["semio", "block", "3d"])
         .artifact_kind(artifact_kind())
         // 🗂️ The puzzle3d catalog artifact this surface's `"catalog:out"` port produces — see
         // `block3d_io`/`Block3dPlayApp::export_media`.
@@ -961,7 +1097,7 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         .mutation("removeVortexKind", LocalizedLabel::native("Remove Vortex Kind", "Wirbelart entfernen"))
         .mutation("addVortex", LocalizedLabel::native("Add Vortex", "Wirbel hinzufügen"))
         .mutation("removeVortex", LocalizedLabel::native("Remove Vortex", "Wirbel entfernen"))
-        .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
         .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
         .view_action("setActiveRepresentation", LocalizedLabel::native("Set Active Representation", "Aktive Darstellung festlegen"))
         .view_action("setWindowRepresentations", LocalizedLabel::native("Set Window Representations", "Fensterdarstellungen festlegen"))
@@ -979,17 +1115,12 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         // only through `dispatch_typed`/binary `OpBinary`, and rejected from the real UI path with
         // `interactive-job.unknown-key`. It writes `Block3dConfig.camera`, never the document, so it is
         // a view action like the other camera/window/brush rows.
-        .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-        // 🧵️ Grants UI execution authority to every one of this app's 23 command rows. `.mutation(…)`/
+        .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
+        // 🧵️ Grants UI execution authority to every one of this app's 22 command rows. `.mutation(…)`/
         // `.view_action(…)` build their `ActionDefinition` through `ActionDefinition::bounded_catalog`,
         // which — per its own doc — is "a catalog row WITHOUT granting UI execution authority": the
         // classification stays `Unclassified` and `validate_ui_dispatch_classification` rejects every
-        // real `handle_action` dispatch with `interactive-job.not-ui-safe`. The `setActiveUtility` row
-        // is a documentary no-op: the framework auto-injects that action (because `.utility(…)` is
-        // declared) already classified `Migrated`, via `ActionDefinition::resumable_framework_catalog`,
-        // and the injection happens in `try_build_definition` — after this builder call has run — so
-        // there is nothing here for it to reclassify. It is kept so this list reads as the complete
-        // 23-row retained set that `BLOCK3D_RETAINED_TOOL_IDS` must equal.
+        // real `handle_action` dispatch with `interactive-job.not-ui-safe`.
         .action_interactive_job("patchObjectKind", InteractiveJobClassification::Migrated)
         .action_interactive_job("addRepresentation", InteractiveJobClassification::Migrated)
         .action_interactive_job("removeRepresentation", InteractiveJobClassification::Migrated)
@@ -1004,7 +1135,6 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("toggleWindowRepresentation", InteractiveJobClassification::Migrated)
         .action_interactive_job("setWindowArrangement", InteractiveJobClassification::Migrated)
         .action_interactive_job("setWindowSpacing", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
         .action_interactive_job("setBrushVortexKind", InteractiveJobClassification::Migrated)
         .action_interactive_job("setBrushRadius", InteractiveJobClassification::Migrated)
         .action_interactive_job("setBrushFlip", InteractiveJobClassification::Migrated)

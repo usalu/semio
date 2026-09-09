@@ -155,7 +155,13 @@ impl Generation2dMountedTypedSnapshotOwner {
         let mut dsl_stack = Vec::new();
         dsl_stack.try_reserve_exact(GENERATION2D_MOUNTED_TYPED_DEPTH).map_err(|_| "generation2d-mounted.dsl-stack-preflight")?;
         let candidate = Generation2dSnapshot {
-            fixture: semio_framework_artifact_flow_flow::FlowFixture { schema: String::new(), camera: semio_framework_artifact_flow_flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: semio_framework_artifact_flow_flow::OrderedMap::new() },
+            fixture: semio_framework_artifact_flow_flow::FlowFixture {
+                schema: String::new(),
+                camera: semio_framework_artifact_flow_flow::CameraJson::default(),
+                widgets: Vec::new(),
+                synapses: Vec::new(),
+                layout: semio_framework_artifact_flow_flow::OrderedMap::new(),
+            },
             generation: semio_framework_artifact_playbook_playbook::GenerationPlayRoot::default(),
         };
         Ok(Self { candidate: std::mem::ManuallyDrop::new(Some(candidate)), stack, string: None, pending_table_rows: None, json_stack, json_destination: None, dsl_stack, dsl_destination: None, complete: false, handed_back: false })
@@ -457,7 +463,11 @@ impl Generation2dMountedTypedSnapshotOwner {
                 *field = None;
             }
             Some(Generation2dMountedContainerOwner::Record { owner: Generation2dMountedRecordOwner::NeuralValue { value: target, .. }, field, .. }) if matches!(*field, Some(0 | 1)) && target.is_none() => {
-                *target = Some(if *field == Some(0) { semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null) } else { semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(value)) });
+                *target = Some(if *field == Some(0) {
+                    semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null)
+                } else {
+                    semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(value))
+                });
                 *field = None;
             }
             _ => {}

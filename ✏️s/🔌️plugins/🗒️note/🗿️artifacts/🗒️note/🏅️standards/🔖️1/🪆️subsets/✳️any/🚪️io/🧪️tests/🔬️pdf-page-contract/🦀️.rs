@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload as ForeignPayload;

@@ -28,9 +28,10 @@ pub enum AnimTargetProperty {
     Rotation,
     Scale,
     Weights,
-    Custom { name: String },
+    Custom {
+        name: String,
+    },
 }
-
 
 /// 🎯️ A channel's animated node + which of its properties is driven.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

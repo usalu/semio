@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.block.block3d.snapshot;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Block3d snapshot schema — artifact-lane fields only.
 
@@ -11,19 +12,21 @@ message Block3dSnapshot {
   // @state artifact
   repeated BlockRepresentation representations = 3;
   // @state artifact
-  repeated Block3dVortexKind vortex_kinds = 4;
+  semio.os.store.ArtifactChild catalog = 4;
   // @state artifact
-  repeated Block3dVortexTemplate vortices = 5;
+  repeated Block3dVortexKindExtra vortex_kind_extra = 5;
   // @state artifact
-  repeated BlockCompatibilityRule compatibility = 6;
+  repeated Block3dVortexTemplate vortices = 6;
   // @state artifact
-  repeated BlockAttribute attributes = 7;
+  repeated BlockCompatibilityRule compatibility = 7;
   // @state artifact
-  repeated BlockAuthor authors = 8;
+  repeated BlockAttribute attributes = 8;
   // @state artifact
-  BlockCamera3d camera3d = 9;
+  repeated BlockAuthor authors = 9;
   // @state artifact
-  BlockMeta meta = 10;
+  BlockCamera3d camera3d = 10;
+  // @state artifact
+  BlockMeta meta = 11;
 }
 
 message BlockKindIdentity {
@@ -35,6 +38,10 @@ message BlockRepresentation {
 }
 
 message Block3dVortexKind {
+  bool _placeholder = 1;
+}
+
+message Block3dVortexKindExtra {
   bool _placeholder = 1;
 }
 
@@ -63,9 +70,5 @@ message BlockMeta {
 }
 
 message Block3dWindowView {
-  bool _placeholder = 1;
-}
-
-message Block3dBrushPreview {
   bool _placeholder = 1;
 }

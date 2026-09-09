@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -11,7 +10,7 @@ async fn component_protocol_semio_is_protocol_dialect() {
 
 #[semio_framework_async_macros::async_test]
 async fn verify_protocol_bytes_against_encoded_spr() {
-    let operation = WriterMutation::EditText(crate::schema::mutations::EditText { text: "hello".into() });
+    let operation = WriterMutation::EditText(schema::mutations::EditText { text: "hello".into() });
     let bytes = encode_op(&operation).expect("encode op");
     let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
     ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");

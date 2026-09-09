@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::{demo_bmp_snapshot, empty_bmp_snapshot};
 

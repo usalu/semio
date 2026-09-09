@@ -9,7 +9,7 @@ use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::duration::{compute_mp3_duration};
+use super::duration::compute_mp3_duration;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an mp3 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
@@ -66,13 +66,7 @@ impl ArtifactInferrer for crate::standards::mpeg1_layer3::subsets::any::schema::
 pub fn mp3_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.mp3.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

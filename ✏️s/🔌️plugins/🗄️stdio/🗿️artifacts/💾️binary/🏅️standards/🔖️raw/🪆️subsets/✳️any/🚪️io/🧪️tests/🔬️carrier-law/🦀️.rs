@@ -1,4 +1,3 @@
-
 //! 🧬️ THE carrier law this whole pilot exists to prove (design.md §3, mission step 5):
 //! `s.stdio.binary@raw/*`'s native `Binary` `IoPayload` is the raw external file content,
 //! byte-for-byte — decode→encode must reproduce arbitrary bytes exactly, and the encoded

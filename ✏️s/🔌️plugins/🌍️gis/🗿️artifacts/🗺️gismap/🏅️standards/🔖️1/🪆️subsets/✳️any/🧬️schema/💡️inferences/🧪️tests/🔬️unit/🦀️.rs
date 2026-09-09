@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{MapFeature, gis_map_snapshot_with_derived_children};
+use crate::{gis_map_snapshot_with_derived_children, MapFeature};
 use protocol::Inference;
 
 //#region 🧪️InferenceLaws

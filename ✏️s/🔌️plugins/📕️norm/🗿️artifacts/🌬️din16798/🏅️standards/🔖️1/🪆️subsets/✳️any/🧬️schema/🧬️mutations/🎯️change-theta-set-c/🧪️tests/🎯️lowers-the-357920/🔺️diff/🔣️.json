@@ -43,7 +43,7 @@
   "hTrWK": null,
   "hVeWK": null,
   "thetaEC": null,
-  "thetaSetC": 25.0,
+  "thetaSetC": 25,
   "coolingDeltaTH": null,
   "coolingGainsKwh": null,
   "coolingUtilizationFactor": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

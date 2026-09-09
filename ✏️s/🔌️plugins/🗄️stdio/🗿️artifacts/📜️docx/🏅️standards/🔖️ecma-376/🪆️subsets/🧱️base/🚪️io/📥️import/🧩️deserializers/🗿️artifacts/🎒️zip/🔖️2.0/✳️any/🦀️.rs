@@ -1,7 +1,7 @@
 //! Deserialize stdio.docx from stdio.binary (parse ZIP bytes).
 
-use semio_s_artifact_stdio_binary::BinarySnapshot;
 use crate::{DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 //#region Codec
 /// Register deserializer hooks.

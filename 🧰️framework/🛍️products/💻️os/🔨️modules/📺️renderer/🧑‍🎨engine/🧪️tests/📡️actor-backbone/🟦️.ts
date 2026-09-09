@@ -3,7 +3,7 @@ import deepEqual from "fast-deep-equal";
 import { describe, expect, it } from "vitest";
 import schema from "../../../🧬️schema/🔣️.json";
 import fixture from "../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json";
-import { ActorDocumentBindingV1, ActorDocumentMessagePortV1, decodeDocumentBackboneControlV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts";
+import { ActorDocumentBindingV1, ActorDocumentMessagePortV1, decodeDocumentBackboneControlV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { decodeBackboneMessage, encodeBackboneMessage, encodePackValue, packUInt, type BinaryBackboneMessage } from "@semio-tech/framework-os";
 import bindingSchema from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json";
 import bindingFixture from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧪️fixture/🔣️.json";

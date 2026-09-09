@@ -14,7 +14,7 @@ use crate::standards::v1::subsets::any::schema::diff::*;
 
 //#region 🔖️Apply
 impl SHomeDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &SHomeArtifact) -> protocol::MutationApplyResult<SHomeArtifact> {
         Ok({
             let mut next = artifact.clone();
@@ -23,9 +23,6 @@ impl SHomeDiff {
             }
             if let Some(value) = self.catalog_generation {
                 next.catalog_generation = value;
-            }
-            if let Some(tab) = &self.active_panel_tab {
-                next.active_panel_tab = tab.clone();
             }
             next
         })
@@ -55,7 +52,6 @@ impl MutationDiff<SHomeSnapshot> for SHomeDiff {
         }
         take!(schema);
         take!(catalog_generation);
-        take!(active_panel_tab);
     }
 }
 //#endregion 🔖️Apply

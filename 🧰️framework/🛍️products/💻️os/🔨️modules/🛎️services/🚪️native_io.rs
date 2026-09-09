@@ -86,7 +86,7 @@ impl NativeModifiedSet {
         self.entries[index].take()
     }
 
-    fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.length == 0
     }
 
@@ -106,6 +106,7 @@ impl Drop for NativeModifiedSet {
 }
 
 #[derive(Debug)]
+#[expect(clippy::large_enum_variant, reason = "Requests retain all 256 fixed path slots without allocating an uncredited wrapper on submission or rejection.")]
 pub enum NativeIoRequest {
     ReadBytes(PathBuf),
     ReadPage { path: PathBuf, offset: u64, max_bytes: usize },
@@ -115,6 +116,7 @@ pub enum NativeIoRequest {
 }
 
 #[derive(Debug)]
+#[expect(clippy::large_enum_variant, reason = "Completions transfer fixed path slots into one-entry retirement without allocating another result owner.")]
 pub enum NativeIoValue {
     Bytes(semio_framework_job::RetainedJobPayload),
     Page { bytes: semio_framework_job::RetainedJobPayload, eof: bool },

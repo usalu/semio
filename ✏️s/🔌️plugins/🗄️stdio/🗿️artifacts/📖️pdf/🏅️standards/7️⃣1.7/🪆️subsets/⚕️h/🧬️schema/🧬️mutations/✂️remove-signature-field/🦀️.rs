@@ -24,10 +24,7 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveSignatureField {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfHMutation> {
-        support::signature_field_named(base, &self.name)
-            .map(|_| PdfHMutation::InsertSignatureField(InsertSignatureField { name: self.name.clone() }))
-            .into_iter()
-            .collect()
+        support::signature_field_named(base, &self.name).map(|_| PdfHMutation::InsertSignatureField(InsertSignatureField { name: self.name.clone() })).into_iter().collect()
     }
 
     fn label(&self) -> String {

@@ -80,7 +80,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, r#"change-load-duration/shortens-the-load-duration-class-from-medium-to-short: `load_duration` is a `String`, so `change-load-duration` has no finiteness guard; "short" differs from the committed "medium", so its equality guard stays shut"#);
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        r#"change-load-duration/shortens-the-load-duration-class-from-medium-to-short: `load_duration` is a `String`, so `change-load-duration` has no finiteness guard; "short" differs from the committed "medium", so its equality guard stays shut"#
+    );
     assert!(produced.messages().is_empty(), "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: an accepted change-load-duration emits no diagnostics at all");
 }
 

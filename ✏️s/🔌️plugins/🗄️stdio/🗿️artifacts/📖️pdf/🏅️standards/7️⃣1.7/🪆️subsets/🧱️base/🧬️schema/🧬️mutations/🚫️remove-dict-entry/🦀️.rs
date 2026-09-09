@@ -2,7 +2,10 @@
 
 use super::set_dict_entry::SetDictEntry;
 use super::PdfMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff, PdfPathSegment}, snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{
+    diff::{self, PdfDiff, PdfPathSegment},
+    snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfSnapshot},
+};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation

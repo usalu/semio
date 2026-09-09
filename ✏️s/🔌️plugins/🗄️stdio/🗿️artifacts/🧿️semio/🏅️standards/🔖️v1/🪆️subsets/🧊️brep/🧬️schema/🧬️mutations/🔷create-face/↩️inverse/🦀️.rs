@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreateFace`.
 
-use crate::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, delete_face};
+use crate::standards::v1::subsets::brep::schema::mutations::{delete_face, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse

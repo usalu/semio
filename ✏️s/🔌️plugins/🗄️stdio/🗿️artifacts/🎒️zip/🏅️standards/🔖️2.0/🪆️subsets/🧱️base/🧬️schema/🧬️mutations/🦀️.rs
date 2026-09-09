@@ -6,18 +6,18 @@ use crate::ZipSnapshot;
 
 //#region 🔖️Model
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "💬set-archive-comment/🦀️.rs"]
-pub mod set_archive_comment;
 #[path = "➕add-entry/🦀️.rs"]
 pub mod add_entry;
 #[path = "➖remove-entry/🦀️.rs"]
 pub mod remove_entry;
 #[path = "🏷️rename-entry/🦀️.rs"]
 pub mod rename_entry;
+#[path = "💬set-archive-comment/🦀️.rs"]
+pub mod set_archive_comment;
 #[path = "✍️set-entry-data/🦀️.rs"]
 pub mod set_entry_data;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
@@ -122,7 +122,9 @@ pub(crate) fn agg_inverse(this: &ZipMutation, base: &ZipSnapshot) -> Vec<ZipMuta
         ZipMutation::AddEntry(add_entry::AddEntry { entry, .. }) => vec![ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
         ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name }) => base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::AddEntry(add_entry::AddEntry { entry: entry.clone() })]).unwrap_or_default(),
         ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => vec![ZipMutation::RenameEntry(rename_entry::RenameEntry { name: new_name.clone(), new_name: name.clone() })],
-        ZipMutation::SetEntryData(set_entry_data::SetEntryData { name, .. }) => base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::SetEntryData(set_entry_data::SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default(),
+        ZipMutation::SetEntryData(set_entry_data::SetEntryData { name, .. }) => {
+            base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::SetEntryData(set_entry_data::SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default()
+        }
     }
 }
 //#endregion 🔖️MutationTrait

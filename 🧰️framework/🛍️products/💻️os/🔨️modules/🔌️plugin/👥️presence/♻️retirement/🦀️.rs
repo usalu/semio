@@ -9,6 +9,22 @@ const _: () = assert!(size_of::<crate::NoPresence>() == 0 && !std::mem::needs_dr
 /// 🫧️ Explicit ownership for the framework's zero-payload presence type only.
 pub struct NoPresenceRetirementFactory;
 
+fn no_presence_is_empty(_: &crate::NoPresence) -> bool {
+    true
+}
+
+pub fn no_presence_store_disposer() -> Box<dyn ArtifactOwnedDisposer<PresenceStore<crate::NoPresence, crate::NoPresenceMutation>>> {
+    Box::new(PresenceStoreOwnedDisposer::new(Arc::new(crate::NoPresence::default()), no_presence_is_empty).expect("NoPresence is statically empty"))
+}
+
+pub fn no_presence_local_root_retirement_factory() -> Arc<dyn store::SnapshotRetirementFactory<crate::NoPresence>> {
+    Arc::new(NoPresenceRetirementFactory)
+}
+
+pub fn no_presence_peer_retirement_factory() -> Arc<dyn store::SnapshotRetirementFactory<crate::NoPresence>> {
+    Arc::new(NoPresenceRetirementFactory)
+}
+
 impl store::SnapshotRetirementFactory<crate::NoPresence> for NoPresenceRetirementFactory {
     fn retire(&self, root: Arc<crate::NoPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(NoPresenceRetirement(std::mem::ManuallyDrop::new(Some(root))))

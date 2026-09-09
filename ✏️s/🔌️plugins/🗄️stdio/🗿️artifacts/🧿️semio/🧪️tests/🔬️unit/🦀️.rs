@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::dsl::{ArtifactPack, SpaceMember, os_io::ArtifactDialect};
+use crate::dsl::{os_io::ArtifactDialect, ArtifactPack, SpaceMember};
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

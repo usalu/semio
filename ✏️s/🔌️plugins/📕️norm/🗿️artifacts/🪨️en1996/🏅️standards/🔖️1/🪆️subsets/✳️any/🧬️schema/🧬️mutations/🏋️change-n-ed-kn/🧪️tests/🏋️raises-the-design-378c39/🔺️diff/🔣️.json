@@ -1,7 +1,7 @@
 {
   "artifact": null,
   "mEdKnm": null,
-  "nEdKn": 320.0,
+  "nEdKn": 320,
   "vEdKn": null,
   "hEdKn": null,
   "zMm3": null,
@@ -21,6 +21,5 @@
   "bedJointThicknessMm": null,
   "storeys": null,
   "hEfMm": null,
-  "tEfMm": null,
-  "selectedCheckIndex": null
+  "tEfMm": null
 }

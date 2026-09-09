@@ -65,7 +65,7 @@ pub fn forms_diff_from_delta(delta: FormsStepsDelta, base: &FormsSnapshot) -> Fo
 }
 
 impl FormsDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document fields onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &FormsArtifact) -> protocol::MutationApplyResult<FormsArtifact> {
         Ok({
             let mut next = artifact.clone();
@@ -86,18 +86,6 @@ impl FormsDiff {
             }
             if let Some(results) = &self.results {
                 next.results = results.clone();
-            }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
-            }
-            if let Some(value) = self.current_step_index {
-                next.current_step_index = value;
-            }
-            if let Some(value) = &self.try_values {
-                next.try_values = value.clone();
-            }
-            if let Some(value) = &self.contributions_json {
-                next.contributions_json = value.clone();
             }
             next
         })
@@ -143,10 +131,6 @@ impl MutationDiff<FormsSnapshot> for FormsDiff {
         take!(title);
         take!(structure);
         take!(results);
-        take!(selected_ids);
-        take!(current_step_index);
-        take!(try_values);
-        take!(contributions_json);
     }
 }
 //#endregion 🔖️Apply

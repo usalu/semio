@@ -1,7 +1,6 @@
 //! ♻️ `replace-product-configuration` — whole-value swap of a product's parameter/geometry-ref/
 //! function-ref configuration block, addressed by article number.
 
-
 use crate::{Configuration, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

@@ -246,14 +246,14 @@ const _: () = assert!(UI_VALUE_AGGREGATE_ITEMS < u16::MAX as usize);
 const _: () = assert!(2 * UI_TEXT_MAX_BYTES <= u16::MAX as usize);
 
 struct ValueComparison {
-    frames: [ValueFrame; UI_VALUE_ADMISSION_SLOTS],
+    frames: [ValueFrame; UI_VALUE_NESTING_DEPTH],
     length: usize,
     position: usize,
     remembered: u8,
 }
 impl Default for ValueComparison {
     fn default() -> Self {
-        Self { frames: [ValueFrame::EMPTY; UI_VALUE_ADMISSION_SLOTS], length: 0, position: 0, remembered: 0 }
+        Self { frames: [ValueFrame::EMPTY; UI_VALUE_NESTING_DEPTH], length: 0, position: 0, remembered: 0 }
     }
 }
 

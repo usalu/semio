@@ -2,13 +2,13 @@
 //! appending the query to the config's search history.
 
 pub mod query {
-    use dsl::{FromValue, ToValue};
+    use crate::editor::architect::config::{parse_search_history, snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::inferences::{search_plugin, SearchQuery};
     use crate::ProgramSnapshot;
-    use crate::editor::architect::config::{parse_search_history, snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use dsl::{FromValue, ToValue};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    
+
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "search")]
     pub struct Search {

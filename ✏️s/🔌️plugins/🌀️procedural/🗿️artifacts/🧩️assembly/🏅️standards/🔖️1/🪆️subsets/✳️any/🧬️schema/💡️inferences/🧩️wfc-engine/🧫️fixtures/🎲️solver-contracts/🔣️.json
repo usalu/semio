@@ -1,0 +1,72 @@
+{
+  "seed": 7,
+  "grid2d": {
+    "size": 2,
+    "nodes": 4,
+    "cardinality": 2,
+    "impossibleCardinality": 3,
+    "assignments": [
+      [
+        0,
+        1,
+        1,
+        0
+      ]
+    ]
+  },
+  "grid3d": {
+    "size": 2,
+    "nodes": 8,
+    "cardinality": 4,
+    "impossibleCardinality": 5,
+    "assignments": [
+      [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1
+      ]
+    ]
+  },
+  "scopes": [
+    {
+      "kind": "region",
+      "region": 1,
+      "min": 1,
+      "max": 1,
+      "accepted": [
+        0,
+        0,
+        1
+      ],
+      "rejected": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "nodes",
+      "nodes": [
+        0,
+        2
+      ],
+      "min": 2,
+      "max": 2,
+      "accepted": [
+        0,
+        1,
+        0
+      ],
+      "rejected": [
+        0,
+        0,
+        1
+      ]
+    }
+  ]
+}

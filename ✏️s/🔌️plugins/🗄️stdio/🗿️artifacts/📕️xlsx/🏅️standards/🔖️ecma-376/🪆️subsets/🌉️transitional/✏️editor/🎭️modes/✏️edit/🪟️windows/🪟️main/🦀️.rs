@@ -5,8 +5,8 @@
 //! `value` is the sole `set-cell` edit target, addressed by table row index into the subset root's
 //! own `xlsx_flat_cells` flattening.
 
-use crate::XlsxSnapshot;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::{render_xlsx_cell_value, xlsx_flat_cells};
+use crate::XlsxSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

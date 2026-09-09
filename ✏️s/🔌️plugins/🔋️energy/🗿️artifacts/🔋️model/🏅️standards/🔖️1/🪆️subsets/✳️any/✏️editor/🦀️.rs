@@ -21,19 +21,19 @@
 //! supplies the document lane's one-item retained preparation; the six session verbs publish nothing
 //! to a store and declare `HostOnly`.
 
-use crate::mutations;
-use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use crate::editor::model::modes::edit;
 use crate::editor::model::modes::edit::windows::{simulation, structure, zones};
 use crate::energy_simulation_session::{self as simulation_session, EnergySimulationConfigProjection, EnergySimulationEventKind, EnergySimulationRequestIdentity};
 use crate::model::{EntityId, Material, OutsideBoundary, ScheduleId, Site, Surface, SurfaceClass, Thermostat, Zone};
-use semio_framework_plugin::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use crate::mutations;
+use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView,
-    Dialect, DraftView, Editor, EditorApp, Emit, ExampleSource, Fault, FaultCode, FaultOrigin, HistoryView, InteractiveJobClassification, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation,
-    NoTransient, NoTransientMutation, UiAssemblyResult,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit,
+    ExampleSource, Fault, FaultCode, FaultOrigin, HistoryView, InteractiveJobClassification, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
+    UiAssemblyResult,
 };
+use semio_framework_plugin::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use store::EngineHandles;
 
@@ -148,7 +148,7 @@ pub enum EnergyModelEditorCommand {
     #[dsl(key = "adopt-energy-simulation")]
     AdoptSimulation { request: u64, operation: u64, generation: u64, config_digest: u64 },
     #[dsl(key = "configure-energy-simulation")]
-    ConfigureSimulation { locale: String, zone_timestep_minutes: u32, system_timestep_minutes: u32, warmup_days: u32 },
+    ConfigureSimulation { zone_timestep_minutes: u32, system_timestep_minutes: u32, warmup_days: u32 },
 }
 
 impl EnergyModelEditorCommand {
@@ -246,12 +246,7 @@ mod args_bridge {
             super::simulation::RETRY_ACTION_ID => identity(|request, operation, generation, config_digest| Command::RetrySimulation { request, operation, generation, config_digest }),
             super::simulation::DISCARD_ACTION_ID => identity(|request, operation, generation, config_digest| Command::DiscardSimulation { request, operation, generation, config_digest }),
             super::simulation::ADOPT_ACTION_ID => identity(|request, operation, generation, config_digest| Command::AdoptSimulation { request, operation, generation, config_digest }),
-            super::simulation::CONFIGURE_ACTION_ID => Command::ConfigureSimulation {
-                locale: text_or("locale", "en"),
-                zone_timestep_minutes: u32_or("zoneTimestepMinutes", 60),
-                system_timestep_minutes: u32_or("systemTimestepMinutes", 60),
-                warmup_days: u32_or("warmupDays", 7),
-            },
+            super::simulation::CONFIGURE_ACTION_ID => Command::ConfigureSimulation { zone_timestep_minutes: u32_or("zoneTimestepMinutes", 60), system_timestep_minutes: u32_or("systemTimestepMinutes", 60), warmup_days: u32_or("warmupDays", 7) },
             _ => return Err(unknown(action)),
         })
     }
@@ -838,19 +833,8 @@ fn session_event(command: &EnergyModelEditorCommand, render: semio_framework_plu
         EnergyModelEditorCommand::RetrySimulation { request, operation, generation, config_digest } => EnergySimulationEventKind::Retry(identity(request, operation, generation, config_digest)),
         EnergyModelEditorCommand::DiscardSimulation { request, operation, generation, config_digest } => EnergySimulationEventKind::Discard(identity(request, operation, generation, config_digest)),
         EnergyModelEditorCommand::AdoptSimulation { request, operation, generation, config_digest } => EnergySimulationEventKind::Adopt(identity(request, operation, generation, config_digest)),
-        EnergyModelEditorCommand::ConfigureSimulation { locale, zone_timestep_minutes, system_timestep_minutes, warmup_days } => {
-            if locale != "en" && locale != "de" {
-                return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.locale"), "the energy simulation requires an explicit locale, en or de"));
-            }
-            EnergySimulationEventKind::Configure {
-                config: EnergySimulationConfigProjection {
-                    locale_de: locale == "de",
-                    checkpoint_token: 0,
-                    zone_timestep_minutes: *zone_timestep_minutes,
-                    system_timestep_minutes: *system_timestep_minutes,
-                    warmup_days: *warmup_days,
-                },
-            }
+        EnergyModelEditorCommand::ConfigureSimulation { zone_timestep_minutes, system_timestep_minutes, warmup_days } => {
+            EnergySimulationEventKind::Configure { config: EnergySimulationConfigProjection { checkpoint_token: 0, zone_timestep_minutes: *zone_timestep_minutes, system_timestep_minutes: *system_timestep_minutes, warmup_days: *warmup_days } }
         }
         _ => return Ok(None),
     }))
@@ -1198,7 +1182,17 @@ impl ArtifactEditor for EnergyModelEditor {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             EnergyModelEditorCommand::action_id,
             ENERGY_MODEL_RETAINED_RAW_BYTES,
             1,
@@ -1257,14 +1251,14 @@ impl ArtifactEditor for EnergyModelEditor {
         simulation_session::reconcile(doc)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         let render = doc.render_operation();
         let node = match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot)?,
             zones::BODY_KEY => zones::render(doc.snapshot)?,
             simulation::BODY_KEY => {
                 let settings = simulation_session::session_settings(render);
-                simulation_session::with_projection(render, |projection| simulation::render(projection, settings, &doc.snapshot.model, settings.locale_de))
+                simulation_session::with_projection(render, |projection| simulation::render(projection, settings, &doc.snapshot.model, view_state.locale == semio_framework_plugin::Locale::De))
             }
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.render", "the unknown-body label could not be assembled"))?,
         };
@@ -1280,10 +1274,7 @@ impl ArtifactEditor for EnergyModelEditor {
 /// The ANSI/ASHRAE 140 case ids are proper nouns and read identically in both authored languages;
 /// `Demo` likewise. That is a real translation decision, not a missing one.
 fn example_rows() -> Vec<(&'static str, &'static str, crate::model::Model)> {
-    use crate::examples::{
-        bestest_600, bestest_600ff, bestest_610, bestest_620, bestest_630, bestest_640, bestest_650, bestest_900, bestest_900ff,
-        bestest_910, bestest_920, bestest_930, bestest_940, bestest_950, demo,
-    };
+    use crate::examples::{bestest_600, bestest_600ff, bestest_610, bestest_620, bestest_630, bestest_640, bestest_650, bestest_900, bestest_900ff, bestest_910, bestest_920, bestest_930, bestest_940, bestest_950, demo};
     vec![
         (demo::ID, demo::LABEL_EN, demo::model()),
         (bestest_600::ID, bestest_600::LABEL_EN, bestest_600::model()),

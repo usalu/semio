@@ -36,14 +36,22 @@ fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
         return Err("PDF/H mutation text payload exceeds its budget".into());
     }
     fn nibble(value: u8) -> Option<u8> {
-        if value.is_ascii_digit() { return Some(value - b'0'); }
+        if value.is_ascii_digit() {
+            return Some(value - b'0');
+        }
         (b'a'..=b'f').contains(&value).then_some(value - b'a' + 10)
     }
-    value.as_bytes().as_chunks::<2>().0.iter().map(|pair| {
-        let high = nibble(pair[0]).ok_or_else(|| "PDF/H mutation payload must be lowercase hexadecimal".to_string())?;
-        let low = nibble(pair[1]).ok_or_else(|| "PDF/H mutation payload must be lowercase hexadecimal".to_string())?;
-        Ok((high << 4) | low)
-    }).collect()
+    value
+        .as_bytes()
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|pair| {
+            let high = nibble(pair[0]).ok_or_else(|| "PDF/H mutation payload must be lowercase hexadecimal".to_string())?;
+            let low = nibble(pair[1]).ok_or_else(|| "PDF/H mutation payload must be lowercase hexadecimal".to_string())?;
+            Ok((high << 4) | low)
+        })
+        .collect()
 }
 
 fn text_error(detail: impl Into<String>) -> store::TextError {

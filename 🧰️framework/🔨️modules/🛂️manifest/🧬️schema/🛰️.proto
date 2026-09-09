@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.framework.manifest;
+enum AppRole { VIEWER = 0; EDITOR = 1; }
+message AppRef { string plugin_id = 1; string app_id = 2; }

@@ -1,6 +1,5 @@
 //! 🧯 `change-fire-member-capacity-c` — sets the En1991 fire member capacity factor scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

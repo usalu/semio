@@ -854,6 +854,7 @@ mod plugin_builder_contract_tests {
                 TestCommand::Increment => EphemeralEmit {
                     presence: vec![ChangePublicationPresence { revision: presence.local.revision.saturating_add(1) }.into()],
                     transient: vec![ChangePublicationTransient { revision: transient.snapshot.revision.saturating_add(1) }.into()],
+                    window_transient: Vec::new(),
                 },
                 _ => EphemeralEmit::default(),
             }
@@ -3825,10 +3826,10 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app_under_test().await;
         let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
 
-        use semio_framework::{catalog_action_icon_id, catalog_command_icon_id};
+        use semio_framework::default_action_icon_id;
 
-        let set_label_icon = catalog_action_icon_id("setLabelRequired", ActionKind::Mutation).as_str().to_string();
-        let increment_icon = catalog_command_icon_id("incrementViaCommand").as_str().to_string();
+        let set_label_icon = default_action_icon_id(ActionKind::Mutation).as_str().to_string();
+        let increment_icon = default_action_icon_id(ActionKind::Mutation).as_str().to_string();
 
         let empty_label = app.context_menu(&request, &ViewModel::default()).await;
         assert_eq!(empty_label.len(), 1, "the gated command must be absent with no label set: {empty_label:?}");

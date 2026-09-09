@@ -34,6 +34,4 @@ export interface CadNode { id: string; [key: string]: unknown }
 export interface CadReferenceList { values: unknown[] }
 export interface CadGeometry { [key: string]: unknown }
 export interface CadCamera { [key: string]: unknown }
-export interface CadComponentSelection { [key: string]: unknown }
-export interface CadDislocateOptions { moveEnabled: boolean; rotateEnabled: boolean }
 

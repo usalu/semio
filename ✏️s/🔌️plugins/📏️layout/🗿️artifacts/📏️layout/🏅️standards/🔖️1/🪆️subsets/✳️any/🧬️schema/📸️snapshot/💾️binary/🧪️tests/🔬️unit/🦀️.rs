@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::dsl;
-use crate::{CharacterStyle, Frame, GridSettings, LAYOUT_DOCUMENT_SCHEMA, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride};
+use crate::standards::v1::subsets::any::schema::snapshot::text as dsl;
+use crate::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {

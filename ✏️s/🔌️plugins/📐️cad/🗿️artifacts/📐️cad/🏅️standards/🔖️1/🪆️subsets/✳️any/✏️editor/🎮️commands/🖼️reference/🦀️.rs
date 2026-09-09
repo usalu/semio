@@ -1,5 +1,8 @@
 //! 🖼️ CAD play app commands — the per-pane reference overlays: patch, select, hover.
 
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::CadDispatchCtx;
+use crate::editor::cad::{axis3_index, cad_pane_id_from_suffix, command_value_json, resolve_number_edit, runtime_of, snapshot_of};
 use crate::mutations::change_reference_hidden::ChangeReferenceHidden;
 use crate::mutations::change_reference_locked::ChangeReferenceLocked;
 use crate::mutations::change_reference_width::ChangeReferenceWidth;
@@ -7,9 +10,6 @@ use crate::mutations::move_reference::MoveReference;
 use crate::op::CadMutation;
 use crate::CadSnapshot;
 use crate::{cad_pane_from_model_definition_id, CadPaneId};
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{axis3_index, cad_pane_id_from_suffix, command_value_json, resolve_number_edit, runtime_of, snapshot_of};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

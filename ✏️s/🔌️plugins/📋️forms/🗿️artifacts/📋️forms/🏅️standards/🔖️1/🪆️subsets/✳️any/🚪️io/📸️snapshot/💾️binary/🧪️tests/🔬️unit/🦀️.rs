@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::document_dsl as dsl;
-use crate::{FORMS_DOCUMENT_SCHEMA, FormStep, forms_children_from_steps};
+use crate::{forms_children_from_steps, FormStep, FORMS_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]
 async fn snapshot_pack_round_trips_with_composed_children() {
@@ -44,9 +43,9 @@ async fn onboarding_fixture_pack_agrees_with_dsl() {
 /// `command_envelope_round_trip_holds_for_an_applied_operation`).
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::{FORMS_DOCUMENT_SCHEMA, FormStep, op::FormMutation};
+    use crate::{op::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, ArtifactStore, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let document = crate::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }]);
     let mut store: ArtifactStore<FormsSnapshot, FormMutation> = ArtifactStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None)).await.expect("valid artifact store fixture");

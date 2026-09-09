@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{FemAnalysisSettings, FemDof, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 

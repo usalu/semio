@@ -1,6 +1,5 @@
 //! 🧾️ Shared glTF measurement value, policy, provenance, diagnostic, and entity contracts.
 
-
 //#region 🧾️MeasurementContracts
 //#region 🔖️Semantics
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]

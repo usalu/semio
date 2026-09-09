@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::STDIO_BINARY_DOCUMENT_SCHEMA;
 use crate::standards::v_raw::subsets::any::schema::{demo_binary_snapshot, empty_binary_snapshot};
+use crate::STDIO_BINARY_DOCUMENT_SCHEMA;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]
@@ -74,8 +73,8 @@ fn sweep_b() -> BinarySnapshot {
 #[semio_framework_async_macros::async_test]
 async fn field_sweep_covers_every_byte_level_change() {
     use crate::standards::v_raw::subsets::any::schema::diff::BinaryDiff;
-    use protocol::MutationDiff;
     use protocol::os_spr::command::DiffAlgebra;
+    use protocol::MutationDiff;
     let a = sweep_a();
     let b = sweep_b();
 

@@ -2,7 +2,7 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1), the aggregated command enum and
 //! the manifest stitch. B1: the pure-trait pilot for this plugin — `EquationPlayApp` is a unit
 //! struct; the former `MathPlayRuntime` app-struct `RefCell` (the node-graph viewport camera) now lives in
-//! `crate::editor::equation::config::EquationConfig`, written via `EquationConfigMutation`s (real
+//! `crate::editor::equation::config::EquationGraphWindowConfig`, written via `EquationGraphWindowConfigMutation`s (real
 //! `backwards`, no ad hoc inverse tracking); every action dispatches through the single typed
 //! `EquationCommand` channel via `ArtifactEditor::handle`.
 //!
@@ -17,23 +17,24 @@
 //! The sibling read-only surface (`👁️viewer/🦀️.rs`) never imports from this module — see
 //! that file's own doc header.
 
-use crate::op::EquationMutation;
-use crate::{EquationGeometry, EquationGraph, EquationSnapshot, EQUATION_DIALECT, MATH_DOCUMENT_SCHEMA};
 use crate::editor::equation::commands::set_artifact;
 use crate::editor::equation::commands::set_points;
 use crate::editor::equation::commands::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
-use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
 use crate::editor::equation::modes::edit;
+use crate::editor::equation::modes::edit::windows::graph::config::{EquationGraphWindowConfigMutation, EquationGraphWindowConfigOwner};
 use crate::editor::equation::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
+use crate::op::EquationMutation;
+use crate::{EquationGeometry, EquationGraph, EquationSnapshot, EQUATION_DIALECT, MATH_DOCUMENT_SCHEMA};
+use pack::json::{self, Value};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::plugin_app_close_prelude::ArtifactDisposal;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
-    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation,
+    ActionArgDef, ActionArgOption, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
+    Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation,
 };
-use pack::json::{self, Value};
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use store::ArtifactPack;
@@ -70,8 +71,6 @@ pub fn equation_io() -> semio_framework_plugin::AppIo {
     }
 }
 //#endregion 🔖️Io
-
-
 
 //#region 🔖️GraphAlgorithms
 /// 🕸️ Runs the selected algorithm over the current graph and returns a per-node label suffix overlay.
@@ -192,7 +191,7 @@ semio_framework_plugin::app_commands! {
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum EquationCommand for EquationSnapshot, EquationMutation, EquationConfig, EquationConfigMutation {
+    pub enum EquationCommand for EquationSnapshot, EquationMutation, NoConfig, NoConfigMutation {
         "setDocument" as "set-artifact" => set_artifact::SetArtifact,
         "setAlgorithm" as "set-algorithm" => set_algorithm::SetAlgorithm,
         "setDirected" as "set-directed" => set_directed::SetDirected,
@@ -204,7 +203,7 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const EQUATION_TOOL_IDS: &[&str] = &["setDocument", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "setPoints", ];
+const EQUATION_TOOL_IDS: &[&str] = &["setDocument", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "setPoints"];
 const EQUATION_RETAINED_PAYLOAD_SCHEMA: &str = "semio.equation/v1.tool-command.v1";
 const EQUATION_RETAINED_RAW_BYTES: usize = 65_536;
 const EQUATION_RETAINED_WORK_ITEMS: usize = 65_536;
@@ -215,14 +214,13 @@ const EQUATION_MAX_EDIT_JSON_BYTES: usize = 8_192;
 const EQUATION_MAX_EDIT_OPERATIONS: usize = 16;
 const EQUATION_MAX_DELETE_IDS: usize = 256;
 const EQUATION_MAX_TEXT_BYTES: usize = 256;
-const EQUATION_MAX_LOCALE_BYTES: usize = 64;
 
 const EQUATION_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setDocument", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setAlgorithm", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setDirected", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setPoints", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
@@ -511,9 +509,9 @@ impl EquationRetainedCommandWork {
         Ok(())
     }
 
-    fn finish(&mut self, command: &EquationCommand) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
-        use crate::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
+    fn finish(&mut self, command: &EquationCommand, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EquationPlayApp>>>) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
         use crate::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
+        use crate::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
         Ok(match command {
             EquationCommand::SetAlgorithm(_) => Emit::commit(vec![EquationMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))? })], "setAlgorithm"),
             EquationCommand::SetDirected(_) => Emit::mutations(vec![EquationMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))? })]),
@@ -530,7 +528,12 @@ impl EquationRetainedCommandWork {
                 }
                 Emit::mutations(mutations)
             }
-            EquationCommand::NodeGraphViewport(payload) => Emit::config(vec![EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: payload.camera.clone() })]),
+            EquationCommand::NodeGraphViewport(payload) => {
+                let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("equation-graph-window-context-required"))?;
+                let mut emit = Emit::default();
+                emit.window_config_mutations.push(graph_window::config::addressed(view, EquationGraphWindowConfigMutation::SetCamera(graph_window::config::SetCamera { camera: payload.camera.clone() }))?);
+                emit
+            }
         })
     }
 
@@ -565,19 +568,13 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
         self.operation_identity ^ (self.extent as u64).rotate_left(17)
     }
 
-    fn extent(
-        &self,
-        command: &EquationCommand,
-        snapshot: &EquationSnapshot,
-        _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EquationPlayApp>>>,
-    ) -> Option<usize> {
+    fn extent(&self, command: &EquationCommand, snapshot: &EquationSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EquationPlayApp>>>) -> Option<usize> {
         let extent = equation_command_extent(command, snapshot)?;
         (extent == self.extent).then_some(extent)
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<EquationPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<EquationPlayApp>>, Fault> {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation: _operation } = *input;
         if equation_command_extent(command, snapshot) != Some(self.extent) || self.cursor > self.extent {
             return Err(Fault::from("equation-command-extent-drift"));
         }
@@ -787,7 +784,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
                 }
                 self.progress::<EditorApp<EquationPlayApp>>(&self.item_cursor.to_le_bytes(), "equation-command-operation")
             }
-            EquationWorkPhase::Finish => self.finish(command).map(ArtifactCommandWorkStep::Complete),
+            EquationWorkPhase::Finish => self.finish(command, context).map(ArtifactCommandWorkStep::Complete),
         }
     }
 
@@ -1110,11 +1107,21 @@ where
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
         if !self.closing || grant.maximum_items == 0 {
@@ -1124,11 +1131,15 @@ where
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("Equation preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() {
+                return Err("Equation preparation could not return its exact base root".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.authority = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1143,16 +1154,15 @@ where
 
 //#region 🔖️EquationPlayApp
 /// 🧪️ B1: unit struct — the former `MathPlayRuntime`/`self.runtime` field now lives in
-/// `crate::editor::equation::config::EquationConfig` (see `ArtifactEditor::Config`), written
-/// through `EquationConfigMutation`s.
+/// the registered graph-window configuration owner.
 #[derive(Default)]
 pub struct EquationPlayApp;
 
 impl ArtifactEditor for EquationPlayApp {
     type Snapshot = EquationSnapshot;
     type Mutation = EquationMutation;
-    type Config = EquationConfig;
-    type ConfigMutation = EquationConfigMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
     type Presence = semio_framework_plugin::NoPresence;
@@ -1165,12 +1175,56 @@ impl ArtifactEditor for EquationPlayApp {
     const DIALECT: Dialect = EQUATION_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners())
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(Arc::new(EquationStorePreparationFactory::<Self::Snapshot, Self::Mutation>::default()))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(Arc::new(EquationStorePreparationFactory::<Self::Config, Self::ConfigMutation>::default()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
+    }
+
+    fn build_config_store_disposer() -> ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_draft_store_disposer() -> ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<EquationGraphWindowConfigOwner>()
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -1213,17 +1267,23 @@ impl ArtifactEditor for EquationPlayApp {
         };
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(EquationRetainedCommandWork::new(tool_id, equation_operation_identity(tool_id, &operation_context), extent));
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             EquationCommand::command_id,
             EQUATION_RETAINED_RAW_BYTES,
             EQUATION_RETAINED_WORK_ITEMS,
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
-    }
-
-    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
-        Some(crate::editor::equation::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> EquationSnapshot {
@@ -1243,11 +1303,18 @@ impl ArtifactEditor for EquationPlayApp {
     fn handle(
         command: &EquationCommand,
         doc: &ArtifactView<'_, EquationSnapshot>,
-        cfg: &ConfigView<'_, EquationConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        cfg: &ConfigView<'_, NoConfig>,
+        _interaction: &InteractionView<'_>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<EquationMutation, EquationConfigMutation, Self::DraftMutation>, Fault> {
+    ) -> Result<Emit<EquationMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
+        if let EquationCommand::NodeGraphViewport(payload) = command {
+            let view = view_state.ok_or_else(|| Fault::from("equation-graph-window-context-required"))?;
+            let mut emit = Emit::default();
+            emit.window_config_mutations.push(graph_window::config::addressed(view, EquationGraphWindowConfigMutation::SetCamera(graph_window::config::SetCamera { camera: payload.camera.clone() }))?);
+            return Ok(emit);
+        }
         command.dispatch(doc, cfg)
     }
 
@@ -1273,9 +1340,9 @@ impl ArtifactEditor for EquationPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, EquationConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
-            MATH_PLAY_BODY_GRAPH => graph_window::render(&crate::equation_graph(doc.snapshot), &cfg.snapshot.camera),
+            MATH_PLAY_BODY_GRAPH => graph_window::render(&crate::equation_graph(doc.snapshot), &graph_window::config::current(cfg).cloned().unwrap_or_default().camera),
             MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&crate::equation_geometry(doc.snapshot)),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
@@ -1311,7 +1378,7 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .mutation("setAlgorithm", LocalizedLabel::native("Set Algorithm", "Algorithmus festlegen"))
         .mutation("setDirected", LocalizedLabel::native("Set Directed", "Gerichtet festlegen"))
         .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
-        .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), semio_framework_plugin::ActionKind::View, "camera"))
         .mutation("setPoints", LocalizedLabel::native("Set Points", "Punkte festlegen"))
         .action_interactive_job("setDocument", InteractiveJobClassification::Migrated)
         .action_interactive_job("setAlgorithm", InteractiveJobClassification::Migrated)

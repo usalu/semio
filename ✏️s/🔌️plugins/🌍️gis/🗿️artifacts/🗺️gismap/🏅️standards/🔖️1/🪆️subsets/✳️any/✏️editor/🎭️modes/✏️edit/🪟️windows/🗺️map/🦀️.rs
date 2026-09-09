@@ -1,13 +1,13 @@
 //! 🗺️ GIS 2D play app — the map window (edit mode): the tiled-map canvas and its chrome measures.
 
-use crate::schema::gis_map_descriptor_json;
-use crate::GisMapSnapshot;
 use crate::editor::gis2d::config::Gis2dConfig;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::editor::gis2d::GIS_MAP_LAYER_IDS;
-use semio_framework_surface::tiled_map::clamp_map_layer_weight;
-use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, TiledMapScene, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use crate::schema::gis_map_descriptor_json;
+use crate::GisMapSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, TiledMapScene, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_surface::tiled_map::clamp_map_layer_weight;
 use std::collections::HashMap;
 
 //#region 🔖️Constants

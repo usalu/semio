@@ -1,4 +1,3 @@
-
 use super::*;
 
 const FIXTURE: &str = concat!(

@@ -1,11 +1,11 @@
 syntax = "proto3";
 package semio.s.forms.forms.snapshot;
-message JsonSnapshot {
-  string schema = 1;
-  string value_wire = 2;
-}
-
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message FormsSnapshot {
-  optional string schema = 1;
-  optional string value = 2;
+  string schema = 1;
+  string id = 2;
+  string version = 3;
+  optional string title = 4;
+  semio.os.store.ArtifactChild structure = 5;
+  semio.os.store.ArtifactChild results = 6;
 }

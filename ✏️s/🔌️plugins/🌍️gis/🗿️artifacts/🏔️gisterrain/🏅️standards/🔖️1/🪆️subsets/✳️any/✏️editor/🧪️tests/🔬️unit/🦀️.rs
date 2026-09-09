@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::editor::gis3d::testkit::{app, app_with_registry, dispatch, gis3d_app_manifest_for_testkit, render};
+use crate::editor::gis3d::testkit::{app, close, dispatch, gis3d_app_manifest_for_testkit, render};
 use semio_framework_plugin::EditorApp;
 use serde_json::json;
 
@@ -9,10 +8,7 @@ const RETAINED_LIMITS: &str = include_str!("../../🧫️fixtures/🧫️retaine
 //#region 🔖️CommandSurface
 /// 🎯️ One value per `app_commands!` row, in row order.
 fn every_command() -> Vec<Gis3dCommand> {
-    vec![
-        Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.5 }),
-        Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }),
-    ]
+    vec![Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.5 }), Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() })]
 }
 
 /// 🏷️ The wire keyword each row prints under — the kebab `as` literal, independent of the camelCase
@@ -107,20 +103,38 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let mut app = app().await;
     assert!(render(&mut app, "gis3d.play.nope").await.contains("Unknown body"));
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn view_actions_emit_no_ops_under_registry_kind_discipline() {
-    let mut app = app_with_registry().await;
-    assert!(dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).await.mutations.is_empty());
-    assert_eq!(dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 })).await.mutations.len(), 1);
+async fn retained_commands_publish_only_their_declared_store_lanes() {
+    fn lane_name(lane: &semio_framework_plugin::app::TypedOperationResultLane) -> &'static str {
+        match lane {
+            semio_framework_plugin::app::TypedOperationResultLane::Artifact => "artifact",
+            semio_framework_plugin::app::TypedOperationResultLane::Config => "config",
+            semio_framework_plugin::app::TypedOperationResultLane::Ui => "ui",
+            semio_framework_plugin::app::TypedOperationResultLane::Terminal => "terminal",
+            lane => panic!("unexpected Terrain publication lane {lane:?}"),
+        }
+    }
+    let mut app = app().await;
+    let fixture: Value = serde_json::from_str(RETAINED_LIMITS).expect("GIS terrain retained completion oracle");
+    let expected = |command: &str| fixture["publicationLanes"][command].as_array().expect("publication lanes").iter().map(|lane| lane.as_str().expect("publication lane").to_string()).collect::<Vec<_>>();
+    let camera = dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).await;
+    let camera_lanes = camera.lanes.iter().map(lane_name).map(str::to_string).collect::<Vec<_>>();
+    assert_eq!(camera_lanes, expected("setCamera"));
+    let exaggeration = dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 })).await;
+    let exaggeration_lanes = exaggeration.lanes.iter().map(lane_name).map(str::to_string).collect::<Vec<_>>();
+    assert_eq!(exaggeration_lanes, expected("setExaggeration"));
+    assert_eq!(app.snapshot().expect("settled Terrain snapshot").exaggeration, 2.0);
+    close(&mut app);
 }
 //#endregion 🔖️Manifest
 
 //#region 🔖️Media
 #[semio_framework_async_macros::async_test]
 async fn export_media_scene_out_produces_a_3d_mesh_structured_payload() {
-    let app = app().await;
+    let mut app = app().await;
     let document = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
@@ -128,11 +142,12 @@ async fn export_media_scene_out_produces_a_3d_mesh_structured_payload() {
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
     assert_eq!(schema, "3d.mesh");
     assert!(json.contains("exaggeration"));
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn import_media_map_in_writes_the_imported_features_operation() {
-    let app = app().await;
+    let mut app = app().await;
     let document = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
@@ -141,6 +156,7 @@ async fn import_media_map_in_writes_the_imported_features_operation() {
     let emit = Gis3dPlayApp::import_media("map:in", &media, &doc).expect("map:in import");
     use crate::mutations::change_imported_features::ChangeImportedFeatures;
     assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: incoming })]);
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

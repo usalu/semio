@@ -1,6 +1,5 @@
 //! ⏱️ `change-fire-resistance-min` — sets the En1991 fire resistance scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

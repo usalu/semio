@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.shooting.shooting.diff;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Shooting diff schema — sparse field delta over the artifact.
 
@@ -20,25 +21,8 @@ message ShootingDiff {
   optional string active_shot_id = 7;
   // @state artifact
   optional string active_asset_id = 8;
-  // @state presence
-  optional ShootingStringList selected_shot_ids = 9;
-  // @state presence
-  optional string active_utility_id = 11;
-  // @state config
-  optional string default_shot_format = 12;
-  // @state config
-  optional string default_shot_shape = 13;
-  // @state config
-  optional string default_asset_format = 14;
-  // @state config
-  optional bool center_model = 16;
-  // @state config
-  optional uint32 fit_revision = 17;
-  // @state config
-  optional string camera_draft_label = 18;
-  // @state config
-  optional ShootingCamera camera = 19;
-  // @state config
+  // @state artifact
+  optional semio.os.store.ArtifactChild emblem = 9;
 }
 
 message ShootingStringList {
@@ -110,15 +94,7 @@ message ShootingArtifact {
   repeated ShootingShot shots = 5;
   string active_shot_id = 6;
   string active_asset_id = 7;
-  repeated string selected_shot_ids = 8;
-  string active_utility_id = 10;
-  string default_shot_format = 11;
-  string default_shot_shape = 12;
-  string default_asset_format = 13;
-  bool center_model = 15;
-  uint32 fit_revision = 16;
-  string camera_draft_label = 17;
-  ShootingCamera camera = 18;
+  optional semio.os.store.ArtifactChild emblem = 8;
 }
 
 message ShootingCamera {

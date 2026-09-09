@@ -20,7 +20,6 @@ pub fn source() -> ExampleSource {
 /// call, never hand-authored independently of the real encoder.
 pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️.pack.semio");
 
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

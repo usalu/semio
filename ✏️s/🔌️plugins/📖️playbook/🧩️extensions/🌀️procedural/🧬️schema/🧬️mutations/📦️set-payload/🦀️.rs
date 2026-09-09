@@ -12,8 +12,16 @@ pub struct SetPayload {
 
 impl protocol::MutationKind<ModuleRenderPayload, ModulePayloadMutation> for SetPayload {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "payload", kind: "set-payload", record: "SetPayload" };
-    fn diff(&self, _base: &ModuleRenderPayload) -> protocol::MutationOutcome<ModulePayloadDiff> { protocol::MutationOutcome::new(ModulePayloadDiff { payload: Some(self.payload.clone()) }) }
-    fn inverse(&self, base: &ModuleRenderPayload) -> Vec<ModulePayloadMutation> { vec![ModulePayloadMutation::SetPayload(SetPayload { payload: base.clone() })] }
-    fn label(&self) -> String { "Set Payload".into() }
-    fn target(&self) -> Vec<String> { vec!["payload".into()] }
+    fn diff(&self, _base: &ModuleRenderPayload) -> protocol::MutationOutcome<ModulePayloadDiff> {
+        protocol::MutationOutcome::new(ModulePayloadDiff { payload: Some(self.payload.clone()) })
+    }
+    fn inverse(&self, base: &ModuleRenderPayload) -> Vec<ModulePayloadMutation> {
+        vec![ModulePayloadMutation::SetPayload(SetPayload { payload: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Payload".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["payload".into()]
+    }
 }

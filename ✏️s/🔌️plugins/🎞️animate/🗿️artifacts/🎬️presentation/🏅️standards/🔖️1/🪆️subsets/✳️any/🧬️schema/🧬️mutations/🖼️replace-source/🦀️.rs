@@ -3,9 +3,9 @@
 //! time except for its `frame` (own `resize-source-frame` mutation), so this is `replace`, per the
 //! taxonomy's rule 1 `update` exception boundary.
 
-use crate::{FigureTileSource, PresentationSnapshot};
 use crate::diff::PresentationDiff;
 use crate::mutations::PresentationMutation;
+use crate::{FigureTileSource, PresentationSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔹Payload

@@ -1,7 +1,7 @@
 //! 🧬️ En1990 snapshot schema — artifact-lane fields only.
 
-use crate::En1990QkChild;
 use crate::document::AnnexChoice;
+use crate::En1990QkChild;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -243,7 +243,6 @@ impl Default for En1990Snapshot {
     }
 }
 //#endregion 🔖️Snapshot
-
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ The canonical JSON projection of a [`En1990Snapshot`] — the surface

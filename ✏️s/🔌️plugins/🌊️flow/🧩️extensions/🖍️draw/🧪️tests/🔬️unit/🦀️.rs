@@ -1,4 +1,3 @@
-
 use super::*;
 use flow_extension_sdk::{boolean_segments_json, build_manifest_json, dispose_drawing, export_pdf_json, export_svg_json, render_scene_json, retain_drawing_handles, trace_bitmap_json};
 
@@ -389,7 +388,7 @@ async fn read_point_list_errors_when_entry_is_not_a_point() {
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_draw_for_flow_and_procedural3d_play() {
     use flow_extension_sdk::build_manifest_json;
-    use semio_framework_plugin::{ExtensionBundle, extension_activate, extension_invoke, extension_manifest, install_extension_bundle};
+    use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
     let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
     let flow_topic = flow_extension_sdk::flow_extension_topic_contribution("flow-play", "draw", "Draw", "draw", &manifest_json);

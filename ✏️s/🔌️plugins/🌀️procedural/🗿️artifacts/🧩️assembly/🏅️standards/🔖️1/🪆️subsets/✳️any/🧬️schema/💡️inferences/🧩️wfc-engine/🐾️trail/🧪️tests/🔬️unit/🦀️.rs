@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::wfc_engine::weights::WeightTable;
 

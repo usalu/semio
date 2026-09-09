@@ -1,8 +1,12 @@
 //! 🕸️ Equation play app — the graph window: the editable node-graph canvas.
 
-use crate::{EquationCamera, EquationGraph};
 use crate::editor::equation::workflow_json;
-use semio_framework_plugin::{LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use crate::EquationGraph;
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+use config::EquationCamera;
 
 //#region 🔖️Constants
 pub const MATH_PLAY_WINDOW_GRAPH: &str = "math-graph";

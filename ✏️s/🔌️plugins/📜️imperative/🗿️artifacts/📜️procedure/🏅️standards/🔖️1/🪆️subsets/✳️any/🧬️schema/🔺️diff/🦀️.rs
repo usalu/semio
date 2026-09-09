@@ -22,10 +22,6 @@ pub struct ProcedureDiff {
     pub flow: Option<ProcedureFlowChild>,
     #[state(artifact)]
     pub text: Option<ProcedureTextChild>,
-    #[state(presence)]
-    pub selected_step_ids: Option<ProcedureStringList>,
-    #[state(config)]
-    pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff
 

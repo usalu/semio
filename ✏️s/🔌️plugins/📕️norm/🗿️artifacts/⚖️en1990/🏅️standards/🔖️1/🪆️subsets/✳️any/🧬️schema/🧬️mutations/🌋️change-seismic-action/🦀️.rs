@@ -1,7 +1,6 @@
 //! 🌍 `change-seismic-action` — sets the EN 1990 document's seismic accidental action `A_Ed`
 //! [kN], combined per Eq. 6.12b; `0.0` disables the seismic design situation.
 
-
 use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload

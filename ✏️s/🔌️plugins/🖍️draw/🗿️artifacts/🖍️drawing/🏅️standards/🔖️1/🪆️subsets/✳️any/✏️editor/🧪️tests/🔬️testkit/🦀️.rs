@@ -1,7 +1,6 @@
-
 use super::*;
 use semio_framework_plugin::testkit::{meta, new_app_with_registry};
-use semio_framework_plugin::{App, EditorApp, VcsArtifactApp};
+use semio_framework_plugin::{ActionMeta, App, EditorApp, VcsArtifactApp, ViewModel};
 
 pub type DrawingApp = VcsArtifactApp<EditorApp<DrawingPlayApp>>;
 
@@ -15,7 +14,9 @@ pub async fn drawing_app() -> DrawingApp {
     new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }).await
 }
 
-/// 🧰️ Sets the config's host-owned active utility to `utility`.
-pub async fn set_utility(app: &mut DrawingApp, utility: &str) {
-    app.dispatch_typed(DrawingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: utility.into() }), &meta("local")).await.expect("set active utility");
+/// 🧰️ Captures the host-owned active utility in one operation's invocation context.
+pub fn meta_with_utility(utility: &str) -> ActionMeta {
+    let mut action_meta = meta("local");
+    action_meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..Default::default() });
+    action_meta
 }

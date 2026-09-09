@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::editor::animate::PresentationCommand;
 use crate::editor::animate::commands::{set_active_example, set_frame};
 use crate::editor::animate::testkit::{dispatch, presentation_app};
-use crate::{FigureTileFrame, default_presentation_snapshot};
+use crate::editor::animate::PresentationCommand;
+use crate::{default_presentation_snapshot, FigureTileFrame};
 
 #[semio_framework_async_macros::async_test]
 async fn set_source_replaces_source_and_clears_tiles_when_src_changes() {
@@ -56,7 +55,7 @@ async fn set_active_example_demo_emits_a_reset_effect() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&deck, &history);
     let cfg_snapshot = PresentationConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let mut ctx = PresentationDispatchCtx { selected_ids: Vec::new() };
     let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "demo".into() }, &doc, &cfg, &mut ctx).expect("handle");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
@@ -72,7 +71,7 @@ async fn set_active_example_unknown_id_is_a_no_op() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&deck, &history);
     let cfg_snapshot = PresentationConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let mut ctx = PresentationDispatchCtx { selected_ids: Vec::new() };
     let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "other".into() }, &doc, &cfg, &mut ctx).expect("handle");
     assert!(emit.effects.is_empty());

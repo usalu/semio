@@ -9,28 +9,30 @@
 //! than under `🗿️artifacts`). This file is a routing table: `handle` → `WriterCommand::dispatch`,
 //! `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::op::WriterMutation;
-use crate::{writer_text, writer_text_owner, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use crate::editor::writer::commands::set_camera;
 use crate::editor::writer::commands::set_editor_selection;
 use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_fixture_json, set_snapshot, set_snapshot_json, set_text, text_edit};
 use crate::editor::writer::commands::{engagement_input, engagement_submit};
 use crate::editor::writer::commands::{lint_document, request_completions};
 use crate::editor::writer::commands::{set_font_px, set_line_height, set_tab_size, toggle_line_numbers};
-use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::editor::writer::modes::edit;
 use crate::editor::writer::modes::edit::windows::main;
+use crate::editor::writer::modes::edit::windows::main::config::{WriterMainWindowConfig, WriterMainWindowConfigMutation, WriterMainWindowConfigOwner};
+use crate::editor::writer::modes::edit::windows::main::transient::{WriterMainWindowTransient, WriterMainWindowTransientMutation, WriterMainWindowTransientOwner};
 use crate::editor::writer::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::editor::writer::presence::{WriterPresence, WriterPresenceMutation};
 use crate::editor::writer::terminology::writer_play_labels;
+use crate::op::WriterMutation;
+use crate::{writer_text, writer_text_owner, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::{kernel::Effect, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::app::{ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolCompletionRejection, ArtifactToolFactoryRegistry, EditorApp, EphemeralEmit, InteractionView};
+use semio_framework_plugin::plugin_app_close_prelude::ArtifactDisposal;
 use semio_framework_plugin::{
-    engagement_token_matches, strip_engagement_prefix, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec,
-    ContextMenuRequest, ContextMenuTextContext, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media,
-    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, WindowMeasure,
+    engagement_token_matches, strip_engagement_prefix, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest,
+    ContextMenuTextContext, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass,
+    MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
+    WindowMeasure,
 };
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
@@ -103,14 +105,14 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 
 /// 🙈️ An internal document operation kept out of the command palette — editor events (text edits,
 /// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
-fn writer_hidden_operation(id: &str, label: LocalizedLabel) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::Mutation) }
+fn writer_hidden_operation(id: &str, label: LocalizedLabel, icon_id: &str) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::Mutation, icon_id) }
 }
 
 /// 🙈️ An internal View action kept out of the palette — ephemeral editor/selection/hover/setting events
 /// that mutate only runtime scratch and emit no document operations.
-fn writer_hidden_view(id: &str, label: LocalizedLabel) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::View) }
+fn writer_hidden_view(id: &str, label: LocalizedLabel, icon_id: &str) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::View, icon_id) }
 }
 //#endregion 🔖️Constants
 
@@ -207,7 +209,7 @@ semio_framework_plugin::app_commands! {
     /// payload types — mirrors the pre-migration `WriterCommand::command_id()` match arm that mapped all
     /// three variants to the same `"setEditorSetting"` string. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum WriterCommand for WriterSnapshot, WriterMutation, WriterConfig, WriterConfigMutation {
+    pub enum WriterCommand for WriterSnapshot, WriterMutation, NoConfig, NoConfigMutation {
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "setText" as "set-text" => set_text::SetText,
         "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
@@ -304,20 +306,21 @@ const WRITER_COMMAND_TOOL_IDS: &[&str] = &[
     "setEditorSetting",
     "engagementInput",
     "engagementSubmit",
-    ];
+];
 const WRITER_COMMAND_PAYLOAD_SCHEMA: &str = "writer.writer.tool-command.v1";
 const MAX_WRITER_COMMAND_RAW_BYTES: usize = 4_096;
 const MAX_WRITER_COMMAND_DECODED_ITEMS: usize = 4_096;
 const MAX_WRITER_COMMAND_TEXT_BYTES: usize = 4_096;
 const MAX_WRITER_COMMAND_URI_BYTES: usize = 1_024;
-const MAX_WRITER_LOCALE_BYTES: usize = 64;
 const MAX_WRITER_EXAMPLE_ID_BYTES: usize = 64;
 
 struct WriterCommandToolPayload {
     command: WriterCommand,
     snapshot: Arc<WriterSnapshot>,
     text: Arc<str>,
-    config: Arc<WriterConfig>,
+    view_state: Option<semio_framework_plugin::ViewModel>,
+    window_config: Option<WriterMainWindowConfig>,
+    window_transient: Option<WriterMainWindowTransient>,
     completion: Option<ArtifactToolCompletion<EditorApp<WriterPlayApp>>>,
 }
 
@@ -325,7 +328,9 @@ struct WriterCommandToolJob {
     command: Option<WriterCommand>,
     snapshot: Option<Arc<WriterSnapshot>>,
     text: Option<Arc<str>>,
-    config: Option<Arc<WriterConfig>>,
+    view_state: Option<semio_framework_plugin::ViewModel>,
+    window_config: Option<WriterMainWindowConfig>,
+    window_transient: Option<WriterMainWindowTransient>,
     completion: Option<ArtifactToolCompletion<EditorApp<WriterPlayApp>>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<EditorApp<WriterPlayApp>>>,
     raw_input: Option<RetainedToolWireInput>,
@@ -350,7 +355,6 @@ impl WriterCommandToolJob {
 
     fn admit_text(&mut self) -> bool {
         let Some(command) = self.command.as_ref() else { return false };
-        let Some(config) = self.config.as_ref() else { return false };
         if matches!(command, WriterCommand::EngagementInput(payload) if payload.value.len() > MAX_WRITER_COMMAND_TEXT_BYTES) {
             return false;
         }
@@ -360,7 +364,8 @@ impl WriterCommandToolJob {
         {
             return false;
         }
-        if matches!(command, WriterCommand::EngagementSubmit(payload) if payload.value.as_ref().unwrap_or(&config.engagement_input).len() > MAX_WRITER_COMMAND_TEXT_BYTES) {
+        if matches!(command, WriterCommand::EngagementSubmit(payload) if payload.value.as_deref().or_else(|| self.window_transient.as_ref().map(|state| state.engagement_input.as_str())).is_none_or(|value| value.len() > MAX_WRITER_COMMAND_TEXT_BYTES))
+        {
             return false;
         }
         if matches!(command, WriterCommand::SetActiveExample(payload) if payload.example_id.len() > MAX_WRITER_EXAMPLE_ID_BYTES) {
@@ -378,7 +383,7 @@ impl WriterCommandToolJob {
         let requires_text = match command {
             WriterCommand::TextEdit(_) | WriterCommand::SetText(_) | WriterCommand::FormatDocument(_) | WriterCommand::CommitRename(_) => true,
             WriterCommand::EngagementSubmit(payload) => {
-                let value = payload.value.as_deref().unwrap_or(&config.engagement_input);
+                let Some(value) = payload.value.as_deref().or_else(|| self.window_transient.as_ref().map(|state| state.engagement_input.as_str())) else { return false };
                 engagement_token_matches(value.trim(), "format")
             }
             _ => false,
@@ -390,117 +395,155 @@ impl WriterCommandToolJob {
         true
     }
 
-    fn emit(&mut self) -> Result<Emit<WriterMutation, WriterConfigMutation>, &'static str> {
+    fn emit(&mut self) -> Result<(Emit<WriterMutation, NoConfigMutation>, EphemeralEmit<EditorApp<WriterPlayApp>>), &'static str> {
         let command = self.command.take().ok_or("writer command job lost its command owner")?;
-        let config = self.config.as_ref().ok_or("writer command job lost its config owner")?;
         let snapshot = self.snapshot.as_ref().ok_or("writer command job lost its snapshot owner")?;
         let text = self.text.as_ref().ok_or("writer command job lost its text owner")?;
-        Ok(match command {
-            WriterCommand::TextEdit(payload) => Emit::amend(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })], "writer-text-edit"),
-            WriterCommand::SetText(payload) => Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })]),
-            WriterCommand::SetCamera(payload) => Emit::config(vec![WriterConfigMutation::SetCamera(crate::editor::writer::config::SetCamera { camera: payload.camera })]),
-            WriterCommand::RequestCompletions(_) => Emit::config(vec![WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })]),
-            WriterCommand::LintDocument(_) => Emit::config(vec![WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { value: config.lint_signal + 1 }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })]),
-            WriterCommand::SetEditorSelection(payload) => Emit::config(vec![
-                WriterConfigMutation::SetEditorSelection(crate::editor::writer::config::SetEditorSelection { selection: Some(crate::editor::writer::config::WriterEditorSelection { start: payload.start, end: payload.end }) }),
-                WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 }),
-            ]),
+        let mut emit = Emit::default();
+        let mut ephemeral = EphemeralEmit::default();
+        match command {
+            WriterCommand::TextEdit(payload) => emit = Emit::amend(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })], "writer-text-edit"),
+            WriterCommand::SetText(payload) => emit = Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })]),
+            WriterCommand::SetCamera(payload) => {
+                let view = self.view_state.as_ref().ok_or("Writer camera change requires its concrete window context")?;
+                emit.window_config_mutations.push(main::config::addressed(view, WriterMainWindowConfigMutation::SetCamera(main::config::SetCamera { camera: payload.camera })).map_err(|_| "Writer camera change rejected its concrete window context")?);
+            }
+            WriterCommand::RequestCompletions(_) => {}
+            WriterCommand::LintDocument(_) => {
+                let view = self.view_state.as_ref().ok_or("Writer lint requires its concrete window context")?;
+                let state = self.window_transient.as_ref().ok_or("Writer lint lost its exact window transient")?;
+                ephemeral.window_transient.push(
+                    main::transient::addressed(view, WriterMainWindowTransientMutation::SetLintGeneration(main::transient::SetLintGeneration { value: state.lint_generation + 1 })).map_err(|_| "Writer lint rejected its concrete window context")?,
+                );
+            }
+            WriterCommand::SetEditorSelection(payload) => {
+                let view = self.view_state.as_ref().ok_or("Writer selection requires its concrete window context")?;
+                let selection = crate::WriterEditorSelection { start: payload.start, end: payload.end };
+                ephemeral.window_transient.push(
+                    main::transient::addressed(view, WriterMainWindowTransientMutation::SetEditorSelection(main::transient::SetEditorSelection { selection: Some(selection) })).map_err(|_| "Writer selection rejected its concrete window context")?,
+                );
+            }
             WriterCommand::ToggleLineNumbers(_) => {
-                let mut settings = config.editor_settings.clone();
+                let view = self.view_state.as_ref().ok_or("Writer settings require their concrete window context")?;
+                let mut settings = self.window_config.as_ref().ok_or("Writer settings lost their exact window config")?.editor_settings.clone();
                 settings.show_line_numbers = !settings.show_line_numbers;
-                Emit::config(vec![WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })])
+                emit.window_config_mutations.push(main::config::addressed(view, WriterMainWindowConfigMutation::SetEditorSettings(main::config::SetEditorSettings { settings })).map_err(|_| "Writer settings rejected their concrete window context")?);
             }
             WriterCommand::SetFontPx(payload) => {
-                let mut settings = config.editor_settings.clone();
+                let view = self.view_state.as_ref().ok_or("Writer settings require their concrete window context")?;
+                let mut settings = self.window_config.as_ref().ok_or("Writer settings lost their exact window config")?.editor_settings.clone();
                 settings.font_px = payload.value;
-                Emit::config(vec![WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })])
+                emit.window_config_mutations.push(main::config::addressed(view, WriterMainWindowConfigMutation::SetEditorSettings(main::config::SetEditorSettings { settings })).map_err(|_| "Writer settings rejected their concrete window context")?);
             }
             WriterCommand::SetLineHeight(payload) => {
-                let mut settings = config.editor_settings.clone();
+                let view = self.view_state.as_ref().ok_or("Writer settings require their concrete window context")?;
+                let mut settings = self.window_config.as_ref().ok_or("Writer settings lost their exact window config")?.editor_settings.clone();
                 settings.line_height = payload.value;
-                Emit::config(vec![WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })])
+                emit.window_config_mutations.push(main::config::addressed(view, WriterMainWindowConfigMutation::SetEditorSettings(main::config::SetEditorSettings { settings })).map_err(|_| "Writer settings rejected their concrete window context")?);
             }
             WriterCommand::SetTabSize(payload) => {
-                let mut settings = config.editor_settings.clone();
+                let view = self.view_state.as_ref().ok_or("Writer settings require their concrete window context")?;
+                let mut settings = self.window_config.as_ref().ok_or("Writer settings lost their exact window config")?.editor_settings.clone();
                 settings.tab_size = payload.value.max(1);
-                Emit::config(vec![WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })])
+                emit.window_config_mutations.push(main::config::addressed(view, WriterMainWindowConfigMutation::SetEditorSettings(main::config::SetEditorSettings { settings })).map_err(|_| "Writer settings rejected their concrete window context")?);
             }
-            WriterCommand::EngagementInput(payload) if payload.value != config.engagement_input => {
-                Emit::config(vec![WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value: payload.value }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })])
+            WriterCommand::EngagementInput(payload) => {
+                let view = self.view_state.as_ref().ok_or("Writer engagement input requires its concrete window context")?;
+                if self.window_transient.as_ref().is_none_or(|state| state.engagement_input != payload.value) {
+                    ephemeral.window_transient.push(
+                        main::transient::addressed(view, WriterMainWindowTransientMutation::SetEngagementInput(main::transient::SetEngagementInput { value: payload.value }))
+                            .map_err(|_| "Writer engagement input rejected its concrete window context")?,
+                    );
+                }
             }
-            WriterCommand::EngagementInput(_) => Emit::default(),
             WriterCommand::SetActiveExample(payload) => {
                 let document = match payload.example_id.as_str() {
-                    "jack" => crate::dsl::jack_example_document(),
-                    "dag.jack" => crate::dsl::dag_jack_example_document(),
+                    "jack" => crate::document_dsl::jack_example_document(),
+                    "dag.jack" => crate::document_dsl::dag_jack_example_document(),
                     _ => crate::schema::empty_writer_snapshot(),
                 };
-                Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }
+                emit.effects.push(reset_document_effect_now(&document));
             }
-            WriterCommand::SetSnapshot(payload) => dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
-            WriterCommand::OpenDocument(payload) => open_document::emit(&payload),
-            WriterCommand::SetSnapshotJson(payload) => dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
-            WriterCommand::SetFixtureJson(payload) => dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
+            WriterCommand::SetSnapshot(payload) => {
+                if let Ok(document) = dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json) {
+                    emit.effects.push(reset_document_effect_now(&document));
+                }
+            }
+            WriterCommand::OpenDocument(payload) => emit = open_document::emit(&payload),
+            WriterCommand::SetSnapshotJson(payload) => {
+                if let Ok(document) = dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json) {
+                    emit.effects.push(reset_document_effect_now(&document));
+                }
+            }
+            WriterCommand::SetFixtureJson(payload) => {
+                if let Ok(document) = dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json) {
+                    emit.effects.push(reset_document_effect_now(&document));
+                }
+            }
             WriterCommand::FormatDocument(_) => {
                 let formatted = crate::schema::format_writer_text(text, &snapshot.language_id);
-                let mut emit = Emit::config(vec![WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { value: config.format_signal + 1 })]);
                 if formatted != text.as_ref() {
-                    emit.artifact_mutations = vec![WriterMutation::EditText(crate::op::EditText { text: formatted })];
+                    emit.artifact_mutations.push(WriterMutation::EditText(crate::op::EditText { text: formatted }));
                 }
-                emit
             }
             WriterCommand::CommitRename(payload) => {
                 use crate::schema::{apply_jack_rename, jack_symbol_at_offset, JackSymbolKind};
-                let selection = config.editor_selection.clone().unwrap_or(crate::editor::writer::config::WriterEditorSelection { start: 0, end: 0 });
+                let selection = self.window_transient.as_ref().and_then(|state| state.editor_selection.clone()).ok_or("Writer rename requires its concrete editor selection")?;
                 if selection.start == selection.end {
                     if let Some(symbol) = jack_symbol_at_offset(text, selection.start) {
                         if symbol.kind == JackSymbolKind::Variable {
-                            let renamed = apply_jack_rename(text, &symbol.occurrences, &payload.text);
-                            return Ok(Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: renamed })]));
+                            emit.artifact_mutations.push(WriterMutation::EditText(crate::op::EditText { text: apply_jack_rename(text, &symbol.occurrences, &payload.text) }));
+                            return Ok((emit, ephemeral));
                         }
                     }
                 }
                 if selection.start <= selection.end && selection.end <= text.len() {
                     let mut updated = text.to_string();
                     updated.replace_range(selection.start..selection.end, &payload.text);
-                    Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: updated })])
-                } else {
-                    Emit::default()
+                    emit.artifact_mutations.push(WriterMutation::EditText(crate::op::EditText { text: updated }));
                 }
             }
             WriterCommand::EngagementSubmit(payload) => {
-                let value = payload.value.unwrap_or_else(|| config.engagement_input.clone());
+                let view = self.view_state.as_ref().ok_or("Writer engagement requires its concrete window context")?;
+                let state = self.window_transient.as_ref().ok_or("Writer engagement lost its exact window transient")?;
+                let value = payload.value.unwrap_or_else(|| state.engagement_input.clone());
                 let trimmed = value.trim();
-                let mut config_mutations = vec![WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value: String::new() }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })];
-                let mut artifact_mutations = Vec::new();
+                ephemeral
+                    .window_transient
+                    .push(main::transient::addressed(view, WriterMainWindowTransientMutation::SetEngagementInput(main::transient::SetEngagementInput { value: String::new() })).map_err(|_| "Writer engagement rejected its concrete window context")?);
                 if engagement_token_matches(trimmed, "format") {
-                    config_mutations.push(WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { value: config.format_signal + 1 }));
                     let formatted = crate::schema::format_writer_text(text, &snapshot.language_id);
                     if formatted != text.as_ref() {
-                        artifact_mutations.push(WriterMutation::EditText(crate::op::EditText { text: formatted }));
+                        emit.artifact_mutations.push(WriterMutation::EditText(crate::op::EditText { text: formatted }));
                     }
                 } else if engagement_token_matches(trimmed, "lint") {
-                    config_mutations.push(WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { value: config.lint_signal + 1 }));
+                    ephemeral.window_transient.push(
+                        main::transient::addressed(view, WriterMainWindowTransientMutation::SetLintGeneration(main::transient::SetLintGeneration { value: state.lint_generation + 1 }))
+                            .map_err(|_| "Writer lint rejected its concrete window context")?,
+                    );
                 } else if engagement_token_matches(trimmed, "line numbers") || engagement_token_matches(trimmed, "numbers") || engagement_token_matches(trimmed, "gutter") {
-                    let mut settings = config.editor_settings.clone();
+                    let mut settings = self.window_config.as_ref().ok_or("Writer engagement lost its exact window config")?.editor_settings.clone();
                     settings.show_line_numbers = !settings.show_line_numbers;
-                    config_mutations.push(WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }));
+                    emit.window_config_mutations
+                        .push(main::config::addressed(view, WriterMainWindowConfigMutation::SetEditorSettings(main::config::SetEditorSettings { settings })).map_err(|_| "Writer settings rejected their concrete window context")?);
                 } else if let Some(rest) = strip_engagement_prefix(trimmed, "font size").or_else(|| strip_engagement_prefix(trimmed, "font")) {
                     if let Ok(px) = rest.parse::<u32>() {
-                        let mut settings = config.editor_settings.clone();
+                        let mut settings = self.window_config.as_ref().ok_or("Writer engagement lost its exact window config")?.editor_settings.clone();
                         settings.font_px = px;
-                        config_mutations.push(WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }));
+                        emit.window_config_mutations
+                            .push(main::config::addressed(view, WriterMainWindowConfigMutation::SetEditorSettings(main::config::SetEditorSettings { settings })).map_err(|_| "Writer settings rejected their concrete window context")?);
                     }
                 } else if let Some(rest) = strip_engagement_prefix(trimmed, "tab size").or_else(|| strip_engagement_prefix(trimmed, "tab")) {
                     if let Ok(size) = rest.parse::<u32>() {
-                        let mut settings = config.editor_settings.clone();
+                        let mut settings = self.window_config.as_ref().ok_or("Writer engagement lost its exact window config")?.editor_settings.clone();
                         settings.tab_size = size.max(1);
-                        config_mutations.push(WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }));
+                        emit.window_config_mutations
+                            .push(main::config::addressed(view, WriterMainWindowConfigMutation::SetEditorSettings(main::config::SetEditorSettings { settings })).map_err(|_| "Writer settings rejected their concrete window context")?);
                     }
                 }
-                Emit { artifact_mutations, config_mutations, ..Default::default() }
             }
-        })
+        }
+        Ok((emit, ephemeral))
     }
 
     fn fault() -> StepOutcome {
@@ -559,11 +602,11 @@ impl InteractiveJob for WriterCommandToolJob {
             if !completion.has_mounted_consumer() {
                 return Self::fault();
             }
-            let emit = match self.emit() {
-                Ok(emit) => emit,
+            let (emit, ephemeral) = match self.emit() {
+                Ok(output) => output,
                 Err(_) => return Self::fault(),
             };
-            if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
+            if let Err(rejected) = completion.complete(Ok(emit), ephemeral) {
                 self.pending_completion_rejection = Some(rejected);
                 return Self::fault();
             }
@@ -647,11 +690,25 @@ impl InteractiveJob for WriterCommandToolJob {
             self.snapshot = None;
             return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        if self.config.is_some() {
+        if self.view_state.is_some() {
             if maximum_items == 0 {
                 return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
-            self.config = None;
+            self.view_state = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.window_config.is_some() {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.window_config = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.window_transient.is_some() {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.window_transient = None;
             return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         if let Some(completion) = self.completion.as_ref() {
@@ -668,7 +725,18 @@ impl InteractiveJob for WriterCommandToolJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.pending_completion_rejection.is_none() && self.command.is_none() && self.snapshot.is_none() && self.text.is_none() && self.config.is_none() && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.is_empty() && self.raw_bytes.capacity() == 0
+        self.closing
+            && self.pending_completion_rejection.is_none()
+            && self.command.is_none()
+            && self.snapshot.is_none()
+            && self.text.is_none()
+            && self.view_state.is_none()
+            && self.window_config.is_none()
+            && self.window_transient.is_none()
+            && self.completion.is_none()
+            && self.raw_input.is_none()
+            && self.raw_bytes.is_empty()
+            && self.raw_bytes.capacity() == 0
     }
 }
 
@@ -707,7 +775,9 @@ impl ToolJobFactory for WriterCommandJobFactory {
             command: Some(payload.command),
             snapshot: Some(payload.snapshot),
             text: Some(payload.text),
-            config: Some(payload.config),
+            view_state: payload.view_state,
+            window_config: payload.window_config,
+            window_transient: payload.window_transient,
             completion: payload.completion,
             pending_completion_rejection: None,
             raw_input: None,
@@ -760,214 +830,22 @@ impl ArtifactOwnedToolJobFactory for WriterCommandJobFactory {
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshotJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitRename", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "requestCompletions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "lintDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleLineNumbers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSetting", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "requestCompletions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "lintDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleLineNumbers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSetting", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_framework_plugin::ArtifactToolPublicationContract {
+            tool_id: "engagementSubmit",
+            lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient],
+        },
     ];
 }
 //#endregion 🧵️InteractiveJobs
-
-//#region 📬️ConfigStorePreparation
-const WRITER_CONFIG_STORE_MAXIMUM_BYTES: usize = 8_192;
-
-struct WriterConfigStorePreparationFactory;
-
-struct WriterConfigStorePreparation {
-    base: Option<store::SnapshotRead<WriterConfig>>,
-    mutation: Option<WriterConfigMutation>,
-    description: Option<String>,
-    authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<WriterConfig, WriterConfigMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    cancelled: bool,
-    closing: bool,
-}
-
-fn writer_config_retained_bytes(config: &WriterConfig) -> usize {
-    config.engagement_input.len()
-}
-
-fn writer_config_mutation_retained_bytes(mutation: &WriterConfigMutation) -> usize {
-    match mutation {
-        WriterConfigMutation::ReplaceConfig(crate::editor::writer::config::ReplaceConfig { config }) => writer_config_retained_bytes(config),
-        WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value }) => value.len(),
-        WriterConfigMutation::SetEditorSelection(crate::editor::writer::config::SetEditorSelection { .. })
-        | WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { .. })
-        | WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { .. })
-        | WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { .. })
-        | WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { .. })
-        | WriterConfigMutation::SetCamera(crate::editor::writer::config::SetCamera { .. }) => 0,
-    }
-}
-
-fn admit_writer_config_mutation(mutation: &WriterConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let retained_bytes = writer_config_mutation_retained_bytes(mutation);
-    if retained_bytes > WRITER_CONFIG_STORE_MAXIMUM_BYTES {
-        return Err("Writer config mutation exceeds its fixed retained preparation envelope".into());
-    }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
-}
-
-fn prepare_writer_config(base: &WriterConfig, mutation: WriterConfigMutation) -> Result<(WriterConfig, Vec<WriterConfigMutation>, WriterConfigMutation), String> {
-    admit_writer_config_mutation(&mutation)?;
-    if writer_config_retained_bytes(base) > WRITER_CONFIG_STORE_MAXIMUM_BYTES {
-        return Err("Writer config base exceeds its fixed retained preparation envelope".into());
-    }
-    let mut post = base.clone();
-    match &mutation {
-        WriterConfigMutation::ReplaceConfig(crate::editor::writer::config::ReplaceConfig { config }) => post = config.clone(),
-        WriterConfigMutation::SetEditorSelection(crate::editor::writer::config::SetEditorSelection { selection }) => post.editor_selection = selection.clone(),
-        WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { value }) => post.format_signal = *value,
-        WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { value }) => post.lint_signal = *value,
-        WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value }) => post.revision = *value,
-        WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }) => post.editor_settings = settings.clone(),
-        WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value }) => post.engagement_input = value.clone(),
-        WriterConfigMutation::SetCamera(crate::editor::writer::config::SetCamera { camera }) => post.camera = camera.clone(),
-    }
-    Ok((post, vec![WriterConfigMutation::ReplaceConfig(crate::editor::writer::config::ReplaceConfig { config: base.clone() })], mutation))
-}
-
-fn writer_store_edit<M>(
-    prefix: &str,
-    forward: M,
-    inverse: Vec<M>,
-    description: Option<String>,
-    authority: &store::ArtifactStoreOneItemLiveAuthority,
-) -> protocol::Edit<M> {
-    let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit {
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-        }],
-        description,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
-impl store::ArtifactStoreOneItemPreparationFactory<WriterConfig, WriterConfigMutation> for WriterConfigStorePreparationFactory {
-    fn preflight(&self, mutation: &WriterConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Writer config preparation rejected its lane or description envelope".into());
-        }
-        admit_writer_config_mutation(mutation)
-    }
-
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<WriterConfig, WriterConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<WriterConfig, WriterConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<WriterConfig, WriterConfigMutation>> {
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
-        }
-        Ok(Box::new(WriterConfigStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            description: request.description,
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl store::ArtifactStoreOneItemPreparation<WriterConfig, WriterConfigMutation> for WriterConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        let base = self.base.as_ref().ok_or_else(|| "Writer config preparation lost its exact base root".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "Writer config preparation lost its mutation owner".to_string())?;
-        let (post, inverse, forward) = prepare_writer_config(base.get(), mutation)?;
-        let authority = self.authority.as_ref().ok_or_else(|| "Writer config preparation lost its Store authority".to_string())?;
-        let edit = writer_store_edit("writer-config-retained", forward, inverse, self.description.take(), authority);
-        let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<WriterConfig, WriterConfigMutation>> {
-        self.prepared.as_ref()
-    }
-
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<WriterConfig, WriterConfigMutation>> {
-        self.prepared.take()
-    }
-
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err("Writer config preparation could not return its exact base root".into());
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
-//#endregion 📬️ConfigStorePreparation
 
 //#region 📬️ArtifactStorePreparation
 const WRITER_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 32_768;
@@ -986,13 +864,7 @@ struct WriterArtifactStorePreparation {
 }
 
 fn writer_snapshot_retained_bytes(snapshot: &WriterSnapshot) -> usize {
-    snapshot
-        .schema
-        .len()
-        .saturating_add(snapshot.id.len())
-        .saturating_add(snapshot.language_id.len())
-        .saturating_add(snapshot.uri.len())
-        .saturating_add(writer_text_owner(snapshot).len())
+    snapshot.schema.len().saturating_add(snapshot.id.len()).saturating_add(snapshot.language_id.len()).saturating_add(snapshot.uri.len()).saturating_add(writer_text_owner(snapshot).len())
 }
 
 fn admit_writer_artifact_mutation(mutation: &WriterMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
@@ -1061,7 +933,31 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
         let mutation = self.mutation.take().ok_or_else(|| "Writer Artifact preparation lost its mutation owner".to_string())?;
         let (post, inverse, forward) = prepare_writer_artifact(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "Writer Artifact preparation lost its Store authority".to_string())?;
-        let edit = writer_store_edit("writer-artifact-retained", forward, inverse, self.description.take(), authority);
+        let id = format!("writer-artifact-retained-{}", authority.next_sequence_number());
+        let edit = protocol::Edit {
+            id: id.clone(),
+            actor: Some(authority.actor().to_string()),
+            forwards: vec![forward],
+            inverse,
+            mutation_meta: vec![protocol::MutationMeta {
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())),
+                timestamp: authority.next_clock(),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: authority.group_id().map(str::to_owned),
+                origin: Default::default(),
+            }],
+            description: self.description.take(),
+            coalesce_key: None,
+            sequence_number: authority.next_sequence_number(),
+            started_at: String::new(),
+            finished_at: None,
+        };
         let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -1118,22 +1014,22 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
 //#endregion 📬️ArtifactStorePreparation
 
 //#region 🔖️WriterPlayApp
-/// 🧪️ B1: unit struct — every former `WriterPlayRuntime` field now lives in [`WriterConfig`], written
-/// through [`WriterConfigMutation`]s.
+/// 🧪️ Writer editor runtime; document state stays in the artifact and concrete view state stays in
+/// its exact main-window config/transient owners.
 #[derive(Default)]
 pub struct WriterPlayApp;
 
 impl ArtifactEditor for WriterPlayApp {
     type Snapshot = WriterSnapshot;
     type Mutation = WriterMutation;
-    type Config = WriterConfig;
-    type ConfigMutation = WriterConfigMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = WriterPresence;
-    type PresenceMutation = WriterPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = NoPresence;
+    type PresenceMutation = NoPresenceMutation;
+    type Transient = NoTransient;
+    type TransientMutation = NoTransientMutation;
 
     type Command = WriterCommand;
 
@@ -1144,8 +1040,48 @@ impl ArtifactEditor for WriterPlayApp {
         Some(Arc::new(WriterArtifactStorePreparationFactory))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(Arc::new(WriterConfigStorePreparationFactory))
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
+    }
+
+    fn build_config_store_disposer() -> ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_draft_store_disposer() -> ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<WriterMainWindowConfigOwner>()
+    }
+
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<WriterMainWindowTransientOwner>()
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -1197,10 +1133,6 @@ impl ArtifactEditor for WriterPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
-        Some(crate::editor::writer::config::schema::app_schema_descriptor())
-    }
-
     fn initial_snapshot() -> WriterSnapshot {
         crate::schema::empty_writer_snapshot()
     }
@@ -1235,24 +1167,28 @@ impl ArtifactEditor for WriterPlayApp {
             return Err(Fault::from("writer-command-tool-mismatch"));
         }
         let text = writer_text_owner(&request.snapshot);
-        let payload = WriterCommandToolPayload { command: *request.command, snapshot: request.snapshot, text, config: request.config, completion: Some(request.completion) };
+        let view_state = request.context.view_state.clone();
+        let window_config = request.window_config.as_ref().and_then(|snapshot| snapshot.get::<WriterMainWindowConfigOwner>()).cloned();
+        let window_transient = request.context.window_transient.as_ref().and_then(|snapshot| snapshot.get::<WriterMainWindowTransientOwner>()).cloned();
+        let payload = WriterCommandToolPayload { command: *request.command, snapshot: request.snapshot, text, view_state, window_config, window_transient, completion: Some(request.completion) };
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
     fn handle(
         command: &WriterCommand,
         doc: &ArtifactView<'_, WriterSnapshot>,
-        cfg: &ConfigView<'_, WriterConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        cfg: &ConfigView<'_, NoConfig>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
+    ) -> Result<Emit<WriterMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🕹️ `ast` domain: `HierarchyProvider::Topology` from the jack AST's own parent links — see
     /// `writer_ast_topology`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert("ast".to_string(), writer_ast_topology(doc.snapshot));
         InteractionTopology { domains }
@@ -1275,24 +1211,43 @@ impl ArtifactEditor for WriterPlayApp {
         Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
-        let config = cfg.snapshot;
         let labels = writer_play_labels(view_state);
+        let window_config = main::config::current(cfg).cloned().unwrap_or_default();
+        let window_transient = WriterMainWindowTransient::default();
         let node = match body_key {
-            WRITER_PLAY_BODY_MAIN => main::render(document, config),
-            WRITER_PLAY_BODY_ARTIFACT => document_panel::render(document, config, labels),
+            WRITER_PLAY_BODY_MAIN => main::render(document, &window_config, &window_transient),
+            WRITER_PLAY_BODY_ARTIFACT => document_panel::render(document, labels),
             WRITER_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            WRITER_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
+            WRITER_PLAY_BODY_INSPECTION => inspection_panel::render(document, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "writer unknown-body text admission failed")),
         }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
-    fn window_engagements(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, WriterSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, NoTransient>,
+        _interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        if body_key == WRITER_PLAY_BODY_MAIN {
+            let config = main::config::current(cfg).cloned().unwrap_or_default();
+            let transient = main::transient::current(transient).cloned().unwrap_or_default();
+            let node = main::render(doc.snapshot, &config, &transient)?;
+            return Ok(semio_framework_plugin::built_to_component_tree(node));
+        }
+        Self::render(body_key, doc, cfg, view_state)
+    }
+
+    fn window_engagements(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus};
 
-        let config = cfg.snapshot;
+        let Some(config) = main::config::current(cfg) else { return HashMap::new() };
         let labels = writer_play_labels(view_state);
         let engagement = WindowEngagement {
             session_active: Some(false),
@@ -1306,7 +1261,7 @@ impl ArtifactEditor for WriterPlayApp {
             }]),
             input: Some(WindowEngagementInput {
                 id: Some("writer-engagement-input".into()),
-                value: Some(config.engagement_input.clone()),
+                value: Some(String::new()),
                 placeholder: Some(labels.engagement_placeholder.into()),
                 disabled: None,
                 on_change: Some(writer_action("engagementInput", None)),
@@ -1323,15 +1278,32 @@ impl ArtifactEditor for WriterPlayApp {
                 WindowEngagementPossible { id: "writer-line-numbers".into(), label: labels.line_numbers.into(), detail: None, action: Some(writer_action("toggleLineNumbers", None)) },
             ]),
         };
-        HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
+        let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
+        HashMap::from([(window_id, engagement)])
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.snapshot;
-        HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), main::window_measures(config, writer_play_labels(view_state)))])
+    fn window_engagements_with_request_context(
+        doc: &ArtifactView<'_, WriterSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, NoTransient>,
+    ) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+        let mut engagements = Self::window_engagements(doc, cfg, view_state);
+        let Some(window_id) = view_state.window_id.as_ref() else { return HashMap::new() };
+        let Some(window_transient) = main::transient::current(transient) else { return HashMap::new() };
+        if let Some(input) = engagements.get_mut(window_id).and_then(|engagement| engagement.input.as_mut()) {
+            input.value = Some(window_transient.engagement_input.clone());
+        }
+        engagements
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn window_measures(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let Some(config) = main::config::current(cfg) else { return HashMap::new() };
+        let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
+        HashMap::from([(window_id, main::window_measures(config, writer_play_labels(view_state)))])
+    }
+
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let is_de = view_state.locale == semio_framework_plugin::Locale::De;
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(registry, text, is_de)
@@ -1358,29 +1330,30 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             // 🔧️ Panel-visible P0 effects: format rewrites the buffer (Mutation), lint re-runs
             // diagnostics into runtime (View — an effect, not a document operation). Categorized for
             // `Menu::group`'s ribbon-parent taxonomy (GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS).
-            .action_with(ActionDefinition::bounded_catalog("formatDocument", LocalizedLabel::native("Format Document", "Dokument formatieren"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::new("formatDocument", LocalizedLabel::native("Format Document", "Dokument formatieren"), ActionKind::Mutation, "typography").with_category("transform"))
             .action_with(ActionDefinition::bounded_catalog("lintDocument", LocalizedLabel::native("Lint Document", "Dokument prüfen"), ActionKind::View).with_category("tools"))
             // 🔧️ P1 example switch (whole-document load) with a staged example choice.
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             // 🙈️ Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
             // and dev-only whole-document JSON setters.
-            .action_with(writer_hidden_operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten")))
-            .action_with(writer_hidden_operation("setText", LocalizedLabel::native("Set Text", "Text festlegen")))
-            .action_with(writer_hidden_view("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen")))
-            .action_with(writer_hidden_operation("commitRename", LocalizedLabel::native("Commit Rename", "Umbenennung übernehmen")).with_category("transform"))
-            .action_with(writer_hidden_operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen")))
-            .action_with(writer_hidden_operation("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen")))
-            .action_with(writer_hidden_operation("setSnapshotJson", LocalizedLabel::native("Set Document JSON", "Dokument-JSON festlegen")))
-            .action_with(writer_hidden_operation("setFixtureJson", LocalizedLabel::native("Set Fixture JSON", "Fixture-JSON festlegen")))
+            .action_with(writer_hidden_operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), "typography"))
+            .action_with(writer_hidden_operation("setText", LocalizedLabel::native("Set Text", "Text festlegen"), "sparkles"))
+            .action_with(writer_hidden_view("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), "camera"))
+            .action_with(writer_hidden_operation("commitRename", LocalizedLabel::native("Commit Rename", "Umbenennung übernehmen"), "sparkles").with_category("transform"))
+            .action_with(writer_hidden_operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), "sparkles"))
+            .action_with(writer_hidden_operation("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), "sparkles"))
+            .action_with(writer_hidden_operation("openDocument", LocalizedLabel::native("Open Document", "Dokument öffnen"), "folder-open"))
+            .action_with(writer_hidden_operation("setSnapshotJson", LocalizedLabel::native("Set Document JSON", "Dokument-JSON festlegen"), "sparkles"))
+            .action_with(writer_hidden_operation("setFixtureJson", LocalizedLabel::native("Set Fixture JSON", "Fixture-JSON festlegen"), "sparkles"))
             // 🙈️ Internal View measures — editor caret/range, completions, editor settings. AST
             // selection/hover no longer declared here: the framework auto-injects
             // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
             // setInteractionGranularity for every domain declared via `.interaction(...)` below.
-            .action_with(writer_hidden_view("requestCompletions", LocalizedLabel::native("Request Completions", "Vervollständigungen anfordern")).with_category("tools"))
-            .action_with(writer_hidden_view("setEditorSelection", LocalizedLabel::native("Set Editor Selection", "Editor-Auswahl festlegen")))
-            .action_with(writer_hidden_view("toggleLineNumbers", LocalizedLabel::native("Toggle Line Numbers", "Zeilennummern umschalten")))
-            .action_with(writer_hidden_view("setEditorSetting", LocalizedLabel::native("Set Editor Setting", "Editor-Einstellung festlegen")))
-            .action_with(writer_hidden_view("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe")))
+            .action_with(writer_hidden_view("requestCompletions", LocalizedLabel::native("Request Completions", "Vervollständigungen anfordern"), "typography").with_category("tools"))
+            .action_with(writer_hidden_view("setEditorSelection", LocalizedLabel::native("Set Editor Selection", "Editor-Auswahl festlegen"), "eye"))
+            .action_with(writer_hidden_view("toggleLineNumbers", LocalizedLabel::native("Toggle Line Numbers", "Zeilennummern umschalten"), "eye"))
+            .action_with(writer_hidden_view("setEditorSetting", LocalizedLabel::native("Set Editor Setting", "Editor-Einstellung festlegen"), "eye"))
+            .action_with(writer_hidden_view("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), "hand"))
             .action_interactive_job("textEdit", InteractiveJobClassification::Migrated)
             .action_interactive_job("setText", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
@@ -1427,7 +1400,6 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             // 🎯️ Typed channel surface (mirrors `shooting_ui::create_shooting_app`'s identical wiring) —
             // `writer_io()` is the single source of truth for both the trait's `io()` override and this
             // manifest declaration.
-            .config(WriterPlayApp::config_spec())
             .io(writer_io())
             // SDK GAP (contract 2.4, Editor/Viewer builder split): .example(...)/.workflow(...) do
             // not exist on Editor::builder's type -- the two example registrations ("jack",

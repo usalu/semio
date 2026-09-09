@@ -4,35 +4,10 @@
   "title": "EquationDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
-    "artifact": {
-      "title": "EquationArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "graph": {
-      "$ref": "https://semio.tech/schema/s/equation/equation/artifact.json#/$defs/EquationGraph",
-      "x-semio-state": "artifact"
-    },
-    "geometry": {
-      "$ref": "https://semio.tech/schema/s/equation/equation/artifact.json#/$defs/EquationGeometry",
-      "x-semio-state": "artifact"
-    },
-    "cameraX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    }
+    "notation": { "anyOf": [{ "$ref": "https://semio.tech/schema/os/store/child.json" }, { "type": "null" }], "x-semio-state": "artifact" },
+    "results": { "anyOf": [{ "$ref": "https://semio.tech/schema/os/store/child.json" }, { "type": "null" }], "x-semio-state": "artifact" },
+    "computed": { "anyOf": [{ "$ref": "https://semio.tech/schema/os/store/child.json" }, { "type": "null" }], "x-semio-state": "artifact" },
+    "equation": { "anyOf": [{ "$ref": "https://semio.tech/schema/framework/value/schema.json" }, { "type": "null" }], "x-semio-state": "artifact" }
   }
 }

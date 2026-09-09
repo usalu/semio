@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::process3d::testkit;
 
@@ -13,7 +12,7 @@ async fn definition_declares_the_world3d_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn engagement_exposes_no_utility_switch_options() {
     let doc = Process3dSnapshot::default();
-    let engagement = engagement(&doc, &Process3dConfig::default(), &crate::editor::process3d::terminology::Process3dLabels::NATIVE_EN);
+    let engagement = engagement(&doc, &Process3dConfig::default(), crate::editor::process3d::config::PROCESS3D_DEFAULT_UTILITY, &crate::editor::process3d::terminology::Process3dLabels::NATIVE_EN);
     assert!(engagement.options.is_none(), "select/cut/drill/attach switching lives only on the framework utility bar; the engagement must not duplicate it as options");
 }
 

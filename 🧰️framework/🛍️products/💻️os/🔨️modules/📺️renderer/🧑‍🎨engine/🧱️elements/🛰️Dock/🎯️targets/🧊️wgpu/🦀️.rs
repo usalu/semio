@@ -874,7 +874,7 @@ fn collect_corner_tab_bars_for_stack(path: &DockPath, windows: &[DockStackTab], 
         let widths: Vec<f32> = tabs
             .iter()
             .map(|tab| {
-                let label = window_labels.get(&tab.window_id).map(String::as_str).unwrap_or(tab.window_id.as_str());
+                let label = window_labels.get(&tab.window_id).or_else(|| window_labels.get(&tab.window_kind_id)).map(String::as_str).unwrap_or(tab.window_id.as_str());
                 dock_tab_chip_width(atlas, theme, label, 3)
             })
             .collect();
@@ -1498,8 +1498,8 @@ fn layout_stack_cap(windows: &[DockStackTab], labels: &HashMap<String, String>, 
         let mut widths = Vec::with_capacity(tabs.len());
         let mut meta = Vec::with_capacity(tabs.len());
         for tab in &tabs {
-            let label = labels.get(&tab.window_id).cloned().unwrap_or_else(|| tab.window_id.clone());
-            let icon_id = icon_ids.get(&tab.window_id).cloned().unwrap_or_else(|| "app-window".into());
+            let label = labels.get(&tab.window_id).or_else(|| labels.get(&tab.window_kind_id)).cloned().unwrap_or_else(|| tab.window_id.clone());
+            let icon_id = icon_ids.get(&tab.window_id).or_else(|| icon_ids.get(&tab.window_kind_id)).cloned().unwrap_or_else(|| "app-window".into());
             let tw = dock_tab_chip_width(atlas, theme, &label, 3);
             widths.push(tw);
             meta.push((tab.window_id.clone(), label, icon_id));

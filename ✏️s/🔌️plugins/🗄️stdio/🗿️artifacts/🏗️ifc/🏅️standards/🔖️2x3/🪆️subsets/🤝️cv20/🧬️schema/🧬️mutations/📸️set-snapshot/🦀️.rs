@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSnapshot {
-        pub(crate) snapshot: Box<Ifc2x3Snapshot>,
-    }
+    pub(crate) snapshot: Box<Ifc2x3Snapshot>,
+}
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetSnapshot {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "snapshot", kind: "set-snapshot", record: "SetSnapshot" };

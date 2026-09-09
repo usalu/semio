@@ -29,7 +29,9 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 }
 
 fn case() -> Case {
-    Case { kind: "change-outdoor-air-system-economizer-enabled", directory: "💰️change-outdoor-air-system-economizer-enabled/🧪️tests/✅️frees-the-cooling", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case {
+        kind: "change-outdoor-air-system-economizer-enabled", directory: "💰️change-outdoor-air-system-economizer-enabled/🧪️tests/✅️frees-the-cooling", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
+    }
 }
 
 #[semio_framework_async_macros::async_test]

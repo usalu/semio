@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 
 async fn synthetic_snapshot() -> Mp4Snapshot {
     Mp4Snapshot {
@@ -89,9 +88,9 @@ async fn codec_retention_law_round_trips_the_real_fixture_snapshot_exactly() {
 #[semio_framework_async_macros::async_test]
 async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     use crate::standards::isobmff::subsets::any::schema::{
-        Mp4AnalyzerAnalysis,
         diff::Mp4Diff,
-        mutations::{Mp4Mutation, apply_mp4_mutation},
+        mutations::{apply_mp4_mutation, Mp4Mutation},
+        Mp4AnalyzerAnalysis,
     };
     use protocol::{DiffCodec, Mutation, OpBinary, OpText};
     use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};

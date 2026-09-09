@@ -38,7 +38,7 @@
   "towerIsChimney": null,
   "towerQNominal": null,
   "towerMassT": null,
-  "foundationAreaM2": 144.0,
+  "foundationAreaM2": 144,
   "foundationPRdKpa": null,
   "foundationHEdKn": null,
   "foundationHRdKn": null,
@@ -48,6 +48,5 @@
   "wallPhiDeg": null,
   "wallSoilGammaKnM3": null,
   "wallR": null,
-  "wallHRdKn": null,
-  "selectedCheckIndex": null
+  "wallHRdKn": null
 }

@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::note::NOTE_PLAY_BODY_NAVIGATOR as BODY_NAVIGATOR;
 use crate::editor::note::testkit::{note_app, render as render_body};
+use crate::editor::note::NOTE_PLAY_BODY_NAVIGATOR as BODY_NAVIGATOR;
 
 #[semio_framework_async_macros::async_test]
 async fn renders_navigator_canvas() {

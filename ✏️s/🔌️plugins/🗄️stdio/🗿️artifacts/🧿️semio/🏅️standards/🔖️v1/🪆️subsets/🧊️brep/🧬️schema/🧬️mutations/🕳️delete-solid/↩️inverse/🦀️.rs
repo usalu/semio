@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteSolid`.
 
-use crate::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, create_solid, delete_solid};
+use crate::standards::v1::subsets::brep::schema::mutations::{create_solid, delete_solid, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse
@@ -10,11 +10,7 @@ pub fn inverse(payload: &super::DeleteSolid, base: &SemioBrepSnapshot) -> Vec<Se
         return Vec::new();
     };
     let tail = &base.solids[index..];
-    let mut undo: Vec<SemioBrepMutation> = tail
-        .iter()
-        .skip(1)
-        .map(|x| SemioBrepMutation::DeleteSolid(delete_solid::DeleteSolid { id: x.id.clone() }))
-        .collect();
+    let mut undo: Vec<SemioBrepMutation> = tail.iter().skip(1).map(|x| SemioBrepMutation::DeleteSolid(delete_solid::DeleteSolid { id: x.id.clone() })).collect();
     undo.extend(tail.iter().map(|x| SemioBrepMutation::CreateSolid(create_solid::CreateSolid { id: x.id.clone(), shells: x.shells.clone() })));
     undo
 }

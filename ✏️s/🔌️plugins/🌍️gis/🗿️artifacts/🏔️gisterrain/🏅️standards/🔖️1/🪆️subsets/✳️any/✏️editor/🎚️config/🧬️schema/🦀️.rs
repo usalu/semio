@@ -1,8 +1,8 @@
 //! 🧬️ schema leaf
 use ::semio_framework_schema::ArtifactSchema;
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
@@ -22,11 +22,7 @@ pub fn app_schema_descriptor() -> ::semio_framework_schema::AppSchemaDescriptor 
     ::semio_framework_schema::AppSchemaDescriptor {
         id: "s.gis.gis3d",
         config: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         presence: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),

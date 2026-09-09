@@ -1,8 +1,8 @@
 //! ⚙️ Remodeling play app panel — the Parameters tab: a read-only dump of the 8 param sub-groups (editing
 //! happens via the per-group `setXParams` command-palette actions' typed arg forms, not inline fields).
 
-use crate::RemodelingSnapshot;
 use crate::editor::remodeling::terminology::RemodelingLabels;
+use crate::RemodelingSnapshot;
 use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
 
 //#region 🔖️Constants
@@ -40,39 +40,19 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemb
                 p.ingest.min_sharpness
             ),
         ),
-        tree_item(
-            "remodeling-parameters.feature",
-            format!("{}: {:?}, {} {}, {} {}", labels.params_feature.as_str(), p.feature.detector, labels.target_short.as_str(), p.feature.target_count, labels.octaves_short.as_str(), p.feature.octaves),
-        ),
+        tree_item("remodeling-parameters.feature", format!("{}: {:?}, {} {}, {} {}", labels.params_feature.as_str(), p.feature.detector, labels.target_short.as_str(), p.feature.target_count, labels.octaves_short.as_str(), p.feature.octaves)),
         tree_item(
             "remodeling-parameters.matching",
             format!("{}: {:?}, {} {:.2}, {} {}", labels.params_matching.as_str(), p.matching.matcher, labels.ratio_short.as_str(), p.matching.ratio_test, labels.window_short.as_str(), p.matching.sequential_window),
         ),
         tree_item(
             "remodeling-parameters.sfm",
-            format!(
-                "{}: {} {}, {} {}, {} {}",
-                labels.params_sfm.as_str(),
-                labels.ransac_short.as_str(),
-                p.sfm.ransac_iterations,
-                labels.min_track_short.as_str(),
-                p.sfm.min_track_length,
-                labels.ba_short.as_str(),
-                p.sfm.ba_max_iterations
-            ),
+            format!("{}: {} {}, {} {}, {} {}", labels.params_sfm.as_str(), labels.ransac_short.as_str(), p.sfm.ransac_iterations, labels.min_track_short.as_str(), p.sfm.min_track_length, labels.ba_short.as_str(), p.sfm.ba_max_iterations),
         ),
         tree_item("remodeling-parameters.dense", format!("{}: {:?}, {} {}px", labels.params_dense.as_str(), p.dense.resolution, labels.window_short.as_str(), p.dense.window_radius_px)),
         tree_item(
             "remodeling-parameters.mesh",
-            format!(
-                "{}: {} {:.1}mm, {} {}, watertight {}",
-                labels.params_mesh.as_str(),
-                labels.voxel_short.as_str(),
-                p.mesh.tsdf_voxel_size_mm,
-                labels.target_short.as_str(),
-                p.mesh.decimate_target_triangles,
-                p.mesh.guarantee_watertight
-            ),
+            format!("{}: {} {:.1}mm, {} {}, watertight {}", labels.params_mesh.as_str(), labels.voxel_short.as_str(), p.mesh.tsdf_voxel_size_mm, labels.target_short.as_str(), p.mesh.decimate_target_triangles, p.mesh.guarantee_watertight),
         ),
         tree_item("remodeling-parameters.motion", format!("{}: {}", labels.params_motion.as_str(), if p.motion.enabled { labels.enabled.as_str() } else { labels.disabled.as_str() })),
         tree_item("remodeling-parameters.geo", format!("{}: {}", labels.params_geo.as_str(), if p.geo.enabled { labels.enabled.as_str() } else { labels.disabled.as_str() })),

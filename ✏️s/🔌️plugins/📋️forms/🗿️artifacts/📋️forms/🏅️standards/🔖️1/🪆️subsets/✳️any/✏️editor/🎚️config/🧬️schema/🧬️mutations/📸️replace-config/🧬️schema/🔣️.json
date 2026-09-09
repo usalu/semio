@@ -21,9 +21,6 @@
             }
           }
         },
-        "locale": {
-          "type": "string"
-        },
         "contributionsJson": {
           "type": "string"
         }
@@ -31,7 +28,6 @@
       "required": [
         "currentStepIndex",
         "tryValues",
-        "locale",
         "contributionsJson"
       ],
       "additionalProperties": false

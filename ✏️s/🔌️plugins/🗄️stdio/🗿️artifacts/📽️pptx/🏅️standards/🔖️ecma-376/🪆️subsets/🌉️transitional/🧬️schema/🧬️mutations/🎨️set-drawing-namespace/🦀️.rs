@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetDrawingNamespace {
-        pub(crate) namespace: String,
-    }
+    pub(crate) namespace: String,
+}
 
 impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for SetDrawingNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "drawing-namespace", kind: "set-drawing-namespace", record: "SetDrawingNamespace" };

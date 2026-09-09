@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamHeader};
 

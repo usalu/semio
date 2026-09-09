@@ -218,11 +218,7 @@ pub fn media_annotation(snapshot: &PdfSnapshot, subtype: &str, title: &str) -> O
 pub fn signature_fields(snapshot: &PdfSnapshot) -> Vec<ObjRef> {
     let Some(form) = catalog_entry(snapshot, "AcroForm").and_then(|value| resolve(snapshot, value)) else { return Vec::new() };
     let Some(fields) = form.dict_get("Fields").and_then(|value| resolve(snapshot, value)).and_then(|value| value.as_array()) else { return Vec::new() };
-    fields
-        .iter()
-        .filter_map(|item| item.as_ref())
-        .filter(|id| object(snapshot, *id).is_some_and(|value| dict_name(value, "FT") == Some("Sig")))
-        .collect()
+    fields.iter().filter_map(|item| item.as_ref()).filter(|id| object(snapshot, *id).is_some_and(|value| dict_name(value, "FT") == Some("Sig"))).collect()
 }
 
 /// ✍️ The signature field titled `title`.
@@ -280,18 +276,9 @@ pub fn output_intent_identifier(snapshot: &PdfSnapshot) -> Option<String> {
 /// when `dest_profile` — a real ICC destination-profile stream ISO 15930-7 requires alongside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn set_output_intent(snapshot: &mut PdfSnapshot, subtype: &str, identifier: &str, dest_profile: bool) {
-    let mut entries = vec![
-        ("Type", PdfObject::Name("OutputIntent".to_string())),
-        ("S", PdfObject::Name(subtype.to_string())),
-        ("OutputConditionIdentifier", literal(identifier)),
-        ("Info", literal(identifier)),
-    ];
+    let mut entries = vec![("Type", PdfObject::Name("OutputIntent".to_string())), ("S", PdfObject::Name(subtype.to_string())), ("OutputConditionIdentifier", literal(identifier)), ("Info", literal(identifier))];
     if dest_profile {
-        let stream = PdfObject::Stream {
-            dict: vec![PdfDictEntry { key: "N".to_string(), value: PdfObject::Int(3) }],
-            data: format!("ICC destination output profile for {identifier}").into_bytes(),
-            filters: Vec::new(),
-        };
+        let stream = PdfObject::Stream { dict: vec![PdfDictEntry { key: "N".to_string(), value: PdfObject::Int(3) }], data: format!("ICC destination output profile for {identifier}").into_bytes(), filters: Vec::new() };
         let program = insert_object(snapshot, stream);
         entries.push(("DestOutputProfile", PdfObject::Ref(program)));
     }
@@ -341,12 +328,7 @@ pub fn action_object(subtype: &str, payload_key: &str, payload: &str) -> PdfObje
 /// is never produced here — ISO 24517-1 forbids the first two and explicitly allows the third.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn media_annotation_object(subtype: &str, title: &str) -> PdfObject {
-    dict(vec![
-        ("Type", PdfObject::Name("Annot".to_string())),
-        ("Subtype", PdfObject::Name(subtype.to_string())),
-        ("T", literal(title)),
-        ("Rect", PdfObject::Array(vec![PdfObject::Int(0), PdfObject::Int(0), PdfObject::Int(144), PdfObject::Int(96)])),
-    ])
+    dict(vec![("Type", PdfObject::Name("Annot".to_string())), ("Subtype", PdfObject::Name(subtype.to_string())), ("T", literal(title)), ("Rect", PdfObject::Array(vec![PdfObject::Int(0), PdfObject::Int(0), PdfObject::Int(144), PdfObject::Int(96)]))])
 }
 
 /// 📎️ Adds a `/Type /Filespec` with a real `/EF` attached-file stream and NO `/AFRelationship` —
@@ -354,12 +336,7 @@ pub fn media_annotation_object(subtype: &str, title: &str) -> PdfObject {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn insert_file_spec(snapshot: &mut PdfSnapshot, file_name: &str) -> ObjRef {
     let payload = insert_object(snapshot, PdfObject::Stream { dict: Vec::new(), data: format!("attached payload for {file_name}").into_bytes(), filters: Vec::new() });
-    let spec = dict(vec![
-        ("Type", PdfObject::Name("Filespec".to_string())),
-        ("F", literal(file_name)),
-        ("UF", literal(file_name)),
-        ("EF", single_entry_dict("F", PdfObject::Ref(payload))),
-    ]);
+    let spec = dict(vec![("Type", PdfObject::Name("Filespec".to_string())), ("F", literal(file_name)), ("UF", literal(file_name)), ("EF", single_entry_dict("F", PdfObject::Ref(payload)))]);
     insert_object(snapshot, spec)
 }
 

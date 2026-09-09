@@ -7,6 +7,11 @@
 //! Frozen contract: `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`
 //! `## Amendment` §`protocol_command`.
 
+/// 🗂️ Shared keyed-map mutation algebra and wire contract.
+#[path = "🗂️map/🦀️.rs"]
+pub mod map;
+pub use map::{MapDelta, MapEntryDelta, MapEntryOperation, MapPresence};
+
 //#region 🔖️Mutation
 /// @emoji 🚫️ Structured rejection of a diff that cannot be applied to its supplied base.
 /// The shape is protocol-owned and wire-safe: callers never need a technology crate's error type

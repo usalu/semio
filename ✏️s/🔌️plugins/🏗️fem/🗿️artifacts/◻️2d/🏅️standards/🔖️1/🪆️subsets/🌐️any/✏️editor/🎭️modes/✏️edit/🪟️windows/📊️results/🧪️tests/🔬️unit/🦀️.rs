@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::fem2d::Fem2dCommand;
 use crate::editor::fem2d::testkit::{dispatch, fem2d_app, render as render_body};
+use crate::editor::fem2d::Fem2dCommand;
 
 async fn load_default_example(app: &mut crate::editor::fem2d::testkit::Fem2dApp) {
     dispatch(app, Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;

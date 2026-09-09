@@ -234,11 +234,9 @@ fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
             colors: dec_list(arg("colors")?, dec_rgba)?,
             indices: dec_list(arg("indices")?, |t| t.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string()))?,
         })),
-        "set-primitive-material" => Ok(SemioMeshMutation::SetPrimitiveMaterial(set_primitive_material::SetPrimitiveMaterial {
-            mesh_id: dec_str(arg("mesh-id")?)?,
-            primitive_id: dec_str(arg("primitive-id")?)?,
-            material_id: decode_option(arg("material-id")?, dec_str)?,
-        })),
+        "set-primitive-material" => {
+            Ok(SemioMeshMutation::SetPrimitiveMaterial(set_primitive_material::SetPrimitiveMaterial { mesh_id: dec_str(arg("mesh-id")?)?, primitive_id: dec_str(arg("primitive-id")?)?, material_id: decode_option(arg("material-id")?, dec_str)? }))
+        }
         "create-material" => Ok(SemioMeshMutation::CreateMaterial(create_material::CreateMaterial { material: dec_material(arg("material")?)? })),
         "delete-material" => Ok(SemioMeshMutation::DeleteMaterial(delete_material::DeleteMaterial { id: dec_str(arg("id")?)? })),
         "change-material-base-color" => Ok(SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::ChangeMaterialBaseColor { id: dec_str(arg("id")?)?, new_base_color: dec_rgba(arg("new-base-color")?)? })),

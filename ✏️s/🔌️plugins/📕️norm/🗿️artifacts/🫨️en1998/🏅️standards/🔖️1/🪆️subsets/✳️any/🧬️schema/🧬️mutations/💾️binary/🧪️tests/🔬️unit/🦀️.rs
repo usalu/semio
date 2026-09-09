@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::En1998Snapshot;
 use crate::mutations::change_seismic_zone;
+use crate::En1998Snapshot;
 
 fn sample_mutation() -> En1998Mutation {
     En1998Mutation::ChangeSeismicZone(change_seismic_zone::ChangeSeismicZone { new_seismic_zone: 3 })

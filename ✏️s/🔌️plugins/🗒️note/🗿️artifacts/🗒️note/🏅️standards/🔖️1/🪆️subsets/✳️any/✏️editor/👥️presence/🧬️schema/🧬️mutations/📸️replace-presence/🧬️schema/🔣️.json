@@ -15,16 +15,12 @@
         },
         "cameraZoom": {
           "type": "number"
-        },
-        "activeUtilityId": {
-          "type": "string"
         }
       },
       "required": [
         "cameraX",
         "cameraY",
-        "cameraZoom",
-        "activeUtilityId"
+        "cameraZoom"
       ],
       "additionalProperties": false
     }

@@ -1,12 +1,9 @@
 # 🧬️ Sequence diff schema.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type SequenceDiff {
   artifact: SequenceArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
-  steps: SequenceStepsDelta @state(class: ARTIFACT)
-  edges: SequenceEdgesDelta @state(class: ARTIFACT)
-  lastRunJson: String @state(class: CONFIG)
-  orientation: String @state(class: CONFIG)
-  camera: SequenceCamera @state(class: CONFIG)
+  content: ArtifactChild @state(class: ARTIFACT)
 }
 type SequenceStepsDelta { added: [SequenceStep!]! removed: [String!]! patched: [SequenceStepPatchEntry!]! reordered: [String!] }
 type SequenceEdgesDelta { added: [SequenceEdge!]! removed: [String!]! patched: [SequenceEdgePatchEntry!]! reordered: [String!] }
@@ -19,8 +16,8 @@ type SequenceStepPatch { params: JSON x: Float y: Float collapsed: Boolean }
 type SequenceEdgePatch { from: String to: String }
 type SequenceCamera { x: Float! y: Float! zoom: Float! }
 type SequenceArtifact {
-  schema: String! steps: [SequenceStep!]! edges: [SequenceEdge!]!
-  lastRunJson: String! orientation: String! camera: SequenceCamera!}
+  schema: String! content: ArtifactChild!
+}
 scalar JSON
 
 type SequenceStringList {

@@ -85,7 +85,7 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ `SHomeDiff` carries four optional fields; this mutation is allowed to set exactly one of
-/// them — `catalogGeneration` — and must leave `schema`, `activePanelTab` and `locale` null.
+/// them — `catalogGeneration` — and must leave `schema` null.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let produced = encode_value(built_outcome().diff());
@@ -93,13 +93,13 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "change-catalog-generation/bumps-the-catalog-generation-to-7: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
-/// 🔣️ The committed diff decodes to `SHomeDiff` and re-encodes unchanged — including the three
-/// nulls, which `SHomeDiff` emits because no field carries `skip_serializing_if`.
+/// 🔣️ The committed diff decodes to `SHomeDiff` and re-encodes unchanged — including the schema
+/// null, which `SHomeDiff` emits because no field carries `skip_serializing_if`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded = decode_value::<SHomeDiff>(DIFF);
     assert_eq!(decoded.catalog_generation, Some(7), "change-catalog-generation/bumps-the-catalog-generation-to-7: the committed diff must set the counter");
-    assert!(decoded.active_panel_tab.is_none() && decoded.locale.is_none(), "change-catalog-generation/bumps-the-catalog-generation-to-7: an artifact-lane counter pin must not reach into the config lane");
+    assert!(decoded.schema.is_none(), "a catalog-generation delta preserves the schema");
     let reencoded = encode_value(&decoded);
     let original = pack::parse_json(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-catalog-generation/bumps-the-catalog-generation-to-7: committed diff JSON is not canonical");

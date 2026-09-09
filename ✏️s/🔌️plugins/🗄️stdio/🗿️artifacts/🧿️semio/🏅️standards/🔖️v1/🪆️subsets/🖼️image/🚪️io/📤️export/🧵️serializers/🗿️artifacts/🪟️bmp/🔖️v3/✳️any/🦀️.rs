@@ -9,9 +9,9 @@
 //!   matching header fields); any other key is dropped (no other textual field exists on
 //!   `BmpSnapshot`).
 
-use semio_s_artifact_stdio_bmp::{schema::snapshot::BmpRowOrder, BmpSnapshot};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_bmp::{schema::snapshot::BmpRowOrder, BmpSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId::ANY };

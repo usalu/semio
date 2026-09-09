@@ -59,12 +59,12 @@ mod renderer {
     }
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    fn path_element_to_kurbo(value: PathEl) -> kurbo::PathEl {
+    fn path_element_to_kurbo(value: &PathEl) -> kurbo::PathEl {
         match value {
-            PathEl::MoveTo(point) => kurbo::PathEl::MoveTo(point_to_kurbo(point)),
-            PathEl::LineTo(point) => kurbo::PathEl::LineTo(point_to_kurbo(point)),
-            PathEl::QuadTo(control, point) => kurbo::PathEl::QuadTo(point_to_kurbo(control), point_to_kurbo(point)),
-            PathEl::CurveTo(control1, control2, point) => kurbo::PathEl::CurveTo(point_to_kurbo(control1), point_to_kurbo(control2), point_to_kurbo(point)),
+            PathEl::MoveTo(point) => kurbo::PathEl::MoveTo(point_to_kurbo(*point)),
+            PathEl::LineTo(point) => kurbo::PathEl::LineTo(point_to_kurbo(*point)),
+            PathEl::QuadTo(control, point) => kurbo::PathEl::QuadTo(point_to_kurbo(*control), point_to_kurbo(*point)),
+            PathEl::CurveTo(control1, control2, point) => kurbo::PathEl::CurveTo(point_to_kurbo(*control1), point_to_kurbo(*control2), point_to_kurbo(*point)),
             PathEl::ClosePath => kurbo::PathEl::ClosePath,
         }
     }
@@ -93,7 +93,7 @@ mod renderer {
             Self: 'iter;
 
         fn path_elements(&self, tolerance: f64) -> Self::PathElementsIter<'_> {
-            shape_path_elements(self.0, tolerance).into_iter().map(path_element_to_kurbo).collect::<Vec<_>>().into_iter()
+            shape_path_elements(self.0, tolerance).iter().map(path_element_to_kurbo).collect::<Vec<_>>().into_iter()
         }
         fn area(&self) -> f64 {
             kurbo::Shape::area(&self.to_path(0.1))

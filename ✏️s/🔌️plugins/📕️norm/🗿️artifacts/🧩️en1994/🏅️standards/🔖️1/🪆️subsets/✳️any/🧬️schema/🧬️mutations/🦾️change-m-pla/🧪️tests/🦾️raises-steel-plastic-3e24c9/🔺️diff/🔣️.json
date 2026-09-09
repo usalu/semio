@@ -3,7 +3,7 @@
   "annex": null,
   "mEdKnm": null,
   "vEdKn": null,
-  "mPla": 128.0,
+  "mPla": 128,
   "mPlRd": null,
   "eta": null,
   "vLRd": null,
@@ -21,6 +21,5 @@
   "spanM": null,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

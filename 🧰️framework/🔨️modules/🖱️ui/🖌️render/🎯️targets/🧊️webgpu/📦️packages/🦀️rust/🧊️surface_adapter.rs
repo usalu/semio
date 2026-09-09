@@ -356,7 +356,7 @@ impl<P: AbiPort> WebGpuSurfaceAdapter<P> {
         let request_id = request.request_id;
         let request_generation = request.generation;
         let frame_owner = matches!(outcome, GpuOutcome::FrameAccepted { .. }).then_some(request.bytes);
-        self.queue_outcome(outcome.clone(), request_id, request_generation, frame_owner)?;
+        self.queue_outcome(&outcome, request_id, request_generation, frame_owner)?;
         Ok(GpuStep::Outcome(outcome))
     }
 
@@ -490,15 +490,15 @@ impl<P: AbiPort> WebGpuSurfaceAdapter<P> {
         self.surfaces.iter().position(|record| record.id == surface && record.generation == generation)
     }
 
-    fn queue_outcome(&mut self, outcome: GpuOutcome, request_id: AbiRequestId, request_generation: u32, frame_owner: Option<AbiBytes>) -> Result<(), AbiErrorCode> {
+    fn queue_outcome(&mut self, outcome: &GpuOutcome, request_id: AbiRequestId, request_generation: u32, frame_owner: Option<AbiBytes>) -> Result<(), AbiErrorCode> {
         self.admission.try_admit_page()?;
         let Some(index) = (0..ABI_MAX_PAGES_PER_TRANSFER).map(|offset| (self.next_page_index + offset) % ABI_MAX_PAGES_PER_TRANSFER).find(|candidate| self.pages.iter().all(|page| page.index != *candidate)) else {
             self.admission.release_page();
             return Err(AbiErrorCode::Busy);
         };
-        let (surface, generation) = outcome_identity(&outcome);
+        let (surface, generation) = outcome_identity(outcome);
         let handle = AbiHandle::try_new(surface.get(), generation.get())?;
-        let bytes = encode_outcome(&outcome);
+        let bytes = encode_outcome(outcome);
         if bytes.len() > GPU_MAX_OUTCOME_BYTES {
             self.admission.release_page();
             return Err(AbiErrorCode::LimitExceeded);
@@ -545,7 +545,7 @@ impl<P: AbiPort> WebGpuSurfaceAdapter<P> {
             let request = self.pending_request.take().expect("matched pending request").request;
             let identity = decode_request_identity(request.operation.get(), request.bytes.as_slice()).unwrap_or(fallback_identity(request_id, generation));
             let outcome = GpuOutcome::Cancelled { request_id, surface: identity.0, generation: identity.1 };
-            self.queue_outcome(outcome.clone(), request_id, generation, None)?;
+            self.queue_outcome(&outcome, request_id, generation, None)?;
             return Ok(GpuStep::Outcome(outcome));
         }
         let position = self.pages.iter().position(|page| page.request_id == request_id).ok_or(AbiErrorCode::LateReply)?;
@@ -558,7 +558,7 @@ impl<P: AbiPort> WebGpuSurfaceAdapter<P> {
         self.release_page_owner(old);
         let surface_generation = SurfaceGeneration::try_new(generation)?;
         let outcome = GpuOutcome::Cancelled { request_id, surface, generation: surface_generation };
-        self.queue_outcome(outcome.clone(), request_id, generation, None)?;
+        self.queue_outcome(&outcome, request_id, generation, None)?;
         Ok(GpuStep::Outcome(outcome))
     }
 
@@ -569,7 +569,8 @@ impl<P: AbiPort> WebGpuSurfaceAdapter<P> {
     }
 
     fn release_page_owner(&mut self, page: OutstandingPage) {
-        if page.frame_owner.is_some() {
+        if let Some(frame) = page.frame_owner {
+            drop(frame);
             self.admission.release_frame();
             if let Some(record) = self.surfaces.iter_mut().find(|record| record.id == page.surface) {
                 record.in_flight_frames = record.in_flight_frames.saturating_sub(1);

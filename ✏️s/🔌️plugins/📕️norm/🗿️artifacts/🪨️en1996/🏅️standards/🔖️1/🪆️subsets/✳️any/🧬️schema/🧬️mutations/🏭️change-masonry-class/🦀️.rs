@@ -1,9 +1,8 @@
 //! 🗺️ `change-masonry-class` payload — changes the En1996 document's `masonry_class` (masonry manufacturing-control class).
 
-
-use crate::En1996Snapshot;
 use crate::diff::En1996Diff;
 use crate::mutations::En1996Mutation;
+use crate::En1996Snapshot;
 //#region 🔖️ChangeMasonryClass
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

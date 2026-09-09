@@ -16,7 +16,13 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for SetContributio
         next.contributions_json = self.json.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> { vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Set Contributions".into() }
-    fn target(&self) -> Vec<String> { vec!["contributions".into()] }
+    fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> {
+        vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Contributions".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["contributions".into()]
+    }
 }

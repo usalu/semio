@@ -1,4 +1,3 @@
-
 use super::*;
 use store::ArtifactPack;
 

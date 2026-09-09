@@ -2,11 +2,11 @@
 
 use crate::kernel::*;
 use crate::registers::*;
-use graph::{orient_endpoints, Undirected};
 use framework_schema::ArtifactSchema;
+use graph::{orient_endpoints, Undirected};
 
 //#region 🔖️Artifact
-/// 🧬️ Full program artifact state across the artifact, presence and config lanes.
+/// 🧬️ program document artifact state.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.architect.program")]
@@ -153,28 +153,6 @@ pub struct ProgramArtifact {
     pub traces: Vec<TraceLink>,
     #[state(artifact)]
     pub governance: Governance,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
-    #[state(presence)]
-    pub active_register: String,
-    #[state(presence)]
-    pub adjacency_kind_filter: Option<AdjacencyKind>,
-    #[state(presence)]
-    pub active_report_json: String,
-    #[state(config)]
-    pub search_query: String,
-    #[state(config)]
-    pub search_history_json: String,
-    #[state(config)]
-    pub last_result_json: String,
-    #[state(config)]
-    pub last_analysis_json: String,
-    #[state(config)]
-    pub graph_camera_x: f64,
-    #[state(config)]
-    pub graph_camera_y: f64,
-    #[state(config)]
-    pub graph_camera_zoom: f64,
 }
 //#endregion 🔖️Artifact
 
@@ -262,7 +240,7 @@ impl ProgramArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::ProgramSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -335,17 +313,6 @@ impl ProgramArtifact {
             benchmarks: snapshot.benchmarks,
             traces: snapshot.traces,
             governance: snapshot.governance,
-            selected_ids: Vec::new(),
-            active_register: "elements".into(),
-            adjacency_kind_filter: None,
-            active_report_json: String::new(),
-            search_query: String::new(),
-            search_history_json: "[]".into(),
-            last_result_json: String::new(),
-            last_analysis_json: String::new(),
-            graph_camera_x: 0.0,
-            graph_camera_y: 0.0,
-            graph_camera_zoom: 1.0,
         }
     }
 
@@ -430,13 +397,7 @@ impl ProgramArtifact {
 pub fn program_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.architect.program",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

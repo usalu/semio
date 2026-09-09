@@ -1,10 +1,10 @@
 //! 🕸️ 🕸️ DAG play app commands command — `node-graph-edit`.
 
+use crate::editor::dag::commands::delete_selection::delete_selection_result;
+use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use crate::mutations::{connect_nodes, dag_snapshot_mutations};
 use crate::op::DagMutation;
 use crate::DagSnapshot;
-use crate::editor::dag::commands::delete_selection::delete_selection_result;
-use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_artifact_infinite_dag::{dag_document_from_fixture, DagFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]

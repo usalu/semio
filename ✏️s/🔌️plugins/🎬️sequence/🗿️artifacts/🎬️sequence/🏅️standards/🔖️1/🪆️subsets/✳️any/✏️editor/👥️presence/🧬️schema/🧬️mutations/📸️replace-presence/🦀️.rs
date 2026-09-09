@@ -16,7 +16,13 @@ impl protocol::MutationKind<SequencePresence, SequencePresenceMutation> for Repl
     fn diff(&self, _base: &SequencePresence) -> protocol::MutationOutcome<SequencePresence> {
         protocol::MutationOutcome::new(self.presence.clone())
     }
-    fn inverse(&self, base: &SequencePresence) -> Vec<SequencePresenceMutation> { vec![SequencePresenceMutation::ReplacePresence(Self { presence: base.clone() })] }
-    fn label(&self) -> String { "Replace Presence".into() }
-    fn target(&self) -> Vec<String> { vec!["presence".into()] }
+    fn inverse(&self, base: &SequencePresence) -> Vec<SequencePresenceMutation> {
+        vec![SequencePresenceMutation::ReplacePresence(Self { presence: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Presence".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["presence".into()]
+    }
 }

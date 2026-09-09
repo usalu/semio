@@ -3,7 +3,7 @@
 
 import { BrowserFrameTransport, type BrowserFrameIntrospectionProbe, type BrowserFramePointer, type BrowserFrameWorkerFaultCode } from "../🚚️browser-frame-transport/🟦️.ts";
 import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs.ts";
-import { PLAYGROUND_SESSION } from "../../../../../🧑‍💻dev/🤖️generated/🟦️session.ts";
+import { DEFAULT_HOST_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 
 const RENDERER_MODULE_URL = new URL("./semio-framework-os-renderer-wgpu.js", import.meta.url).href;
 const RENDERER_WASM_URL = new URL("./semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;
@@ -30,7 +30,7 @@ function bootDescriptor(): { pluginVariant: string; appRole: string; hub?: { hub
   const params = new URLSearchParams(window.location.search);
   const hubUrl = params.get("hub");
   return {
-    pluginVariant: bounded(params.get("plugin") ?? PLAYGROUND_SESSION.variant, "plugin"),
+    pluginVariant: bounded(params.get("plugin") ?? DEFAULT_HOST_VARIANT, "plugin"),
     appRole: params.get("role") === "viewer" ? "viewer" : "editor",
     ...(hubUrl ? { hub: { hubUrl: bounded(hubUrl, "hub"), user: bounded(params.get("user") ?? "", "user"), dataDir: bounded(params.get("dataDir") ?? "", "dataDir") } } : {}),
   };

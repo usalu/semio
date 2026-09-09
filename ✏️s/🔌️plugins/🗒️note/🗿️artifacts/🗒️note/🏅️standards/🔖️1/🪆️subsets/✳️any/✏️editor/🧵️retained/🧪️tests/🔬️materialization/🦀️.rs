@@ -1,6 +1,5 @@
-
 use super::*;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{STDIO_SEMIOTEXT_DOCUMENT_SCHEMA, SemioTextSnapshot};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
 fn text_child(owner: Option<std::sync::Arc<SemioTextSnapshot>>, child_id: String) -> crate::NoteTextChild {
     let target = store::os_io::ArtifactRef { artifact_id: "note-text-artifact".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() } };

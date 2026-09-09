@@ -70,11 +70,6 @@ export interface CurationArtifact {
   stockExtra: ObjectKindExtra[];
   /** @state artifact */
   curated: CuratedItem[];
-  /** @state config */
-  filters: Filters;
-  /** @state config */
-  /** @state config */
-  contributionsJson: string;
 }
 
 //#region 🚪️Parsers
@@ -130,8 +125,6 @@ export function parseCurationArtifact(value: unknown, at = "$"): CurationArtifac
     catalog: sourcingCurationArtifactGuardObject(row["catalog"], `${at}.catalog`),
     stockExtra: sourcingCurationArtifactGuardArray(row["stockExtra"], `${at}.stockExtra`).map((item, index) => parseObjectKindExtra(item, `${at}.stockExtra[${index}]`)),
     curated: sourcingCurationArtifactGuardArray(row["curated"], `${at}.curated`).map((item, index) => parseCuratedItem(item, `${at}.curated[${index}]`)),
-    filters: parseFilters(row["filters"], `${at}.filters`),
-    contributionsJson: sourcingCurationArtifactGuardString(row["contributionsJson"], `${at}.contributionsJson`),
   };
 }
 

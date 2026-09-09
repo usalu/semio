@@ -1,4 +1,3 @@
-
 use super::*;
 #[semio_framework_async_macros::async_test]
 async fn demo_source_nonempty() {
@@ -11,8 +10,8 @@ async fn demo_source_nonempty() {
 /// parsed through the real `ArtifactDsl` codec — not a hand-built stub).
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::TiffSnapshot;
     use crate::standards::v6_0::subsets::document::schema::inferences::TiffInference;
+    use crate::TiffSnapshot;
     use protocol::Inference;
     let snapshot = <TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
     assert_eq!(TiffInference::infer(&snapshot), TiffInference::infer(&snapshot));
@@ -20,8 +19,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::TiffSnapshot;
     use crate::standards::v6_0::subsets::document::schema::inferences::TiffInference;
+    use crate::TiffSnapshot;
     use protocol::Inference;
     assert_eq!(TiffInference::infer(&TiffSnapshot::default()), TiffInference::default());
 }
@@ -64,7 +63,7 @@ impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
     }
 
     async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-        use crate::schema::snapshot::{TAG_IMAGE_WIDTH, TiffFieldType, TiffValues};
+        use crate::schema::snapshot::{TiffFieldType, TiffValues, TAG_IMAGE_WIDTH};
         let width = snapshot
             .ifds
             .first()

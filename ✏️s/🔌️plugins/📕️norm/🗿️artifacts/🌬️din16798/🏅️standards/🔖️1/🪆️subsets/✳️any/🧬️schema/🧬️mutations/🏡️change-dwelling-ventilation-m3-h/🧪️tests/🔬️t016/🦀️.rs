@@ -122,15 +122,12 @@ async fn produces_committed_diff() {
     assert!(raised.diff().bedrooms.is_none(), "change-dwelling-ventilation-m3-h/raises-the-dwelling-airflow-to-96-m3-per-hour: the sparse delta must leave bedrooms unset — a delta that rewrote it would be a bug this assertion exists to catch");
 }
 
-/// 🔣️ The committed diff is itself canonical and decodes to `Din16798Diff`. Its
-/// `selectedCheckIndex` is an `Option<Option<u32>>` and so cannot distinguish `None` from
-/// `Some(None)` across a JSON round trip — `change-dwelling-ventilation-m3-h` never writes it, so the committed
-/// `null` is unambiguously `None` here and the fixed point holds.
+/// 🔣️ The committed artifact diff is canonical and excludes presence selection.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: Din16798Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert!(
-        decoded.selected_check_index.is_none(),
+        serde_json::to_value(&decoded).expect("diff JSON").get("selectedCheckIndex").is_none(),
         "change-dwelling-ventilation-m3-h/raises-the-dwelling-airflow-to-96-m3-per-hour: change-dwelling-ventilation-m3-h is an artifact-lane edit and must never carry the presence-lane selectedCheckIndex"
     );
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");

@@ -25,13 +25,7 @@ pub struct LayoutConfig {
 pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.layout.layout",
-        config: ::schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        config: ::schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         presence: ::schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
@@ -44,7 +38,7 @@ pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
 //endregion 📎 App-schema descriptor
 
 //#region 🔁️Re-exports
+pub use crate::LayoutCamera;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::LayoutDropPreviewState;
-pub use crate::LayoutCamera;
 //#endregion 🔁️Re-exports

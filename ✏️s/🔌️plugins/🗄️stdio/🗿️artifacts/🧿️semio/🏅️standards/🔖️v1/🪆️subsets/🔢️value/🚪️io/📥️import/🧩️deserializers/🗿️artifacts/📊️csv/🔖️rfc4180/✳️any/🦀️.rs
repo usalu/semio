@@ -14,9 +14,9 @@
 //!   plain `Str` value and is dropped — see the serializer's own doc comment for the encode side.
 //! - `nodes` always decodes empty — CSV has no graph/reference concept.
 
-use semio_s_artifact_stdio_csv::CsvSnapshot;
 use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_csv::CsvSnapshot;
 
 //#region 🔖️Deserializer
 pub struct SemioValueFromCsv;

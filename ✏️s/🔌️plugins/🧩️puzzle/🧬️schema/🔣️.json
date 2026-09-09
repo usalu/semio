@@ -71,7 +71,10 @@
                           "draft",
                           "presence",
                           "transient",
+                          "window-config",
+                          "window-transient",
                           "child",
+                          "interaction",
                           "host-only"
                         ]
                       }

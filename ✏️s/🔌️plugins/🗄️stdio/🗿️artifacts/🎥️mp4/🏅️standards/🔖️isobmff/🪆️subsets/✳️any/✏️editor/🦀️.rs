@@ -3,11 +3,11 @@
 //! `seek-media` is declared (the frozen `MediaWindowKit` editable action) but intentionally performs no document mutation — playback position is host-side ephemeral transport state, not persisted document content this format's schema models.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
+use crate::editor::mp4::modes::edit;
+use crate::editor::mp4::modes::edit::windows::main;
 use crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation;
 use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
 use crate::{MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA};
-use crate::editor::mp4::modes::edit;
-use crate::editor::mp4::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;
 

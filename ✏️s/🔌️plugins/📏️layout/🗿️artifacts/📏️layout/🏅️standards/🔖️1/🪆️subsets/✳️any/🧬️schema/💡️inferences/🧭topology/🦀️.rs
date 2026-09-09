@@ -5,8 +5,8 @@
 //! Kahn's algorithm so `cycleFree` genuinely reports whether those refs ever form a cycle.
 
 use crate::{Page, ParentPage, Spread};
-use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
 use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
 
 //#region 🔖️Topology
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]

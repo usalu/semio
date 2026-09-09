@@ -77,7 +77,7 @@ async fn set_active_example_loads_the_demo_stock_or_empty_curation_fixture() {
     let (snapshot, history) = empty_view();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = SourcingCurationConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }, &doc, &cfg).expect("handle");
     assert!(!load_document_pack(&emit).stock_extra.is_empty());
     let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: EMPTY_EXAMPLE_ID.into() }, &doc, &cfg).expect("handle");
@@ -89,7 +89,7 @@ async fn set_artifact_json_emits_a_load_document_effect_for_the_parsed_snapshot(
     let (snapshot, history) = empty_view();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = SourcingCurationConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let expected = empty_document();
     let emit = handle(&SetArtifactJson { json: dsl::json::to_json_string(&expected) }, &doc, &cfg).expect("handle");
     assert_eq!(load_document_pack(&emit), expected);
@@ -100,7 +100,7 @@ async fn stock_from_catalogue_merges_built_in_kinds_without_duplicating() {
     let (empty, history) = (empty_document(), HistoryView::empty());
     let doc = ArtifactView::new(&empty, &history);
     let cfg_snapshot = SourcingCurationConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = stock_from_catalogue::handle(&stock_from_catalogue::StockFromCatalogue {}, &doc, &cfg).expect("handle");
     let loaded = load_document_pack(&emit);
     let expected: usize = crate::schema::sourcing_modules("[]").iter().map(|module| module.demo_kinds().len()).sum();

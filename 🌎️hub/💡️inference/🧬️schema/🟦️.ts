@@ -79,6 +79,15 @@ export function parseInferenceRequestV1(value: unknown): InferenceRequestV1 {
   return { schema: "semio.hub.inference-request/v1", version: 1, requestId: row.requestId as string, serviceId: "s.gis.gismap.inference", policyVersion: 1, lifetimeMs: row.lifetimeMs as number };
 }
 
+export const INFERENCE_RECONCILE_REQUEST_MAX_BYTES = 256;
+export type InferenceJobReconcileRequestV1 = { readonly schema: "semio.hub.inference-job-reconcile/v1"; readonly version: 1; readonly requestId: string };
+export function parseInferenceJobReconcileRequestV1(value: unknown): InferenceJobReconcileRequestV1 {
+  const name = "hub.inference/InferenceJobReconcileRequestV1";
+  const row = rows(value, ["schema", "version", "requestId"], name);
+  if (row.schema !== "semio.hub.inference-job-reconcile/v1" || row.version !== 1 || !hex(row.requestId, 32)) return fail(name);
+  return { schema: "semio.hub.inference-job-reconcile/v1", version: 1, requestId: row.requestId as string };
+}
+
 /** 🧬️ The exact retained parent dialect the frozen Map binding admitted; never a client label. */
 export type InferenceParentDialectV1 = { readonly artifactKind: "s.gis.gismap"; readonly standard: "1"; readonly subset: "*" };
 export function parseInferenceParentDialectV1(value: unknown): InferenceParentDialectV1 {
@@ -269,13 +278,26 @@ export function parseInferenceApprovalOutboxV1(value: unknown): InferenceApprova
 }
 
 /** ⏸️ One test-support checkpoint control frame on the fixed inherited descriptor. */
-export type GisInferenceCheckpointControlFrameV1 = { readonly schema: "semio.hub.gis-inference-checkpoint-control/v1"; readonly version: 1; readonly sequence: number; readonly kind: "entered" | "release"; readonly jobId: string };
+export type GisInferenceCheckpointControlFrameV1 = {
+  readonly schema: "semio.hub.gis-inference-checkpoint-control/v1";
+  readonly version: 1;
+  readonly sequence: number;
+  readonly kind: "progress-persisted" | "release";
+  readonly jobId: string;
+  readonly progressCursor: number;
+  readonly completed: number;
+  readonly total: number;
+};
 export function parseGisInferenceCheckpointControlFrameV1(value: unknown): GisInferenceCheckpointControlFrameV1 {
   const name = "hub.inference/GisInferenceCheckpointControlFrameV1";
-  const row = rows(value, ["schema", "version", "sequence", "kind", "jobId"], name);
+  const row = rows(value, ["schema", "version", "sequence", "kind", "jobId", "progressCursor", "completed", "total"], name);
   if (row.schema !== "semio.hub.gis-inference-checkpoint-control/v1" || row.version !== 1 || !uint(row.sequence) || (row.sequence as number) < 1 || (row.sequence as number) > 2
-    || !member(row.kind, ["entered", "release"] as const) || !hex(row.jobId, 32)) return fail(name);
-  return { schema: "semio.hub.gis-inference-checkpoint-control/v1", version: 1, sequence: row.sequence as number, kind: row.kind as "entered" | "release", jobId: row.jobId as string };
+    || !member(row.kind, ["progress-persisted", "release"] as const) || !hex(row.jobId, 32) || !uint(row.progressCursor) || (row.progressCursor as number) < 1 || (row.progressCursor as number) > 16
+    || !uint(row.completed) || (row.completed as number) < 1 || !uint(row.total) || (row.total as number) < 1 || (row.completed as number) > (row.total as number)) return fail(name);
+  return {
+    schema: "semio.hub.gis-inference-checkpoint-control/v1", version: 1, sequence: row.sequence as number, kind: row.kind as "progress-persisted" | "release", jobId: row.jobId as string,
+    progressCursor: row.progressCursor as number, completed: row.completed as number, total: row.total as number,
+  };
 }
 
 export const GIS_INFERENCE_CHECKPOINT_CONTROL_DIRECTIONS = ["hub-to-runner", "runner-to-hub"] as const;
@@ -345,6 +367,73 @@ export function parseInferenceJobReceiptV1(value: unknown): InferenceJobReceiptV
   const row = rows(value, ["schema", "jobId", "state", "proposalState", "proposalHash", "cursor", "expiresAtMs"], name);
   if (row.schema !== "semio.hub.inference-job-receipt/v1" || !hex(row.jobId, 32) || (row.proposalHash !== null && !hex(row.proposalHash, 64)) || !uint(row.cursor) || !uint(row.expiresAtMs)) return fail(name);
   return { schema: "semio.hub.inference-job-receipt/v1", jobId: row.jobId as string, state: parseInferenceJobStateV1(row.state), proposalState: parseInferenceProposalStateV1(row.proposalState), proposalHash: row.proposalHash as string | null, cursor: row.cursor as number, expiresAtMs: row.expiresAtMs as number };
+}
+
+export const INFERENCE_JOB_RECONCILE_APPROVAL_STATES = ["available", "undo-prepared", "undone"] as const;
+export type InferenceJobReconcileApprovalStateV1 = (typeof INFERENCE_JOB_RECONCILE_APPROVAL_STATES)[number];
+export type InferenceJobReconcileApprovalV1 = { readonly state: InferenceJobReconcileApprovalStateV1; readonly receipt: InferenceApprovalReceiptV1 | null };
+export function parseInferenceJobReconcileApprovalV1(value: unknown): InferenceJobReconcileApprovalV1 {
+  const name = "hub.inference/InferenceJobReconcileApprovalV1";
+  const row = rows(value, ["state", "receipt"], name);
+  if (!member(row.state, INFERENCE_JOB_RECONCILE_APPROVAL_STATES)) return fail(name);
+  const state = row.state as InferenceJobReconcileApprovalStateV1;
+  if (state === "available") return { state, receipt: parseInferenceApprovalReceiptV1(row.receipt) };
+  if (row.receipt !== null) return fail(name);
+  return { state, receipt: null };
+}
+
+export type InferenceJobReconcilePageV1 = {
+  readonly jobId: string;
+  readonly state: InferenceJobStateV1;
+  readonly proposalState: InferenceProposalStateV1;
+  readonly cancelRequested: boolean;
+  readonly expired: boolean;
+  readonly proposalHash: string | null;
+  readonly events: readonly InferenceEventV1[];
+  readonly progress: readonly InferenceProgressV1[];
+  readonly nextCursor: number;
+};
+export function parseInferenceJobReconcilePageV1(value: unknown): InferenceJobReconcilePageV1 {
+  const name = "hub.inference/InferenceJobReconcilePageV1";
+  const row = rows(value, ["jobId", "state", "proposalState", "cancelRequested", "expired", "proposalHash", "events", "progress", "nextCursor"], name);
+  if (!hex(row.jobId, 32) || typeof row.cancelRequested !== "boolean" || typeof row.expired !== "boolean" || (row.proposalHash !== null && !hex(row.proposalHash, 64))
+    || !Array.isArray(row.events) || row.events.length > 8 || !Array.isArray(row.progress) || row.progress.length > 16 || !uint(row.nextCursor)) return fail(name);
+  return {
+    jobId: row.jobId as string, state: parseInferenceJobStateV1(row.state), proposalState: parseInferenceProposalStateV1(row.proposalState), cancelRequested: row.cancelRequested,
+    expired: row.expired, proposalHash: row.proposalHash as string | null, events: row.events.map(parseInferenceEventV1), progress: row.progress.map(parseInferenceProgressV1), nextCursor: row.nextCursor as number,
+  };
+}
+
+export type InferenceJobReconcileJobV1 = { readonly receipt: InferenceJobReceiptV1; readonly page: InferenceJobReconcilePageV1; readonly approval: InferenceJobReconcileApprovalV1 | null };
+export function parseInferenceJobReconcileJobV1(value: unknown): InferenceJobReconcileJobV1 {
+  const name = "hub.inference/InferenceJobReconcileJobV1";
+  const row = rows(value, ["receipt", "page", "approval"], name);
+  const receipt = parseInferenceJobReceiptV1(row.receipt);
+  const page = parseInferenceJobReconcilePageV1(row.page);
+  if (receipt.jobId !== page.jobId || receipt.state !== page.state || receipt.proposalState !== page.proposalState || receipt.proposalHash !== page.proposalHash || receipt.cursor !== page.nextCursor) return fail(name);
+  const approval = row.approval === null ? null : parseInferenceJobReconcileApprovalV1(row.approval);
+  if ((page.proposalState === "approved") !== (approval !== null)) return fail(name);
+  if (approval !== null && (page.proposalHash === null || (approval.receipt !== null && (approval.receipt.jobId !== page.jobId || !approval.receipt.applied || approval.receipt.proposalHash !== page.proposalHash)))) return fail(name);
+  return { receipt, page, approval };
+}
+
+export type InferenceJobReconcileResultV1 = {
+  readonly schema: "semio.hub.inference-job-reconcile-result/v1";
+  readonly version: 1;
+  readonly requestId: string;
+  readonly found: boolean;
+  readonly job: InferenceJobReconcileJobV1 | null;
+};
+export function parseInferenceJobReconcileResultV1(value: unknown): InferenceJobReconcileResultV1 {
+  const name = "hub.inference/InferenceJobReconcileResultV1";
+  const row = rows(value, ["schema", "version", "requestId", "found", "job"], name);
+  if (row.schema !== "semio.hub.inference-job-reconcile-result/v1" || row.version !== 1 || !hex(row.requestId, 32) || typeof row.found !== "boolean") return fail(name);
+  if (!row.found) {
+    if (row.job !== null) return fail(name);
+    return { schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, requestId: row.requestId as string, found: false, job: null };
+  }
+  if (row.job === null) return fail(name);
+  return { schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, requestId: row.requestId as string, found: true, job: parseInferenceJobReconcileJobV1(row.job) };
 }
 
 /** 📃️ The owner-private bounded page a single `events` read returns. */
@@ -526,10 +615,10 @@ export function parseInferenceCatalogSelectionV1(value: unknown): InferenceCatal
   return { scope: { spaceId: scope.spaceId as string, documentId: scope.documentId as string }, descriptor: parseInferenceCatalogDescriptorV1(row.descriptor), package: parseInferenceCatalogPackageV1(row.package), services: row.services.map(parseInferenceCatalogServiceV1) };
 }
 
-export type GisMapFrozenExecutionProtocolV1 = { readonly appChannelVersion: 14 };
+export type GisMapFrozenExecutionProtocolV1 = { readonly appChannelVersion: 15 };
 export function parseGisMapFrozenExecutionProtocolV1(value: unknown): GisMapFrozenExecutionProtocolV1 {
   const row = rows(value, ["appChannelVersion"], "hub.inference/GisMapFrozenExecutionProtocolV1");
-  return row.appChannelVersion === 14 ? { appChannelVersion: 14 } : fail("hub.inference/GisMapFrozenExecutionProtocolV1");
+  return row.appChannelVersion === 15 ? { appChannelVersion: 15 } : fail("hub.inference/GisMapFrozenExecutionProtocolV1");
 }
 
 export type GisMapFrozenPackageV1 = {

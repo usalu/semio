@@ -1,6 +1,6 @@
 //! 🧰 Shared canonical text-carrier representability check.
-use crate::TxtSnapshot;
 use crate::schema::snapshot::LineEnding;
+use crate::TxtSnapshot;
 
 //#region 🔖️Transport
 pub fn txt_u32_to_usize(value: u32) -> Result<usize, String> {

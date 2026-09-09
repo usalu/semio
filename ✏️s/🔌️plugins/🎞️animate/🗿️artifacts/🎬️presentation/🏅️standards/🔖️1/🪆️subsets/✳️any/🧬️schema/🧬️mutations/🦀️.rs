@@ -93,11 +93,7 @@ pub fn encode_presentation_projection_json(snapshot: &PresentationSnapshot) -> S
     let (source, tiles) = crate::presentation_working_scene(snapshot);
     let source_json = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&source));
     let tiles_json = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&tiles));
-    let value = dsl::os_pack::json::object([
-        ("schema".to_string(), dsl::os_pack::json::Value::from(snapshot.schema.clone())),
-        ("source".to_string(), source_json),
-        ("tiles".to_string(), tiles_json),
-    ]);
+    let value = dsl::os_pack::json::object([("schema".to_string(), dsl::os_pack::json::Value::from(snapshot.schema.clone())), ("source".to_string(), source_json), ("tiles".to_string(), tiles_json)]);
     dsl::os_pack::json::to_string(&value)
 }
 //#endregion 🔖️Apply

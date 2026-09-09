@@ -1,0 +1,33 @@
+{
+  "define": {
+    "import.meta.vitest": "undefined"
+  },
+  "externals": [
+    [
+      "vscode",
+      true
+    ],
+    [
+      "fs",
+      true
+    ],
+    [
+      "node:fs",
+      true
+    ],
+    [
+      "node:sqlite",
+      true
+    ],
+    [
+      "fixture-dependency",
+      false
+    ]
+  ],
+  "source": "import { basename } from \"node:path\";\nimport { answer } from \"./library.ts\";\nexport const result = { answer, name: basename(\"/fixture/input\") };\n",
+  "library": "export const answer = 42;\nif (import.meta.vitest) { await import(\"./unavailable-vitest-suite.ts\"); }\n",
+  "expected": {
+    "answer": 42,
+    "name": "input"
+  }
+}

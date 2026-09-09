@@ -9,9 +9,7 @@
     "lhsJson",
     "rhsJson",
     "parameterBindings",
-    "ruleLayout",
-    "lodModeByWindow",
-    "beforePaneCamera"
+    "ruleLayout"
   ],
   "properties": {
     "beforeFixtureJson": {
@@ -32,7 +30,7 @@
     "parameterBindings": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/$defs/PropertyValue"
+        "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/DslValue"
       },
       "x-semio-state": "artifact"
     },
@@ -42,24 +40,9 @@
         "$ref": "#/$defs/LayoutPoint"
       },
       "x-semio-state": "artifact"
-    },
-    "lodModeByWindow": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
-    "beforePaneCamera": {
-      "$ref": "#/$defs/Camera",
-      "x-semio-state": "config"
     }
   },
   "$defs": {
-    "PropertyValue": {
-      "title": "PropertyValue",
-      "description": "JSON-equivalent property value."
-    },
     "LayoutPoint": {
       "title": "LayoutPoint",
       "type": "object",
@@ -74,30 +57,6 @@
           "format": "double"
         },
         "y": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "Camera": {
-      "title": "Camera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
           "type": "number",
           "format": "double"
         }

@@ -1,8 +1,8 @@
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::set_icc;
 use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
-use crate::standards::v1::subsets::image::schema::mutations::set_icc;
 
 /// 🔺️ Diff helper for set-icc — a root-scoped singleton field; `icc` already equal to
 /// `base.icc` (including `None == None`) is `mutation.no-op` (Warning, empty diff).

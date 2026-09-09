@@ -14,10 +14,10 @@
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::MutationDiff;
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexedCollectionAlgebra
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs — see `🧬️schema-design.md`

@@ -2,9 +2,8 @@
 //! replacement for the retired `SetDataFields` generic variant; the `fields:in` workflow port's
 //! real, undoable write (see `crate::editor::layout::LayoutPlayApp::import_media`).
 
-
-use crate::{LayoutDiff, LayoutSnapshot};
 use crate::mutations::LayoutMutation;
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -30,7 +29,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeDataFields {
 }
 //#endregion 🧾ChangeDataFields
 
-
 //#region 🧾ChangeDataFields
 pub fn diff_change_data_fields(payload: &ChangeDataFields, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.data_fields_json == payload.new_json {
@@ -39,7 +37,6 @@ pub fn diff_change_data_fields(payload: &ChangeDataFields, base: &LayoutSnapshot
     protocol::MutationOutcome::new(LayoutDiff { data_fields_json: Some(payload.new_json.clone()), ..Default::default() })
 }
 //#endregion 🧾ChangeDataFields
-
 
 //#region 🧾ChangeDataFields
 pub fn inverse_change_data_fields(_payload: &ChangeDataFields, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

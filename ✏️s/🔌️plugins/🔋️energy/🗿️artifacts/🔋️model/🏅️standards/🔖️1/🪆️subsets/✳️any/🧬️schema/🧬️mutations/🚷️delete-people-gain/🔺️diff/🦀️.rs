@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `DeletePeopleGain` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeletePeopleGain, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

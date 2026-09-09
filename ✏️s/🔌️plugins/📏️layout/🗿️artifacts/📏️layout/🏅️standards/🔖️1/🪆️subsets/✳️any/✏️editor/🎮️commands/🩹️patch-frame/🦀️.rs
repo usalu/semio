@@ -1,5 +1,6 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-frame`.
 
+use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::mutations::change_frame_columns::ChangeFrameColumns;
 use crate::mutations::change_frame_fill::ChangeFrameFill;
 use crate::mutations::change_frame_stroke::ChangeFrameStroke;
@@ -11,7 +12,6 @@ use crate::mutations::resize_frame::ResizeFrame;
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::text_to_rgba;
 use crate::{Frame, LayoutSnapshot};
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::{EditorApp, HistoryView};
 
@@ -48,7 +47,7 @@ async fn change_schema_command_mutates_the_schema_field() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let config = NoConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let command = PlaygroundCommand::ChangeSchema(change_schema::ChangeSchema { new_schema: "playground.custom".into() });
     let emit = command.dispatch(&doc, &cfg).expect("dispatch");
     assert_eq!(emit.artifact_mutations, vec![PlaygroundMutation::ChangeSchema(crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema { new_schema: "playground.custom".into() })]);

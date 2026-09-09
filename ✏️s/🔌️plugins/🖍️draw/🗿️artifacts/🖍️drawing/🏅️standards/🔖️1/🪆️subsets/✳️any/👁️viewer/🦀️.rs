@@ -5,9 +5,9 @@
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
 use crate::schema::default_drawing_document;
-use crate::{DrawingSnapshot, DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
 use crate::viewer::drawing::modes::view;
 use crate::viewer::drawing::modes::view::windows::canvas;
+use crate::{DrawingSnapshot, DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
@@ -60,11 +60,18 @@ impl ArtifactViewer for DrawingViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// pan/zoom) is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(
+        _command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let root = match body_key {
             canvas::BODY_KEY => canvas::render(doc.snapshot),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))

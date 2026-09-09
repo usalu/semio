@@ -22,9 +22,33 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 1.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 0.5 });
-    model.ideal_loads.push(crate::model::IdealLoadsSystem { id: crate::model::EntityId(500), zone_id: crate::model::EntityId(1), max_heating_supply_air_temp_c: 50.0, min_cooling_supply_air_temp_c: 13.0, max_heating_capacity_w: None, max_cooling_capacity_w: None, outdoor_air_per_person_m3_s: 0.0, outdoor_air_per_area_m3_s_m2: 0.0 });
-    model.ideal_loads.push(crate::model::IdealLoadsSystem { id: crate::model::EntityId(501), zone_id: crate::model::EntityId(2), max_heating_supply_air_temp_c: 50.0, min_cooling_supply_air_temp_c: 13.0, max_heating_capacity_w: None, max_cooling_capacity_w: None, outdoor_air_per_person_m3_s: 0.0, outdoor_air_per_area_m3_s_m2: 0.0 });
-    model.faults.push(crate::model::FaultDefinition { id: crate::model::EntityId(440), target_equipment_id: crate::model::EntityId(500), fault_type: crate::model::FaultType::CoilFouling, severity: 0.3, start_schedule_id: crate::model::ScheduleId(1) });
+    model.ideal_loads.push(crate::model::IdealLoadsSystem {
+        id: crate::model::EntityId(500),
+        zone_id: crate::model::EntityId(1),
+        max_heating_supply_air_temp_c: 50.0,
+        min_cooling_supply_air_temp_c: 13.0,
+        max_heating_capacity_w: None,
+        max_cooling_capacity_w: None,
+        outdoor_air_per_person_m3_s: 0.0,
+        outdoor_air_per_area_m3_s_m2: 0.0,
+    });
+    model.ideal_loads.push(crate::model::IdealLoadsSystem {
+        id: crate::model::EntityId(501),
+        zone_id: crate::model::EntityId(2),
+        max_heating_supply_air_temp_c: 50.0,
+        min_cooling_supply_air_temp_c: 13.0,
+        max_heating_capacity_w: None,
+        max_cooling_capacity_w: None,
+        outdoor_air_per_person_m3_s: 0.0,
+        outdoor_air_per_area_m3_s_m2: 0.0,
+    });
+    model.faults.push(crate::model::FaultDefinition {
+        id: crate::model::EntityId(440),
+        target_equipment_id: crate::model::EntityId(500),
+        fault_type: crate::model::FaultType::CoilFouling,
+        severity: 0.3,
+        start_schedule_id: crate::model::ScheduleId(1),
+    });
     (snapshot(model), super::change_fault_type(crate::model::EntityId(999), crate::model::FaultType::SensorBias))
 }
 

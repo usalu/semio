@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧪️ F6/P2-FG3: `OpText`/`OpBinary` round-trip laws for the hand-rolled `PlyMutation`

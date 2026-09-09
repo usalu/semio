@@ -25,7 +25,7 @@ Native Neo4j Desktop connection:
 2. Desktop: **`bolt://127.0.0.1:7687`**, user **`neo4j`**, password **`password`**.
 3. Browser: **`http://127.0.0.1:7474`** with the same credentials.
 
-**Database:** The devcontainer’s sole user graph database is named **`compose`** (not `neo4j`). Legacy stores that still have only `neo4j` are cleared once on post-start so the DBMS can bootstrap `compose`.
+**Database:** New devcontainer stores initialize the user graph as **`compose`**. The named **`<workspace>-neo4j-data`** volume retains the live store across container recreation. Startup preserves existing stores and Git stashes.
 
 # Docs
 
@@ -35,7 +35,7 @@ Devcontainer configuration with VS Code customizations, container/remote env, po
 
 ## docker-compose.yml
 
-Compose stack for the devcontainer: **`compose`** only. Neo4j is installed in the **`compose`** image, started by **`post-start.sh`**, and persisted in repo-owned Cypher files under **`.🧬semio/🦑️repo/🛂️manifest`**. The live Neo4j store is container-local and replayed from those Cypher files on an empty DB. MCP uses **`bolt://localhost:7687`** from inside **`compose`**.
+Compose stack for the devcontainer: **`compose`** only. Neo4j is installed in the **`compose`** image, started by **`post-start.sh`**, with its live store persisted in the workspace’s **`neo4j-data`** named volume. Repo-owned Cypher files under **`.🧬semio/🦑️repo/🛂️manifest`** remain explicit export/import artifacts. MCP uses **`bolt://localhost:7687`** from inside **`compose`**.
 
 ## Neo4j Cypher Persistence
 
@@ -46,7 +46,7 @@ APOC Core and APOC Extended are installed in the **`compose`** image and configu
 - **`.🧬semio/🦑️repo/🛂️manifest/coda.cypher`**
 - **`.🧬semio/🦑️repo/🛂️manifest/reuse.cypher`**
 
-On devcontainer start, **`post-start.sh`** imports non-empty schema files with **`apoc.cypher.runFile`** only when the live database is empty. Export technology-scoped graph state with APOC query exports instead of dumping the whole database, for example:
+Container startup preserves the live graph and performs no Cypher replay or pruning. Export technology-scoped graph state with APOC query exports, for example:
 
 ```cypher
 CALL apoc.export.cypher.query(
@@ -60,9 +60,9 @@ CALL apoc.export.cypher.query(
 
 Legacy helper kept for existing callers. The current setup does not need entrypoint startup logic because **`post-start.sh`** starts Neo4j inside **`compose`**.
 
-## post-create.sh
+## Dependency Preparation
 
-Devcontainer provisioning steps for dependency installs, including Playwright browser install into the shared cache path and Linux GitKraken Desktop plus GitKraken CLI installation into persisted user profile locations.
+The image provides Bun 1.3.14 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. Nx comes from the repository's locked tooling bootstrap. Container creation invokes `bun nx run workspace:deps-javascript`, which synchronizes the frozen Bun lockfile without building applications. Select additional dependency environments and project builds through their Nx launch configurations. Post-start and post-attach remain separate lifecycle hooks.
 
 ## post-start.sh
 
@@ -70,7 +70,7 @@ Devcontainer start script that fixes ownership for persisted volumes, normalizes
 
 ## post-attach.sh
 
-Devcontainer post-attach script that uninstalls any existing repo extension via IDE IPC hook CLIs and extensions directory cleanup, clears stale VS Code and Cursor caches, builds and installs the local compose extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration (using `$mid` location keys) on WSL-only CLI responses, generates Windsurf and Codex MCP configs from the repo `.mcp.json`, installs Linux GitKraken Desktop plus CLI when missing, and bootstraps a GitKraken local workspace for the repo plus submodules.
+The attach hook detects the active editor CLI and invokes `bun nx run @semio-tech/repo-vscode:build-vsix`. Nx owns source invalidation, the build prerequisite and VSIX restoration. A successful package is installed through the selected editor CLI and verified with its extension list; a failed package skips installation. Linux developer-tool and repo configuration steps remain separate parts of this hook.
 
 ## Devcontainer Persistence
 
@@ -78,9 +78,9 @@ Devcontainer rebuilds keep AI tooling state by mounting named volumes for CLI au
 Claude Code persists its auth files by storing `~/.claude.json` inside the mounted Claude volume and linking it back into `$HOME` on start.
 Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
 Post-attach reconciles VS Code workspace chat storage for `GitHub.copilot-chat` and `openai.chatgpt` by merging transcript and chat resource folders from older workspace-storage hashes into the active workspace-storage directories after attach.
-Post-attach uninstalls any existing repo extension across IDE IPC hook CLIs and extensions directories, clears stale VS Code and Cursor caches, installs the fresh VSIX, validates installs by checking list-extensions output, and falls back to direct extensions directory installs plus extensions.json registration (with `$mid` location keys) when CLIs report WSL-only usage.
+Post-attach asks Nx for the current VSIX on every enabled attach, then installs that package with the editor CLI. Source or archive timestamps do not decide whether a build is needed.
 Post-attach also materializes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` and merges Codex MCP server entries into `~/.codex/config.toml` from the monorepo `.mcp.json`, so both clients pick up the repo, compose, coda, and Playwright servers after rebuilds without manual setup while preserving existing Codex user settings such as model and personality.
-Post-create installs Linux GitKraken Desktop plus the official GitKraken `gk` CLI into the devcontainer, and post-attach creates or updates the default local GitKraken workspace from the repo root plus submodules so the Linux GitKraken app picks up the monorepo layout without manual workspace setup.
+Post-attach installs Linux GitKraken Desktop and its CLI when missing, then creates or updates the local GitKraken workspace from the repo root and submodules.
 Engine compatibility for the local extension is aligned to the lowest supported editor build so Cursor and VS Code accept the same VSIX.
 
 ## Emoji Font Setup
@@ -112,7 +112,7 @@ The font configuration refreshes on container start and ensures emoji glyphs are
 
 ## Devcontainer Extension Install
 
-The devcontainer packages the workspace VS Code extension during setup, uninstalls any existing repo extension on attach, and installs the generated `.vsix` across supported IDEs so the extension is ready without manual "Install Extension From Location..." steps.
+When an editor CLI is available, post-attach resolves the workspace VSIX through its Nx target and installs it automatically after packaging succeeds.
 This keeps the active editor clean of stale versions while aligning installation with a running IDE server, avoiding failures during container creation and preserving automatic delivery.
 
 ## GitKraken Zero Touch
@@ -170,7 +170,7 @@ The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to the shared cache location, a
 
 Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
 
-Devcontainer post-attach MUST uninstall any existing repo extension via IDE IPC hook CLIs and extensions directory cleanup, clear stale VS Code and Cursor extension caches, install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity, validate installs with list-extensions, and fall back to direct extensions directory installs with extensions.json updates that include mid location keys when CLIs report WSL-only usage.
+Devcontainer post-attach MUST resolve the workspace extension through the Nx packaging target, install only after that target succeeds, and validate installation through the active editor CLI.
 
 Devcontainer post-attach MUST generate Windsurf MCP config, write `.cursor/mcp.json` with repo-root-absolute MCP commands (so Cursor discovers stdio servers even when the spawn cwd is not the repo root), and merge Codex MCP server entries from the monorepo `.mcp.json` into the clients' home config folders without removing unrelated Codex user settings.
 

@@ -1,11 +1,10 @@
 //! 🫧️ Jack app-local transient state and its typed mutation channel.
 
-use std::collections::BTreeMap;
 use crate::ast::QueryResult;
 
 #[path = "../🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🦀️.rs"]
 mod editor_window;
-pub use editor_window::JackEditorSelection;
+pub use editor_window::{JackEditorSelection, JackEditorWindowTransient, JackEditorWindowTransientMutation, JackEditorWindowTransientOwner, SetEditorSelection, WINDOW_KIND_ID as JACK_EDITOR_WINDOW_KIND_ID};
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
@@ -13,10 +12,8 @@ pub use editor_window::JackEditorSelection;
 #[dsl(layout = "lines")]
 pub struct JackTransient {
     pub query_execution_id: Option<String>,
-    #[dsl(block)]
     pub result: Option<QueryResult>,
     pub query_error: Option<String>,
-    pub editor_selection_by_window_id: BTreeMap<String, JackEditorSelection>,
 }
 
 impl store::ArtifactDsl for JackTransient {
@@ -196,12 +193,7 @@ pub struct JackTransientStoreDisposer {
 }
 
 impl semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<JackTransient, JackTransientMutation>> for JackTransientStoreDisposer {
-    fn close_step(
-        &mut self,
-        owner: &mut store::TransientStore<JackTransient, JackTransientMutation>,
-        maximum_items: usize,
-        maximum_bytes: usize,
-    ) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework_plugin::Fault> {
+    fn close_step(&mut self, owner: &mut store::TransientStore<JackTransient, JackTransientMutation>, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework_plugin::Fault> {
         if self.terminal_root.is_none() {
             if maximum_items == 0 {
                 return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -219,9 +211,7 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<JackTra
             self.retired = None;
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
-        self.owns_terminal(owner)
-            .then_some(semio_framework_plugin::PluginCloseStep::Complete)
-            .ok_or_else(|| semio_framework_plugin::Fault::from("Jack transient terminal owner changed during disposal"))
+        self.owns_terminal(owner).then_some(semio_framework_plugin::PluginCloseStep::Complete).ok_or_else(|| semio_framework_plugin::Fault::from("Jack transient terminal owner changed during disposal"))
     }
 
     fn terminal_is_empty(&self, owner: &store::TransientStore<JackTransient, JackTransientMutation>) -> bool {
@@ -231,7 +221,6 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<JackTra
 
 impl JackTransientStoreDisposer {
     fn owns_terminal(&self, owner: &store::TransientStore<JackTransient, JackTransientMutation>) -> bool {
-        owner.generation_now() == self.terminal_generation
-            && self.terminal_root.as_ref().and_then(std::sync::Weak::upgrade).is_some_and(|root| std::sync::Arc::ptr_eq(&root, &owner.current_root()))
+        owner.generation_now() == self.terminal_generation && self.terminal_root.as_ref().and_then(std::sync::Weak::upgrade).is_some_and(|root| std::sync::Arc::ptr_eq(&root, &owner.current_root()))
     }
 }

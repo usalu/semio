@@ -1,20 +1,7 @@
-# 🧬️ Wires diff schema — sparse field delta.
-
-scalar DslValue
-
 type WiresDiff {
   artifact: WiresArtifact @state(class: ARTIFACT)
   wiresFixture: DslValue @state(class: ARTIFACT)
-  boardFixture: DslValue @state(class: ARTIFACT)
-  dragNodeId: String @state(class: ARTIFACT)
-  dragLastX: Float @state(class: ARTIFACT)
-  dragLastY: Float @state(class: ARTIFACT)
-}
-
-type WiresArtifact {
-  wiresFixture: DslValue!
-  boardFixture: DslValue!
-  dragNodeId: String
-  dragLastX: Float!
-  dragLastY: Float!
+  content: ArtifactChild @state(class: ARTIFACT)
+  camera: DslValue @state(class: ARTIFACT)
+  meta: DslValue @state(class: ARTIFACT)
 }

@@ -2,9 +2,9 @@
 //! `delete-selection` multi-select editor gesture; a real plural mutation per the taxonomy's
 //! bulk/plural rule, never a bare `Vec` arg bolted onto the singular `delete-tile`).
 
-use crate::PresentationSnapshot;
 use crate::diff::PresentationDiff;
 use crate::mutations::PresentationMutation;
+use crate::PresentationSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔹Payload

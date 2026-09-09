@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetPhotometricInterpretation {
-        pub(crate) photometric: u16,
-    }
+    pub(crate) photometric: u16,
+}
 
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetPhotometricInterpretation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "photometric-interpretation", kind: "set-photometric-interpretation", record: "SetPhotometricInterpretation" };

@@ -1,12 +1,11 @@
-
 use super::*;
-use crate::CadPaneId;
 use crate::editor::cad::config::CadConfig;
 use crate::editor::cad::terminology::cad_labels;
 use crate::editor::cad::testkit::*;
-use crate::editor::cad::{CadPlayApp, CadPlayRuntime, make_object_for_typology};
+use crate::editor::cad::{make_object_for_typology, CadPlayApp, CadPlayRuntime};
 use crate::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
-use crate::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_SHAPE, default_document, forest_play_scene};
+use crate::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_SHAPE};
+use crate::CadPaneId;
 use semio_framework_plugin::{ArtifactView, Locale, PluginApp, ViewModel};
 
 #[semio_framework_async_macros::async_test]

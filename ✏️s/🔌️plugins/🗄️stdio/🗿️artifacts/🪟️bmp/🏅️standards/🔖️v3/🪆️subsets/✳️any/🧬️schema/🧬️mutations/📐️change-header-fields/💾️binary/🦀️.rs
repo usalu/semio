@@ -1,6 +1,6 @@
 //! 💾️ Direct change-header-fields binary codec.
-use super::*;
 use super::text;
+use super::*;
 use crate::schema::mutations::binary::Entry;
 pub const BINARY_TAG: u8 = 2;
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };

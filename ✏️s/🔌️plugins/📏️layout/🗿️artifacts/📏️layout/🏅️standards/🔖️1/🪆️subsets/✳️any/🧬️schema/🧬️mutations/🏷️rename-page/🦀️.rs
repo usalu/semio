@@ -1,9 +1,8 @@
 //! 🏷️ `rename-page` — changes a page's identity `name` field.
 
-
-use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -33,7 +32,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RenamePage {
 }
 //#endregion 🏷️RenamePage
 
-
 //#region 🏷️RenamePage
 pub fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
@@ -48,7 +46,6 @@ pub fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> protocol
     })
 }
 //#endregion 🏷️RenamePage
-
 
 //#region 🏷️RenamePage
 pub fn inverse_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

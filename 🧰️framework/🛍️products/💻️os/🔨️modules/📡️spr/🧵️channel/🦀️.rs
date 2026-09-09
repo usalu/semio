@@ -21,7 +21,7 @@
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
 /// `Event::InstanceOpen`/`InstanceClose`, so this constant is no longer carried on the wire by any
 /// frame; it exists purely as the drift guard the tests below assert against.
-pub const CHANNEL_VERSION: u32 = 14;
+pub const CHANNEL_VERSION: u32 = 15;
 //#endregion 🔖️Version
 
 //#region 🔖️ChildPackEntry
@@ -41,6 +41,16 @@ pub struct ChildPackEntry {
     pub envelope_pack: Vec<u8>,
 }
 //#endregion 🔖️ChildPackEntry
+
+//#region 🔖️WindowConfigPackEntry
+/// 🪟️ One concrete window's persisted-local configuration envelope.
+#[derive(Clone, Debug, PartialEq)]
+pub struct WindowConfigPackEntry {
+    pub window_id: String,
+    pub window_kind_id: String,
+    pub envelope_pack: Vec<u8>,
+}
+//#endregion 🔖️WindowConfigPackEntry
 
 //#region 🔖️PagedCommandIngress
 pub const COMMAND_PAGE_MAXIMUM_BYTES: usize = 4_096;
@@ -1188,7 +1198,11 @@ enum PagedAppCommandDecodeState {
     ReadHistory { seq: u64 },
     ReadConflicts { seq: u64 },
     LocalInteractionQuery { seq: u64 },
-    RejectedFields { first: Option<Vec<u8>>, second: Option<Vec<u8>> },
+    LoadWindowConfigWindowId { seq: u64 },
+    LoadWindowConfigKind { seq: u64, window_id: Option<String> },
+    LoadWindowConfigPack { seq: u64, window_id: Option<String>, window_kind_id: Option<String> },
+    ReadWindowConfigs { seq: u64 },
+    RejectedFields { fields: Vec<Vec<u8>> },
     Terminal,
     Faulted,
 }
@@ -1222,8 +1236,11 @@ impl DecodedAppCommandOwner {
             (0, AppCommand::ConfigCommand { command, .. }) | (0, AppCommand::ContextMenu { request: command, .. }) | (0, AppCommand::ArtifactCommand { command, .. }) | (0, AppCommand::Command { command, .. }) => Some(std::mem::take(command)),
             (0, AppCommand::CommandText { line, .. }) => Some(std::mem::take(line).into_bytes()),
             (0, AppCommand::LoadDocument { pack, .. }) | (0, AppCommand::LoadConfig { pack, .. }) => Some(std::mem::take(pack)),
+            (0, AppCommand::LoadWindowConfig { entry, .. }) => Some(std::mem::take(&mut entry.window_id).into_bytes()),
             (1, AppCommand::Command { view_state, .. }) => Some(std::mem::take(view_state)),
             (1, AppCommand::LoadDocument { spr, .. }) | (1, AppCommand::LoadConfig { spr, .. }) => Some(std::mem::take(spr)),
+            (1, AppCommand::LoadWindowConfig { entry, .. }) => Some(std::mem::take(&mut entry.window_kind_id).into_bytes()),
+            (2, AppCommand::LoadWindowConfig { entry, .. }) => Some(std::mem::take(&mut entry.envelope_pack)),
             _ => None,
         };
         if let Some(field) = field {
@@ -1232,8 +1249,11 @@ impl DecodedAppCommandOwner {
                     (0, AppCommand::ConfigCommand { command, .. }) | (0, AppCommand::ContextMenu { request: command, .. }) | (0, AppCommand::ArtifactCommand { command, .. }) | (0, AppCommand::Command { command, .. }) => *command = field,
                     (0, AppCommand::CommandText { line, .. }) => *line = String::from_utf8(field).expect("decoded command text remains valid UTF-8"),
                     (0, AppCommand::LoadDocument { pack, .. }) | (0, AppCommand::LoadConfig { pack, .. }) => *pack = field,
+                    (0, AppCommand::LoadWindowConfig { entry, .. }) => entry.window_id = String::from_utf8(field).expect("decoded window id remains valid UTF-8"),
                     (1, AppCommand::Command { view_state, .. }) => *view_state = field,
                     (1, AppCommand::LoadDocument { spr, .. }) | (1, AppCommand::LoadConfig { spr, .. }) => *spr = field,
+                    (1, AppCommand::LoadWindowConfig { entry, .. }) => entry.window_kind_id = String::from_utf8(field).expect("decoded window kind id remains valid UTF-8"),
+                    (2, AppCommand::LoadWindowConfig { entry, .. }) => entry.envelope_pack = field,
                     _ => unreachable!("decoded command close field has an exact restoration target"),
                 }
                 return (false, 0, 0);
@@ -1282,6 +1302,8 @@ impl PagedAppCommandDecodeCursor {
                     16 => PagedAppCommandDecodeState::ReadHistory { seq },
                     27 => PagedAppCommandDecodeState::ReadConflicts { seq },
                     29 => PagedAppCommandDecodeState::LocalInteractionQuery { seq },
+                    30 => PagedAppCommandDecodeState::LoadWindowConfigWindowId { seq },
+                    31 => PagedAppCommandDecodeState::ReadWindowConfigs { seq },
                     _ => {
                         return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-route-state-machine-required"), "this AppCommand kind requires its route-specific retained decoder before admission"));
                     }
@@ -1312,7 +1334,7 @@ impl PagedAppCommandDecodeCursor {
                 let line = match String::from_utf8(bytes) {
                     Ok(line) => line,
                     Err(error) => {
-                        self.state = PagedAppCommandDecodeState::RejectedFields { first: Some(error.into_bytes()), second: None };
+                        self.state = PagedAppCommandDecodeState::RejectedFields { fields: vec![error.into_bytes()] };
                         return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "paged command text is not valid UTF-8"));
                     }
                 };
@@ -1366,8 +1388,58 @@ impl PagedAppCommandDecodeCursor {
                 let command = protocol::decode_local_interaction_query_command(&bytes).map_err(|reason| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("local-interaction.command-wire"), reason))?;
                 Some(AppCommand::LocalInteractionQuery { seq, command })
             }
-            PagedAppCommandDecodeState::RejectedFields { first, second } => {
-                self.state = PagedAppCommandDecodeState::RejectedFields { first, second };
+            PagedAppCommandDecodeState::LoadWindowConfigWindowId { seq } => {
+                let bytes = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                let window_id = match String::from_utf8(bytes) {
+                    Ok(window_id) => window_id,
+                    Err(error) => {
+                        self.state = PagedAppCommandDecodeState::RejectedFields { fields: vec![error.into_bytes()] };
+                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "window config window id is not valid UTF-8"));
+                    }
+                };
+                self.state = PagedAppCommandDecodeState::LoadWindowConfigKind { seq, window_id: Some(window_id) };
+                None
+            }
+            PagedAppCommandDecodeState::LoadWindowConfigKind { seq, mut window_id } => {
+                let bytes = match self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES) {
+                    Ok(bytes) => bytes,
+                    Err(fault) => {
+                        self.state = PagedAppCommandDecodeState::LoadWindowConfigKind { seq, window_id };
+                        return Err(fault);
+                    }
+                };
+                let window_kind_id = match String::from_utf8(bytes) {
+                    Ok(window_kind_id) => window_kind_id,
+                    Err(error) => {
+                        self.state = PagedAppCommandDecodeState::RejectedFields {
+                            fields: vec![window_id.take().expect("retained window id").into_bytes(), error.into_bytes()],
+                        };
+                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "window config kind id is not valid UTF-8"));
+                    }
+                };
+                self.state = PagedAppCommandDecodeState::LoadWindowConfigPack { seq, window_id, window_kind_id: Some(window_kind_id) };
+                None
+            }
+            PagedAppCommandDecodeState::LoadWindowConfigPack { seq, mut window_id, mut window_kind_id } => {
+                let envelope_pack = match self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES) {
+                    Ok(envelope_pack) => envelope_pack,
+                    Err(fault) => {
+                        self.state = PagedAppCommandDecodeState::LoadWindowConfigPack { seq, window_id, window_kind_id };
+                        return Err(fault);
+                    }
+                };
+                Some(AppCommand::LoadWindowConfig {
+                    seq,
+                    entry: WindowConfigPackEntry {
+                        window_id: window_id.take().expect("retained window id"),
+                        window_kind_id: window_kind_id.take().expect("retained window kind id"),
+                        envelope_pack,
+                    },
+                })
+            }
+            PagedAppCommandDecodeState::ReadWindowConfigs { seq } => Some(AppCommand::ReadWindowConfigs { seq }),
+            PagedAppCommandDecodeState::RejectedFields { fields } => {
+                self.state = PagedAppCommandDecodeState::RejectedFields { fields };
                 return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-closing"), "rejected paged command must be closed before it can be stepped again"));
             }
             PagedAppCommandDecodeState::Terminal | PagedAppCommandDecodeState::Faulted => {
@@ -1376,16 +1448,23 @@ impl PagedAppCommandDecodeCursor {
         };
         if let Some(command) = outcome {
             if !self.reader.terminal_is_empty() {
-                let (first, second) = match command {
-                    AppCommand::ConfigCommand { command, .. } | AppCommand::ContextMenu { request: command, .. } | AppCommand::ArtifactCommand { command, .. } => (Some(command), None),
-                    AppCommand::Command { command, view_state, .. } => (Some(command), Some(view_state)),
-                    AppCommand::CommandText { line, .. } => (Some(line.into_bytes()), None),
-                    AppCommand::LoadDocument { pack, spr, .. } | AppCommand::LoadConfig { pack, spr, .. } => (Some(pack), Some(spr)),
-                    AppCommand::ReadDocument { .. } | AppCommand::ReadConfig { .. } | AppCommand::ReadChildren { .. } | AppCommand::ReadHistory { .. } | AppCommand::ReadConflicts { .. } | AppCommand::LocalInteractionQuery { .. } => (None, None),
+                let fields = match command {
+                    AppCommand::ConfigCommand { command, .. } | AppCommand::ContextMenu { request: command, .. } | AppCommand::ArtifactCommand { command, .. } => vec![command],
+                    AppCommand::Command { command, view_state, .. } => vec![command, view_state],
+                    AppCommand::CommandText { line, .. } => vec![line.into_bytes()],
+                    AppCommand::LoadDocument { pack, spr, .. } | AppCommand::LoadConfig { pack, spr, .. } => vec![pack, spr],
+                    AppCommand::LoadWindowConfig { entry, .. } => vec![entry.window_id.into_bytes(), entry.window_kind_id.into_bytes(), entry.envelope_pack],
+                    AppCommand::ReadDocument { .. }
+                    | AppCommand::ReadConfig { .. }
+                    | AppCommand::ReadChildren { .. }
+                    | AppCommand::ReadHistory { .. }
+                    | AppCommand::ReadConflicts { .. }
+                    | AppCommand::LocalInteractionQuery { .. }
+                    | AppCommand::ReadWindowConfigs { .. } => Vec::new(),
                     AppCommand::Presence { .. } => unreachable!("Presence is never decoded by the generic paged cursor"),
                     _ => unreachable!("route-specific AppCommand is never decoded by the generic paged cursor"),
                 };
-                self.state = PagedAppCommandDecodeState::RejectedFields { first, second };
+                self.state = PagedAppCommandDecodeState::RejectedFields { fields };
                 return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-trailing"), "paged command carries trailing bytes after its terminal field"));
             }
             self.state = PagedAppCommandDecodeState::Terminal;
@@ -1421,21 +1500,38 @@ impl PagedAppCommandDecodeCursor {
                 return (false, released);
             }
         }
-        if let PagedAppCommandDecodeState::RejectedFields { first, second } = &mut self.state {
-            if let Some(bytes) = first.as_ref() {
+        if let PagedAppCommandDecodeState::LoadWindowConfigKind { window_id, .. } = &mut self.state {
+            if let Some(text) = window_id.take() {
+                let bytes = text.into_bytes();
                 if bytes.len() > maximum_bytes {
+                    *window_id = Some(String::from_utf8(bytes).expect("retained window config identity remains valid UTF-8"));
                     return (false, 0);
                 }
-                let bytes = first.take().expect("first rejected field was present");
                 let released = bytes.len();
                 drop(bytes);
                 return (false, released);
             }
-            if let Some(bytes) = second.as_ref() {
+        }
+        if let PagedAppCommandDecodeState::LoadWindowConfigPack { window_id, window_kind_id, .. } = &mut self.state {
+            let retained = if window_id.is_some() { window_id } else { window_kind_id };
+            if let Some(text) = retained.take() {
+                let bytes = text.into_bytes();
+                if bytes.len() > maximum_bytes {
+                    *retained = Some(String::from_utf8(bytes).expect("retained window config identity remains valid UTF-8"));
+                    return (false, 0);
+                }
+                let released = bytes.len();
+                drop(bytes);
+                return (false, released);
+            }
+        }
+        if let PagedAppCommandDecodeState::RejectedFields { fields } = &mut self.state {
+            if let Some(bytes) = fields.last() {
                 if bytes.len() > maximum_bytes {
                     return (false, 0);
                 }
-                let bytes = second.take().expect("second rejected field was present");
+            }
+            if let Some(bytes) = fields.pop() {
                 let released = bytes.len();
                 drop(bytes);
                 return (false, released);
@@ -1499,6 +1595,15 @@ pub enum AppCommand {
         spr: Vec<u8>,
     },
     ReadConfig {
+        seq: u64,
+    },
+    /// 🪟️ Restores one exact concrete window's persisted-local config envelope.
+    LoadWindowConfig {
+        seq: u64,
+        entry: WindowConfigPackEntry,
+    },
+    /// 🪟️ Reads every exact concrete window config envelope owned by this app instance.
+    ReadWindowConfigs {
         seq: u64,
     },
     MediaIn {
@@ -1681,6 +1786,11 @@ pub enum AppFrame {
         pack: Vec<u8>,
         spr: Vec<u8>,
         ops: String,
+    },
+    /// 🪟️ Every exact concrete window config envelope owned by the app instance.
+    WindowConfigs {
+        in_reply_to: u64,
+        entries: Vec<WindowConfigPackEntry>,
     },
     ConfigChanged {
         envelopes: Vec<crate::os_spr::causal::MutationEnvelope>,
@@ -2078,6 +2188,17 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             out.byte(9)?;
             out.varint(*seq)?;
         }
+        AppCommand::LoadWindowConfig { seq, entry } => {
+            out.byte(30)?;
+            out.varint(*seq)?;
+            out.string(&entry.window_id)?;
+            out.string(&entry.window_kind_id)?;
+            out.bytes(&entry.envelope_pack)?;
+        }
+        AppCommand::ReadWindowConfigs { seq } => {
+            out.byte(31)?;
+            out.varint(*seq)?;
+        }
         AppCommand::MediaIn { seq, port, descriptor, data } => {
             out.byte(10)?;
             out.varint(*seq)?;
@@ -2232,6 +2353,30 @@ async fn read_vec_child_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildP
     Ok(entries)
 }
 
+/// 🪟️ Writes the exact concrete-window config pack roster.
+async fn write_vec_window_config_pack(out: &mut Vec<u8>, entries: &[WindowConfigPackEntry]) {
+    crate::os_spr::write_varint_u64(out, entries.len() as u64);
+    for entry in entries {
+        crate::os_spr::write_str(out, &entry.window_id);
+        crate::os_spr::write_str(out, &entry.window_kind_id);
+        crate::os_spr::write_bytes(out, &entry.envelope_pack);
+    }
+}
+
+/// 🪟️ Reads the exact concrete-window config pack roster.
+async fn read_vec_window_config_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<WindowConfigPackEntry>, crate::os_spr::ProtocolError> {
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+    let mut entries = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        entries.push(WindowConfigPackEntry {
+            window_id: crate::os_spr::read_str(bytes, pos)?,
+            window_kind_id: crate::os_spr::read_str(bytes, pos)?,
+            envelope_pack: crate::os_spr::read_bytes(bytes, pos)?,
+        });
+    }
+    Ok(entries)
+}
+
 /// @emoji 📥️ Decodes one `AppCommand`, the inverse of [`encode_app_command`].
 pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::ProtocolError> {
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-command tag", 0, "empty frame"))?;
@@ -2326,6 +2471,15 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
             let command = protocol::decode_local_interaction_query_command(&bytes[pos..]).map_err(|reason| malformed("local interaction command", pos as u64, reason))?;
             AppCommand::LocalInteractionQuery { seq, command }
         }
+        30 => AppCommand::LoadWindowConfig {
+            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            entry: WindowConfigPackEntry {
+                window_id: crate::os_spr::read_str(bytes, &mut pos)?,
+                window_kind_id: crate::os_spr::read_str(bytes, &mut pos)?,
+                envelope_pack: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            },
+        },
+        31 => AppCommand::ReadWindowConfigs { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -2386,6 +2540,11 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_bytes(&mut out, pack);
             crate::os_spr::write_bytes(&mut out, spr);
             crate::os_spr::write_str(&mut out, ops);
+        }
+        AppFrame::WindowConfigs { in_reply_to, entries } => {
+            out.push(24);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            write_vec_window_config_pack(&mut out, entries).await;
         }
         AppFrame::ConfigChanged { envelopes, origin } => {
             out.push(5);
@@ -2573,6 +2732,10 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             }
             AppFrame::LocalInteractionQuery { reply: protocol::decode_local_interaction_query_reply(&bytes[pos..]).map_err(|reason| malformed("local interaction reply", pos as u64, reason))? }
         }
+        24 => AppFrame::WindowConfigs {
+            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            entries: read_vec_window_config_pack(bytes, &mut pos).await?,
+        },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)

@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` and `NOTE_DOCUMENT_SCHEMA` are deliberately the

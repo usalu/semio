@@ -46,13 +46,7 @@ impl TiffArtifact {
 pub fn tiff_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.tiff",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -273,7 +267,8 @@ pub fn demo_tiff_snapshot() -> TiffSnapshot {
     let seed = TiffSnapshot {
         schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
         byte_order: TiffByteOrder::LittleEndian,
-        ifds: vec![TiffIfd { pixels: Vec::new(),
+        ifds: vec![TiffIfd {
+            pixels: Vec::new(),
             entries: vec![
                 TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![w]) },
                 TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![h]) },

@@ -8,9 +8,9 @@
 use crate::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
 use crate::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
 
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel};
 use protocol::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel};
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
@@ -144,7 +144,10 @@ const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
         "aec.building.structure.classic",
         include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🚧️constructReinforc-e8fc67.json"),
     ),
-    ("aec.building.structure.fem.line", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🕹️interactions/🔣️constructLineElem-0d404b.json")),
+    (
+        "aec.building.structure.fem.line",
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🕹️interactions/🔣️constructLineElem-0d404b.json"),
+    ),
     (
         "aec.building.structure.fem.solid",
         include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🕹️interactions/🔣️constructSolidEle-105046.json"),
@@ -767,20 +770,11 @@ pub(crate) fn commit_object(kernel: &mut Brep, session: &CadEngagementScratch, l
 fn preview_two_point_footprint(session: &CadEngagementScratch, include_segment: bool) -> Vec<DslValue> {
     let mut items = Vec::new();
     if let Some(corner_a) = context_point(session, "cornerA") {
-        items.push(DslValue::object([
-            ("kind".to_string(), DslValue::String("point".into())),
-            ("role".to_string(), DslValue::String("cornerA".into())),
-            ("position".to_string(), vec3_json(corner_a)),
-        ]));
+        items.push(DslValue::object([("kind".to_string(), DslValue::String("point".into())), ("role".to_string(), DslValue::String("cornerA".into())), ("position".to_string(), vec3_json(corner_a))]));
     }
     if include_segment {
         if let (Some(corner_a), Some(corner_b)) = (context_point(session, "cornerA"), context_point(session, "cornerB")) {
-            items.push(DslValue::object([
-                ("kind".to_string(), DslValue::String("segment".into())),
-                ("role".to_string(), DslValue::String("footprint".into())),
-                ("from".to_string(), vec3_json(corner_a)),
-                ("to".to_string(), vec3_json(corner_b)),
-            ]));
+            items.push(DslValue::object([("kind".to_string(), DslValue::String("segment".into())), ("role".to_string(), DslValue::String("footprint".into())), ("from".to_string(), vec3_json(corner_a)), ("to".to_string(), vec3_json(corner_b))]));
         }
     }
     items
@@ -792,11 +786,7 @@ fn legacy_preview_display_items(session: &CadEngagementScratch) -> Vec<DslValue>
             "column_height" | "ready" => {
                 let mut items = Vec::new();
                 if let Some(base) = context_point(session, "base") {
-                    items.push(DslValue::object([
-                        ("kind".to_string(), DslValue::String("point".into())),
-                        ("role".to_string(), DslValue::String("base".into())),
-                        ("position".to_string(), vec3_json(base)),
-                    ]));
+                    items.push(DslValue::object([("kind".to_string(), DslValue::String("point".into())), ("role".to_string(), DslValue::String("base".into())), ("position".to_string(), vec3_json(base))]));
                 }
                 items
             }
@@ -821,20 +811,11 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
             if position.is_null() {
                 return None;
             }
-            Some(DslValue::object([
-                ("kind".to_string(), DslValue::String("point".into())),
-                ("role".to_string(), opt_string_value(role)),
-                ("position".to_string(), position),
-            ]))
+            Some(DslValue::object([("kind".to_string(), DslValue::String("point".into())), ("role".to_string(), opt_string_value(role)), ("position".to_string(), position)]))
         }
         DisplayItemSpec::Label { role, text, position, .. } => {
             let position = evaluate_expr(position, env, vars);
-            Some(DslValue::object([
-                ("kind".to_string(), DslValue::String("label".into())),
-                ("role".to_string(), opt_string_value(role)),
-                ("text".to_string(), DslValue::String(text.clone())),
-                ("position".to_string(), position),
-            ]))
+            Some(DslValue::object([("kind".to_string(), DslValue::String("label".into())), ("role".to_string(), opt_string_value(role)), ("text".to_string(), DslValue::String(text.clone())), ("position".to_string(), position)]))
         }
         DisplayItemSpec::Segment { role, from, to, .. } => {
             let from = evaluate_expr(from, env, vars);
@@ -842,24 +823,14 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
             if from.is_null() || to.is_null() {
                 return None;
             }
-            Some(DslValue::object([
-                ("kind".to_string(), DslValue::String("segment".into())),
-                ("role".to_string(), opt_string_value(role)),
-                ("from".to_string(), from),
-                ("to".to_string(), to),
-            ]))
+            Some(DslValue::object([("kind".to_string(), DslValue::String("segment".into())), ("role".to_string(), opt_string_value(role)), ("from".to_string(), from), ("to".to_string(), to)]))
         }
         DisplayItemSpec::LinearHandle { role, axis, origin, .. } => {
             let origin = evaluate_expr(origin, env, vars);
             if origin.is_null() {
                 return None;
             }
-            Some(DslValue::object([
-                ("kind".to_string(), DslValue::String("linear-handle".into())),
-                ("role".to_string(), opt_string_value(role)),
-                ("axis".to_string(), vec3_json(*axis)),
-                ("origin".to_string(), origin),
-            ]))
+            Some(DslValue::object([("kind".to_string(), DslValue::String("linear-handle".into())), ("role".to_string(), opt_string_value(role)), ("axis".to_string(), vec3_json(*axis)), ("origin".to_string(), origin)]))
         }
         DisplayItemSpec::BoxPreview { role, corner_a, corner_b, height, .. } => {
             let corner_a = evaluate_expr(corner_a, env, vars);
@@ -868,13 +839,7 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
                 return None;
             }
             let height = evaluate_expr(height, env, vars);
-            Some(DslValue::object([
-                ("kind".to_string(), DslValue::String("box-preview".into())),
-                ("role".to_string(), opt_string_value(role)),
-                ("cornerA".to_string(), corner_a),
-                ("cornerB".to_string(), corner_b),
-                ("height".to_string(), height),
-            ]))
+            Some(DslValue::object([("kind".to_string(), DslValue::String("box-preview".into())), ("role".to_string(), opt_string_value(role)), ("cornerA".to_string(), corner_a), ("cornerB".to_string(), corner_b), ("height".to_string(), height)]))
         }
         DisplayItemSpec::EntityHighlight { role, geometry_entity_kind, entity_id, .. } => {
             let entity_id = evaluate_expr(entity_id, env, vars);
@@ -888,14 +853,8 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
                 ("entityId".to_string(), entity_id),
             ]))
         }
-        DisplayItemSpec::Curve { role, .. } => Some(DslValue::object([
-            ("kind".to_string(), DslValue::String("curve".into())),
-            ("role".to_string(), opt_string_value(role)),
-        ])),
-        DisplayItemSpec::Mesh { role, .. } => Some(DslValue::object([
-            ("kind".to_string(), DslValue::String("mesh".into())),
-            ("role".to_string(), opt_string_value(role)),
-        ])),
+        DisplayItemSpec::Curve { role, .. } => Some(DslValue::object([("kind".to_string(), DslValue::String("curve".into())), ("role".to_string(), opt_string_value(role))])),
+        DisplayItemSpec::Mesh { role, .. } => Some(DslValue::object([("kind".to_string(), DslValue::String("mesh".into())), ("role".to_string(), opt_string_value(role))])),
         DisplayItemSpec::Preview { role, preview_kind, params, .. } => {
             let evaluated_params: Vec<(String, DslValue)> = params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, env, vars))).collect();
             Some(DslValue::object([

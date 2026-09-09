@@ -133,6 +133,7 @@ return {
     host: "127.0.0.1",
     port: Number(process.env.S_OS_PORT ?? 6066),
     strictPort: true,
+    ...(process.env.SEMIO_VITE_HMR === "0" ? { hmr: false } : {}),
     ...(process.env.S_LOCAL_RELAY_URL ? {
       proxy: {
         "/_semio": {

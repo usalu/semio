@@ -44,11 +44,11 @@
   "boltTMm": null,
   "boltFUMpa": null,
   "boltFUbMpa": null,
-  "weldAMm": 7.0,
-  "weldLMm": 160.0,
-  "weldFUMpa": 540.0,
+  "weldAMm": 7,
+  "weldLMm": 160,
+  "weldFUMpa": 540,
   "weldSteelGrade": "S460",
-  "weldFEdKn": 140.0,
+  "weldFEdKn": 140,
   "deltaSigmaMpa": null,
   "fatigueCategory": null,
   "fatigueMethod": null,
@@ -73,6 +73,5 @@
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

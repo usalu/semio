@@ -9,26 +9,6 @@ message Generation3dArtifact {
   // @state artifact
   GenerationPlayState generation = 2;
   // @state presence
-  repeated string selected_node_ids = 3;
-  // @state config
-  string lod_mode = 4;
-  // @state config
-  string show_mode = 5;
-  // @state config
-  string selection_method = 6;
-  // @state artifact
-  optional string hovered_node_id = 7;
-  // @state config
-  CameraJson graph_camera = 8;
-  // @state config
-  Generation3dPreviewCamera preview_camera = 9;
-  // @state config
-  string sun_json = 10;
-  // @state presence
-  optional string selected_generation_id = 11;
-  // @state artifact
-  optional string generation_preview_text = 12;
-  // @state presence
   // @state config
 }
 

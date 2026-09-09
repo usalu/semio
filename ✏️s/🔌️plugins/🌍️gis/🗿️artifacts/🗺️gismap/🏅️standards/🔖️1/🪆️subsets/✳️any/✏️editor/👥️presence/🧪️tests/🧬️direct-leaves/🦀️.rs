@@ -95,15 +95,25 @@ pub(crate) fn assert_set_camera_leaf(descriptor: &str) {
 #[test]
 fn strict_state_and_payload_vectors_match_the_direct_camera_contract() {
     let fixture = fixture();
-    for row in fixture["state"]["valid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<Gis2dPresence>(&(row["value"].clone()).to_string()).is_ok(), "{}", row["name"]); }
-    for row in fixture["state"]["invalid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<Gis2dPresence>(&(row["value"].clone()).to_string()).is_err(), "{}", row["name"]); }
-    for payload in fixture["payload"]["valid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<SetCamera>(&(payload.clone()).to_string()).is_ok()); }
-    for payload in fixture["payload"]["invalid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<SetCamera>(&(payload.clone()).to_string()).is_err()); }
+    for row in fixture["state"]["valid"].as_array().unwrap() {
+        assert!(dsl::json::from_json_str::<Gis2dPresence>(&(row["value"].clone()).to_string()).is_ok(), "{}", row["name"]);
+    }
+    for row in fixture["state"]["invalid"].as_array().unwrap() {
+        assert!(dsl::json::from_json_str::<Gis2dPresence>(&(row["value"].clone()).to_string()).is_err(), "{}", row["name"]);
+    }
+    for payload in fixture["payload"]["valid"].as_array().unwrap() {
+        assert!(dsl::json::from_json_str::<SetCamera>(&(payload.clone()).to_string()).is_ok());
+    }
+    for payload in fixture["payload"]["invalid"].as_array().unwrap() {
+        assert!(dsl::json::from_json_str::<SetCamera>(&(payload.clone()).to_string()).is_err());
+    }
     for envelope in fixture["aggregate"]["valid"].as_array().unwrap() {
         let operation: Gis2dPresenceMutation = dsl::json::from_json_str(&(envelope.clone()).to_string()).expect("valid aggregate");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).expect("aggregate JSON"), *envelope);
     }
-    for envelope in fixture["aggregate"]["invalid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<Gis2dPresenceMutation>(&(envelope.clone()).to_string()).is_err()); }
+    for envelope in fixture["aggregate"]["invalid"].as_array().unwrap() {
+        assert!(dsl::json::from_json_str::<Gis2dPresenceMutation>(&(envelope.clone()).to_string()).is_err());
+    }
 }
 
 #[test]
@@ -124,8 +134,12 @@ fn sparse_camera_diff_has_an_empty_identity_and_preserves_the_no_op_warning() {
 #[test]
 fn sparse_camera_diff_serde_order_noop_and_codec_rejections_match_neutral_fixture() {
     let fixture = fixture();
-    for value in fixture["diff"]["valid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<Gis2dPresenceDiff>(&(value.clone()).to_string()).is_ok()); }
-    for value in fixture["diff"]["invalid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<Gis2dPresenceDiff>(&(value.clone()).to_string()).is_err()); }
+    for value in fixture["diff"]["valid"].as_array().unwrap() {
+        assert!(dsl::json::from_json_str::<Gis2dPresenceDiff>(&(value.clone()).to_string()).is_ok());
+    }
+    for value in fixture["diff"]["invalid"].as_array().unwrap() {
+        assert!(dsl::json::from_json_str::<Gis2dPresenceDiff>(&(value.clone()).to_string()).is_err());
+    }
     let missing: Gis2dPresenceDiff = dsl::json::from_json_str(&(serde_json::json!({"steps":[{}]})).to_string()).unwrap();
     let explicit_null: Gis2dPresenceDiff = dsl::json::from_json_str(&(serde_json::json!({"steps":[{"cameraJson":null}]})).to_string()).unwrap();
     assert_eq!(missing, explicit_null);

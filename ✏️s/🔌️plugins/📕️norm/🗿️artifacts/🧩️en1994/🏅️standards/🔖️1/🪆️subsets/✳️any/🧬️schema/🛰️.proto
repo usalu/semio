@@ -48,6 +48,4 @@ message En1994Artifact {
   double n_cycles_stud = 21;
   // @state artifact
   double delta_tau_stud_mpa = 22;
-  // @state presence
-  optional uint32 selected_check_index = 23;
 }

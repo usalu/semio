@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// ⚖️ Every variant — full-coverage `OpText` round trip over the closed vocabulary, one sample

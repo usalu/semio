@@ -5,10 +5,9 @@
 //! `MonthlyClimate::german_reference`), never meaningfully edited one month/array at a time from this
 //! app's own input surface — an inseparable ≥2-field facet, not independently-set scalars.
 
-
-use crate::{Din18599Snapshot, MonthlyClimate};
 use crate::diff::Din18599Diff;
 use crate::mutations::Din18599Mutation;
+use crate::{Din18599Snapshot, MonthlyClimate};
 //#region 🔖️UpdateClimate
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

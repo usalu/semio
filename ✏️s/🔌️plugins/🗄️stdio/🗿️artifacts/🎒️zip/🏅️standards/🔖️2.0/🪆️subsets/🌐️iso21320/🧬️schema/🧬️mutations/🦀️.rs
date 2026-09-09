@@ -51,20 +51,20 @@ impl ZipIso21320Method {
 }
 
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "💬set-archive-comment/🦀️.rs"]
-pub mod set_archive_comment;
-#[path = "📦add-stored-entry/🦀️.rs"]
-pub mod add_stored_entry;
 #[path = "🗜️add-deflated-entry/🦀️.rs"]
 pub mod add_deflated_entry;
+#[path = "📦add-stored-entry/🦀️.rs"]
+pub mod add_stored_entry;
 #[path = "➖remove-entry/🦀️.rs"]
 pub mod remove_entry;
 #[path = "🏷️rename-entry/🦀️.rs"]
 pub mod rename_entry;
+#[path = "💬set-archive-comment/🦀️.rs"]
+pub mod set_archive_comment;
 #[path = "✍️set-entry-data/🦀️.rs"]
 pub mod set_entry_data;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed content mutation for `stdio.zip` 2.0/🌐️iso21320. `NoMutation` was dropped:
@@ -174,9 +174,13 @@ pub(crate) fn agg_inverse(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> Vec
         ZipIso21320Mutation::SetArchiveComment(_) => vec![ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: base.comment.clone() })],
         ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry }) => vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
         ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry }) => vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
-        ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name }) => base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: entry.clone() })]).unwrap_or_default(),
+        ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name }) => {
+            base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: entry.clone() })]).unwrap_or_default()
+        }
         ZipIso21320Mutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => vec![ZipIso21320Mutation::RenameEntry(rename_entry::RenameEntry { name: new_name.clone(), new_name: name.clone() })],
-        ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name, .. }) => base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default(),
+        ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name, .. }) => {
+            base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default()
+        }
     }
 }
 //#endregion 🔖️MutationTrait

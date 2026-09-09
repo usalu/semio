@@ -1,9 +1,9 @@
 //! 📄️ Remodeling play app panel — the framework Document tab: reconstruction job status/progress plus the
 //! live viewport session state.
 
+use crate::editor::remodeling::terminology::RemodelingLabels;
 use crate::schema::stage_display;
 use crate::{ReconstructionStage, RemodelingSnapshot};
-use crate::editor::remodeling::terminology::RemodelingLabels;
 use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
@@ -35,11 +35,7 @@ pub fn render(scene: &RemodelingSnapshot, active_utility: &str, labels: &Remodel
     // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); `ArtifactEditor::render` carries no
     // `InteractionView`, so this panel can no longer embed a live selection count in its text.
     let utility_label = format!("{}: {}", labels.utility.as_str(), active_utility);
-    let rows = crate::editor::remodeling::ui_node_list([
-        tree_item("remodeling-pipeline.job", job_label),
-        tree_item("remodeling-pipeline.status", running_label),
-        tree_item("remodeling-pipeline.utility", utility_label),
-    ])?;
+    let rows = crate::editor::remodeling::ui_node_list([tree_item("remodeling-pipeline.job", job_label), tree_item("remodeling-pipeline.status", running_label), tree_item("remodeling-pipeline.utility", utility_label)])?;
     PanelTreeBuilder::new("remodeling-pipeline")?.section("remodeling-pipeline.reconstruction", Some(crate::editor::remodeling::ui_label(labels.panel_pipeline.as_str())?), true, rows)?.build()
 }
 //#endregion 🔖️Render

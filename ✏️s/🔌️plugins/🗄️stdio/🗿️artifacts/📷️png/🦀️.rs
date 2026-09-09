@@ -50,14 +50,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution {
-        identity: "png",
-        schema: ARTIFACT_DEFINITION_SCHEMA,
-        definition,
-        assembly,
-        formats,
-        native_codecs,
-    }
+    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "png", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Dialect
@@ -287,46 +280,46 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod top_level;
                         pub use top_level::*;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-header/🦀️.rs"]
-                        pub mod change_header;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️replace-palette/🦀️.rs"]
-                        pub mod replace_palette;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-transparency/🦀️.rs"]
-                        pub mod change_transparency;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗️change-gamma/🦀️.rs"]
-                        pub mod change_gamma;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️change-chromaticities/🦀️.rs"]
-                        pub mod change_chromaticities;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️change-srgb-intent/🦀️.rs"]
-                        pub mod change_srgb_intent;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-physical-dims/🦀️.rs"]
-                        pub mod change_physical_dims;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️change-timestamp/🦀️.rs"]
-                        pub mod change_timestamp;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-background/🦀️.rs"]
-                        pub mod change_background;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥️insert-text-chunk/🦀️.rs"]
-                        pub mod insert_text_chunk;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-text-chunk/🦀️.rs"]
-                        pub mod remove_text_chunk;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️replace-text-chunk/🦀️.rs"]
-                        pub mod replace_text_chunk;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️replace-pixels/🦀️.rs"]
-                        pub mod replace_pixels;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️insert-unknown-chunk/🦀️.rs"]
-                        pub mod insert_unknown_chunk;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📤️remove-unknown-chunk/🦀️.rs"]
-                        pub mod remove_unknown_chunk;
-                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-background/🦀️.rs"]
+                        pub mod change_background;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️change-chromaticities/🦀️.rs"]
+                        pub mod change_chromaticities;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗️change-gamma/🦀️.rs"]
+                        pub mod change_gamma;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-header/🦀️.rs"]
+                        pub mod change_header;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-physical-dims/🦀️.rs"]
+                        pub mod change_physical_dims;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️change-srgb-intent/🦀️.rs"]
+                        pub mod change_srgb_intent;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️change-timestamp/🦀️.rs"]
+                        pub mod change_timestamp;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-transparency/🦀️.rs"]
+                        pub mod change_transparency;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥️insert-text-chunk/🦀️.rs"]
+                        pub mod insert_text_chunk;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️insert-unknown-chunk/🦀️.rs"]
+                        pub mod insert_unknown_chunk;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-text-chunk/🦀️.rs"]
+                        pub mod remove_text_chunk;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📤️remove-unknown-chunk/🦀️.rs"]
+                        pub mod remove_unknown_chunk;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️replace-palette/🦀️.rs"]
+                        pub mod replace_palette;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️replace-pixels/🦀️.rs"]
+                        pub mod replace_pixels;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️replace-text-chunk/🦀️.rs"]
+                        pub mod replace_text_chunk;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
                     }
-                    #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
-                    pub mod operations;
                     #[cfg(test)]
                     #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🛡️mutation-regressions/🦀️.rs"]
                     mod mutation_regressions;
+                    #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
+                    pub mod operations;
                 }
                 #[path = "."]
                 pub mod io {

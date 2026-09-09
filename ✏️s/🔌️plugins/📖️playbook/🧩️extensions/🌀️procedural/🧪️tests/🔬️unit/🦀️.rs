@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::{ActionMeta, PluginApp, VcsArtifactApp};
 
@@ -256,7 +255,7 @@ async fn module_payload_operation_op_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, ArtifactStore, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> =
         ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None)).await.expect("valid artifact store fixture");

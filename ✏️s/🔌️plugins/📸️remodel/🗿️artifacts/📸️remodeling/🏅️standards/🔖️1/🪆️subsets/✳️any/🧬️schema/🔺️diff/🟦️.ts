@@ -33,16 +33,8 @@ import {
 } from "../📸️snapshot/🟦️.ts";
 import {
   REMODELING_ARTIFACT_SPEC,
-  REMODELING_UI_CAMERA_SPEC,
-  REMODELING_UI_FRAME_CURSOR_SPEC,
-  REMODELING_UI_LAYERS_SPEC,
-  REMODELING_UI_SELECTION_SPEC,
   remodelingArtifactToSnapshot,
   type RemodelingArtifact,
-  type RemodelingUiCamera,
-  type RemodelingUiFrameCursor,
-  type RemodelingUiLayers,
-  type RemodelingUiSelection,
 } from "../🟦️.ts";
 
 //#region 🔖️DeltaHelpers
@@ -70,11 +62,6 @@ export interface RemodelingDiff {
   gcps: RemodelingGcpList | null;
   job: ReconstructionJob | null;
   results: ReconstructionResults | null;
-  selection: RemodelingUiSelection | null;
-  reportTable: string | null;
-  frameCursor: RemodelingUiFrameCursor | null;
-  camera: RemodelingUiCamera | null;
-  layers: RemodelingUiLayers | null;
 }
 //#endregion 🔖️Diff
 
@@ -114,11 +101,6 @@ export const REMODELING_DIFF_SPEC: RecordSpec = {
     f("gcps", opt(rec(() => REMODELING_GCP_LIST_SPEC)), nothing),
     f("job", opt(rec(() => RECONSTRUCTION_JOB_SPEC)), nothing),
     f("results", opt(rec(() => RECONSTRUCTION_RESULTS_SPEC)), nothing),
-    f("selection", opt(rec(() => REMODELING_UI_SELECTION_SPEC)), nothing),
-    f("report_table", opt(text), nothing),
-    f("frame_cursor", opt(rec(() => REMODELING_UI_FRAME_CURSOR_SPEC)), nothing),
-    f("camera", opt(rec(() => REMODELING_UI_CAMERA_SPEC)), nothing),
-    f("layers", opt(rec(() => REMODELING_UI_LAYERS_SPEC)), nothing),
     f("locale", opt(text), nothing),
   ],
 };
@@ -237,10 +219,5 @@ export interface RemodelingArtifact {
   readonly gcps: readonly GroundControlPoint[];
   readonly job: ReconstructionJob;
   readonly results: ReconstructionResults;
-  readonly selection: RemodelingUiSelection;
-  readonly reportTable: string;
-  readonly frameCursor: RemodelingUiFrameCursor;
-  readonly camera: RemodelingUiCamera;
-  readonly layers: RemodelingUiLayers;
-  readonly
+
 }

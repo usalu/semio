@@ -1,8 +1,8 @@
 //! 👁️ 👁️ Remodeling play app commands command — `set-camera`.
 
+use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation, RemodelingWorldCamera};
 use crate::op::RemodelingMutation;
 use crate::RemodelingSnapshot;
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation, RemodelingWorldCamera};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

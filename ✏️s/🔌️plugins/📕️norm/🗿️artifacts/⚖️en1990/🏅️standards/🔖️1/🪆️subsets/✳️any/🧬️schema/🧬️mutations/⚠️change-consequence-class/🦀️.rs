@@ -1,7 +1,6 @@
 //! 🎯 `change-consequence-class` — sets the EN 1990 document's consequence class (CC1/CC2/CC3),
 //! which drives the target reliability index used by `check_reliability_index`.
 
-
 use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload

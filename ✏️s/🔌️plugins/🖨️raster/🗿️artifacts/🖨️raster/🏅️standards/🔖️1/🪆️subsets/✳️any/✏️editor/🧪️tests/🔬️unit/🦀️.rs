@@ -1,9 +1,8 @@
-
 use super::testkit::*;
 use super::*;
 use crate::editor::raster::panels::{catalogue, document, inspection, masks};
 use crate::standards::v1::subsets::any::schema::{empty_raster_document, layer_name, layer_visible};
-use semio_framework_plugin::{PluginApp, SET_ACTIVE_UTILITY_ACTION_ID, testkit};
+use semio_framework_plugin::{testkit, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
 use store::MemoryBackbone;
 
 //#region 🔖️RetainedEnvelopeIngress
@@ -202,14 +201,14 @@ async fn raster_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn raster_labels_resolve_german_locale() {
     let mut app = app().await;
-    dispatch(&mut app, RasterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })).await;
-    let layers_json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS).await;
+    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let layers_json = render_with_view(&mut app, document::RASTER_PLAY_BODY_LAYERS, &view_state).await;
     assert!(layers_json.contains("Pixel hinzufügen"));
     assert!(layers_json.contains("Gruppe hinzufügen"));
-    let masks_json = render(&mut app, masks::RASTER_PLAY_BODY_MASKS).await;
+    let masks_json = render_with_view(&mut app, masks::RASTER_PLAY_BODY_MASKS, &view_state).await;
     assert!(masks_json.contains("Masken"));
     assert!(masks_json.contains("Keine Masken"));
-    let catalogue_json = render(&mut app, catalogue::RASTER_PLAY_BODY_CATALOGUE).await;
+    let catalogue_json = render_with_view(&mut app, catalogue::RASTER_PLAY_BODY_CATALOGUE, &view_state).await;
     assert!(catalogue_json.contains("Ebenenarten"));
 }
 
@@ -379,19 +378,6 @@ async fn ingest_operations_is_idempotent() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn set_active_utility_switch_emits_no_ops_and_persists_in_config() {
-    let mut app = app_with_registry().await;
-    let before = app.snapshot().expect("snapshot");
-    // Switching utilities is the framework View action: no document operations, nothing to sync/undo.
-    let result = dispatch(&mut app, RasterCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "paintBrush".into() })).await;
-    assert!(result.mutations.is_empty(), "utility switching never emits document operations");
-    assert_eq!(app.snapshot().expect("snapshot"), before, "utility switching does not mutate the document");
-    // The composite scene reads the host-owned active utility from config, not view state.
-    let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
-    assert!(json.contains("\"activeUtility\":\"paintBrush\""), "scene reflects host-owned active utility: {json}");
-}
-
-#[semio_framework_async_macros::async_test]
 async fn utility_registry_declares_utilities_scoped_to_the_composite_window() {
     let definition = create_raster_app();
     let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
@@ -447,8 +433,6 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }),
         RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::RasterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
         RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 2.0 }),
-        RasterCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "paintBrush".into() }),
-        RasterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() }),
     ]
 }
@@ -462,7 +446,7 @@ fn every_command() -> Vec<RasterCommand> {
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use std::collections::BTreeSet;
-    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 17);
+    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 15);
     assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 17);
     assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 17);
     assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
@@ -473,7 +457,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert_eq!(retained, RasterCommand::TOOL_JOB_IDS.iter().copied().collect::<BTreeSet<_>>(), "the retained table must equal the generated tool-job id set");
 
     // 🛣️ Lane discipline, read off the handlers: ten document verbs publish into the artifact lane,
-    // seven session verbs into the config lane, and no route publishes into both.
+    // five session verbs into the config lane, and no route publishes into both.
     let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer", "setActiveExample"].into_iter().collect();
     for tool_id in RASTER_RETAINED_TOOL_IDS {
         let contract = RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
@@ -483,8 +467,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert!(<RasterPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
     assert!(<RasterPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some(), "the Config lane is rejected outright without a config one-item preparation factory");
 
-    // 🧵️ Every retained id must be UI-dispatchable — including the framework-injected
-    // `setActiveUtility`, which `resumable_framework_catalog` classifies for us.
+    // 🧵️ Every retained plugin command id must be UI-dispatchable.
     let definition = create_raster_app();
     for tool_id in RASTER_RETAINED_TOOL_IDS {
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} declared"));
@@ -553,8 +536,6 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
                 RasterCommand::SetCompositeViewport(_) => "composite-viewport",
                 RasterCommand::SetCamera(_) => "camera",
                 RasterCommand::SetCameraZoom(_) => "camera-zoom",
-                RasterCommand::SetActiveUtility(_) => "active-utility",
-                RasterCommand::SetLocale(_) => "locale",
                 RasterCommand::SetActiveExample(_) => "set-active-example",
             };
             (keyword, command)

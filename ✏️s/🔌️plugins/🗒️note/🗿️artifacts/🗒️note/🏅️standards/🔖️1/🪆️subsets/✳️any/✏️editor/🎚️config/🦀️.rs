@@ -6,21 +6,21 @@
 //! content.
 
 use crate::NoteCamera;
-#[cfg(test)]
-use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+#[cfg(test)]
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ Note's real `ArtifactEditor::Config` — mirrors `shooting_engine::ShootingConfig`'s pilot shape.
 /// Absorbs every field that used to live on the old ui crate's `NotePlayRuntime` (the in-progress
 /// engagement-rename input, and the free/live canvas camera) plus the two `ViewModel` fields the note
-/// UI actually reads (`locale`/`active_utility_id`) — see `crate::editor::note::NotePlayApp::render`.
+/// UI actually reads — see `crate::editor::note::NotePlayApp::render`.
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_block_ids`/`hovered_block_id`
 /// moved OUT of here into the framework-owned `InteractionState` (the "blocks" domain declared on
 /// `create_note_app`) — see `crate::editor::note::NoteDispatchCtx`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[dsl(id = "note.config", layout = "lines")]
 pub struct NoteConfig {
@@ -30,9 +30,6 @@ pub struct NoteConfig {
     /// `NotePlayRuntime::camera`.
     #[dsl(block)]
     pub camera: NoteCamera,
-    /// 🧰️ The active canvas utility (select/pencil/eraser/…) — was read off
-    /// `view_state.active_utility_id` (host-pushed `ViewModel`, deleted by the pure-trait migration).
-    pub active_utility_id: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -81,7 +78,7 @@ impl store::ArtifactPack for NoteConfig {
 
 impl Default for NoteConfig {
     fn default() -> Self {
-        Self { engagement_input: String::new(), camera: NoteCamera::default(), active_utility_id: "selectDirect".into(), }
+        Self { engagement_input: String::new(), camera: NoteCamera::default() }
     }
 }
 
@@ -91,7 +88,6 @@ store::impl_whole_record_config!(NoteConfig);
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
-
 
 //#region 🧪️Tests
 #[cfg(test)]

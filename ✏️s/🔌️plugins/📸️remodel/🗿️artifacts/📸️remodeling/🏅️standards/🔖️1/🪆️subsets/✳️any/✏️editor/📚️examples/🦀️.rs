@@ -22,13 +22,7 @@ pub struct RemodelingExample {
 
 /// 📚️ Every committed example of this subset, in picker order. **Append-only** — see this module's doc.
 pub const REMODELING_EXAMPLES: &[RemodelingExample] = &[
-    RemodelingExample {
-        id: crate::examples::demo::ID,
-        text: crate::examples::demo::PRIMARY_TEXT,
-        icon: crate::examples::demo::ICON,
-        label_en: "Demo",
-        label_de: "Demo",
-    },
+    RemodelingExample { id: crate::examples::demo::ID, text: crate::examples::demo::PRIMARY_TEXT, icon: crate::examples::demo::ICON, label_en: "Demo", label_de: "Demo" },
     RemodelingExample {
         id: crate::examples::app_remodeling_demo_session::ID,
         text: crate::examples::app_remodeling_demo_session::PRIMARY_TEXT,
@@ -36,13 +30,7 @@ pub const REMODELING_EXAMPLES: &[RemodelingExample] = &[
         label_en: "Demo Session",
         label_de: "Demo-Sitzung",
     },
-    RemodelingExample {
-        id: crate::examples::synthetic_orbit::ID,
-        text: crate::examples::synthetic_orbit::PRIMARY_TEXT,
-        icon: crate::examples::synthetic_orbit::ICON,
-        label_en: "Synthetic Orbit",
-        label_de: "Synthetischer Orbit",
-    },
+    RemodelingExample { id: crate::examples::synthetic_orbit::ID, text: crate::examples::synthetic_orbit::PRIMARY_TEXT, icon: crate::examples::synthetic_orbit::ICON, label_en: "Synthetic Orbit", label_de: "Synthetischer Orbit" },
 ];
 
 /// 📚️ Every registered example as a `&'static [ExampleSource]` — the exact borrow
@@ -77,9 +65,7 @@ pub fn example_sources() -> Vec<ExampleSource> {
 /// 🚀️ The boot document: the registered boot example's text parsed as a scene, or the artifact's own
 /// default scene when that text is absent or no longer parses.
 pub fn boot_snapshot() -> crate::RemodelingSnapshot {
-    example_text(REMODELING_EXAMPLE_BOOT_ID)
-        .and_then(|text| crate::snapshot::text::parse_dsl(text).ok())
-        .unwrap_or_else(crate::default_remodeling_scene)
+    example_text(REMODELING_EXAMPLE_BOOT_ID).and_then(|text| crate::snapshot::text::parse_dsl(text).ok()).unwrap_or_else(crate::default_remodeling_scene)
 }
 //#endregion 🔖️Registry
 

@@ -17,17 +17,6 @@ type LayoutDiff {
   dataFieldsJson: String @state(class: ARTIFACT)
   backgroundDrawing: LayoutDrawingChild @state(class: ARTIFACT) @child(kind: "s.stdio.semio.drawing")
   referencedModel: ArtifactLink @state(class: ARTIFACT) @link(roles: ["model"])
-  selectedIds: LayoutStringList @state(class: PRESENCE)
-  activePageId: String @state(class: CONFIG)
-  engagementInput: String @state(class: CONFIG)
-  cameraX: Float @state(class: CONFIG)
-  cameraY: Float @state(class: CONFIG)
-  cameraZoom: Float @state(class: CONFIG)
-  previewCameraX: Float @state(class: CONFIG)
-  previewCameraY: Float @state(class: CONFIG)
-  previewCameraZoom: Float @state(class: CONFIG)
-  dropPreview: LayoutDropPreviewState @state(class: CONFIG)
-  hoveredId: String @state(class: ARTIFACT)
 }
 
 # 🌉️ Opaque mirror of the full `LayoutArtifact` aggregate (artifact + presence + config lanes) — out

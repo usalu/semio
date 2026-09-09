@@ -1,15 +1,18 @@
 //! 🧬️ Rewriting artifact schema — every field of the artifact with its state class.
 
-use semio_s_artifact_trinity_jack::{Graph};
-use crate::{TrinityRewritingError};
+use crate::TrinityRewritingError;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_trinity_jack::ast::{Pattern, PatternEdge, PatternNode, QueryResult};
 use semio_s_artifact_trinity_jack::executor::execute;
 use semio_s_artifact_trinity_jack::language_service::parse;
-use ::semio_framework_schema::ArtifactSchema;
+use semio_s_artifact_trinity_jack::Graph;
 use std::collections::BTreeMap;
 
+#[path = "♻️retirement/🦀️.rs"]
+pub mod retirement;
+
 //#region 🔖️Artifact
-/// 🧬️ Full rewriting artifact state across the artifact and local config lanes.
+/// 🧬️ Rewriting document state owned by the artifact.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.rewriting")]
@@ -24,43 +27,25 @@ pub struct RewritingArtifact {
     pub parameter_bindings: BTreeMap<String, PropertyValue>,
     #[state(artifact)]
     pub rule_layout: BTreeMap<String, LayoutPoint>,
-    #[state(config)]
-    pub lod_mode_by_window: BTreeMap<String, String>,
-    #[state(config)]
-    pub before_pane_camera: Camera,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for RewritingArtifact {
     fn default() -> Self {
-        Self {
-            before_fixture_json: String::new(),
-            lhs_json: String::new(),
-            rhs_json: String::new(),
-            parameter_bindings: BTreeMap::new(),
-            rule_layout: BTreeMap::new(),
-            lod_mode_by_window: BTreeMap::new(),
-            before_pane_camera: Camera::default(),
-        }
+        Self { before_fixture_json: String::new(), lhs_json: String::new(), rhs_json: String::new(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() }
     }
 }
 
 impl RewritingArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::RewritingSnapshot {
-        crate::RewritingSnapshot {
-            before_fixture_json: self.before_fixture_json.clone(),
-            lhs_json: self.lhs_json.clone(),
-            rhs_json: self.rhs_json.clone(),
-            parameter_bindings: self.parameter_bindings.clone(),
-            rule_layout: self.rule_layout.clone(),
-        }
+        crate::RewritingSnapshot { before_fixture_json: self.before_fixture_json.clone(), lhs_json: self.lhs_json.clone(), rhs_json: self.rhs_json.clone(), parameter_bindings: self.parameter_bindings.clone(), rule_layout: self.rule_layout.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the artifact from its document snapshot.
     pub fn from_snapshot(snapshot: crate::RewritingSnapshot) -> Self {
-        Self { before_fixture_json: snapshot.before_fixture_json, lhs_json: snapshot.lhs_json, rhs_json: snapshot.rhs_json, parameter_bindings: snapshot.parameter_bindings, rule_layout: snapshot.rule_layout, ..Self::default() }
+        Self { before_fixture_json: snapshot.before_fixture_json, lhs_json: snapshot.lhs_json, rhs_json: snapshot.rhs_json, parameter_bindings: snapshot.parameter_bindings, rule_layout: snapshot.rule_layout }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -80,11 +65,7 @@ pub fn rewriting_artifact_schema_descriptor() -> ::semio_framework_schema::Artif
     ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.trinity.rewriting",
         artifact: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
@@ -344,7 +325,7 @@ mod rule_application_tests;
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::{RewritingDiff, RewriteRuleMutation, RewritingSnapshot};
+    use crate::{RewriteRuleMutation, RewritingDiff, RewritingSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -457,8 +438,8 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use semio_s_artifact_trinity_jack::PropertyValue;
 pub use crate::LayoutPoint;
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use semio_framework_graph::manifest::PropertyValue;
 pub use semio_s_artifact_trinity_jack::Camera;
 //#endregion 🔁️Re-exports

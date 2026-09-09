@@ -3,8 +3,8 @@
 use crate::curves::PerformanceCurve;
 use crate::props::{r410a_saturation_pressure_pa, r410a_saturation_temp_c};
 use crate::units::P_STD;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️State
 /// 🌡️ Refrigeration circuit state.

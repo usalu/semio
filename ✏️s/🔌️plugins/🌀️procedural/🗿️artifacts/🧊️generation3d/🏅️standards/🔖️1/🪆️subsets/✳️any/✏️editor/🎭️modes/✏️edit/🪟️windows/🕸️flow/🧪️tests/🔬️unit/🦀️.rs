@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::generation3d::testkit::{app_with_registry, render as render_body};
 

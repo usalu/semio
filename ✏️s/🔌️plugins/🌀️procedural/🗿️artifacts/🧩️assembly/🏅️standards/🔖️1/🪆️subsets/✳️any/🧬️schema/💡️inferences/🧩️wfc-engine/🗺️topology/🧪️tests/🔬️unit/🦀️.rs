@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -91,4 +90,32 @@ fn regions_default_to_zero_and_are_settable() {
     let topo = b.build().unwrap();
     assert_eq!(topo.region_of(NodeId(0)), RegionId(0));
     assert_eq!(topo.region_of(NodeId(1)), RegionId(7));
+}
+
+#[test]
+fn graph_view_conversion_preserves_neutral_directed_and_undirected_arcs() {
+    use semio_framework_graph::{Directed, Normal, Storage, Undirected};
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔍️decoding-and-graphs/🔣️.json")).unwrap();
+    let row = &oracle["graph"];
+    let mut directed = Storage::<Normal, Directed>::new();
+    let mut undirected = Storage::<Normal, Undirected>::new();
+    for id in serde_json::from_value::<Vec<u64>>(row["nodes"].clone()).unwrap() {
+        directed.add_node_with_id(id, Default::default());
+        undirected.add_node_with_id(id, Default::default());
+    }
+    for [from, to] in serde_json::from_value::<Vec<[u64; 2]>>(row["edges"].clone()).unwrap() {
+        directed.add_edge(from, to);
+        undirected.add_edge(from, to);
+    }
+    let relation = RelationId(row["relation"].as_u64().unwrap() as u32);
+    for (key, topology) in [("directed", from_graph_view(&directed, |_| relation).unwrap()), ("undirected", from_graph_view(&undirected, |_| relation).unwrap())] {
+        assert_eq!(topology.node_count(), row["nodes"].as_array().unwrap().len());
+        let mut arcs = Vec::new();
+        for from in 0..topology.node_count() {
+            topology.for_each_out_arc(NodeId::from_index(from), |to, relation| arcs.push([from as u32, to.get(), relation.get()]));
+        }
+        arcs.sort_unstable();
+        assert_eq!(serde_json::to_value(&arcs).unwrap(), row[key]);
+        assert_eq!(topology.arc_count(), arcs.len());
+    }
 }

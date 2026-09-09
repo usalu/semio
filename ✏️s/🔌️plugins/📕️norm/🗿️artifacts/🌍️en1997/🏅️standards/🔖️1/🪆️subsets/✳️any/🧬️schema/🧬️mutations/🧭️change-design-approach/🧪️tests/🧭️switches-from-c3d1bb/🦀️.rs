@@ -82,7 +82,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-design-approach/switches-from-design-approach-1-to-design-approach-2: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, r#"change-design-approach/switches-from-design-approach-1-to-design-approach-2: `change-design-approach` has no finiteness guard — the field is a `String` — and "da2" differs from the committed "da1str", so its only guard, the equality one, stays shut"#);
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        r#"change-design-approach/switches-from-design-approach-1-to-design-approach-2: `change-design-approach` has no finiteness guard — the field is a `String` — and "da2" differs from the committed "da1str", so its only guard, the equality one, stays shut"#
+    );
     assert!(produced.messages().is_empty(), "change-design-approach/switches-from-design-approach-1-to-design-approach-2: an accepted change-design-approach emits no diagnostics at all");
 }
 

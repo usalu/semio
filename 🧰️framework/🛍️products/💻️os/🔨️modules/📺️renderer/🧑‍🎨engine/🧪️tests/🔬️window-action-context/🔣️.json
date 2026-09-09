@@ -1,0 +1,9 @@
+{
+  "activeWindowId": "editor-left",
+  "clickedWindowId": "editor-right",
+  "cases": [
+    { "args": null, "expected": { "windowId": "editor-right" } },
+    { "args": { "value": 7 }, "expected": { "value": 7, "windowId": "editor-right" } },
+    { "args": { "windowId": "editor-left", "nodeId": "n1" }, "expected": { "windowId": "editor-right", "nodeId": "n1" } }
+  ]
+}

@@ -241,3 +241,18 @@ Removed schema and DSL root facades that collided with framework crate names in 
 - ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs
 - ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs
 - ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs
+
+## Late Compiler Roots
+
+Remodel declaration builders now accept their consuming plugin app fleet, its descriptor leaf names use the framework schema namespace, and its existing session example and example law are mounted once. Removed its stale example re-export and locale action. Removed unused unavailable test-only Geometry/Graph aliases from both Procedural artifacts. Process imports its declared utility constant and drops its removed utility module import. Playbook Procedural's direct ArtifactApp handler supplies the optional view state argument. Parsed 10 proposals; wrote 10 current sources and skipped 0 concurrent changes. Compilation remains pending.
+
+- ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs
+- ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🦀️.rs
+- ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs
+- ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs
+- ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs
+- ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs
+- ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs
+- ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs
+- ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs
+- ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs

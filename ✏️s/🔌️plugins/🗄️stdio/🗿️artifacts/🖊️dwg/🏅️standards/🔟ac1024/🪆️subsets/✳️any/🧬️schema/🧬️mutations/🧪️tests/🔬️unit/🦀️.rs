@@ -1,9 +1,8 @@
-
 use super::*;
+use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use protocol::OpBinary;
 use protocol::OpText;
-use protocol::command::DiffAlgebra;
 
 /// 🧪️ Keeps the declaration honest, which nothing else can: the framework never parses Rust, so
 /// the CATALOGS are what the contract gate counts against, and this is the only check that ties

@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn two_spring_model() -> Model {

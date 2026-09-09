@@ -20,8 +20,6 @@ message Iso16757Diff {
   optional string script_limits = 8;
   // @state artifact
   optional string exchange_process = 9;
-  // @state presence
-  optional uint32 selected_check_index = 10;
 }
 
 message Iso16757Artifact {
@@ -33,7 +31,6 @@ message Iso16757Artifact {
   map<string, string> part_number_inputs = 6;
   string script_limits = 7;
   string exchange_process = 8;
-  optional uint32 selected_check_index = 9;
 }
 
 message Iso16757StringList { repeated string values = 1; }

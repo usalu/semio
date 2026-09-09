@@ -27,12 +27,6 @@ pub struct EquationDiff {
     pub computed: Option<EquationComputedChild>,
     #[state(artifact)]
     pub equation: Option<EquationExprSnapshot>,
-    #[state(config)]
-    pub camera_x: Option<f64>,
-    #[state(config)]
-    pub camera_y: Option<f64>,
-    #[state(config)]
-    pub camera_zoom: Option<f64>,
 }
 
 // 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `Option<store::ArtifactChild<S>>`,
@@ -49,9 +43,6 @@ impl ToValue for EquationDiff {
             ("results".to_string(), to_dsl_value(&self.results).unwrap_or(DslValue::Null)),
             ("computed".to_string(), to_dsl_value(&self.computed).unwrap_or(DslValue::Null)),
             ("equation".to_string(), self.equation.to_value()),
-            ("cameraX".to_string(), self.camera_x.to_value()),
-            ("cameraY".to_string(), self.camera_y.to_value()),
-            ("cameraZoom".to_string(), self.camera_zoom.to_value()),
         ])
     }
 }
@@ -64,9 +55,6 @@ impl FromValue for EquationDiff {
             results: from_dsl_value(field("results")).map_err(ValueError::new)?,
             computed: from_dsl_value(field("computed")).map_err(ValueError::new)?,
             equation: Option::from_value(field("equation"))?,
-            camera_x: Option::from_value(field("cameraX"))?,
-            camera_y: Option::from_value(field("cameraY"))?,
-            camera_zoom: Option::from_value(field("cameraZoom"))?,
         })
     }
 }

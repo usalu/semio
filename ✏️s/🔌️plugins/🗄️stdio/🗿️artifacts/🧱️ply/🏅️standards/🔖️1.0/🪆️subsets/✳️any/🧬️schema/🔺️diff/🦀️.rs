@@ -18,13 +18,13 @@
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
 
-use std::collections::{BTreeMap, BTreeSet, HashSet};
 use crate::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType};
 use crate::PlySnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 //#region 🔖️RowFieldDiff
 /// 🔣️ One changed cell inside a row's sparse patch, keyed by the owning element's property

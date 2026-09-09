@@ -3,16 +3,16 @@
 //! doc comment for the shared reasoning). Exports `subset() -> SubsetDeclaration`.
 
 #[cfg(feature = "component-app-assembly")]
-use crate::standards::v_utf_8::subsets::any::{io, schema};
-#[cfg(feature = "component-app-assembly")]
 use crate::editor::txt as editor;
+#[cfg(feature = "component-app-assembly")]
+use crate::standards::v_utf_8::subsets::any::{io, schema};
 #[cfg(feature = "component-app-assembly")]
 use crate::viewer::txt as viewer;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::{Dialect, StandardId, SubsetId};
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::ExampleSource;
+use semio_framework_plugin::{Dialect, StandardId, SubsetId};
 #[cfg(feature = "component-app-assembly")]
 use std::sync::OnceLock;
 

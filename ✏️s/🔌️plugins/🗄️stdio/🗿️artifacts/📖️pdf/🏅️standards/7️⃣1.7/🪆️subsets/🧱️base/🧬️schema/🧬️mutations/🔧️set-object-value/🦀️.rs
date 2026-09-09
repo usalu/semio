@@ -2,7 +2,10 @@
 
 use super::remove_object::RemoveObject;
 use super::PdfMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff}, snapshot::{ObjRef, PdfObject, PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{
+    diff::{self, PdfDiff},
+    snapshot::{ObjRef, PdfObject, PdfSnapshot},
+};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -22,7 +25,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetObjectValue {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
-        match base.objects.iter().find(|object| object.id == self.id) { Some(object) => vec![PdfMutation::SetObjectValue(SetObjectValue { id: self.id, value: object.value.clone() })], None => vec![PdfMutation::RemoveObject(RemoveObject { id: self.id })] }
+        match base.objects.iter().find(|object| object.id == self.id) {
+            Some(object) => vec![PdfMutation::SetObjectValue(SetObjectValue { id: self.id, value: object.value.clone() })],
+            None => vec![PdfMutation::RemoveObject(RemoveObject { id: self.id })],
+        }
     }
 
     fn label(&self) -> String {

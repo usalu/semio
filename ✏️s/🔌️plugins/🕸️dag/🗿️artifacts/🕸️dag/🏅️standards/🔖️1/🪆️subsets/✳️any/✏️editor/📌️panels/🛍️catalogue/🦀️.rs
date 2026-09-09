@@ -1,7 +1,7 @@
 //! 🛍️ DAG play app panel — the node-kind catalogue (drag/click-to-add palette).
 
-use crate::editor::dag::{dag_action, ui_value_map, ui_value_text};
 use crate::editor::dag::terminology::DagPlayLabels;
+use crate::editor::dag::{dag_action, ui_value_map, ui_value_text};
 use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
@@ -30,7 +30,12 @@ pub fn render(labels: &DagPlayLabels) -> semio_framework_plugin::UiAssemblyResul
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "dag catalogue item admission failed"))?;
     }
     PanelTreeBuilder::new("dag-play-catalogue")?
-        .section("dag-play-catalogue.node-kinds", Some(semio_framework_plugin::plugin_app_close_prelude::Label::try_from(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "catalogue heading admission failed"))?), true, items)?
+        .section(
+            "dag-play-catalogue.node-kinds",
+            Some(semio_framework_plugin::plugin_app_close_prelude::Label::try_from(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "catalogue heading admission failed"))?),
+            true,
+            items,
+        )?
         .build()
 }
 //#endregion 🔖️Render

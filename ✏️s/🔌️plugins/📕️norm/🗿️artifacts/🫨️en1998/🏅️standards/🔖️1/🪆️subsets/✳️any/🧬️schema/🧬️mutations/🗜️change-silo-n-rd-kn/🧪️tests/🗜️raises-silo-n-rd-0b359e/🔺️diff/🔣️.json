@@ -25,7 +25,7 @@
   "retrofitGammaEl": null,
   "siloHeightM": null,
   "siloRadiusM": null,
-  "siloNRdKn": 640.0,
+  "siloNRdKn": 640,
   "siloVEdKn": null,
   "siloVRdKn": null,
   "siloQNominal": null,
@@ -48,6 +48,5 @@
   "wallPhiDeg": null,
   "wallSoilGammaKnM3": null,
   "wallR": null,
-  "wallHRdKn": null,
-  "selectedCheckIndex": null
+  "wallHRdKn": null
 }

@@ -96,14 +96,12 @@ async fn change_fire_rating_produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is canonical and decodes back into `En1992Diff` with `fireRating` set.
-/// `selected_check_index` stays unset on purpose: it is an `Option<Option<u32>>` whose `None` and
-/// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-fire-rating`
-/// never writes it anyway.
+/// 🕹️ Presence selection is absent from the artifact diff encoding.
 #[semio_framework_async_macros::async_test]
 async fn change_fire_rating_committed_diff_is_canonical() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-fire-rating committed diff decodes");
     assert_eq!(decoded.fire_rating, Some(crate::part_1_2::FireRating::R120), "change-fire-rating/switches-fire-rating-to-r120: the committed diff must carry fire_rating at R120");
-    assert!(decoded.selected_check_index.is_none(), "change-fire-rating/switches-fire-rating-to-r120: the committed diff must leave the presence-lane selected_check_index unset");
+    assert!(serde_json::to_value(&decoded).expect("diff JSON").get("selectedCheckIndex").is_none(), "change-fire-rating/switches-fire-rating-to-r120: the committed diff must leave the presence-lane selectedCheckIndex absent");
     let reencoded = serde_json::to_value(&decoded).expect("change-fire-rating committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-fire-rating committed diff reparses");
     assert_eq!(reencoded, original, "change-fire-rating/switches-fire-rating-to-r120: committed diff JSON is not canonical");

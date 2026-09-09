@@ -1723,7 +1723,7 @@ impl std::error::Error for JobPublicationError {}
 
 #[cfg(test)]
 struct JobPayloadProjection {
-    owner: Option<job::RetainedJobPayload>,
+    owner: Option<Box<job::RetainedJobPayload>>,
     bytes: Vec<u8>,
     page: usize,
 }
@@ -1732,7 +1732,7 @@ struct JobPayloadProjection {
 impl JobPayloadProjection {
     fn new(owner: job::RetainedJobPayload) -> Self {
         let bytes = Vec::with_capacity(owner.len());
-        Self { owner: Some(owner), bytes, page: 0 }
+        Self { owner: Some(Box::new(owner)), bytes, page: 0 }
     }
 
     fn step(&mut self) -> (bool, bool) {

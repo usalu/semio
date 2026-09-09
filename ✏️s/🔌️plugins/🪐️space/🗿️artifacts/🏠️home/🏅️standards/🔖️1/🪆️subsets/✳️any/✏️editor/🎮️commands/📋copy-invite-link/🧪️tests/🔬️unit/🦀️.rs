@@ -7,7 +7,7 @@ async fn copy_invite_link_relays_share_link_with_default_ttl() {
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&CopyInviteLink { space_id: "sp-1".into(), role: "spectator".into(), ttl_secs: 0 }, &doc, &cfg).expect("handle");
     let (action_id, args) = emit
         .effects
@@ -29,7 +29,7 @@ async fn explicit_ttl_is_respected() {
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&CopyInviteLink { space_id: "sp-1".into(), role: "author".into(), ttl_secs: 60 }, &doc, &cfg).expect("handle");
     let args = emit
         .effects

@@ -1,10 +1,10 @@
 //! 🔍️ Sequence play app panel — inspection: the selected step's kind and params.
 
-use crate::{SequenceFixture, SequenceStep};
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::ui_label;
+use crate::{SequenceFixture, SequenceStep};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult, UiFixedList, PanelTreeBuilder, PluginAssemblyError, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
@@ -35,16 +35,20 @@ pub fn render(fixture: &SequenceFixture, selected: &[String], labels: &SequenceL
         fields.try_push((labels.kind.as_str(), step.kind.clone())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector kind admission failed"))?;
         fields.try_push((labels.params.as_str(), dsl::os_pack::to_json_string(&step.params))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector parameters admission failed"))?;
         for (index, (label, value)) in fields.into_iter().enumerate() {
-            let field = ui::text(ui_label(format!("{label}: {value}"))?).try_id(format!("sequence-play-inspector.field.{index}"))
-                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector field id admission failed"))?.try_build()
+            let field = ui::text(ui_label(format!("{label}: {value}"))?)
+                .try_id(format!("sequence-play-inspector.field.{index}"))
+                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector field id admission failed"))?
+                .try_build()
                 .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector field admission failed"))?;
             children.try_push(field).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector child admission failed"))?;
         }
         ("sequence-play-inspector.step", labels.step.as_str())
     } else {
         let text = if selected.is_empty() { labels.select_prompt.as_str() } else { labels.step_not_found.as_str() };
-        let child = ui::text(ui_label(text)?).try_id("sequence-play-inspector.message")
-            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector message id admission failed"))?.try_build()
+        let child = ui::text(ui_label(text)?)
+            .try_id("sequence-play-inspector.message")
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector message id admission failed"))?
+            .try_build()
             .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector message admission failed"))?;
         children.try_push(child).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector message child admission failed"))?;
         (if selected.is_empty() { "sequence-play-inspector.empty" } else { "sequence-play-inspector.missing" }, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)

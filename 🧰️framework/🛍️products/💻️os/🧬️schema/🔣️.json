@@ -4,6 +4,87 @@
   "title": "OS",
   "description": "Product-level os contracts owned by the os shell itself: the wire shapes its product-root backbone worker and TypeScript package exchange with the hub and with plugin runtimes. Module-level concerns live in the owning 🔨️modules/<m>/🧬️schema module instead.",
   "$defs": {
+    "DocumentCachePairV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pack",
+        "spr"
+      ],
+      "properties": {
+        "pack": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "spr": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "DocumentCacheAcceptanceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initial",
+        "candidate",
+        "reply",
+        "cases"
+      ],
+      "properties": {
+        "initial": {
+          "$ref": "#/$defs/DocumentCachePairV1"
+        },
+        "candidate": {
+          "$ref": "#/$defs/DocumentCachePairV1"
+        },
+        "reply": {
+          "$ref": "#/$defs/DocumentCachePairV1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "outcome",
+              "expected"
+            ],
+            "properties": {
+              "outcome": {
+                "enum": [
+                  "done",
+                  "document",
+                  "error",
+                  "error-document",
+                  "transport",
+                  "enqueue"
+                ]
+              },
+              "expected": {
+                "enum": [
+                  "initial",
+                  "candidate",
+                  "reply"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "title": "Document Cache Acceptance V1"
+    },
     "GisMapApprovalHistoryPhase": {
       "enum": [
         "unavailable",
@@ -188,6 +269,7 @@
         "running",
         "offered",
         "approving",
+        "indeterminate",
         "applied",
         "cancelled",
         "stale",
@@ -396,13 +478,13 @@
         "jobId",
         "state",
         "proposalState",
+        "proposalHash",
         "cursor",
         "expiresAtMs"
       ],
       "properties": {
         "schema": {
-          "type": "string",
-          "minLength": 1
+          "const": "semio.hub.inference-job-receipt/v1"
         },
         "jobId": {
           "$ref": "#/$defs/GisMapInferencePortHex32"
@@ -414,7 +496,14 @@
           "$ref": "#/$defs/GisMapInferencePortProposalState"
         },
         "proposalHash": {
-          "$ref": "#/$defs/GisMapInferencePortHex64"
+          "oneOf": [
+            {
+              "$ref": "#/$defs/GisMapInferencePortHex64"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "cursor": {
           "type": "integer",
@@ -435,6 +524,7 @@
         "jobId",
         "state",
         "proposalState",
+        "proposalHash",
         "cancelRequested",
         "stale",
         "events",
@@ -443,8 +533,7 @@
       ],
       "properties": {
         "schema": {
-          "type": "string",
-          "minLength": 1
+          "const": "semio.hub.inference-job-events/v1"
         },
         "jobId": {
           "$ref": "#/$defs/GisMapInferencePortHex32"
@@ -462,7 +551,14 @@
           "type": "boolean"
         },
         "proposalHash": {
-          "$ref": "#/$defs/GisMapInferencePortHex64"
+          "oneOf": [
+            {
+              "$ref": "#/$defs/GisMapInferencePortHex64"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "preview": {
           "$ref": "#/$defs/GisMapInferencePortPreview"
@@ -502,8 +598,7 @@
       ],
       "properties": {
         "schema": {
-          "type": "string",
-          "minLength": 1
+          "const": "semio.hub.inference-approval-receipt/v1"
         },
         "jobId": {
           "$ref": "#/$defs/GisMapInferencePortHex32"
@@ -583,6 +678,7 @@
             "approve",
             "approval",
             "cancel",
+            "indeterminate",
             "failed",
             "clear"
           ]
@@ -651,6 +747,33 @@
         }
       }
     },
+    "GisMapInferencePendingCancelProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "jobId",
+        "cancelRequested"
+      ],
+      "properties": {
+        "phase": {
+          "$ref": "#/$defs/GisMapInferencePortPhase"
+        },
+        "jobId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/GisMapInferencePortHex32"
+            }
+          ]
+        },
+        "cancelRequested": {
+          "const": true
+        }
+      }
+    },
     "GisMapInferencePortV1": {
       "type": "object",
       "additionalProperties": false,
@@ -673,6 +796,10 @@
         "initial",
         "successLifecycle",
         "cancelLifecycle",
+        "uncertainLifecycle",
+        "cancelBeforeReceipt",
+        "retainedClosing",
+        "wire",
         "leaseRefusal",
         "hostileTransitions",
         "crossFixture",
@@ -687,8 +814,8 @@
         },
         "phases": {
           "type": "array",
-          "minItems": 9,
-          "maxItems": 9,
+          "minItems": 10,
+          "maxItems": 10,
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/GisMapInferencePortPhase"
@@ -717,6 +844,7 @@
             "running",
             "offered",
             "approving",
+            "indeterminate",
             "applied",
             "cancelled",
             "stale",
@@ -736,6 +864,9 @@
               "const": "status"
             },
             "approving": {
+              "const": "status"
+            },
+            "indeterminate": {
               "const": "status"
             },
             "applied": {
@@ -851,6 +982,83 @@
           "maxItems": 7,
           "items": {
             "$ref": "#/$defs/GisMapInferencePortStep"
+          }
+        },
+        "uncertainLifecycle": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/GisMapInferencePortStep" }
+        },
+        "cancelBeforeReceipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "intents",
+            "requestId",
+            "operationEpoch",
+            "expectedBeforeReceipt",
+            "expectedAfterReceipt",
+            "expectedTerminal",
+            "expectedRequests"
+          ],
+          "properties": {
+            "intents": { "const": ["inference-cancel", "inference-close"] },
+            "requestId": {
+              "$ref": "#/$defs/GisMapInferencePortHex32"
+            },
+            "operationEpoch": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "expectedBeforeReceipt": {
+              "$ref": "#/$defs/GisMapInferencePendingCancelProjection"
+            },
+            "expectedAfterReceipt": {
+              "$ref": "#/$defs/GisMapInferencePendingCancelProjection"
+            },
+            "expectedTerminal": {
+              "const": "cancelled"
+            },
+            "expectedRequests": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "pattern": "^POST /_semio/hub/spaces/"
+              }
+            }
+          }
+        },
+        "retainedClosing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requestId", "operationEpoch", "cases", "approvalClose", "queuedRetirement", "brokerReplacement", "authorityRetirement", "portReplacement", "successorProof", "unknownPhase", "terminalPhase", "reconcilePath", "closedKind"],
+          "properties": {
+            "requestId": { "$ref": "#/$defs/GisMapInferencePortHex32" },
+            "operationEpoch": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "cases": { "const": ["lost-submit", "retired-document", "rotated-session"] },
+            "approvalClose": { "const": ["approval-response", "reconcile-response"] },
+            "queuedRetirement": { "const": ["abort", "session-rotation"] },
+            "brokerReplacement": { "const": "queued-old-request-denied" },
+            "authorityRetirement": { "const": ["invalid-response", "http-401", "non-200", "old-body-after-proof-replacement"] },
+            "portReplacement": { "const": "old-body-cannot-bind-successor-port" },
+            "successorProof": { "$ref": "#/$defs/GisMapInferencePortHex64" },
+            "unknownPhase": { "const": "indeterminate" },
+            "terminalPhase": { "const": "cancelled" },
+            "reconcilePath": { "const": "POST /_semio/hub/spaces/sp-inference/documents/doc-inference/inference/gis-map/jobs/reconcile" },
+            "closedKind": { "const": "inference-port-closed" }
+          }
+        },
+        "wire": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["receipt", "page"],
+          "properties": {
+            "receipt": { "$ref": "#/$defs/GisMapInferencePortReceipt" },
+            "page": { "$ref": "#/$defs/GisMapInferencePortPage" }
           }
         },
         "cancelLifecycle": {

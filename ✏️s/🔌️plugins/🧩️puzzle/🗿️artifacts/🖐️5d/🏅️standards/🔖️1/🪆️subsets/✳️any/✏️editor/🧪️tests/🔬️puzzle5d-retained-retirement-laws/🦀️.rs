@@ -208,7 +208,7 @@ fn completion_rejection(kind: Puzzle5dCompletionOwnerKind, emit: Emit<Puzzle5dMu
         kind,
         ArtifactToolCompletionRejection {
             emit: Ok(emit),
-            ephemeral: EphemeralEmit { presence: vec![Puzzle5dPresenceMutation::Snapshot { presence: Puzzle5dPresence { active_utility_id: "select".repeat(32), ..Default::default() } }], transient: Vec::new() },
+            ephemeral: EphemeralEmit { presence: vec![Puzzle5dPresenceMutation::Snapshot { presence: Puzzle5dPresence::default() }], transient: Vec::new(), window_transient: Vec::new() },
             fault,
         },
     )

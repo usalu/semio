@@ -44,28 +44,6 @@ pub struct LayoutDiff {
     /// 🔗️ Same double-`Option` shape as `background_drawing`, for the forward link slot.
     #[state(artifact)]
     pub referenced_model: Option<Option<store::ArtifactLink>>,
-    #[state(presence)]
-    pub selected_ids: Option<LayoutStringList>,
-    #[state(config)]
-    pub active_page_id: Option<String>,
-    #[state(config)]
-    pub engagement_input: Option<String>,
-    #[state(config)]
-    pub camera_x: Option<f64>,
-    #[state(config)]
-    pub camera_y: Option<f64>,
-    #[state(config)]
-    pub camera_zoom: Option<f64>,
-    #[state(config)]
-    pub preview_camera_x: Option<f64>,
-    #[state(config)]
-    pub preview_camera_y: Option<f64>,
-    #[state(config)]
-    pub preview_camera_zoom: Option<f64>,
-    #[state(config)]
-    pub drop_preview: Option<crate::LayoutDropPreviewState>,
-    #[state(artifact)]
-    pub hovered_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 

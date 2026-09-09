@@ -15,11 +15,11 @@
 //!   own default "HeadingN" style ids), not a fabrication.
 //! - `RunStyle::{size,font,color,link}` have no `DocxRun` field and are dropped.
 
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
 use semio_s_artifact_stdio_docx::DocxSnapshot;
-use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -2418,10 +2418,7 @@ impl InteractiveJob for AssemblyJob<'_> {
         }
         if self.state.stage == AssemblyJobStage::Complete {
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
-                return StepOutcome::Complete(CommitCandidate {
-                    state: RetainedJobPayload::empty(JobPayloadStream::CommitState),
-                    output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput),
-                });
+                return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
             }
             let bytes = encode_value(&self.preview());
             return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {

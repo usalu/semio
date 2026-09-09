@@ -5,7 +5,6 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv, { type ValidateFunction } from "ajv";
-import Ajv from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../../../📜️script.ts";
 
@@ -1727,6 +1726,81 @@ class DirectoryRuntimeSourceScript extends BundleScript {
   }
 }
 
+/** 🪪️ Proves the broker-visible identity is canonically bound to one exact server session. */
+export async function directorySessionAuthorityOracle(repoRoot: string): Promise<number> {
+  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1");
+  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  const contract = await import("../../🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts");
+  for (const row of fixture.rows) {
+    assert.equal(validate(row.value), row.accepted, `${row.id}: ${JSON.stringify(validate.errors)}`);
+    let accepted = true;
+    try { contract.parseDirectorySessionAuthorityJsonV1(JSON.stringify(row.value)); } catch { accepted = false; }
+    assert.equal(accepted, row.accepted, `${row.id}: TypeScript`);
+  }
+  for (const row of fixture.raw) {
+    let accepted = true;
+    try { contract.parseDirectorySessionAuthorityJsonV1(row.source); } catch { accepted = false; }
+    assert.equal(accepted, row.accepted, `${row.id}: canonical`);
+  }
+  for (const row of fixture.bindingGoldens) {
+    const hash = createHash("sha256");
+    const length = (value: string) => { const bytes = Buffer.alloc(4); bytes.writeUInt32BE(Buffer.byteLength(value)); return bytes; };
+    const generation = Buffer.alloc(8);
+    const expiresAt = Buffer.alloc(8);
+    generation.writeBigUInt64BE(BigInt(row.authorizationGeneration));
+    expiresAt.writeBigInt64BE(BigInt(row.expiresAt));
+    hash.update("semio/hub/directory-event-page/session-binding/v1\0");
+    hash.update(length(row.sessionId));
+    hash.update(row.sessionId);
+    hash.update(length(row.userId));
+    hash.update(row.userId);
+    hash.update(generation);
+    hash.update(expiresAt);
+    assert.equal(hash.digest("hex"), row.sessionBindingSha256, row.id);
+  }
+  for (const row of fixture.authorityLifecycle) {
+    assert(["installed", "retained", "replaced", "ignored", "retired"].includes(row.outcome), `${row.id}: outcome`);
+    assert.equal(row.epochDelta === 1, row.retireMountedAuthorities, `${row.id}: retirement epoch`);
+    if (row.outcome === "replaced" || row.outcome === "retired") assert.equal(row.retainIndeterminateJobs, true, `${row.id}: uncertain jobs`);
+    if (!row.brokerAdmissionCurrent) assert.equal(row.outcome, "ignored", `${row.id}: stale admission`);
+  }
+  const rust = readFileSync(join(root, "🦀️.rs"), "utf8");
+  const client = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  assert(rust.includes("pub struct DirectorySessionAuthorityV1") && rust.includes("parse_canonical_json"), "Rust session authority contract missing");
+  assert(client.includes("DirectorySessionAuthorityV1::parse_canonical_json") && client.includes("DIRECTORY_SESSION_AUTHORITY_MAX_BYTES"), "Rust client does not enforce canonical session authority");
+  assert(hub.includes("directory_event_page_session_binding_v1(&caller)") && hub.includes("Json<DirectorySessionAuthorityV1>"), "Hub session response is not bound to the existing session digest");
+  return fixture.rows.length + fixture.raw.length + fixture.bindingGoldens.length + fixture.authorityLifecycle.length + 3;
+}
+
+class DirectorySessionAuthorityCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("directory-session-authority-check accepts only --native");
+    const checks = await directorySessionAuthorityOracle(this.repoRoot);
+    if (segments[0] === "--native") {
+      const receipts = await runExactCargoLaws({
+        cwd: this.repoRoot,
+        ...exactCargoStageEnvironments(),
+        groups: [{
+          package: "semio-framework-os-kernel",
+          target: { kind: "lib" },
+          laws: [
+            "os_directory::schema::tests::directory_session_authority_v1_matches_neutral_corpus_and_binding_goldens",
+            "os_directory::client::tests::session_authority_client_preserves_canonical_binding_and_rejects_reordered_body",
+            "os_directory::schema::tests::inference_current_hub_wire_preserves_required_nullable_hash",
+            "os_directory::schema::tests::inference_indeterminate_lifecycle_matches_neutral_corpus",
+            "os_directory::client::tests::inference_client_refuses_substituted_hub_receipt_and_page_coordinates",
+          ],
+        }],
+      });
+      console.log(`directory-session-authority-native-receipts: ${JSON.stringify(receipts)}`);
+    }
+    console.log(`directory-session-authority-check: checks=${checks} clean`);
+  }
+}
+
 /** 📃️ Proves the shared event-page envelope against an independent JSON Schema and SHA-256 oracle. */
 export async function directoryEventPageContractOracle(repoRoot: string): Promise<number> {
   const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
@@ -2040,6 +2114,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check-jco-package-adapter", CheckJcoPackageAdapterScript)
   .register("test-native", NativeTestScript)
   .register("test-directory-runtime-source", DirectoryRuntimeSourceScript)
+  .register("directory-session-authority-check", DirectorySessionAuthorityCheckScript)
   .register("directory-event-page-contract-check", DirectoryEventPageContractCheckScript)
   .register("directory-event-page-client-check", DirectoryEventPageClientCheckScript)
   .register("directory-event-page-bootstrap-check", DirectoryEventPageBootstrapCheckScript)

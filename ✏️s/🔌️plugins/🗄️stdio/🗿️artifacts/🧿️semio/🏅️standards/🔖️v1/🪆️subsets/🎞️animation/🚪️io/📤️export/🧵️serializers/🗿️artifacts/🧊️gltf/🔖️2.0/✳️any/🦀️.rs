@@ -18,13 +18,13 @@
 //!   correct, not byte-packing-optimal; gltf's own encoder is free to re-pack on a later true
 //!   binary write, this bridge only produces the typed `Snapshot`.
 
+use crate::standards::v1::subsets::animation::schema::snapshot::{AnimInterpolation, AnimTargetProperty, AnimValue, SemioAnimationSnapshot};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_gltf::engine::{GltfAccessorType, GltfComponentType};
 use semio_s_artifact_stdio_gltf::schema::snapshot::{
     GltfAccessor, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm,
 };
 use semio_s_artifact_stdio_gltf::GltfSnapshot;
-use crate::standards::v1::subsets::animation::schema::snapshot::{AnimInterpolation, AnimTargetProperty, AnimValue, SemioAnimationSnapshot};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };

@@ -23,19 +23,19 @@ type AvcDecoderConfiguration = (Vec<Vec<u8>>, Vec<Vec<u8>>, u8);
 
 use crate::editor::remodeling::engine::images as remodeling_image;
 use semio_s_artifact_stdio_avi::{
-        standards::v1_0::{
-            subsets::any::io as avi_engine,
-            subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader},
-        },
-        STDIO_AVI_DOCUMENT_SCHEMA,
-    };
+    standards::v1_0::{
+        subsets::any::io as avi_engine,
+        subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader},
+    },
+    STDIO_AVI_DOCUMENT_SCHEMA,
+};
 use semio_s_artifact_stdio_mp4::{
-        standards::isobmff::{
-            subsets::any::io as mp4_engine,
-            subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track},
-        },
-        STDIO_MP4_DOCUMENT_SCHEMA,
-    };
+    standards::isobmff::{
+        subsets::any::io as mp4_engine,
+        subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track},
+    },
+    STDIO_MP4_DOCUMENT_SCHEMA,
+};
 
 // #region 🔖️Bytes
 /// 🧭️ Four-character box/chunk code (ISO-BMFF box types, RIFF FourCCs); compared and hashed by raw bytes.

@@ -1,62 +1,7 @@
 # 🧬️ Lowpoly snapshot schema — artifact-lane fields only.
+# import LowpolyObject from "../🔗️.graphql"
 
 type LowpolySnapshot {
   schema: String! @state(class: ARTIFACT)
   objects: [LowpolyObject!]! @state(class: ARTIFACT)
-}
-
-type LowpolySelectionTargets {
-  mesh: Boolean!
-  vertex: Boolean!
-  edge: Boolean!
-  face: Boolean!
-}
-
-type LowpolySelection {
-  targets: LowpolySelectionTargets!
-  keys: [String!]!
-  mode: String!
-  ids: [Int!]!
-}
-
-type LowpolyTransform {
-  position: [Float!]!
-  rotation: [Float!]!
-  scale: [Float!]!
-}
-
-type LowpolyPaintLayer {
-  name: String!
-  visible: Boolean!
-  opacity: Float!
-  blendMode: String!
-  pixels: String!
-}
-
-type ArtifactDialect {
-  artifactKind: String!
-  standard: String!
-  subset: String!
-}
-
-type ArtifactRef {
-  artifactId: String!
-  dialect: ArtifactDialect!
-}
-
-"Owned CHILD handle for an object's mesh slot (`store::ArtifactChild<SemioMeshSnapshot>`); target is
-the full ArtifactRef, never a flattened URI string — confirmed against the create-mesh fixtures."
-type LowpolyMeshHandle {
-  childId: String!
-  target: ArtifactRef!
-}
-
-type LowpolyObject {
-  id: String!
-  name: String!
-  transform: LowpolyTransform!
-  smoothShading: Boolean!
-  "null when the object owns no mesh yet — confirmed against the create-object mutation fixture."
-  mesh: LowpolyMeshHandle
-  paintLayers: [LowpolyPaintLayer!]!
 }

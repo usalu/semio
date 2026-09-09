@@ -149,11 +149,11 @@ class DocumentRetirementScript extends BundleScript {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
     let grants = 0;
+    const measure = (value: unknown, text: (value: string) => number): number => value === null ? 0 : typeof value === "string" ? text(value) : typeof value === "number" ? 8 : typeof value === "boolean" ? 1 : Array.isArray(value) ? value.reduce((sum, item) => sum + measure(item, text), 0) : Object.entries(value as Record<string, unknown>).reduce((sum, [key, item]) => sum + text(key) + measure(item, text), 0);
     for (const row of fixture.cases) {
-      const fields: string[] = row.value === null ? [] : Array.isArray(row.value) ? row.value : [row.value];
-      const bytes = fields.reduce((sum, field) => sum + Buffer.byteLength(field, "utf8"), 0);
+      const bytes = measure(row.value, value => Buffer.byteLength(value, "utf8"));
       assert.equal(bytes, row.bytes, row.id);
-      assert.equal(fields.reduce((sum, field) => sum + new TextEncoder().encode(field).byteLength, 0), bytes, row.id);
+      assert.equal(measure(row.value, value => new TextEncoder().encode(value).byteLength), bytes, row.id);
       for (const budget of fixture.budgets) {
         let remaining = bytes;
         let released = 0;
@@ -167,7 +167,7 @@ class DocumentRetirementScript extends BundleScript {
         assert.equal(released, row.bytes, row.id);
       }
     }
-    const source = readFileSync(join(base, "🦀️.rs"), "utf8");
+    const source = readFileSync(join(base, "🧪️tests/🔬️unit/🦀️.rs"), "utf8");
     assert(source.includes("owned_retirement_matches_neutral_exact_byte_grants"));
     assert(source.includes("owned_retirement_rejects_false_terminal_and_preserves_shared_roots"));
     const stdio = readFileSync(join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs"), "utf8");

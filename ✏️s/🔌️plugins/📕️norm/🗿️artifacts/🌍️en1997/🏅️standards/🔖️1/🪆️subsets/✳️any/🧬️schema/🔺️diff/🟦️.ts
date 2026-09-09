@@ -49,6 +49,4 @@ export interface En1997Diff {
   pileNProfiles?: number;
   /** @state artifact */
   zInvestigatedM?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

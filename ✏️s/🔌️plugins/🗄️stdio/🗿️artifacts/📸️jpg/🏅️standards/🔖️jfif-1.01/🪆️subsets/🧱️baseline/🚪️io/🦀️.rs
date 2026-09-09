@@ -5,8 +5,8 @@
 //! already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgComposer as JpgAnyComposer;
     use crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
+    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgComposer as JpgAnyComposer;
     use crate::JpgSnapshot;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};

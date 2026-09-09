@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.writer.main_window.transient.v1;
+
+message WriterMainWindowTransient {
+  optional WriterEditorSelection editor_selection = 1;
+  uint32 lint_generation = 2;
+  string engagement_input = 3;
+}
+message WriterEditorSelection { uint64 start = 1; uint64 end = 2; }

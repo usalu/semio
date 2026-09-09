@@ -23,7 +23,14 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 1.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 120.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(3), value: 0.5 });
-    model.mechanical_ventilations.push(crate::model::MechanicalVentilation { id: crate::model::EntityId(60), zone_id: crate::model::EntityId(1), schedule_id: crate::model::ScheduleId(1), design_flow_m3_s: 0.05, fan_total_efficiency: 0.7, fan_delta_pressure_pa: 300.0 });
+    model.mechanical_ventilations.push(crate::model::MechanicalVentilation {
+        id: crate::model::EntityId(60),
+        zone_id: crate::model::EntityId(1),
+        schedule_id: crate::model::ScheduleId(1),
+        design_flow_m3_s: 0.05,
+        fan_total_efficiency: 0.7,
+        fan_delta_pressure_pa: 300.0,
+    });
     (snapshot(model), super::create_mechanical_ventilation(1, crate::model::EntityId(60), crate::model::EntityId(2), crate::model::ScheduleId(1), 0.08, 0.65, 250.0))
 }
 

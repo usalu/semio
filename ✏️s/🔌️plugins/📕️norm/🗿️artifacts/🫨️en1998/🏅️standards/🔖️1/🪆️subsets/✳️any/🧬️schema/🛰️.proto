@@ -101,6 +101,4 @@ message En1998Artifact {
   double wall_r = 48;
   // @state artifact
   double wall_h_rd_kn = 49;
-  // @state presence
-  optional uint32 selected_check_index = 50;
 }

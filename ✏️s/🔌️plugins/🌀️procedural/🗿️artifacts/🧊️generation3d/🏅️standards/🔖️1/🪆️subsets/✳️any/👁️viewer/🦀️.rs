@@ -4,9 +4,9 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling `✏️editor` module (`policyViewerPurityBreaches`).
 
-use crate::{Generation3dMutation, Generation3dSnapshot, GENERATION3D_DIALECT, GENERATION_3D_SCHEMA};
 use crate::viewer::generation3d::modes::view;
 use crate::viewer::generation3d::modes::view::windows::preview;
+use crate::{Generation3dMutation, Generation3dSnapshot, GENERATION3D_DIALECT, GENERATION_3D_SCHEMA};
 // 🚧️ SDK note (ticket 26/08/16 contract §2.1/§2.2/§2.4): `ArtifactViewer`/`Viewer`/`ViewEmit`/
 // `Dialect` are curated at `semio_framework_plugin`'s crate root as of W0-F/W2-FIX — imported bare
 // here, no `app::` prefix needed (unlike the earlier cad pilot, written before that gap closed).

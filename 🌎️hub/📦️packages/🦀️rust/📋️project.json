@@ -480,6 +480,14 @@
         "command": "bun ./📜️script.ts open-plan-check"
       }
     },
+    "open-plan-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts open-plan-check --source"
+      }
+    },
     "open-plan-server-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -687,6 +695,14 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts gis-inference-ledger-oracle"
+      }
+    },
+    "inference-relay-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-relay-check"
       }
     },
     "gis-inference-ledger-check": {

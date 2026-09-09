@@ -2,15 +2,15 @@
 //! vocabulary. Every command here is config-only: it emits `config_mutations`, never document
 //! operations.
 
-use crate::op::GisMapMutation;
-use crate::GisMapSnapshot;
 use crate::editor::gis2d::config::{layer_visible, mutations as config_mutations, Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::maphost::map_host_from;
-use semio_framework_surface::tiled_map::clamp_map_layer_weight;
+use crate::op::GisMapMutation;
+use crate::GisMapSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_surface::tiled_map::clamp_map_layer_weight;
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ToggleLayerVisibility
 pub mod toggle_layer_visibility {

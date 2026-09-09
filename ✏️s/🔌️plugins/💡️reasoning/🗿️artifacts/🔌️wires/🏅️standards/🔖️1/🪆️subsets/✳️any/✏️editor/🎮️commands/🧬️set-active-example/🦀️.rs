@@ -1,9 +1,9 @@
 //! 🧬️ 🧬️ Wires play app commands command — `set-active-example`.
 
+use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::empty_wires_snapshot;
 use crate::op::WiresMutation;
 use crate::schema::metabolism_wires_example_snapshot;
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 

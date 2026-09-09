@@ -1,0 +1,5 @@
+type RewritingWindowCamera { x: Float!, y: Float!, zoom: Float! }
+type RewritingWindowConfig {
+  camera: RewritingWindowCamera @state(kind: CONFIG)
+  lodMode: String! @state(kind: CONFIG)
+}

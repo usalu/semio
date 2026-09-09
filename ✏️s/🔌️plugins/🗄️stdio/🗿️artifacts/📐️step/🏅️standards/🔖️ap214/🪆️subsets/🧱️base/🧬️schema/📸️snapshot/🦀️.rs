@@ -34,7 +34,10 @@ pub enum StepValue {
     Enum(String),
     Reference(u64),
     Aggregate(Vec<StepValue>),
-    TypedValue { type_name: String, value: Box<StepValue> },
+    TypedValue {
+        type_name: String,
+        value: Box<StepValue>,
+    },
 }
 
 //#endregion 🔖️Value
@@ -98,15 +101,7 @@ pub struct StepFileName {
 
 impl Default for StepFileName {
     fn default() -> Self {
-        Self {
-            name: String::new(),
-            timestamp: String::new(),
-            author: unpopulated_string_list(),
-            organization: unpopulated_string_list(),
-            preprocessor_version: String::new(),
-            originating_system: String::new(),
-            authorization: String::new(),
-        }
+        Self { name: String::new(), timestamp: String::new(), author: unpopulated_string_list(), organization: unpopulated_string_list(), preprocessor_version: String::new(), originating_system: String::new(), authorization: String::new() }
     }
 }
 

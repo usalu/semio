@@ -1,0 +1,134 @@
+{
+  "schema": "semio.hub.inference-job-reconcile-fixture/v1",
+  "maximumRequestBytes": 256,
+  "request": {
+    "schema": "semio.hub.inference-job-reconcile/v1",
+    "version": 1,
+    "requestId": "11111111111111111111111111111111"
+  },
+  "requestCases": [
+    { "name": "exact", "path": [], "value": null, "accepted": true },
+    { "name": "wrong-schema", "path": ["schema"], "value": "semio.hub.inference-request/v1", "accepted": false },
+    { "name": "wrong-version", "path": ["version"], "value": 2, "accepted": false },
+    { "name": "short-request", "path": ["requestId"], "value": "1111111111111111111111111111111", "accepted": false },
+    { "name": "uppercase-request", "path": ["requestId"], "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "accepted": false },
+    { "name": "client-job", "path": ["jobId"], "value": "568c96d3342074947f704a66ac850dc5", "accepted": false },
+    { "name": "client-user", "path": ["userId"], "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "accepted": false },
+    { "name": "client-session", "path": ["sessionId"], "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "accepted": false }
+  ],
+  "results": [
+    {
+      "name": "missing",
+      "accepted": true,
+      "value": {
+        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": false,
+        "job": null
+      }
+    },
+    {
+      "name": "accepted-live",
+      "accepted": true,
+      "value": {
+        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": {
+          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "568c96d3342074947f704a66ac850dc5", "state": "accepted", "proposalState": "none", "proposalHash": null, "cursor": 0, "expiresAtMs": 121000 },
+          "page": { "jobId": "568c96d3342074947f704a66ac850dc5", "state": "accepted", "proposalState": "none", "cancelRequested": false, "expired": false, "proposalHash": null, "events": [{ "ordinal": 1, "kind": "accepted", "atMs": 1000 }], "progress": [], "nextCursor": 0 },
+          "approval": null
+        }
+      }
+    },
+    {
+      "name": "cancelled-expired",
+      "accepted": true,
+      "value": {
+        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": {
+          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "568c96d3342074947f704a66ac850dc5", "state": "cancelled", "proposalState": "none", "proposalHash": null, "cursor": 0, "expiresAtMs": 121000 },
+          "page": { "jobId": "568c96d3342074947f704a66ac850dc5", "state": "cancelled", "proposalState": "none", "cancelRequested": true, "expired": true, "proposalHash": null, "events": [{ "ordinal": 1, "kind": "accepted", "atMs": 1000 }, { "ordinal": 2, "kind": "cancel-requested", "atMs": 121000 }, { "ordinal": 3, "kind": "cancelled", "atMs": 121000 }], "progress": [], "nextCursor": 0 },
+          "approval": null
+        }
+      }
+    },
+    {
+      "name": "approved-undo-available",
+      "accepted": true,
+      "value": {
+        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": {
+          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "568c96d3342074947f704a66ac850dc5", "state": "succeeded", "proposalState": "approved", "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "cursor": 1, "expiresAtMs": 121000 },
+          "page": { "jobId": "568c96d3342074947f704a66ac850dc5", "state": "succeeded", "proposalState": "approved", "cancelRequested": false, "expired": true, "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "events": [{ "ordinal": 1, "kind": "accepted", "atMs": 1000 }, { "ordinal": 2, "kind": "running", "atMs": 1001 }, { "ordinal": 3, "kind": "succeeded", "atMs": 1002 }, { "ordinal": 4, "kind": "approval-prepared", "atMs": 1003 }, { "ordinal": 5, "kind": "approved", "atMs": 1004 }], "progress": [{ "cursor": 1, "runEpoch": 1, "completed": 1, "total": 1, "atMs": 1002 }], "nextCursor": 1 },
+          "approval": {
+            "state": "available",
+            "receipt": {
+              "schema": "semio.hub.inference-approval-receipt/v1",
+              "jobId": "568c96d3342074947f704a66ac850dc5",
+              "mutationId": "7729810f9d1435cbf175a05b235af799",
+              "commandHash": "1178466157c5e592ee73cdc0a965d8766a2c8038c9457bbb0456507a4525eae8",
+              "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc",
+              "applied": true,
+              "undo": {
+                "targetId": "abababababababababababababababab",
+                "expectedCurrent": { "documentId": "dddddddddddddddddddddddddddddddd", "headEditOrdinal": 1, "headEditId": "7729810f9d1435cbf175a05b235af799", "lastCommitSeq": 1, "chainSha256": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "approved-undo-prepared",
+      "accepted": true,
+      "value": {
+        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": {
+          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "568c96d3342074947f704a66ac850dc5", "state": "succeeded", "proposalState": "approved", "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "cursor": 0, "expiresAtMs": 121000 },
+          "page": { "jobId": "568c96d3342074947f704a66ac850dc5", "state": "succeeded", "proposalState": "approved", "cancelRequested": false, "expired": false, "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "events": [], "progress": [], "nextCursor": 0 },
+          "approval": { "state": "undo-prepared", "receipt": null }
+        }
+      }
+    },
+    {
+      "name": "approved-undone",
+      "accepted": true,
+      "value": {
+        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": {
+          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "568c96d3342074947f704a66ac850dc5", "state": "succeeded", "proposalState": "approved", "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "cursor": 0, "expiresAtMs": 121000 },
+          "page": { "jobId": "568c96d3342074947f704a66ac850dc5", "state": "succeeded", "proposalState": "approved", "cancelRequested": false, "expired": false, "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "events": [], "progress": [], "nextCursor": 0 },
+          "approval": { "state": "undone", "receipt": null }
+        }
+      }
+    },
+    { "name": "missing-with-job", "accepted": false, "copy": "accepted-live", "path": ["found"], "value": false },
+    { "name": "found-without-job", "accepted": false, "copy": "missing", "path": ["found"], "value": true },
+    { "name": "available-without-receipt", "accepted": false, "copy": "approved-undo-available", "path": ["job", "approval", "receipt"], "value": null },
+    { "name": "prepared-with-receipt", "accepted": false, "copy": "approved-undo-available", "path": ["job", "approval", "state"], "value": "undo-prepared" },
+    { "name": "authority-overpost", "accepted": false, "copy": "missing", "path": ["userId"], "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }
+  ],
+  "readerCases": [
+    { "name": "exact", "field": "none", "value": null, "accepted": true },
+    { "name": "foreign-user", "field": "userId", "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "accepted": false },
+    { "name": "foreign-session", "field": "sessionId", "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "accepted": false },
+    { "name": "rotated-authorization", "field": "authorizationGeneration", "value": 2, "accepted": false },
+    { "name": "foreign-space", "field": "spaceId", "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "accepted": false },
+    { "name": "foreign-document", "field": "documentId", "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "accepted": false }
+  ]
+}

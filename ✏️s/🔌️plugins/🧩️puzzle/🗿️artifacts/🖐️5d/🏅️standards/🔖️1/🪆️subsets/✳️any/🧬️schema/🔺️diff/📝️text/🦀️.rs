@@ -111,81 +111,6 @@ impl Puzzle5dDiff {
             if let Some(delta) = &self.fasteners {
                 next.fasteners = apply_fasteners_delta(&next.fasteners, delta).map_err(|error| error.under(["fasteners"]))?;
             }
-            if let Some(list) = &self.selected_part_ids {
-                next.selected_part_ids = list.values.clone();
-            }
-            if let Some(list) = &self.selected_grip_ids {
-                next.selected_grip_ids = list.values.clone();
-            }
-            if let Some(list) = &self.selected_fastener_ids {
-                next.selected_fastener_ids = list.values.clone();
-            }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
-            if let Some(value) = self.camera2d_x {
-                next.camera2d_x = value;
-            }
-            if let Some(value) = self.camera2d_y {
-                next.camera2d_y = value;
-            }
-            if let Some(value) = self.camera2d_zoom {
-                next.camera2d_zoom = value;
-            }
-            if let Some(value) = self.camera3d_position_x {
-                next.camera3d_position_x = value;
-            }
-            if let Some(value) = self.camera3d_position_y {
-                next.camera3d_position_y = value;
-            }
-            if let Some(value) = self.camera3d_position_z {
-                next.camera3d_position_z = value;
-            }
-            if let Some(value) = self.camera3d_target_x {
-                next.camera3d_target_x = value;
-            }
-            if let Some(value) = self.camera3d_target_y {
-                next.camera3d_target_y = value;
-            }
-            if let Some(value) = self.camera3d_target_z {
-                next.camera3d_target_z = value;
-            }
-            if let Some(value) = self.camera3d_zoom {
-                next.camera3d_zoom = value;
-            }
-            if let Some(value) = &self.selection_method {
-                next.selection_method = value.clone();
-            }
-            if let Some(value) = self.grid_snap_enabled {
-                next.grid_snap_enabled = value;
-            }
-            if let Some(value) = self.grid_factor {
-                next.grid_factor = value;
-            }
-            if let Some(value) = self.suggestion_offset {
-                next.suggestion_offset = value;
-            }
-            if let Some(value) = self.overlap_budget {
-                next.overlap_budget = value;
-            }
-            if let Some(value) = self.fill_count {
-                next.fill_count = value;
-            }
-            if let Some(value) = self.brush_candidate_index {
-                next.brush_candidate_index = value;
-            }
-            if let Some(value) = &self.lod_mode {
-                next.lod_mode = value.clone();
-            }
-            if let Some(value) = &self.runtime_extras_json {
-                next.runtime_extras_json = value.clone();
-            }
-            if let Some(value) = &self.hovered_part_id {
-                next.hovered_part_id = value.clone();
-            }
-            if let Some(value) = self.preview_seq {
-                next.preview_seq = value;
-            }
             next
         })
     }
@@ -247,31 +172,6 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
         take!(kind_catalogs);
         take!(kind_catalogs_extra);
         take!(kind_compatibility);
-        take!(selected_part_ids);
-        take!(selected_grip_ids);
-        take!(selected_fastener_ids);
-        take!(active_utility_id);
-        take!(camera2d_x);
-        take!(camera2d_y);
-        take!(camera2d_zoom);
-        take!(camera3d_position_x);
-        take!(camera3d_position_y);
-        take!(camera3d_position_z);
-        take!(camera3d_target_x);
-        take!(camera3d_target_y);
-        take!(camera3d_target_z);
-        take!(camera3d_zoom);
-        take!(selection_method);
-        take!(grid_snap_enabled);
-        take!(grid_factor);
-        take!(suggestion_offset);
-        take!(overlap_budget);
-        take!(fill_count);
-        take!(brush_candidate_index);
-        take!(lod_mode);
-        take!(runtime_extras_json);
-        take!(hovered_part_id);
-        take!(preview_seq);
         macro_rules! merge_delta {
             ($field:ident) => {
                 if let Some(delta) = other.$field {

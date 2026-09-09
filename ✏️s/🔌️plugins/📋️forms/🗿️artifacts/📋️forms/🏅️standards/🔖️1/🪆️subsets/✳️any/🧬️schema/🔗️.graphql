@@ -1,35 +1,10 @@
-# @emoji 🧬️ Shared @state directive is defined in the framework schema module.
-
+# 🪪️ FormsArtifact imports the canonical OS Store child identity.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type FormsArtifact {
-  schema: String! @state(class: ARTIFACT)
-  id: String! @state(class: ARTIFACT)
-  version: String! @state(class: ARTIFACT)
-  title: String @state(class: ARTIFACT)
-  steps: [FormStep!]! @state(class: ARTIFACT)
-  selectedIds: [String!]! @state(class: PRESENCE)
-  currentStepIndex: Int! @state(class: CONFIG)
-  tryValues: [FormsTryValue!]! @state(class: CONFIG)
-  contributionsJson: String! @state(class: CONFIG)
-}
-
-type FormsTryValue {
-  key: String!
-  chunks: [String!]!
-}
-
-type FormStep {
+  schema: String!
   id: String!
-  title: String!
-  description: String
-  blocks: [FormQuestion!]!
-}
-
-type FormQuestion {
-  id: String!
-  label: String!
-  kind: String!
-}
-
-type FormsStringList {
-  values: [String!]!
+  version: String!
+  title: String
+  structure: ArtifactChild!
+  results: ArtifactChild!
 }

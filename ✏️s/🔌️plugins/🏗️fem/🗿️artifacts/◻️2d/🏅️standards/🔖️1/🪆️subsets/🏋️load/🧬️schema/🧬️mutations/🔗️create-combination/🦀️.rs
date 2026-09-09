@@ -1,7 +1,7 @@
 //! 🌱️ Fem2d mutation — `CreateCombination` payload + `MutationKind` impl.
 
-use crate::{Fem2dSnapshot, FemCombination};
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use crate::{Fem2dSnapshot, FemCombination};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

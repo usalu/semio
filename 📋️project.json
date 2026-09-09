@@ -9,6 +9,13 @@
     }
   },
   "targets": {
+    "reset-document-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify reset-document-ownership"
+      }
+    },
     "scale-fixture-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1080,7 +1087,18 @@
       "options": {
         "command": "bun ./📜️script.ts setup deps wasm"
       },
-      "parallelism": false
+      "parallelism": false,
+      "dependsOn": [
+        "deps-wasm-opt"
+      ]
+    },
+    "deps-wasm-opt": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts\" prepare"
+      }
     },
     "deps-tools": {
       "executor": "nx:run-commands",
@@ -1162,11 +1180,207 @@
         "command": "bun ./📜️script.ts verify surface-view-context menu"
       }
     },
+    "test-jack-query-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify jack-query-ownership oracle"
+      }
+    },
     "test-jack-query-ownership": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts verify jack-query-ownership"
+      }
+    },
+    "test-window-action-context": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify window-action-context"
+      }
+    },
+    "test-window-action-context-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify window-action-context oracle"
+      }
+    },
+    "verify-artifact-contract-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify artifact-contract-ownership"
+      }
+    },
+    "test-artifact-contract-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify artifact-contract-ownership test"
+      }
+    },
+    "test-rewriting-window-config": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify rewriting-window-config"
+      }
+    },
+    "test-rewriting-window-config-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify rewriting-window-config oracle"
+      }
+    },
+    "test-retained-window-input": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify retained-window-input"
+      }
+    },
+    "test-retained-window-input-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify retained-window-input oracle"
+      }
+    },
+    "test-wires-window-transient": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify wires-window-transient"
+      }
+    },
+    "test-shared-artifact-addressing": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify shared-artifact-addressing"
+      }
+    },
+    "test-shared-artifact-addressing-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify shared-artifact-addressing oracle"
+      }
+    },
+    "test-wires-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify wires-document-contract"
+      }
+    },
+    "test-wires-document-contract-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify wires-document-contract oracle"
+      }
+    },
+    "artifact-field-parity-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify artifact-field-parity test"
+      }
+    },
+    "artifact-field-parity-report": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify artifact-field-parity report"
+      }
+    },
+    "artifact-field-parity-enforce": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify artifact-field-parity enforce"
+      }
+    },
+    "rewriting-map-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify rewriting-map-ownership"
+      }
+    },
+    "rewriting-map-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify rewriting-map-ownership oracle"
+      }
+    },
+    "shared-dynamic-value": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify shared-dynamic-value"
+      }
+    },
+    "rewriting-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify rewriting-document-contract"
+      }
+    },
+    "forms-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify forms-document-contract"
+      }
+    },
+    "playbook-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify playbook-document-contract"
+      }
+    },
+    "shared-map-delta": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify shared-map-delta"
+      }
+    },
+    "shared-map-delta-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify shared-map-delta oracle"
+      }
+    },
+    "shared-value-clone": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify shared-value-clone"
+      }
+    },
+    "shared-value-canonical-json": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify shared-value-canonical-json"
+      }
+    },
+    "wires-pointer-move": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify wires-pointer-move"
       }
     }
   }

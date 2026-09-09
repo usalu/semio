@@ -12,11 +12,6 @@ type RemodelingDiff {
   gcps: RemodelingGcpList @state(class: ARTIFACT)
   job: ReconstructionJob @state(class: ARTIFACT)
   results: ReconstructionResults @state(class: ARTIFACT)
-  selection: RemodelingUiSelection @state(class: PRESENCE)
-  reportTable: String @state(class: PRESENCE)
-  frameCursor: RemodelingUiFrameCursor @state(class: PRESENCE)
-  camera: RemodelingUiCamera @state(class: CONFIG)
-  layers: RemodelingUiLayers @state(class: CONFIG)
 }
 
 type ArtifactDialect {
@@ -274,11 +269,6 @@ type RemodelingArtifact {
   gcps: [GroundControlPoint!]!
   job: ReconstructionJob!
   results: ReconstructionResults!
-  selection: RemodelingUiSelection!
-  reportTable: String!
-  frameCursor: RemodelingUiFrameCursor!
-  camera: RemodelingUiCamera!
-  layers: RemodelingUiLayers!
 }
 
 type RemodelingAssetChild {
@@ -322,30 +312,6 @@ type RemodelingMesh {
 type RemodelingMeshChild {
   childId: String!
   target: ArtifactRef!
-}
-
-type RemodelingUiCamera {
-  position: [Float!]!
-  target: [Float!]!
-  fov: Float!
-}
-
-type RemodelingUiFrameCursor {
-  streamId: String
-  frameIndex: Int!
-}
-
-type RemodelingUiLayers {
-  mesh: Boolean!
-  dense: Boolean!
-  sparse: Boolean!
-  cameras: Boolean!
-  gcps: Boolean!
-}
-
-type RemodelingUiSelection {
-  mode: String!
-  ids: [String!]!
 }
 
 type RigExtrinsic {

@@ -34,7 +34,6 @@ type En1991Diff {
   siloK: Float @state(class: ARTIFACT)
   cS: Float @state(class: ARTIFACT)
   cD: Float @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type En1991Artifact {
@@ -70,5 +69,4 @@ type En1991Artifact {
   siloK: Float
   cS: Float
   cD: Float
-  selectedCheckIndex: Int
 }

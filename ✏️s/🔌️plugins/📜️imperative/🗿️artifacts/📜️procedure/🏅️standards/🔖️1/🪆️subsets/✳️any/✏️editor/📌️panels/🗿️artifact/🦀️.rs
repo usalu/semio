@@ -1,8 +1,8 @@
 //! 📄️ Imperative play app panel — the document tree: the top-level steps of the current path.
 
-use crate::ProcedureSnapshot;
 use crate::editor::procedure::terminology::ImperativeLabels;
 use crate::editor::procedure::IMPERATIVE_INTERACTION_STEPS;
+use crate::ProcedureSnapshot;
 use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants

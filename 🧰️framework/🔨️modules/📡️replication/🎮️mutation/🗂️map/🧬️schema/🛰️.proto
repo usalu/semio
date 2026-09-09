@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.framework.replication.mutation.map;
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+enum MapPresence { ANY = 0; PRESENT = 1; ABSENT = 2; NEVER = 3; }
+message MapRemove {}
+message MapReject {}
+message MapEntryOperation {
+  oneof operation {
+    semio.framework.value.DslValue set = 1;
+    MapRemove remove = 2;
+    MapReject reject = 3;
+  }
+}
+message MapEntryDelta { string key = 1; MapPresence precondition = 2; MapEntryOperation operation = 3; }
+message MapDelta { repeated MapEntryDelta entries = 1; }

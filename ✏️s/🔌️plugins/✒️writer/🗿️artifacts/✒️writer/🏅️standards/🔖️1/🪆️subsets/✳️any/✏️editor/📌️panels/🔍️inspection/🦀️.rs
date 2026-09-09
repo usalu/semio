@@ -1,8 +1,7 @@
 //! 🔍️ Writer play app panel — document/camera inspection plus jack diagnostics.
 
-use crate::{writer_text, WriterSnapshot};
-use crate::editor::writer::config::WriterConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;
+use crate::{writer_text, WriterSnapshot};
 use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_s_artifact_trinity_jack::core::{example_graph, lint};
 
@@ -23,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterPlayLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let text = writer_text(document);
     let document_items = crate::editor::writer::ui_node_list([
         tree_item("writer-inspector.document.schema", crate::editor::writer::ui_label(format!("Schema: {}", document.schema))?),
@@ -32,12 +31,7 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterP
         tree_item("writer-inspector.document.uri", crate::editor::writer::ui_label(format!("Uri: {}", document.uri))?),
         tree_item("writer-inspector.document.lines", crate::editor::writer::ui_label(format!("Lines: {}", text.lines().count()))?),
     ])?;
-    let camera_items = crate::editor::writer::ui_node_list([
-        tree_item("writer-inspector.camera.x", crate::editor::writer::ui_label(format!("x: {}", config.camera.x))?),
-        tree_item("writer-inspector.camera.y", crate::editor::writer::ui_label(format!("y: {}", config.camera.y))?),
-        tree_item("writer-inspector.camera.zoom", crate::editor::writer::ui_label(format!("zoom: {}", config.camera.zoom))?),
-    ])?;
-    let mut tree = PanelTreeBuilder::new("writer-inspector")?.section("writer-inspector.document", Some(crate::editor::writer::ui_label(labels.document.as_str())?), true, document_items)?.section("writer-inspector.camera", Some(crate::editor::writer::ui_label(labels.camera.as_str())?), false, camera_items)?;
+    let mut tree = PanelTreeBuilder::new("writer-inspector")?.section("writer-inspector.document", Some(crate::editor::writer::ui_label(labels.document.as_str())?), true, document_items)?;
     if document.language_id == "jack" {
         let graph = example_graph();
         let messages: Vec<String> = lint(&graph, &text).into_iter().map(|diag| diag.message).take(8).collect();

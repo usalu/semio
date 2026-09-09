@@ -60,8 +60,7 @@ pub fn render(history: &HistoryView, labels: &VcsPlayLabels) -> semio_framework_
     let alternative_items = ui_node_list(alternative_ids.iter().map(|alternative_id| {
         let count = history.columns.iter().filter(|column| column.alternative_ids.iter().any(|candidate| candidate == alternative_id.as_str())).count();
         let action_args = ui_value_map([("alternativeId", ui_value_text(alternative_id.as_str())?)])?;
-        let mut node =
-            tree_item_with_action(builder.item_id("alternative", alternative_id.as_str())?, alternative_id.as_str(), Some(format!("{count} {}", labels.checkpoints.as_str())), vcs_action("switchAlternative", Some(action_args))?)?;
+        let mut node = tree_item_with_action(builder.item_id("alternative", alternative_id.as_str())?, alternative_id.as_str(), Some(format!("{count} {}", labels.checkpoints.as_str())), vcs_action("switchAlternative", Some(action_args))?)?;
         if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
             props.icon = Some(UiText::try_from_str("git-branch").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "vcs alternative icon admission failed"))?);
         }

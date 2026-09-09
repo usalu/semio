@@ -64,4 +64,4 @@ Native `--list` and exact-law execution for the freshly retargeted routes remain
 
 ## Coordinator Resolution Of Flow Routing
 
-A subsequent direct source read confirms that all three identified Flow law groups now select `semio-s-artifact-flow-flow`. The ordinary parent plugin check, plugin tests and component description routes correctly remain on the composition package. This resolves the open static package-routing finding; native law execution remains part of the pending acceptance gates.
+A subsequent direct source read confirms that the twelve artifact-owned Flow laws now select `semio-s-artifact-flow-flow`. The thirteenth law, `flow_actual_surface_factories_close_all_owners_under_neutral_grants`, correctly remains on `semio-s-plugin-flow`: it constructs the actual parent plugin and closed app fleet. The ordinary parent plugin check, plugin tests and component description routes also remain on the composition package. This resolves the static package-routing finding; all thirteen native laws remain a separate pending acceptance gate.

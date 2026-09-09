@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::testkit::{meta, new_app_with_registry};
 use semio_framework_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
@@ -173,12 +172,12 @@ pub fn app_with_registry() -> Process3dApp {
 }
 
 pub fn dispatch(app: &mut Process3dRawApp, command: Process3dCommand) -> InvocationResult {
-    dispatch_with_utility(app, command, crate::editor::process3d::config::PROCESS3D_DEFAULT_UTILITY)
+    dispatch_with_utility(app, command, PROCESS3D_DEFAULT_UTILITY)
 }
 
 pub fn dispatch_with_utility(app: &mut Process3dRawApp, command: Process3dCommand, active_utility_id: &str) -> InvocationResult {
     let mut view_state = ViewModel::default();
-    view_state.active_utility_id = active_utility_id.into();
+    view_state.active_utility_id = Some(active_utility_id.into());
     let meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
     semio_framework_plugin::resolve_ready(app.dispatch_typed(command, &meta)).expect("dispatch")
 }

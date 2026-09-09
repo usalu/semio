@@ -132,7 +132,7 @@ fn absorb_saved_cameras_delta(target: &mut Option<ShootingSavedCamerasDelta>, in
 }
 
 impl ShootingDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &ShootingArtifact) -> protocol::MutationApplyResult<ShootingArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -162,33 +162,6 @@ impl ShootingDiff {
             }
             if let Some(value) = &self.emblem {
                 next.emblem = value.clone();
-            }
-            if let Some(list) = &self.selected_shot_ids {
-                next.selected_shot_ids = list.values.clone();
-            }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
-            if let Some(value) = &self.default_shot_format {
-                next.default_shot_format = value.clone();
-            }
-            if let Some(value) = &self.default_shot_shape {
-                next.default_shot_shape = value.clone();
-            }
-            if let Some(value) = &self.default_asset_format {
-                next.default_asset_format = value.clone();
-            }
-            if let Some(value) = self.center_model {
-                next.center_model = value;
-            }
-            if let Some(value) = self.fit_revision {
-                next.fit_revision = value;
-            }
-            if let Some(value) = &self.camera_draft_label {
-                next.camera_draft_label = value.clone();
-            }
-            if let Some(value) = &self.camera {
-                next.camera = value.clone();
             }
             next
         })
@@ -249,15 +222,6 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
         take!(active_shot_id);
         take!(active_asset_id);
         take!(emblem);
-        take!(selected_shot_ids);
-        take!(active_utility_id);
-        take!(default_shot_format);
-        take!(default_shot_shape);
-        take!(default_asset_format);
-        take!(center_model);
-        take!(fit_revision);
-        take!(camera_draft_label);
-        take!(camera);
     }
 }
 //#endregion 🔖️Apply

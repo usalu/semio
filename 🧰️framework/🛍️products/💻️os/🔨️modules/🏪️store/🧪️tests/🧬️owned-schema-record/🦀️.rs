@@ -8,7 +8,7 @@ fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧪️tests/🧬️owned-schema-record/🔣️.json")).expect("owned schema record vectors")
 }
 
-fn source_case<'a>(row: &'a serde_json::Value) -> &'a str {
+fn source_case(row: &serde_json::Value) -> &str {
     row["source"].as_str().expect("source vector")
 }
 

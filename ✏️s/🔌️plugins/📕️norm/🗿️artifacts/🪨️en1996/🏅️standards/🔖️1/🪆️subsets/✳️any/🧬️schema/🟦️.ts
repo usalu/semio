@@ -45,6 +45,4 @@ export interface En1996Artifact {
   hEfMm: number;
   /** @state artifact */
   tEfMm: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

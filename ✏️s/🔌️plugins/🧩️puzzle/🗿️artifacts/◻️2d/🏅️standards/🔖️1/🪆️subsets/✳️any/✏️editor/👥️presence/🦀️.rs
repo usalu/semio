@@ -4,7 +4,7 @@ use protocol::Mutation;
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of puzzle view state (selection, hover, camera, active utility).
+/// 👥️ Shareable live subset of puzzle camera state.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "puzzle2d.presence")]
@@ -13,12 +13,11 @@ pub struct Puzzle2dPresence {
     pub camera_x: f64,
     pub camera_y: f64,
     pub camera_zoom: f64,
-    pub active_utility_id: String,
 }
 
 impl Default for Puzzle2dPresence {
     fn default() -> Self {
-        Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, active_utility_id: String::new() }
+        Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0 }
     }
 }
 

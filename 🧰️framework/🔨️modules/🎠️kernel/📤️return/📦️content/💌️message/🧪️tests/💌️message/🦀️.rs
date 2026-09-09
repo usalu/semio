@@ -71,11 +71,12 @@ fn return_content_message_large_payload_and_cancel_keep_original_source_allocati
         assert_eq!(encode(&effect, grant), expected);
     }
     for frontier in 0..8 {
-        let mut cursor = ReturnMessageCursor::new(&effect).unwrap();
-        for _ in 0..frontier {
-            let _ = cursor.write(&mut [0; 64], 1, 64);
+        {
+            let mut cursor = ReturnMessageCursor::new(&effect).unwrap();
+            for _ in 0..frontier {
+                let _ = cursor.write(&mut [0; 64], 1, 64);
+            }
         }
-        drop(cursor);
         assert!(matches!(&effect, Effect::SendMessage { payload, .. } if payload.as_ptr() == pointer && payload.len() == length));
     }
 }

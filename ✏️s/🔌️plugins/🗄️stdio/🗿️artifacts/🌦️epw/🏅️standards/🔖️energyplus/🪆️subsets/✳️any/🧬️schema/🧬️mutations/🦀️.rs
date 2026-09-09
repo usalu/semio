@@ -10,6 +10,26 @@ use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
 //#region 🔖️Mutations
+#[path = "📥insert-record/🦀️.rs"]
+pub mod insert_record;
+#[path = "📤remove-record/🦀️.rs"]
+pub mod remove_record;
+#[path = "💬set-comments1/🦀️.rs"]
+pub mod set_comments1;
+#[path = "🗨️set-comments2/🦀️.rs"]
+pub mod set_comments2;
+#[path = "📅set-data-periods/🦀️.rs"]
+pub mod set_data_periods;
+#[path = "🌡️set-design-conditions/🦀️.rs"]
+pub mod set_design_conditions;
+#[path = "🌍set-ground-temperatures/🦀️.rs"]
+pub mod set_ground_temperatures;
+#[path = "🎉set-holidays-dst/🦀️.rs"]
+pub mod set_holidays_dst;
+#[path = "📍set-location/🦀️.rs"]
+pub mod set_location;
+#[path = "🎚️set-record-field/🦀️.rs"]
+pub mod set_record_field;
 /// 📐️ Typed content mutation for `stdio.epw`.
 /// 🧪️ F6: hand-rolled — `#[derive(dsl::DslOps)]` is not attempted here (the enum embeds
 /// `EpwSnapshot`/`EpwLocation`/`EpwDataPeriods`, none of which implement `dsl::DslField`; wiring
@@ -17,28 +37,8 @@ use protocol::{Mutation, OpText};
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "📍set-location/🦀️.rs"]
-pub mod set_location;
-#[path = "🌡️set-design-conditions/🦀️.rs"]
-pub mod set_design_conditions;
 #[path = "📆set-typical-extreme-periods/🦀️.rs"]
 pub mod set_typical_extreme_periods;
-#[path = "🌍set-ground-temperatures/🦀️.rs"]
-pub mod set_ground_temperatures;
-#[path = "🎉set-holidays-dst/🦀️.rs"]
-pub mod set_holidays_dst;
-#[path = "💬set-comments1/🦀️.rs"]
-pub mod set_comments1;
-#[path = "🗨️set-comments2/🦀️.rs"]
-pub mod set_comments2;
-#[path = "📅set-data-periods/🦀️.rs"]
-pub mod set_data_periods;
-#[path = "📥insert-record/🦀️.rs"]
-pub mod insert_record;
-#[path = "📤remove-record/🦀️.rs"]
-pub mod remove_record;
-#[path = "🎚️set-record-field/🦀️.rs"]
-pub mod set_record_field;
 //#endregion 🔖️Leaves
 
 /// 🧭️ `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
@@ -122,7 +122,9 @@ pub(crate) fn agg_diff(this: &EpwMutation, base: &EpwSnapshot) -> protocol::Muta
         EpwMutation::SetComments1(set_comments1::SetComments1 { value }) => EpwDiff { comments_1: Some(value.clone()), ..EpwDiff::default() },
         EpwMutation::SetComments2(set_comments2::SetComments2 { value }) => EpwDiff { comments_2: Some(value.clone()), ..EpwDiff::default() },
         EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods }) => EpwDiff { data_periods: Some(data_periods.clone()), ..EpwDiff::default() },
-        EpwMutation::InsertRecord(insert_record::InsertRecord { index, record }) => EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![EpwRecordAdded { index: *index, record: record.as_ref().clone() }] }), ..EpwDiff::default() },
+        EpwMutation::InsertRecord(insert_record::InsertRecord { index, record }) => {
+            EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![EpwRecordAdded { index: *index, record: record.as_ref().clone() }] }), ..EpwDiff::default() }
+        }
         EpwMutation::RemoveRecord(remove_record::RemoveRecord { index }) => EpwDiff { records: Some(EpwRecordsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..EpwDiff::default() },
         EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index, field_index, value }) => {
             let mut fdiff = EpwRecordDiff::default();

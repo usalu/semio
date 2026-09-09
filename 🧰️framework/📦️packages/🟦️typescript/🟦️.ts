@@ -1,3 +1,4 @@
+export * from "../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 /** @emoji 📦️ `@semio-tech/framework` — package glue (reexports + inline vitest). */
 export * from "../../🔨️modules/🎯️action-bus/🟦️.ts";
 export { blake3Hex, Blake3Hasher } from "../../🔨️modules/🔏️hash/🟦️.ts";

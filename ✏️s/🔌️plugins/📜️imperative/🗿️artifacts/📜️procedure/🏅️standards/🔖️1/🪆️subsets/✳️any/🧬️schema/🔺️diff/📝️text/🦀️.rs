@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️Apply
 impl ProcedureDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &ProcedureArtifact) -> protocol::MutationApplyResult<ProcedureArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -28,12 +28,6 @@ impl ProcedureDiff {
             }
             if let Some(handle) = &self.text {
                 next.text = handle.clone();
-            }
-            if let Some(list) = &self.selected_step_ids {
-                next.selected_step_ids = list.values.clone();
-            }
-            if let Some(value) = &self.contributions_json {
-                next.contributions_json = value.clone();
             }
             next
         })
@@ -74,8 +68,6 @@ impl MutationDiff<ProcedureSnapshot> for ProcedureDiff {
         take!(schema);
         take!(flow);
         take!(text);
-        take!(selected_step_ids);
-        take!(contributions_json);
     }
 }
 //#endregion 🔖️Apply

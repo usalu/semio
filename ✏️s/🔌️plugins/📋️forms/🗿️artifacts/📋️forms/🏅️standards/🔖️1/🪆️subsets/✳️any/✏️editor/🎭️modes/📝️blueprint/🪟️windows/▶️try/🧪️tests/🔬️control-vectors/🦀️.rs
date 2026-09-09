@@ -1,4 +1,3 @@
-
 use super::*;
 #[test]
 fn semantic_question_controls_match_the_language_neutral_vectors() {

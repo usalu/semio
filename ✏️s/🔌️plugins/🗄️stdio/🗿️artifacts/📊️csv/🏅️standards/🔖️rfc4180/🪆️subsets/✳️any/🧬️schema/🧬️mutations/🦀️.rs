@@ -9,6 +9,14 @@ use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 
 //#region 🔖️Mutations
+#[path = "📥insert-record/🦀️.rs"]
+pub mod insert_record;
+#[path = "📤remove-record/🦀️.rs"]
+pub mod remove_record;
+#[path = "✏️set-field/🦀️.rs"]
+pub mod set_field;
+#[path = "🧾set-has-header/🦀️.rs"]
+pub mod set_has_header;
 /// 📐️ Typed content mutation for `stdio.csv`.
 /// 🧪️ F6: `#[derive(dsl::DslOps)]` on this enum CANNOT be used — confirmed via a real `cargo
 /// check` error, and NOT one of the recon report's documented §3a/§3b failure modes: it is a
@@ -26,14 +34,6 @@ use protocol::{Mutation, MutationDiff, OpText};
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🧾set-has-header/🦀️.rs"]
-pub mod set_has_header;
-#[path = "📥insert-record/🦀️.rs"]
-pub mod insert_record;
-#[path = "📤remove-record/🦀️.rs"]
-pub mod remove_record;
-#[path = "✏️set-field/🦀️.rs"]
-pub mod set_field;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed content mutation for `stdio.csv`. `NoMutation` was dropped: the derive requires every
@@ -73,41 +73,43 @@ pub fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) ->
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &CsvMutation, base: &CsvSnapshot) -> protocol::MutationOutcome<CsvDiff> {
-        protocol::MutationOutcome::new(match this {
-            CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-            CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header }) => CsvDiff { has_header: Some(*has_header), records: None },
-            CsvMutation::InsertRecord(insert_record::InsertRecord { index, record }) => CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CsvRecordAdded { index: *index, record: record.clone() }] }) },
-            CsvMutation::RemoveRecord(remove_record::RemoveRecord { index }) => CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) },
-            CsvMutation::SetField(set_field::SetField { record_index, field_index, value, quoted }) => {
-                let mut fields = vec![None; field_index + 1];
-                fields[*field_index] = Some(CsvFieldDiff { value: Some(value.clone()), quoted: Some(*quoted) });
-                CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: vec![CsvRecordModified { index: *record_index, diff: CsvRecordDiff { fields: Some(fields) } }], added: Vec::new() }) }
-            }
-        })
-    }
+    protocol::MutationOutcome::new(match this {
+        CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header }) => CsvDiff { has_header: Some(*has_header), records: None },
+        CsvMutation::InsertRecord(insert_record::InsertRecord { index, record }) => {
+            CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CsvRecordAdded { index: *index, record: record.clone() }] }) }
+        }
+        CsvMutation::RemoveRecord(remove_record::RemoveRecord { index }) => CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) },
+        CsvMutation::SetField(set_field::SetField { record_index, field_index, value, quoted }) => {
+            let mut fields = vec![None; field_index + 1];
+            fields[*field_index] = Some(CsvFieldDiff { value: Some(value.clone()), quoted: Some(*quoted) });
+            CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: vec![CsvRecordModified { index: *record_index, diff: CsvRecordDiff { fields: Some(fields) } }], added: Vec::new() }) }
+        }
+    })
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &CsvMutation, base: &CsvSnapshot) -> Vec<CsvMutation> {
-        match this {
-            CsvMutation::SetSnapshot(_) => {
-                vec![CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })]
-            }
-            CsvMutation::SetHasHeader(_) => {
-                vec![CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: base.has_header })]
-            }
-            CsvMutation::InsertRecord(insert_record::InsertRecord { index, .. }) => {
-                vec![CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: *index })]
-            }
-            CsvMutation::RemoveRecord(remove_record::RemoveRecord { index }) => match base.records.get(*index) {
-                Some(record) => vec![CsvMutation::InsertRecord(insert_record::InsertRecord { index: *index, record: record.clone() })],
-                None => Vec::new(),
-            },
-            CsvMutation::SetField(set_field::SetField { record_index, field_index, .. }) => match base.records.get(*record_index).and_then(|r| r.fields.get(*field_index)) {
-                Some(field) => vec![CsvMutation::SetField(set_field::SetField { record_index: *record_index, field_index: *field_index, value: field.value.clone(), quoted: field.quoted })],
-                None => Vec::new(),
-            },
+    match this {
+        CsvMutation::SetSnapshot(_) => {
+            vec![CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })]
         }
+        CsvMutation::SetHasHeader(_) => {
+            vec![CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: base.has_header })]
+        }
+        CsvMutation::InsertRecord(insert_record::InsertRecord { index, .. }) => {
+            vec![CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: *index })]
+        }
+        CsvMutation::RemoveRecord(remove_record::RemoveRecord { index }) => match base.records.get(*index) {
+            Some(record) => vec![CsvMutation::InsertRecord(insert_record::InsertRecord { index: *index, record: record.clone() })],
+            None => Vec::new(),
+        },
+        CsvMutation::SetField(set_field::SetField { record_index, field_index, .. }) => match base.records.get(*record_index).and_then(|r| r.fields.get(*field_index)) {
+            Some(field) => vec![CsvMutation::SetField(set_field::SetField { record_index: *record_index, field_index: *field_index, value: field.value.clone(), quoted: field.quoted })],
+            None => Vec::new(),
+        },
     }
+}
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs

@@ -59,6 +59,8 @@ import {
   type ActivationReason,
   createTurnOutcomeBroadcast,
   fetchDescriptorManifest,
+  type BuiltNode,
+  type Component,
   type Effect,
   type InvocationResponse,
   type PluginManifest,
@@ -66,12 +68,16 @@ import {
   SemioFaultError,
   type TurnOutcome,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, packValueToExactJson, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type WindowConfigPackEntry, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
 import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import type { ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { rendererResidentLedger } from "../../../../../💾️resident/🟦️.ts";
+import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
+import { OwnedUiPatchIntake } from "../../../../../🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts";
+import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import type { RetainedUiNodeRecord } from "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
 import {
   applyUiPatchToRetained,
   coerceTurnResult,
@@ -186,41 +192,234 @@ function getActivationRegistry(): ActivationRegistry {
  * file's header doc for why this is deliberately simpler than `PluginRuntime`'s lane/coalescing
  * `TurnScheduler`. */
 const actorTurnChains = new Map<string, Promise<unknown>>();
-function submitTurn(actorId: string, events: readonly ShardEventEnvelope[], commandPage?: ShardCommandIngressPage): Promise<WireTurnResult> {
+function submitActorWork<T>(actorId: string, work: () => Promise<T>): Promise<T> {
   getActivationRegistry().touch(actorId);
   const previousSettled = (actorTurnChains.get(actorId) ?? Promise.resolve()).catch(() => undefined);
-  const next = previousSettled.then(() => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET, commandPage));
+  const next = previousSettled.then(work);
   actorTurnChains.set(actorId, next);
-  return next.then(coerceTurnResult);
+  return next;
+}
+
+function submitTurn(actorId: string, events: readonly ShardEventEnvelope[], commandPage?: ShardCommandIngressPage): Promise<WireTurnResult> {
+  return submitActorWork(actorId, () => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET, commandPage)).then(coerceTurnResult);
 }
 //#endregion 🔖️TurnSubmit
 
-//#region 🚪️InstanceLifecycleSettle
-/** @emoji 🚪️ Drives one instance's open handshake to LIVE. `open()` only POSTS the request — the guest
- * answers with a lifecycle receipt that the host must acknowledge before the instance is registered, and
- * `⚛️reactor/🔄️turn/🦀️.rs`'s dirty-surface loop `continue`s past any instance whose
- * `native_close_key` is not registered. Skipping the ACK therefore renders NOTHING, silently: measured as
- * 257 turns producing zero patches and zero effects for `puzzle3d.play.composite`, with no fault raised.
- * Bounded by the same opportunity ceiling as the document drain. */
-async function settleInstanceLifecycle(lifecycle: ShardInstanceLifecycleLease): Promise<void> {
+//#region 🔖️OwnedUiRoute
+const RETAINED_DOCUMENT_OPPORTUNITIES = 256;
+const WGPU_UI_CONTINUATION_LIMIT = 4_096;
+const WGPU_UI_CONTINUATION_BATCH_SIZE = 8;
+const WGPU_UI_GRANT = Object.freeze({ maxItems: 1, maxBytes: 4_096 });
+type WgpuActorExecutor = <T>(work: () => Promise<T>) => Promise<T>;
+type WgpuOwnedUiProjection = Readonly<{ node: BuiltNode; document: Readonly<{ surface: string; revision: number; root: number; nodes: readonly object[]; layoutEpoch: number }> }>;
+
+async function yieldWgpuUi(step: number): Promise<void> {
+  if (step % WGPU_UI_CONTINUATION_BATCH_SIZE === 0) await new Promise<void>((resolve) => setTimeout(resolve, 0));
+}
+
+function ownedUiComponentToBuilt(component: RetainedUiNodeRecord["component"]): Component {
+  if (component.type !== "surface") return component;
+  return { ...component, doc: { bytes: Array.from({ length: component.doc.bytes.length }, (_, index) => component.doc.bytes.byteAt(index)) } };
+}
+
+/** 🏠️ Exact WGPU host owner for one captured guest lifetime. Patch intake, render reads and
+ * terminal retirement all traverse this same owner; no parallel retained tree can outlive its witness. */
+export class WgpuOwnedUiInstanceRoute {
+  readonly lifecycle: ShardInstanceLifecycleLease;
+  readonly owner: OwnedUiInstance;
+  readonly #surfaces = new Map<string, OwnedUiInstanceSurface>();
+  readonly #intakes = new Set<OwnedUiPatchIntake>();
+  readonly #reads = new Set<Promise<unknown>>();
+  #retirement: OwnedUiInstanceRetirement | null = null;
+  #closing = false;
+
+  constructor(lifecycle: ShardInstanceLifecycleLease) {
+    const lifetime = lifecycle.lifetime;
+    if (!lifetime) throw new Error("wgpu-ui.native-lifetime-required");
+    this.lifecycle = lifecycle;
+    this.owner = new OwnedUiInstance(lifecycle.activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 32 });
+    lifecycle.bindHostRetirement(this.owner);
+  }
+
+  get hasPendingReads(): boolean { return this.#reads.size > 0; }
+  get terminalIsEmpty(): boolean { return this.owner.terminalIsEmpty() && this.#surfaces.size === 0 && this.#intakes.size === 0 && this.#reads.size === 0; }
+  hasSurface(name: string): boolean { return this.#surfaces.has(name); }
+
+  async #advanceMaintenance(phase: string, budget: { steps: number }): Promise<void> {
+    while (this.owner.maintenancePending) {
+      if (++budget.steps > DEFAULT_UI_DOCUMENT_LIMITS.maxNodes * 64) throw new Error(`wgpu-ui.${phase}-budget-exhausted`);
+      const current = this.owner.advanceMaintenance(WGPU_UI_GRANT);
+      if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.${phase}-${current.kind}:${current.phase}`);
+      await yieldWgpuUi(budget.steps);
+    }
+  }
+
+  async #closeIntake(intake: OwnedUiPatchIntake): Promise<void> {
+    intake.beginClose();
+    for (let step = 1; !intake.terminalIsEmpty(); step += 1) {
+      if (step > WGPU_UI_CONTINUATION_LIMIT) throw new Error("wgpu-ui.intake-close-budget-exhausted");
+      const current = intake.closeStep(WGPU_UI_GRANT);
+      if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.intake-close-${current.kind}:${current.phase}`);
+      await yieldWgpuUi(step);
+    }
+    this.#intakes.delete(intake);
+  }
+
+  async accept(turn: WireTurnResult, execute: WgpuActorExecutor): Promise<readonly WireTurnResult[]> {
+    if (this.#closing) throw new Error("wgpu-ui.owner-closing");
+    if (turn.uiPatches.length === 0) {
+      if (turn.uiPatchReceipt !== undefined) throw new Error("wgpu-ui.receipt-without-patch");
+      return [];
+    }
+    if (!turn.original || !turn.uiPatchReceipt) throw new Error("wgpu-ui.native-owner-required");
+    const supplemental: WireTurnResult[] = [];
+    for (const [index, patch] of turn.uiPatches.entries()) {
+      const surfaceId = patch.surface?.surface;
+      if (!surfaceId) throw new Error("wgpu-ui.projection-surface-required");
+      const source = this.lifecycle.captureUiPatchAuthority(turn.original, index);
+      const intake = new OwnedUiPatchIntake(this.owner, source);
+      this.#intakes.add(intake);
+      let token: OwnedUiPatchAcknowledgement | null = null;
+      for (let step = 1; token === null; step += 1) {
+        if (step > WGPU_UI_CONTINUATION_LIMIT) throw new Error("wgpu-ui.intake-budget-exhausted");
+        const current = intake.advance(WGPU_UI_GRANT);
+        token = intake.peekAcknowledgement();
+        if (current.kind === "rejected") throw new Error(`wgpu-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
+        if (current.kind === "blocked" && token === null) throw new Error(`wgpu-ui.intake-blocked:${current.phase}`);
+        await yieldWgpuUi(step);
+      }
+      const acknowledged = await execute(() => this.lifecycle.submitUiAcknowledgement(source, token, DEFAULT_SHARD_BUDGET));
+      if (!intake.acceptAcknowledgement(acknowledged.receipt)) throw new Error("wgpu-ui.acknowledgement-refused");
+      for (let step = 1; ; step += 1) {
+        if (step > WGPU_UI_CONTINUATION_LIMIT) throw new Error("wgpu-ui.publication-close-budget-exhausted");
+        const current = intake.advance(WGPU_UI_GRANT);
+        if (current.kind === "ready") break;
+        if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.intake-${current.kind}:${current.phase}`);
+        await yieldWgpuUi(step);
+      }
+      const surface = intake.takeSurface();
+      if (!surface) throw new Error("wgpu-ui.surface-missing");
+      this.#surfaces.set(surfaceId, surface);
+      await this.#closeIntake(intake);
+      const next = coerceTurnResult(acknowledged.result);
+      supplemental.push(next, ...await this.accept(next, execute));
+    }
+    return supplemental;
+  }
+
+  async project(surfaceId: string): Promise<WgpuOwnedUiProjection | null> {
+    if (this.#closing) throw new Error("wgpu-ui.owner-closing");
+    const surface = this.#surfaces.get(surfaceId);
+    if (!surface) return null;
+    const read = this.#project(surfaceId, surface);
+    this.#reads.add(read);
+    try { return await read; } finally { this.#reads.delete(read); }
+  }
+
+  async #project(surfaceId: string, surface: OwnedUiInstanceSurface): Promise<WgpuOwnedUiProjection | null> {
+    const view = surface.view;
+    if (view.root === null) return null;
+    if (!view.hash) throw new Error("wgpu-ui.surface-hash-required");
+    const visited = new Set<number>();
+    const records: object[] = [];
+    const budget = { steps: 0 };
+    const build = async (id: number, depth: number): Promise<BuiltNode> => {
+      if (this.#closing || this.#surfaces.get(surfaceId) !== surface) throw new Error("wgpu-ui.read-stale");
+      if (depth > DEFAULT_UI_DOCUMENT_LIMITS.maxDepth || visited.size >= DEFAULT_UI_DOCUMENT_LIMITS.maxNodes || visited.has(id)) throw new Error("wgpu-ui.read-graph-invalid");
+      visited.add(id);
+      const subscription = surface.subscribeNode(id, () => {});
+      let record: RetainedUiNodeRecord | null = null;
+      try {
+        await this.#advanceMaintenance("read", budget);
+        const snapshot = subscription.snapshot;
+        if (!snapshot || snapshot.version !== view.revision || !snapshot.record) throw new Error("wgpu-ui.read-snapshot-missing");
+        record = snapshot.record;
+        surface.acknowledgeRead(subscription, snapshot);
+      } finally {
+        surface.unsubscribeNode(subscription);
+        await this.#advanceMaintenance("read-retirement", budget);
+      }
+      if (!record) throw new Error("wgpu-ui.read-snapshot-missing");
+      const component = ownedUiComponentToBuilt(record.component);
+      records.push({ ...record, component });
+      const children: BuiltNode[] = [];
+      for (const child of record.children) children.push(await build(child, depth + 1));
+      return { key: record.key, component, layout: record.layout, style: record.style, activity: record.activity, disabled: record.disabled, accessibility: record.accessibility, bindings: record.bindings, menu: record.menu, children };
+    };
+    const node = await build(view.root, 1);
+    if (this.#closing || this.#surfaces.get(surfaceId) !== surface || surface.view !== view) throw new Error("wgpu-ui.read-stale");
+    return { node, document: { surface: surfaceId, revision: view.revision, root: view.root, nodes: records, layoutEpoch: 0 } };
+  }
+
+  async retire(): Promise<OwnedUiInstanceRetirement> {
+    if (this.#retirement) return this.#retirement;
+    this.#closing = true;
+    await Promise.allSettled([...this.#reads]);
+    for (const intake of [...this.#intakes]) await this.#closeIntake(intake);
+    this.#surfaces.clear();
+    this.owner.beginClose();
+    for (let step = 1; !this.owner.terminalIsEmpty(); step += 1) {
+      if (step > WGPU_UI_CONTINUATION_LIMIT) throw new Error("wgpu-ui.owner-close-budget-exhausted");
+      const current = this.owner.closeStep(WGPU_UI_GRANT);
+      if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.owner-close-${current.kind}:${current.phase}`);
+      await yieldWgpuUi(step);
+    }
+    const witness = this.owner.takeRetirementWitness();
+    if (!witness) throw new Error("wgpu-ui.retirement-witness-missing");
+    this.#retirement = witness;
+    return witness;
+  }
+}
+
+/** 🚪️ Opens one captured lifecycle only after binding its exact host UI retirement owner. */
+async function settleInstanceLifecycle(lifecycle: ShardInstanceLifecycleLease, route: WgpuOwnedUiInstanceRoute, initial: WireTurnResult, execute: WgpuActorExecutor): Promise<void> {
+  let current = initial;
   for (let opportunity = 0; opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
+    await route.accept(current, execute);
     const receipt = lifecycle.pendingReceipt;
     if (receipt !== null) {
-      await lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET);
+      if (receipt.kind !== "captured") throw new Error("wgpu-ui.open-receipt-kind");
+      current = coerceTurnResult(await execute(() => lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET)));
       continue;
     }
     const phase = lifecycle.progress().kind;
-    if (phase !== "opening" && phase !== "captured") return;
-    await lifecycle.poll(DEFAULT_SHARD_BUDGET);
+    if (phase === "open") return;
+    if (phase !== "opening" && phase !== "captured") throw new Error(`wgpu-ui.open-${phase}`);
+    current = coerceTurnResult(await execute(() => lifecycle.poll(DEFAULT_SHARD_BUDGET)));
   }
-  console.warn(`[DEBUG] plugin-bridge: instance lifecycle never reached open within ${RETAINED_DOCUMENT_OPPORTUNITIES} opportunities`);
+  throw new Error(`wgpu-ui.open-budget-exhausted:${RETAINED_DOCUMENT_OPPORTUNITIES}`);
 }
 
-const lifecycleByInstance = new Map<number, ShardInstanceLifecycleLease>();
-//#endregion 🚪️InstanceLifecycleSettle
+/** 🧹 Retires one captured WGPU lifetime without asking `beginClose` to cross an unacknowledged
+ * Captured receipt. Cancellation at that exact stage first admits the original lifetime, then closes
+ * the same bound UI owner through Accepted and Retired. */
+export async function retireWgpuOwnedUiInstanceLifecycle(lifecycle: ShardInstanceLifecycleLease, route: WgpuOwnedUiInstanceRoute, execute: WgpuActorExecutor): Promise<void> {
+  const captured = lifecycle.pendingReceipt;
+  if (captured?.kind === "captured") {
+    const acknowledged = coerceTurnResult(await execute(() => lifecycle.acknowledge(captured, DEFAULT_SHARD_BUDGET)));
+    if (acknowledged.uiPatches.length > 0 || acknowledged.uiPatchReceipt !== undefined) throw new Error("wgpu-ui.patch-during-cancelled-open");
+  }
+  lifecycle.beginClose();
+  for (let step = 1; lifecycle.progress().kind !== "complete"; step += 1) {
+    if (step > WGPU_UI_CONTINUATION_LIMIT) throw new Error("wgpu-ui.lifecycle-close-budget-exhausted");
+    const receipt = lifecycle.pendingReceipt;
+    let current: WireTurnResult;
+    if (receipt?.kind === "accepted") current = coerceTurnResult(await execute(() => lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET)));
+    else if (receipt?.kind === "retired") {
+      const retirement = await route.retire();
+      current = coerceTurnResult(await execute(() => lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET, retirement)));
+    } else {
+      const progress = lifecycle.progress();
+      if (progress.kind === "blocked") throw new Error(`wgpu-ui.lifecycle-close-blocked:${progress.failure ?? "unknown"}`);
+      current = coerceTurnResult(await execute(() => progress.kind === "closing" ? lifecycle.close(DEFAULT_SHARD_BUDGET) : lifecycle.poll(DEFAULT_SHARD_BUDGET)));
+    }
+    if (current.uiPatches.length > 0 || current.uiPatchReceipt !== undefined) throw new Error("wgpu-ui.patch-after-lifecycle-close");
+    await yieldWgpuUi(step);
+  }
+  lifecycle.dispose();
+}
 
-//#region 🔖️RetainedWindow
-const retainedWindowByActor = new Map<string, Map<string, RetainedSurface>>();
+//#region 🧪️RetainedPatchOracle
 
 /** 🖼️ One wire `UiPatch` reconciled onto `previous`: every `pack`-typed op payload is projected through
  * {@link decodePackWire} and the two WIT `u64` revisions narrowed through {@link packWireNatural}, so a
@@ -230,93 +429,7 @@ export function reconcileRetainedWindowPatch(previous: RetainedSurface | null, p
   const ops = decodeWirePatchOps(patch.ops ?? [], decodePackWire);
   return applyUiPatchToRetained(previous, { revision: packWireNatural(patch.revision, "uiPatch.revision"), baseRevision: packWireNatural(patch.baseRevision, "uiPatch.baseRevision"), ops });
 }
-
-function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiPatch[]): void {
-  const retained = retainedWindowByActor.get(actorId) ?? new Map<string, RetainedSurface>();
-  retainedWindowByActor.set(actorId, retained);
-  for (const patch of uiPatches) {
-    const surfaceId = patch.surface?.surface;
-    if (!surfaceId) continue;
-    const previous = retained.get(surfaceId) ?? null;
-    const { surface, desynced } = reconcileRetainedWindowPatch(previous, patch);
-    if (desynced) {
-      console.warn(`[DEBUG] plugin-bridge: actor ${actorId} desynced (unrecognized op shape or stale baseRevision) — keeping the previously retained body`);
-      continue;
-    }
-    if (surface) retained.set(surfaceId, surface);
-  }
-}
-
-/** 🖼️ Requests one concrete retained surface with its authored body and host ViewModel. */
-async function performRender(actorId: string, instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown): Promise<unknown> {
-  const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
-  if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
-  return retainedWindowByActor.get(actorId)?.get(surfaceId)?.node ?? null;
-}
-
-/** @emoji 📃️ Publishes ONE surface's retained document as the `UiSnapshot`-shaped JSON the wgpu
- * renderer's `render_with_document_js` assembles into a `UiDocumentLease`.
- *
- * Reads the RAW `ui-patch` ops (`🧬️schema/📜️.wit`'s `patch-op`: `upsert` carries a pack-encoded
- * `contract-doc::UiNodeRecord`, `set-root` carries the root `node-id`) rather than the reconciled JS tree,
- * because the Rust side wants the flat node table `UiSnapshot` declares — and because `decodeWirePatchOps`
- * still speaks the older `replace`/`insert-child` vocabulary this variant no longer emits.
- *
- * Every decoded record is projected with `packValueToExactJson`: `decodePackValue` yields `{kind,value}`
- * integer carriers, which serialize as `[object Object]` where `UiNodeId`/`UiRevision` expect numbers. */
-/** @emoji 🔁️ Bounded drain for one retained surface: a guest answers `surface-visible` with
- * `status: more-work` and publishes its `ui-patch` a turn or more later, so a single turn reads empty
- * (measured — `puzzle3d.play.composite` returns zero ops on the visibility turn itself). Mirrors the
- * native `render_with_document`'s own opportunity ceiling: keep stepping until the surface publishes,
- * and fail closed rather than spin. `WireTurnResult` carries no `status`, so the ceiling — not a guest
- * flag — is what bounds this. */
-const RETAINED_DOCUMENT_OPPORTUNITIES = 256;
-
-async function publishRetainedDocument(actorId: string, instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown): Promise<string> {
-  const collected: WireUiPatch[] = [];
-  const seenSurfaces: string[] = [];
-  const seenTags: string[] = [];
-  let anyPatches = 0;
-  let anyEffects = 0;
-  const seenEffects: string[] = [];
-  let turns = 1;
-  let result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
-  for (let opportunity = 0; opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
-    anyPatches += result.uiPatches.length;
-    anyEffects += result.effects.length;
-    for (const effect of result.effects) if (typeof effect.tag === "string" && !seenEffects.includes(effect.tag)) seenEffects.push(effect.tag);
-    for (const patch of result.uiPatches) {
-      const name = patch.surface?.surface ?? "(none)";
-      if (!seenSurfaces.includes(name)) seenSurfaces.push(name);
-      for (const op of patch.ops ?? []) if (typeof op.tag === "string" && !seenTags.includes(op.tag)) seenTags.push(op.tag);
-    }
-    if (result.uiPatches.length > 0) {
-      applyRetainedWindowPatches(actorId, result.uiPatches);
-      collected.push(...result.uiPatches.filter((patch) => (patch.surface?.surface ?? surfaceId) === surfaceId));
-    }
-    if (collected.length > 0) break;
-    result = await submitTurn(actorId, []);
-    turns += 1;
-  }
-  console.log(`[DEBUG] publishRetainedDocument ${surfaceId}/${bodyKey}: turns=${turns} collected=${collected.length} anyPatches=${anyPatches} surfaces=${JSON.stringify(seenSurfaces)} tags=${JSON.stringify(seenTags.slice(0, 12))} effects=${anyEffects} effectTags=${JSON.stringify(seenEffects.slice(0, 12))}`);
-  const nodes: unknown[] = [];
-  let revision = 0;
-  let root: number | null = null;
-  for (const patch of collected) {
-    if (typeof patch.revision === "number") revision = patch.revision;
-    for (const op of patch.ops ?? []) {
-      const value = (op.val ?? {}) as Record<string, unknown>;
-      if (op.tag === "upsert") {
-        nodes.push(packValueToExactJson(decodePackValue(coerceWireBytes(value.node)) as Parameters<typeof packValueToExactJson>[0]));
-        continue;
-      }
-      if (op.tag === "set-root") root = Number(typeof op.val === "object" && op.val !== null ? (value.id ?? 0) : op.val);
-    }
-  }
-  if (root === null && nodes.length > 0) root = Number((nodes[0] as { readonly id?: unknown }).id ?? 0);
-  return JSON.stringify({ surface: surfaceId, revision, root, nodes, layoutEpoch: 0 });
-}
-//#endregion 🔖️RetainedWindow
+//#endregion 🧪️RetainedPatchOracle
 
 //#region 🔖️Invocation
 /** 🎯️ Per-instance "leftover" `TurnResult.effects` — everything a turn produced that was NOT a
@@ -383,7 +496,9 @@ export interface WgpuPluginHandle {
   readonly render: (instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown) => Promise<unknown>;
   readonly renderDocument: (instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown) => Promise<string>;
   readonly contextMenu: (instanceId: number, request: unknown) => Promise<unknown>;
-  readonly dispose: () => void;
+  readonly readWindowConfigPacks: (instanceId: number) => Promise<readonly WindowConfigPackEntry[]>;
+  readonly loadWindowConfigPack: (instanceId: number, entry: WindowConfigPackEntry) => Promise<void>;
+  readonly dispose: () => Promise<void>;
 }
 
 /** 🐚️ Acquires a real actor through `ActivationRegistry`/`ShardClient` (replacing the deleted
@@ -398,18 +513,59 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const shardClient = getShardClient();
   const actorIdByInstance = new Map<number, string>();
   const channelByInstance = new Map<number, AppChannelClient>();
+  const lifecycleByInstance = new Map<number, ShardInstanceLifecycleLease>();
+  const uiRouteByInstance = new Map<number, WgpuOwnedUiInstanceRoute>();
+  const openingInstances = new Map<number, Promise<number>>();
+  const retiringInstances = new Map<number, Promise<void>>();
+  const closingInstances = new Set<number>();
   const channelRequests = new AppChannelRequestSequence();
+  let disposing = false;
+  let disposal: Promise<void> | null = null;
   let eventSeq = 0;
 
   const requireActorId = (instanceId: number): string => {
     const actorId = actorIdByInstance.get(instanceId);
-    if (!actorId) throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
+    if (disposing) throw new Error("wgpu-plugin-handle.closed");
+    if (!actorId || closingInstances.has(instanceId)) throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
     return actorId;
   };
   const requireChannel = (instanceId: number): AppChannelClient => {
     const client = channelByInstance.get(instanceId);
     if (!client) throw new Error(`[DEBUG] program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
     return client;
+  };
+  const requireUiRoute = (instanceId: number): WgpuOwnedUiInstanceRoute => {
+    const route = uiRouteByInstance.get(instanceId);
+    if (!route) throw new Error("wgpu-ui.native-owner-required");
+    return route;
+  };
+  const executeFor = (actorId: string): WgpuActorExecutor => <T>(work: () => Promise<T>) => submitActorWork(actorId, work);
+  const releaseInstance = (instanceId: number, actorId: string): void => {
+    actorIdByInstance.delete(instanceId);
+    channelByInstance.delete(instanceId);
+    lifecycleByInstance.delete(instanceId);
+    uiRouteByInstance.delete(instanceId);
+    pendingTurnEffects.delete(instanceId);
+    actorTurnChains.delete(actorId);
+    closingInstances.delete(instanceId);
+  };
+
+  const renderSurface = async (instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown): Promise<WgpuOwnedUiProjection> => {
+    const actorId = requireActorId(instanceId);
+    const route = requireUiRoute(instanceId);
+    const execute = executeFor(actorId);
+    let current = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
+    for (let opportunity = 0; opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
+      await route.accept(current, execute);
+      requireActorId(instanceId);
+      if (uiRouteByInstance.get(instanceId) !== route) throw new Error("wgpu-ui.owner-replaced");
+      const projected = await route.project(surfaceId);
+      if (projected) return projected;
+      const status = typeof current.status === "string" ? current.status : current.status && typeof current.status === "object" && "tag" in current.status ? String((current.status as { readonly tag?: unknown }).tag ?? "") : "";
+      if (status.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() !== "more-work") throw new Error(`wgpu-ui.surface-not-published:${surfaceId}`);
+      current = await submitTurn(actorId, []);
+    }
+    throw new Error(`wgpu-ui.render-budget-exhausted:${surfaceId}`);
   };
 
   /** 📤️📥️ Backs `channelHandle.enqueue`/`.outcomes` below — one broadcast per `loadPluginModule` call,
@@ -429,7 +585,12 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[]): Promise<void> => {
     try {
       const actorId = requireActorId(instanceId);
+      const route = requireUiRoute(instanceId);
+      const execute = executeFor(actorId);
       const results: WireTurnResult[] = [];
+      const accept = async (turn: WireTurnResult): Promise<void> => {
+        results.push(turn, ...await route.accept(turn, execute));
+      };
       for (let commandIndex = 0; commandIndex < events.length; commandIndex += 1) {
         eventSeq += 1;
         const pages = createShardCommandIngressPages({
@@ -441,32 +602,29 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           seq: BigInt(eventSeq),
           command: events[commandIndex]!,
         });
-        for (const commandPage of pages) results.push(await submitTurn(actorId, [], commandPage));
-        let terminal = results.at(-1)?.commandIngress?.tag;
+        let terminal: string | undefined;
+        for (const commandPage of pages) {
+          const submitted = await submitTurn(actorId, [], commandPage);
+          terminal = submitted.commandIngress?.tag;
+          await accept(submitted);
+        }
         for (let continuation = 0; terminal !== "command-complete" && continuation < 1_024; continuation += 1) {
           if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault`);
           if (terminal === "backpressure") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
           const continued = await submitTurn(actorId, []);
-          results.push(continued);
+          await accept(continued);
           terminal = continued.commandIngress?.tag;
         }
         if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations`);
       }
-      const result: WireTurnResult = {
-        uiPatches: results.flatMap((turn) => turn.uiPatches),
-        effects: results.flatMap((turn) => turn.effects),
-        nextWake: [...results].reverse().find((turn) => turn.nextWake !== null)?.nextWake ?? null,
-        commandIngress: results.at(-1)?.commandIngress,
-      };
       const outFrames: Uint8Array[] = [];
       const leftover: WireVariant[] = [];
-      for (const effect of result.effects) {
+      for (const effect of results.flatMap((turn) => turn.effects)) {
         const frame = shellFrameBytes(effect, instanceId);
         if (frame) outFrames.push(frame);
         else leftover.push(effect);
       }
       pendingTurnEffects.set(instanceId, leftover);
-      if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
       turnOutcomes.push({ instanceId, frames: outFrames });
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
@@ -480,52 +638,93 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     outcomes: turnOutcomes.stream,
   };
 
-  return {
+  const handle: WgpuPluginHandle = {
     pluginId,
     manifest,
-    createApp: async (appId) => {
+    createApp: (appId) => {
+      if (disposing) return Promise.reject(new Error("wgpu-plugin-handle.closed"));
       const instanceId = nextGlobalInstanceId;
       nextGlobalInstanceId += 1;
       const actorId = `${pluginId}#${instanceId}`;
       actorIdByInstance.set(instanceId, actorId);
-      await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
-      eventSeq += 1;
-      const lifecycle = getShardClient().captureInstanceLifecycle(actorId, instanceId);
-      await lifecycle.open({ appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) }, DEFAULT_SHARD_BUDGET);
-      await settleInstanceLifecycle(lifecycle);
-      lifecycleByInstance.set(instanceId, lifecycle);
-      channelByInstance.set(instanceId, new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local"));
-      return instanceId;
+      const requireOpening = (): void => {
+        if (disposing || closingInstances.has(instanceId) || actorIdByInstance.get(instanceId) !== actorId) throw new Error("wgpu-plugin-handle.closed");
+      };
+      const opening = Promise.resolve().then(async () => {
+        requireOpening();
+        await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
+        requireOpening();
+        eventSeq += 1;
+        const lifecycle = shardClient.captureInstanceLifecycle(actorId, instanceId);
+        lifecycleByInstance.set(instanceId, lifecycle);
+        const execute = executeFor(actorId);
+        const opened = coerceTurnResult(await execute(() => lifecycle.open({ appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) }, DEFAULT_SHARD_BUDGET)));
+        const captured = lifecycle.pendingReceipt;
+        if (!captured || captured.kind !== "captured" || !lifecycle.lifetime) throw new Error("wgpu-ui.native-lifetime-required");
+        const route = new WgpuOwnedUiInstanceRoute(lifecycle);
+        uiRouteByInstance.set(instanceId, route);
+        requireOpening();
+        await settleInstanceLifecycle(lifecycle, route, opened, execute);
+        requireOpening();
+        channelByInstance.set(instanceId, new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local"));
+        return instanceId;
+      });
+      openingInstances.set(instanceId, opening);
+      const forget = (): void => { if (openingInstances.get(instanceId) === opening) openingInstances.delete(instanceId); };
+      return opening.then((value) => { forget(); return value; }, async (error) => {
+        forget();
+        if (!retiringInstances.has(instanceId)) await handle.destroyApp(instanceId);
+        throw error;
+      });
     },
-    destroyApp: async (instanceId) => {
+    destroyApp: (instanceId) => {
+      const previous = retiringInstances.get(instanceId);
+      if (previous) return previous;
       const actorId = actorIdByInstance.get(instanceId);
-      if (!actorId) return;
-      // 🔌️ Ends this instance's channel's own outcome subscription BEFORE dropping it — otherwise it
-      // leaks a live subscriber against `turnOutcomes` for the rest of this `loadPluginModule` call's
-      // lifetime (`AppChannelClient.dispose`'s own doc; mirrors `PluginRuntime`'s `adaptPluginHandle`).
-      channelByInstance.get(instanceId)?.dispose();
-      actorIdByInstance.delete(instanceId);
-      channelByInstance.delete(instanceId);
-      retainedWindowByActor.delete(actorId);
-      pendingTurnEffects.delete(instanceId);
-      shardClient.dispose(actorId);
+      if (!actorId) return Promise.resolve();
+      closingInstances.add(instanceId);
+      const opening = openingInstances.get(instanceId);
+      const retirement = Promise.resolve().then(async () => {
+        await opening?.then(() => {}, () => {});
+        if (actorIdByInstance.get(instanceId) !== actorId) return;
+        channelByInstance.get(instanceId)?.dispose();
+        const lifecycle = lifecycleByInstance.get(instanceId);
+        const route = uiRouteByInstance.get(instanceId);
+        if (!lifecycle) {
+          registry.cancel(actorId);
+          releaseInstance(instanceId, actorId);
+          return;
+        }
+        if (!route) throw new Error("wgpu-ui.native-owner-required");
+        await retireWgpuOwnedUiInstanceLifecycle(lifecycle, route, executeFor(actorId));
+        registry.cancel(actorId);
+        releaseInstance(instanceId, actorId);
+      });
+      retiringInstances.set(instanceId, retirement);
+      const forget = (): void => { if (retiringInstances.get(instanceId) === retirement) retiringInstances.delete(instanceId); };
+      void retirement.then(forget, forget);
+      return retirement;
     },
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), viewState),
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), viewState),
-    render: (instanceId, surfaceId, bodyKey, viewState) => performRender(requireActorId(instanceId), instanceId, surfaceId, bodyKey, viewState),
-    renderDocument: (instanceId, surfaceId, bodyKey, viewState) => publishRetainedDocument(requireActorId(instanceId), instanceId, surfaceId, bodyKey, viewState),
+    render: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result) => result.node),
+    renderDocument: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result) => JSON.stringify(result.document)),
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
+    readWindowConfigPacks: (instanceId) => requireChannel(instanceId).readWindowConfigs(),
+    loadWindowConfigPack: (instanceId, entry) => requireChannel(instanceId).loadWindowConfig(entry),
     dispose: () => {
-      for (const instanceId of channelByInstance.keys()) channelByInstance.get(instanceId)?.dispose();
-      for (const actorId of actorIdByInstance.values()) {
-        retainedWindowByActor.delete(actorId);
-        shardClient.dispose(actorId);
-      }
-      actorIdByInstance.clear();
-      channelByInstance.clear();
-      turnOutcomes.complete();
+      if (disposal) return disposal;
+      disposing = true;
+      const retirements = [...actorIdByInstance.keys()].map((instanceId) => handle.destroyApp(instanceId));
+      disposal = Promise.allSettled(retirements).then((results) => {
+        const failures = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+        if (failures.length) throw new AggregateError(failures.map((result) => result.reason), "wgpu-plugin-handle.retirement-failed");
+        turnOutcomes.complete();
+      });
+      return disposal;
     },
   };
+  return handle;
 }
 //#endregion 🔖️WgpuPluginHandle
 

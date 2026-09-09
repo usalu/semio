@@ -1,4 +1,3 @@
-
 use super::*;
 use flow_extension_sdk::evaluate_json;
 use neural_engine::{Atom, Value};
@@ -327,7 +326,7 @@ async fn schema_component_deconstructs_geometry() {
 
 #[semio_framework_async_macros::async_test]
 async fn extension_bundle_extends_flow_and_evaluates_box() {
-    use semio_framework_plugin::{ExtensionBundle, extension_activate, extension_invoke, extension_manifest, install_extension_bundle};
+    use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
     let _serial = test_serial().await;
     reset_test_kernel().await;

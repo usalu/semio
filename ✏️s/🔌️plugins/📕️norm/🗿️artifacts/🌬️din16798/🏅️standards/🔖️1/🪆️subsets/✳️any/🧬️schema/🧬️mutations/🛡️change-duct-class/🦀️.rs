@@ -1,9 +1,8 @@
 //! 🔧 `change-duct-class` payload — changes the Din16798 document's `duct_class` (duct leakage class).
 
-
-use crate::Din16798Snapshot;
 use crate::diff::Din16798Diff;
 use crate::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
 //#region 🔖️ChangeDuctClass
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

@@ -629,7 +629,12 @@ pub struct DrawingEnvelopeOwnedFieldCatalog;
 
 impl store::ArtifactEnvelopeOwnedFieldCatalog<DrawingSnapshot, DrawingMutation> for DrawingEnvelopeOwnedFieldCatalog {
     fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<DrawingSnapshot, DrawingMutation>> {
-        Box::new(store::ArtifactEnvelopeFreshVcsAuthority::new(self.begin_snapshot(operation, generation, path), std::sync::Arc::new(DrawingSnapshotRetirementFactory), std::sync::Arc::new(DrawingMutationRetirementFactory), self.edit_history_decoder()))
+        Box::new(store::ArtifactEnvelopeFreshVcsAuthority::new(
+            self.begin_snapshot(operation, generation, path),
+            std::sync::Arc::new(DrawingSnapshotRetirementFactory),
+            std::sync::Arc::new(DrawingMutationRetirementFactory),
+            self.edit_history_decoder(),
+        ))
     }
 
     fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>> {
@@ -3173,7 +3178,6 @@ impl DrawingLayerDigestAuthority {
         self.variant = None;
         self.terminal = true;
     }
-
 }
 
 struct DrawingMutationDigestAuthority {
@@ -4319,7 +4323,9 @@ impl DrawingMutationCandidateAuthority {
                         target.params = crate::DrawingTraceParams { threshold: value.params.threshold, simplify_epsilon: value.params.simplify_epsilon };
                     }
                     DrawingMutation::UpdateLayerTraceParams(_) => return Err("drawing-store.mutation-trace-invalid"),
-                    DrawingMutation::CreateLayer(_) | DrawingMutation::DuplicateLayer(_) | DrawingMutation::DeleteLayer(_) | DrawingMutation::ReorderLayer(_) => unreachable!("structural Drawing mutations start retained rebuild before scalar mutation"),
+                    DrawingMutation::CreateLayer(_) | DrawingMutation::DuplicateLayer(_) | DrawingMutation::DeleteLayer(_) | DrawingMutation::ReorderLayer(_) => {
+                        unreachable!("structural Drawing mutations start retained rebuild before scalar mutation")
+                    }
                 }
                 self.overlay.as_mut().ok_or("drawing-store.mutation-overlay-missing")?.commit(source)?;
                 self.phase = DrawingMutationCandidatePhase::Complete;
@@ -5213,9 +5219,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                     } else {
                         self.phase = DrawingStoreInitializationPhase::Fault;
                         let source = self.fault.take().unwrap_or_else(|| b"drawing-store.initializer-fault".to_vec());
-                        let detail = cx
-                            .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &source)
-                            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &source).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
                         semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
                     }
                 }
@@ -5231,9 +5235,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
             DrawingStoreInitializationPhase::Fault => {
                 let source = self.fault.as_deref().unwrap_or(b"drawing-store.initializer-fault");
-                let detail = cx
-                    .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, source)
-                    .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, source).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
                 semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
             }
         }

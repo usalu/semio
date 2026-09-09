@@ -5,9 +5,9 @@
 //! (base + target, since `product_groups`/`products`/`property_definitions`/`subjects` are real
 //! id-keyed collections needing full remove/re-insert), bundled into a single atomic edit.
 
+use crate::config::{NormConfig, NormConfigMutation};
 use crate::op::Iso16757Mutation;
 use crate::Iso16757Snapshot;
-use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

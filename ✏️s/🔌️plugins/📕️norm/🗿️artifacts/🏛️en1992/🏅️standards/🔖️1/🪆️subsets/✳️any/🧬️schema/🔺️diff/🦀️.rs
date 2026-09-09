@@ -82,8 +82,6 @@ pub struct En1992Diff {
     pub anchor_n_ed_kn: Option<f64>,
     #[state(artifact)]
     pub anchor_v_ed_kn: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

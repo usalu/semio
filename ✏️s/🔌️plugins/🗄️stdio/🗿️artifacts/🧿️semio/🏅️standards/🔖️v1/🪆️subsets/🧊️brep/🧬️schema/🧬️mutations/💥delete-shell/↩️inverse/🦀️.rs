@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteShell`.
 
-use crate::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, create_shell, delete_shell};
+use crate::standards::v1::subsets::brep::schema::mutations::{create_shell, delete_shell, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse
@@ -10,11 +10,7 @@ pub fn inverse(payload: &super::DeleteShell, base: &SemioBrepSnapshot) -> Vec<Se
         return Vec::new();
     };
     let tail = &base.shells[index..];
-    let mut undo: Vec<SemioBrepMutation> = tail
-        .iter()
-        .skip(1)
-        .map(|x| SemioBrepMutation::DeleteShell(delete_shell::DeleteShell { id: x.id.clone() }))
-        .collect();
+    let mut undo: Vec<SemioBrepMutation> = tail.iter().skip(1).map(|x| SemioBrepMutation::DeleteShell(delete_shell::DeleteShell { id: x.id.clone() })).collect();
     undo.extend(tail.iter().map(|x| SemioBrepMutation::CreateShell(create_shell::CreateShell { id: x.id.clone(), faces: x.faces.clone() })));
     undo
 }

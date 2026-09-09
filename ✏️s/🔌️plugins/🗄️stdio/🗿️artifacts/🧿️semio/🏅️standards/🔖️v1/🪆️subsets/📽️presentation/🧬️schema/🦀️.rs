@@ -49,13 +49,7 @@ impl SemioPresentationArtifact {
 pub fn semio_presentation_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.presentation",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -82,9 +76,9 @@ pub fn semio_presentation_artifact_schema_descriptor() -> framework_schema::Arti
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::standards::v1::subsets::presentation::schema::diff::SemioPresentationDiff;
-    use crate::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, SemioPresentationMutation};
     #[cfg(test)]
-    use crate::standards::v1::subsets::presentation::schema::mutations::{insert_master};
+    use crate::standards::v1::subsets::presentation::schema::mutations::insert_master;
+    use crate::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, SemioPresentationMutation};
     use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 

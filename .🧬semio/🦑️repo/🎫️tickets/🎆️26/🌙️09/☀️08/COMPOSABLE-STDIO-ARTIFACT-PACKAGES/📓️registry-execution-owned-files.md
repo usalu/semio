@@ -755,6 +755,8 @@ The following inventory is the exact Rust source set changed while severing the 
 - [updated] `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/Cargo.toml`
 - [updated; later removed concurrently] `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/🦀️.rs`
 - [updated] `✏️s/🔌️plugins/📕️norm/🖥️app-surface/🧪️tests/🖥️app-surface/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/📕️norm/🖥️app-surface/🧪️tests/🔬️retained-disposition-oracle/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/📕️norm/🖥️app-surface/🧪️tests/🔬️unit/🦀️.rs`
 - [updated] `✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🧬️mutations/☑️change-selected-check-index/🔣️.json`
 - [created] `✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🧬️mutations/☑️change-selected-check-index/🧬️schema/🔣️.json`
 - [removed] `✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🧬️mutations/☑️change-selected-check-index/🧬️.schema.json`
@@ -867,9 +869,34 @@ The Space/Collection Nx project declarations and scripts were handled by the Nx 
 
 The coordinator owned the surrounding DAG package extraction, schemas, mutation leaves, codecs, and root registration; those paths are not claimed here.
 
+## GIS Map retained test repair
+
+- [updated] `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs`
+- [updated] `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🧪️tests/🔬️unit/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`
+
 ## Durable reports
 
 - [updated] `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/COMPOSABLE-STDIO-ARTIFACT-PACKAGES/📓️norm-artifact-package-extraction.md`
 - [updated] `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/COMPOSABLE-STDIO-ARTIFACT-PACKAGES/📓️framework-space-artifact-extraction.md`
 - [updated] `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/COMPOSABLE-STDIO-ARTIFACT-PACKAGES/📓️dag-retirement-integration.md`
+- [created] `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/COMPOSABLE-STDIO-ARTIFACT-PACKAGES/📓️gis-map-test-ownership-repair.md`
 - [updated] `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/COMPOSABLE-STDIO-ARTIFACT-PACKAGES/📓️registry-execution-owned-files.md`
+
+## GIS Terrain fixture and ownership repair
+
+- [updated] `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏔️exaggeration/🧪️tests/🔬️unit/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️view/🧪️tests/🔬️unit/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🧪️tests/🔬️unit/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🧪️tests/🔬️unit/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️structural-correspondence/🦀️.rs`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/📸️snapshot/⬅️before/🔣️.json`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/📸️snapshot/⬅️before/🔣️.json`
+- [updated] `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/📸️snapshot/➡️after/🔣️.json`
+- [created] `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/COMPOSABLE-STDIO-ARTIFACT-PACKAGES/📓️gis-terrain-fixture-repair.md`

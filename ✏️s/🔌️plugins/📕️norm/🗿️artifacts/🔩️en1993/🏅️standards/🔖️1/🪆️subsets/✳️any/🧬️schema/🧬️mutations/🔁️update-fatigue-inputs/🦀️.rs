@@ -1,7 +1,5 @@
 //! 🔁 `update-fatigue-inputs` — atomically updates the fatigue-inputs facet (delta_sigma_mpa, fatigue_category, fatigue_method are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

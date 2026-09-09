@@ -15,13 +15,6 @@ type NoteDiff {
   pencilWidth: Float @state(class: ARTIFACT)
   eraserRadius: Float @state(class: ARTIFACT)
   assets: NoteAssetsDelta @state(class: ARTIFACT)
-  selectedBlockIds: NoteStringList @state(class: PRESENCE)
-  activeUtilityId: String @state(class: PRESENCE)
-  engagementInput: String @state(class: CONFIG)
-  cameraX: Float @state(class: CONFIG)
-  cameraY: Float @state(class: CONFIG)
-  cameraZoom: Float @state(class: CONFIG)
-  hoveredBlockId: String @state(class: ARTIFACT)
 }
 
 type NoteArtifact {
@@ -38,13 +31,6 @@ type NoteArtifact {
   pencilWidth: Float
   eraserRadius: Float
   assets: [NoteImageAssetEntry!]!
-  selectedBlockIds: [String!]!
-  activeUtilityId: String!
-  engagementInput: String!
-  cameraX: Float!
-  cameraY: Float!
-  cameraZoom: Float!
-  hoveredBlockId: String
 }
 
 type NoteAssetsDelta {

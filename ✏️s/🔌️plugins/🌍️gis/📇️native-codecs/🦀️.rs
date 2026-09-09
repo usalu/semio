@@ -33,16 +33,28 @@ impl NativeGisCodecReceiptV1 {
     /// 🧾 Returns identity data without exposing executable construction authority.
     pub fn identity(&self) -> NativeGisCodecIdentityV1 {
         let (factory_id, artifact_kind, schema, extension, capability, protocol) = match self.artifact {
-            GisCodecV1::Map => (
-                "gis.gismap.v1", "s.gis.gismap", "gis.map", "gismap", "s.gis.gismap.codec.document",
-                include_bytes!("../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio").as_slice(),
-            ),
+            GisCodecV1::Map => ("gis.gismap.v1", "s.gis.gismap", "gis.map", "gismap", "s.gis.gismap.codec.document", include_bytes!("../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio").as_slice()),
             GisCodecV1::Terrain => (
-                "gis.gisterrain.v1", "s.gis.gisterrain", "gis.terrain", "gisterrain", "s.gis.gisterrain.codec.document",
+                "gis.gisterrain.v1",
+                "s.gis.gisterrain",
+                "gis.terrain",
+                "gisterrain",
+                "s.gis.gisterrain.codec.document",
                 include_bytes!("../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio").as_slice(),
             ),
         };
-        NativeGisCodecIdentityV1 { plugin_id: "gis", package_id: "semio:gis", package_version: env!("CARGO_PKG_VERSION"), factory_id, artifact_kind, schema, extension, capability, pack_schema_hash: self.codec().pack_schema_hash, protocol_sha256: Sha256::digest(protocol) }
+        NativeGisCodecIdentityV1 {
+            plugin_id: "gis",
+            package_id: "semio:gis",
+            package_version: env!("CARGO_PKG_VERSION"),
+            factory_id,
+            artifact_kind,
+            schema,
+            extension,
+            capability,
+            pack_schema_hash: self.codec().pack_schema_hash,
+            protocol_sha256: Sha256::digest(protocol),
+        }
     }
 
     fn codec(&self) -> store::ArtifactCodec {
@@ -65,7 +77,8 @@ impl NativeGisCodecReceiptV1 {
         let declaration = match self.artifact {
             GisCodecV1::Map => semio_s_artifact_gis_gismap::declaration(),
             GisCodecV1::Terrain => semio_s_artifact_gis_gisterrain::declaration(),
-        }.map_err(PluginAssemblyError::definition)?;
+        }
+        .map_err(PluginAssemblyError::definition)?;
         let definition = declaration.definition();
         let mut codecs = definition.codecs();
         let codec = codecs.next().ok_or_else(|| invalid("missing GIS codec capability"))?;

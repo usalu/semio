@@ -1,8 +1,8 @@
 //! 🌀️ HVAC fluid topology: nodes, branches, splitters, mixers, and loop validation.
 
 use crate::error::{Diagnostics, Error};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️FluidNode
 /// 💧️ Fluid stream state at a topology node (air or water).

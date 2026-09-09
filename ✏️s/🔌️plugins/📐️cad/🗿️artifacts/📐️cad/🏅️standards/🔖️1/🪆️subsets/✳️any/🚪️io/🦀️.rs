@@ -286,6 +286,7 @@ pub mod io_registry {
 // 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) -- native-geometry solid export bridging
 // to stdio's real semio/mesh + semio/brep codecs is io by definition (rule 5), not artifact-engine
 // compute.
+use protocol::DslValue;
 use semio_framework::MeshImporter;
 use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;
@@ -302,7 +303,6 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot
 use semio_s_artifact_stdio_step::standards::v_ap214::engine::part21::{parse_part21, write_part21};
 use semio_s_artifact_stdio_step::StepSnapshot;
 use semio_s_artifact_stdio_stl::standards::v_ascii::engine::encode_stl_binary;
-use protocol::DslValue;
 
 /// @emoji 📤️ A native-geometry export ready to be wrapped into a `Effect::DownloadMediaExport`.
 pub struct CadSolidExport {
@@ -667,8 +667,7 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawi
         .iter()
         .enumerate()
         .filter_map(|(layer_index, layer)| {
-            let filtered =
-                semio_s_artifact_stdio_dwg::DwgDrawing { layers: drawing.layers.clone(), entities: drawing.entities.iter().filter(|entity| entity.layer == layer_index).cloned().collect(), extmin: drawing.extmin, extmax: drawing.extmax };
+            let filtered = semio_s_artifact_stdio_dwg::DwgDrawing { layers: drawing.layers.clone(), entities: drawing.entities.iter().filter(|entity| entity.layer == layer_index).cloned().collect(), extmin: drawing.extmin, extmax: drawing.extmax };
             if filtered.entities.is_empty() {
                 return None;
             }

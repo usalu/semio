@@ -1,0 +1,35 @@
+{
+  "document": [
+    "semio",
+    "block",
+    "3d"
+  ],
+  "toolIds": [
+    "patchObjectKind",
+    "addRepresentation",
+    "removeRepresentation",
+    "addVortexKind",
+    "removeVortexKind",
+    "addVortex",
+    "removeVortex",
+    "setActiveExample",
+    "edit",
+    "setActiveRepresentation",
+    "setWindowRepresentations",
+    "toggleWindowRepresentation",
+    "setWindowArrangement",
+    "setWindowSpacing",
+    "setBrushVortexKind",
+    "setBrushRadius",
+    "setBrushFlip",
+    "worldSurfaceHover",
+    "worldSurfaceLeave",
+    "worldSurfacePlace",
+    "setCamera",
+    "patchRepresentation"
+  ],
+  "leaveSurface": {
+    "text": "leaveSurface",
+    "binaryHex": "01120000"
+  }
+}

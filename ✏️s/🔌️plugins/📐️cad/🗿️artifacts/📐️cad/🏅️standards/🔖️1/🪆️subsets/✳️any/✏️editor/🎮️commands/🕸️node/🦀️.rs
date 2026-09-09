@@ -1,14 +1,14 @@
 //! 🕸️ CAD play app commands — the scene's node tree: create and rename.
 
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::CadDispatchCtx;
+use crate::editor::cad::{runtime_of, snapshot_of};
 use crate::mutations::create_node::CreateNode as CreateNodeMutation;
 use crate::mutations::rename_node::RenameNode as RenameNodeMutation;
 use crate::op::CadMutation;
 use crate::standards::v1::subsets::any::schema::inferences::next_cad_id;
 use crate::CadNode;
 use crate::CadSnapshot;
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{runtime_of, snapshot_of};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

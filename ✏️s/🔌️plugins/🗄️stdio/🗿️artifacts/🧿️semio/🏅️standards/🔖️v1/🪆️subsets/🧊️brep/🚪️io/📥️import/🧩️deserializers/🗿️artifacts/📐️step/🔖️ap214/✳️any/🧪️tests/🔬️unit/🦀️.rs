@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧱️ Same single-triangular-planar-face box fixture used by step's own

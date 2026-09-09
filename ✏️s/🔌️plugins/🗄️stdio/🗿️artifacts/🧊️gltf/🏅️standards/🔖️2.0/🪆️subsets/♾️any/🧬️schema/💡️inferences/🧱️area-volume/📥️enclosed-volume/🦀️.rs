@@ -18,8 +18,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    context
-        .solid.map_or_else(|| unavailable(GltfUnit::CubicMetre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)), |metrics| exact(metrics.1, GltfUnit::CubicMetre, context.sample_count, Some(context.topology)))
+    context.solid.map_or_else(|| unavailable(GltfUnit::CubicMetre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)), |metrics| exact(metrics.1, GltfUnit::CubicMetre, context.sample_count, Some(context.topology)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

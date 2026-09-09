@@ -21,15 +21,21 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
 //#region 🗿️Artifacts
-mod artifacts { pub use semio_s_artifact_demonstrator_playground as playground; }
+mod artifacts {
+    pub use semio_s_artifact_demonstrator_playground as playground;
+}
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_demonstrator_playground::editor::*; }
+mod editor {
+    pub use semio_s_artifact_demonstrator_playground::editor::*;
+}
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_demonstrator_playground::viewer::*; }
+mod viewer {
+    pub use semio_s_artifact_demonstrator_playground::viewer::*;
+}
 //#endregion 👁️Viewer
 
 //#region 🛂️Manifest
@@ -42,4 +48,3 @@ mod manifest;
 // carry was permanently false: the export never compiled in, on any build, ever.
 semio_framework_plugin::plugin_exports!(manifest::plugin, manifest::DemonstratorApps);
 //#endregion 🛂️Manifest
-

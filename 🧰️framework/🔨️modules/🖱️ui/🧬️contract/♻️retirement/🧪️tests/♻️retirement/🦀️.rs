@@ -93,7 +93,7 @@ fn instance_lifetime_ui_value_retirement_releases_alias_without_touching_other_r
 #[test]
 fn instance_lifetime_ui_value_retirement_epoch_reuse_and_terminal_guard() {
     let mut arena = UiValueArena::default();
-    let handbacks = UiArenaHandbacks::<UI_VALUE_ADMISSION_SLOTS, 4>::new();
+    let handbacks = UiArenaHandbacks::<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS>::new();
     let original = arena.reserve_collection(UiCollectionKind::List).unwrap();
     arena.try_push_page(original, UiPageValue::List(UiValue::Text(UiText::try_from_str("first").unwrap()))).unwrap();
     arena.release_exact_handle(original).unwrap();

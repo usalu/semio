@@ -1,9 +1,8 @@
 //! 📏 `resize-frame` — changes a frame's `bounds.width`/`bounds.height` extent.
 
-
-use crate::{FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -35,7 +34,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ResizeFrame {
 }
 //#endregion 📏ResizeFrame
 
-
 //#region 📏ResizeFrame
 pub fn diff_resize_frame(payload: &ResizeFrame, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
@@ -59,7 +57,6 @@ pub fn diff_resize_frame(payload: &ResizeFrame, base: &LayoutSnapshot) -> protoc
     })
 }
 //#endregion 📏ResizeFrame
-
 
 //#region 📏ResizeFrame
 pub fn inverse_resize_frame(payload: &ResizeFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

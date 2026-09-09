@@ -1,0 +1,2 @@
+type ArtifactDialect { artifactKind: String! standard: String! subset: String! }
+type ArtifactRef { artifactId: String! dialect: ArtifactDialect! }

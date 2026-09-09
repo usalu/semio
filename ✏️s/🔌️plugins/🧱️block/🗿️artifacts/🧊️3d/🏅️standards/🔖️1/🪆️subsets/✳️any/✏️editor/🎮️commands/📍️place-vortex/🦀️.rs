@@ -29,5 +29,5 @@ pub fn handle(payload: &PlaceVortex, doc: &ArtifactView<'_, Block3dSnapshot>, cf
     }
     let id = crate::standards::v1::subsets::any::schema::next_id(doc.snapshot.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");
     operations.push(crate::standards::v1::subsets::any::schema::mutations::create_vortex(Block3dVortexTemplate { id, vortex_kind: vortex_kind_id, position: local_position, direction, radius: cfg.snapshot.brush_radius, label: None }));
-    Ok(Emit { artifact_mutations: operations, config_mutations: vec![Block3dConfigMutation::SetBrushPreview { preview: None }], description: None, ..Default::default() })
+    Ok(Emit { artifact_mutations: operations, description: None, ..Default::default() })
 }

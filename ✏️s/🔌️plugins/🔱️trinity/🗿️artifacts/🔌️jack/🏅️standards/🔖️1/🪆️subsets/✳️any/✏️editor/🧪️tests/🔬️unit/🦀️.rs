@@ -1,7 +1,6 @@
-
 use super::*;
 use protocol::{OpBinary, OpText};
-use semio_framework_plugin::{App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, testkit};
+use semio_framework_plugin::{testkit, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel};
 
 /// 🎫️ `testkit::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`'s own signature
 /// is still `fn(manifest: fn() -> App)`, unchanged for this ticket (SDK gap, see this packet's
@@ -22,10 +21,12 @@ async fn trinity_jack_command_text_and_binary_round_trip() {
         TrinityJackCommand::Reorganize,
         TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a".into()) },
         TrinityJackCommand::RunQuery { query: None },
+        TrinityJackCommand::LoadExampleQuery { query: "MATCH (a:Piece) RETURN a.name".into() },
+        TrinityJackCommand::FormatDocument,
         TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() },
         TrinityJackCommand::SetViewport { viewport_json: "{\"x\":1.0,\"y\":2.0,\"zoom\":1.0}".into() },
         TrinityJackCommand::TextSelect { start: 3, end: 9 },
-        TrinityJackCommand::SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() },
+        TrinityJackCommand::SetLodMode { value: "compact".into() },
     ];
     for command in commands {
         let bytes = command.encode_op().expect("encode");
@@ -228,9 +229,19 @@ async fn graph_scene_has_lod_json() {
 #[semio_framework_async_macros::async_test]
 async fn set_lod_mode_reflects_in_window_measures() {
     let mut app = new_app().await;
-    app.dispatch_typed(TrinityJackCommand::SetLodMode { window_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into(), value: "compact".into() }, &meta("local")).await.expect("lod");
-    let measures = app.window_measures().await;
-    assert!(measures[TRINITY_JACK_PLAY_WINDOW_GRAPH].iter().any(|measure| matches!(measure, WindowMeasure::Select { value, .. } if value == "compact")));
+    let view = ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "jack-graph-main".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into() }], ..Default::default() };
+    let addressed = view.for_window_instance("jack-graph-main").unwrap();
+    app.dispatch_typed(TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(addressed), ..meta("local") }).await.expect("lod");
+    while app.has_pending_typed_operations() {
+        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance");
+        app.advance_typed_operation_publication().await.expect("publish");
+        if let Some(page) = app.take_typed_operation_result_page(1) {
+            assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault);
+            app.acknowledge_typed_operation_result(page.token).expect("acknowledge");
+        }
+    }
+    let measures = app.window_measures(&view).await;
+    assert!(measures["jack-graph-main"].iter().any(|measure| matches!(measure, WindowMeasure::Select { value, .. } if value == "compact")));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -301,7 +312,7 @@ async fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request).await;
+    let menu = app.context_menu(&request, &ViewModel::default()).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");
@@ -333,31 +344,124 @@ async fn query_ownership_runtime_publishes_transient_result_without_document_edi
     let mut app = new_app().await;
     let outcome: Result<(u64, String), String> = async {
         let before = app.ephemeral_snapshot().await.transient_generation;
-        let document = app.snapshot().map_err(|error| error.to_string())?.clone();
-        app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a.name".into()) }, &meta("query-owner")).await.map_err(|error| error.to_string())?;
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-        while app.has_pending_typed_operations() {
-            if std::time::Instant::now() >= deadline { return Err("query operation did not finish".into()); }
-            app.advance_typed_operation_publication().await.map_err(|error| error.to_string())?;
-            if let Some(page) = app.take_typed_operation_result_page(1) {
-                let fault = (page.lane == semio_framework_plugin::TypedOperationResultLane::Fault).then(|| format!("query publication fault: {:?}", page.bytes()));
-                app.acknowledge_typed_operation_result(page.token).map_err(|error| error.to_string())?;
-                if let Some(fault) = fault { return Err(fault); }
-            }
-            app.take_typed_operation_effect();
-            app.take_typed_operation_event();
-            app.take_typed_operation_ui_scope();
-            std::thread::yield_now();
+        let document = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
+        let expected_name = document.nodes().into_iter().find(|node| node.kind == "Piece").ok_or_else(|| "query runtime fixture has no Piece".to_string())?.name;
+        app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a.name".into()) }, &meta("query-owner")).await.map_err(|error| format!("{error:?}"))?;
+        if drive_query_ownership_operations(&mut app).await? != (1, 0) {
+            return Err("query operation did not produce one app transient receipt".into());
         }
-        if app.snapshot().map_err(|error| error.to_string())? != document { return Err("read query modified the document".into()); }
+        if app.snapshot().map_err(|error| format!("{error:?}"))? != document {
+            return Err("read query modified the document".into());
+        }
         let generation = app.ephemeral_snapshot().await.transient_generation;
-        if generation <= before { return Err("query result did not reach the transient store".into()); }
-        let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).await.map_err(|error| error.to_string())?;
+        if generation != before + 1 {
+            return Err("query result did not publish exactly once to the transient store".into());
+        }
+        let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).await.map_err(|error| format!("{error:?}"))?;
         let rendered = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+        if !rendered.contains(&expected_name) {
+            return Err("query result table did not contain the document's matching Piece".into());
+        }
         Ok((generation, rendered))
-    }.await;
+    }
+    .await;
     testkit::close_registered_fixture_app(&mut app);
     let (generation, rendered) = outcome.expect("owned query runtime");
     assert!(rendered.contains("table"));
     eprintln!("[DEBUG] query result reached transient generation {generation}, rendered as a table, preserved the document, and retired the app");
+}
+
+async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>>) -> Result<(u64, u64), String> {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    let mut transient_receipts = 0;
+    let mut window_transient_receipts = 0;
+    while app.has_pending_typed_operations() {
+        if std::time::Instant::now() >= deadline {
+            return Err("query operations did not finish".into());
+        }
+        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
+        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
+        if let Some(page) = app.take_typed_operation_result_page(1) {
+            let fault = (page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault).then(|| format!("query publication fault: {:?}", page.bytes()));
+            transient_receipts += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::Transient);
+            window_transient_receipts += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient);
+            app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
+            if let Some(fault) = fault {
+                return Err(fault);
+            }
+        }
+        app.take_typed_operation_effect();
+        app.take_typed_operation_event();
+        app.take_typed_operation_ui_scope();
+        std::thread::yield_now();
+    }
+    Ok((transient_receipts, window_transient_receipts))
+}
+
+fn rendered_selection(value: &serde_json::Value) -> Option<serde_json::Value> {
+    match value {
+        serde_json::Value::Object(fields) => fields.get("selectionJson").and_then(serde_json::Value::as_str).and_then(|text| serde_json::from_str(text).ok()).or_else(|| fields.values().find_map(rendered_selection)),
+        serde_json::Value::Array(items) => items.iter().find_map(rendered_selection),
+        _ => None,
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn query_ownership_window_carets_and_query_publish_independently() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🧮️executor/🧪️tests/🪜️resumable-query/🔣️.json")).unwrap();
+    let case = &fixture["interleaving"];
+    let mut app = new_app().await;
+    let outcome: Result<(), String> = async {
+        let document = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
+        let generation = app.ephemeral_snapshot().await.transient_generation;
+        let selections = case["selections"].as_array().ok_or("missing selection fixture")?;
+        let view = ViewModel {
+            window_instances: selections.iter().map(|selection| semio_framework::ViewWindowInstance { id: selection["windowId"].as_str().unwrap().into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_EDITOR.into() }).collect(),
+            ..Default::default()
+        };
+        app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some(case["query"].as_str().unwrap().into()) }, &meta("query-owner")).await.map_err(|error| format!("{error:?}"))?;
+        for selection in selections {
+            let context = view.for_window_instance(selection["windowId"].as_str().unwrap()).ok_or("missing concrete editor window")?;
+            let command = TrinityJackCommand::TextSelect { start: selection["start"].as_u64().unwrap(), end: selection["end"].as_u64().unwrap() };
+            app.dispatch_typed(command, &semio_framework_plugin::ActionMeta { view_state: Some(context), ..meta("query-owner") }).await.map_err(|error| format!("{error:?}"))?;
+        }
+        let (app_receipts, window_receipts) = drive_query_ownership_operations(&mut app).await?;
+        if app_receipts != case["expected"]["appTransientPublications"].as_u64().unwrap() {
+            return Err(format!("expected app transient receipts, received {app_receipts}"));
+        }
+        if window_receipts != case["expected"]["windowTransientPublications"].as_u64().unwrap() {
+            return Err(format!("expected window transient receipts, received {window_receipts}"));
+        }
+        let app_generation = app.ephemeral_snapshot().await.transient_generation;
+        if app_generation != generation + app_receipts || app_generation != case["expected"]["appTransientGeneration"].as_u64().unwrap() {
+            return Err("app transient generation does not match acknowledged publications".into());
+        }
+        if app.snapshot().map_err(|error| format!("{error:?}"))? != document {
+            return Err("query or caret publication modified document content".into());
+        }
+        for selection in selections {
+            let context = view.for_window_instance(selection["windowId"].as_str().unwrap()).unwrap();
+            let tree = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &context).await.map_err(|error| format!("{error:?}"))?;
+            let json = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+            let tree: serde_json::Value = serde_json::from_str(&json).map_err(|error| error.to_string())?;
+            let expected = serde_json::json!({ "start": selection["start"], "end": selection["end"] });
+            if rendered_selection(&tree) != Some(expected) {
+                return Err(format!("concrete window {} lost its own caret selection", selection["windowId"]));
+            }
+            let generation = app.window_transient_generation(&context).map_err(|error| format!("{error:?}"))?.ok_or("missing concrete window transient generation")?;
+            if generation != case["expected"]["windowTransientGenerationById"][selection["windowId"].as_str().unwrap()].as_u64().unwrap() {
+                return Err(format!("concrete window {} has generation {generation}", selection["windowId"]));
+            }
+        }
+        let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &view.for_panel()).await.map_err(|error| format!("{error:?}"))?;
+        let rendered = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+        if !rendered.contains("table") {
+            return Err("interleaved query did not produce the shared result table".into());
+        }
+        Ok(())
+    }
+    .await;
+    testkit::close_registered_fixture_app(&mut app);
+    outcome.expect("query and concrete-window caret ownership must publish independently");
+    eprintln!("[DEBUG] query result and two concrete-window carets published independently, preserved document content, and rendered each selection");
 }

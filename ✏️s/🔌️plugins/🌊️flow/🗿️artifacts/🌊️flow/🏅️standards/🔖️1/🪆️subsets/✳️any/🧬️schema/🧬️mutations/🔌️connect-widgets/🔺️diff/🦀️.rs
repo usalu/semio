@@ -2,8 +2,8 @@
 //! against the current working scene (never a whole-snapshot capture).
 use crate::schema::diff::text::{diff_replace_content, FlowDiff};
 use crate::{flow_working_scene, FlowSnapshot};
-use semio_framework_artifact_flow_flow::SynapseSpec;
 use protocol::Identified;
+use semio_framework_artifact_flow_flow::SynapseSpec;
 
 use super::ConnectWidgets;
 

@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::RasterOwnedMap;
-use crate::{RASTER_DOCUMENT_SCHEMA, RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform};
+use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
 /// 📄️ Handcrafted document exercising every layer kind/field, shared with the `pack`/`op`
 /// taxonomy nodes' own copies (each node keeps its own private copy, per §7 test isolation).

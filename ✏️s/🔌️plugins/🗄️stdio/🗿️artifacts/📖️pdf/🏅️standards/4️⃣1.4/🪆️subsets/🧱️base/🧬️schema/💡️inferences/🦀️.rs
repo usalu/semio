@@ -5,10 +5,9 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::Inference;
 use framework_schema::ArtifactSchema;
+use protocol::Inference;
 use semio_framework_plugin::ArtifactInferrer;
-
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a pdf (1.4) snapshot. One field per named inference under
@@ -65,13 +64,7 @@ impl ArtifactInferrer for crate::standards::v1_4::subsets::base::schema::PdfBuil
 pub fn pdf_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.pdf.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

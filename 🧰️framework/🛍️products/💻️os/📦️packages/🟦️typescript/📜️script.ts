@@ -52,6 +52,8 @@ type OracleCorpus = {
   initial: OracleStatus;
   successLifecycle: readonly { name: string; event: OracleEvent; expected: OracleStatus }[];
   cancelLifecycle: readonly { name: string; event: OracleEvent; expected: OracleStatus }[];
+  uncertainLifecycle: readonly { name: string; event: OracleEvent; expected: OracleStatus }[];
+  cancelBeforeReceipt: { expectedBeforeReceipt: Pick<OracleStatus, "phase" | "jobId" | "cancelRequested">; expectedAfterReceipt: Pick<OracleStatus, "phase" | "jobId" | "cancelRequested"> };
   leaseRefusal: readonly { name: string; event: OracleEvent; expected: OracleStatus }[];
   hostileTransitions: readonly { name: string; from: OracleStatus; event: OracleEvent; expected: OracleStatus }[];
   crossFixture: { approvalFixture: string; serverLifecycleKinds: readonly string[]; serverCancelLifecycleKinds: readonly string[]; serverKindToPhase: Readonly<Record<string, string>> };
@@ -83,13 +85,13 @@ function oracleReduce(current: OracleStatus, event: OracleEvent): OracleStatus {
   if (event.kind === "start") return current.phase === "idle" ? { ...idle, phase: "submitting" } : current;
   if (event.kind === "lease-unverified") return current.phase === "idle" || current.phase === "submitting" ? { ...current, phase: "failed", code: "inference.lease-unverified" } : current;
   if (event.kind === "receipt") {
-    if (current.phase !== "submitting") return current;
-    const receipt = event.receipt as { jobId: string; state: string; proposalState: string; proposalHash?: string; cursor: number };
+    if (current.phase !== "submitting" && !(current.phase === "indeterminate" && current.jobId === null)) return current;
+    const receipt = event.receipt as { jobId: string; state: string; proposalState: string; proposalHash: string | null; cursor: number };
     const { preview: _preview, ...withoutPreview } = current;
-    return { ...withoutPreview, phase: oracleServerPhase({ state: receipt.state, proposalState: receipt.proposalState, stale: false }), jobId: receipt.jobId, cursor: receipt.cursor, proposalHash: receipt.proposalHash ?? null };
+    return { ...withoutPreview, phase: oracleServerPhase({ state: receipt.state, proposalState: receipt.proposalState, stale: false }), jobId: receipt.jobId, cursor: receipt.cursor, proposalHash: receipt.proposalHash ?? null, code: null };
   }
   if (event.kind === "page") {
-    const page = event.page as { jobId: string; state: string; proposalState: string; cancelRequested: boolean; stale: boolean; proposalHash?: string; preview?: OraclePreview; progress: { completed: number; total: number }[]; nextCursor: number };
+    const page = event.page as { jobId: string; state: string; proposalState: string; cancelRequested: boolean; stale: boolean; proposalHash: string | null; preview?: OraclePreview; progress: { completed: number; total: number }[]; nextCursor: number };
     if (current.jobId === null || current.jobId !== page.jobId) return current;
     const server = oracleServerPhase(page);
     const phase = current.phase === "approving" && !ORACLE_TERMINALS.has(server) ? "approving" : server;
@@ -103,18 +105,22 @@ function oracleReduce(current: OracleStatus, event: OracleEvent): OracleStatus {
       proposalHash: page.proposalHash ?? null,
       ...((phase === "offered" || phase === "approving") && page.preview !== undefined ? { preview: page.preview } : {}),
       cancelRequested: current.cancelRequested || page.cancelRequested,
-      code: phase === "failed" ? (current.code ?? "inference.storage") : current.code,
+      code: phase === "failed" ? "inference.storage" : null,
     };
   }
   if (event.kind === "approve")
     return current.phase === "offered" && current.proposalHash !== null && current.preview?.proposalHash === current.proposalHash && current.preview.jobId === current.jobId && !current.cancelRequested ? { ...current, phase: "approving" } : current;
   if (event.kind === "approval") {
     const receipt = event.receipt as { jobId: string; proposalHash: string; applied: boolean };
-    if (current.phase !== "approving" || current.jobId !== receipt.jobId || current.proposalHash !== receipt.proposalHash) return current;
+    if ((current.phase !== "approving" && current.phase !== "indeterminate") || current.jobId !== receipt.jobId || current.proposalHash !== receipt.proposalHash) return current;
     const { preview: _preview, ...withoutPreview } = current;
-    return receipt.applied ? { ...withoutPreview, phase: "applied" } : { ...withoutPreview, phase: "failed", code: "approval.commit-unavailable" };
+    return receipt.applied ? { ...withoutPreview, phase: "applied", code: null } : { ...withoutPreview, phase: "failed", code: "approval.commit-unavailable" };
   }
   if (event.kind === "cancel") return current.phase === "idle" ? current : { ...current, cancelRequested: true };
+  if (event.kind === "indeterminate") {
+    const { preview: _preview, ...withoutPreview } = current;
+    return { ...withoutPreview, phase: "indeterminate", code: event.code ?? null };
+  }
   if (event.kind === "failed") {
     const { preview: _preview, ...withoutPreview } = current;
     return { ...withoutPreview, phase: event.code === "inference.cancelled" ? "cancelled" : "failed", code: event.code ?? null };
@@ -282,6 +288,16 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
   };
   walk(fixture.successLifecycle);
   walk(fixture.cancelLifecycle);
+  walk(fixture.uncertainLifecycle);
+  let pendingOracle = oracleReduce(oracleReduce(fixture.initial, { kind: "start" }), { kind: "cancel" });
+  let pendingProduction = production.reduceGisMapInferencePortV1(production.reduceGisMapInferencePortV1(production.idleGisMapInferencePortStatusV1(), { kind: "start" }), { kind: "cancel" });
+  const projectPending = (status: OracleStatus) => JSON.stringify({ phase: status.phase, jobId: status.jobId, cancelRequested: status.cancelRequested });
+  for (const state of [pendingOracle, pendingProduction]) if (projectPending(state) !== JSON.stringify(fixture.cancelBeforeReceipt.expectedBeforeReceipt)) throw new Error("inference pending cancellation intent was lost");
+  const accepted = fixture.successLifecycle[1]!.event;
+  pendingOracle = oracleReduce(pendingOracle, accepted);
+  pendingProduction = production.reduceGisMapInferencePortV1(pendingProduction, accepted as never);
+  for (const state of [pendingOracle, pendingProduction]) if (projectPending(state) !== JSON.stringify(fixture.cancelBeforeReceipt.expectedAfterReceipt)) throw new Error("inference receipt erased pending cancellation");
+  transitions += 3;
   walk(fixture.leaseRefusal);
   for (const row of fixture.hostileTransitions) {
     const viaOracle = oracleReduce(structuredClone(row.from), row.event);
@@ -526,15 +542,15 @@ async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
     candidateWorker.includes("owner.assertApplied(status, lifetime);") &&
     candidateWorker.includes("await this.renderSurface(child, assertCurrent);") &&
     candidateWorker.includes("if (!equalFrontiers(bootstrap.required_tail_frontier, serverFrontier))") &&
-    candidateShell.includes('if (message.kind === "artifact-rebootstrap-required") {\n          if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey))');
+    candidateShell.includes('retireBrowserActorUi(runtimeKey, "browser-actor-action: rebootstrap required");');
   if (!conforms(worker, shell)) throw new Error("GIS Map peer production rebootstrap closure is incomplete");
   const hostiles = [
     [worker.replace("control.space_id !== binding.spaceId || control.document_id !== state.config.documentId", "false"), shell],
-    [worker, shell.replace("if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey))", "if (false)")],
+    [worker, shell.replace('retireBrowserActorUi(runtimeKey, "browser-actor-action: rebootstrap required");', "void runtimeKey;")],
     [worker.replace("const authority = await requestDocumentSocketAuthority(state, binding);", "const authority = null as never;"), shell],
     [worker.replace("await startArtifactBootstrap(state, bootstrap.ArtifactBootstrap", "await Promise.resolve(state, bootstrap.ArtifactBootstrap"), shell],
     [worker.replace("owner.assertApplied(status, lifetime);", "void status; void lifetime;"), shell],
-    [worker.replace("await this.renderSurface(child, assertCurrent);", "void child; void assertCurrent;"), shell],
+    [worker.replaceAll("await this.renderSurface(child, assertCurrent);", "void child; void assertCurrent;"), shell],
     [worker.replace("if (!equalFrontiers(bootstrap.required_tail_frontier, serverFrontier))", "if (false)"), shell],
   ];
   if (hostiles.length !== fixture.sourceHostiles.length) throw new Error("GIS Map peer source hostile count differs");
@@ -562,6 +578,9 @@ async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
     componentSha256: fixture.source.componentSha256,
     descriptorSha256: fixture.source.descriptorSha256,
     browserActorSha256: fixture.source.browserActorSha256,
+    activeCheckpointId: fixture.source.activeCheckpointId,
+    descriptorDigestV1: fixture.source.descriptorDigestV1,
+    frontier: structuredClone(fixture.source.frontier),
     uiRevision: fixture.source.uiRevision,
     rootKind: "tiled-map",
     regionIds: fixture.source.regions.map((region: { id: string }) => region.id).sort(),
@@ -571,8 +590,13 @@ async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
   const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
   const conforms = (candidateWorker: string, candidateShell: string): boolean =>
     candidateWorker.includes('kind: "browser-actor-ui-mounted"')
-    && candidateWorker.includes("uiRevision: result.revision")
+    && candidateWorker.includes("this.acknowledgedUiRevision !== this.renderedUiRevision")
+    && candidateWorker.includes("activeCheckpointId: identity.checkpoint.checkpointId")
+    && candidateWorker.includes("descriptorDigestV1: identity.checkpoint.descriptorDigestV1")
+    && candidateWorker.includes("frontier,\n      uiRevision: this.renderedUiRevision")
     && candidateShell.includes("state.revision !== source.uiRevision")
+    && candidateShell.includes("activeCheckpointId: source.activeCheckpointId")
+    && candidateShell.includes("frontier: Object.freeze({ ...source.frontier")
     && candidateShell.includes('root?.component.type !== "surface" || root.component.kind !== "tiled-map"')
     && candidateShell.includes("decodePackValue(new Uint8Array(root.component.doc.bytes))")
     && candidateShell.includes("regionIds.includes(id)")
@@ -581,7 +605,10 @@ async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
   if (!conforms(worker, shell)) throw new Error("mounted GIS Map production probe closure is incomplete");
   const hostiles = [
     [worker.replace('kind: "browser-actor-ui-mounted"', 'kind: "browser-actor-ui-patch"'), shell],
+    [worker.replace("this.acknowledgedUiRevision !== this.renderedUiRevision", "false"), shell],
     [worker, shell.replace("state.revision !== source.uiRevision", "false")],
+    [worker.replace("activeCheckpointId: identity.checkpoint.checkpointId", "activeCheckpointId: identity.package.componentSha256"), shell],
+    [worker.replace("frontier,\n      uiRevision: this.renderedUiRevision", "frontier: identity.checkpoint.baselineFrontier,\n      uiRevision: this.renderedUiRevision"), shell],
     [worker, shell.replace('root?.component.type !== "surface" || root.component.kind !== "tiled-map"', "false")],
     [worker, shell.replace("decodePackValue(new Uint8Array(root.component.doc.bytes))", "{}")],
     [worker, shell.replace("regionIds.includes(id)", "false")],

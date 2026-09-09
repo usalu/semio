@@ -16,7 +16,7 @@ use ui_wgpu::wgpu::{push_chrome_group_border, Label, UiButtonNode, UiNode, UiPre
 use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayload, DockDragState, DockState, WindowSilhouette};
 use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, UiDocumentFrameCursor};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
-use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use crate::scenes::{toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
 #[cfg(test)]
 use ui_wgpu::wgpu::draw_text;
@@ -314,6 +314,18 @@ fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, c
         disabled: disabled.unwrap_or(false),
         separator: separator.unwrap_or(false),
         checked: checked.unwrap_or(false),
+    }
+}
+
+fn scope_context_menu_items(items: &mut [ContextMenuItem], window_id: &str) {
+    for item in items {
+        if let Some(action) = item.action.as_mut() {
+            let mut args = match action.args.take() { Some(DslValue::Object(entries)) => entries, _ => Vec::new() };
+            args.retain(|(key, _)| key != "windowId");
+            args.push(("windowId".into(), DslValue::String(window_id.into())));
+            action.args = Some(DslValue::Object(args));
+        }
+        scope_context_menu_items(&mut item.children, window_id);
     }
 }
 
@@ -5468,9 +5480,8 @@ impl ShellState {
                     if let Some((path_str_value, window_id)) = rest.split_once('.') {
                         let path = parse_path(path_str_value);
                         let tab_index = self.dock.tab_index(&path, window_id).unwrap_or(0);
-                        let ghost_label =
-                            self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == window_id).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| window_id.to_string());
                         let window_kind_id = self.dock.window_kind_id(window_id).unwrap_or(window_id).to_string();
+                        let ghost_label = self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == window_kind_id).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| window_id.to_string());
                         self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.to_string(), window_kind_id, source_path: path, tab_index, ghost_label }, x, y);
                         return Ok(());
                     }
@@ -5481,8 +5492,8 @@ impl ShellState {
                     let active = windows.iter().find(|wid| self.active_window_id.as_deref() == Some(wid.as_str())).or_else(|| windows.first()).cloned().unwrap_or_default();
                     if !active.is_empty() {
                         let tab_index = self.dock.tab_index(&path, &active).unwrap_or(0);
-                        let ghost_label = self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == active).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| active.clone());
                         let window_kind_id = self.dock.window_kind_id(&active).unwrap_or(&active).to_string();
+                        let ghost_label = self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == window_kind_id).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| active.clone());
                         self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Stack, window_id: active, window_kind_id, source_path: path, tab_index, ghost_label }, x, y);
                         return Ok(());
                     }
@@ -6287,9 +6298,6 @@ impl ShellState {
                                 } else if let Some(shortcut) = item.shortcut.as_ref() {
                                     item.shortcut = Some(format_keybinding_shortcut(shortcut));
                                 }
-                                if let Some(action) = item.action.take() {
-                                    item.action = Some(resolve_graph_context_action(&action, node_id.as_deref()));
-                                }
                                 item
                             })
                             .collect();
@@ -6302,12 +6310,10 @@ impl ShellState {
         }
         if items.is_empty() {
             if let Some(session) = &self.session {
-                let window_kind = self
-                    .active_window_id
+                let window_kind = window_instance_id
                     .as_deref()
                     .and_then(|window_id| self.live_window_kind_id(session, window_id))
-                    .and_then(|window_kind_id| session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id))
-                    .or_else(|| Some(session.app.window_kinds.first()));
+                    .and_then(|window_kind_id| session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id));
                 let actions: Vec<ui_wgpu::wgpu::ShellMenuAction> = window_kind
                     .map(|kind| semio_framework::resolve_window_actions(&session.app, kind))
                     .unwrap_or_default()
@@ -6326,6 +6332,9 @@ impl ShellState {
                 let controller_id = session.app.controller_id.clone();
                 items = ui_wgpu::wgpu::build_shell_context_menu_specs(&actions, true).into_iter().map(|spec| shell_context_menu_item_from_spec(spec, &controller_id, is_de)).collect();
             }
+        }
+        if let Some(window_id) = window_instance_id.as_deref() {
+            scope_context_menu_items(&mut items, window_id);
         }
         if let Some(controller_id) = self.host_controller_id() {
             items.push(ContextMenuItem { id: "shell.context.home".into(), label: "Go Home".into(), icon: None, destructive: false, action: Some(ActionDescriptor { controller_id, action: "goHome".into(), args: None }), ..Default::default() });
@@ -8079,11 +8088,11 @@ impl ShellState {
         use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, PlatformKeybinding};
         let terminology_options: Vec<ActionArgOption> = self.active_terminologies().into_iter().map(|id| ActionArgOption { label: if id == "native" { LocalizedLabel::data("Native") } else { LocalizedLabel::data(id.clone()) }, value: id }).collect();
         vec![
-            CommandDefinition::bounded_catalog("os.toggleFullscreen", LocalizedLabel::native("Toggle Full Screen", "Vollbild umschalten"), "window", ActionKind::Shell)
+            CommandDefinition::new("os.toggleFullscreen", LocalizedLabel::native("Toggle Full Screen", "Vollbild umschalten"), "window", "code", ActionKind::Shell)
                 .with_keybinding(PlatformKeybinding::for_platform("f11", Platform::Windows))
                 .with_keybinding(PlatformKeybinding::for_platform("f11", Platform::Linux))
                 .with_keybinding(PlatformKeybinding::for_platform("control+meta+f", Platform::MacOs)),
-            CommandDefinition::bounded_catalog("os.setAppearance", LocalizedLabel::data("Set Appearance"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::new("os.setAppearance", LocalizedLabel::data("Set Appearance"), "appearance", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Appearance"),
                 vec![
@@ -8093,21 +8102,21 @@ impl ShellState {
                 ],
             )
             .required()]),
-            CommandDefinition::bounded_catalog("os.setDriver", LocalizedLabel::data("Set Driver"), "layout", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::new("os.setDriver", LocalizedLabel::data("Set Driver"), "layout", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Driver"),
                 vec![ActionArgOption { value: "default".into(), label: LocalizedLabel::data("Default") }, ActionArgOption { value: "compact".into(), label: LocalizedLabel::data("Compact") }],
             )
             .required()]),
-            CommandDefinition::bounded_catalog("os.setLocale", LocalizedLabel::data("Set Locale"), "language", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::new("os.setLocale", LocalizedLabel::data("Set Locale"), "language", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Locale"),
                 vec![ActionArgOption { value: "en".into(), label: LocalizedLabel::data("English") }, ActionArgOption { value: "de".into(), label: LocalizedLabel::data("Deutsch") }],
             )
             .required()]),
-            CommandDefinition::bounded_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", ActionKind::Shell)
+            CommandDefinition::new("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", "settings", ActionKind::Shell)
                 .with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
-            CommandDefinition::bounded_catalog("os.setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::new("os.setThemeId", LocalizedLabel::data("Set Theme"), "appearance", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Theme"),
                 std::iter::once(ActionArgOption { value: "semio".into(), label: LocalizedLabel::data("Semio") })
@@ -8119,7 +8128,7 @@ impl ShellState {
                     .collect(),
             )
             .required()]),
-            CommandDefinition::bounded_catalog("os.resetDock", LocalizedLabel::data("Reset Dock Layout"), "layout", ActionKind::Shell),
+            CommandDefinition::new("os.resetDock", LocalizedLabel::data("Reset Dock Layout"), "layout", "panel-left", ActionKind::Shell),
         ]
     }
 
@@ -9864,7 +9873,6 @@ impl ShellState {
                         self.chrome_tour_frame_begin();
                     }
                     20 => {
-                        clear_graph_node_context();
                         cursor.phase = ShellChromeFramePhase::MainWindow;
                         return false;
                     }

@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::mutations::{add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
 use crate::standards::v1::subsets::any::schema::empty_raster_document;
-use crate::{RASTER_DOCUMENT_SCHEMA, RasterLayerNode, RasterTransform};
+use crate::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
 static RASTER_INITIALIZER_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 static RASTER_STANDALONE_RETIREMENT_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());

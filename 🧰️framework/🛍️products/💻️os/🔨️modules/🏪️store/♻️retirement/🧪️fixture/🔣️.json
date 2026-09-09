@@ -49,6 +49,18 @@
         "ß"
       ],
       "bytes": 3
+    },
+    {
+      "id": "ordered-map",
+      "kind": "stringMap",
+      "value": { "a": "Ü", "b": "😀" },
+      "bytes": 8
+    },
+    {
+      "id": "nested-dynamic-value",
+      "kind": "value",
+      "value": { "a": ["Ü", true, 4, null, { "nested": "😀" }] },
+      "bytes": 22
     }
   ],
   "budgets": [

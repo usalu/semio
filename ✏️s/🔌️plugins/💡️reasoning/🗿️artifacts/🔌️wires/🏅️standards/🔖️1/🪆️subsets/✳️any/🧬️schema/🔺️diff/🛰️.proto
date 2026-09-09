@@ -1,30 +1,12 @@
 syntax = "proto3";
 package semio.s.reasoning.wires.diff;
-
-// 🧬️ Wires diff schema — sparse field delta.
-
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message WiresDiff {
-  // @state artifact
-  optional WiresArtifact artifact = 1;
-  // @state artifact
-  optional DslValue wires_fixture = 2;
-  // @state artifact
-  optional DslValue board_fixture = 3;
-  // @state artifact
-  optional string drag_node_id = 4;
-  // @state artifact
-  optional double drag_last_x = 5;
-  // @state artifact
-  optional double drag_last_y = 6;
-  // @state config
+  semio.s.reasoning.wires.artifact.WiresArtifact artifact = 1;
+  semio.framework.value.DslValue wires_fixture = 2;
+  semio.os.store.ArtifactChild content = 3;
+  semio.framework.value.DslValue camera = 4;
+  semio.framework.value.DslValue meta = 5;
 }
-
-message WiresArtifact {
-  DslValue wires_fixture = 1;
-  DslValue board_fixture = 2;
-  optional string drag_node_id = 3;
-  double drag_last_x = 4;
-  double drag_last_y = 5;
-}
-
-message DslValue {}

@@ -16,10 +16,10 @@
 //!   either) — dangling refs and cycles are hard errors, never silently truncated.
 
 use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, ValueId};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDocument, XmlDtdDeclaration, XmlExternalId, XmlNode};
 use semio_s_artifact_stdio_xml::XmlSnapshot;
 use semio_s_artifact_stdio_xml::STDIO_XML_DOCUMENT_SCHEMA;
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Serializer

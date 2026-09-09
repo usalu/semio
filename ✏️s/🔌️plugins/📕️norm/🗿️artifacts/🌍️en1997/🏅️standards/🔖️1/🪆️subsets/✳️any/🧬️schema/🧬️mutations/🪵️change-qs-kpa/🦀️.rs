@@ -1,9 +1,8 @@
 //! 🌾 `change-qs-kpa` payload — changes the En1997 document's `q_s_kpa` (shaft resistance q_s [kPa]).
 
-
-use crate::En1997Snapshot;
 use crate::diff::En1997Diff;
 use crate::mutations::En1997Mutation;
+use crate::En1997Snapshot;
 //#region 🔖️ChangeQSKpa
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

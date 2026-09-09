@@ -93,7 +93,7 @@ async fn interaction_topology_nests_grips_under_their_grip_kind() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = Block5dConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let topology = Block5dPlayApp::interaction_topology(&doc, &cfg);
     let domain = topology.domains.get(BLOCK5D_INTERACTION_GRIP).expect("grip domain topology present");
     let grip_node = domain.ordered.iter().find(|node| node.id == format!("grip:{grip_id}")).expect("grip node present");

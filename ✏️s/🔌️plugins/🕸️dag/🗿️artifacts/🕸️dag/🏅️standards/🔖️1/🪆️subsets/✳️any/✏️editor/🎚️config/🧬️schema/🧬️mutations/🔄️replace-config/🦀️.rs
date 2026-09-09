@@ -10,13 +10,21 @@ use super::{DagConfig, DagConfigMutation};
 #[mutation_leaf(contract = ::protocol)]
 pub struct ReplaceConfig {
     #[dsl(block)]
-    pub config: DagConfig
+    pub config: DagConfig,
 }
 
 impl protocol::MutationKind<DagConfig, DagConfigMutation> for ReplaceConfig {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
-    fn diff(&self, _base: &DagConfig) -> protocol::MutationOutcome<DagConfig> { protocol::MutationOutcome::new(self.config.clone()) }
-    fn inverse(&self, base: &DagConfig) -> Vec<DagConfigMutation> { vec![DagConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Replace Config".into() }
-    fn target(&self) -> Vec<String> { vec!["config".into()] }
+    fn diff(&self, _base: &DagConfig) -> protocol::MutationOutcome<DagConfig> {
+        protocol::MutationOutcome::new(self.config.clone())
+    }
+    fn inverse(&self, base: &DagConfig) -> Vec<DagConfigMutation> {
+        vec![DagConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Config".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["config".into()]
+    }
 }

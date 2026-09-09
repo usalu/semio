@@ -57,13 +57,31 @@ impl dsl::FromValue for JackSnapshot {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
         Ok(Self {
-            schema: match get("schema") { Some(v) => dsl::FromValue::from_value(v)?, None => Default::default() },
-            name: match get("name") { Some(v) => dsl::FromValue::from_value(v)?, None => Default::default() },
-            manifest_id: match get("manifestId") { Some(v) => dsl::FromValue::from_value(v)?, None => None },
-            manifest: match get("manifest") { Some(v) => dsl::FromValue::from_value(v)?, None => Default::default() },
-            camera: match get("camera") { Some(v) => dsl::FromValue::from_value(v)?, None => Default::default() },
+            schema: match get("schema") {
+                Some(v) => dsl::FromValue::from_value(v)?,
+                None => Default::default(),
+            },
+            name: match get("name") {
+                Some(v) => dsl::FromValue::from_value(v)?,
+                None => Default::default(),
+            },
+            manifest_id: match get("manifestId") {
+                Some(v) => dsl::FromValue::from_value(v)?,
+                None => None,
+            },
+            manifest: match get("manifest") {
+                Some(v) => dsl::FromValue::from_value(v)?,
+                None => Default::default(),
+            },
+            camera: match get("camera") {
+                Some(v) => dsl::FromValue::from_value(v)?,
+                None => Default::default(),
+            },
             content: dsl::from_dsl_value(get("content").ok_or_else(|| dsl::ValueError::new("missing field `content`"))?).map_err(dsl::ValueError::new)?,
-            root_node_id: match get("rootNodeId") { Some(v) => dsl::FromValue::from_value(v)?, None => None },
+            root_node_id: match get("rootNodeId") {
+                Some(v) => dsl::FromValue::from_value(v)?,
+                None => None,
+            },
         })
     }
 }
@@ -71,15 +89,7 @@ impl dsl::FromValue for JackSnapshot {
 
 impl Default for JackSnapshot {
     fn default() -> Self {
-        Self {
-            schema: crate::TRINITY_GRAPH_SCHEMA.into(),
-            name: String::new(),
-            manifest_id: None,
-            manifest: Manifest::default(),
-            camera: Camera::default(),
-            content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()),
-            root_node_id: None,
-        }
+        Self { schema: crate::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()), root_node_id: None }
     }
 }
 

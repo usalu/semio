@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 use std::collections::HashSet;
 
 //#region 🔖️Artifact
-/// 🧬️ Full puzzle5d artifact state across the artifact, presence and config lanes.
+/// 🧬️ puzzle5d document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle5d")]
@@ -30,56 +30,6 @@ pub struct Puzzle5dArtifact {
     pub parts: Vec<Puzzle5dPart>,
     #[state(artifact)]
     pub fasteners: Vec<Puzzle5dFastener>,
-    #[state(presence)]
-    pub selected_part_ids: Vec<String>,
-    #[state(presence)]
-    pub selected_grip_ids: Vec<String>,
-    #[state(presence)]
-    pub selected_fastener_ids: Vec<String>,
-    #[state(presence)]
-    pub active_utility_id: String,
-    #[state(config)]
-    pub camera2d_x: f64,
-    #[state(config)]
-    pub camera2d_y: f64,
-    #[state(config)]
-    pub camera2d_zoom: f64,
-    #[state(config)]
-    pub camera3d_position_x: f64,
-    #[state(config)]
-    pub camera3d_position_y: f64,
-    #[state(config)]
-    pub camera3d_position_z: f64,
-    #[state(config)]
-    pub camera3d_target_x: f64,
-    #[state(config)]
-    pub camera3d_target_y: f64,
-    #[state(config)]
-    pub camera3d_target_z: f64,
-    #[state(config)]
-    pub camera3d_zoom: f64,
-    #[state(config)]
-    pub selection_method: String,
-    #[state(config)]
-    pub grid_snap_enabled: bool,
-    #[state(config)]
-    pub grid_factor: f64,
-    #[state(config)]
-    pub suggestion_offset: f64,
-    #[state(config)]
-    pub overlap_budget: f64,
-    #[state(config)]
-    pub fill_count: u32,
-    #[state(config)]
-    pub brush_candidate_index: u32,
-    #[state(config)]
-    pub lod_mode: String,
-    #[state(config)]
-    pub runtime_extras_json: String,
-    #[state(artifact)]
-    pub hovered_part_id: Option<String>,
-    #[state(artifact)]
-    pub preview_seq: i64,
 }
 //#endregion 🔖️Artifact
 
@@ -106,7 +56,7 @@ impl Puzzle5dArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Puzzle5dSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -118,31 +68,6 @@ impl Puzzle5dArtifact {
             kind_compatibility: snapshot.kind_compatibility,
             parts: snapshot.parts,
             fasteners: snapshot.fasteners,
-            selected_part_ids: Vec::new(),
-            selected_grip_ids: Vec::new(),
-            selected_fastener_ids: Vec::new(),
-            active_utility_id: "select".into(),
-            camera2d_x: 0.0,
-            camera2d_y: 0.0,
-            camera2d_zoom: 1.0,
-            camera3d_position_x: 0.0,
-            camera3d_position_y: 0.0,
-            camera3d_position_z: 0.0,
-            camera3d_target_x: 0.0,
-            camera3d_target_y: 0.0,
-            camera3d_target_z: 0.0,
-            camera3d_zoom: 1.0,
-            selection_method: "rectangle".into(),
-            grid_snap_enabled: true,
-            grid_factor: 1.0,
-            suggestion_offset: 80.0,
-            overlap_budget: 0.0,
-            fill_count: 0,
-            brush_candidate_index: 0,
-            lod_mode: "automatic".into(),
-            runtime_extras_json: "{}".into(),
-            hovered_part_id: None,
-            preview_seq: 0,
         }
     }
 

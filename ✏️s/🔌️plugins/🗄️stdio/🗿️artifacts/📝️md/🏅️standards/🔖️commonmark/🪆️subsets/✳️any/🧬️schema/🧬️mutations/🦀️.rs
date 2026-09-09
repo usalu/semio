@@ -23,6 +23,14 @@ use crate::MdSnapshot;
 use protocol::{Mutation, OpText};
 
 //#region 🔖️Mutations
+#[path = "➕insert-block/🦀️.rs"]
+pub mod insert_block;
+#[path = "➖remove-block/🦀️.rs"]
+pub mod remove_block;
+#[path = "🔁replace-block/🦀️.rs"]
+pub mod replace_block;
+#[path = "✏️set-inlines/🦀️.rs"]
+pub mod set_inlines;
 /// 📐️ Typed content mutation for `stdio.md`. Every `path`-carrying variant addresses the
 /// CONTAINER (the `Vec<MdBlock>` -- top level, a block-quote's `blocks`, or a list item's
 /// content) the mutation's `index` lives in; `path == []` addresses the top-level `blocks`.
@@ -37,14 +45,6 @@ use protocol::{Mutation, OpText};
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "➕insert-block/🦀️.rs"]
-pub mod insert_block;
-#[path = "➖remove-block/🦀️.rs"]
-pub mod remove_block;
-#[path = "🔁replace-block/🦀️.rs"]
-pub mod replace_block;
-#[path = "✏️set-inlines/🦀️.rs"]
-pub mod set_inlines;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]

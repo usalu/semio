@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{RASTER_DOCUMENT_SCHEMA, RasterTransform};
+use crate::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
 fn pixel_layer(id: &str) -> RasterLayerNode {
     RasterLayerNode::Pixel { id: id.into(), name: id.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: None, height: None, image_key: None }

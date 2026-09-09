@@ -5,9 +5,9 @@
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
-use crate::{empty_trinity_graph_fixture, JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use crate::viewer::jack::modes::view;
 use crate::viewer::jack::modes::view::windows::graph;
+use crate::{empty_trinity_graph_fixture, JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

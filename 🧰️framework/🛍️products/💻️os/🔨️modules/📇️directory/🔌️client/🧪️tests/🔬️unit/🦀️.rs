@@ -1,6 +1,6 @@
 use super::test_support::{FakeTransport, FakeWs};
 use super::*;
-use crate::os_directory::{directory_command_sha256, DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
+use crate::os_directory::{DirectoryCommandOutcomeV1, DirectoryCommandResultV1, directory_command_sha256};
 use semio_framework_async::{CancelToken, TraceId};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -550,6 +550,38 @@ async fn unauthorized_status_maps_to_unauthorized_error() {
 
     let error = client.me(&root_ctx()).await.expect_err("401 is unauthorized");
     assert!(matches!(error, DirectoryClientError::Unauthorized));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn session_authority_client_preserves_canonical_binding_and_rejects_reordered_body() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🪪️session-authority-v1/🔣️.json")).expect("session authority fixture");
+    let canonical = fixture["raw"][0]["source"].as_str().expect("canonical");
+    let reordered = fixture["raw"][1]["source"].as_str().expect("reordered");
+    let transport = FakeTransport::default();
+    transport.push_response(Ok(HttpResponse { status: 200, body: canonical.as_bytes().to_vec() })).await;
+    transport.push_response(Ok(HttpResponse { status: 200, body: reordered.as_bytes().to_vec() })).await;
+    let client = authenticated_client(transport, "session-authority-token");
+    let authority = client.me(&root_ctx()).await.expect("canonical authority");
+    assert_eq!(authority.session_binding_sha256, fixture["bindingGoldens"][0]["sessionBindingSha256"]);
+    assert_eq!(authority.authorization_generation, 7);
+    assert!(matches!(client.me(&root_ctx()).await, Err(DirectoryClientError::Decode(_))));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inference_client_refuses_substituted_hub_receipt_and_page_coordinates() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json")).expect("inference fixture");
+    let mut substituted_receipt = fixture["wire"]["receipt"].clone();
+    substituted_receipt["schema"] = serde_json::json!("semio.hub.inference-job-events/v1");
+    let mut substituted_page = fixture["wire"]["page"].clone();
+    substituted_page["jobId"] = serde_json::json!("2".repeat(32));
+    let transport = FakeTransport::default();
+    transport.push_response(Ok(HttpResponse { status: 200, body: substituted_receipt.to_string().into_bytes() })).await;
+    transport.push_response(Ok(HttpResponse { status: 200, body: substituted_page.to_string().into_bytes() })).await;
+    let client = authenticated_client(transport, "inference-token");
+    let scope = DocumentScope { space_id: "space-inference".to_string(), document_id: "document-inference".to_string() };
+    let request = GisMapInferenceJobRequestV1 { schema: "semio.hub.inference-job/v1".to_string(), version: 1, request_id: "a".repeat(32), service_id: "s.gis.gismap.inference".to_string(), policy_version: 1, lifetime_ms: 60_000 };
+    assert_eq!(client.submit_gis_map_inference_job(&root_ctx(), &scope, &request).await, Err(GisMapInferencePortCodeV1::Invalid));
+    assert_eq!(client.read_gis_map_inference_events(&root_ctx(), &scope, "1".repeat(32).as_str(), 0).await, Err(GisMapInferencePortCodeV1::Invalid));
 }
 
 #[semio_framework_async_macros::async_test]

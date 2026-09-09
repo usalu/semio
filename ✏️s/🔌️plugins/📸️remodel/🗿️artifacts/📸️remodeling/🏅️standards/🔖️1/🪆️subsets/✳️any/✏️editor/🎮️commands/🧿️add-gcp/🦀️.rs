@@ -1,10 +1,10 @@
 //! 🎯️ 🎯️ Remodeling play app commands command — `add-gcp`.
 
+use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::mutations::create_gcp;
 use crate::op::RemodelingMutation;
 use crate::schema::next_remodeling_id;
 use crate::{GroundControlPoint, RemodelingSnapshot};
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

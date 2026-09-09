@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🔬 CommonMark §4.6 start condition 2 (`<!--`): an HTML COMMENT standing alone between two

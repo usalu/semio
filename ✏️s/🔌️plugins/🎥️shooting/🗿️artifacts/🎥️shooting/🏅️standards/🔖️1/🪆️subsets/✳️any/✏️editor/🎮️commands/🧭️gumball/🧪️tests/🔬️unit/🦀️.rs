@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::shooting::ShootingCommand;
 use crate::editor::shooting::testkit::{dispatch, shooting_app};
+use crate::editor::shooting::ShootingCommand;
 use semio_framework_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]

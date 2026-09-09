@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::{
-    CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, MotionTrackSummary, PackedF32, PackedU8, QcReportSnapshot, ReconstructionStage,
-    RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot, default_remodeling_scene,
+    default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, MotionTrackSummary, PackedF32, PackedU8,
+    QcReportSnapshot, ReconstructionStage, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
 };
 
 /// 🏗️ Verbatim duplicate of the `rs` crate's own private test-only fixture builder — see that

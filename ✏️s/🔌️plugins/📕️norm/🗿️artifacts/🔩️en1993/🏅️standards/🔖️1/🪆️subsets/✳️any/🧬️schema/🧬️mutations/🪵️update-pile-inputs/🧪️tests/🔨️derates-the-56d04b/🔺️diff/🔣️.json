@@ -67,12 +67,11 @@
   "bridgeDeltaSigmaPMpa": null,
   "towerWindFactor": null,
   "towerNEdKn": null,
-  "pileSigmaMpa": 320.0,
+  "pileSigmaMpa": 320,
   "pileKRed": 0.75,
-  "pileNEdKn": 340.0,
+  "pileNEdKn": 340,
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

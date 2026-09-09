@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧪️ Logical diff text and binary codecs retain every field.

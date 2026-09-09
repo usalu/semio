@@ -14,8 +14,6 @@
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #![allow(clippy::result_large_err)]
 
-use crate::op::DagMutation;
-use crate::DagSnapshot;
 use crate::editor::dag::commands::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
 use crate::editor::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit, reorganize};
 use crate::editor::dag::commands::{graph_pointer_down, node_graph_viewport};
@@ -24,13 +22,15 @@ use crate::editor::dag::modes::edit;
 use crate::editor::dag::modes::edit::windows::{compiled, main};
 use crate::editor::dag::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::dag::terminology::{dag_play_labels, is_de_locale};
+use crate::op::DagMutation;
+use crate::DagSnapshot;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionFactory, ActionKind, AppActionRegistry, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest,
-    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionFactory, ActionKind, AppActionRegistry, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    ArtifactToolPublicationLane, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
+    InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 use store::EngineHandles;
 
@@ -51,12 +51,9 @@ pub fn dag_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -
     ActionFactory::new(DAG_PLAY_APP_ID).action(action, args)
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -69,27 +66,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -99,9 +89,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
@@ -167,7 +155,7 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::
 pub struct DagPlayApp;
 
 //#region 🧵️RetainedConfigCommands
-const DAG_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport", ];
+const DAG_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport"];
 const DAG_RETAINED_COMMAND_SCHEMA: &str = "dag.dag/v1.tool-command.v1";
 const DAG_RETAINED_RAW_BYTES: usize = 8_192;
 
@@ -184,14 +172,16 @@ fn dag_retained_config_reduce(
     if !DAG_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::from("dag-retained-config-route-mismatch"));
     }
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 fn dag_retained_config_extent(command: &DagCommand, _snapshot: &DagSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     DAG_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()).then_some(1)
 }
 
-struct DagConfigCommandJobFactory { keys: Vec<ToolFactoryKey> }
+struct DagConfigCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
 
 impl DagConfigCommandJobFactory {
     fn new(controller_id: &str) -> Self {
@@ -203,11 +193,21 @@ impl semio_framework::ToolJobFactory for DagConfigCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<DagPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<DagPlayApp>>;
 
-    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
-    fn payload_schema_id(&self) -> &str { DAG_RETAINED_COMMAND_SCHEMA }
-    fn classification(&self) -> semio_framework::InteractiveJobClassification { semio_framework::InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(DAG_RETAINED_RAW_BYTES, 64, 1, 8_192, 7_500) }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        DAG_RETAINED_COMMAND_SCHEMA
+    }
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        ToolExecutionContract::bounded_first_step(DAG_RETAINED_RAW_BYTES, 64, 1, 8_192, 7_500)
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
 
     fn create_job_from_wire_pages_with_payload(
         &mut self,
@@ -227,9 +227,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DagConfigCommandJob
     type Owner = EditorApp<DagPlayApp>;
     const TOOL_IDS: &'static [&'static str] = DAG_RETAINED_CONFIG_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = "dag.dag";
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
-        ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
-    ];
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] }];
 }
 //#endregion 🧵️RetainedConfigCommands
 
@@ -265,7 +263,9 @@ fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(
     let inverse = match &mutation {
         DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { .. }) => return Err("DAG Config preparation rejects whole-snapshot input".into()),
         DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x, y, zoom }) => {
-            post.camera_x = *x; post.camera_y = *y; post.camera_zoom = *zoom;
+            post.camera_x = *x;
+            post.camera_y = *y;
+            post.camera_zoom = *zoom;
             DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom })
         }
     };
@@ -275,13 +275,28 @@ fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(
 fn dag_config_edit(forward: DagConfigMutation, inverse: Vec<DagConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<DagConfigMutation> {
     let id = format!("dag-config-retained-{}", authority.next_sequence_number());
     protocol::Edit {
-        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse,
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
         }],
-        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
     }
 }
 
@@ -293,28 +308,56 @@ impl store::ArtifactStoreOneItemPreparationFactory<DagConfig, DagConfigMutation>
         dag_config_footprint(mutation)
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation>> {
-        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err() || request.operation != request.authority.operation() || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > DAG_CONFIG_METADATA_BYTES { return Err(request); }
-        Ok(Box::new(DagConfigPreparation { base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None, checkpoint: Default::default(), retained_bytes: 0, cancelled: false, closing: false }))
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation>> {
+        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > DAG_CONFIG_METADATA_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(DagConfigPreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            candidate: None,
+            prepared: None,
+            checkpoint: Default::default(),
+            retained_bytes: 0,
+            cancelled: false,
+            closing: false,
+        }))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for DagConfigPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if !grant.permits_one() || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
         if self.candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "DAG Config preparation lost its exact base root".to_string())?.get();
             let bytes = DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024;
-            if grant.maximum_bytes < bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+            if grant.maximum_bytes < bytes {
+                return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            }
             let mutation = self.mutation.take().ok_or_else(|| "DAG Config preparation lost its mutation owner".to_string())?;
             self.candidate = Some(prepare_dag_config(base, mutation)?);
             self.retained_bytes = bytes;
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
             return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
         }
-        if grant.maximum_bytes < self.retained_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if grant.maximum_bytes < self.retained_bytes {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
         let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "DAG Config preparation lost its candidate".to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "DAG Config preparation lost its Store authority".to_string())?;
         let prepared = authority.prepare_one_item(dag_config_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
@@ -322,41 +365,67 @@ impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for Da
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || !grant.permits_one() { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if !self.closing || !grant.permits_one() {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
         if self.prepared.is_some() || self.candidate.is_some() {
-            if grant.maximum_bytes < self.retained_bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
-            if self.prepared.take().is_none() { self.candidate = None; }
+            if grant.maximum_bytes < self.retained_bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            if self.prepared.take().is_none() {
+                self.candidate = None;
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if self.mutation.is_some() {
-            if grant.maximum_bytes < DAG_CONFIG_STORE_MAXIMUM_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < DAG_CONFIG_STORE_MAXIMUM_BYTES {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.mutation = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: DAG_CONFIG_STORE_MAXIMUM_BYTES });
         }
         if let Some(description) = self.description.as_ref() {
             let bytes = description.len();
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.description = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("DAG Config preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() {
+                return Err("DAG Config preparation could not return its exact base root".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.authority = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(store::SnapshotRetirementStep::Complete)
     }
-    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none() }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+    }
 }
 //#endregion 📬️ConfigStorePreparation
 
@@ -399,8 +468,12 @@ impl ArtifactEditor for DagPlayApp {
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !DAG_RETAINED_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
-        if request.command.command_id() != request.tool_id { return Err(Fault::from("dag-retained-command-tool-mismatch")); }
+        if !DAG_RETAINED_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("dag-retained-command-tool-mismatch"));
+        }
         let tool_id = request.command.command_id();
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -410,7 +483,17 @@ impl ArtifactEditor for DagPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             DagCommand::command_id,
             DAG_RETAINED_RAW_BYTES,
             1,
@@ -447,7 +530,8 @@ impl ArtifactEditor for DagPlayApp {
         command: &DagCommand,
         doc: &ArtifactView<'_, DagSnapshot>,
         cfg: &ConfigView<'_, DagConfig>,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
@@ -483,7 +567,7 @@ impl ArtifactEditor for DagPlayApp {
     /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render`), so the
     /// selection-dependent rows below always take the "nothing selected" branch — `request.surface`'s
     /// own click-carried selection (independent of `graph`'s live state) still drives the menu.
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let labels = dag_play_labels(view_state);
         let is_de = is_de_locale(view_state);
         dag_context_menu_items(registry, labels, is_de, &[], request)
@@ -547,15 +631,15 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("disconnect", LocalizedLabel::native("Disconnect", "Trennen"), ActionKind::Mutation).with_category("transfer"))
             .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
             .action_with(ActionDefinition::bounded_catalog("renameDagNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"), ActionKind::Mutation).with_category("actions"))
-            .action_with(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "rotate-cw").with_category("transform"))
             .mutation("patchDagNodes", LocalizedLabel::native("Patch Nodes", "Knoten patchen"))
             // 👁️ Ephemeral view state — camera/viewport. Selection/hover no longer declared here: the
             // framework auto-injects interactionSelect/interactionHover/clearSelection/selectAll/
             // setSelectionMode/setInteractionGranularity for every domain declared via `.interaction(...)`
             // below (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM — never declare those
             // actions yourself).
-            .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
-            .view_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"))
+            .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View, "camera"))
+            .action_with(ActionDefinition::new("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
             .keybinding("delete,backspace", "deleteSelection")
             // 📝️ Staged argument form for the panel-visible create action.
             .action_args("addNode", vec![

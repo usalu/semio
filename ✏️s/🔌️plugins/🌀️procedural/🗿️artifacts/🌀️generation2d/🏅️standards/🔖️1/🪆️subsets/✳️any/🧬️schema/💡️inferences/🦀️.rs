@@ -4,11 +4,11 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
+use super::topology::compute_generation2d_topology;
 use crate::Generation2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
-use super::topology::{compute_generation2d_topology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a generation2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
@@ -57,11 +57,7 @@ pub fn generation2d_artifact_inference_descriptor() -> ::semio_framework_schema:
     ::semio_framework_schema::ArtifactInferenceDescriptor {
         id: "s.procedural.generation2d.inference",
         inference: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }
 }

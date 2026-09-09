@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.lowpoly.lowpoly.snapshot;
+import "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
 // 🧬️ Lowpoly snapshot schema — artifact-lane fields only.
 
@@ -7,62 +8,5 @@ message LowpolySnapshot {
   // @state artifact
   string schema = 1;
   // @state artifact
-  repeated LowpolyObject objects = 2;
-}
-
-message LowpolySelectionTargets {
-  bool mesh = 1;
-  bool vertex = 2;
-  bool edge = 3;
-  bool face = 4;
-}
-
-message LowpolySelection {
-  LowpolySelectionTargets targets = 1;
-  repeated string keys = 2;
-  string mode = 3;
-  repeated uint32 ids = 4;
-}
-
-message LowpolyTransform {
-  repeated float position = 1;
-  repeated float rotation = 2;
-  repeated float scale = 3;
-}
-
-message LowpolyPaintLayer {
-  string name = 1;
-  bool visible = 2;
-  float opacity = 3;
-  string blend_mode = 4;
-  bytes pixels = 5;
-}
-
-message ArtifactDialect {
-  string artifact_kind = 1;
-  string standard = 2;
-  string subset = 3;
-}
-
-message ArtifactRef {
-  string artifact_id = 1;
-  ArtifactDialect dialect = 2;
-}
-
-// 🕸️ Owned CHILD handle for an object's mesh slot (`store::ArtifactChild<SemioMeshSnapshot>`);
-// `target` is the full `ArtifactRef`, never a flattened URI string — confirmed against the
-// `create-mesh` mutation/diff fixtures.
-message LowpolyMeshHandle {
-  string child_id = 1;
-  ArtifactRef target = 2;
-}
-
-message LowpolyObject {
-  string id = 1;
-  string name = 2;
-  LowpolyTransform transform = 3;
-  bool smooth_shading = 4;
-  // absent when the object owns no mesh yet — confirmed against the `create-object` mutation fixture.
-  LowpolyMeshHandle mesh = 5;
-  repeated LowpolyPaintLayer paint_layers = 6;
+  repeated semio.s.lowpoly.lowpoly.artifact.LowpolyObject objects = 2;
 }

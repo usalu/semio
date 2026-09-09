@@ -134,7 +134,7 @@ fn exact_wire_admission_rejects_alias_schema_and_raw_limit_before_decode() {
     let exact = ToolFactoryKey::new("app", "exact");
     let alias = ToolFactoryKey::new("app", "alias");
     bus.register(echo_factory("app", &["exact"], InteractiveJobClassification::Migrated)).unwrap();
-    bus.register_alias(alias.clone(), exact.clone()).unwrap();
+    bus.register_alias(alias, exact.clone()).unwrap();
     assert!(matches!(bus.admit_exact_wire("app", "alias", "test.echo.v1", b"ok"), Err(ToolDispatchError::UnknownController { .. })));
     let operation = Operation::new(allocate_operation_id(), RevisionId(0), Generation(0), 1);
     assert!(matches!(bus.dispatch_wire("app", "alias", "test.echo.v1", b"ok", None, operation), Err(ToolDispatchError::UnknownController { .. })));

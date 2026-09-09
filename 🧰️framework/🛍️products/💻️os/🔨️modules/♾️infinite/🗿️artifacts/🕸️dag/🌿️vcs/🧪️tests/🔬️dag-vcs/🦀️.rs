@@ -119,7 +119,7 @@ fn move_node_diff_is_consistent_with_direct_field_mutation() {
     let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
     let mutation = DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 5.0, y: 6.0 });
     let via_diff = Mutation::diff(&mutation, &document).diff().apply(&document).expect("valid DAG diff");
-    let mut via_direct = document.clone();
+    let mut via_direct = document;
     via_direct.nodes[0].x = 5.0;
     via_direct.nodes[0].y = 6.0;
     assert_eq!(via_diff, via_direct, "diff().apply() must match the mutation's own documented field-level effect");

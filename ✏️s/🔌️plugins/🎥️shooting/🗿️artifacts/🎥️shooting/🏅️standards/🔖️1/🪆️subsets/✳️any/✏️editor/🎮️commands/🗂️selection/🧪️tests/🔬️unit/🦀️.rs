@@ -1,12 +1,11 @@
-
 use super::*;
-use crate::editor::shooting::ShootingCommand;
 use crate::editor::shooting::testkit::{dispatch, shooting_app};
+use crate::editor::shooting::ShootingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn set_shot_selection_is_config_only_and_selects_the_shot_in_the_inspector() {
-    use crate::editor::shooting::SHOOTING_PLAY_BODY_INSPECTION;
     use crate::editor::shooting::testkit::render;
+    use crate::editor::shooting::SHOOTING_PLAY_BODY_INSPECTION;
 
     let mut app = shooting_app().await;
     let shot_id = app.snapshot().expect("snapshot").shots.first().expect("fixture shot").id.clone();

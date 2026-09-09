@@ -97,11 +97,7 @@ impl Mat3 {
     pub fn cofactor(&self) -> Mat3 {
         let m = &self.rows;
         let minor = |r0: usize, r1: usize, c0: usize, c1: usize| m[r0][c0] * m[r1][c1] - m[r0][c1] * m[r1][c0];
-        Mat3::from_rows([
-            [minor(1, 2, 1, 2), -minor(1, 2, 0, 2), minor(1, 2, 0, 1)],
-            [-minor(0, 2, 1, 2), minor(0, 2, 0, 2), -minor(0, 2, 0, 1)],
-            [minor(0, 1, 1, 2), -minor(0, 1, 0, 2), minor(0, 1, 0, 1)],
-        ])
+        Mat3::from_rows([[minor(1, 2, 1, 2), -minor(1, 2, 0, 2), minor(1, 2, 0, 1)], [-minor(0, 2, 1, 2), minor(0, 2, 0, 2), -minor(0, 2, 0, 1)], [minor(0, 1, 1, 2), -minor(0, 1, 0, 2), minor(0, 1, 0, 1)]])
     }
 }
 

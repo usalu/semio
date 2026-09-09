@@ -2,7 +2,6 @@
 //! reaches for. Deliberately ONE block for the whole app (never split per window/panel): the macro's
 //! value is that every locale combination is compile-checked in one place.
 
-
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the note app; one field per label makes every locale combination
 // compile-checked. (A plain `//` comment, not `///`: rustdoc does not generate documentation for macro
@@ -55,7 +54,7 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-/// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
+/// 🗣️ Resolves the active label set from the host-provided view state.
 pub fn note_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static NotePlayLabels {
     semio_framework_plugin::resolve_labels::<NotePlayLabels>(view_state)
 }

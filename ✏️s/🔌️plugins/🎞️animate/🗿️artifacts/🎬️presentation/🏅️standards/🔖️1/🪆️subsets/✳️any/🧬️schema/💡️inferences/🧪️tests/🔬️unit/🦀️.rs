@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{FigureTileDraft, FigureTileFrame};
 use protocol::Inference;

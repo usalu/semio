@@ -20,7 +20,13 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetR
         next.run_output_json = self.json.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &ImperativeConfig) -> Vec<ImperativeConfigMutation> { vec![ImperativeConfigMutation::SetRunOutput(Self { json: base.run_output_json.clone() })] }
-    fn label(&self) -> String { "Set Run Output".into() }
-    fn target(&self) -> Vec<String> { vec!["run_output_json".into()] }
+    fn inverse(&self, base: &ImperativeConfig) -> Vec<ImperativeConfigMutation> {
+        vec![ImperativeConfigMutation::SetRunOutput(Self { json: base.run_output_json.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Run Output".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["run_output_json".into()]
+    }
 }

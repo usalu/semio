@@ -46,7 +46,6 @@ impl Default for Iso16757Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-
 //#region 🌉️ExternalCodecBridge
 /// 📤️ The canonical JSON projection of a [`Iso16757Snapshot`] — the surface
 /// `../../../../../🧪️tests/📇️mutate-iso16757-1` is compared through under `ordered-json-v1`.

@@ -8,14 +8,19 @@
     "domain/🟦️.ts": "export const ui = 1;\n",
     "domain/🧪️tests/🦀️.rs": "#[test] fn fixture() { assert!(true); }\n"
   },
-  "included": [
-    "domain/📦️packages/🦀️rust/Cargo.toml",
-    "domain/🦀️.rs",
-    "domain/shared.bin"
-  ],
-  "excluded": [
-    "domain/🟦️.ts",
-    "domain/🧪️tests/🦀️.rs",
-    "📜️script.ts"
-  ]
+  "included": ["domain/📦️packages/🦀️rust/Cargo.toml", "domain/🦀️.rs", "domain/shared.bin"],
+  "excluded": ["domain/🟦️.ts", "domain/🧪️tests/🦀️.rs", "📜️script.ts"],
+  "commandRouter": {
+    "entry": "domain/📦️packages/🦀️rust/📜️script.ts",
+    "cwd": "domain/📦️packages/🦀️rust",
+    "command": "bun ./📜️script.ts test",
+    "files": {
+      "domain/📦️packages/🦀️rust/📜️script.ts": "import { run } from \"../../../shared/📜️script.ts\";\nrun();\n",
+      "shared/📜️script.ts": "import { execute } from \"./🟦️.ts\";\nexport const run = (): void => execute();\n",
+      "shared/🟦️.ts": "export const execute = (): void => {};\n",
+      "sibling/📜️script.ts": "throw new Error(\"unrelated sibling\");\n"
+    },
+    "included": ["domain/📦️packages/🦀️rust/📜️script.ts", "shared/📜️script.ts", "shared/🟦️.ts"],
+    "excluded": ["sibling/📜️script.ts"]
+  }
 }

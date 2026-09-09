@@ -7,9 +7,7 @@
   "required": [
     "schema",
     "source",
-    "tiles",
-    "selectedIds",
-    "engagementInput"
+    "tiles"
   ],
   "properties": {
     "schema": {
@@ -26,17 +24,6 @@
         "$ref": "#/$defs/FigureTileDraft"
       },
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

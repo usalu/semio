@@ -15,44 +15,6 @@ export interface Process3dArtifact {
   toolSolids: ArtifactChildHandle[];
   /** @state artifact */
   resolvedUpTo?: number;
-  /** @state presence */
-  selectedId?: string;
-  /** @state presence */
-  selectedFaceId?: number;
-  /** @state presence */
-  /** @state config */
-  selectionMethod: string;
-  /** @state config */
-  engagementInput: string;
-  /** @state config */
-  cameraPositionX: number;
-  /** @state config */
-  cameraPositionY: number;
-  /** @state config */
-  cameraPositionZ: number;
-  /** @state config */
-  cameraTargetX: number;
-  /** @state config */
-  cameraTargetY: number;
-  /** @state config */
-  cameraTargetZ: number;
-  /** @state config */
-  cameraFov: number;
-  /** @state config */
-  sunEnabled: boolean;
-  /** @state config */
-  sunAzimuth: number;
-  /** @state config */
-  sunElevation: number;
-  /** @state config */
-  sunIntensity: number;
-  /** @state config */
-  sunColor: string;
-  /** @state config */
-  /** @state config */
-  contributionsJson: string;
-  /** @state artifact */
-  hoveredId?: string;
 }
 
 export interface Process3dWorkshop { machines: Process3dWorkshopMachine[]; }
@@ -140,24 +102,6 @@ export function parseProcess3dArtifact(value: unknown, at = "$"): Process3dArtif
     stepPayloads: processProcess3dArtifactGuardArray(row["stepPayloads"], `${at}.stepPayloads`).map((item, index) => parseProcess3dStep(item, `${at}.stepPayloads[${index}]`)),
     toolSolids: processProcess3dArtifactGuardArray(row["toolSolids"], `${at}.toolSolids`).map((item, index) => parseArtifactChildHandle(item, `${at}.toolSolids[${index}]`)),
     resolvedUpTo: row["resolvedUpTo"] === undefined ? undefined : processProcess3dArtifactGuardInteger(row["resolvedUpTo"], `${at}.resolvedUpTo`),
-    selectedId: row["selectedId"] === undefined ? undefined : processProcess3dArtifactGuardString(row["selectedId"], `${at}.selectedId`),
-    selectedFaceId: row["selectedFaceId"] === undefined ? undefined : processProcess3dArtifactGuardInteger(row["selectedFaceId"], `${at}.selectedFaceId`),
-    selectionMethod: processProcess3dArtifactGuardString(row["selectionMethod"], `${at}.selectionMethod`),
-    engagementInput: processProcess3dArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),
-    cameraPositionX: processProcess3dArtifactGuardNumber(row["cameraPositionX"], `${at}.cameraPositionX`),
-    cameraPositionY: processProcess3dArtifactGuardNumber(row["cameraPositionY"], `${at}.cameraPositionY`),
-    cameraPositionZ: processProcess3dArtifactGuardNumber(row["cameraPositionZ"], `${at}.cameraPositionZ`),
-    cameraTargetX: processProcess3dArtifactGuardNumber(row["cameraTargetX"], `${at}.cameraTargetX`),
-    cameraTargetY: processProcess3dArtifactGuardNumber(row["cameraTargetY"], `${at}.cameraTargetY`),
-    cameraTargetZ: processProcess3dArtifactGuardNumber(row["cameraTargetZ"], `${at}.cameraTargetZ`),
-    cameraFov: processProcess3dArtifactGuardNumber(row["cameraFov"], `${at}.cameraFov`),
-    sunEnabled: processProcess3dArtifactGuardBoolean(row["sunEnabled"], `${at}.sunEnabled`),
-    sunAzimuth: processProcess3dArtifactGuardNumber(row["sunAzimuth"], `${at}.sunAzimuth`),
-    sunElevation: processProcess3dArtifactGuardNumber(row["sunElevation"], `${at}.sunElevation`),
-    sunIntensity: processProcess3dArtifactGuardNumber(row["sunIntensity"], `${at}.sunIntensity`),
-    sunColor: processProcess3dArtifactGuardString(row["sunColor"], `${at}.sunColor`),
-    contributionsJson: processProcess3dArtifactGuardString(row["contributionsJson"], `${at}.contributionsJson`),
-    hoveredId: row["hoveredId"] === undefined ? undefined : processProcess3dArtifactGuardString(row["hoveredId"], `${at}.hoveredId`),
   };
 }
 

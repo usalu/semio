@@ -1550,10 +1550,9 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
                         }
                         Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
                             Ok(PdfObject::Int(_)) => arr.push(ContentOperand::Num),
-                            Ok(PdfObject::Real(real))
-                                if real.to_f64().is_some() => {
-                                    arr.push(ContentOperand::Num);
-                                }
+                            Ok(PdfObject::Real(real)) if real.to_f64().is_some() => {
+                                arr.push(ContentOperand::Num);
+                            }
                             _ => {}
                         },
                         Some(_) => {
@@ -1566,10 +1565,9 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
             }
             c if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
                 Ok(PdfObject::Int(_)) => operands.push(ContentOperand::Num),
-                Ok(PdfObject::Real(r))
-                    if r.to_f64().is_some() => {
-                        operands.push(ContentOperand::Num);
-                    }
+                Ok(PdfObject::Real(r)) if r.to_f64().is_some() => {
+                    operands.push(ContentOperand::Num);
+                }
                 _ => {}
             },
             b'%' => {

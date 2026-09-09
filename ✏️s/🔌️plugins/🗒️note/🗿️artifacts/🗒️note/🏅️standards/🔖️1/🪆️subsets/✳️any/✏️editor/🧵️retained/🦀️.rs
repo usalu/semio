@@ -1,10 +1,10 @@
 //! 🧵️ Note-owned retained command microstate and exact publication contracts.
 
-use crate::schema::NoteIdOwner;
-use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use crate::editor::note::commands::{ink_apply_events, patch_blocks};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::editor::note::{NoteCommand, NoteDispatchCtx, NotePlayApp, NOTE_INTERACTION_BLOCKS};
+use crate::schema::NoteIdOwner;
+use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES};
@@ -46,23 +46,13 @@ pub const NOTE_AUDITED_TOOL_IDS: &[&str] = &[
     "nudgeSelectionRightFast",
     "setCamera",
     "setCameraZoom",
-    "setActiveUtility",
     "engagementInput",
     "navigatorEngagementInput",
     "saveDownload",
     "loadRequest",
 ];
 
-pub const NOTE_RETAINED_TOOL_IDS: &[&str] = &[
-    "setGridVisible",
-    "setGridSpacing",
-    "setCamera",
-    "setCameraZoom",
-    "setActiveUtility",
-    "engagementInput",
-    "navigatorEngagementInput",
-    "loadRequest",
-];
+pub const NOTE_RETAINED_TOOL_IDS: &[&str] = &["setGridVisible", "setGridSpacing", "setCamera", "setCameraZoom", "engagementInput", "navigatorEngagementInput", "loadRequest"];
 
 pub const NOTE_AUDITED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setGridVisible", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -95,7 +85,6 @@ pub const NOTE_AUDITED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract]
     ArtifactToolPublicationContract { tool_id: "nudgeSelectionRightFast", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "navigatorEngagementInput", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "saveDownload", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -107,7 +96,6 @@ pub const NOTE_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract
     ArtifactToolPublicationContract { tool_id: "setGridSpacing", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "navigatorEngagementInput", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "loadRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -126,13 +114,7 @@ struct NoteCommandUnit {
 }
 
 fn selected_block_ids(interaction: &protocol::InteractionState) -> Vec<String> {
-    interaction
-        .selection
-        .get(NOTE_INTERACTION_BLOCKS)
-        .into_iter()
-        .flat_map(|selection| selection.ids.iter())
-        .filter_map(|id| crate::schema::block_id_from_tree_row_id(id))
-        .collect()
+    interaction.selection.get(NOTE_INTERACTION_BLOCKS).into_iter().flat_map(|selection| selection.ids.iter()).filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect()
 }
 
 fn selection_units(command: &NoteCommand, selected: &[String]) -> Option<Vec<NoteCommandUnit>> {
@@ -164,23 +146,22 @@ fn note_command_units(command: &NoteCommand, selected: &[String]) -> Vec<NoteCom
         return units;
     }
     match command {
-        NoteCommand::PatchBlocks(payload) => if payload.block_ids.is_empty() {
-            vec![NoteCommandUnit { command: command.clone(), selected_block_ids: selected.to_vec() }]
-        } else {
-            payload
-                .block_ids
-                .iter()
-                .map(|block_id| NoteCommandUnit {
-                    command: NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec![block_id.clone()], field: payload.field.clone(), value: payload.value.clone() }),
-                    selected_block_ids: selected.to_vec(),
-                })
-                .collect()
-        },
+        NoteCommand::PatchBlocks(payload) => {
+            if payload.block_ids.is_empty() {
+                vec![NoteCommandUnit { command: command.clone(), selected_block_ids: selected.to_vec() }]
+            } else {
+                payload
+                    .block_ids
+                    .iter()
+                    .map(|block_id| NoteCommandUnit {
+                        command: NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec![block_id.clone()], field: payload.field.clone(), value: payload.value.clone() }),
+                        selected_block_ids: selected.to_vec(),
+                    })
+                    .collect()
+            }
+        }
         NoteCommand::InkApplyEvents(payload) => {
-            let events = serde_json::from_str::<serde_json::Value>(&payload.events_json)
-                .ok()
-                .and_then(|value| value.as_array().cloned())
-                .unwrap_or_default();
+            let events = serde_json::from_str::<serde_json::Value>(&payload.events_json).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
             if events.is_empty() {
                 vec![NoteCommandUnit { command: command.clone(), selected_block_ids: selected.to_vec() }]
             } else {
@@ -220,18 +201,7 @@ impl NoteCommandWork {
         }
         let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
         let workspace_identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
-        Ok(Self {
-            tool_id,
-            units,
-            cursor: 0,
-            replay_target: None,
-            projection: None,
-            accumulated: Emit::default(),
-            id_owner: Some(NoteIdOwner::new(scope, 0)),
-            workspace_identity,
-            complete: false,
-            closing: false,
-        })
+        Ok(Self { tool_id, units, cursor: 0, replay_target: None, projection: None, accumulated: Emit::default(), id_owner: Some(NoteIdOwner::new(scope, 0)), workspace_identity, complete: false, closing: false })
     }
 
     fn append(&mut self, mut emit: Emit<crate::op::NoteMutation, NoteConfigMutation>) -> Result<(), Fault> {
@@ -300,7 +270,7 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         let projection = self.projection.as_ref().unwrap_or(snapshot);
         let id_owner = self.id_owner.as_mut().ok_or_else(|| Fault::from("note-retained-id-owner-missing"))?;
         let mut ctx = NoteDispatchCtx { selected_block_ids: unit.selected_block_ids.clone(), id_owner: id_owner.clone() };
-        let emit = unit.command.dispatch(&ArtifactView::with_operation(projection, history, operation.clone()), &ConfigView { snapshot: config }, &mut ctx)?;
+        let emit = unit.command.dispatch(&ArtifactView::with_operation(projection, history, operation.clone()), &ConfigView { snapshot: config, window: None }, &mut ctx)?;
         *id_owner = ctx.id_owner;
         if self.cursor + 1 < self.units.len() {
             for mutation in &emit.artifact_mutations {
@@ -470,7 +440,17 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
     let tool_id = request.command.command_id();
     let work = Box::new(NoteCommandWork::new(tool_id, &request.command, &request.snapshot, &request.interaction_state, &operation)?);
     let payload = ArtifactRetainedCommandPayload::try_new(
-        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
+        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            history: request.history,
+            interaction_state: request.interaction_state,
+            interaction_hover: request.interaction_hover,
+            context: Some(request.context),
+            operation,
+            completion: request.completion,
+        },
         NoteCommand::command_id,
         NOTE_RETAINED_RAW_BYTES,
         NOTE_RETAINED_MAXIMUM_UNITS,
@@ -629,11 +609,7 @@ impl NoteTextChildMaterializationCursor {
         if maximum_items == 0 || maximum_bytes == 0 {
             return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        let released = if self.string.terminal_is_empty() {
-            self.retirement.last_mut().map_or(0, |cursor| cursor.close_step(maximum_bytes))
-        } else {
-            self.string.close_step(maximum_bytes)
-        };
+        let released = if self.string.terminal_is_empty() { self.retirement.last_mut().map_or(0, |cursor| cursor.close_step(maximum_bytes)) } else { self.string.close_step(maximum_bytes) };
         if self.retirement.last().is_some_and(NoteStringMaterializationCursor::terminal_is_empty) {
             self.retirement.pop();
         }
@@ -647,7 +623,15 @@ impl NoteTextChildMaterializationCursor {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.string.terminal_is_empty() && self.retirement.is_empty() && self.child_id.is_none() && self.artifact_id.is_none() && self.artifact_kind.is_none() && self.standard.is_none() && self.subset.is_none() && self.local_owner.is_none()
+        self.closing
+            && self.string.terminal_is_empty()
+            && self.retirement.is_empty()
+            && self.child_id.is_none()
+            && self.artifact_id.is_none()
+            && self.artifact_kind.is_none()
+            && self.standard.is_none()
+            && self.subset.is_none()
+            && self.local_owner.is_none()
     }
 }
 
@@ -751,10 +735,7 @@ impl NoteTextContentMaterializationCursor {
                 }
             }
             NoteTextContentMaterializationPhase::Complete => {
-                return Ok(Some(crate::NoteTextChild {
-                    handle: self.materialized_handle.take().ok_or_else(|| "Note text-content handle owner is absent".to_string())?,
-                    paragraphs: std::mem::take(&mut self.paragraphs),
-                }));
+                return Ok(Some(crate::NoteTextChild { handle: self.materialized_handle.take().ok_or_else(|| "Note text-content handle owner is absent".to_string())?, paragraphs: std::mem::take(&mut self.paragraphs) }));
             }
         }
         Ok(None)
@@ -931,10 +912,7 @@ impl NoteOwnedRetirement {
         self.push_string(std::mem::take(&mut child.handle.target.dialect.artifact_kind));
         self.push_string(std::mem::take(&mut child.handle.target.dialect.standard));
         self.push_string(std::mem::take(&mut child.handle.target.dialect.subset));
-        if let Some(owner) = child
-            .handle
-            .local_owner::<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>()
-        {
+        if let Some(owner) = child.handle.local_owner::<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>() {
             self.text_owners.push(owner);
         }
         self.paragraph_lists.push(child.paragraphs);
@@ -1133,9 +1111,7 @@ fn note_block_common(source: &crate::NoteBlockNode) -> (&str, &str, f64, f64, f6
         | crate::NoteBlockNode::Table { id, name, x, y, width, height, rotation, visible, locked, .. }
         | crate::NoteBlockNode::Math { id, name, x, y, width, height, rotation, visible, locked, .. }
         | crate::NoteBlockNode::Ink { id, name, x, y, width, height, rotation, visible, locked, .. }
-        | crate::NoteBlockNode::Group { id, name, x, y, width, height, rotation, visible, locked, .. } => {
-            (id, name, *x, *y, *width, *height, *rotation, *visible, *locked)
-        }
+        | crate::NoteBlockNode::Group { id, name, x, y, width, height, rotation, visible, locked, .. } => (id, name, *x, *y, *width, *height, *rotation, *visible, *locked),
     }
 }
 
@@ -1151,35 +1127,13 @@ impl NoteBlockMaterializationCursor {
                 align: NoteStringMaterializationCursor::default(),
                 materialized_align: None,
             },
-            crate::NoteBlockNode::Image { .. } => NoteBlockPayloadMaterialization::Image {
-                image_key: NoteStringMaterializationCursor::default(),
-                materialized_image_key: None,
-            },
-            crate::NoteBlockNode::Table { .. } => NoteBlockPayloadMaterialization::Table {
-                phase: 0,
-                column_cursor: 0,
-                cell_row_cursor: 0,
-                cell_cursor: 0,
-                string: NoteStringMaterializationCursor::default(),
-                columns: Vec::new(),
-                rows: Vec::new(),
-            },
-            crate::NoteBlockNode::Math { .. } => NoteBlockPayloadMaterialization::Math {
-                tex: NoteStringMaterializationCursor::default(),
-                materialized_tex: None,
-            },
+            crate::NoteBlockNode::Image { .. } => NoteBlockPayloadMaterialization::Image { image_key: NoteStringMaterializationCursor::default(), materialized_image_key: None },
+            crate::NoteBlockNode::Table { .. } => NoteBlockPayloadMaterialization::Table { phase: 0, column_cursor: 0, cell_row_cursor: 0, cell_cursor: 0, string: NoteStringMaterializationCursor::default(), columns: Vec::new(), rows: Vec::new() },
+            crate::NoteBlockNode::Math { .. } => NoteBlockPayloadMaterialization::Math { tex: NoteStringMaterializationCursor::default(), materialized_tex: None },
             crate::NoteBlockNode::Ink { .. } => NoteBlockPayloadMaterialization::Ink { point_cursor: 0, points: Vec::new() },
             crate::NoteBlockNode::Group { .. } => NoteBlockPayloadMaterialization::Group { child_cursor: 0, active: None, children: Vec::new() },
         };
-        Self {
-            phase: NoteBlockMaterializationPhase::Id,
-            string: NoteStringMaterializationCursor::default(),
-            id: None,
-            name: None,
-            payload,
-            retirement: NoteOwnedRetirement::default(),
-            closing: false,
-        }
+        Self { phase: NoteBlockMaterializationPhase::Id, string: NoteStringMaterializationCursor::default(), id: None, name: None, payload, retirement: NoteOwnedRetirement::default(), closing: false }
     }
 
     fn step(&mut self, source: &crate::NoteBlockNode) -> Result<Option<crate::NoteBlockNode>, String> {
@@ -1209,10 +1163,7 @@ impl NoteBlockMaterializationCursor {
                 let id = self.id.take().ok_or_else(|| "Note block id owner is absent".to_string())?;
                 let name = self.name.take().ok_or_else(|| "Note block name owner is absent".to_string())?;
                 return Ok(Some(match (&mut self.payload, source) {
-                    (
-                        NoteBlockPayloadMaterialization::Text { materialized_content, materialized_font_weight, materialized_align, .. },
-                        crate::NoteBlockNode::Text { font_size, .. },
-                    ) => crate::NoteBlockNode::Text {
+                    (NoteBlockPayloadMaterialization::Text { materialized_content, materialized_font_weight, materialized_align, .. }, crate::NoteBlockNode::Text { font_size, .. }) => crate::NoteBlockNode::Text {
                         id,
                         name,
                         x,
@@ -1227,85 +1178,19 @@ impl NoteBlockMaterializationCursor {
                         font_weight: materialized_font_weight.take().ok_or_else(|| "Note text block font-weight owner is absent".to_string())?,
                         align: materialized_align.take().ok_or_else(|| "Note text block alignment owner is absent".to_string())?,
                     },
-                    (
-                        NoteBlockPayloadMaterialization::Image { materialized_image_key, .. },
-                        crate::NoteBlockNode::Image { .. },
-                    ) => crate::NoteBlockNode::Image {
-                        id,
-                        name,
-                        x,
-                        y,
-                        width,
-                        height,
-                        rotation,
-                        visible,
-                        locked,
-                        image_key: materialized_image_key.take().ok_or_else(|| "Note image key owner is absent".to_string())?,
-                    },
-                    (
-                        NoteBlockPayloadMaterialization::Table { columns, rows, .. },
-                        crate::NoteBlockNode::Table { .. },
-                    ) => crate::NoteBlockNode::Table {
-                        id,
-                        name,
-                        x,
-                        y,
-                        width,
-                        height,
-                        rotation,
-                        visible,
-                        locked,
-                        columns: std::mem::take(columns),
-                        rows: std::mem::take(rows),
-                    },
-                    (
-                        NoteBlockPayloadMaterialization::Math { materialized_tex, .. },
-                        crate::NoteBlockNode::Math { display_mode, .. },
-                    ) => crate::NoteBlockNode::Math {
-                        id,
-                        name,
-                        x,
-                        y,
-                        width,
-                        height,
-                        rotation,
-                        visible,
-                        locked,
-                        tex: materialized_tex.take().ok_or_else(|| "Note math source owner is absent".to_string())?,
-                        display_mode: *display_mode,
-                    },
-                    (
-                        NoteBlockPayloadMaterialization::Ink { points, .. },
-                        crate::NoteBlockNode::Ink { stroke_width, color, .. },
-                    ) => crate::NoteBlockNode::Ink {
-                        id,
-                        name,
-                        x,
-                        y,
-                        width,
-                        height,
-                        rotation,
-                        visible,
-                        locked,
-                        points: std::mem::take(points),
-                        stroke_width: *stroke_width,
-                        color: *color,
-                    },
-                    (
-                        NoteBlockPayloadMaterialization::Group { children, .. },
-                        crate::NoteBlockNode::Group { .. },
-                    ) => crate::NoteBlockNode::Group {
-                        id,
-                        name,
-                        x,
-                        y,
-                        width,
-                        height,
-                        rotation,
-                        visible,
-                        locked,
-                        children: std::mem::take(children),
-                    },
+                    (NoteBlockPayloadMaterialization::Image { materialized_image_key, .. }, crate::NoteBlockNode::Image { .. }) => {
+                        crate::NoteBlockNode::Image { id, name, x, y, width, height, rotation, visible, locked, image_key: materialized_image_key.take().ok_or_else(|| "Note image key owner is absent".to_string())? }
+                    }
+                    (NoteBlockPayloadMaterialization::Table { columns, rows, .. }, crate::NoteBlockNode::Table { .. }) => {
+                        crate::NoteBlockNode::Table { id, name, x, y, width, height, rotation, visible, locked, columns: std::mem::take(columns), rows: std::mem::take(rows) }
+                    }
+                    (NoteBlockPayloadMaterialization::Math { materialized_tex, .. }, crate::NoteBlockNode::Math { display_mode, .. }) => {
+                        crate::NoteBlockNode::Math { id, name, x, y, width, height, rotation, visible, locked, tex: materialized_tex.take().ok_or_else(|| "Note math source owner is absent".to_string())?, display_mode: *display_mode }
+                    }
+                    (NoteBlockPayloadMaterialization::Ink { points, .. }, crate::NoteBlockNode::Ink { stroke_width, color, .. }) => {
+                        crate::NoteBlockNode::Ink { id, name, x, y, width, height, rotation, visible, locked, points: std::mem::take(points), stroke_width: *stroke_width, color: *color }
+                    }
+                    (NoteBlockPayloadMaterialization::Group { children, .. }, crate::NoteBlockNode::Group { .. }) => crate::NoteBlockNode::Group { id, name, x, y, width, height, rotation, visible, locked, children: std::mem::take(children) },
                     _ => return Err("Note block materialization variant changed beneath its operation-owned cursor".into()),
                 }));
             }
@@ -1342,10 +1227,7 @@ impl NoteBlockMaterializationCursor {
                 }
                 _ => Ok(true),
             },
-            (
-                NoteBlockPayloadMaterialization::Image { image_key, materialized_image_key },
-                crate::NoteBlockNode::Image { image_key: source_image_key, .. },
-            ) => {
+            (NoteBlockPayloadMaterialization::Image { image_key, materialized_image_key }, crate::NoteBlockNode::Image { image_key: source_image_key, .. }) => {
                 if materialized_image_key.is_none() {
                     *materialized_image_key = image_key.step(source_image_key)?;
                     Ok(false)
@@ -1353,10 +1235,7 @@ impl NoteBlockMaterializationCursor {
                     Ok(true)
                 }
             }
-            (
-                NoteBlockPayloadMaterialization::Table { phase, column_cursor, cell_row_cursor, cell_cursor, string, columns, rows },
-                crate::NoteBlockNode::Table { columns: source_columns, rows: source_rows, .. },
-            ) => match *phase {
+            (NoteBlockPayloadMaterialization::Table { phase, column_cursor, cell_row_cursor, cell_cursor, string, columns, rows }, crate::NoteBlockNode::Table { columns: source_columns, rows: source_rows, .. }) => match *phase {
                 0 => {
                     if *column_cursor == source_columns.len() {
                         *phase = 1;
@@ -1389,10 +1268,7 @@ impl NoteBlockMaterializationCursor {
                 }
                 _ => Ok(true),
             },
-            (
-                NoteBlockPayloadMaterialization::Math { tex, materialized_tex },
-                crate::NoteBlockNode::Math { tex: source_tex, .. },
-            ) => {
+            (NoteBlockPayloadMaterialization::Math { tex, materialized_tex }, crate::NoteBlockNode::Math { tex: source_tex, .. }) => {
                 if materialized_tex.is_none() {
                     *materialized_tex = tex.step(source_tex)?;
                     Ok(false)
@@ -1400,10 +1276,7 @@ impl NoteBlockMaterializationCursor {
                     Ok(true)
                 }
             }
-            (
-                NoteBlockPayloadMaterialization::Ink { point_cursor, points },
-                crate::NoteBlockNode::Ink { points: source_points, .. },
-            ) => {
+            (NoteBlockPayloadMaterialization::Ink { point_cursor, points }, crate::NoteBlockNode::Ink { points: source_points, .. }) => {
                 if *point_cursor == source_points.len() {
                     Ok(true)
                 } else {
@@ -1412,10 +1285,7 @@ impl NoteBlockMaterializationCursor {
                     Ok(false)
                 }
             }
-            (
-                NoteBlockPayloadMaterialization::Group { child_cursor, active, children },
-                crate::NoteBlockNode::Group { children: source_children, .. },
-            ) => {
+            (NoteBlockPayloadMaterialization::Group { child_cursor, active, children }, crate::NoteBlockNode::Group { children: source_children, .. }) => {
                 if *child_cursor == source_children.len() {
                     return Ok(true);
                 }
@@ -1521,21 +1391,8 @@ impl NoteBlockMaterializationCursor {
 
     fn terminal_is_empty(&self) -> bool {
         let payload_empty = match &self.payload {
-            NoteBlockPayloadMaterialization::Text {
-                content,
-                materialized_content,
-                font_weight,
-                materialized_font_weight,
-                align,
-                materialized_align,
-                ..
-            } => {
-                content.terminal_is_empty()
-                    && materialized_content.is_none()
-                    && font_weight.terminal_is_empty()
-                    && materialized_font_weight.is_none()
-                    && align.terminal_is_empty()
-                    && materialized_align.is_none()
+            NoteBlockPayloadMaterialization::Text { content, materialized_content, font_weight, materialized_font_weight, align, materialized_align, .. } => {
+                content.terminal_is_empty() && materialized_content.is_none() && font_weight.terminal_is_empty() && materialized_font_weight.is_none() && align.terminal_is_empty() && materialized_align.is_none()
             }
             NoteBlockPayloadMaterialization::Image { image_key, materialized_image_key } => image_key.terminal_is_empty() && materialized_image_key.is_none(),
             NoteBlockPayloadMaterialization::Table { string, columns, rows, .. } => string.terminal_is_empty() && columns.is_empty() && rows.is_empty(),
@@ -1549,18 +1406,8 @@ impl NoteBlockMaterializationCursor {
 
 enum NoteLinkPinMaterialization {
     Head,
-    Checkpoint {
-        cursor: NoteStringMaterializationCursor,
-        id: Option<String>,
-    },
-    Snapshot {
-        phase: u8,
-        hash: NoteStringMaterializationCursor,
-        materialized_hash: Option<String>,
-        media_type: NoteStringMaterializationCursor,
-        materialized_media_type: Option<String>,
-        size: u64,
-    },
+    Checkpoint { cursor: NoteStringMaterializationCursor, id: Option<String> },
+    Snapshot { phase: u8, hash: NoteStringMaterializationCursor, materialized_hash: Option<String>, media_type: NoteStringMaterializationCursor, materialized_media_type: Option<String>, size: u64 },
 }
 
 struct NoteArtifactLinkMaterializationCursor {
@@ -1581,27 +1428,11 @@ impl NoteArtifactLinkMaterializationCursor {
         let pin = match &source.pin {
             store::LinkPin::Head => NoteLinkPinMaterialization::Head,
             store::LinkPin::Checkpoint { .. } => NoteLinkPinMaterialization::Checkpoint { cursor: NoteStringMaterializationCursor::default(), id: None },
-            store::LinkPin::Snapshot { blob } => NoteLinkPinMaterialization::Snapshot {
-                phase: 0,
-                hash: NoteStringMaterializationCursor::default(),
-                materialized_hash: None,
-                media_type: NoteStringMaterializationCursor::default(),
-                materialized_media_type: None,
-                size: blob.size,
-            },
+            store::LinkPin::Snapshot { blob } => {
+                NoteLinkPinMaterialization::Snapshot { phase: 0, hash: NoteStringMaterializationCursor::default(), materialized_hash: None, media_type: NoteStringMaterializationCursor::default(), materialized_media_type: None, size: blob.size }
+            }
         };
-        Self {
-            phase: 0,
-            string: NoteStringMaterializationCursor::default(),
-            artifact_id: None,
-            artifact_kind: None,
-            standard: None,
-            subset: None,
-            role: None,
-            pin,
-            retirement: NoteOwnedRetirement::default(),
-            closing: false,
-        }
+        Self { phase: 0, string: NoteStringMaterializationCursor::default(), artifact_id: None, artifact_kind: None, standard: None, subset: None, role: None, pin, retirement: NoteOwnedRetirement::default(), closing: false }
     }
 
     fn step(&mut self, source: &store::ArtifactLink) -> Result<Option<store::ArtifactLink>, String> {
@@ -1639,9 +1470,7 @@ impl NoteArtifactLinkMaterializationCursor {
         }
         let pin = match &mut self.pin {
             NoteLinkPinMaterialization::Head => store::LinkPin::Head,
-            NoteLinkPinMaterialization::Checkpoint { id, .. } => {
-                store::LinkPin::Checkpoint { id: id.take().ok_or_else(|| "Note link checkpoint owner is absent".to_string())? }
-            }
+            NoteLinkPinMaterialization::Checkpoint { id, .. } => store::LinkPin::Checkpoint { id: id.take().ok_or_else(|| "Note link checkpoint owner is absent".to_string())? },
             NoteLinkPinMaterialization::Snapshot { materialized_hash, materialized_media_type, size, .. } => store::LinkPin::Snapshot {
                 blob: store::BlobRef {
                     hash: materialized_hash.take().ok_or_else(|| "Note link blob hash owner is absent".to_string())?,
@@ -1675,10 +1504,7 @@ impl NoteArtifactLinkMaterializationCursor {
                     Ok(true)
                 }
             }
-            (
-                NoteLinkPinMaterialization::Snapshot { phase, hash, materialized_hash, media_type, materialized_media_type, size },
-                store::LinkPin::Snapshot { blob },
-            ) => match *phase {
+            (NoteLinkPinMaterialization::Snapshot { phase, hash, materialized_hash, media_type, materialized_media_type, size }, store::LinkPin::Snapshot { blob }) => match *phase {
                 0 => {
                     if let Some(value) = hash.step(&blob.hash)? {
                         *materialized_hash = Some(value);
@@ -1704,16 +1530,7 @@ impl NoteArtifactLinkMaterializationCursor {
 
     fn begin_close(&mut self) {
         self.closing = true;
-        for value in [
-            self.artifact_id.take(),
-            self.artifact_kind.take(),
-            self.standard.take(),
-            self.subset.take(),
-            self.role.take(),
-        ]
-        .into_iter()
-        .flatten()
-        {
+        for value in [self.artifact_id.take(), self.artifact_kind.take(), self.standard.take(), self.subset.take(), self.role.take()].into_iter().flatten() {
             self.retirement.push_string(value);
         }
         match &mut self.pin {
@@ -1761,19 +1578,9 @@ impl NoteArtifactLinkMaterializationCursor {
         let pin_empty = match &self.pin {
             NoteLinkPinMaterialization::Head => true,
             NoteLinkPinMaterialization::Checkpoint { cursor, id } => cursor.terminal_is_empty() && id.is_none(),
-            NoteLinkPinMaterialization::Snapshot { hash, materialized_hash, media_type, materialized_media_type, .. } => {
-                hash.terminal_is_empty() && materialized_hash.is_none() && media_type.terminal_is_empty() && materialized_media_type.is_none()
-            }
+            NoteLinkPinMaterialization::Snapshot { hash, materialized_hash, media_type, materialized_media_type, .. } => hash.terminal_is_empty() && materialized_hash.is_none() && media_type.terminal_is_empty() && materialized_media_type.is_none(),
         };
-        self.closing
-            && self.string.terminal_is_empty()
-            && self.artifact_id.is_none()
-            && self.artifact_kind.is_none()
-            && self.standard.is_none()
-            && self.subset.is_none()
-            && self.role.is_none()
-            && pin_empty
-            && self.retirement.terminal_is_empty()
+        self.closing && self.string.terminal_is_empty() && self.artifact_id.is_none() && self.artifact_kind.is_none() && self.standard.is_none() && self.subset.is_none() && self.role.is_none() && pin_empty && self.retirement.terminal_is_empty()
     }
 }
 
@@ -1859,12 +1666,7 @@ impl NoteSnapshotMaterializationCursor {
         }
     }
 
-    fn step(
-        &mut self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        source: &NoteSnapshot,
-    ) -> Result<Option<NoteSnapshot>, String> {
+    fn step(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, source: &NoteSnapshot) -> Result<Option<NoteSnapshot>, String> {
         if self.closing {
             return Err("Note snapshot materialization was stepped after cancellation".into());
         }
@@ -1902,12 +1704,7 @@ impl NoteSnapshotMaterializationCursor {
                         self.active_block = Some(Box::new(NoteBlockMaterializationCursor::new(&source.blocks[self.block_cursor])));
                         return Ok(None);
                     }
-                    if let Some(block) = self
-                        .active_block
-                        .as_mut()
-                        .ok_or_else(|| "Note snapshot block cursor is absent".to_string())?
-                        .step(&source.blocks[self.block_cursor])?
-                    {
+                    if let Some(block) = self.active_block.as_mut().ok_or_else(|| "Note snapshot block cursor is absent".to_string())?.step(&source.blocks[self.block_cursor])? {
                         self.blocks.push(block);
                         self.active_block = None;
                         self.block_cursor += 1;
@@ -1916,10 +1713,7 @@ impl NoteSnapshotMaterializationCursor {
             }
             NoteSnapshotMaterializationPhase::AssetTraversalKey => {
                 let source_asset = match self.last_asset_key.as_ref() {
-                    Some(last_key) => source
-                        .assets
-                        .range::<str, _>((std::ops::Bound::Excluded(last_key.as_str()), std::ops::Bound::Unbounded))
-                        .next(),
+                    Some(last_key) => source.assets.range::<str, _>((std::ops::Bound::Excluded(last_key.as_str()), std::ops::Bound::Unbounded)).next(),
                     None => source.assets.iter().next(),
                 };
                 let Some((source_key, _)) = source_asset else {
@@ -2001,11 +1795,7 @@ impl NoteSnapshotMaterializationCursor {
 
     fn active_source_asset<'a>(&self, source: &'a NoteSnapshot) -> Result<(&'a str, &'a crate::NoteImageAsset), String> {
         let active_key = self.active_asset_key.as_deref().ok_or_else(|| "Note active asset traversal key owner is absent".to_string())?;
-        source
-            .assets
-            .get_key_value(active_key)
-            .map(|(key, asset)| (key.as_str(), asset))
-            .ok_or_else(|| "Note active asset changed beneath its operation-owned cursor".into())
+        source.assets.get_key_value(active_key).map(|(key, asset)| (key.as_str(), asset)).ok_or_else(|| "Note active asset changed beneath its operation-owned cursor".into())
     }
 
     fn progress(&self) -> NoteSnapshotMaterializationProgress {
@@ -2031,18 +1821,8 @@ impl NoteSnapshotMaterializationCursor {
 
     fn begin_close(&mut self) {
         self.closing = true;
-        for value in [
-            self.schema.take(),
-            self.id.take(),
-            self.title.take(),
-            self.last_asset_key.take(),
-            self.active_asset_key.take(),
-            self.active_asset_mime.take(),
-            self.active_asset_data.take(),
-            self.active_asset_output_key.take(),
-        ]
-        .into_iter()
-        .flatten()
+        for value in
+            [self.schema.take(), self.id.take(), self.title.take(), self.last_asset_key.take(), self.active_asset_key.take(), self.active_asset_mime.take(), self.active_asset_data.take(), self.active_asset_output_key.take()].into_iter().flatten()
         {
             self.retirement.push_string(value);
         }
@@ -2066,13 +1846,7 @@ impl NoteSnapshotMaterializationCursor {
         if maximum_items == 0 || maximum_bytes == 0 {
             return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        for cursor in [
-            &mut self.string,
-            &mut self.asset_traversal_string,
-            &mut self.asset_mime_string,
-            &mut self.asset_data_string,
-            &mut self.asset_output_key_string,
-        ] {
+        for cursor in [&mut self.string, &mut self.asset_traversal_string, &mut self.asset_mime_string, &mut self.asset_data_string, &mut self.asset_output_key_string] {
             if !cursor.terminal_is_empty() {
                 let released = cursor.close_step(maximum_bytes);
                 return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: released };
@@ -2178,8 +1952,6 @@ fn note_semantic_edit<M>(forward: M, inverse: Vec<M>, description: Option<String
         finished_at: None,
     }
 }
-
-
 
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for NoteStoreOneItemPreparationFactory<P, M>
 where
@@ -2353,12 +2125,7 @@ struct NoteRootScalarPreparation {
 impl NoteRootScalarPreparation {
     fn progress(&mut self, cursor: u32) -> store::ArtifactStoreOneItemPreparationStep {
         self.completed_items = self.completed_items.saturating_add(1);
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint {
-            cursor,
-            completed_items: self.completed_items,
-            completed_bytes: u64::from(self.completed_items).saturating_mul(2_048),
-            digest: [0; 32],
-        };
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor, completed_items: self.completed_items, completed_bytes: u64::from(self.completed_items).saturating_mul(2_048), digest: [0; 32] };
         store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint)
     }
 
@@ -2372,29 +2139,18 @@ impl NoteRootScalarPreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::op::NoteMutation> for NoteRootScalarPreparationFactory {
-    fn preflight(
-        &self,
-        mutation: &crate::op::NoteMutation,
-        description: Option<&str>,
-        lane: store::HistoryLane,
-    ) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &crate::op::NoteMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Note retained root-scalar preparation rejected its lane or description envelope".into());
         }
         Self::validate_mutation(mutation)?;
-        Ok(store::ArtifactStoreOneItemFootprint {
-            work_items: NOTE_ROOT_SCALAR_STORE_MAXIMUM_UNITS,
-            retained_bytes: NOTE_ROOT_SCALAR_STORE_RETAINED_BYTES,
-        })
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: NOTE_ROOT_SCALAR_STORE_MAXIMUM_UNITS, retained_bytes: NOTE_ROOT_SCALAR_STORE_RETAINED_BYTES })
     }
 
     fn begin(
         &self,
         request: store::ArtifactStoreOneItemPreparationRequest<NoteSnapshot, crate::op::NoteMutation>,
-    ) -> Result<
-        Box<dyn store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::op::NoteMutation>>,
-        store::ArtifactStoreOneItemPreparationRequest<NoteSnapshot, crate::op::NoteMutation>,
-    > {
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::op::NoteMutation>>, store::ArtifactStoreOneItemPreparationRequest<NoteSnapshot, crate::op::NoteMutation>> {
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
@@ -2440,21 +2196,15 @@ impl store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::op::NoteMutatio
         }
         match self.phase {
             0 => {
-                NoteRootScalarPreparationFactory::validate_mutation(
-                    self.forward.as_ref().ok_or_else(|| "Note root-scalar validation lost its forward owner".to_string())?,
-                )?;
+                NoteRootScalarPreparationFactory::validate_mutation(self.forward.as_ref().ok_or_else(|| "Note root-scalar validation lost its forward owner".to_string())?)?;
                 self.phase = 1;
                 Ok(self.progress(1))
             }
             1 => {
                 let base = self.base.as_ref().ok_or_else(|| "Note root-scalar inverse lost its base root".to_string())?.get();
                 self.inverse = Some(vec![match self.forward.as_ref().ok_or_else(|| "Note root-scalar inverse lost its forward owner".to_string())? {
-                    crate::op::NoteMutation::ChangeGridVisible(_) => crate::op::NoteMutation::ChangeGridVisible(
-                        crate::schema::mutations::ChangeGridVisible { new_visible: base.grid_visible },
-                    ),
-                    crate::op::NoteMutation::ChangeGridSpacing(_) => crate::op::NoteMutation::ChangeGridSpacing(
-                        crate::schema::mutations::ChangeGridSpacing { new_spacing: base.grid_spacing },
-                    ),
+                    crate::op::NoteMutation::ChangeGridVisible(_) => crate::op::NoteMutation::ChangeGridVisible(crate::schema::mutations::ChangeGridVisible { new_visible: base.grid_visible }),
+                    crate::op::NoteMutation::ChangeGridSpacing(_) => crate::op::NoteMutation::ChangeGridSpacing(crate::schema::mutations::ChangeGridSpacing { new_spacing: base.grid_spacing }),
                     _ => return Err("Note root-scalar inverse rejected a non-admitted mutation".into()),
                 }]);
                 self.phase = 2;
@@ -2498,21 +2248,14 @@ impl store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::op::NoteMutatio
             }
             5 => {
                 self.live_authority()?;
-                let authority = std::sync::Arc::clone(
-                    self.authority.as_ref().ok_or_else(|| "Note root-scalar seal lost its Store authority".to_string())?,
-                );
+                let authority = std::sync::Arc::clone(self.authority.as_ref().ok_or_else(|| "Note root-scalar seal lost its Store authority".to_string())?);
                 let forward = self.forward.take().ok_or_else(|| "Note root-scalar seal lost its forward owner".to_string())?;
                 let inverse = self.inverse.take().ok_or_else(|| "Note root-scalar seal lost its inverse owner".to_string())?;
                 let edit = note_semantic_edit(forward, inverse, self.description.take(), &authority);
                 let post = self.post.take().ok_or_else(|| "Note root-scalar seal lost its post root".to_string())?;
                 let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
                 self.completed_items = self.completed_items.saturating_add(1);
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint {
-                    cursor: 6,
-                    completed_items: self.completed_items,
-                    completed_bytes: u64::from(self.completed_items).saturating_mul(2_048),
-                    digest: prepared.edit_digest(),
-                };
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 6, completed_items: self.completed_items, completed_bytes: u64::from(self.completed_items).saturating_mul(2_048), digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
                 self.phase = 6;
                 Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -2554,18 +2297,14 @@ impl store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::op::NoteMutatio
         }
         if !self.materialization.terminal_is_empty() {
             return Ok(match self.materialization.close_step(1, grant.maximum_bytes) {
-                InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                    store::SnapshotRetirementStep::Pending { released_items, released_bytes }
-                }
+                InteractiveJobCloseStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes },
                 InteractiveJobCloseStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 },
                 InteractiveJobCloseStep::Blocked => store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 },
             });
         }
         if !self.retirement.terminal_is_empty() {
             return Ok(match self.retirement.close_step(grant.maximum_bytes) {
-                InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                    store::SnapshotRetirementStep::Pending { released_items, released_bytes }
-                }
+                InteractiveJobCloseStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes },
                 InteractiveJobCloseStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 },
                 InteractiveJobCloseStep::Blocked => store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 },
             });

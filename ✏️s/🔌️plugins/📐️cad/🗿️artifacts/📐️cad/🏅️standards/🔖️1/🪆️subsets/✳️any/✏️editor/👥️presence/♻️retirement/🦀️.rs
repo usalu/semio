@@ -41,9 +41,8 @@ impl ErasedSnapshotRetirement for CadPresenceRetirement {
         }
         if let Some(owned) = self.owned.as_mut() {
             let value = match self.field {
-                0 => Some(std::mem::take(&mut owned.active_utility_id)),
-                1 => Some(std::mem::take(&mut owned.engagement_step)),
-                2 => owned.engagement_pane.take(),
+                0 => Some(std::mem::take(&mut owned.engagement_step)),
+                1 => owned.engagement_pane.take(),
                 _ => {
                     drop(self.owned.take());
                     return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -72,11 +71,11 @@ impl Drop for CadPresenceRetirement {
 
 //#region 🏪️StoreRetirement
 pub fn empty_terminal() -> CadPresence {
-    CadPresence { camera_position: [0.0; 3], camera_target: [0.0; 3], camera_zoom: 0.0, camera_fov: 0.0, active_utility_id: String::new(), engagement_step: String::new(), engagement_pane: None }
+    CadPresence { camera_position: [0.0; 3], camera_target: [0.0; 3], camera_zoom: 0.0, camera_fov: 0.0, engagement_step: String::new(), engagement_pane: None }
 }
 
 pub fn terminal_is_empty(value: &CadPresence) -> bool {
-    value.active_utility_id.is_empty() && value.engagement_step.is_empty() && value.engagement_pane.is_none()
+    value.engagement_step.is_empty() && value.engagement_pane.is_none()
 }
 
 pub struct CadPresenceStoreDisposer {
@@ -97,12 +96,7 @@ impl CadPresenceStoreDisposer {
 }
 
 impl semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<CadPresence, super::CadPresenceMutation>> for CadPresenceStoreDisposer {
-    fn close_step(
-        &mut self,
-        owner: &mut store::PresenceStore<CadPresence, super::CadPresenceMutation>,
-        maximum_items: usize,
-        maximum_bytes: usize,
-    ) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework_plugin::Fault> {
+    fn close_step(&mut self, owner: &mut store::PresenceStore<CadPresence, super::CadPresenceMutation>, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework_plugin::Fault> {
         if maximum_items == 0 {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }

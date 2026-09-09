@@ -4,11 +4,18 @@
   "rhsJson": null,
   "parameterBindings": null,
   "ruleLayout": {
-    "c": {
-      "x": 24,
-      "y": 16.5
-    }
-  },
-  "lodModeByWindow": null,
-  "beforePaneCamera": null
+    "entries": [
+      {
+        "key": "c",
+        "precondition": "any",
+        "operation": {
+          "kind": "set",
+          "value": {
+            "x": 24.0,
+            "y": 16.5
+          }
+        }
+      }
+    ]
+  }
 }

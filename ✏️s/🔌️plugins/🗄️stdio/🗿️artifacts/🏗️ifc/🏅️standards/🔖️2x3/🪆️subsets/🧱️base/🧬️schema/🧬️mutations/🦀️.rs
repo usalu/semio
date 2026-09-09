@@ -7,23 +7,23 @@ use crate::standards::v2x3::subsets::base::schema::diff::{
     enc_part21_header, enc_part21_header_bin, enc_part21_instance, enc_part21_instance_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin, Ifc2x3Diff,
 };
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use protocol::os_spr::command::DiffAlgebra;
+use protocol::Mutation;
 #[cfg(test)]
 use semio_s_artifact_stdio_step::engine::part21::Part21Value;
 use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance};
-use protocol::os_spr::command::DiffAlgebra;
-use protocol::Mutation;
 
 //#region 🔖️Mutations
+#[path = "🗑️remove-instance/🦀️.rs"]
+pub mod remove_instance;
+#[path = "📋set-header/🦀️.rs"]
+pub mod set_header;
 /// 📐️ Typed content mutation for `stdio.ifc.2x3`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🧱upsert-instance/🦀️.rs"]
 pub mod upsert_instance;
-#[path = "🗑️remove-instance/🦀️.rs"]
-pub mod remove_instance;
-#[path = "📋set-header/🦀️.rs"]
-pub mod set_header;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`

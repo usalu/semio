@@ -94,7 +94,7 @@ async fn produces_committed_diff() {
     assert_eq!(delta.patched.len(), 1, "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: exactly one layer is patched");
     assert_eq!(delta.patched[0].patch.opacity, Some(0.25), "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: the patch must carry the new opacity");
     assert_eq!(delta.patched[0].patch.visible, None, "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: the patch must leave `visible` to change-layer-visible");
-    assert!(produced.diff().brush_opacity.is_none(), "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: LAYER opacity and the config-class BRUSH opacity are different fields entirely");
+    assert!(encoded.get("brushOpacity").is_none(), "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: LAYER opacity and the config-class BRUSH opacity are different fields entirely");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.

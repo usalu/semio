@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::editor::playbook::PlaybookCommand;
 use crate::editor::playbook::commands::move_block::MoveBlock;
 use crate::editor::playbook::commands::remove_block::RemoveBlock;
 use crate::editor::playbook::testkit::{dispatch, playbook_app, playbook_app_with_registry};
+use crate::editor::playbook::PlaybookCommand;
 use AddBlock;
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the new block is no longer

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{Cardinality, LocalizedText, Names, part_1, part_4, part_5};
+use crate::{part_1, part_4, part_5, Cardinality, LocalizedText, Names};
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 
 fn round_trip(base: &Iso16757Snapshot, operation: &Iso16757Mutation) -> Iso16757Snapshot {

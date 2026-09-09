@@ -23,5 +23,4 @@ type En1997Artifact {
   pileBaseAreaM2: Float! @state(class: ARTIFACT)
   pileNProfiles: Int! @state(class: ARTIFACT)
   zInvestigatedM: Float! @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }

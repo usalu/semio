@@ -1,8 +1,8 @@
 //! ✏️ Composite-window option — pencil utility width, scoped to the `pencil` canvas utility.
 //! Its command handler lives in `🎮️commands/✏️drawing::set_pencil_width`.
 
-use crate::NoteSnapshot;
 use crate::editor::note::terminology::NotePlayLabels;
+use crate::NoteSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

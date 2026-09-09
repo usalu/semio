@@ -1,11 +1,11 @@
-
 use super::*;
-use crate::editor::gis2d::testkit::{app, render as render_body};
+use crate::editor::gis2d::testkit::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_map_layers() {
     let mut app = app().await;
     assert!(render_body(&mut app, GIS2D_PLAY_BODY_DOCUMENT).await.contains("gis2d-play-document.layer.raster"));
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

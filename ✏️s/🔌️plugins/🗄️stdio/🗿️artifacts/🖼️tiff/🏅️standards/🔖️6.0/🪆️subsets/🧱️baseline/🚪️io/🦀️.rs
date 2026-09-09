@@ -5,9 +5,9 @@
 //! already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    use crate::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
     use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
     use crate::standards::v6_0::subsets::document::schema::TiffComposer as TiffAnyComposer;
-    use crate::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;

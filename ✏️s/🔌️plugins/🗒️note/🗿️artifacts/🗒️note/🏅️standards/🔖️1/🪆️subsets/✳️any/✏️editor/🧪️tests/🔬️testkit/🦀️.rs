@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
 use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
@@ -29,7 +28,11 @@ pub async fn dispatch(app: &mut NoteApp, command: NoteCommand) -> InvocationResu
 }
 
 pub async fn render(app: &mut NoteApp, body_key: &str) -> String {
-    semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+    render_with_view(app, body_key, &ViewModel::default()).await
+}
+
+pub async fn render_with_view(app: &mut NoteApp, body_key: &str, view_state: &ViewModel) -> String {
+    semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render json")
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's

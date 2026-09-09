@@ -10,8 +10,11 @@
         "schema": "semio.hub.gis-inference-checkpoint-control/v1",
         "version": 1,
         "sequence": 1,
-        "kind": "entered",
-        "jobId": "11111111111111111111111111111111"
+        "kind": "progress-persisted",
+        "jobId": "11111111111111111111111111111111",
+        "progressCursor": 1,
+        "completed": 1,
+        "total": 4096
       }
     },
     {
@@ -21,7 +24,10 @@
         "version": 1,
         "sequence": 2,
         "kind": "release",
-        "jobId": "11111111111111111111111111111111"
+        "jobId": "11111111111111111111111111111111",
+        "progressCursor": 1,
+        "completed": 1,
+        "total": 4096
       }
     }
   ],
@@ -30,6 +36,9 @@
     "wrong-version",
     "wrong-sequence",
     "wrong-kind",
+    "zero-progress-cursor",
+    "zero-completed",
+    "completed-past-total",
     "unknown-field",
     "zero-length",
     "oversized-frame",

@@ -63,5 +63,4 @@ type Din16798Artifact {
   ductClass: String! @state(class: ARTIFACT)
   ductTestPressurePa: Float! @state(class: ARTIFACT)
   ductLeakageM3SM2: Float! @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }

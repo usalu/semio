@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ConnectSynapse` — a real id-keyed upsert into the fixture's synapse
 //! collection helper (never a whole-snapshot capture).
 
-use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, Generation2dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::{widget_id, Generation2dSnapshot};
 
 pub fn diff(payload: &super::ConnectSynapse, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

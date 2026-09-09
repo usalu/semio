@@ -13,7 +13,8 @@
           ],
           "routes": [
             "lodScaleJson",
-            "selectSameKind"
+            "selectSameKind",
+            "setBrushNodeSize"
           ]
         },
         {
@@ -23,10 +24,16 @@
           ],
           "routes": [
             "addNode",
+            "applyBoardEvents",
+            "deleteSelection",
+            "duplicateSelection",
             "forceLayout",
             "import-media",
+            "patchInspectorNodes",
             "redrawHandles",
-            "reorganize"
+            "reorganize",
+            "setActiveExample",
+            "setSelectionFlag"
           ]
         },
         {
@@ -35,21 +42,20 @@
             "config"
           ],
           "routes": [
-            "brushCancelSlot",
-            "brushCycleCandidate",
+            "setBrushKindWeights"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-config"
+          ],
+          "routes": [
             "brushFillSessionAdopt",
             "brushFillSessionCancel",
             "brushFillSessionClear",
             "brushFillSessionDiscard",
-            "brushOpenSlot",
-            "brushSetCandidateIndex",
-            "engagementAbort",
-            "engagementControlSelect",
-            "engagementInput",
-            "engagementSubmit",
             "focusSelection",
-            "setBrushKindWeights",
-            "setBrushNodeSize",
             "setCamera",
             "setGridFactor",
             "setGridSnapEnabled",
@@ -60,21 +66,40 @@
         {
           "status": "migrated",
           "lanes": [
-            "artifact",
-            "config"
+            "window-transient"
           ],
           "routes": [
-            "applyBoardEvents",
-            "brushCommitSlot",
+            "brushCancelSlot",
+            "brushCycleCandidate",
+            "brushOpenSlot",
+            "brushSetCandidateIndex",
+            "engagementAbort",
+            "engagementControlSelect",
+            "engagementInput",
+            "engagementSubmit"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-transient"
+          ],
+          "routes": [
+            "brushCommitSlot"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-config"
+          ],
+          "routes": [
             "brushFillSessionBegin",
             "brushFillSessionRetry",
             "brushFillSessionStep",
-            "deleteSelection",
-            "duplicateSelection",
-            "patchInspectorNodes",
-            "setActiveExample",
-            "setFillCount",
-            "setSelectionFlag"
+            "setFillCount"
           ]
         }
       ]
@@ -89,7 +114,10 @@
             "host-only"
           ],
           "routes": [
+            "cancelFillBuild",
+            "fillBuildTick",
             "openAddObjectDialog",
+            "registerBrushMesh",
             "transformBegin",
             "transformEnd",
             "worldPointerDown"
@@ -101,45 +129,9 @@
             "config"
           ],
           "routes": [
-            "closeVortexSuggestions",
-            "cycleBrushCandidate",
-            "cycleBrushCandidateBack",
-            "engagementAbort",
-            "engagementControlSelect",
-            "engagementInput",
-            "engagementRepeatLast",
-            "engagementSubmit",
-            "fillBuildTick",
-            "focusSelection",
-            "hoverSuggestion",
-            "openVortexSuggestions",
-            "registerBrushMesh",
-            "selectSameKindSelection",
             "setBrushPlacementOverlapBudget",
-            "setCamera",
-            "setChunkSize",
-            "setFillCount",
-            "setGridSnapEnabled",
-            "setGridSpacing",
-            "setGridVisible",
-            "setLodAutomatic",
-            "setLodDepthVariable",
-            "setLodManual",
             "setObjectKindWeight",
-            "setProjection",
-            "setProjectionParam",
-            "setProximityRadius",
-            "setSelectableKind",
-            "setSunAzimuth",
-            "setSunElevation",
-            "setSunIntensity",
-            "setTransformGumballFlag",
-            "setVortexDirection",
-            "setVortexKindWeight",
-            "setVortexShow",
-            "setVoxelDims",
-            "suggestionsTick",
-            "toggleSun"
+            "setVortexKindWeight"
           ]
         },
         {
@@ -149,23 +141,7 @@
             "config"
           ],
           "routes": [
-            "acceptSuggestion",
-            "addBrushObject",
-            "addObjectKind",
-            "createAttraction",
-            "deleteAttraction",
-            "deleteSelection",
-            "deleteTargetVolume",
-            "duplicateSelection",
-            "patchInspector",
-            "rotateSelection",
-            "scaleSelection",
-            "setActiveExample",
-            "setFillCountStep",
-            "setSelectionFlag",
-            "setTargetVolumeFlag",
-            "translateSelection",
-            "worldRelocate"
+            "addObjectKind"
           ]
         },
         {
@@ -175,7 +151,117 @@
           ],
           "routes": [
             "addTargetVolume",
-            "relocateTargetVolume"
+            "createAttraction",
+            "deleteAttraction",
+            "deleteSelection",
+            "deleteTargetVolume",
+            "patchInspector",
+            "relocateTargetVolume",
+            "rotateSelection",
+            "scaleSelection",
+            "setActiveExample",
+            "setSelectionFlag",
+            "setTargetVolumeFlag",
+            "translateSelection",
+            "worldRelocate"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "interaction"
+          ],
+          "routes": [
+            "selectSameKindSelection"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "interaction"
+          ],
+          "routes": [
+            "duplicateSelection"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "acceptSuggestion",
+            "addBrushObject"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-transient"
+          ],
+          "routes": [
+            "closeVortexSuggestions",
+            "cycleBrushCandidate",
+            "cycleBrushCandidateBack",
+            "engagementAbort",
+            "engagementControlSelect",
+            "engagementInput",
+            "engagementRepeatLast",
+            "hoverSuggestion",
+            "openVortexSuggestions",
+            "suggestionsTick"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-config"
+          ],
+          "routes": [
+            "focusSelection",
+            "setCamera",
+            "setChunkSize",
+            "setGridSnapEnabled",
+            "setGridSpacing",
+            "setGridVisible",
+            "setLodAutomatic",
+            "setLodDepthVariable",
+            "setLodManual",
+            "setProjection",
+            "setProjectionParam",
+            "setProximityRadius",
+            "setSelectableKind",
+            "setSunAzimuth",
+            "setSunElevation",
+            "setSunIntensity",
+            "setTransformGumballFlag",
+            "setVortexDirection",
+            "setVortexShow",
+            "setVoxelDims",
+            "toggleSun"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-config",
+            "window-transient"
+          ],
+          "routes": [
+            "engagementSubmit"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "config"
+          ],
+          "routes": [
+            "setFillCount"
           ]
         }
       ]
@@ -215,10 +301,32 @@
         {
           "status": "migrated",
           "lanes": [
-            "config"
+            "window-config"
           ],
           "routes": [
             "zoomToSelection"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-transient"
+          ],
+          "routes": [
+            "cycleBrushCandidate",
+            "engagementAbort",
+            "engagementControlSelect",
+            "engagementInput"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-transient"
+          ],
+          "routes": [
+            "engagementSubmit"
           ]
         },
         {
@@ -254,13 +362,19 @@
             "config"
           ],
           "routes": [
-            "cycleBrushCandidate",
-            "engagementAbort",
-            "engagementControlSelect",
-            "engagementInput",
-            "engagementSubmit",
-            "focusSelection",
             "setBrushPlacementOverlapBudget",
+            "setObjectKindWeight",
+            "setVortexKindWeight"
+          ],
+          "blocker": "config-lane completion has no app-owned retained preparation and root-retirement factory"
+        },
+        {
+          "status": "batch-only-pending-rewrite",
+          "lanes": [
+            "window-config"
+          ],
+          "routes": [
+            "focusSelection",
             "setCamera",
             "setCamera2d",
             "setCamera3d",
@@ -268,15 +382,13 @@
             "setGridFactor",
             "setGridSnapEnabled",
             "setLodMode",
-            "setObjectKindWeight",
             "setSuggestionOffset",
             "setSunAzimuth",
             "setSunElevation",
             "setSunIntensity",
-            "setVortexKindWeight",
             "toggleSun"
           ],
-          "blocker": "config-lane completion has no app-owned retained preparation and root-retirement factory"
+          "blocker": "window-config completion has no app-owned retained preparation and root-retirement factory"
         },
         {
           "status": "batch-only-pending-rewrite",

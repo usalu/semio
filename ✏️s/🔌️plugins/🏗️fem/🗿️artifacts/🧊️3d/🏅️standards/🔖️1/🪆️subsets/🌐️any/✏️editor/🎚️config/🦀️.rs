@@ -10,8 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🧮️ B1: fem3d's real `ArtifactApp::Config` — absorbs both former `Fem3dPlayApp` `RefCell` fields
 /// (`result_display`, `camera`); session-only view state now round-trips through the config
 /// `ArtifactStore` exactly like document content, with a real `backwards` per `Fem3dConfigMutation`
-/// instead of never being VCS'd at all. Mirrors `Fem2dConfig`'s identical B1 recipe, minus a `locale`
-/// field (fem3d never carried a `ViewModel::locale` the way fem2d did).
+/// instead of never being VCS'd at all. Locale and terminology come from the shared host `ViewModel`.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "fem3dcfg")]
@@ -177,9 +176,54 @@ impl Mutation<Fem3dConfig> for Fem3dConfigMutation {
     /// disk, so every `owner` below names a path that does not exist yet — the same shape block3d's
     /// `Block3dConfigMutation` and puzzle3d's `Puzzle3dConfigMutation` already carry.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🟤️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/👁️set-result-display", semantic_kind: "set-result-display", display_name: "Set Result Display", emoji: "👁️", aggregate_variant: "SetResultDisplay", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🎥️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🟤️set-snapshot",
+            semantic_kind: "set-snapshot",
+            display_name: "Set Snapshot",
+            emoji: "📄",
+            aggregate_variant: "Snapshot",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/👁️set-result-display",
+            semantic_kind: "set-result-display",
+            display_name: "Set Result Display",
+            emoji: "👁️",
+            aggregate_variant: "SetResultDisplay",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🎥️set-camera",
+            semantic_kind: "set-camera",
+            display_name: "Set Camera",
+            emoji: "🎥️",
+            aggregate_variant: "SetCamera",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {

@@ -4,7 +4,6 @@
 //! reuse-terminology concept (pure control-flow vocabulary), so `reuse_*` mirrors `native_*` throughout —
 //! `ImperativeConfig` carries no terminology axis.
 
-
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the imperative app; one field per label makes every locale

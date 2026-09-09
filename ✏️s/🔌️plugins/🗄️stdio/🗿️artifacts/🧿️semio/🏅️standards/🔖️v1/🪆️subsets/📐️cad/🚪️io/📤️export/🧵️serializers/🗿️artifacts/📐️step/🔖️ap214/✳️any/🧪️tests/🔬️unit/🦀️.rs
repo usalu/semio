@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::cad::schema::snapshot::CadEntityRecord;

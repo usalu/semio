@@ -18,12 +18,12 @@
 //!   frames only support flat paragraphs of runs, never nested block structure — an honest
 //!   limitation of pptx's own shape, not this mapping's).
 
-use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
-use semio_s_artifact_stdio_pptx::PptxSnapshot;
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
 use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, SlideFrame, SlideShape};
-use semio_s_artifact_stdio_zip::opc::OpcPackage;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
+use semio_s_artifact_stdio_pptx::PptxSnapshot;
+use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

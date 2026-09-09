@@ -141,7 +141,13 @@ pub mod guards {
     /// `id`; letting the two differ is a silent RENAME that orphans every referrer, so it is
     /// refused. Renaming a record is `delete-` + `create-` + re-pointing the referrers.
     pub fn identity_matches(noun: &str, target: &str, replacement: &str) -> Option<Rejection> {
-        (target != replacement).then(|| protocol::MutationOutcome::fatal("mutation.id-mismatch", format!("A replace-{noun} selects \"{target}\" but carries a record identified \"{replacement}\"; a replacement may not rename its target."), [target.to_string(), replacement.to_string()]))
+        (target != replacement).then(|| {
+            protocol::MutationOutcome::fatal(
+                "mutation.id-mismatch",
+                format!("A replace-{noun} selects \"{target}\" but carries a record identified \"{replacement}\"; a replacement may not rename its target."),
+                [target.to_string(), replacement.to_string()],
+            )
+        })
     }
 
     /// 🔗️ A `delete-` may not orphan a live reference. The diagnostic addresses the target FIRST
@@ -446,14 +452,14 @@ pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
     let report = dsl::DslValue::object([
-    ("base".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&base))),
-    ("expectedSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&expected))),
-    ("snapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&applied))),
-    ("diff".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.diff()))),
-    ("messages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.messages()))),
-    ("inverseSteps".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse))),
-    ("inverseSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&undone))),
-    ("inverseMessages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse_messages))),
+        ("base".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&base))),
+        ("expectedSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&expected))),
+        ("snapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&applied))),
+        ("diff".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.diff()))),
+        ("messages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.messages()))),
+        ("inverseSteps".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse))),
+        ("inverseSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&undone))),
+        ("inverseMessages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse_messages))),
     ]);
     Ok(dsl::json::to_json_string(&report))
 }
@@ -544,11 +550,7 @@ fn fem2d_case_value(result: &crate::model::StaticResult, nodes: &[String], pairs
             dsl::DslValue::Array(six.iter().map(|value| dsl::DslValue::float(*value)).collect())
         })
         .collect();
-    dsl::DslValue::Object(vec![
-        ("displacements".to_string(), dsl::DslValue::Array(displacements)),
-        ("reactions".to_string(), dsl::DslValue::Array(reactions)),
-        ("elements".to_string(), dsl::DslValue::Array(elements)),
-    ])
+    dsl::DslValue::Object(vec![("displacements".to_string(), dsl::DslValue::Array(displacements)), ("reactions".to_string(), dsl::DslValue::Array(reactions)), ("elements".to_string(), dsl::DslValue::Array(elements))])
 }
 
 /// 🔤️ A solver degree of freedom as the wire spells it.
@@ -624,10 +626,9 @@ pub fn fem2d_modal_report_json(snapshot_json: &str) -> Result<String, String> {
     let doc: Fem2dSnapshot = dsl::json::from_json_str(snapshot_json).map_err(|error| error.to_string())?;
     match crate::fem2d_engine::modal_buckling::fem2d_modal(&doc) {
         Err(error) => Ok(dsl::json::to_json_string(&dsl::DslValue::Object(vec![("error".to_string(), dsl::DslValue::String(error.to_string()))]))),
-        Ok(result) => Ok(dsl::json::to_json_string(&dsl::DslValue::Object(vec![(
-            "frequenciesHz".to_string(),
-            dsl::DslValue::Array(result.frequencies_hz.iter().take(doc.analysis.modal_count as usize).map(|value| dsl::DslValue::float(*value)).collect()),
-        )]))),
+        Ok(result) => {
+            Ok(dsl::json::to_json_string(&dsl::DslValue::Object(vec![("frequenciesHz".to_string(), dsl::DslValue::Array(result.frequencies_hz.iter().take(doc.analysis.modal_count as usize).map(|value| dsl::DslValue::float(*value)).collect()))])))
+        }
     }
 }
 

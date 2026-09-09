@@ -23,7 +23,6 @@ pub fn print_dsl(document: &DagSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
-
 //#region 🔖️HandcraftedArtifactDsl
 impl store::ArtifactDsl for DagSnapshot {
     const EXTENSION: &'static str = "dag";

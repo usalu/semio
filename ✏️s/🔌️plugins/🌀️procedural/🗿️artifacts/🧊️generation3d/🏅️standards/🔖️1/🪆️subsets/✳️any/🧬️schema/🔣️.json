@@ -6,14 +6,7 @@
   "additionalProperties": false,
   "required": [
     "fixture",
-    "generation",
-    "selectedNodeIds",
-    "lodMode",
-    "showMode",
-    "selectionMethod",
-    "graphCamera",
-    "previewCamera",
-    "sunJson"
+    "generation"
   ],
   "properties": {
     "fixture": {
@@ -22,50 +15,6 @@
     },
     "generation": {
       "$ref": "#/$defs/GenerationPlayState",
-      "x-semio-state": "artifact"
-    },
-    "selectedNodeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "lodMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "showMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "hoveredNodeId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "graphCamera": {
-      "$ref": "#/$defs/CameraJson",
-      "x-semio-state": "config"
-    },
-    "previewCamera": {
-      "$ref": "#/$defs/Generation3dPreviewCamera",
-      "x-semio-state": "config"
-    },
-    "sunJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "selectedGenerationId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "generationPreviewText": {
-      "type": "string",
       "x-semio-state": "artifact"
     }
   },

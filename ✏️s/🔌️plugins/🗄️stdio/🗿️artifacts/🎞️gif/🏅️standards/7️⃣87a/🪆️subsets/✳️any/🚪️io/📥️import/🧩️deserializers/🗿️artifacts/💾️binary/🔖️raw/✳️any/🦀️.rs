@@ -1,8 +1,8 @@
 //! Deserialize stdio.gif from stdio.binary.
 
-use semio_s_artifact_stdio_binary::BinarySnapshot;
 use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::STDIO_GIF_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}

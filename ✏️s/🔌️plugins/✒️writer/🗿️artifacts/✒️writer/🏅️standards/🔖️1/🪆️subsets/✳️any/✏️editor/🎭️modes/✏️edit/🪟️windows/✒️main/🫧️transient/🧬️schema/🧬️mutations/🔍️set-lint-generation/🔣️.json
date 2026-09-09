@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧬️schema/🧬️mutations/🔍️set-lint-generation",
+  "semanticKind": "set-lint-generation",
+  "displayName": "Set Lint Generation",
+  "emoji": "🔍️",
+  "aggregateVariant": "SetLintGeneration",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-lint-generation",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "text", "binary", "json-schema"]
+}

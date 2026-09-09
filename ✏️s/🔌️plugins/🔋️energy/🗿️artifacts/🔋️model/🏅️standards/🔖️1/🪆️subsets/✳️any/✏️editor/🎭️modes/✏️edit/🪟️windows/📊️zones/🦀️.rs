@@ -32,12 +32,7 @@ pub fn actions() -> Vec<ActionDefinition> {
                 ActionArgDef::toggle("conditioned", LocalizedLabel::native("Conditioned", "Konditioniert")),
             ],
         ),
-        action(
-            "rename-zone",
-            "Rename zone",
-            "Zone umbenennen",
-            vec![ActionArgDef::number("zone", LocalizedLabel::native("Zone id", "Zonen-Id")).required(), ActionArgDef::text("newName", LocalizedLabel::native("New name", "Neuer Name")).required()],
-        ),
+        action("rename-zone", "Rename zone", "Zone umbenennen", vec![ActionArgDef::number("zone", LocalizedLabel::native("Zone id", "Zonen-Id")).required(), ActionArgDef::text("newName", LocalizedLabel::native("New name", "Neuer Name")).required()]),
         action("delete-zone", "Delete zone", "Zone löschen", vec![ActionArgDef::number("zone", LocalizedLabel::native("Zone id", "Zonen-Id")).required()]),
     ]
 }

@@ -1144,9 +1144,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
                     } else {
                         self.phase = GisMapStoreInitializationPhase::Fault;
                         let fault = self.fault.take().unwrap_or_else(|| b"gis-map-store.initializer-fault".to_vec());
-                        let detail = cx
-                            .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &fault)
-                            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &fault).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
                         semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
                     }
                 }
@@ -1162,9 +1160,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
             GisMapStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
             GisMapStoreInitializationPhase::Fault => {
                 let fault = self.fault.as_deref().unwrap_or(b"gis-map-store.initializer-fault");
-                let detail = cx
-                    .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, fault)
-                    .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, fault).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
                 semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
             }
         }

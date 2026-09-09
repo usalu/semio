@@ -124,8 +124,8 @@ pub mod geometry_import {
 /// `io()` uses.
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::standards::v1::subsets::any::io::geometry_import::{ObjIntoFem3d, StlIntoFem3d};
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::{Fem3dMutation, Fem3dSnapshot, FEM3D_DIALECT, FEM_3D_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};

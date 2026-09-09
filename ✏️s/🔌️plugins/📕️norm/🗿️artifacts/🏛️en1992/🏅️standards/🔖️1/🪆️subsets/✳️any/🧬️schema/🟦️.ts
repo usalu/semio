@@ -71,6 +71,4 @@ export interface En1992Artifact {
   anchorNEdKn: number;
   /** @state artifact */
   anchorVEdKn: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

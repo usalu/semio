@@ -32,12 +32,20 @@ impl NativeVcsCodecReceiptV1 {
     /// 🪧️ Returns identity data without exposing executable construction authority.
     pub fn identity(&self) -> NativeVcsCodecIdentityV1 {
         let (factory_id, artifact_kind, schema, extension, capability, protocol) = match self.artifact {
-            VcsCodecV1::Vcs => (
-                "vcs.vcs.v1", "s.vcs.vcs", "vcs.vcs", "vcs", "s.vcs.vcs.codec.document",
-                include_bytes!("../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/📡️.protocol.semio").as_slice(),
-            ),
+            VcsCodecV1::Vcs => ("vcs.vcs.v1", "s.vcs.vcs", "vcs.vcs", "vcs", "s.vcs.vcs.codec.document", include_bytes!("../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/📡️.protocol.semio").as_slice()),
         };
-        NativeVcsCodecIdentityV1 { plugin_id: "vcs", package_id: "semio:vcs", package_version: env!("CARGO_PKG_VERSION"), factory_id, artifact_kind, schema, extension, capability, pack_schema_hash: self.codec().pack_schema_hash, protocol_sha256: Sha256::digest(protocol) }
+        NativeVcsCodecIdentityV1 {
+            plugin_id: "vcs",
+            package_id: "semio:vcs",
+            package_version: env!("CARGO_PKG_VERSION"),
+            factory_id,
+            artifact_kind,
+            schema,
+            extension,
+            capability,
+            pack_schema_hash: self.codec().pack_schema_hash,
+            protocol_sha256: Sha256::digest(protocol),
+        }
     }
 
     fn codec(&self) -> store::ArtifactCodec {

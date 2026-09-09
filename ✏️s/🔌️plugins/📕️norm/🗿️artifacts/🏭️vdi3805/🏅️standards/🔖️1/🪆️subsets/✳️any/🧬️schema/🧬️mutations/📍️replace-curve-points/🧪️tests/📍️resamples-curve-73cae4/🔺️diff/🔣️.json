@@ -20,24 +20,23 @@
         "symbol": "m3/h",
         "kind": "Volume",
         "delta": false,
-        "si_factor": 1.0
+        "si_factor": 1
       },
       "points": [
         {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0,
+          "y": 0
         },
         {
-          "x": 50.0,
+          "x": 50,
           "y": 2.25
         },
         {
-          "x": 100.0,
+          "x": 100,
           "y": 4.5
         }
       ]
     }
   },
-  "limits": null,
-  "selectedCheckIndex": null
+  "limits": null
 }

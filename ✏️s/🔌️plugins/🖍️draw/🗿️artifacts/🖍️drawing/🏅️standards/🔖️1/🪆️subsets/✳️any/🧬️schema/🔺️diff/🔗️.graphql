@@ -16,12 +16,6 @@ type DrawingDiff {
   layers: DrawingLayersDelta @state(class: ARTIFACT)
   assets: DrawingAssetsDelta @state(class: ARTIFACT)
   artboard: DrawingArtboard @state(class: ARTIFACT)
-  selectedIds: DrawingStringList @state(class: PRESENCE)
-  engagementInput: String @state(class: CONFIG)
-  cameraX: Float @state(class: CONFIG)
-  cameraY: Float @state(class: CONFIG)
-  cameraZoom: Float @state(class: CONFIG)
-  hoveredId: String @state(class: ARTIFACT)
 }
 
 # 🗂️ Mirrors Rust `DrawingAssetsDelta` — asset-map wrapper so optional map diffs stay scalar across

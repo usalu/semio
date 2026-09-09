@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::flow::testkit::{FlowApp, dispatch, flow_app, render};
-use crate::editor::flow::{FLOW_PLAY_BODY_MAIN, FlowCommand};
-use serde_json::{Value, json};
+use crate::editor::flow::testkit::{dispatch, flow_app, render, FlowApp};
+use crate::editor::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
+use serde_json::{json, Value};
 
 async fn preview_off_ids(app: &mut FlowApp) -> Value {
     let rendered: Value = serde_json::from_str(&render(app, FLOW_PLAY_BODY_MAIN).await).expect("render json");

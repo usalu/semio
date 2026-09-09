@@ -18,9 +18,8 @@
   "pileDM": null,
   "qSKpa": null,
   "pileLM": null,
-  "qBKpa": 3200.0,
+  "qBKpa": 3200,
   "pileBaseAreaM2": null,
   "pileNProfiles": null,
-  "zInvestigatedM": null,
-  "selectedCheckIndex": null
+  "zInvestigatedM": null
 }

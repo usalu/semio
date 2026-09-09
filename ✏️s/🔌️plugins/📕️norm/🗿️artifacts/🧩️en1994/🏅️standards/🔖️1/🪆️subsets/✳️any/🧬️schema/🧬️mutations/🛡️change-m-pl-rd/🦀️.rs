@@ -1,6 +1,5 @@
 //! 🏗️ `change-m-pl-rd` — sets the En 1994 full-interaction composite plastic moment resistance M_pl,Rd [kNm] scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

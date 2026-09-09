@@ -4,8 +4,8 @@ use crate::diff::text::diff_replace_content;
 use crate::diff::DagDiff;
 use crate::schema::split_endpoint;
 use crate::{dag_working_scene, DagSnapshot};
-use semio_framework_artifact_infinite_dag::DagEdgePatch;
 use protocol::Patchable;
+use semio_framework_artifact_infinite_dag::DagEdgePatch;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::RenameNode, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {

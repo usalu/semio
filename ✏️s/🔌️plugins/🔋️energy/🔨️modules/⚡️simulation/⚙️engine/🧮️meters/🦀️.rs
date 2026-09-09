@@ -1,8 +1,8 @@
 //! ⚡️ Energy and resource meters with end-use categories.
 
 use crate::model::FixedTable;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️Fuel
 /// ⛽️ Fuel/resource type for meters.

@@ -1,12 +1,14 @@
 syntax = "proto3";
 package semio.s.animate.presentation.diff;
 message PresentationDiff {
-  optional PresentationArtifact artifact = 1; // @state artifact
-  optional string schema = 2; // @state artifact
-  optional FigureTileSource source = 3; // @state artifact
-  optional PresentationTilesDelta tiles = 4; // @state artifact
-  optional PresentationStringList selected_ids = 5; // @state presence
-  optional string engagement_input = 6; // @state config
+  // @state artifact
+  optional PresentationArtifact artifact = 1;
+  // @state artifact
+  optional string schema = 2;
+  // @state artifact
+  optional FigureTileSource source = 3;
+  // @state artifact
+  optional PresentationTilesDelta tiles = 4;
 }
 message PresentationStringList { repeated string values = 1; }
 message PresentationTilesDelta {
@@ -24,6 +26,4 @@ message PresentationArtifact {
   string schema = 1;
   FigureTileSource source = 2;
   repeated FigureTileDraft tiles = 3;
-  repeated string selected_ids = 4;
-  string engagement_input = 5;
 }

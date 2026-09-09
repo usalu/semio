@@ -3,9 +3,9 @@
 use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::standards::v1::subsets::any::schema::Generation2dArtifact;
 use crate::{widget_id, Generation2dSnapshot};
-use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
-use semio_framework_artifact_flow_flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use protocol::MutationDiff;
+use semio_framework_artifact_flow_flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -98,7 +98,7 @@ pub fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMu
 
 //#region 🔖️Apply
 impl Generation2dDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &Generation2dArtifact) -> protocol::MutationApplyResult<Generation2dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -110,21 +110,6 @@ impl Generation2dDiff {
             }
             if let Some(generation) = &self.generation {
                 std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
-            }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
-            }
-            if let Some(value) = &self.graph_camera {
-                next.graph_camera = value.clone();
-            }
-            if let Some(value) = &self.show_mode {
-                next.show_mode = value.clone();
-            }
-            if let Some(value) = &self.selected_generation_id {
-                next.selected_generation_id = value.clone();
-            }
-            if let Some(value) = &self.generation_preview_text {
-                next.generation_preview_text = value.clone();
             }
             next
         })
@@ -161,11 +146,6 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
         }
         take!(fixture);
         take!(generation);
-        take!(selected_ids);
-        take!(graph_camera);
-        take!(show_mode);
-        take!(selected_generation_id);
-        take!(generation_preview_text);
     }
 }
 //#endregion 🔖️Apply

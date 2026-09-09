@@ -18,69 +18,7 @@ message Puzzle3dArtifact {
   repeated Puzzle3dTargetVolume target_volumes = 6;
   // @state artifact
   repeated Puzzle3dReference references = 7;
-  // @state presence
-  repeated string selected_object_ids = 8;
-  // @state presence
-  repeated string selected_vortex_ids = 9;
-  // @state presence
-  repeated string selected_attraction_ids = 10;
-  // @state presence
-  repeated string selected_target_volume_ids = 11;
-  // @state presence
-  repeated string selected_reference_ids = 12;
-  // @state presence
-  string active_utility_id = 13;
   // @state config
-  double camera_position_x = 14;
-  // @state config
-  double camera_position_y = 15;
-  // @state config
-  double camera_position_z = 16;
-  // @state config
-  double camera_target_x = 17;
-  // @state config
-  double camera_target_y = 18;
-  // @state config
-  double camera_target_z = 19;
-  // @state config
-  double camera_zoom = 20;
-  // @state config
-  string selection_method = 21;
-  // @state config
-  string selection_mode_default = 22;
-  // @state config
-  string engagement_input = 23;
-  // @state config
-  bool grid_visible = 24;
-  // @state config
-  bool grid_snap_enabled = 25;
-  // @state config
-  double grid_spacing = 26;
-  // @state config
-  double overlap_budget = 27;
-  // @state config
-  uint32 fill_count = 28;
-  // @state config
-  uint32 brush_candidate_index = 29;
-  // @state config
-  bool lod_automatic = 30;
-  // @state config
-  bool lod_depth_variable = 31;
-  // @state config
-  double lod_manual = 32;
-  // @state config
-  double proximity_radius = 33;
-  // @state config
-  // @state config
-  string runtime_extras_json = 35;
-  // @state artifact
-  optional string hovered_object_id = 36;
-  // @state artifact
-  optional string hovered_vortex_full_id = 37;
-  // @state artifact
-  optional string hovered_kind_id = 38;
-  // @state artifact
-  int64 preview_seq = 39;
 }
 
 enum Puzzle3dObjectAnchor {

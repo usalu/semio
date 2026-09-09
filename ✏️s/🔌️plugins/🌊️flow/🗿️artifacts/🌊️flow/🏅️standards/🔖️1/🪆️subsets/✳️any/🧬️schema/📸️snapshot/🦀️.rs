@@ -1,8 +1,8 @@
 //! 🧬️ Flow snapshot schema — artifact-lane fields only.
 
 use crate::{flow_content_child_handle_and_cache, flow_working_scene, FlowContentChild};
-use semio_framework_artifact_flow_flow::CameraJson;
 use framework_schema::ArtifactSchema;
+use semio_framework_artifact_flow_flow::CameraJson;
 
 //#region 🔹Snapshot
 /// 📸️ Persisted flow document snapshot (persistent fields of the artifact). Ticket

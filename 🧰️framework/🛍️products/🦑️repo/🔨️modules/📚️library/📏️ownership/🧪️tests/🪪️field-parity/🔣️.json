@@ -1,0 +1,131 @@
+{
+  "cases": [
+    {
+      "name": "quoted numeric wire names retain their spelling",
+      "typeName": "Fixture",
+      "rust": "pub struct Fixture { #[state(artifact)] #[value(rename = \"2d\")] pub part_2d: String, #[state(artifact)] #[value(rename = \"3d\")] pub part_3d: String, }",
+      "typescript": "export interface Fixture { \"2d\": string; '3d': string; }",
+      "expected": [
+        "2d",
+        "3d"
+      ],
+      "state": [
+        "artifact",
+        "artifact"
+      ]
+    },
+    {
+      "name": "canonical fields preserve numeric segments",
+      "typeName": "Fixture",
+      "rust": "#[value(rename_all = \"camelCase\")] pub struct Fixture { #[state(artifact)] pub f_c_0_k: f64, #[state(artifact)] pub part_2d: String, }",
+      "typescript": "export interface Fixture { fC0K: number; part2d: string; }",
+      "expected": [
+        "fC0K",
+        "part2d"
+      ],
+      "state": [
+        "artifact",
+        "artifact"
+      ]
+    },
+    {
+      "name": "explicit wire name overrides native field spelling",
+      "typeName": "Fixture",
+      "rust": "#[value(rename_all = \"camelCase\")] pub struct Fixture { #[state(artifact)] #[value(rename = \"type\")] pub kind: String, #[value(rename = \"childId\")] #[state(artifact)] pub child: String, }",
+      "typescript": "export interface Fixture { type: string; childId: string; }",
+      "expected": [
+        "type",
+        "childId"
+      ],
+      "state": [
+        "artifact",
+        "artifact"
+      ]
+    },
+    {
+      "name": "helpers and serde test attributes retain exact owner",
+      "typeName": "Fixture",
+      "rust": "pub struct Helper { pub locale: String, } pub struct Fixture { #[state(artifact)] #[cfg_attr(test, serde(rename = \"nodeId\"))] #[value(rename = \"nodeId\")] pub identifier: String, }",
+      "typescript": "export interface Helper { locale: string; } export interface Fixture { nodeId: string; }",
+      "expected": [
+        "nodeId"
+      ],
+      "state": [
+        "artifact"
+      ]
+    }
+  ],
+  "parity": [
+    {
+      "reference": [
+        "content",
+        "meta"
+      ],
+      "candidate": [
+        "meta",
+        "content"
+      ],
+      "expected": {
+        "missing": [],
+        "extra": []
+      }
+    },
+    {
+      "reference": [
+        "content",
+        "meta"
+      ],
+      "candidate": [
+        "boardFixture"
+      ],
+      "expected": {
+        "missing": [
+          "content",
+          "meta"
+        ],
+        "extra": [
+          "boardFixture"
+        ]
+      }
+    },
+    {
+      "reference": [
+        "content",
+        "meta"
+      ],
+      "candidate": [],
+      "expected": {
+        "missing": [
+          "content",
+          "meta"
+        ],
+        "extra": []
+      }
+    },
+    {
+      "reference": [],
+      "candidate": [
+        "locale"
+      ],
+      "expected": {
+        "missing": [],
+        "extra": [
+          "locale"
+        ]
+      }
+    }
+  ],
+  "discovery": {
+    "pattern": "{✏️s/🔌️plugins,🧰️framework}/**/🗿️artifacts/*/🏅️standards/*/🪆️subsets/*",
+    "ignore": [
+      "**/node_modules/**",
+      "**/target/**",
+      "**/🗑️generated/**"
+    ],
+    "facetRels": [
+      "🧬️schema",
+      "🧬️schema/📸️snapshot",
+      "🧬️schema/🔺️diff"
+    ]
+  }
+}

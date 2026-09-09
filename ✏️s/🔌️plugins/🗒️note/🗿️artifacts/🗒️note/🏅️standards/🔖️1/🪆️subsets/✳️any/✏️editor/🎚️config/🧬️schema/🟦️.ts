@@ -5,8 +5,6 @@ export interface NoteConfig {
   /** @state config */
   camera: NoteCamera;
   /** @state config */
-  activeUtilityId: string;
-  /** @state config */
 }
 
 export interface NoteCamera {
@@ -67,7 +65,6 @@ export function parseNoteConfig(value: unknown, at = "$"): NoteConfig {
   return {
     engagementInput: noteNoteConfigGuardString(row["engagementInput"], `${at}.engagementInput`),
     camera: parseNoteCamera(row["camera"], `${at}.camera`),
-    activeUtilityId: noteNoteConfigGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
   };
 }
 

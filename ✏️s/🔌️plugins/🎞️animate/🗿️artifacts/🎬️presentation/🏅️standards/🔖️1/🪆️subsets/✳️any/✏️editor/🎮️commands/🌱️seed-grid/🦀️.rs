@@ -2,12 +2,12 @@
 
 #![allow(clippy::result_large_err)]
 
+use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
+use crate::editor::animate::{interaction_select_effect, PresentationDispatchCtx};
 use crate::mutations::replace_tiles::ReplaceTiles;
 use crate::op::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::PresentationSnapshot;
-use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{interaction_select_effect, PresentationDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

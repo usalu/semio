@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -17,13 +16,25 @@ fn all_built_in_stencils_validate() {
 
 #[test]
 fn node_at_and_coords_roundtrip() {
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
+    let [width, height, depth]: [usize; 3] = serde_json::from_value(oracle["dimensions3d"].clone()).unwrap();
     let mut b = ModelBuilder::new();
     b.add_pattern(1.0);
     let rels = declare_stencil_relations_3d(&mut b, &Stencil3d::Face6).unwrap();
-    let topo = Grid3dTopology::new(3, 4, 5, &Stencil3d::Face6, rels, Boundary::Open, Boundary::Open, Boundary::Open, None).unwrap();
+    let topo = Grid3dTopology::new(width, height, depth, &Stencil3d::Face6, rels, Boundary::Open, Boundary::Open, Boundary::Open, None).unwrap();
     let n = topo.node_at(1, 2, 3).unwrap();
     assert_eq!(topo.coords(n), (1, 2, 3));
-    assert_eq!(topo.node_at(3, 0, 0), None);
+    assert_eq!((topo.width(), topo.height(), topo.depth()), (width, height, depth));
+    for z in 0..topo.depth() {
+        for y in 0..topo.height() {
+            for x in 0..topo.width() {
+                assert_eq!(topo.coords(topo.node_at(x, y, z).unwrap()), (x, y, z));
+            }
+        }
+    }
+    assert_eq!(topo.node_at(topo.width(), 0, 0), None);
+    assert_eq!(topo.node_at(0, topo.height(), 0), None);
+    assert_eq!(topo.node_at(0, 0, topo.depth()), None);
 }
 
 #[test]
@@ -97,5 +108,16 @@ fn in_arc_matches_out_arc_on_open_boundary() {
                 assert_eq!(outgoing, reconstructed, "voxel ({x},{y},{z}) out-arcs must match in-arc reconstruction");
             }
         }
+    }
+}
+
+#[test]
+fn custom_stencil_validation_matches_neutral_vectors() {
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
+    for row in oracle["customStencils3d"].as_array().unwrap() {
+        let offsets: Vec<(i32, i32, i32)> = serde_json::from_value(row["offsets"].clone()).unwrap();
+        let stencil = Stencil3d::Custom(offsets);
+        assert_eq!(stencil.validate().is_ok(), row["valid"].as_bool().unwrap());
+        assert_eq!(serde_json::to_value(stencil.offsets()).unwrap(), row["offsets"]);
     }
 }

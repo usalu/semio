@@ -1,11 +1,10 @@
-
 use super::*;
-use crate::editor::forms::FormsCommand;
 use crate::editor::forms::commands::move_step::MoveStep;
 use crate::editor::forms::commands::patch_step::PatchStep;
 use crate::editor::forms::commands::remove_step::RemoveStep;
 use crate::editor::forms::commands::update_form::UpdateForm;
 use crate::editor::forms::testkit::{dispatch, forms_app};
+use crate::editor::forms::FormsCommand;
 use AddStep;
 
 #[semio_framework_async_macros::async_test]

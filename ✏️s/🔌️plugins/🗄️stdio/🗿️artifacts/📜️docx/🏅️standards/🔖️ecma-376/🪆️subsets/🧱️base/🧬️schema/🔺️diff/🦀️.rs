@@ -17,11 +17,11 @@
 
 use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
 use crate::DocxSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use std::collections::HashMap;
 
 //#region 🔖️GenericCollectionTriples
@@ -569,10 +569,7 @@ fn reorder_named<K: PartialEq, T>(items: &mut Vec<T>, order: &[K], key_of: impl 
     }
     let mut pool: Vec<Option<T>> = std::mem::take(items).into_iter().map(Some).collect();
     for key in order {
-        let slot = pool
-            .iter()
-            .position(|held| matches!(held, Some(item) if key_of(item) == *key))
-            .ok_or_else(|| MutationApplyError::new("mutation.apply.invalid-order", "named ordering names an item the collection does not carry").at(["order"]))?;
+        let slot = pool.iter().position(|held| matches!(held, Some(item) if key_of(item) == *key)).ok_or_else(|| MutationApplyError::new("mutation.apply.invalid-order", "named ordering names an item the collection does not carry").at(["order"]))?;
         items.push(pool[slot].take().expect("the slot was located as occupied one line above"));
     }
     Ok(())
@@ -848,7 +845,11 @@ fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResu
                 return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "paragraph diff targets a non-paragraph block"));
             };
             if let Some(rd) = &pd.runs {
-                apply_indexed(&mut p.runs, rd, |item, diff| { apply_run(item, diff); Ok(()) }).map_err(|error| error.under(["runs"]))?;
+                apply_indexed(&mut p.runs, rd, |item, diff| {
+                    apply_run(item, diff);
+                    Ok(())
+                })
+                .map_err(|error| error.under(["runs"]))?;
             }
             if let Some(s) = &pd.style {
                 p.style = s.clone();
@@ -914,7 +915,16 @@ fn apply_document_diff(doc: &mut DocxDocument, diff: &DocxDocumentDiff) -> Mutat
         apply_indexed(&mut doc.body, bd, apply_block).map_err(|error| error.under(["body"]))?;
     }
     if let Some(sd) = &diff.styles {
-        apply_named(&mut doc.styles, sd, |s| s.id.clone(), |item, diff| { apply_style(item, diff); Ok(()) }).map_err(|error| error.under(["styles"]))?;
+        apply_named(
+            &mut doc.styles,
+            sd,
+            |s| s.id.clone(),
+            |item, diff| {
+                apply_style(item, diff);
+                Ok(())
+            },
+        )
+        .map_err(|error| error.under(["styles"]))?;
     }
     Ok(())
 }

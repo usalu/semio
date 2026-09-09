@@ -21,7 +21,14 @@ pub struct CreateThermostat {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_thermostat(id: crate::model::EntityId, zone_id: crate::model::EntityId, heating_setpoint_schedule_id: crate::model::ScheduleId, cooling_setpoint_schedule_id: crate::model::ScheduleId, heating_throttle_range_k: f64, cooling_throttle_range_k: f64) -> EnergyModelMutation {
+pub fn create_thermostat(
+    id: crate::model::EntityId,
+    zone_id: crate::model::EntityId,
+    heating_setpoint_schedule_id: crate::model::ScheduleId,
+    cooling_setpoint_schedule_id: crate::model::ScheduleId,
+    heating_throttle_range_k: f64,
+    cooling_throttle_range_k: f64,
+) -> EnergyModelMutation {
     EnergyModelMutation::CreateThermostat(CreateThermostat { id, zone_id, heating_setpoint_schedule_id, cooling_setpoint_schedule_id, heating_throttle_range_k, cooling_throttle_range_k })
 }
 

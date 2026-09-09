@@ -15,7 +15,7 @@ use crate::wgpu::component::ui::UiNode;
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
-use crate::wgpu::mounted_layout::{MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
+use crate::wgpu::mounted_layout::{MountedLayoutIdentity, MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
 #[cfg(test)]
 use crate::wgpu::paint::paint_tree;
 use crate::wgpu::paint::{paint_node_step, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
@@ -222,6 +222,7 @@ impl UiSurfaceRegistry {
         Some(UiSurfaceToken { slot: slot as u8, generation: self.slots[slot].as_ref()?.generation })
     }
 
+    #[expect(clippy::result_large_err, reason = "Surface and document admission return the exact refused identity or page without allocating a rejection wrapper.")]
     fn try_admit(&mut self, id: SurfaceId) -> Result<UiSurfaceToken, UiSurfaceAdmissionRejected> {
         if let Some(token) = self.token(id.as_ref()) {
             return Ok(token);
@@ -495,6 +496,7 @@ impl Ui {
         }
     }
 
+    #[expect(clippy::result_large_err, reason = "Surface and document admission return the exact refused identity or page without allocating a rejection wrapper.")]
     pub fn try_admit_surface(&mut self, window_id: &str) -> Result<UiSurfaceToken, UiSurfaceAdmissionRejected> {
         let id = SurfaceId::try_from(window_id).map_err(|_| UiSurfaceAdmissionRejected { id: SurfaceId::default() })?;
         self.windows.try_admit(id)
@@ -556,6 +558,7 @@ impl Ui {
             .map_or(UiDocumentIngressStatus::Vacant, |ingress| UiDocumentIngressStatus::Pending { next_page: ingress.next_page, node_count: ingress.node_count })
     }
 
+    #[expect(clippy::result_large_err, reason = "Surface and document admission return the exact refused identity or page without allocating a rejection wrapper.")]
     pub fn begin_document(&mut self, window_id: &str, header: UiDocumentLeaseHeader, cx: &mut StepContext<'_>) -> Result<(), (UiDocumentIngressFault, UiDocumentLeaseHeader)> {
         if cx.is_cancelled() {
             return Err((UiDocumentIngressFault::Cancelled, header));
@@ -593,6 +596,7 @@ impl Ui {
         Ok(())
     }
 
+    #[expect(clippy::result_large_err, reason = "Surface and document admission return the exact refused identity or page without allocating a rejection wrapper.")]
     pub fn apply_document_page(&mut self, window_id: &str, page: UiDocumentNodePage, cx: &mut StepContext<'_>) -> Result<usize, UiDocumentPageRejection> {
         let Some(window) = self.window_mut(window_id) else {
             return Err(UiDocumentPageRejection { fault: UiDocumentTreeFault::Generation, generation: page.generation(), revision: page.revision(), index: page.index(), record: page.into_record() });
@@ -763,10 +767,7 @@ impl Ui {
                     window.glyph_preview = Some(preview);
                 }
                 let publish = session.checked_out_job_mut().filter(|job| job.stage() == LayoutJobStage::PublishResults).map(|job| job.publish_one(&mut window.tree, identity));
-                if terminal || matches!(publish, Some(LayoutJobStep::Complete | LayoutJobStep::Fault(_))) {
-                    session.begin_close();
-                    window.layout_closing = true;
-                } else if session.resume().is_err() {
+                if terminal || matches!(publish, Some(LayoutJobStep::Complete | LayoutJobStep::Fault(_))) || session.resume().is_err() {
                     session.begin_close();
                     window.layout_closing = true;
                 }
@@ -837,7 +838,7 @@ impl Ui {
                 LayoutJobStep::Complete => {}
             }
         }
-        window.layout_job = MountedLayoutJob::try_new(&window.tree, root, token, window.layout_generation, window.revision, window.theme_revision, window.viewport_revision, theme, window.viewport.0, window.viewport.1).ok();
+        window.layout_job = MountedLayoutJob::try_new(&window.tree, root, MountedLayoutIdentity { surface: token, generation: window.layout_generation, revision: window.revision, theme_revision: window.theme_revision, viewport_revision: window.viewport_revision }, theme, window.viewport.0, window.viewport.1).ok();
         if window.layout_job.is_some() {
             self.enqueue_layout(window_id.as_ref());
             UiLayoutStep::Yielded { window_id, lane, stage: "Layout.Preadmit", nodes: 0, glyphs: 0 }
@@ -1206,15 +1207,13 @@ impl Ui {
     pub fn frame_into_step<H: SceneHost>(
         &mut self,
         window_id: &str,
-        viewport_width: f32,
-        viewport_height: f32,
-        offset_x: f32,
-        offset_y: f32,
+        viewport: crate::wgpu::geometry::Rect,
         atlas: &mut FontAtlas,
         icons: Option<&IconAtlas>,
         mut scene_host: Option<&mut H>,
         target: &mut DrawList,
     ) -> UiFrameStep {
+        let crate::wgpu::geometry::Rect { x: offset_x, y: offset_y, w: viewport_width, h: viewport_height } = viewport;
         self.set_viewport(window_id, viewport_width, viewport_height);
         let theme = self.theme;
         let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };

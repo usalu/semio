@@ -145,4 +145,71 @@ A focused scan of literal Rust include paths in the shared Norm config and app-s
 
 Before native execution, the mounted integration surfaces were audited against the current graph. The config test imports only `semio-s-artifact-norm-contract` plus the framework kernel traits, and its semantic kind, text opcode, and binary tag match the owned change-selected-check-index descriptor. The surface test imports the public framework testkit and the fifteen artifact crates directly; every editor/viewer type path and plugin app/artifact identity resolves from the current package roots. No Rust source or manifest below Norm refers to the removed parent artifact/config/app-surface API or to `semio-s-plugin-fem`. Both integration sources pass `rustfmt --check`; the surface test import layout was normalized during this audit.
 
-The three authoritative native commands are staged sequentially with `CARGO_INCREMENTAL=0` and the one ticket Cargo target: contract `config-mutation-test`, plugin `test -- --lib`, then plugin `surface-render-test`. They remain intentionally unstarted while the coordinator's host Cargo process owns the shared build epoch.
+The three authoritative native commands run sequentially with `CARGO_INCREMENTAL=0`, `CARGO_BUILD_JOBS=2`, a unique daemon-free Nx workspace-data directory per gate, and the one ticket Cargo target: contract `config-mutation-test`, plugin `test -- --lib`, then plugin `surface-render-test`.
+
+The first gate completed successfully:
+
+```text
+NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_WORKSPACE_DATA_DIRECTORY=<ticket>/🗑️generated/nx-workspace-data/norm-config-2 CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo bun x nx run @semio-tech/norm-plugin:config-mutation-test --output-style=stream
+```
+
+Result: Nx passed and nextest reported 1 passed, 0 failed.
+
+The first correctly formed plugin library gate, session `51981`, compiled all Norm sources and the parent plugin binary. Its post-build nextest metadata step then failed because a concurrently added glTF test manifest referred to the nonexistent workspace package `semio-framework-value`. The stdio artifact owner replaced those imports with the framework protocol traits, removed that manifest edge, and verified locked offline metadata for the 36-package catalog. This was an external graph failure; it did not report a Norm diagnostic.
+
+The warm retry used the same acceptance shape with a new isolated Nx graph:
+
+```text
+NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_WORKSPACE_DATA_DIRECTORY=<ticket>/🗑️generated/nx-workspace-data/norm-lib-3 CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo bun x nx run @semio-tech/norm-plugin:test --output-style=stream -- --lib
+```
+
+Session `49067` exited 1 after 6m03s. The retry reached the current shared `semio-framework-plugin` source and failed on the concurrent `ConfigView::window` integration plus missing thread-safety bounds in the new erased window config ownership path. It again reported no Norm source diagnostic. The framework owner repaired that shared compilation boundary.
+
+The authoritative warm plugin retry then completed successfully:
+
+```text
+NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_WORKSPACE_DATA_DIRECTORY=<ticket>/🗑️generated/nx-workspace-data/norm-lib-4 CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo bun x nx run @semio-tech/norm-plugin:test --output-style=stream -- --lib
+```
+
+Result: session `58231` exited 0 after 18m20s. Nx passed, and nextest reported 16 passed, 0 failed across the parent plugin library binary. This compiled the current framework plugin, all fifteen directly composed Norm packages, and the selective semio codec package.
+
+The first surface-render integration gate was session `83800`:
+
+```text
+NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_WORKSPACE_DATA_DIRECTORY=<ticket>/🗑️generated/nx-workspace-data/norm-surface-1 CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo bun x nx run @semio-tech/norm-plugin:surface-render-test --output-style=stream
+```
+
+It exited 1 after 14m04s with both native cases failing. The failures identified two actual integration defects: fixture lane ids use the canonical lower-case vocabulary while the test projected Rust `Debug` variant names, and the default DIN 4108 document JSON exceeded the UI component's 512-byte text capacity. The panic on that over-capacity insertion also exposed the intentionally strict disposer during unwind.
+
+The shared lower app-surface now publishes `publication_lane_id`, the single canonical mapping used by both integration tests. Document JSON is rendered as a bounded column of exact UTF-8 chunks, each no larger than `UI_TEXT_MAX_BYTES`, rather than being truncated or rejected. A focused contract regression renders a document containing 512 multibyte `ä` characters, retires the component tree, parses every text child, and proves their reassembly equals the complete source JSON. The independent source/AJV oracle was rerun after the change and passed its 15 variants, 30 apps, 120 bodies, and 5 hostile vectors.
+
+The first focused native regression was session `93063`:
+
+```text
+NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_WORKSPACE_DATA_DIRECTORY=<ticket>/🗑️generated/nx-workspace-data/norm-contract-chunk-1 CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo bun x nx run @semio-tech/norm-artifact-contract-rs:test --output-style=stream -- long_unicode_document_text_is_admitted_in_exact_utf8_chunks
+```
+
+It exited 1 after 37m11s with the one selected test failing `duplicate-key`: every chunked text node carried the UI builder's default identity. The chunk builder now assigns the stable unique id `norm-text-chunk-{index}` before each node is built. The source/AJV oracle completed again after this repair with the same 15/30/120/5 counts.
+
+The warm focused retry completed successfully:
+
+```text
+NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_WORKSPACE_DATA_DIRECTORY=<ticket>/🗑️generated/nx-workspace-data/norm-contract-chunk-2 \
+CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo \
+bun x nx run @semio-tech/norm-artifact-contract-rs:test --output-style=stream -- \
+  long_unicode_document_text_is_admitted_in_exact_utf8_chunks
+```
+
+Result: session `86471` exited 0 after 107m02s including the shared target queue. Nx passed; Nextest ran the one selected law with 1 passed, 0 failed, and 19 skipped. Durable log: `🗑️generated/norm-contract-chunk-test-2.txt`.
+
+The earlier surface retry lost its observable controller during the execution-slot handoff and was replaced by a fresh attached route. That attached session reached Cargo after 66m42s, then exited 1 before compilation could finish because the shared disk filled while Cargo wrote the Norm integration-test fingerprint. It emitted no Rust diagnostic and ran no surface test. Durable environmental-failure log: `🗑️generated/norm-surface-render-test-3.txt`.
+
+The final warmed surface-render integration retry is attached with a fresh isolated Nx graph:
+
+```text
+NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_WORKSPACE_DATA_DIRECTORY=<ticket>/🗑️generated/nx-workspace-data/norm-surface-4 \
+CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo \
+bun x nx run @semio-tech/norm-plugin:surface-render-test --output-style=stream
+```
+
+Pending session: `98132`; durable log: `🗑️generated/norm-surface-render-test-4.txt`. No final surface pass is claimed while pending.

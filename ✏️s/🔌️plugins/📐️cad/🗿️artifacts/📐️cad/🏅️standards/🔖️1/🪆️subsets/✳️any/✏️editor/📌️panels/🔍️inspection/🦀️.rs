@@ -2,21 +2,21 @@
 //! (object multi-selection, a primitive slot, a reference overlay, a node), or a schema summary.
 
 #[cfg(test)]
-use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
-use crate::{CadNode, CadReference};
-#[cfg(test)]
 use crate::editor::cad::terminology::typology_label;
 use crate::editor::cad::terminology::CadLabels;
 #[cfg(test)]
 use crate::editor::cad::TYPOLOGY_CATALOG;
 use crate::editor::cad::{CadPlayView, CAD_PLAY_APP_ID};
+#[cfg(test)]
+use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
+use crate::{CadNode, CadReference};
+use protocol::DslValue;
 use semio_framework_plugin::{
     tree_item, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiFieldNode, UiGroupNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 #[cfg(test)]
 use semio_framework_plugin::{ui_inspector_mixed_text, ui_inspector_mixed_toggle, UiSelectItem, UiSelectNode};
-use protocol::DslValue;
 
 //#region 🔖️Constants
 pub const CAD_PLAY_BODY_PROPERTIES: &str = "cad.play.properties";
@@ -48,15 +48,10 @@ fn cad_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
 pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let rows = crate::editor::cad::ui_node_list([
         tree_item("cad-play-inspector.schema", crate::editor::cad::ui_label(format!("{}: {}", labels.schema.as_str(), envelope.document.schema))?),
-        tree_item(
-            "cad-play-inspector.utility",
-            crate::editor::cad::ui_label(format!("{}: {}", labels.utility.as_str(), active_utility.unwrap_or(labels.none_placeholder.as_str())))?,
-        ),
+        tree_item("cad-play-inspector.utility", crate::editor::cad::ui_label(format!("{}: {}", labels.utility.as_str(), active_utility.unwrap_or(labels.none_placeholder.as_str())))?),
         tree_item("cad-play-inspector.objects", crate::editor::cad::ui_label(format!("{}: 0", labels.objects.as_str()))?),
     ])?;
-    PanelTreeBuilder::new("cad-play-inspector")?
-        .section("cad-play-inspector.summary", Some(crate::editor::cad::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?
-        .build()
+    PanelTreeBuilder::new("cad-play-inspector")?.section("cad-play-inspector.summary", Some(crate::editor::cad::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build()
 }
 
 /// @emoji 🌀️ Builds an editable 4-component quaternion group (`X`/`Y`/`Z`/`W` steppers) — orientation
@@ -219,11 +214,29 @@ pub fn reference_inspector_group(model_definition_id: &str, reference: &CadRefer
             ui_inspector_readonly_field("cad-play-inspector.reference.id", labels.id, &reference.id),
             ui_inspector_readonly_field("cad-play-inspector.reference.source", labels.source, &reference.source_url),
             {
-                let patch_cmd = |field: &str| cad_action("patchCadPlayReference", Some(DslValue::object([("modelDefinitionId".to_string(), DslValue::String(model_definition_id.to_string())), ("referenceId".to_string(), DslValue::String(reference.id.clone())), ("field".to_string(), DslValue::String(field.to_string()))])));
+                let patch_cmd = |field: &str| {
+                    cad_action(
+                        "patchCadPlayReference",
+                        Some(DslValue::object([
+                            ("modelDefinitionId".to_string(), DslValue::String(model_definition_id.to_string())),
+                            ("referenceId".to_string(), DslValue::String(reference.id.clone())),
+                            ("field".to_string(), DslValue::String(field.to_string())),
+                        ])),
+                    )
+                };
                 ui_inspector_stepper_field("cad-play-inspector.reference.widthWorld", labels.width_world, &[reference.width_world], 0.1, patch_cmd("widthWorld"))
             },
             {
-                let patch_cmd = move |axis: &str| cad_action("patchCadPlayReference", Some(DslValue::object([("modelDefinitionId".to_string(), DslValue::String(model_definition_id.to_string())), ("referenceId".to_string(), DslValue::String(reference.id.clone())), ("field".to_string(), DslValue::String(format!("origin.{axis}")))])));
+                let patch_cmd = move |axis: &str| {
+                    cad_action(
+                        "patchCadPlayReference",
+                        Some(DslValue::object([
+                            ("modelDefinitionId".to_string(), DslValue::String(model_definition_id.to_string())),
+                            ("referenceId".to_string(), DslValue::String(reference.id.clone())),
+                            ("field".to_string(), DslValue::String(format!("origin.{axis}"))),
+                        ])),
+                    )
+                };
                 ui_inspector_vec3_group("cad-play-inspector.reference.origin", labels.position, &[reference.origin], 0.1, patch_cmd)
             },
         ],

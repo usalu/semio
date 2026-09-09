@@ -1,7 +1,7 @@
 //! 🧬️ Din4108 snapshot schema — artifact-lane fields only.
 
-use crate::LayerDocument;
 use crate::document::ClimateZoneDe;
+use crate::LayerDocument;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -86,7 +86,6 @@ impl Default for Din4108Snapshot {
     }
 }
 //#endregion 🔖️Snapshot
-
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ The canonical JSON projection of a [`Din4108Snapshot`] — the surface

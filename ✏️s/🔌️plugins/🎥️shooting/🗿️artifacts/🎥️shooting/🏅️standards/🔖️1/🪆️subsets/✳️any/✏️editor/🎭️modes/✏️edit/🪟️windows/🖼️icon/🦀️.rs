@@ -1,10 +1,10 @@
 //! 🖼️ Shooting play app — the icon-render preview window: the active shot's rendered output.
 
-use crate::standards::v1::subsets::any::schema::shooting_icon_render_request_json;
-use crate::ShootingSnapshot;
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::modes::edit::windows::icon::options;
 use crate::editor::shooting::terminology::ShootingLabels;
+use crate::standards::v1::subsets::any::schema::shooting_icon_render_request_json;
+use crate::ShootingSnapshot;
 use semio_framework_plugin::{IconRenderScene, LocalizedLabel, SurfaceKind, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants

@@ -4,34 +4,201 @@
   "title": "WiresMutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-kind/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "edgeId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "disconnectNodes"
+        },
+        "edgeId": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/disconnect-nodes/schema.json#/properties/edgeId"
+        }
+      }
     },
     {
-      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-shape/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "newText",
+        "nodeId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "editNodeText"
+        },
+        "nodeId": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/edit-node-text/schema.json#/properties/nodeId"
+        },
+        "newText": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/edit-node-text/schema.json#/properties/newText"
+        }
+      }
     },
     {
-      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/connect-nodes/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "node"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createNode"
+        },
+        "node": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/create-node/schema.json#/properties/node"
+        }
+      }
     },
     {
-      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/create-node/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "newNodeKind",
+        "nodeId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeNodeKind"
+        },
+        "nodeId": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-kind/schema.json#/properties/nodeId"
+        },
+        "newNodeKind": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-kind/schema.json#/properties/newNodeKind"
+        }
+      }
     },
     {
-      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/delete-node/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "nodeId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "resizeNode"
+        },
+        "nodeId": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/resize-node/schema.json#/properties/nodeId"
+        },
+        "newRadius": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/resize-node/schema.json#/properties/newRadius"
+        },
+        "newWidth": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/resize-node/schema.json#/properties/newWidth"
+        },
+        "newHeight": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/resize-node/schema.json#/properties/newHeight"
+        }
+      }
     },
     {
-      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/disconnect-nodes/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "newShape",
+        "nodeId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeNodeShape"
+        },
+        "nodeId": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-shape/schema.json#/properties/nodeId"
+        },
+        "newShape": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-shape/schema.json#/properties/newShape"
+        }
+      }
     },
     {
-      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/edit-node-text/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "nodeId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteNode"
+        },
+        "nodeId": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/delete-node/schema.json#/properties/nodeId"
+        }
+      }
     },
     {
-      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/move-node/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "newRoot",
+        "nodeId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "setNodeRoot"
+        },
+        "nodeId": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/set-node-root/schema.json#/properties/nodeId"
+        },
+        "newRoot": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/set-node-root/schema.json#/properties/newRoot"
+        }
+      }
     },
     {
-      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/resize-node/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "edge",
+        "relationship"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "connectNodes"
+        },
+        "edge": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/connect-nodes/schema.json#/properties/edge"
+        },
+        "relationship": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/connect-nodes/schema.json#/properties/relationship"
+        }
+      }
     },
     {
-      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/set-node-root/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "newX",
+        "newY",
+        "nodeId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveNode"
+        },
+        "nodeId": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/move-node/schema.json#/properties/nodeId"
+        },
+        "newX": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/move-node/schema.json#/properties/newX"
+        },
+        "newY": {
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/move-node/schema.json#/properties/newY"
+        }
+      }
     }
   ]
 }

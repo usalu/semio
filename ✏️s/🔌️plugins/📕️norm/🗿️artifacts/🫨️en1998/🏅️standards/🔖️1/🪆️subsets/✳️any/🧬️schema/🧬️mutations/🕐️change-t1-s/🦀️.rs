@@ -1,9 +1,8 @@
 //! 🐚 `change-t1-s` payload — changes the En1998 document's `t1_s` (fundamental period T1 [s]).
 
-
-use crate::En1998Snapshot;
 use crate::diff::En1998Diff;
 use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 //#region 🔖️ChangeT1S
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

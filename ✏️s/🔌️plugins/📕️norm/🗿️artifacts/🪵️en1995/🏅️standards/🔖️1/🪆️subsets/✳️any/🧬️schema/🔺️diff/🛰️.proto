@@ -45,6 +45,4 @@ message En1995Diff {
   optional double a_vert_m_s2 = 20;
   // @state artifact
   optional double n_cycles_bridge = 21;
-  // @state presence
-  optional uint32 selected_check_index = 22;
 }

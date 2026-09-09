@@ -4,11 +4,11 @@
 //! `SetLayout` op per real drag gesture, so this mirrors that batch 1:1 rather than splitting into
 //! per-widget mutations.
 
-use crate::FlowSnapshot;
 use crate::schema::diff::text::FlowDiff;
 use crate::schema::mutations::FlowMutation;
-use semio_framework_artifact_flow_flow::FlowLayoutEntry;
+use crate::FlowSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
+use semio_framework_artifact_flow_flow::FlowLayoutEntry;
 
 //#region 📍️MoveWidgets
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

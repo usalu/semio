@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `MoveNode`.
 
-use crate::standards::v1::subsets::drawing::schema::diff::{SemioDrawingDiff, diff_move_node, node_at, node_origin};
+use crate::standards::v1::subsets::drawing::schema::diff::{diff_move_node, node_at, node_origin, SemioDrawingDiff};
 use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Diff

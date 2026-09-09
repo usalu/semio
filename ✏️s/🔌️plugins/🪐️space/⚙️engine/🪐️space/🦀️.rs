@@ -221,7 +221,8 @@ async fn space_workflow_context_menu_items(
         let remove_label = if phrase.is_empty() { labels.context_remove.as_str().to_string() } else { format!("{} ({phrase})", labels.context_remove.as_str()) };
         // 🎯️ Destructive tail always comes last — kept unconditionally after the "selection" group so
         // remove-instance is the final row regardless of whether clear-selection was appended above.
-        menu = menu.item(ContextMenuItemSpec { id: "remove-instance".into(), label: Some(remove_label), icon: Some("trash".into()), action: Some("removeAppInstance".into()), destructive: Some(true), ..Default::default() });
+        let args = hit_node.map(|node_id| DslValue::object([("nodeId".to_string(), DslValue::String(node_id.into()))]));
+        menu = menu.item(ContextMenuItemSpec { id: "remove-instance".into(), label: Some(remove_label), icon: Some("trash".into()), action: Some("removeAppInstance".into()), args, destructive: Some(true), ..Default::default() });
     }
     menu.build()
 }
@@ -376,7 +377,7 @@ fn space_bounded_reduce(
         let selected = interaction.selection.get(S_PLAY_INTERACTION_DOMAIN).map_or_else(Vec::new, |selection| selection.ids.clone());
         return Ok(crate::engine::space::engine::resolve_future(open_instance::open_with_selection(payload, &doc, config, &selected)));
     }
-    command.dispatch(&doc, &ConfigView { snapshot: config })
+    command.dispatch(&doc, &ConfigView { snapshot: config, window: None })
 }
 
 pub struct SpaceCommandJobFactory {
@@ -872,12 +873,12 @@ impl ArtifactApp for SpaceApp {
                 target_port_id: str_field("targetPortId").or_else(|| str_field("target_port_id")).unwrap_or_default(),
             })),
             "disconnectMediaEdge" => Ok(SpaceCommand::DisconnectMediaEdge(disconnect_media_edge::DisconnectMediaEdge { edge_id: str_field("edgeId").or_else(|| str_field("edge_id")).unwrap_or_default() })),
-            "removeAppInstance" => Ok(SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: node_id(), surface_contexts: Default::default() })),
+            "removeAppInstance" => Ok(SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: node_id() })),
             "deleteSelection" => Ok(SpaceCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "copyAppInstance" => Ok(SpaceCommand::CopyAppInstance(copy_app_instance::CopyAppInstance {})),
             "duplicateAppInstance" => Ok(SpaceCommand::DuplicateAppInstance(duplicate_app_instance::DuplicateAppInstance {})),
             "pasteAppInstance" => Ok(SpaceCommand::PasteAppInstance(paste_app_instance::PasteAppInstance {})),
-            "renameAppInstance" => Ok(SpaceCommand::RenameAppInstance(rename_app_instance::RenameAppInstance { label: str_field("label").or_else(|| str_field("name")), surface_contexts: Default::default() })),
+            "renameAppInstance" => Ok(SpaceCommand::RenameAppInstance(rename_app_instance::RenameAppInstance { label: str_field("label").or_else(|| str_field("name")) })),
             "patchMediaNodes" => {
                 let ids = string_vec("nodeIds");
                 Ok(SpaceCommand::PatchMediaNodes(patch_media_nodes::PatchMediaNodes {
@@ -942,6 +943,7 @@ impl ArtifactApp for SpaceApp {
         doc: &ArtifactView<'_, WorkflowSnapshot>,
         cfg: &ConfigView<'_, SpaceConfig>,
         interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, Self::DraftMutation>, Fault> {
@@ -1071,24 +1073,24 @@ pub async fn create_space_app() -> App {
         // 🕹️ Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
         // below) — the six framework verbs (`interactionSelect`/`interactionHover`/`clearSelection`/
         // `selectAll`/`setSelectionMode`/`setInteractionGranularity`) auto-inject.
-        .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen")).await
-        .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansichtsfenster festlegen")).await
+        .action_with(ActionDefinition::new("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"), ActionKind::View, "panel-left")).await
+        .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansichtsfenster festlegen"), ActionKind::View, "camera")).await
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Anwesenheits-Heartbeat")).await
-        .view_action("workflowEngagementInput", LocalizedLabel::native("Workflow Engagement Input", "Workflow-Eingabe")).await
-        .view_action("compiledDagEngagementInput", LocalizedLabel::native("Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe")).await
-        .shell_action("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen")).await
-        .shell_action("exportMedia", LocalizedLabel::native("Export Media", "Medien exportieren")).await
-        .shell_action("importMedia", LocalizedLabel::native("Import Media", "Medien importieren")).await
+        .action_with(ActionDefinition::new("workflowEngagementInput", LocalizedLabel::native("Workflow Engagement Input", "Workflow-Eingabe"), ActionKind::View, "hand")).await
+        .action_with(ActionDefinition::new("compiledDagEngagementInput", LocalizedLabel::native("Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe"), ActionKind::View, "hand")).await
+        .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Shell, "panel-left")).await
+        .action_with(ActionDefinition::new("exportMedia", LocalizedLabel::native("Export Media", "Medien exportieren"), ActionKind::Shell, "download")).await
+        .action_with(ActionDefinition::new("importMedia", LocalizedLabel::native("Import Media", "Medien importieren"), ActionKind::Shell, "hard-drive")).await
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importMediaPayload", LocalizedLabel::native("Import Media Payload", "Medien-Payload importieren"), ActionKind::Shell) }).await
-        .shell_action("exportStudioPack", LocalizedLabel::native("Export Studio Pack", "Studio-Paket exportieren")).await
-        .shell_action("exportStudioDsl", LocalizedLabel::native("Export Studio DSL", "Studio-DSL exportieren")).await
-        .shell_action("importSpacePack", LocalizedLabel::native("Import Studio Pack", "Studio-Paket importieren")).await
+        .action_with(ActionDefinition::new("exportStudioPack", LocalizedLabel::native("Export Studio Pack", "Studio-Paket exportieren"), ActionKind::Shell, "download")).await
+        .action_with(ActionDefinition::new("exportStudioDsl", LocalizedLabel::native("Export Studio DSL", "Studio-DSL exportieren"), ActionKind::Shell, "download")).await
+        .action_with(ActionDefinition::new("importSpacePack", LocalizedLabel::native("Import Studio Pack", "Studio-Paket importieren"), ActionKind::Shell, "hard-drive")).await
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importSpacePackPayload", LocalizedLabel::native("Import Studio Pack Payload", "Studio-Paket-Payload importieren"), ActionKind::Shell) }).await
-        .shell_action("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen")).await
-        .action_with(ActionDefinition::bounded_catalog("openInstance", LocalizedLabel::native("Open Instance", "Instanz öffnen"), ActionKind::Shell).with_category("open")).await
+        .action_with(ActionDefinition::new("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"), ActionKind::Shell, "folder-open")).await
+        .action_with(ActionDefinition::new("openInstance", LocalizedLabel::native("Open Instance", "Instanz öffnen"), ActionKind::Shell, "folder-open").with_category("open")).await
         .shell_action("closeFocusedInstance", LocalizedLabel::native("Close Focused Instance", "Fokussierte Instanz schließen")).await
-        .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite")).await
-        .shell_action("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren")).await
+        .action_with(ActionDefinition::new("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"), ActionKind::Shell, "home")).await
+        .action_with(ActionDefinition::new("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"), ActionKind::Shell, "folder")).await
         .action_interactive_job("patchParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("addParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("removeParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await

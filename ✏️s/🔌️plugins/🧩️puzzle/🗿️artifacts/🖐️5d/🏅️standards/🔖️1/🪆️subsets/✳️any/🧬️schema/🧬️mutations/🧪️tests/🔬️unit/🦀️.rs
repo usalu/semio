@@ -109,7 +109,7 @@ fn connect_disconnect_grips_inverse_law_and_cascade() {
     semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_grips("f1".into())));
     semio_framework::io::resolve_ready(assert_mutation_inverse_law(
         &connected,
-        &replace_fastener_geometry(crate::standards::v1::subsets::any::schema::mutations::ReplaceFastenerGeometry { id: "f1".into(), new_gap: 1.0, new_shift: 2.0, new_rise: 3.0, new_rotation: 4.0, new_turn: 5.0, new_tilt: 6.0, new_x: 7.0, new_y: 8.0 }),
+        &replace_fastener_geometry(ReplaceFastenerGeometry { id: "f1".into(), new_gap: 1.0, new_shift: 2.0, new_rise: 3.0, new_rotation: 4.0, new_turn: 5.0, new_tilt: 6.0, new_x: 7.0, new_y: 8.0 }),
     ));
     semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &change_fastener_kind("f1".into(), Some("core.link".into()))));
     let deleted = delete_part("a".into());

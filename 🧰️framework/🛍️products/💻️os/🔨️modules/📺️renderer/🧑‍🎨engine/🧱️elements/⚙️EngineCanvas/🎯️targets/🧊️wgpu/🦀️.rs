@@ -56,10 +56,10 @@ struct EngineSurface {
     sync_cache: NodeGraphSyncCache,
     map_host: Option<MapHost>,
     map_sync_cache: MapSyncCache,
-    board_host: Option<ManuallyDrop<puzzle::editor::puzzle2d::engine::BoardHost>>,
+    board_host: Option<ManuallyDrop<infinite_canvas::BoardHost>>,
     board_sync_cache: BoardSyncCache,
-    board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue,
-    board_retiring_events: Option<puzzle::editor::puzzle2d::engine::BoardEventQueue>,
+    board_pending_events: infinite_canvas::BoardEventQueue,
+    board_retiring_events: Option<infinite_canvas::BoardEventQueue>,
     board_pointer_inside: bool,
     board_pointer_claim: Option<ui_wgpu::wgpu::BoundedActionClaim>,
     board_pointer_controller_id: Option<String>,
@@ -345,10 +345,10 @@ struct EngineSurfaceRetirement {
     sync_cache: NodeGraphSyncCache,
     map_source: Option<MapHost>,
     map_sync_cache: MapSyncCache,
-    board_source: Option<ManuallyDrop<puzzle::editor::puzzle2d::engine::BoardHost>>,
+    board_source: Option<ManuallyDrop<infinite_canvas::BoardHost>>,
     board_sync_cache: BoardSyncCache,
-    board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue,
-    board_retiring_events: Option<puzzle::editor::puzzle2d::engine::BoardEventQueue>,
+    board_pending_events: infinite_canvas::BoardEventQueue,
+    board_retiring_events: Option<infinite_canvas::BoardEventQueue>,
     board_pointer_claim: Option<ui_wgpu::wgpu::BoundedActionClaim>,
     board_pointer_controller_id: Option<String>,
     editor_source: Option<EditorHost>,
@@ -357,7 +357,7 @@ struct EngineSurfaceRetirement {
     node_graph: Option<NodeGraphEngineRetirement>,
     map: Option<framework_surface_tiled_map::tiled_map::MapHostRetirement>,
     editor: Option<framework_editor::EditorHostRetirement>,
-    board: Option<puzzle::editor::puzzle2d::engine::BoardHostRetirement>,
+    board: Option<infinite_canvas::BoardHostRetirement>,
     phase: EngineSurfaceClosePhase,
     faulted: bool,
 }
@@ -584,14 +584,14 @@ impl EngineSurfaceRetirement {
             EngineSurfaceClosePhase::Board => {
                 if self.board.is_none() {
                     if let Some(host) = self.board_source.take() {
-                        self.board = Some(puzzle::editor::puzzle2d::engine::BoardHostRetirement::new(ManuallyDrop::into_inner(host)));
+                        self.board = Some(infinite_canvas::BoardHostRetirement::new(ManuallyDrop::into_inner(host)));
                         context.consume_fuel(1);
                     } else {
                         self.phase = EngineSurfaceClosePhase::BoardSync;
                         context.consume_fuel(1);
                     }
                 } else if self.board.as_mut().is_some_and(|owner| owner.close_step(context)) {
-                    if !self.board.as_ref().is_some_and(puzzle::editor::puzzle2d::engine::BoardHostRetirement::terminal_nonopaque_is_empty) {
+                    if !self.board.as_ref().is_some_and(infinite_canvas::BoardHostRetirement::terminal_nonopaque_is_empty) {
                         self.faulted = true;
                         return false;
                     }
@@ -1544,7 +1544,7 @@ fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
         map_sync_cache: MapSyncCache::default(),
         board_host: None,
         board_sync_cache: BoardSyncCache::default(),
-        board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue::default(),
+        board_pending_events: infinite_canvas::BoardEventQueue::default(),
         board_retiring_events: None,
         board_pointer_inside: false,
         board_pointer_claim: None,
@@ -2541,7 +2541,7 @@ pub fn tiled_map_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, 
 //#endregion TiledMap
 
 //#region Board2d
-/// @emoji 🧩️ Raw event row drained from {@link puzzle::editor::puzzle2d::engine::BoardHost::drain_events_json}; mirrors the TS `BoardEventRow` shape.
+/// @emoji 🧩️ Raw event row drained from {@link infinite_canvas::BoardHost::drain_events_json}; mirrors the TS `BoardEventRow` shape.
 #[cfg(test)]
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct BoardEventRow {
@@ -2567,7 +2567,7 @@ const PUZZLE2D_FLUSH_NOW_EVENT_NAMES: &[&str] = &["select", "preselectCancel", "
 
 
 
-pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut puzzle::editor::puzzle2d::engine::BoardHost) -> R) -> Option<R> {
+pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut infinite_canvas::BoardHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(surface_id)?;
@@ -2576,7 +2576,7 @@ pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut puzzle::edit
     })
 }
 
-pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&puzzle::editor::puzzle2d::engine::BoardHost) -> R) -> Option<R> {
+pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&infinite_canvas::BoardHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let entry = map.get(surface_id)?;
@@ -2597,17 +2597,17 @@ pub fn board_pick_best_target_id(surface_id: &str, sx: f64, sy: f64) -> Option<S
     .flatten()
 }
 
-fn board_event_transient(kind: puzzle::editor::puzzle2d::engine::BoardEventKind) -> bool {
-    use puzzle::editor::puzzle2d::engine::BoardEventKind;
+fn board_event_transient(kind: infinite_canvas::BoardEventKind) -> bool {
+    use infinite_canvas::BoardEventKind;
     matches!(kind, BoardEventKind::Preselect | BoardEventKind::BrushPreview | BoardEventKind::LinkCompatibleNodes | BoardEventKind::LinkTargetRing)
 }
 
-fn board_event_flush_now(kind: puzzle::editor::puzzle2d::engine::BoardEventKind) -> bool {
-    use puzzle::editor::puzzle2d::engine::BoardEventKind;
+fn board_event_flush_now(kind: infinite_canvas::BoardEventKind) -> bool {
+    use infinite_canvas::BoardEventKind;
     matches!(kind, BoardEventKind::Select | BoardEventKind::PreselectCancel | BoardEventKind::BrushCandidates | BoardEventKind::BrushPlace | BoardEventKind::EdgeCreate | BoardEventKind::EdgeDelete | BoardEventKind::NodeDelete)
 }
 
-fn append_board_owned_event(output: &mut String, first: &mut bool, event: &puzzle::editor::puzzle2d::engine::BoardOwnedEvent) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn append_board_owned_event(output: &mut String, first: &mut bool, event: &infinite_canvas::BoardOwnedEvent) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     if !*first {
         output.push(',');
     }
@@ -2619,8 +2619,8 @@ fn append_board_owned_event(output: &mut String, first: &mut bool, event: &puzzl
     Ok(())
 }
 
-fn coalesce_owned_board_events(queue: &puzzle::editor::puzzle2d::engine::BoardEventQueue) -> Result<CoalescedBoardEvents, ui_wgpu::wgpu::BoundedActionFault> {
-    use puzzle::editor::puzzle2d::engine::BoardEventKind;
+fn coalesce_owned_board_events(queue: &infinite_canvas::BoardEventQueue) -> Result<CoalescedBoardEvents, ui_wgpu::wgpu::BoundedActionFault> {
+    use infinite_canvas::BoardEventKind;
     let has_drag_end = queue.iter().any(|event| event.kind() == BoardEventKind::NodeDragEnd);
     let mut output = String::from("[");
     let mut first = true;
@@ -2747,15 +2747,15 @@ fn board_set_pointer_inside(surface_id: &str, inside: bool) {
     });
 }
 
-fn board_pointer_plan_fault(fault: puzzle::editor::puzzle2d::engine::BoardPointerPlanFault) -> ui_wgpu::wgpu::BoundedActionFault {
+fn board_pointer_plan_fault(fault: infinite_canvas::BoardPointerPlanFault) -> ui_wgpu::wgpu::BoundedActionFault {
     match fault {
-        puzzle::editor::puzzle2d::engine::BoardPointerPlanFault::ItemCredits => ui_wgpu::wgpu::BoundedActionFault::ItemCredits,
-        puzzle::editor::puzzle2d::engine::BoardPointerPlanFault::ByteCredits => ui_wgpu::wgpu::BoundedActionFault::ByteCredits,
-        puzzle::editor::puzzle2d::engine::BoardPointerPlanFault::Unsupported => ui_wgpu::wgpu::BoundedActionFault::Structure,
+        infinite_canvas::BoardPointerPlanFault::ItemCredits => ui_wgpu::wgpu::BoundedActionFault::ItemCredits,
+        infinite_canvas::BoardPointerPlanFault::ByteCredits => ui_wgpu::wgpu::BoundedActionFault::ByteCredits,
+        infinite_canvas::BoardPointerPlanFault::Unsupported => ui_wgpu::wgpu::BoundedActionFault::Structure,
     }
 }
 
-fn plan_board_pointer(surface_id: &str, intent: puzzle::editor::puzzle2d::engine::BoardPointerIntent) -> Result<Option<puzzle::editor::puzzle2d::engine::BoardPointerPlan>, ui_wgpu::wgpu::BoundedActionFault> {
+fn plan_board_pointer(surface_id: &str, intent: infinite_canvas::BoardPointerIntent) -> Result<Option<infinite_canvas::BoardPointerPlan>, ui_wgpu::wgpu::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(host) = map.get(surface_id).and_then(|entry| entry.board_host.as_ref()) else {
@@ -2765,7 +2765,7 @@ fn plan_board_pointer(surface_id: &str, intent: puzzle::editor::puzzle2d::engine
     })
 }
 
-fn commit_board_pointer(surface_id: &str, plan: &puzzle::editor::puzzle2d::engine::BoardPointerPlan, pointer_inside: Option<bool>) -> bool {
+fn commit_board_pointer(surface_id: &str, plan: &infinite_canvas::BoardPointerPlan, pointer_inside: Option<bool>) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(surface_id) else {
@@ -2787,7 +2787,7 @@ fn commit_board_pointer(surface_id: &str, plan: &puzzle::editor::puzzle2d::engin
 fn begin_board_pointer_commit(
     surface_id: &str,
     controller_id: &str,
-    plan: puzzle::editor::puzzle2d::engine::BoardPointerPlan,
+    plan: infinite_canvas::BoardPointerPlan,
     pointer_inside: Option<bool>,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
@@ -2825,11 +2825,11 @@ fn begin_board_pointer_commit(
     admitted
 }
 
-pub fn drive_board_authority_step(surface_id: &str, context: &mut semio_framework_job::StepContext<'_>) -> puzzle::editor::puzzle2d::engine::BoardAuthorityStep {
+pub fn drive_board_authority_step(surface_id: &str, context: &mut semio_framework_job::StepContext<'_>) -> infinite_canvas::BoardAuthorityStep {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(host) = map.get_mut(surface_id).and_then(|entry| entry.board_host.as_mut()) else {
-            return puzzle::editor::puzzle2d::engine::BoardAuthorityStep::Complete;
+            return infinite_canvas::BoardAuthorityStep::Complete;
         };
         if !host.pointer_authority_terminal_is_empty() {
             return host.step_pointer_commit(context);
@@ -2919,7 +2919,7 @@ pub fn puzzle_board_pointer_move_into(
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let (sx, sy) = map_local_pointer(inner, x, y);
-    let plan = plan_board_pointer(surface_id, puzzle::editor::puzzle2d::engine::BoardPointerIntent { phase: puzzle::editor::puzzle2d::engine::BoardPointerPhase::Move, x: sx, y: sy, shift, ctrl_or_meta, alt })?;
+    let plan = plan_board_pointer(surface_id, infinite_canvas::BoardPointerIntent { phase: infinite_canvas::BoardPointerPhase::Move, x: sx, y: sy, shift, ctrl_or_meta, alt })?;
     let Some(plan) = plan else {
         return Ok(false);
     };
@@ -2954,7 +2954,7 @@ pub fn puzzle_board_pointer_up_into(
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let (sx, sy) = map_local_pointer(inner, x, y);
-    let plan = plan_board_pointer(surface_id, puzzle::editor::puzzle2d::engine::BoardPointerIntent { phase: puzzle::editor::puzzle2d::engine::BoardPointerPhase::Up, x: sx, y: sy, shift, ctrl_or_meta, alt })?;
+    let plan = plan_board_pointer(surface_id, infinite_canvas::BoardPointerIntent { phase: infinite_canvas::BoardPointerPhase::Up, x: sx, y: sy, shift, ctrl_or_meta, alt })?;
     let Some(plan) = plan else {
         return Ok(false);
     };
@@ -2982,7 +2982,7 @@ pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, al
     if !was_inside {
         return Ok(false);
     }
-    let plan = plan_board_pointer(surface_id, puzzle::editor::puzzle2d::engine::BoardPointerIntent { phase: puzzle::editor::puzzle2d::engine::BoardPointerPhase::Leave, x: 0.0, y: 0.0, shift: false, ctrl_or_meta: false, alt })?;
+    let plan = plan_board_pointer(surface_id, infinite_canvas::BoardPointerIntent { phase: infinite_canvas::BoardPointerPhase::Leave, x: 0.0, y: 0.0, shift: false, ctrl_or_meta: false, alt })?;
     let Some(plan) = plan else {
         return Ok(false);
     };

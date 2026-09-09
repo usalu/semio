@@ -11,6 +11,44 @@ use protocol::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutations
+#[path = "🧩add-app-extension/🦀️.rs"]
+pub mod add_app_extension;
+#[path = "💬insert-comment/🦀️.rs"]
+pub mod insert_comment;
+#[path = "🖼️insert-frame/🦀️.rs"]
+pub mod insert_frame;
+#[path = "🔀move-frame/🦀️.rs"]
+pub mod move_frame;
+#[path = "➖remove-app-extension/🦀️.rs"]
+pub mod remove_app_extension;
+#[path = "🚫remove-comment/🦀️.rs"]
+pub mod remove_comment;
+#[path = "🗑️remove-frame/🦀️.rs"]
+pub mod remove_frame;
+#[path = "🖌️set-background-color-index/🦀️.rs"]
+pub mod set_background_color_index;
+#[path = "⏱️set-frame-delay/🦀️.rs"]
+pub mod set_frame_delay;
+#[path = "♻️set-frame-disposal/🦀️.rs"]
+pub mod set_frame_disposal;
+#[path = "📍set-frame-geometry/🦀️.rs"]
+pub mod set_frame_geometry;
+#[path = "🪜set-frame-interlace/🦀️.rs"]
+pub mod set_frame_interlace;
+#[path = "🎞️set-frame-pixels/🦀️.rs"]
+pub mod set_frame_pixels;
+#[path = "👻set-frame-transparency/🦀️.rs"]
+pub mod set_frame_transparency;
+#[path = "🕹️set-frame-user-input/🦀️.rs"]
+pub mod set_frame_user_input;
+#[path = "🎨set-global-color-table/🦀️.rs"]
+pub mod set_global_color_table;
+#[path = "🔁set-loop-count/🦀️.rs"]
+pub mod set_loop_count;
+#[path = "📏set-pixel-aspect-ratio/🦀️.rs"]
+pub mod set_pixel_aspect_ratio;
+#[path = "📐set-screen-size/🦀️.rs"]
+pub mod set_screen_size;
 /// 📐️ Typed content mutation for `stdio.gif.89a`.
 ///
 /// 🧪️ F6-PILOT: `dsl::DslOps` derive — unlike `GifDiff` (blocked by tri-state fields, see the
@@ -22,44 +60,6 @@ use protocol::{OpBinary, OpText};
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "📐set-screen-size/🦀️.rs"]
-pub mod set_screen_size;
-#[path = "🎨set-global-color-table/🦀️.rs"]
-pub mod set_global_color_table;
-#[path = "🖌️set-background-color-index/🦀️.rs"]
-pub mod set_background_color_index;
-#[path = "📏set-pixel-aspect-ratio/🦀️.rs"]
-pub mod set_pixel_aspect_ratio;
-#[path = "🔁set-loop-count/🦀️.rs"]
-pub mod set_loop_count;
-#[path = "🖼️insert-frame/🦀️.rs"]
-pub mod insert_frame;
-#[path = "🗑️remove-frame/🦀️.rs"]
-pub mod remove_frame;
-#[path = "🔀move-frame/🦀️.rs"]
-pub mod move_frame;
-#[path = "📍set-frame-geometry/🦀️.rs"]
-pub mod set_frame_geometry;
-#[path = "🎞️set-frame-pixels/🦀️.rs"]
-pub mod set_frame_pixels;
-#[path = "🪜set-frame-interlace/🦀️.rs"]
-pub mod set_frame_interlace;
-#[path = "⏱️set-frame-delay/🦀️.rs"]
-pub mod set_frame_delay;
-#[path = "♻️set-frame-disposal/🦀️.rs"]
-pub mod set_frame_disposal;
-#[path = "👻set-frame-transparency/🦀️.rs"]
-pub mod set_frame_transparency;
-#[path = "🕹️set-frame-user-input/🦀️.rs"]
-pub mod set_frame_user_input;
-#[path = "💬insert-comment/🦀️.rs"]
-pub mod insert_comment;
-#[path = "🚫remove-comment/🦀️.rs"]
-pub mod remove_comment;
-#[path = "🧩add-app-extension/🦀️.rs"]
-pub mod add_app_extension;
-#[path = "➖remove-app-extension/🦀️.rs"]
-pub mod remove_app_extension;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
@@ -254,7 +254,9 @@ pub(crate) fn agg_diff(this: &GifMutation, base: &GifSnapshot) -> protocol::Muta
         GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index }) => GifDiff { background_color_index: (*index != base.background_color_index).then_some(*index), ..Default::default() },
         GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio }) => GifDiff { pixel_aspect_ratio: (*ratio != base.pixel_aspect_ratio).then_some(*ratio), ..Default::default() },
         GifMutation::SetLoopCount(set_loop_count::SetLoopCount { loop_count }) => GifDiff { loop_count: (*loop_count != base.loop_count).then_some(*loop_count), ..Default::default() },
-        GifMutation::InsertFrame(insert_frame::InsertFrame { index, frame }) => GifDiff { frames: Some(GifFramesDiff { added: vec![GifFrameAdded { index: (*index).min(base.frames.len()), frame: frame.clone() }], ..Default::default() }), ..Default::default() },
+        GifMutation::InsertFrame(insert_frame::InsertFrame { index, frame }) => {
+            GifDiff { frames: Some(GifFramesDiff { added: vec![GifFrameAdded { index: (*index).min(base.frames.len()), frame: frame.clone() }], ..Default::default() }), ..Default::default() }
+        }
         GifMutation::RemoveFrame(remove_frame::RemoveFrame { index }) => GifDiff { frames: Some(GifFramesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
         GifMutation::MoveFrame(move_frame::MoveFrame { from, to }) => {
             let mut frames = base.frames.clone();
@@ -293,7 +295,9 @@ pub(crate) fn agg_diff(this: &GifMutation, base: &GifSnapshot) -> protocol::Muta
             let d = GifFrameDiff { user_input: Some(*user_input), ..Default::default() };
             GifDiff { frames: Some(GifFramesDiff { modified: vec![GifFrameModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
         }
-        GifMutation::InsertComment(insert_comment::InsertComment { index, text }) => GifDiff { comments: Some(GifCommentsDiff { added: vec![GifCommentAdded { index: (*index).min(base.comments.len()), text: text.clone() }], ..Default::default() }), ..Default::default() },
+        GifMutation::InsertComment(insert_comment::InsertComment { index, text }) => {
+            GifDiff { comments: Some(GifCommentsDiff { added: vec![GifCommentAdded { index: (*index).min(base.comments.len()), text: text.clone() }], ..Default::default() }), ..Default::default() }
+        }
         GifMutation::RemoveComment(remove_comment::RemoveComment { index }) => GifDiff { comments: Some(GifCommentsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
         GifMutation::AddAppExtension(add_app_extension::AddAppExtension { index, extension }) => {
             GifDiff { app_extensions: Some(GifAppExtensionsDiff { added: vec![GifAppExtensionAdded { index: (*index).min(base.app_extensions.len()), extension: extension.clone() }], ..Default::default() }), ..Default::default() }

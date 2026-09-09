@@ -1508,6 +1508,54 @@ pub trait ArtifactOwnedValueRetirementFactory<T>: Send + Sync {
     fn retire_owned(&self, value: T) -> Box<dyn ErasedSnapshotRetirement>;
 }
 
+struct ReturnedSnapshotReadRetirement<P: Send + Sync + 'static> {
+    alias: std::mem::ManuallyDrop<Option<Arc<P>>>,
+    unique: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    owned_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
+}
+
+impl<P: Send + Sync + 'static> ReturnedSnapshotReadRetirement<P> {
+    fn new(alias: Arc<P>, owned_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>) -> Self {
+        Self { alias: std::mem::ManuallyDrop::new(Some(alias)), unique: std::mem::ManuallyDrop::new(None), owned_factory }
+    }
+}
+
+impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ReturnedSnapshotReadRetirement<P> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(unique) = self.unique.as_mut() {
+            return match unique.close_step(maximum_items, maximum_bytes)? {
+                SnapshotRetirementStep::Complete if unique.terminal_is_empty() => {
+                    drop(self.unique.take());
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                SnapshotRetirementStep::Complete => Err("returned snapshot read unique owner reported Complete without terminal-empty authority".into()),
+                step => Ok(step),
+            };
+        }
+        let Some(alias) = self.alias.take() else { return Ok(SnapshotRetirementStep::Complete) };
+        match Arc::into_inner(alias) {
+            Some(unique) => {
+                *self.unique = Some(self.owned_factory.retire_owned(unique));
+                Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+            }
+            None => Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }),
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.alias.is_none() && self.unique.is_none()
+    }
+}
+
+impl<P: Send + Sync + 'static> Drop for ReturnedSnapshotReadRetirement<P> {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "returned snapshot read retired before terminal-empty ownership");
+    }
+}
+
 const ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY: usize = 1_024;
 const ARTIFACT_STORE_DISPLACED_RESERVATION_CAPACITY: usize = 8;
 
@@ -1801,7 +1849,7 @@ impl<P, Mutation> Default for ArtifactStoreCursorDisposer<P, Mutation> {
 
 impl<P, Mutation> ArtifactStoreCursorDisposer<P, Mutation> {
     pub fn new() -> Self {
-        Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, started: false, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
+        Self { phase: ArtifactStoreCursorDisposerPhase::ReturnedReads, started: false, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
     }
 
     fn retain(active: &mut std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>, owner: Option<Box<dyn ErasedSnapshotRetirement>>) -> SnapshotRetirementStep {
@@ -1838,21 +1886,21 @@ where
             };
         }
         match &mut self.phase {
-            ArtifactStoreCursorDisposerPhase::Displaced => match store.maintenance_retirements_step(1, maximum_bytes)? {
-                SnapshotRetirementStep::Complete if store.maintenance_retirements_terminal_is_empty() => {
-                    self.phase = ArtifactStoreCursorDisposerPhase::ReturnedReads;
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                SnapshotRetirementStep::Complete => Err("artifact store displaced authority reported a false terminal".into()),
-                step => Ok(step),
-            },
             ArtifactStoreCursorDisposerPhase::ReturnedReads => match store.take_returned_snapshot_read_retirement().map_err(|error| error.to_string())? {
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None if !store.snapshot_read_leases_terminal_is_empty() => Ok(SnapshotRetirementStep::Blocked),
                 None => {
+                    self.phase = ArtifactStoreCursorDisposerPhase::Displaced;
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+            },
+            ArtifactStoreCursorDisposerPhase::Displaced => match store.maintenance_retirements_step(1, maximum_bytes)? {
+                SnapshotRetirementStep::Complete if store.maintenance_retirements_terminal_is_empty() => {
                     self.phase = ArtifactStoreCursorDisposerPhase::HistoryMutations(store.history_edit_count().checked_sub(1));
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
+                SnapshotRetirementStep::Complete => Err("artifact store displaced authority reported a false terminal".into()),
+                step => Ok(step),
             },
             ArtifactStoreCursorDisposerPhase::HistoryMutations(edit_index) => {
                 let Some(index) = *edit_index else {
@@ -2831,7 +2879,7 @@ impl<S> FromValue for ArtifactChild<S> {
             match key.as_str() {
                 "childId" => child_id = Some(String::from_value(entry).map_err(|e| e.under("childId"))?),
                 "target" => target = Some(crate::os_io::ArtifactRef::from_value(entry).map_err(|e| e.under("target"))?),
-                _ => {}
+                _ => return Err(ValueError::new(format!("ArtifactChild has unknown field {key}"))),
             }
         }
         Ok(ArtifactChild { child_id: child_id.ok_or_else(|| ValueError::new("ArtifactChild missing childId"))?, target: target.ok_or_else(|| ValueError::new("ArtifactChild missing target"))?, local_owner: None, _snapshot: PhantomData })
@@ -14412,12 +14460,19 @@ where
         if Arc::ptr_eq(&self.current, &next) {
             return Ok(());
         }
-        self.displaced_retirements.reserve(1)?;
-        let Some(factory) = (*self.snapshot_retirement_factory).clone() else {
-            return Err(VcsError::ValidationFailed("artifact store current replacement requires its exact snapshot retirement factory".into()));
+        let previous_is_tail = !self.current_detached && self.tail_undo_cache.as_ref().is_some_and(|(_, snapshot)| Arc::ptr_eq(snapshot, &self.current));
+        let factory = if previous_is_tail {
+            None
+        } else {
+            self.displaced_retirements.reserve(1)?;
+            Some((*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store current replacement requires its exact snapshot retirement factory".into()))?)
         };
         let previous = std::mem::replace(&mut *self.current, next);
-        self.displaced_retirements.push_reserved(factory.retire(previous));
+        if previous_is_tail {
+            drop(previous);
+        } else {
+            self.displaced_retirements.push_reserved(factory.expect("non-tail current factory was validated").retire(previous));
+        }
         Ok(())
     }
 
@@ -14775,11 +14830,11 @@ where
         if !self.snapshot_read_leases.has_returned() {
             return Ok(None);
         }
-        let Some(factory) = (*self.snapshot_retirement_factory).clone() else {
-            return Err(VcsError::ValidationFailed("snapshot read retirement factory is not installed".into()));
+        let Some(factory) = (*self.initial_snapshot_retirement_factory).clone() else {
+            return Err(VcsError::ValidationFailed("returned snapshot read requires its exact owned-snapshot retirement factory".into()));
         };
         let owner = self.snapshot_read_leases.try_take_one_returned::<P>().map_err(VcsError::ValidationFailed)?;
-        Ok(owner.map(|owner| factory.retire(owner)))
+        Ok(owner.map(|owner| Box::new(ReturnedSnapshotReadRetirement::new(owner, factory)) as Box<dyn ErasedSnapshotRetirement>))
     }
 
     fn close_take_history_mutation_at(&mut self, edit_index: usize) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError> {
@@ -15805,8 +15860,8 @@ where
                 // 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
                 folded = apply_mutation(&folded, operation)?.0;
             }
-            self.replace_current_retained(Arc::new(folded))?;
             self.replace_tail_undo_cache_retained(Some((next.clone(), pre)))?;
+            self.replace_current_retained(Arc::new(folded))?;
         }
         self.applied_edit_ids.push(next);
         self.bump()?;
@@ -20387,6 +20442,10 @@ impl ArtifactPack for protocol::InteractionState {
 //#endregion 🔖️TestSupport
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🪪️artifact-addressing/🦀️.rs"]
+mod artifact_addressing_tests;
+
 #[cfg(test)]
 #[path = "🧫️fixtures/🦀️.rs"]
 mod fixture_mutations;

@@ -2,12 +2,11 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.vcsdemo` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`), so locale edits are VCS'd exactly like document content.
+//! `ArtifactStore` (with a real `backwards`).
 //! Multi-selected checkpoint ids (formerly `VcsPlayApp::selected_checkpoint_ids`, then this struct's own
 //! `selected_checkpoint_ids` field) are now the framework-owned "history" interaction domain (ticket
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM, see `VCS_INTERACTION_HISTORY`'s doc comment) —
-//! this struct keeps only the `locale` field the UI used to read off the deleted `ViewModel` (mirrors
-//! `shooting_engine::ShootingConfig`'s identical `locale` field/doc).
+//! this struct no longer duplicates host-owned view preferences.
 
 use protocol::Mutation;
 
@@ -19,8 +18,7 @@ use protocol::Mutation;
 #[dsl(extension = "vcscfg")]
 #[dsl(id = "vcs.config")]
 #[dsl(layout = "lines")]
-pub struct VcsDemoConfig {
-}
+pub struct VcsDemoConfig {}
 
 //#region 🔖️ArtifactCodec
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
@@ -68,7 +66,7 @@ impl store::ArtifactPack for VcsDemoConfig {
 
 impl Default for VcsDemoConfig {
     fn default() -> Self {
-        Self { }
+        Self {}
     }
 }
 
@@ -77,7 +75,7 @@ store::impl_whole_record_config!(VcsDemoConfig);
 
 //#region 🔖️ConfigMutations
 /// 🧮️ [`VcsDemoConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
-/// `VcsPlayApp` field writes/deleted `ViewModel.locale`), plus a generic `Snapshot` every variant's
+/// `VcsPlayApp` field writes), plus a generic `Snapshot` every variant's
 /// `backwards()` returns (see `shooting_op::ShootingConfigMutation`'s identical doc for why this
 /// whole-config-snapshot-undo shape is correct and sufficient here).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
@@ -148,24 +146,22 @@ impl protocol::OpBinary for VcsDemoConfigMutation {
 impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
     type Diff = VcsDemoConfig;
 
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
-            owner: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄️snapshot",
-            semantic_kind: "snapshot",
-            display_name: "Snapshot",
-            emoji: "📄️",
-            aggregate_variant: "Snapshot",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::Warning],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄️snapshot",
+        semantic_kind: "snapshot",
+        display_name: "Snapshot",
+        emoji: "📄️",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::Warning],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
@@ -174,16 +170,14 @@ impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
     }
 
     fn diff(&self, base: &VcsDemoConfig) -> protocol::MutationOutcome<VcsDemoConfig> {
-        let mut next = base.clone();
         match self {
             VcsDemoConfigMutation::Snapshot { config } => {
                 if base == config {
                     return protocol::MutationOutcome::empty().warn("mutation.no-op", "Config snapshot is already identical to the requested replacement.");
                 }
-                return protocol::MutationOutcome::new(config.clone());
+                protocol::MutationOutcome::new(config.clone())
             }
         }
-        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &VcsDemoConfig) -> Vec<Self> {

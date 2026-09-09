@@ -19,10 +19,10 @@
 
 use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
 use crate::XlsxSnapshot;
-use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
+use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use std::collections::HashMap;
 
 //#region 🔖️GenericCollectionTriples
@@ -372,7 +372,11 @@ fn diff_sheet(old: &XlsxSheet, new: &XlsxSheet) -> Option<XlsxSheetDiff> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_sheet(sheet: &mut XlsxSheet, diff: &XlsxSheetDiff) -> MutationApplyResult<()> {
     if let Some(cd) = &diff.cells {
-        apply_named(&mut sheet.cells, cd, cell_key, |item, diff| { apply_cell(item, diff); Ok(()) }).map_err(|error| error.under(["cells"]))?;
+        apply_named(&mut sheet.cells, cd, cell_key, |item, diff| {
+            apply_cell(item, diff);
+            Ok(())
+        })
+        .map_err(|error| error.under(["cells"]))?;
     }
     Ok(())
 }

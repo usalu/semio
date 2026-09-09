@@ -78,6 +78,20 @@ pub const BASELINE_TABLES_PER_CLASS: usize = 2;
 //#endregion 🔖️Dialect
 
 //#region 🔖️Mutations
+#[path = "🧩️insert-frame-component/🦀️.rs"]
+pub mod insert_frame_component;
+#[path = "🌳️insert-huffman-table/🦀️.rs"]
+pub mod insert_huffman_table;
+#[path = "✂️remove-frame-component/🦀️.rs"]
+pub mod remove_frame_component;
+#[path = "🪓️remove-huffman-table/🦀️.rs"]
+pub mod remove_huffman_table;
+#[path = "➗️set-arithmetic/🦀️.rs"]
+pub mod set_arithmetic;
+#[path = "🎨️set-component-sampling/🦀️.rs"]
+pub mod set_component_sampling;
+#[path = "🎯️set-sample-precision/🦀️.rs"]
+pub mod set_sample_precision;
 /// 📐️ Typed conformance-class mutation for `stdio.jpg` under T.81 baseline sequential DCT. Every
 /// variant addresses ONE axis of the class; none addresses document content.
 //#region 🔖️Leaves
@@ -85,20 +99,6 @@ pub const BASELINE_TABLES_PER_CLASS: usize = 2;
 pub mod set_snapshot;
 #[path = "🏁️set-sof-marker/🦀️.rs"]
 pub mod set_sof_marker;
-#[path = "🎯️set-sample-precision/🦀️.rs"]
-pub mod set_sample_precision;
-#[path = "➗️set-arithmetic/🦀️.rs"]
-pub mod set_arithmetic;
-#[path = "🌳️insert-huffman-table/🦀️.rs"]
-pub mod insert_huffman_table;
-#[path = "🪓️remove-huffman-table/🦀️.rs"]
-pub mod remove_huffman_table;
-#[path = "🧩️insert-frame-component/🦀️.rs"]
-pub mod insert_frame_component;
-#[path = "✂️remove-frame-component/🦀️.rs"]
-pub mod remove_frame_component;
-#[path = "🎨️set-component-sampling/🦀️.rs"]
-pub mod set_component_sampling;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -210,95 +210,105 @@ fn huffman<'a>(base: &'a JpgSnapshot, key: &JpgHuffmanTableKey) -> Option<&'a Jp
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &JpgBaselineMutation, base: &JpgSnapshot) -> protocol::MutationOutcome<JpgDiff> {
-        protocol::MutationOutcome::new(match this {
-            JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => crate::standards::v_jfif_1_01::subsets::document::schema::diff::diff_set_snapshot(base, snapshot),
-            JpgBaselineMutation::SetSofMarker(set_sof_marker::SetSofMarker { marker }) => JpgDiff { sof_marker: (base.sof_marker != *marker).then_some(*marker), ..Default::default() },
-            JpgBaselineMutation::SetSamplePrecision(set_sample_precision::SetSamplePrecision { precision }) => {
-                let unchanged = base.frame.as_ref().is_some_and(|frame| frame.precision == *precision);
-                frame_diff(base, JpgFrameFieldsDiff { precision: (!unchanged).then_some(*precision), ..Default::default() })
+    protocol::MutationOutcome::new(match this {
+        JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => crate::standards::v_jfif_1_01::subsets::document::schema::diff::diff_set_snapshot(base, snapshot),
+        JpgBaselineMutation::SetSofMarker(set_sof_marker::SetSofMarker { marker }) => JpgDiff { sof_marker: (base.sof_marker != *marker).then_some(*marker), ..Default::default() },
+        JpgBaselineMutation::SetSamplePrecision(set_sample_precision::SetSamplePrecision { precision }) => {
+            let unchanged = base.frame.as_ref().is_some_and(|frame| frame.precision == *precision);
+            frame_diff(base, JpgFrameFieldsDiff { precision: (!unchanged).then_some(*precision), ..Default::default() })
+        }
+        JpgBaselineMutation::SetArithmetic(set_arithmetic::SetArithmetic { arithmetic }) => JpgDiff { arithmetic: (base.arithmetic != *arithmetic).then_some(*arithmetic), ..Default::default() },
+        JpgBaselineMutation::InsertHuffmanTable(insert_huffman_table::InsertHuffmanTable { index, table }) => {
+            let key = JpgHuffmanTableKey { class: table.class, id: table.id };
+            if huffman(base, &key).is_some() {
+                JpgDiff::default()
+            } else {
+                JpgDiff { huffman_tables: Some(JpgHuffmanTablesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![JpgHuffmanTableAdded { index: (*index).min(base.huffman_tables.len()), item: table.clone() }] }), ..Default::default() }
             }
-            JpgBaselineMutation::SetArithmetic(set_arithmetic::SetArithmetic { arithmetic }) => JpgDiff { arithmetic: (base.arithmetic != *arithmetic).then_some(*arithmetic), ..Default::default() },
-            JpgBaselineMutation::InsertHuffmanTable(insert_huffman_table::InsertHuffmanTable { index, table }) => {
-                let key = JpgHuffmanTableKey { class: table.class, id: table.id };
-                if huffman(base, &key).is_some() {
-                    JpgDiff::default()
-                } else {
-                    JpgDiff { huffman_tables: Some(JpgHuffmanTablesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![JpgHuffmanTableAdded { index: (*index).min(base.huffman_tables.len()), item: table.clone() }] }), ..Default::default() }
-                }
+        }
+        JpgBaselineMutation::RemoveHuffmanTable(remove_huffman_table::RemoveHuffmanTable { key }) => {
+            if huffman(base, key).is_none() {
+                JpgDiff::default()
+            } else {
+                JpgDiff { huffman_tables: Some(JpgHuffmanTablesDiff { removed: vec![*key], modified: Vec::new(), added: Vec::new() }), ..Default::default() }
             }
-            JpgBaselineMutation::RemoveHuffmanTable(remove_huffman_table::RemoveHuffmanTable { key }) => {
-                if huffman(base, key).is_none() {
-                    JpgDiff::default()
-                } else {
-                    JpgDiff { huffman_tables: Some(JpgHuffmanTablesDiff { removed: vec![*key], modified: Vec::new(), added: Vec::new() }), ..Default::default() }
-                }
-            }
-            JpgBaselineMutation::InsertFrameComponent(insert_frame_component::InsertFrameComponent { index, component: added }) => {
-                if component(base, added.id).is_some() {
-                    JpgDiff::default()
-                } else {
-                    let at = (*index).min(base.frame.as_ref().map_or(0, |frame| frame.components.len()));
-                    frame_diff(base, JpgFrameFieldsDiff { components: Some(JpgComponentsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![crate::standards::v_jfif_1_01::subsets::document::schema::diff::JpgComponentAdded { index: at, item: *added }] }), ..Default::default() })
-                }
-            }
-            JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id }) => {
-                if component(base, *id).is_none() {
-                    JpgDiff::default()
-                } else {
-                    frame_diff(base, JpgFrameFieldsDiff { components: Some(JpgComponentsDiff { removed: vec![*id], modified: Vec::new(), added: Vec::new() }), ..Default::default() })
-                }
-            }
-            JpgBaselineMutation::SetComponentSampling(set_component_sampling::SetComponentSampling { id, h_sampling, v_sampling }) => match component(base, *id) {
-                Some(found) if found.h_sampling == *h_sampling && found.v_sampling == *v_sampling => JpgDiff::default(),
-                Some(_) => frame_diff(
+        }
+        JpgBaselineMutation::InsertFrameComponent(insert_frame_component::InsertFrameComponent { index, component: added }) => {
+            if component(base, added.id).is_some() {
+                JpgDiff::default()
+            } else {
+                let at = (*index).min(base.frame.as_ref().map_or(0, |frame| frame.components.len()));
+                frame_diff(
                     base,
                     JpgFrameFieldsDiff {
-                        components: Some(JpgComponentsDiff { removed: Vec::new(), modified: vec![JpgComponentModified { id: *id, diff: JpgComponentDiff { h_sampling: Some(*h_sampling), v_sampling: Some(*v_sampling), ..Default::default() } }], added: Vec::new() }),
+                        components: Some(JpgComponentsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![crate::standards::v_jfif_1_01::subsets::document::schema::diff::JpgComponentAdded { index: at, item: *added }] }),
                         ..Default::default()
                     },
-                ),
-                None => JpgDiff::default(),
-            },
-        })
-    }
+                )
+            }
+        }
+        JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id }) => {
+            if component(base, *id).is_none() {
+                JpgDiff::default()
+            } else {
+                frame_diff(base, JpgFrameFieldsDiff { components: Some(JpgComponentsDiff { removed: vec![*id], modified: Vec::new(), added: Vec::new() }), ..Default::default() })
+            }
+        }
+        JpgBaselineMutation::SetComponentSampling(set_component_sampling::SetComponentSampling { id, h_sampling, v_sampling }) => match component(base, *id) {
+            Some(found) if found.h_sampling == *h_sampling && found.v_sampling == *v_sampling => JpgDiff::default(),
+            Some(_) => frame_diff(
+                base,
+                JpgFrameFieldsDiff {
+                    components: Some(JpgComponentsDiff {
+                        removed: Vec::new(),
+                        modified: vec![JpgComponentModified { id: *id, diff: JpgComponentDiff { h_sampling: Some(*h_sampling), v_sampling: Some(*v_sampling), ..Default::default() } }],
+                        added: Vec::new(),
+                    }),
+                    ..Default::default()
+                },
+            ),
+            None => JpgDiff::default(),
+        },
+    })
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &JpgBaselineMutation, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
-        vec![match this {
-            JpgBaselineMutation::SetSnapshot(_) => JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            JpgBaselineMutation::SetSofMarker(_) => JpgBaselineMutation::SetSofMarker(set_sof_marker::SetSofMarker { marker: base.sof_marker }),
-            JpgBaselineMutation::SetSamplePrecision(_) => match &base.frame {
-                Some(frame) => JpgBaselineMutation::SetSamplePrecision(set_sample_precision::SetSamplePrecision { precision: frame.precision }),
-                None => return Vec::new(),
-            },
-            JpgBaselineMutation::SetArithmetic(_) => JpgBaselineMutation::SetArithmetic(set_arithmetic::SetArithmetic { arithmetic: base.arithmetic }),
-            JpgBaselineMutation::InsertHuffmanTable(insert_huffman_table::InsertHuffmanTable { table, .. }) => {
-                let key = JpgHuffmanTableKey { class: table.class, id: table.id };
-                match huffman(base, &key) {
-                    Some(_) => return Vec::new(),
-                    None => JpgBaselineMutation::RemoveHuffmanTable(remove_huffman_table::RemoveHuffmanTable { key }),
-                }
-            }
-            // ↩️ The removed table goes back at the position it held, not at the end: `index` exists
-            // on the insertion kind precisely so this inverse can name it.
-            JpgBaselineMutation::RemoveHuffmanTable(remove_huffman_table::RemoveHuffmanTable { key }) => match base.huffman_tables.iter().position(|table| table.class == key.class && table.id == key.id) {
-                Some(at) => JpgBaselineMutation::InsertHuffmanTable(insert_huffman_table::InsertHuffmanTable { index: at, table: base.huffman_tables[at].clone() }),
-                None => return Vec::new(),
-            },
-            JpgBaselineMutation::InsertFrameComponent(insert_frame_component::InsertFrameComponent { component: added, .. }) => match component(base, added.id) {
+    vec![match this {
+        JpgBaselineMutation::SetSnapshot(_) => JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        JpgBaselineMutation::SetSofMarker(_) => JpgBaselineMutation::SetSofMarker(set_sof_marker::SetSofMarker { marker: base.sof_marker }),
+        JpgBaselineMutation::SetSamplePrecision(_) => match &base.frame {
+            Some(frame) => JpgBaselineMutation::SetSamplePrecision(set_sample_precision::SetSamplePrecision { precision: frame.precision }),
+            None => return Vec::new(),
+        },
+        JpgBaselineMutation::SetArithmetic(_) => JpgBaselineMutation::SetArithmetic(set_arithmetic::SetArithmetic { arithmetic: base.arithmetic }),
+        JpgBaselineMutation::InsertHuffmanTable(insert_huffman_table::InsertHuffmanTable { table, .. }) => {
+            let key = JpgHuffmanTableKey { class: table.class, id: table.id };
+            match huffman(base, &key) {
                 Some(_) => return Vec::new(),
-                None => JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id: added.id }),
-            },
-            JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id }) => match base.frame.as_ref().and_then(|frame| frame.components.iter().position(|found| found.id == *id)) {
-                Some(at) => JpgBaselineMutation::InsertFrameComponent(insert_frame_component::InsertFrameComponent { index: at, component: base.frame.as_ref().expect("the frame was just read").components[at] }),
-                None => return Vec::new(),
-            },
-            JpgBaselineMutation::SetComponentSampling(set_component_sampling::SetComponentSampling { id, .. }) => match component(base, *id) {
-                Some(found) => JpgBaselineMutation::SetComponentSampling(set_component_sampling::SetComponentSampling { id: *id, h_sampling: found.h_sampling, v_sampling: found.v_sampling }),
-                None => return Vec::new(),
-            },
-        }]
-    }
+                None => JpgBaselineMutation::RemoveHuffmanTable(remove_huffman_table::RemoveHuffmanTable { key }),
+            }
+        }
+        // ↩️ The removed table goes back at the position it held, not at the end: `index` exists
+        // on the insertion kind precisely so this inverse can name it.
+        JpgBaselineMutation::RemoveHuffmanTable(remove_huffman_table::RemoveHuffmanTable { key }) => match base.huffman_tables.iter().position(|table| table.class == key.class && table.id == key.id) {
+            Some(at) => JpgBaselineMutation::InsertHuffmanTable(insert_huffman_table::InsertHuffmanTable { index: at, table: base.huffman_tables[at].clone() }),
+            None => return Vec::new(),
+        },
+        JpgBaselineMutation::InsertFrameComponent(insert_frame_component::InsertFrameComponent { component: added, .. }) => match component(base, added.id) {
+            Some(_) => return Vec::new(),
+            None => JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id: added.id }),
+        },
+        JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id }) => match base.frame.as_ref().and_then(|frame| frame.components.iter().position(|found| found.id == *id)) {
+            Some(at) => JpgBaselineMutation::InsertFrameComponent(insert_frame_component::InsertFrameComponent { index: at, component: base.frame.as_ref().expect("the frame was just read").components[at] }),
+            None => return Vec::new(),
+        },
+        JpgBaselineMutation::SetComponentSampling(set_component_sampling::SetComponentSampling { id, .. }) => match component(base, *id) {
+            Some(found) => JpgBaselineMutation::SetComponentSampling(set_component_sampling::SetComponentSampling { id: *id, h_sampling: found.h_sampling, v_sampling: found.v_sampling }),
+            None => return Vec::new(),
+        },
+    }]
+}
 //#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::{demo_las_snapshot, empty_las_snapshot};
 

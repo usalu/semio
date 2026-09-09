@@ -1,12 +1,12 @@
 //! 🕹️ 🕹️ Note play app commands command — `nudge-selection-right`.
 
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::schema::{block_id, flatten_blocks};
 use crate::{NoteBlockNode, NoteSnapshot};
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use std::collections::HashSet;
 use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::HashSet;
 
 //#region 🔖️Helpers
 /// ✂️ Nudge step magnitudes: `1px` fine, `10px` fast.

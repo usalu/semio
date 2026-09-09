@@ -352,14 +352,15 @@ pub struct FaultCause {
     pub code: Option<FaultCode>,
 }
 
-/// @emoji 🧯️ Structured abort report crossing every os boundary.
+/// 🧯️ Structured abort report crossing every os boundary.
+/// Scope metadata owns a separate allocation to keep error return values compact.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Fault {
     pub origin: FaultOrigin,
     pub code: FaultCode,
     pub severity: Severity,
     pub message: String,
-    pub scope: FaultScope,
+    pub scope: Box<FaultScope>,
     pub span: Option<TextSpan>,
     pub causes: Vec<FaultCause>,
     pub retryable: bool,
@@ -512,10 +513,10 @@ impl FromValue for Fault {
             code: FaultCode::from_value(required("code")?)?,
             severity: Severity::from_value(required("severity")?)?,
             message,
-            scope: match find("scope") {
+            scope: Box::new(match find("scope") {
                 None | Some(DslValue::Null) => FaultScope::default(),
                 Some(slot) => FaultScope::from_value(slot)?,
-            },
+            }),
             span: match find("span") {
                 None | Some(DslValue::Null) => None,
                 Some(slot) => Some(TextSpan::from_value(slot)?),
@@ -548,11 +549,11 @@ impl From<String> for Fault {
 
 impl Fault {
     pub fn new(origin: FaultOrigin, code: impl Into<FaultCode>, message: impl Into<String>) -> Self {
-        Self { origin, code: code.into(), severity: Severity::Error, message: message.into(), scope: FaultScope::default(), span: None, causes: Vec::new(), retryable: false }
+        Self { origin, code: code.into(), severity: Severity::Error, message: message.into(), scope: Box::default(), span: None, causes: Vec::new(), retryable: false }
     }
 
     pub fn with_scope(mut self, scope: FaultScope) -> Self {
-        self.scope = scope;
+        *self.scope = scope;
         self
     }
 
@@ -595,7 +596,7 @@ pub trait FaultFrom {
     where
         Self: Sized,
     {
-        Fault { origin: self.fault_origin(), code: self.fault_code(), severity: self.fault_severity(), message: self.fault_message(), scope: self.fault_scope(), span: self.fault_span(), causes: self.fault_causes(), retryable: self.fault_retryable() }
+        Fault { origin: self.fault_origin(), code: self.fault_code(), severity: self.fault_severity(), message: self.fault_message(), scope: Box::new(self.fault_scope()), span: self.fault_span(), causes: self.fault_causes(), retryable: self.fault_retryable() }
     }
 }
 

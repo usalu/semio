@@ -3,7 +3,7 @@
   "annex": null,
   "mEdKnm": null,
   "vEdKn": null,
-  "fCk": 45.0,
+  "fCk": 45,
   "bMm": null,
   "dMm": null,
   "aSMm2": null,
@@ -34,6 +34,5 @@
   "anchorDMm": null,
   "anchorC1Mm": null,
   "anchorNEdKn": null,
-  "anchorVEdKn": null,
-  "selectedCheckIndex": null
+  "anchorVEdKn": null
 }

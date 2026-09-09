@@ -274,6 +274,8 @@ mod typed_command_full_operation_tests {
                 draft_generation: 0,
                 presence_generation: 0,
                 transient_generation: 0,
+                window_config_authority: None,
+                window_transient_authority: None,
                 publication_lanes: &[ArtifactToolPublicationLane::Presence],
                 session: None,
                 session_rejected: None,
@@ -468,6 +470,8 @@ mod typed_command_full_operation_tests {
                     draft_generation: 0,
                     presence_generation: 0,
                     transient_generation: 0,
+                    window_config_authority: None,
+                    window_transient_authority: None,
                     publication_lanes: &[ArtifactToolPublicationLane::Artifact],
                     session: None,
                     session_rejected: None,
@@ -851,6 +855,8 @@ mod typed_command_full_operation_tests {
                     draft_generation: 0,
                     presence_generation: 0,
                     transient_generation: 0,
+                    window_config_authority: None,
+                    window_transient_authority: None,
                     publication_lanes: &[ArtifactToolPublicationLane::Presence],
                     session: None,
                     session_rejected: None,
@@ -899,6 +905,8 @@ mod typed_command_full_operation_tests {
                     draft_generation: 0,
                     presence_generation: 0,
                     transient_generation: 0,
+                    window_config_authority: None,
+                    window_transient_authority: None,
                     publication_lanes: &[],
                     session: None,
                     session_rejected: None,
@@ -1286,6 +1294,14 @@ mod typed_command_full_operation_tests {
         let wire = page.renderer_exchange_bytes();
         assert!(wire.starts_with(TypedOperationResultPage::RENDERER_PAGE_MAGIC));
         assert_eq!(&wire[wire.len() - TYPED_OPERATION_RESULT_PAGE_BYTES..], &[0x5a; TYPED_OPERATION_RESULT_PAGE_BYTES]);
+
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️renderer-result-lanes.json")).expect("neutral result lanes");
+        for row in fixture["lanes"].as_array().expect("result lanes") {
+            let lane: TypedOperationResultLane = protocol::json::from_json_str(&serde_json::to_string(&row["name"]).unwrap()).expect("own lane decoder");
+            let page = TypedOperationResultPage::try_new(token, lane, &[0x5a]).expect("declared result lane");
+            let bytes = page.renderer_exchange_bytes();
+            assert_eq!(bytes[TypedOperationResultPage::RENDERER_PAGE_MAGIC.len() + 25], row["tag"].as_u64().unwrap() as u8);
+        }
 
         let mut ack = Vec::from(TypedOperationResultPage::RENDERER_ACK_MAGIC);
         ack.extend_from_slice(&token.receiver.to_le_bytes());

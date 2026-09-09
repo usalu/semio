@@ -1,9 +1,8 @@
 //! 📝 `edit-story` — replaces a story's authored `content` body.
 
-
-use crate::{LayoutDiff, LayoutSnapshot, TextStoryPatch};
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::diff::{LayoutStoriesDelta, LayoutStoryPatchEntry};
+use crate::{LayoutDiff, LayoutSnapshot, TextStoryPatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -33,7 +32,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for EditStory {
 }
 //#endregion 📝EditStory
 
-
 //#region 📝EditStory
 pub fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else {
@@ -48,7 +46,6 @@ pub fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::
     })
 }
 //#endregion 📝EditStory
-
 
 //#region 📝EditStory
 pub fn inverse_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

@@ -1,6 +1,8 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG BUN_VERSION=1.3.14
+ARG NODE_VERSION=24.15.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -66,6 +68,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     netbase \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+RUN set -eu; \
+    runtime_arch="$(dpkg --print-architecture)"; \
+    case "$runtime_arch" in \
+      amd64) bun_archive="x64-baseline"; bun_sha="a063908ae08b7852ca10939bbdc6ceed3ddabce8fb9402dce83d65d73b36e6c7"; node_archive="x64"; node_sha="472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6";; \
+      arm64) bun_archive="aarch64"; bun_sha="a27ffb63a8310375836e0d6f668ae17fa8d8d18b88c37c821c65331973a19a3b"; node_archive="arm64"; node_sha="f3d5a797b5d210ce8e2cb265544c8e482eaedcb8aa409a8b46da7e8595d0dda0";; \
+      *) echo "Unsupported runtime architecture: $runtime_arch" >&2; exit 1;; \
+    esac; \
+    mkdir -p /tmp/semio-runtime; \
+    cd /tmp/semio-runtime; \
+    curl --fail --location --retry 3 --max-time 300 "https://github.com/oven-sh/bun/releases/download/bun-v$BUN_VERSION/bun-linux-$bun_archive.zip" --output bun.zip; \
+    printf '%s  bun.zip\n' "$bun_sha" | sha256sum -c -; \
+    unzip -p bun.zip "bun-linux-$bun_archive/bun" > /usr/local/bin/bun; \
+    chmod 755 /usr/local/bin/bun; \
+    ln -s bun /usr/local/bin/bunx; \
+    test "$(bun --version)" = "$BUN_VERSION"; \
+    curl --fail --location --retry 3 --max-time 300 "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-$node_archive.tar.xz" --output node.tar.xz; \
+    printf '%s  node.tar.xz\n' "$node_sha" | sha256sum -c -; \
+    tar -xJf node.tar.xz --strip-components=2 --no-same-owner -C /usr/local/bin "node-v$NODE_VERSION-linux-$node_archive/bin/node"; \
+    test "$(node --version)" = "v$NODE_VERSION"; \
+    cd /; \
+    rm -rf /tmp/semio-runtime
 
 RUN mkdir -p /etc/apt/keyrings /var/lib/neo4j/plugins \
     && wget -O - https://debian.neo4j.com/neotechnology.gpg.key | gpg --dearmor -o /etc/apt/keyrings/neotechnology.gpg \

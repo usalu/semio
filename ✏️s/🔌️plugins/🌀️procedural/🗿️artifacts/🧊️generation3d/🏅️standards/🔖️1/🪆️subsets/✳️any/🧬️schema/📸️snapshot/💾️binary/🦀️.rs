@@ -156,10 +156,28 @@ impl Generation3dMountedTypedSnapshotOwner {
         let mut dsl_stack = Vec::new();
         dsl_stack.try_reserve_exact(GENERATION3D_MOUNTED_TYPED_DEPTH).map_err(|_| "generation3d-mounted.dsl-stack-preflight")?;
         let candidate = Generation3dSnapshot {
-            fixture: semio_framework_artifact_flow_flow::FlowFixture { schema: String::new(), camera: semio_framework_artifact_flow_flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: semio_framework_artifact_flow_flow::OrderedMap::new() },
+            fixture: semio_framework_artifact_flow_flow::FlowFixture {
+                schema: String::new(),
+                camera: semio_framework_artifact_flow_flow::CameraJson::default(),
+                widgets: Vec::new(),
+                synapses: Vec::new(),
+                layout: semio_framework_artifact_flow_flow::OrderedMap::new(),
+            },
             generation: semio_framework_artifact_playbook_playbook::GenerationPlayState::default().into(),
         };
-        Ok(Self { candidate: std::mem::ManuallyDrop::new(Some(candidate)), retirement: std::mem::ManuallyDrop::new(None), stack, string: None, pending_table_rows: None, json_stack, json_destination: None, dsl_stack, dsl_destination: None, complete: false, handed_back: false })
+        Ok(Self {
+            candidate: std::mem::ManuallyDrop::new(Some(candidate)),
+            retirement: std::mem::ManuallyDrop::new(None),
+            stack,
+            string: None,
+            pending_table_rows: None,
+            json_stack,
+            json_destination: None,
+            dsl_stack,
+            dsl_destination: None,
+            complete: false,
+            handed_back: false,
+        })
     }
 
     fn push(&mut self, owner: Generation3dMountedContainerOwner) -> Result<(), &'static str> {
@@ -458,7 +476,11 @@ impl Generation3dMountedTypedSnapshotOwner {
                 *field = None;
             }
             Some(Generation3dMountedContainerOwner::Record { owner: Generation3dMountedRecordOwner::NeuralValue { value: target, .. }, field, .. }) if matches!(*field, Some(0 | 1)) && target.is_none() => {
-                *target = Some(if *field == Some(0) { semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null) } else { semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(value)) });
+                *target = Some(if *field == Some(0) {
+                    semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null)
+                } else {
+                    semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(value))
+                });
                 *field = None;
             }
             _ => {}
@@ -914,7 +936,9 @@ impl Generation3dMountedTypedSnapshotOwner {
             return false;
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            if !matches!(retirement.close_step(1, 4096), Ok(store::SnapshotRetirementStep::Complete)) { return false; }
+            if !matches!(retirement.close_step(1, 4096), Ok(store::SnapshotRetirementStep::Complete)) {
+                return false;
+            }
             self.retirement.take();
             return false;
         }
@@ -927,7 +951,15 @@ impl Generation3dMountedTypedSnapshotOwner {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.handed_back && self.candidate.is_none() && self.retirement.is_none() && self.stack.is_empty() && self.string.is_none() && self.json_stack.is_empty() && self.json_destination.is_none() && self.dsl_stack.is_empty() && self.dsl_destination.is_none()
+        self.handed_back
+            && self.candidate.is_none()
+            && self.retirement.is_none()
+            && self.stack.is_empty()
+            && self.string.is_none()
+            && self.json_stack.is_empty()
+            && self.json_destination.is_none()
+            && self.dsl_stack.is_empty()
+            && self.dsl_destination.is_none()
     }
 }
 

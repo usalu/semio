@@ -1,11 +1,11 @@
 //! ⚪️ GLTF compactness indicators.
 
-#[path = "🗜️compactness/🦀️.rs"]
-pub mod measure;
 #[path = "🔢️compactness-index/🦀️.rs"]
 pub mod compactness_index;
 #[path = "🫙️hull-fill-ratio/🦀️.rs"]
 pub mod hull_fill_ratio;
+#[path = "🗜️compactness/🦀️.rs"]
+pub mod measure;
 #[path = "🌐️sphericity/🦀️.rs"]
 pub mod sphericity;
 #[path = "➗️surface-to-volume-ratio/🦀️.rs"]

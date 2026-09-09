@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::NoteCamera;
 use crate::editor::note::commands::set_camera_zoom;
 use crate::editor::note::testkit::{dispatch, note_app, render};
-use crate::editor::note::{NOTE_PLAY_BODY_COMPOSITE, NoteCommand};
+use crate::editor::note::{NoteCommand, NOTE_PLAY_BODY_COMPOSITE};
+use crate::NoteCamera;
 
 /// 🎥️ `setCamera`/`setCameraZoom` are config-only — they must never emit a `NoteMutation` (no VCS
 /// edit, no undo entry on the document store) and instead write into `cfg.camera`, which the

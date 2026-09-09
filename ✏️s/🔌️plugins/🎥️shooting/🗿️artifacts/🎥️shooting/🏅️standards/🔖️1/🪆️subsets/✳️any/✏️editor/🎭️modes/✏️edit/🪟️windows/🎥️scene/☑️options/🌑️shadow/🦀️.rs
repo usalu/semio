@@ -1,8 +1,8 @@
 //! 🌑️ Scene-window option — the shadow-enabled toggle.
 //! Its command handler lives in `🎮️commands/☀️scene::set_shadow_enabled`.
 
-use crate::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
+use crate::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

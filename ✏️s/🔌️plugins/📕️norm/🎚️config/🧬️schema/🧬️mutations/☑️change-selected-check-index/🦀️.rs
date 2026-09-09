@@ -11,12 +11,7 @@ pub struct ChangeSelectedCheckIndex {
 }
 
 impl protocol::MutationKind<NormConfig, NormConfigMutation> for ChangeSelectedCheckIndex {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
-        verb: "change",
-        entity: "selected-check-index",
-        kind: "change-selected-check-index",
-        record: "ChangedSelectedCheckIndex",
-    };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "selected-check-index", kind: "change-selected-check-index", record: "ChangedSelectedCheckIndex" };
 
     fn diff(&self, base: &NormConfig) -> protocol::MutationOutcome<NormConfig> {
         if base.selected_check_index == self.index {

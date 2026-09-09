@@ -324,7 +324,7 @@ impl Mutation<DemoSnapshot> for DemoMutation {
 async fn ensure_demo_codec_registered() {
     static ONCE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
     if !ONCE.swap(true, std::sync::atomic::Ordering::AcqRel) {
-        let _ = register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec");
+        register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec");
     }
 }
 
@@ -1051,8 +1051,8 @@ mod actor_tests {
     use super::*;
     use crate::os_spr::{decode_client_frame, encode_server_frame};
     use futures::{SinkExt, StreamExt};
-    use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
     use std::time::Duration;
     use tokio::sync::{broadcast as tokio_broadcast, Mutex};
     use tokio_tungstenite::tungstenite::Message as WsMessage;
@@ -1090,7 +1090,11 @@ mod actor_tests {
         }
     }
 
-    async fn wait_for_event(events: &mut broadcast::Receiver<ArtifactEvent>, mut predicate: impl FnMut(&ArtifactEvent) -> bool) -> ArtifactEvent {
+    async fn wait_for_event(events: &mut broadcast::Receiver<ArtifactEvent>, predicate: impl FnMut(&ArtifactEvent) -> bool) -> ArtifactEvent {
+        wait_for_named_event("event", events, predicate).await
+    }
+
+    async fn wait_for_named_event(label: &str, events: &mut broadcast::Receiver<ArtifactEvent>, mut predicate: impl FnMut(&ArtifactEvent) -> bool) -> ArtifactEvent {
         let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
         loop {
             match tokio::time::timeout_at(deadline, events.recv()).await {
@@ -1100,7 +1104,24 @@ mod actor_tests {
                     }
                 }
                 Ok(Err(broadcast::error::RecvError::Lagged(_))) => continue,
-                other => panic!("no matching event before deadline: {other:?}"),
+                other => panic!("no matching {label} before deadline: {other:?}"),
+            }
+        }
+    }
+
+    async fn wait_for_mock_hub_event(label: &str, hub: &MockHub, events: &mut broadcast::Receiver<ArtifactEvent>, mut predicate: impl FnMut(&ArtifactEvent) -> bool) -> ArtifactEvent {
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+        let mut observed = Vec::new();
+        loop {
+            match tokio::time::timeout_at(deadline, events.recv()).await {
+                Ok(Ok(event)) => {
+                    if predicate(&event) {
+                        return event;
+                    }
+                    observed.push(format!("{event:?}"));
+                }
+                Ok(Err(broadcast::error::RecvError::Lagged(count))) => observed.push(format!("lagged:{count}")),
+                other => panic!("no matching {label} before deadline: {other:?}; actor-events={observed:?}; mock-hub={:?}", hub.trace()),
             }
         }
     }
@@ -1178,12 +1199,25 @@ mod actor_tests {
         log: Arc<Mutex<Vec<(u64, MutationEnvelope)>>>,
         broadcast: tokio_broadcast::Sender<ServerFrame>,
         connections: AtomicUsize,
+        session_gate: Option<Arc<tokio::sync::Semaphore>>,
+        trace: Arc<std::sync::Mutex<Vec<&'static str>>>,
+    }
+
+    impl MockHub {
+        fn record(&self, event: &'static str) {
+            self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(event);
+        }
+
+        fn trace(&self) -> Vec<&'static str> {
+            self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+        }
     }
 
     struct MockHubSocketGrantSource {
         hub_origin: String,
         actor_id: String,
         grant_fill: char,
+        trace: Arc<std::sync::Mutex<Vec<&'static str>>>,
     }
 
     impl crate::os_directory::client::HubSocketGrantSource for MockHubSocketGrantSource {
@@ -1196,13 +1230,9 @@ mod actor_tests {
             _client_instance_id: &str,
             _timeout_ms: u64,
         ) -> Result<crate::os_directory::client::DocumentSocketAdmissionV1, crate::os_directory::client::DirectoryClientError> {
-            let expires_at_ms = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("system clock after epoch")
-                .as_millis()
-                .saturating_add(60_000)
-                .min(i64::MAX as u128) as i64;
-            Ok(crate::os_directory::client::DocumentSocketAdmissionV1 {
+            self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("grant.entered");
+            let expires_at_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("system clock after epoch").as_millis().saturating_add(60_000).min(i64::MAX as u128) as i64;
+            let admission = crate::os_directory::client::DocumentSocketAdmissionV1 {
                 socket: crate::os_directory::client::SocketGrantReceiptV1 {
                     schema: "semio.hub.socket-grant/v1".into(),
                     protocol: "semio.socket.v1".into(),
@@ -1252,20 +1282,15 @@ mod actor_tests {
                     },
                     revalidation: crate::os_directory::DocumentOpenRevalidationV1 { directory_revision: 1, membership_generation: 1, session_generation: Some(1), share_generation: None },
                 },
-            })
+            };
+            self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("grant.returned");
+            Ok(admission)
         }
     }
 
-    fn configure_mock_hub(host: &ArtifactHost, hub_origin: &str, actor_fill: char) {
-        host.set_local_hub_credential(Arc::new(crate::os_directory::client::LocalHubCredential::test(
-            hub_origin,
-            &format!("session.v1.{}.{}", actor_fill.to_string().repeat(32), actor_fill.to_string().repeat(64)),
-        )));
-        host.set_hub_socket_grant_source(Arc::new(MockHubSocketGrantSource {
-            hub_origin: hub_origin.into(),
-            actor_id: format!("hub.v1.{}", actor_fill.to_string().repeat(64)),
-            grant_fill: actor_fill,
-        }));
+    fn configure_mock_hub(host: &ArtifactHost, hub_origin: &str, actor_fill: char, hub: &MockHub) {
+        host.set_local_hub_credential(Arc::new(crate::os_directory::client::LocalHubCredential::test(hub_origin, &format!("session.v1.{}.{}", actor_fill.to_string().repeat(32), actor_fill.to_string().repeat(64)))));
+        host.set_hub_socket_grant_source(Arc::new(MockHubSocketGrantSource { hub_origin: hub_origin.into(), actor_id: format!("hub.v1.{}", actor_fill.to_string().repeat(64)), grant_fill: actor_fill, trace: hub.trace.clone() }));
     }
 
     async fn mock_frontier(ordinal: u64) -> RuntimeFrontierSummary {
@@ -1273,24 +1298,38 @@ mod actor_tests {
     }
 
     async fn spawn_mock_hub() -> (std::net::SocketAddr, Arc<MockHub>) {
+        spawn_mock_hub_with_session_gate(false).await
+    }
+
+    async fn spawn_mock_hub_with_session_gate(gated: bool) -> (std::net::SocketAddr, Arc<MockHub>) {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind");
         let addr = listener.local_addr().expect("addr");
         let (broadcast, _rx) = tokio_broadcast::channel(256);
-        let semio_hub = Arc::new(MockHub { log: Arc::new(Mutex::new(Vec::new())), broadcast, connections: AtomicUsize::new(0) });
+        let semio_hub = Arc::new(MockHub { log: Arc::new(Mutex::new(Vec::new())), broadcast, connections: AtomicUsize::new(0), session_gate: gated.then(|| Arc::new(tokio::sync::Semaphore::new(0))), trace: Arc::new(std::sync::Mutex::new(Vec::new())) });
         let accept_hub = semio_hub.clone();
         tokio::spawn(async move {
             loop {
                 let Ok((stream, _)) = listener.accept().await else { break };
                 let conn_hub = accept_hub.clone();
+                conn_hub.record("tcp.accepted");
                 tokio::spawn(async move {
                     let actor_fill = if conn_hub.connections.fetch_add(1, Ordering::SeqCst) == 0 { 'a' } else { 'b' };
-                    let accepted = tokio_tungstenite::accept_hdr_async(stream, |_request, mut response| {
-                        response.headers_mut().insert("Sec-WebSocket-Protocol", "semio.socket.v1".parse().expect("static protocol header"));
-                        Ok(response)
-                    })
+                    let accepted = tokio_tungstenite::accept_hdr_async(
+                        stream,
+                        |_request: &tokio_tungstenite::tungstenite::handshake::server::Request,
+                         mut response: tokio_tungstenite::tungstenite::handshake::server::Response|
+                         -> Result<_, tokio_tungstenite::tungstenite::handshake::server::ErrorResponse> {
+                            response.headers_mut().insert("Sec-WebSocket-Protocol", "semio.socket.v1".parse().expect("static protocol header"));
+                            Ok(response)
+                        },
+                    )
                     .await;
-                    if let Ok(ws) = accepted {
-                        mock_hub_connection(ws, conn_hub, format!("hub.v1.{}", actor_fill.to_string().repeat(64))).await;
+                    match accepted {
+                        Ok(ws) => {
+                            conn_hub.record("websocket.accepted");
+                            mock_hub_connection(ws, conn_hub, format!("hub.v1.{}", actor_fill.to_string().repeat(64))).await;
+                        }
+                        Err(_) => conn_hub.record("websocket.refused"),
                     }
                 });
             }
@@ -1303,10 +1342,31 @@ mod actor_tests {
         // Expect Hello first.
         let requested_ordinal = match read.next().await {
             Some(Ok(WsMessage::Binary(bytes))) => match decode_client_frame(&bytes).await {
-                Ok((_, ClientFrame::SocketHelloV1 { frontier, .. })) => frontier.map_or(0, |frontier| frontier.head_edit_ordinal),
-                _ => return,
+                Ok((_, ClientFrame::SocketHelloV1 { frontier, .. })) => {
+                    semio_hub.record("client.socket-hello");
+                    frontier.map_or(0, |frontier| frontier.head_edit_ordinal)
+                }
+                Ok(_) => {
+                    semio_hub.record("client.unexpected-first-frame");
+                    return;
+                }
+                Err(_) => {
+                    semio_hub.record("client.malformed-first-frame");
+                    return;
+                }
             },
-            _ => return,
+            Some(Ok(_)) => {
+                semio_hub.record("client.nonbinary-first-frame");
+                return;
+            }
+            Some(Err(_)) => {
+                semio_hub.record("client.first-frame-error");
+                return;
+            }
+            None => {
+                semio_hub.record("client.closed-before-hello");
+                return;
+            }
         };
         let (frontier, backlog) = {
             let log = semio_hub.log.lock().await;
@@ -1314,18 +1374,29 @@ mod actor_tests {
             let backlog: Vec<MutationEnvelope> = log.iter().filter(|(ordinal, _)| *ordinal > requested_ordinal).map(|(_, envelope)| envelope.clone()).collect();
             (mock_frontier(ordinal).await, backlog)
         };
+        if let Some(gate) = &semio_hub.session_gate {
+            semio_hub.record("server.session-gate-waiting");
+            gate.acquire().await.expect("mock session gate remains live").forget();
+            semio_hub.record("server.session-gate-released");
+        }
         let welcome = ServerFrame::Welcome { session_id: "mock-session".to_string(), resume_token: "mock-resume".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail };
         if write.send(WsMessage::Binary(encode_server_frame(&welcome, Lane::Command).await.into())).await.is_err() {
+            semio_hub.record("server.welcome-send-failed");
             return;
         }
+        semio_hub.record("server.welcome-sent");
         let session = ServerFrame::Session { actor, color: 1 };
         if write.send(WsMessage::Binary(encode_server_frame(&session, Lane::Command).await.into())).await.is_err() {
+            semio_hub.record("server.session-send-failed");
             return;
         }
+        semio_hub.record("server.session-sent");
         let commands = ServerFrame::Commands { envelopes: backlog, origin: ActorId("semio_hub-backlog".to_string()), frontier: frontier.clone() };
         if write.send(WsMessage::Binary(encode_server_frame(&commands, Lane::Command).await.into())).await.is_err() {
+            semio_hub.record("server.commands-send-failed");
             return;
         }
+        semio_hub.record("server.commands-sent");
         let mut broadcast_rx = semio_hub.broadcast.subscribe();
         loop {
             tokio::select! {
@@ -1334,6 +1405,7 @@ mod actor_tests {
                         Some(Ok(WsMessage::Binary(bytes))) => {
                             match decode_client_frame(&bytes).await {
                                 Ok((_, ClientFrame::Commands { batch_id, envelopes })) => {
+                                    semio_hub.record("client.commands");
                                     let mut assigned_frontier = frontier.clone();
                                     for envelope in envelopes {
                                         let (ordinal, origin) = {
@@ -1349,14 +1421,16 @@ mod actor_tests {
                                     let _ = write.send(WsMessage::Binary(encode_server_frame(&ack, Lane::Command).await.into())).await;
                                 }
                                 Ok((_, ClientFrame::PreviewPublish { key, seq, payload })) => {
+                                    semio_hub.record("client.preview-publish");
                                     // 👻️ Best-effort fan-out on the uncredited preview lane — this mock
                                     // semio_hub doesn't track per-connection actor identity beyond `Hello`, so
                                     // it stamps a fixed sentinel origin (fine for the round-trip test
                                     // this drives, which only asserts the *other* peer receives it).
                                     let _ = semio_hub.broadcast.send(ServerFrame::Preview { actor: ActorId("mock-semio_hub-peer".to_string()), key, seq, payload });
                                 }
-                                Ok((_, ClientFrame::Bye)) | Err(_) => {}
-                                Ok(_) => {}
+                                Ok((_, ClientFrame::Bye)) => semio_hub.record("client.bye"),
+                                Ok(_) => semio_hub.record("client.other"),
+                                Err(_) => semio_hub.record("client.malformed-frame"),
                             }
                         }
                         Some(Ok(WsMessage::Close(_))) | None | Some(Err(_)) => break,
@@ -1431,9 +1505,11 @@ mod actor_tests {
 
     #[tokio::test]
     async fn raw_document_backbone_reaches_hub_once_and_returns_one_canonical_event() {
-        let (addr, _hub) = spawn_mock_hub().await;
+        ensure_demo_codec_registered().await;
+        let (addr, hub) = spawn_mock_hub_with_session_gate(true).await;
         let base_url = format!("ws://{addr}");
         let host_a = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_a, &base_url, 'a', &hub);
         let channels_a = host_a
             .open(ArtifactActorConfig {
                 document_id: "raw-shared".into(),
@@ -1445,25 +1521,34 @@ mod actor_tests {
             .await;
         let key_a = channels_a.document_key.clone();
         let mut events_a = host_a.subscribe_key(&key_a).await;
+        hub.session_gate.as_ref().expect("gated mock").add_permits(1);
+        assert!(matches!(wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await, ArtifactEvent::Session { .. }));
         let host_b = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_b, &base_url, 'b', &hub);
         let channels_b = host_b
-            .open(ArtifactActorConfig { document_id: "raw-shared".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
+            .open(ArtifactActorConfig {
+                document_id: "raw-shared".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+                watch_external: false,
+                actor: "B".into(),
+            })
             .await;
         let key_b = channels_b.document_key.clone();
         let mut events_b = host_b.subscribe_key(&key_b).await;
-        assert!(matches!(wait_for_event(&mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await, ArtifactEvent::Session { .. }));
-        assert!(matches!(wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await, ArtifactEvent::Session { .. }));
+        hub.session_gate.as_ref().expect("gated mock").add_permits(1);
+        assert!(matches!(wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await, ArtifactEvent::Session { .. }));
 
         let original = document_backbone_envelope("raw-mutation", "raw-shared");
         channels_a.cmd_tx.send(ArtifactActorMsg::DocumentBackbone { message: document_backbone_message(std::slice::from_ref(&original)) }).expect("exact raw owner admitted");
-        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
+        let event = wait_for_mock_hub_event("B DocumentBackbone", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
         let delivered = document_backbone_event_envelopes(&event).expect("canonical raw event");
         assert_eq!(delivered.len(), 1);
         assert_eq!(delivered[0].mutation_id, original.mutation_id);
         assert_eq!(delivered[0].diff, original.diff);
         assert_eq!(delivered[0].inverse, original.inverse);
         assert_ne!(delivered[0].actor, original.actor, "Hub authority stamps its actor without rewriting opaque mutation fields");
-        assert!(matches!(wait_for_event(&mut events_a, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await, ArtifactEvent::CommandOutcome { outcome: CommandAckOutcome::Accepted, .. }));
+        assert!(matches!(wait_for_mock_hub_event("A CommandOutcome", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await, ArtifactEvent::CommandOutcome { outcome: CommandAckOutcome::Accepted, .. }));
         while let Ok(next) = events_b.try_recv() {
             assert!(!matches!(next, ArtifactEvent::RemoteMutations { .. }), "one server Commands frame cannot emit a duplicate legacy mutation event");
         }

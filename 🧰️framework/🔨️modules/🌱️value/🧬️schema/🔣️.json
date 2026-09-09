@@ -1,23 +1,33 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/framework/value/schema.json",
-  "title": "Value Schema Module",
+  "title": "DslValue",
+  "$ref": "#/$defs/DslValue",
   "$defs": {
-    "U64": {
-      "$comment": "The single owner of the decimal-string u64 scalar (📋️cross-partition-requests.md row 151). A u64 exceeds IEEE-754 double precision, so every JSON carrier on the wire spells it as a canonical decimal string: no sign, no leading zero, no separator, 0 ≤ value ≤ 18446744073709551615. Every other scope references this export instead of restating the pattern (📋️execution-contract.md §A).",
-      "type": "string",
-      "maxLength": 20,
-      "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$"
-    },
-    "NonZeroU64": {
-      "$comment": "U64 minus the single value \"0\": the identity-and-generation narrowing the 🎭️actor family speaks, where 0 is the reserved never-allocated sentinel and is rejected on the wire (🚪️lifetime/🧪️tests/…/🟦️.ts asserts \"0\" invalid beside \"-1\", \"01\" and 2⁶⁴). Expressed as a narrowing of U64, never as a second pattern (📋️execution-contract.md §A).",
-      "allOf": [
+    "DslValue": {
+      "anyOf": [
         {
-          "$ref": "#/$defs/U64"
+          "type": "null"
         },
         {
-          "not": {
-            "const": "0"
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DslValue"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/DslValue"
           }
         }
       ]

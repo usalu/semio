@@ -1,7 +1,7 @@
 //! 🧱️ EN 1996 snapshot schema — artifact-lane fields only.
 
-use crate::{part_2, MasonryClass};
 use crate::document::{AnnexChoice, DesignSituation};
+use crate::{part_2, MasonryClass};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -97,7 +97,6 @@ impl Default for En1996Snapshot {
         }
     }
 }
-
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ The canonical JSON projection of a [`En1996Snapshot`] — the surface

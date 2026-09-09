@@ -18,11 +18,7 @@ pub struct PdfOutline {
 impl PdfOutline {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(snapshot: &PdfSnapshot) -> Self {
-        Self {
-            page_count: snapshot.pages.len() as u32,
-            word_count: snapshot.pages.iter().map(|page| page.text.split_whitespace().count() as u32).sum(),
-            char_count: snapshot.pages.iter().map(|page| page.text.chars().count() as u32).sum(),
-        }
+        Self { page_count: snapshot.pages.len() as u32, word_count: snapshot.pages.iter().map(|page| page.text.split_whitespace().count() as u32).sum(), char_count: snapshot.pages.iter().map(|page| page.text.chars().count() as u32).sum() }
     }
 }
 //#endregion 🔖️Outline

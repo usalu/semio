@@ -1,8 +1,8 @@
 //! ✏️ ✏️ Note play app commands command — `set-pencil-width`.
 
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::NoteSnapshot;
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

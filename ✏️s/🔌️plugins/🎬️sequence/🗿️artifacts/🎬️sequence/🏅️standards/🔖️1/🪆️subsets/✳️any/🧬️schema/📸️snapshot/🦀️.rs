@@ -68,12 +68,18 @@ pub struct SequenceFixture {
     pub edges: Vec<SequenceEdge>,
 }
 
-impl neural_engine::ColdRetire for SequenceFixture { fn retire_cold(self) { self.steps.retire_cold(); } }
+impl neural_engine::ColdRetire for SequenceFixture {
+    fn retire_cold(self) {
+        self.steps.retire_cold();
+    }
+}
 
 impl neural_engine::ColdRetire for SequenceSnapshot {
     fn retire_cold(mut self) {
         if let Some(owner) = self.content.take_local_owner::<crate::SequenceWorkingScene>().expect("exact sequence scene owner") {
-            if let Ok(scene) = std::sync::Arc::try_unwrap(owner) { scene.retire_cold(); }
+            if let Ok(scene) = std::sync::Arc::try_unwrap(owner) {
+                scene.retire_cold();
+            }
         }
     }
 }

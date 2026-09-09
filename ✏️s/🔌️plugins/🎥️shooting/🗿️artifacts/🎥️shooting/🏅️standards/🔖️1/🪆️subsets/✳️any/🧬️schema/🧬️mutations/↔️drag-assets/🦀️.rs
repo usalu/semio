@@ -1,8 +1,8 @@
 //! ↔️ Shooting mutation payload — `DragAssets`. The bulk relative-offset gesture over multiple assets (gumball drag). Relative `(dx, dy, dz)` offset applied to every asset in `asset_ids` — the taxonomy's plural bulk-drag gesture.
 
-use crate::ShootingSnapshot;
 use crate::diff::ShootingDiff;
 use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

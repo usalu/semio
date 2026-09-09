@@ -9,6 +9,4 @@ message SHomeDiff {
   // @state artifact
   optional uint64 catalog_generation = 2;
   // @state config
-  optional string active_panel_tab = 3;
-  // @state config
 }

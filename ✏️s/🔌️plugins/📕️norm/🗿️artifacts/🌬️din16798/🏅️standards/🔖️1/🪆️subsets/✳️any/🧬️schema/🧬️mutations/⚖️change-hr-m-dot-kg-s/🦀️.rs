@@ -1,9 +1,8 @@
 //! 🔧 `change-hr-m-dot-kg-s` payload — changes the Din16798 document's `hr_m_dot_kg_s` (heat recovery mass flow rate).
 
-
-use crate::Din16798Snapshot;
 use crate::diff::Din16798Diff;
 use crate::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
 //#region 🔖️ChangeHrMDotKgS
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

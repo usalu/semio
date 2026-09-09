@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::text::schema::mutations::text::demo_mutation_cases;
 use protocol::OpBinary;

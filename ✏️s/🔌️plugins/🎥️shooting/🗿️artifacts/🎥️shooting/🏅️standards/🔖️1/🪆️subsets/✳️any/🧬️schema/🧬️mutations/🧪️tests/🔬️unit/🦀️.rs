@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{SHOOTING_DOCUMENT_SCHEMA, ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot};
+use crate::{ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
 use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 use protocol::{Mutation, MutationDiff};
 

@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::editor::process3d::Process3dCommand;
 use crate::editor::process3d::commands::workshop::{add_workshop_machine, remove_workshop_machine};
 use crate::editor::process3d::panels::catalogue;
 use crate::editor::process3d::testkit;
+use crate::editor::process3d::Process3dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_a_workshop_panel_tab_to_this_body_key() {

@@ -55,7 +55,5 @@ pub struct En1996Diff {
     pub h_ef_mm: Option<f64>,
     #[state(artifact)]
     pub t_ef_mm: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff

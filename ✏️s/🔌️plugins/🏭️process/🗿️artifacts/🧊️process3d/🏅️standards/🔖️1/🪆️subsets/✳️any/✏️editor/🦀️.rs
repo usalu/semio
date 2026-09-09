@@ -12,23 +12,24 @@
 //! written via `config::Process3dConfigMutation`s; every action dispatches through the single typed
 //! `Process3dCommand` channel via `ArtifactEditor::handle`.
 
-use crate::op::Process3dMutation;
-use crate::{Capability, CapabilityRule, MachineCatalog, MachineCatalogs, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, WorkingSolid, WorkshopMachine};
-use crate::editor::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, utility, workshop, world};
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::editor::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, workshop, world};
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation, PROCESS3D_DEFAULT_UTILITY};
 use crate::editor::process3d::modes::edit;
 use crate::editor::process3d::modes::edit::windows::workpiece;
 use crate::editor::process3d::panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
 use crate::editor::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
 use crate::editor::process3d::terminology::process3d_labels;
+use crate::op::Process3dMutation;
+use crate::{Capability, CapabilityRule, MachineCatalog, MachineCatalogs, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, WorkingSolid, WorkshopMachine};
 use semio_framework::kernel::Effect;
 use semio_framework::{DslValue, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
-    ArtifactToolFactoryRegistry, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DraftView, Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
+    ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DraftView, Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
+    InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition,
+    WindowMeasure,
 };
 use std::collections::HashMap;
 use store::ArtifactPack;
@@ -293,14 +294,7 @@ const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &[
     "stepCursorBack",
     "stepCursorForward",
 ];
-const PROCESS3D_RESUMABLE_TOOL_IDS: &[&str] = &[
-    "engagementInput",
-    "toggleSun",
-    "setSunAzimuth",
-    "setSunElevation",
-    "setSunIntensity",
-    "setContributions",
-];
+const PROCESS3D_RESUMABLE_TOOL_IDS: &[&str] = &["engagementInput", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setContributions"];
 const PROCESS3D_RETAINED_PAYLOAD_SCHEMA: &str = "process.3d.tool-command.v1";
 const PROCESS3D_RETAINED_RAW_BYTES: usize = 8_192;
 const PROCESS3D_RETAINED_WORK_ITEMS: usize = 64;
@@ -330,8 +324,6 @@ fn process3d_resumable_contract() -> ToolExecutionContract {
     ToolExecutionContract::resumable(PROCESS3D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500, 1, 1)
 }
 
-
-
 fn process3d_string_units(value: &str) -> usize {
     value.len().div_ceil(PROCESS3D_SCAN_BYTES).max(1)
 }
@@ -358,12 +350,9 @@ fn process3d_retained_reduce(
     operation: &AppOperationContext,
 ) -> Result<Emit<Process3dMutation, Process3dConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     let selection = interaction.selection.get(PROCESS3D_INTERACTION_DOMAIN);
-    let mut ctx = Process3dDispatchCtx {
-        interaction: Process3dInteractionSnapshot { ids: selection.map(|selection| selection.ids.clone()).unwrap_or_default() },
-        view_state: context.and_then(|context| context.view_state.clone()),
-    };
+    let mut ctx = Process3dDispatchCtx { interaction: Process3dInteractionSnapshot { ids: selection.map(|selection| selection.ids.clone()).unwrap_or_default() }, view_state: context.and_then(|context| context.view_state.clone()) };
     command.dispatch(&doc, &cfg, &mut ctx)
 }
 
@@ -929,11 +918,7 @@ fn process3d_origin_bytes(origin: Option<&StepOrigin>) -> Result<usize, String> 
 }
 
 fn process3d_step_bytes(step: &ProcessStep) -> Result<usize, String> {
-    Ok(process3d_text_bytes(&step.id)?
-        .saturating_add(process3d_text_bytes(&step.label)?)
-        .saturating_add(process3d_origin_bytes(step.origin.as_ref())?)
-        .saturating_add(process3d_measure_bytes(&step.measure)?)
-        .saturating_add(size_of::<ProcessStep>()))
+    Ok(process3d_text_bytes(&step.id)?.saturating_add(process3d_text_bytes(&step.label)?).saturating_add(process3d_origin_bytes(step.origin.as_ref())?).saturating_add(process3d_measure_bytes(&step.measure)?).saturating_add(size_of::<ProcessStep>()))
 }
 
 fn process3d_recipe_bytes(recipe: &MeasureRecipe) -> Result<usize, String> {
@@ -1367,7 +1352,17 @@ impl ArtifactEditor for Process3dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             Process3dCommand::command_id,
             PROCESS3D_RETAINED_RAW_BYTES,
             PROCESS3D_RETAINED_WORK_ITEMS,
@@ -1398,8 +1393,7 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::spr::process3d_validate_atomic_publication_authority(operation, generation, live_generation)
-            .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))
+        crate::spr::process3d_validate_atomic_publication_authority(operation, generation, live_generation).map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1428,9 +1422,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
-            "brep:out" => match crate::io::export_process3d_model(&crate::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step")
-                .map_err(|error| MediaError::Payload("brep:out".into(), error))?
-            {
+            "brep:out" => match crate::io::export_process3d_model(&crate::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step").map_err(|error| MediaError::Payload("brep:out".into(), error))? {
                 Some(export) => {
                     let text = match export.data {
                         DslValue::String(text) => text,
@@ -1685,7 +1677,7 @@ pub fn create_process3d_app() -> AppDefinition {
             // 🔧️ Palette-visible create/mutate actions (staged arg forms attached below).
             .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
             .mutation("setStock", LocalizedLabel::native("Set Stock", "Rohteil festlegen"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .mutation("removeSelectedStep", LocalizedLabel::native("Remove Selected Step", "Ausgewählten Schritt entfernen"))
             // 🐚️ Palette-visible host round-trips.
             .shell_action("exportModel", LocalizedLabel::native("Export Model", "Modell exportieren"))
@@ -1701,7 +1693,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_with(internal_action("updateStep", LocalizedLabel::native("Update Step", "Schritt aktualisieren"), ActionKind::Mutation))
             .action_with(internal_action("setStepEnabled", LocalizedLabel::native("Set Step Enabled", "Schrittaktivierung festlegen"), ActionKind::Mutation))
             .action_with(internal_action("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"), ActionKind::Mutation))
-            .action_with(internal_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::Mutation))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::Mutation, "mouse-pointer") })
             .action_with(internal_action("worldFaceDragEnd", LocalizedLabel::native("World Face Drag End", "Welt-Flächenzug beendet"), ActionKind::Mutation))
             // ⏱️ Document-cursor navigation operations (NOT framework History — they move the replay cursor).
             .action_with(internal_action("setCursor", LocalizedLabel::native("Set Cursor", "Cursor festlegen"), ActionKind::Mutation))
@@ -1710,17 +1702,17 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_with(internal_action("stepCursorForward", LocalizedLabel::native("Step Cursor Forward", "Cursor vorwärts"), ActionKind::Mutation))
             // 🎛️ Engagement session command line (a separate system from utility selection).
             .action_with(internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
-            .action_with(internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
-            .action_with(internal_action("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
             // 👁️ Ephemeral view state — camera, sun. Selection/hover are the framework-owned
             // "geometry" interaction domain now (declared below via `.interaction`); the six
             // framework verbs (interactionSelect/interactionHover/clearSelection/selectAll/
             // setSelectionMode/setInteractionGranularity) auto-inject — never declared here.
-            .action_with(internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
-            .action_with(internal_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View))
-            .action_with(internal_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View))
-            .action_with(internal_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View))
-            .action_with(internal_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View, "sun") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View, "sun") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun") })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View, "sun") })
             // 📝️ Staged argument forms for the palette-visible create/export actions.
             .action_args("addStep", vec![
                 ActionArgDef::select("measure", LocalizedLabel::native("Measure", "Maßnahme"), vec![
@@ -1998,13 +1990,7 @@ fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMach
 }
 
 fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
-    vec![
-        crate::schema::GenericCatalog.into(),
-        crate::schema::wood_catalog().into(),
-        crate::schema::concrete_catalog().into(),
-        crate::schema::metal_catalog().into(),
-        crate::schema::robotic_catalog().into(),
-    ]
+    vec![crate::schema::GenericCatalog.into(), crate::schema::wood_catalog().into(), crate::schema::concrete_catalog().into(), crate::schema::metal_catalog().into(), crate::schema::robotic_catalog().into()]
 }
 
 /// 🧩️ Every machine catalog installed in this build, in stable display order — the built-in generic

@@ -1,6 +1,5 @@
 //! 🏗️ `change-construction-activity` — sets the En1991 construction activity scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

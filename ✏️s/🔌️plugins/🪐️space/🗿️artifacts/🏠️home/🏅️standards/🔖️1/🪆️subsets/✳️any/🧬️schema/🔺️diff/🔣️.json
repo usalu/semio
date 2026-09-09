@@ -15,10 +15,6 @@
       "format": "int64",
       "minimum": 0,
       "x-semio-state": "artifact"
-    },
-    "activePanelTab": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   }
 }

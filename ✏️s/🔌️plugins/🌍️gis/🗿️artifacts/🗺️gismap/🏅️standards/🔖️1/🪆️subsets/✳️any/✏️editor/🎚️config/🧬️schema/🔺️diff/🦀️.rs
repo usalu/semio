@@ -1,8 +1,8 @@
 //! 🔺️ Sparse configuration writes with an actual identity and exact keyed removals.
 
 use super::Gis2dConfig;
-use std::collections::BTreeMap;
 use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::BTreeMap;
 
 //#region 🔺️Payload
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
@@ -29,13 +29,19 @@ pub struct Gis2dConfigDiff {
 
 impl From<Gis2dConfigDelta> for Gis2dConfigDiff {
     fn from(delta: Gis2dConfigDelta) -> Self {
-        if delta == Gis2dConfigDelta::default() { Self::default() } else { Self { steps: vec![delta] } }
+        if delta == Gis2dConfigDelta::default() {
+            Self::default()
+        } else {
+            Self { steps: vec![delta] }
+        }
     }
 }
 
 #[cfg(test)]
 fn serialize_scales<S: serde::Serializer>(values: &BTreeMap<String, Option<f64>>, serializer: S) -> Result<S::Ok, S::Error> {
-    if values.values().any(|value| value.is_some_and(|value| !value.is_finite())) { return Err(serde::ser::Error::custom("layer stroke scale must be finite")); }
+    if values.values().any(|value| value.is_some_and(|value| !value.is_finite())) {
+        return Err(serde::ser::Error::custom("layer stroke scale must be finite"));
+    }
     serde::Serialize::serialize(values, serializer)
 }
 //#endregion 🔺️Payload
@@ -50,18 +56,34 @@ impl Gis2dConfigDelta {
         }
         for (id, value) in &self.layer_visibility {
             match value {
-                Some(value) => { next.layer_visibility.insert(id.clone(), *value); }
-                None => { next.layer_visibility.remove(id); }
+                Some(value) => {
+                    next.layer_visibility.insert(id.clone(), *value);
+                }
+                None => {
+                    next.layer_visibility.remove(id);
+                }
             }
         }
-        if let Some(value) = &self.camera_json { next.camera_json = value.clone(); }
-        if let Some(value) = &self.render_mode { next.render_mode = value.clone(); }
-        if let Some(value) = &self.vector_style { next.vector_style = value.clone(); }
-        if let Some(value) = &self.lod_mode { next.lod_mode = value.clone(); }
+        if let Some(value) = &self.camera_json {
+            next.camera_json = value.clone();
+        }
+        if let Some(value) = &self.render_mode {
+            next.render_mode = value.clone();
+        }
+        if let Some(value) = &self.vector_style {
+            next.vector_style = value.clone();
+        }
+        if let Some(value) = &self.lod_mode {
+            next.lod_mode = value.clone();
+        }
         for (id, value) in &self.layer_stroke_scale {
             match value {
-                Some(value) => { next.layer_stroke_scale.insert(id.clone(), *value); }
-                None => { next.layer_stroke_scale.remove(id); }
+                Some(value) => {
+                    next.layer_stroke_scale.insert(id.clone(), *value);
+                }
+                None => {
+                    next.layer_stroke_scale.remove(id);
+                }
             }
         }
         Ok(())
@@ -71,10 +93,14 @@ impl Gis2dConfigDelta {
 impl protocol::MutationDiff<Gis2dConfig> for Gis2dConfigDiff {
     fn apply(&self, base: &Gis2dConfig) -> protocol::MutationApplyResult<Gis2dConfig> {
         let mut next = base.clone();
-        for step in &self.steps { step.apply_into(&mut next)?; }
+        for step in &self.steps {
+            step.apply_into(&mut next)?;
+        }
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) { self.steps.extend(other.steps); }
+    fn absorb(&mut self, other: Self) {
+        self.steps.extend(other.steps);
+    }
 }
 //#endregion ⚙️Application

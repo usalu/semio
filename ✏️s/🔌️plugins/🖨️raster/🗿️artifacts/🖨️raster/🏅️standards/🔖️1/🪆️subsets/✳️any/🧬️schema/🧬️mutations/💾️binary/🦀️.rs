@@ -304,15 +304,9 @@ impl RasterOwnedRetirement {
 
     fn layer_fields(layer: RasterLayerNode) -> RasterLayerFields {
         let (strings, children, values) = match layer {
-            RasterLayerNode::Pixel { id, name, blend_mode, image_key, .. } => {
-                ([Some(id), Some(name), Some(blend_mode), image_key], None, None)
-            }
-            RasterLayerNode::Group { id, name, blend_mode, children, .. } => {
-                ([Some(id), Some(name), Some(blend_mode), None], Some(children), None)
-            }
-            RasterLayerNode::Adjustment { id, name, blend_mode, adjustment_kind, params, .. } => {
-                ([Some(id), Some(name), Some(blend_mode), Some(adjustment_kind)], None, Some(params))
-            }
+            RasterLayerNode::Pixel { id, name, blend_mode, image_key, .. } => ([Some(id), Some(name), Some(blend_mode), image_key], None, None),
+            RasterLayerNode::Group { id, name, blend_mode, children, .. } => ([Some(id), Some(name), Some(blend_mode), None], Some(children), None),
+            RasterLayerNode::Adjustment { id, name, blend_mode, adjustment_kind, params, .. } => ([Some(id), Some(name), Some(blend_mode), Some(adjustment_kind)], None, Some(params)),
         };
         RasterLayerFields { strings, children, values, string_cursor: 0 }
     }
@@ -3492,7 +3486,7 @@ impl RasterStoreInitializationAuthority {
             let disposer = self.candidate_disposer.as_mut().expect("Raster candidate disposer remains retained");
             return match disposer.close_step(candidate, 1, RASTER_OWNED_FIELD_BYTES).map_err(|fault| format!("{}: {}", fault.code.0, fault.message))? {
                 semio_framework_plugin::PluginCloseStep::Complete if disposer.terminal_is_empty(candidate) => {
-                    self.candidate_disposer = None;
+                    *self.candidate_disposer = None;
                     drop(self.candidate.take());
                     Ok(false)
                 }
@@ -3947,8 +3941,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
             RasterStoreInitializationPhase::RetireCancelled | RasterStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(Some(cx)) {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    self.initial_digest = None;
-                    self.edit_digest = None;
+                    *self.initial_digest = None;
+                    *self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == RasterStoreInitializationPhase::RetireCancelled {
                         self.phase = RasterStoreInitializationPhase::Cancelled;
@@ -3956,9 +3950,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     } else {
                         self.phase = RasterStoreInitializationPhase::Fault;
                         let source = self.fault.take().unwrap_or_else(|| b"raster-store.initializer-fault".to_vec());
-                        let detail = cx
-                            .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &source)
-                            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &source).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
                         semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
                     }
                 }
@@ -3974,9 +3966,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
             RasterStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
             RasterStoreInitializationPhase::Fault => {
                 let source = self.fault.as_deref().unwrap_or(b"raster-store.initializer-fault");
-                let detail = cx
-                    .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, source)
-                    .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, source).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
                 semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
             }
         }
@@ -4001,8 +3991,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
         match self.pump_terminal_retirement(None) {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                self.initial_digest = None;
-                self.edit_digest = None;
+                *self.initial_digest = None;
+                *self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
@@ -4015,8 +4005,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
             return None;
         }
         let candidate = self.candidate.take()?;
-        self.initial_digest = None;
-        self.edit_digest = None;
+        *self.initial_digest = None;
+        *self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }

@@ -8,10 +8,10 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetComponentSampling {
-        pub(crate) id: u8,
-        pub(crate) h_sampling: u8,
-        pub(crate) v_sampling: u8,
-    }
+    pub(crate) id: u8,
+    pub(crate) h_sampling: u8,
+    pub(crate) v_sampling: u8,
+}
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetComponentSampling {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "component-sampling", kind: "set-component-sampling", record: "SetComponentSampling" };

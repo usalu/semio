@@ -47,14 +47,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution {
-        identity: "json",
-        schema: ARTIFACT_DEFINITION_SCHEMA,
-        definition,
-        assembly,
-        formats,
-        native_codecs,
-    }
+    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "json", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️ArtifactKind
@@ -271,18 +264,18 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/✏️set-member/🦀️.rs"]
-                        pub mod set_member;
-                        #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗑️remove-member/🦀️.rs"]
-                        pub mod remove_member;
+                        #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
                         #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📥️insert-array-element/🦀️.rs"]
                         pub mod insert_array_element;
                         #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📤️remove-array-element/🦀️.rs"]
                         pub mod remove_array_element;
+                        #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗑️remove-member/🦀️.rs"]
+                        pub mod remove_member;
+                        #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/✏️set-member/🦀️.rs"]
+                        pub mod set_member;
                         #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔢️set-scalar/🦀️.rs"]
                         pub mod set_scalar;
-                        #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
                         #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
                     }

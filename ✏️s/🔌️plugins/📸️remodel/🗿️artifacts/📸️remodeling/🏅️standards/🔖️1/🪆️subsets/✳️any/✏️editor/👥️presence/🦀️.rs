@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of remodeling view state (selection, orbit camera, frame cursor, utility, report table).
+/// 👥️ Shareable live subset of remodeling orbit camera, frame cursor, and report-table state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
@@ -17,13 +17,12 @@ pub struct RemodelingPresence {
     pub world_camera_fov: f64,
     pub frame_stream_id: Option<String>,
     pub frame_index: u32,
-    pub active_utility_id: String,
     pub report_table: String,
 }
 
 impl Default for RemodelingPresence {
     fn default() -> Self {
-        Self { world_camera_position: [4.0, -4.0, 3.0], world_camera_target: [0.0, 0.0, 0.0], world_camera_fov: 45.0, frame_stream_id: None, frame_index: 0, active_utility_id: "select".into(), report_table: "frames".into() }
+        Self { world_camera_position: [4.0, -4.0, 3.0], world_camera_target: [0.0, 0.0, 0.0], world_camera_fov: 45.0, frame_stream_id: None, frame_index: 0, report_table: "frames".into() }
     }
 }
 

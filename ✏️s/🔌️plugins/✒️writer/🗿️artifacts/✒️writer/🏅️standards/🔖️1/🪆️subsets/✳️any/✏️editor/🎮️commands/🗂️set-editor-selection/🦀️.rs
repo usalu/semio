@@ -10,8 +10,7 @@
 
 use crate::op::WriterMutation;
 use crate::WriterSnapshot;
-use crate::editor::writer::config::{WriterConfig, WriterConfigMutation, WriterEditorSelection};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -21,7 +20,6 @@ pub struct SetEditorSelection {
     pub end: usize,
 }
 
-pub fn handle(payload: &SetEditorSelection, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-    let config = cfg.snapshot;
-    Ok(Emit::config(vec![WriterConfigMutation::SetEditorSelection(crate::editor::writer::config::SetEditorSelection { selection: Some(WriterEditorSelection { start: payload.start, end: payload.end }) }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })]))
+pub fn handle(_payload: &SetEditorSelection, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WriterMutation, NoConfigMutation>, Fault> {
+    Err(Fault::from("writer editor selection requires the retained exact-window reducer"))
 }

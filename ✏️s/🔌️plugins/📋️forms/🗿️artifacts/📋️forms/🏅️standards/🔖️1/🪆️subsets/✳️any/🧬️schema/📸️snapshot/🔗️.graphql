@@ -1,12 +1,10 @@
-# 📸️ Forms snapshot schema — artifact-lane fields only. Mirrors Rust `FormsSnapshot` (sibling
-# `🦀️.rs`): `structure`/`results` are composed `s.stdio.semio.value`/`s.stdio.semio.table`
-# child handles, not inline fields — ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM.
-
+# 🪪️ FormsSnapshot imports the canonical OS Store child identity.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type FormsSnapshot {
-  schema: String! @state(class: ARTIFACT)
-  id: String! @state(class: ARTIFACT)
-  version: String! @state(class: ARTIFACT)
-  title: String @state(class: ARTIFACT)
-  structure: ArtifactLink! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.value")
-  results: ArtifactLink! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.table")
+  schema: String!
+  id: String!
+  version: String!
+  title: String
+  structure: ArtifactChild!
+  results: ArtifactChild!
 }

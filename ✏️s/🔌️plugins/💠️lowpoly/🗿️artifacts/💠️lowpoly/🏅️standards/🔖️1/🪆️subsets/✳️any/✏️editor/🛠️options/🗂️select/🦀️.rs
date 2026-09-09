@@ -22,7 +22,10 @@ fn granularity_toggle(id: &str, icon: &str, label: LabelText, granularity_id: &s
         label: Some(label.into()),
         pressed: false,
         text: None,
-        on_change: lowpoly_window_action("setInteractionGranularity", Some((&dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("granularityId".to_string(), dsl::DslValue::String(granularity_id.to_string()))])).into())),
+        on_change: lowpoly_window_action(
+            "setInteractionGranularity",
+            Some((&dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("granularityId".to_string(), dsl::DslValue::String(granularity_id.to_string()))])).into()),
+        ),
     }
 }
 
@@ -34,7 +37,10 @@ fn selection_mode_toggle(id: &str, icon: &str, label: LabelText, mode: &str) -> 
         label: Some(label.into()),
         pressed: false,
         text: None,
-        on_change: lowpoly_window_action("setSelectionMode", Some((&dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("mode".to_string(), dsl::DslValue::String(mode.to_string()))])).into())),
+        on_change: lowpoly_window_action(
+            "setSelectionMode",
+            Some((&dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("mode".to_string(), dsl::DslValue::String(mode.to_string()))])).into()),
+        ),
     }
 }
 

@@ -1,10 +1,10 @@
 //! 📄️ Layout play app panel — the document tree: spreads, pages, frames, parent pages, layers,
 //! stories, links and styles of the current layout document.
 
-use crate::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::terminology::LayoutLabels;
 use crate::editor::layout::{layout_action, ui_node_list, ui_value_map, ui_value_text, LAYOUT_GRANULARITY_ELEMENT, LAYOUT_INTERACTION_ELEMENTS};
+use crate::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     tree_item_desc, tree_item_with_action, InteractionTarget, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
     FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID,

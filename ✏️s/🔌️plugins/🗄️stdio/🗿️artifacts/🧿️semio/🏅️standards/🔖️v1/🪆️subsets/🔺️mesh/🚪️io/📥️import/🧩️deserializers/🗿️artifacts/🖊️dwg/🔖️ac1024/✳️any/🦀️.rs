@@ -11,10 +11,10 @@
 //!   are left empty/`None`, mirroring the sibling export leaf's own drop list.
 //! - Malformed logical geometry is a hard `Err`, not a fabricated empty mesh.
 
-use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry, DwgSnapshot};
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry, DwgSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };

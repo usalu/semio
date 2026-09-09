@@ -23,27 +23,6 @@ export interface Block3dDiff {
   camera3d?: BlockCamera3d;
   /** @state artifact */
   meta?: BlockMeta;
-  /** @state presence */
-  selectedIds?: Block3dStringList;
-  /** @state presence */
-  activeRepresentationId?: string | null;
-  /** @state presence */
-  wantedTags?: Block3dStringList;
-  /** @state config */
-  /** @state config */
-  windows?: Block3dWindowsList;
-  /** @state config */
-  brushVortexKindId?: string | null;
-  /** @state config */
-  brushRadius?: number;
-  /** @state config */
-  brushFlip?: boolean;
-  /** @state artifact */
-  brushPreview?: Block3dBrushPreview | null;
-  /** @state config */
-  camera?: BlockCamera3d | null;
-  /** @state artifact */
-  hoveredVortexFullId?: string | null;
 }
 
 export interface BlockKindIdentity { [key: string]: unknown; }
@@ -66,7 +45,6 @@ export interface BlockMeta { [key: string]: unknown; }
 
 export interface Block3dWindowView { [key: string]: unknown; }
 
-export interface Block3dBrushPreview { [key: string]: unknown; }
 
 export interface Block3dStringList {
   values: string[];

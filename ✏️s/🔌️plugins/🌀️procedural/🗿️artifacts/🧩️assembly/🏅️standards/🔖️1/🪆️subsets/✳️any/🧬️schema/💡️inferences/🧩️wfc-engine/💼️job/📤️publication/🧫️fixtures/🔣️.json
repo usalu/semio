@@ -1,0 +1,64 @@
+{
+  "page_bytes": 16384,
+  "vectors": [
+    {
+      "kind": "commit",
+      "primary": {
+        "byte": 65,
+        "length": 16387,
+        "pages": [
+          16384,
+          3
+        ]
+      },
+      "secondary": {
+        "byte": 66,
+        "length": 16389,
+        "pages": [
+          16384,
+          5
+        ]
+      },
+      "steps": 4
+    },
+    {
+      "kind": "preview",
+      "primary": {
+        "byte": 80,
+        "length": 7,
+        "pages": [
+          7
+        ]
+      },
+      "steps": 1
+    },
+    {
+      "kind": "checkpoint",
+      "primary": {
+        "byte": 67,
+        "length": 9,
+        "pages": [
+          9
+        ]
+      },
+      "applied_progress": 17,
+      "steps": 1
+    },
+    {
+      "kind": "fault",
+      "primary": {
+        "byte": 70,
+        "length": 11,
+        "pages": [
+          11
+        ]
+      },
+      "steps": 1
+    }
+  ],
+  "cancellation": {
+    "steps": 3,
+    "maximum_items": 1,
+    "maximum_bytes": 16384
+  }
+}

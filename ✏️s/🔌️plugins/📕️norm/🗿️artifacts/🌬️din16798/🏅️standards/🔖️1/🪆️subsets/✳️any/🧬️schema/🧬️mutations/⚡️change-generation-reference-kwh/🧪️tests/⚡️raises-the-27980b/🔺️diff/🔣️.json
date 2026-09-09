@@ -51,7 +51,7 @@
   "chillerType": null,
   "eerActual": null,
   "qCKwh": null,
-  "generationReferenceKwh": 450.0,
+  "generationReferenceKwh": 450,
   "dataCenterSupplyC": null,
   "hStWK": null,
   "thetaStC": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

@@ -1,8 +1,8 @@
 //! 📸 Shooting mutation payload — `CreateShot`. Brings a new shot into existence (append-only apply).
 
-use crate::{ShootingShot, ShootingSnapshot};
 use crate::diff::ShootingDiff;
 use crate::mutations::ShootingMutation;
+use crate::{ShootingShot, ShootingSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

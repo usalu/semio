@@ -8,16 +8,32 @@ use crate::directory::{
 use directory::os_directory::DocumentScope;
 
 pub(crate) async fn check_live_inference_author(directory: &HubDirectories, identity: &InferenceIdentityV1, scope: &DocumentScope, now: impl Fn() -> i64, control: &InferenceOperationControlV1) -> Result<(), InferenceErrorV1> {
-    control.checkpoint(0)?;
     identity.validate()?;
+    if identity.space_id != scope.space_id || identity.document_id != scope.document_id {
+        return Err(InferenceErrorV1::Denied);
+    }
+    check_live_inference_session_author(directory, &identity.session_id, &identity.user_id, identity.authorization_generation, scope, now, control).await
+}
+
+/// 🛡️ Rechecks the current authenticated reader without requiring a previously accepted job.
+pub(crate) async fn check_live_inference_session_author(
+    directory: &HubDirectories,
+    session_id: &str,
+    user_id: &str,
+    authorization_generation: u64,
+    scope: &DocumentScope,
+    now: impl Fn() -> i64,
+    control: &InferenceOperationControlV1,
+) -> Result<(), InferenceErrorV1> {
+    control.checkpoint(0)?;
     let now_ms = now();
-    if now_ms < 0 || identity.space_id != scope.space_id || identity.document_id != scope.document_id {
+    if now_ms < 0 || authorization_generation == 0 {
         return Err(InferenceErrorV1::Denied);
     }
     let binding = tokio::select! {
         biased;
         error = control.interruption() => return Err(error),
-        result = directory.socket_session_binding(&identity.session_id, &identity.user_id, identity.authorization_generation, Some(&scope.space_id), now_ms) => result.map_err(|_| InferenceErrorV1::Storage)?,
+        result = directory.socket_session_binding(session_id, user_id, authorization_generation, Some(&scope.space_id), now_ms) => result.map_err(|_| InferenceErrorV1::Storage)?,
     };
     let returned_at_ms = now();
     control.checkpoint(1)?;

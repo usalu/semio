@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧪️ Keeps the declaration honest: `KINDS` must equal every variant's `kind()` (via

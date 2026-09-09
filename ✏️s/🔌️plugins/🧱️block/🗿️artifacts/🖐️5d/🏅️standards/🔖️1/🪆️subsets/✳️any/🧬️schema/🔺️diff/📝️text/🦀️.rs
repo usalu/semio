@@ -76,7 +76,7 @@ macro_rules! apply_delta {
 }
 
 impl Block5dDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &Block5dArtifact) -> protocol::MutationApplyResult<Block5dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -121,9 +121,6 @@ impl Block5dDiff {
             }
             if let Some(v) = &self.meta {
                 next.meta = v.clone();
-            }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
             }
             next
         })
@@ -199,7 +196,6 @@ impl MutationDiff<Block5dSnapshot> for Block5dDiff {
         take!(camera2d);
         take!(camera3d);
         take!(meta);
-        take!(selected_ids);
         fn absorb_col<D>(target: &mut Option<D>, incoming: Option<D>, merge: impl FnOnce(&mut D, D)) {
             if let Some(src) = incoming {
                 match target {

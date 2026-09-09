@@ -7,7 +7,16 @@
  * re-import the artifact's own root schema (`../🟦️.ts`) rather than re-declaring stubs, so
  * every facet of the drawing artifact agrees on the same `DrawingLayerNode`/`DrawingImageAsset`/
  * `DrawingArtboard`/`DrawingArtifact`. */
-import type { DrawingArtifact, DrawingLayerNode, DrawingImageAsset, DrawingArtboard } from "../🟦️.ts";
+import {
+  parseDrawingArtifact,
+  parseDrawingArtboard,
+  parseDrawingImageAsset,
+  parseDrawingLayerNode,
+  type DrawingArtifact,
+  type DrawingArtboard,
+  type DrawingImageAsset,
+  type DrawingLayerNode,
+} from "../🟦️.ts";
 
 export interface DrawingDiff {
   /** @state artifact */
@@ -24,20 +33,6 @@ export interface DrawingDiff {
   assets?: DrawingAssetsDelta;
   /** @state artifact */
   artboard?: DrawingArtboard | null;
-  /** @state presence */
-  selectedIds?: DrawingStringList;
-  /** @state presence */
-  /** @state config */
-  engagementInput?: string;
-  /** @state config */
-  cameraX?: number;
-  /** @state config */
-  cameraY?: number;
-  /** @state config */
-  cameraZoom?: number;
-  /** @state config */
-  /** @state artifact */
-  hoveredId?: string | null;
 }
 
 /** 🗂️ Mirrors Rust `DrawingAssetsDelta` — asset-map wrapper so optional map diffs stay scalar across
@@ -141,7 +136,67 @@ export const drawingDrawingDiffGuardConstant = <T extends string | number | bool
 export function parseDrawingDiff(value: unknown, at = "$"): DrawingDiff {
   const row = drawingDrawingDiffGuardObject(value, at);
   return {
-    schema: row["schema"] === undefined ? undefined : drawingDrawingDiffGuardString(row["schema"], `${at}.schema`),
-    value: row["value"] === undefined ? undefined : drawingDrawingDiffGuardString(row["value"], `${at}.value`),
+    ...(Object.hasOwn(row, "artifact") ? { artifact: row["artifact"] == null ? undefined : parseDrawingArtifact(row["artifact"], `${at}.artifact`) } : {}),
+    ...(Object.hasOwn(row, "schema") ? { schema: row["schema"] == null ? undefined : drawingDrawingDiffGuardString(row["schema"], `${at}.schema`) } : {}),
+    ...(Object.hasOwn(row, "id") ? { id: row["id"] == null ? undefined : drawingDrawingDiffGuardString(row["id"], `${at}.id`) } : {}),
+    ...(Object.hasOwn(row, "title") ? { title: row["title"] == null ? null : drawingDrawingDiffGuardString(row["title"], `${at}.title`) } : {}),
+    ...(Object.hasOwn(row, "layers") ? { layers: row["layers"] == null ? undefined : parseDrawingLayersDelta(row["layers"], `${at}.layers`) } : {}),
+    ...(Object.hasOwn(row, "assets") ? { assets: row["assets"] == null ? undefined : parseDrawingAssetsDelta(row["assets"], `${at}.assets`) } : {}),
+    ...(Object.hasOwn(row, "artboard") ? { artboard: row["artboard"] == null ? null : parseDrawingArtboard(row["artboard"], `${at}.artboard`) } : {}),
+  };
+}
+
+export function parseDrawingAssetsDelta(value: unknown, at = "$"): DrawingAssetsDelta {
+  const row = drawingDrawingDiffGuardObject(value, at);
+  return {
+    entries: Object.fromEntries(
+      Object.entries(drawingDrawingDiffGuardObject(row["entries"], `${at}.entries`))
+        .map(([key, item]) => [key, item == null ? null : parseDrawingImageAsset(item, `${at}.entries.${key}`)]),
+    ),
+  };
+}
+
+export function parseDrawingLayersDelta(value: unknown, at = "$"): DrawingLayersDelta {
+  const row = drawingDrawingDiffGuardObject(value, at);
+  return {
+    added: drawingDrawingDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseDrawingLayerAddition(item, `${at}.added[${index}]`)),
+    removed: drawingDrawingDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => drawingDrawingDiffGuardString(item, `${at}.removed[${index}]`)),
+    patched: drawingDrawingDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseDrawingLayerPatchEntry(item, `${at}.patched[${index}]`)),
+    reordered: row["reordered"] == null ? undefined : drawingDrawingDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => drawingDrawingDiffGuardString(item, `${at}.reordered[${index}]`)),
+  };
+}
+
+export function parseDrawingLayerAddition(value: unknown, at = "$"): DrawingLayerAddition {
+  const row = drawingDrawingDiffGuardObject(value, at);
+  return {
+    parentId: row["parentId"] === undefined ? undefined : drawingDrawingDiffGuardString(row["parentId"], `${at}.parentId`),
+    index: drawingDrawingDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
+    layer: parseDrawingLayerNode(row["layer"], `${at}.layer`),
+  };
+}
+
+export function parseDrawingLayerPatchEntry(value: unknown, at = "$"): DrawingLayerPatchEntry {
+  const row = drawingDrawingDiffGuardObject(value, at);
+  return {
+    id: drawingDrawingDiffGuardString(row["id"], `${at}.id`),
+    patch: parseDrawingLayerPatch(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseDrawingLayerPatch(value: unknown, at = "$"): DrawingLayerPatch {
+  const row = drawingDrawingDiffGuardObject(value, at);
+  const text = (key: string): string | undefined => row[key] == null ? undefined : drawingDrawingDiffGuardString(row[key], `${at}.${key}`);
+  return {
+    visible: row["visible"] == null ? undefined : drawingDrawingDiffGuardBoolean(row["visible"], `${at}.visible`),
+    locked: row["locked"] == null ? undefined : drawingDrawingDiffGuardBoolean(row["locked"], `${at}.locked`),
+    name: text("name"),
+    opacity: row["opacity"] == null ? undefined : drawingDrawingDiffGuardNumber(row["opacity"], `${at}.opacity`),
+    blendMode: text("blendMode"),
+    transformJson: text("transformJson"),
+    fillJson: text("fillJson"),
+    strokeJson: text("strokeJson"),
+    booleanOperation: text("booleanOperation"),
+    traceParamsJson: text("traceParamsJson"),
+    layerJson: text("layerJson"),
   };
 }

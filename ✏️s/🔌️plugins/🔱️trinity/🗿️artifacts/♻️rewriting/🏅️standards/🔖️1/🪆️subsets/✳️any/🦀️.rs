@@ -15,11 +15,11 @@
 //! `io_mechanism` channel pending that file's own migration. See
 //! `📓️terra-fleet-trinity-recipe-report.md`'s lease-request.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
-use crate::standards::v1::subsets::any::schema;
-use crate::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use crate::editor::rewriting as editor;
+use crate::standards::v1::subsets::any::schema;
+use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::viewer::rewriting as viewer;
+use crate::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;

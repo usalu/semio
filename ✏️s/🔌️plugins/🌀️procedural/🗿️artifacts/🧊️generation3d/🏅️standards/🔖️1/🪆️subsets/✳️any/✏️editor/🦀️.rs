@@ -5,12 +5,9 @@
 //! `🎭️modes/*/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
-use crate::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
 use crate::editor::generation3d::commands::{
-    add_generation, add_widget, delete_selection, flow_eval_tick, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget,
-    rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_camera, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun,
-    translate_selection, update_generation_values, world_pointer_down,
+    add_generation, add_widget, delete_selection, flow_eval_tick, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
+    scale_selection, select_generation, set_active_example, set_camera, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection, update_generation_values, world_pointer_down,
 };
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
@@ -18,18 +15,21 @@ use crate::editor::generation3d::modes::generate::windows::{form, generations, p
 use crate::editor::generation3d::modes::{edit, generate};
 use crate::editor::generation3d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::generation3d::terminology::generation3d_labels;
-use semio_framework_os_flow::FlowEvalSession;
+use crate::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation, SetGenerationPreview};
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
+use crate::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_framework_os_flow::{FlowEvalSession, FlowHost};
 // 🚧️ SDK note (ticket 26/08/16 contract §2.1/§2.4): `ArtifactEditor`/`Editor`/`Dialect` are curated at
 // `semio_framework_plugin`'s crate root as of W0-F/W2-FIX — imported bare here, no `app::` prefix
 // needed (unlike the earlier cad pilot, written before that gap closed). `app::InteractionView` is a
 // separate, still-uncurated gap (unrelated to this ticket) — kept qualified.
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
-    ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, ExampleSource, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
-    TopologyNode, UtilityDefinition, WindowMeasure,
+    ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, EphemeralEmit, ExampleSource, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider,
+    HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
+    SelectionSpec, TopologyNode, UtilityDefinition, WindowMeasure,
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -111,7 +111,11 @@ fn parse_flow_camera_json(args: &dsl::DslValue) -> semio_framework_artifact_flow
             return parsed;
         }
     }
-    semio_framework_artifact_flow_flow::CameraJson { x: args.get("x").and_then(dsl::DslValue::as_f64).unwrap_or(0.0), y: args.get("y").and_then(dsl::DslValue::as_f64).unwrap_or(0.0), zoom: args.get("zoom").and_then(dsl::DslValue::as_f64).unwrap_or(1.0) }
+    semio_framework_artifact_flow_flow::CameraJson {
+        x: args.get("x").and_then(dsl::DslValue::as_f64).unwrap_or(0.0),
+        y: args.get("y").and_then(dsl::DslValue::as_f64).unwrap_or(0.0),
+        zoom: args.get("zoom").and_then(dsl::DslValue::as_f64).unwrap_or(1.0),
+    }
 }
 
 /// 🎥️ Parses the 3D preview camera out of `command_from_action`'s JSON args; falls back to the default
@@ -137,16 +141,23 @@ fn generation3d_port_ids_by_node(fixture: &semio_framework_artifact_flow_flow::F
 /// 🧱️ Every window body of the generation3d editor, rendered against one already-resolved set of
 /// `graph` marks. Shared by `render` (marks-free) and `render_with_request_context` (live marks) so
 /// there is exactly one body-key match in the app.
-fn generation3d_render_body(body_key: &str, document: &Generation3dSnapshot, config: &Generation3dConfig, view_state: &semio_framework_plugin::ViewModel, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+fn generation3d_render_body(
+    body_key: &str,
+    document: &Generation3dSnapshot,
+    config: &Generation3dConfig,
+    generation_preview_text: Option<&str>,
+    view_state: &semio_framework_plugin::ViewModel,
+    marks: &PreviewInteractionMarks,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let labels = generation3d_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().unwrap_or("move");
     let session = FlowEvalSession::new();
     let node = match body_key {
         flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, &session, marks),
         edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session, active_utility, marks),
-        generations::GENERATION_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, view_state.locale, semio_framework_plugin::Terminology::default()),
+        generations::GENERATION_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, view_state.locale, view_state.terminology),
         form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.fixture, &document.generation, labels),
-        generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.fixture, &document.generation, config, labels, active_utility, marks),
+        generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.fixture, &document.generation, generation_preview_text, config, labels, active_utility, marks),
         document_panel::GENERATION_3D_PLAY_BODY_DOCUMENT => document_panel::render(&document.fixture, labels),
         catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
         inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.fixture, &marks.graph_selection_ids(), labels),
@@ -157,7 +168,7 @@ fn generation3d_render_body(body_key: &str, document: &Generation3dSnapshot, con
 
 //#region 🧵️RetainedCommands
 /// 🧾️ Every gen3d tool id, in `Generation3dCommand` declaration order — a bijection with
-/// `Generation3dCommand`'s 29 rows (asserted by `retained_route_dispositions_are_exact_and_exhaustive`
+/// `Generation3dCommand`'s 27 rows (asserted by `retained_route_dispositions_are_exact_and_exhaustive`
 /// below) and with `Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS`.
 const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setActiveExample",
@@ -186,13 +197,15 @@ const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setSunIntensity",
     "setCamera",
     "selectGeneration",
-        "flowEvalTick",
+    "flowEvalTick",
 ];
 const GENERATION3D_RETAINED_PAYLOAD_SCHEMA: &str = "generation.3d.tool-command.v1";
 const GENERATION3D_RETAINED_RAW_BYTES: usize = 8_192;
+const GENERATION3D_PREVIEW_TOOL_IDS: &[&str] = &["setActiveExample", "addGeneration", "removeGeneration", "renameGeneration", "updateGenerationValues", "selectGeneration"];
+const GENERATION3D_RETAINED_WORK_ITEMS: usize = 32;
 /// 🎒️ Real bound for one Artifact-lane edit: the 8 built-in example DSLs top out around 1.6 KB of text
 /// (`📚️examples/*/🖼️assets/*/🗣️.dsl.semio`), and `setActiveExample`'s full-fixture replacement is the
-/// single largest Artifact mutation any of the 29 tools ever emits — 64 KiB stays a real ceiling, not a
+/// single largest Artifact mutation any of the 27 tools ever emits — 64 KiB stays a real ceiling, not a
 /// rubber stamp, for every example plus ordinary interactive graph edits.
 const GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
 /// 🎒️ Real bound for one Config-lane edit: `flowEvalTick`'s `SetPreviewEval` carries the largest config
@@ -207,6 +220,120 @@ fn generation3d_bounded_contract() -> ToolExecutionContract {
 
 fn generation3d_bounded_extent(_command: &Generation3dCommand, _snapshot: &Generation3dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     Some(1)
+}
+
+struct Generation3dPreviewCommandWork {
+    tool_id: &'static str,
+    emit: Option<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>>,
+    host: Option<FlowHost>,
+    session: Option<FlowEvalSession>,
+    started: bool,
+    complete: bool,
+    closing: bool,
+}
+
+impl Generation3dPreviewCommandWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self { tool_id, emit: None, host: None, session: None, started: false, complete: false, closing: false }
+    }
+
+    fn complete(&mut self, preview_text: Option<String>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+        self.complete = true;
+        let emit = self.emit.take().ok_or_else(|| Fault::from("generation3d-preview-emit-owner-absent"))?;
+        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { presence: Vec::new(), transient: vec![Generation3dTransientMutation::from(SetGenerationPreview { preview_text })], window_transient: Vec::new() } })
+    }
+}
+
+impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreviewCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        command: &Generation3dCommand,
+        snapshot: &Generation3dSnapshot,
+        _interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
+    ) -> Option<usize> {
+        if matches!(command, Generation3dCommand::SetActiveExample(_)) {
+            return Some(1);
+        }
+        if !matches!(command, Generation3dCommand::AddGeneration(_) | Generation3dCommand::RemoveGeneration(_) | Generation3dCommand::RenameGeneration(_) | Generation3dCommand::UpdateGenerationValues(_) | Generation3dCommand::SelectGeneration(_)) {
+            return None;
+        }
+        snapshot.fixture.widgets.len().checked_add(2).filter(|extent| *extent <= GENERATION3D_RETAINED_WORK_ITEMS)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+        if self.closing || self.complete {
+            return Err(Fault::from("generation3d-preview-work-is-terminal"));
+        }
+        if !self.started {
+            self.started = true;
+            if let Generation3dCommand::SetActiveExample(payload) = input.command {
+                let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+                let cfg = ConfigView { snapshot: input.config, window: None };
+                self.emit = Some(set_active_example::emit(payload, &doc, &cfg)?);
+                return self.complete(None);
+            }
+            let result = crate::editor::generation3d::commands::generation::generation_command_result_for(input.command, input.snapshot, input.config).ok_or_else(|| Fault::from("generation3d-preview-command-unowned"))?;
+            self.emit = Some(result.emit);
+            let Some(fixture) = result.preview_fixture else {
+                return self.complete(None);
+            };
+            let host = crate::standards::v1::subsets::any::schema::host_from_fixture(&fixture);
+            let mut session = FlowEvalSession::new();
+            session.sync(&host);
+            self.host = Some(host);
+            self.session = Some(session);
+            return Ok(ArtifactCommandWorkStep::Progress { stage: "generation3d-preview-evaluation", preview: b"{\"en\":\"Evaluating generation preview\",\"de\":\"Generierungsvorschau wird ausgewertet\"}" });
+        }
+        let host = self.host.as_mut().ok_or_else(|| Fault::from("generation3d-preview-host-owner-absent"))?;
+        let session = self.session.as_mut().ok_or_else(|| Fault::from("generation3d-preview-session-owner-absent"))?;
+        if session.tick(host) {
+            return Ok(ArtifactCommandWorkStep::Progress { stage: "generation3d-preview-evaluation", preview: b"{\"en\":\"Evaluating generation preview\",\"de\":\"Generierungsvorschau wird ausgewertet\"}" });
+        }
+        let preview_text = Some(session.eval_json().to_string());
+        self.complete(preview_text)
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(session) = self.session.as_mut() {
+            session.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
+        if !self.closing {
+            return InteractiveJobCloseStep::Blocked;
+        }
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return InteractiveJobCloseStep::Blocked;
+        }
+        if let Some(session) = self.session.as_mut() {
+            match session.close_step(maximum_items, maximum_bytes) {
+                InteractiveJobCloseStep::Complete => {
+                    if !session.terminal_is_empty() {
+                        return InteractiveJobCloseStep::Blocked;
+                    }
+                    self.session.take();
+                    return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                step => return step,
+            }
+        }
+        if self.host.take().is_some() || self.emit.take().is_some() {
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.emit.is_none() && self.host.is_none() && self.session.is_none()
+    }
 }
 
 /// 🕹️ `nodeGraphEdit`/`deleteSelection`/`{translate,rotate,scale}Selection` read real `graph` selection
@@ -228,7 +355,7 @@ fn generation3d_retained_reduce(
         return Err(Fault::from("generation3d-command-retained-route-rejected"));
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     let mut session = FlowEvalSession::new();
     let selected = || interaction.selection.get("graph").map(|selection| selection.ids.clone()).unwrap_or_default();
     match command {
@@ -294,7 +421,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
     const TOOL_IDS: &'static [&'static str] = GENERATION3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
-        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
         ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "removeWidget", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -305,10 +432,10 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
         ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "addGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "removeGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "renameGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "updateGenerationValues", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "removeGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "renameGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "updateGenerationValues", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
         ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "graphPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -319,7 +446,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
         ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
         ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[ArtifactToolPublicationLane::Config] },
     ];
 }
@@ -640,8 +767,8 @@ impl ArtifactEditor for Generation3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::editor::generation3d::presence::Generation3dPresence;
     type PresenceMutation = crate::editor::generation3d::presence::Generation3dPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = Generation3dTransient;
+    type TransientMutation = Generation3dTransientMutation;
 
     type Command = Generation3dCommand;
 
@@ -657,6 +784,18 @@ impl ArtifactEditor for Generation3dPlayApp {
 
     fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
     fn build_document_store_initialization_job(
@@ -678,6 +817,26 @@ impl ArtifactEditor for Generation3dPlayApp {
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default Generation3d presence is the exact empty terminal")))
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
     const DIALECT: Dialect = crate::GENERATION3D_DIALECT;
@@ -704,7 +863,8 @@ impl ArtifactEditor for Generation3dPlayApp {
             return Err(Fault::from("generation3d-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, generation3d_retained_reduce, generation3d_bounded_extent));
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Generation3dPlayApp>>> =
+            if GENERATION3D_PREVIEW_TOOL_IDS.contains(&tool_id) { Box::new(Generation3dPreviewCommandWork::new(tool_id)) } else { Box::new(BoundedArtifactCommandWork::new(tool_id, generation3d_retained_reduce, generation3d_bounded_extent)) };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -713,10 +873,20 @@ impl ArtifactEditor for Generation3dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             Generation3dCommand::command_id,
             GENERATION3D_RETAINED_RAW_BYTES,
-            1,
+            GENERATION3D_RETAINED_WORK_ITEMS,
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
@@ -997,7 +1167,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &PreviewInteractionMarks::default())
+        generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, None, view_state, &PreviewInteractionMarks::default())
     }
 
     /// 🕹️ Resolves the live `graph` hover/selection once per render and threads it into every
@@ -1009,13 +1179,13 @@ impl ArtifactEditor for Generation3dPlayApp {
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        transient: &semio_framework_plugin::TransientView<'_, Generation3dTransient>,
         interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &PreviewInteractionMarks::from_interaction(interaction))
+        generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot.generation_preview_text.as_deref(), view_state, &PreviewInteractionMarks::from_interaction(interaction))
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let measures = edit_preview::preview_window_measures(config, generation3d_action);
         HashMap::from([
@@ -1035,13 +1205,12 @@ impl ArtifactEditor for Generation3dPlayApp {
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, Generation3dSnapshot>,
-        cfg: &ConfigView<'_, Generation3dConfig>,
+        _cfg: &ConfigView<'_, Generation3dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         {
-            let config = cfg.snapshot;
             let labels = generation3d_labels(view_state);
             let is_de = view_state.locale == semio_framework_plugin::Locale::De;
             let selected: Vec<String> = Vec::new();
@@ -1051,11 +1220,11 @@ impl ArtifactEditor for Generation3dPlayApp {
             if has_selection {
                 menu = menu.action("translateSelection").action("rotateSelection").action("scaleSelection");
             }
-            menu = menu.group("create", |m| { m.action("addWidget").action("addGeneration") });
+            menu = menu.group("create", |m| m.action("addWidget").action("addGeneration"));
             if has_selection {
-                menu = menu.group("targets", |m| { m.action("removeWidget").action("removeGeneration") });
+                menu = menu.group("targets", |m| m.action("removeWidget").action("removeGeneration"));
             }
-            menu = menu.group("methods", |m| { m.action("renameGeneration").action("updateGenerationValues").action("patchFlowWidgets") });
+            menu = menu.group("methods", |m| m.action("renameGeneration").action("updateGenerationValues").action("patchFlowWidgets"));
             if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
                 menu = menu.item(spec);
             }
@@ -1086,7 +1255,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"))
             .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
             .action_with(categorized_action("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"), ActionKind::Mutation, "targets"))
@@ -1105,16 +1274,16 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             // Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
             // below) — the six framework verbs (`interactionSelect`/`interactionHover`/`clearSelection`/
             // `selectAll`/`setSelectionMode`/`setInteractionGranularity`) auto-inject.
-            .view_action("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"))
-            .view_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"))
-            .view_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"))
-            .view_action("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"))
+            .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"), ActionKind::View, "camera"))
+            .action_with(ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
+            .action_with(ActionDefinition::new("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
+            .action_with(ActionDefinition::new("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
             .view_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"))
-            .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
-            .view_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
-            .view_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
-            .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
-            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .action_with(ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::new("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
             .view_action("selectGeneration", LocalizedLabel::native("Set Generation", "Generation auswählen"))
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
@@ -1309,10 +1478,7 @@ impl PreviewInteractionMarks {
     /// 🕹️ Reads the framework-owned domain: hover off the ephemeral pointer channel, selection off
     /// the persisted interaction store. The app stores neither itself.
     pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
-        Self {
-            hovered: interaction.hover(GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_CHANNEL).ids.iter().cloned().collect(),
-            selected: interaction.selection(GENERATION_3D_INTERACTION_DOMAIN).ids.iter().cloned().collect(),
-        }
+        Self { hovered: interaction.hover(GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_CHANNEL).ids.iter().cloned().collect(), selected: interaction.selection(GENERATION_3D_INTERACTION_DOMAIN).ids.iter().cloned().collect() }
     }
 
     fn marked(set: &std::collections::BTreeSet<String>, widget_id: &str, channel: &str, index: usize) -> bool {
@@ -1550,11 +1716,7 @@ const PREVIEW_POINT_MARKER_HALF_EXTENT: f64 = 0.05;
 fn point_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshData {
     let (x, y, z) = (x as f32, y as f32, z as f32);
     let e = PREVIEW_POINT_MARKER_HALF_EXTENT as f32;
-    semio_framework_plugin::MeshData {
-        positions: vec![x, y, z],
-        edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e],
-        ..Default::default()
-    }
+    semio_framework_plugin::MeshData { positions: vec![x, y, z], edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e], ..Default::default() }
 }
 
 /// 🔌️ A line segment from the world origin to `(x, y, z)` — the vector-channel preview marker,
@@ -1684,12 +1846,7 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
             request_object.insert("handle", dsl::json::Value::String(handle));
             request_object.insert("tolerance", dsl::json::Value::from(tolerance));
             request_object.insert("nodeHash", dsl::json::Value::from(node_hash));
-            effects.push(Effect::InvokeExtension {
-                req: semio_framework_plugin::RequestId(105),
-                extension_id: "brep".into(),
-                capability: "tessellate".into(),
-                request_json: dsl::json::to_string(&dsl::json::Value::Object(request_object)),
-            });
+            effects.push(Effect::InvokeExtension { req: semio_framework_plugin::RequestId(105), extension_id: "brep".into(), capability: "tessellate".into(), request_json: dsl::json::to_string(&dsl::json::Value::Object(request_object)) });
         }
     }
     effects
@@ -1806,12 +1963,7 @@ pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_
             }
         }
     }
-    PreviewPayload {
-        meshes_json: dsl::json::to_string(&dsl::json::Value::Array(meshes)),
-        instances_json: dsl::json::to_string(&dsl::json::Value::Array(instances)),
-        selected_ids,
-        hovered_id,
-    }
+    PreviewPayload { meshes_json: dsl::json::to_string(&dsl::json::Value::Array(meshes)), instances_json: dsl::json::to_string(&dsl::json::Value::Array(instances)), selected_ids, hovered_id }
 }
 //#endregion 🔖️PreviewPipeline
 

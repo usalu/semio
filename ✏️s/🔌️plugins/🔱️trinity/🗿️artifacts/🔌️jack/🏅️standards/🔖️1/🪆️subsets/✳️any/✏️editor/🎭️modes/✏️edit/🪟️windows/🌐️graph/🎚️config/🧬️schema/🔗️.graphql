@@ -1,0 +1,5 @@
+type JackGraphWindowCamera { x: Float!, y: Float!, zoom: Float! }
+type JackGraphWindowConfig {
+  camera: JackGraphWindowCamera @state(kind: CONFIG)
+  lodMode: String! @state(kind: CONFIG)
+}

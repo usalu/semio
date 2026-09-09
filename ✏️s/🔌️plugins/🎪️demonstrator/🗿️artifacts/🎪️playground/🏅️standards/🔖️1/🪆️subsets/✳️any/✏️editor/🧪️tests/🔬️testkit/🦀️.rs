@@ -1,4 +1,3 @@
-
 //! 🧪️ `testkit::assert_declared_actions_bridge_to_commands`'s signature is still
 //! `fn(manifest: fn() -> App)` (framework testkit gap, `📓️w0-f-report.md` Gap 3) — `App { definition,
 //! examples }` shape kept alive here purely to satisfy that call.

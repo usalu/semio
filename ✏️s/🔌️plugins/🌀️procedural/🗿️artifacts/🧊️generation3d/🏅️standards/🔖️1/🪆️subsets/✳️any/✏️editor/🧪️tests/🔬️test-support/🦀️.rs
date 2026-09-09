@@ -1,4 +1,3 @@
-
 use std::sync::{Mutex, MutexGuard};
 
 static TEST_SERIAL: Mutex<()> = Mutex::new(());

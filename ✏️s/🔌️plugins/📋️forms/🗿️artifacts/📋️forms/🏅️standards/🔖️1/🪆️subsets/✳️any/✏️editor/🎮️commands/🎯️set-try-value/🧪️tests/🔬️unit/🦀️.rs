@@ -1,10 +1,9 @@
-
 use super::*;
+use crate::editor::forms::testkit::{forms_app_with_registry, FormsApp};
 use crate::editor::forms::FormsCommand;
-use crate::editor::forms::testkit::{FormsApp, forms_app_with_registry};
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::PluginApp;
 use semio_framework_plugin::testkit::meta;
+use semio_framework_plugin::PluginApp;
 
 fn rope(raw: &str) -> std::sync::Arc<ChunkedSource> {
     std::sync::Arc::new(ChunkedSource::from_text(raw.into()))

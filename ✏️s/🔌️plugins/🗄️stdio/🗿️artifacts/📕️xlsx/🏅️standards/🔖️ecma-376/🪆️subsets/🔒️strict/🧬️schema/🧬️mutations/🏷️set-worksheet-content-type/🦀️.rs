@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetWorksheetContentType {
-        pub(crate) path: String,
-        pub(crate) content_type: String,
-    }
+    pub(crate) path: String,
+    pub(crate) content_type: String,
+}
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetWorksheetContentType {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "worksheet-content-type", kind: "set-worksheet-content-type", record: "SetWorksheetContentType" };

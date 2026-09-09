@@ -1,19 +1,19 @@
 //! 🧩️ Playbook procedural block-kind module — flow-backed building component params + live 3D preview.
 
-use semio_framework_ui_contract::{ActionId as UiActionId, Buildable, HasBase, HasChildren};
 use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_ui_contract::{ActionId as UiActionId, Buildable, HasBase, HasChildren};
 
-use semio_framework_artifact_playbook_playbook::{visible_blocks, PlaybookBlock};
 use flow::{export_solid_json, import_solid_json, tessellate_geometry};
 use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowHost};
-use semio_framework_artifact_flow_flow::{FlowFixture, Widget};
 use protocol::MutationDiff;
+use semio_framework_artifact_flow_flow::{FlowFixture, Widget};
+use semio_framework_artifact_playbook_playbook::{visible_blocks, PlaybookBlock};
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{
-    app_labels, create_default_layout, mesh_from_kind, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, App, ArtifactApp,
-    ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, PluginApp, WorldSunConfig,
+    app_labels, create_default_layout, mesh_from_kind, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, App, ArtifactApp, ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault,
+    LocalizedLabel, NoDraft, NoDraftMutation, Plugin, PluginApp, WorldSunConfig,
 };
 // 🌱️ `Value`/`Map` alias `pack::json`'s first-party JSON tree (the `serde_json::Value`
 // replacement, `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`), keeping this file's shape
@@ -23,9 +23,9 @@ use semio_framework_plugin::{
 // itself now derives `ToValue`/`FromValue` alongside `Serialize`/`Deserialize`, so its own parse
 // goes through `pack::json::from_json_str` below instead. Every other JSON value in this file is
 // arbitrary-shaped and goes through `pack::json` instead.
-use pack::{json_from_dsl_value, json_to_dsl_value, json_to_string, parse_json, JsonObject as Map, JsonValue as Value};
 #[cfg(test)]
 use pack::to_json_string;
+use pack::{json_from_dsl_value, json_to_dsl_value, json_to_string, parse_json, JsonObject as Map, JsonValue as Value};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -241,20 +241,28 @@ fn ui_admit<T, E>(result: Result<T, E>) -> UiAssemblyResult<T> {
     result.map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "procedural module UI admission failed"))
 }
 
-fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<Label> { ui_admit(Label::try_from(value.as_ref())) }
+fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<Label> {
+    ui_admit(Label::try_from(value.as_ref()))
+}
 
 fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
     UiText::try_from_str(value.as_ref()).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural module text admission failed"))
 }
 
-fn text_node(value: impl AsRef<str>) -> UiAssemblyResult<BuiltNode> { ui_admit(text(ui_label(value)?).try_build()) }
+fn text_node(value: impl AsRef<str>) -> UiAssemblyResult<BuiltNode> {
+    ui_admit(text(ui_label(value)?).try_build())
+}
 
-fn value_text(value: &str) -> UiAssemblyResult<UiValue> { Ok(UiValue::Text(ui_text(value)?)) }
+fn value_text(value: &str) -> UiAssemblyResult<UiValue> {
+    Ok(UiValue::Text(ui_text(value)?))
+}
 
 fn value_map<const N: usize>(mut entries: [(&'static str, UiValue); N]) -> UiAssemblyResult<UiValue> {
     entries.sort_unstable_by(|left, right| left.0.cmp(right.0));
     let mut map = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural module action map admission failed"))?;
-    for (key, value) in entries { ui_admit(map.push(key.into(), value))?; }
+    for (key, value) in entries {
+        ui_admit(map.push(key.into(), value))?;
+    }
     Ok(UiValue::Map(map.finish()))
 }
 
@@ -439,7 +447,8 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
     };
     let fixture: FlowFixture = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
     let handles = evaluated_preview_geometry_handles(&fixture, &params_as_json(&payload.params));
-    let result_json = if handles.is_empty() { pack::json!({ "error": "no procedural solid geometry to export" }) } else { parse_json(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(pack::json!({ "error": "export failed" })) };
+    let result_json =
+        if handles.is_empty() { pack::json!({ "error": "no procedural solid geometry to export" }) } else { parse_json(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(pack::json!({ "error": "export failed" })) };
     let mut object = params_as_json(&payload.params);
     let Some(map) = object.as_object_mut() else {
         return;
@@ -463,7 +472,15 @@ fn media_button(payload: &ModuleRenderPayload, format: &str, import: bool) -> Ui
     let verb = if import { "Import" } else { "Export" };
     let icon = if import { "import" } else { "export" };
     let label = format!("{verb} {}", format.to_uppercase());
-    bind_control(button(ui_label(&label)?).icon(ui_text(icon)?), &format!("playbook-module.{icon}.{format}"), &label, payload, if import { ACTION_IMPORT_SOLID } else { ACTION_EXPORT_SOLID }, value_map([("format", value_text(format)?)])?, Trigger::Activate)
+    bind_control(
+        button(ui_label(&label)?).icon(ui_text(icon)?),
+        &format!("playbook-module.{icon}.{format}"),
+        &label,
+        payload,
+        if import { ACTION_IMPORT_SOLID } else { ACTION_EXPORT_SOLID },
+        value_map([("format", value_text(format)?)])?,
+        Trigger::Activate,
+    )
 }
 
 fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltNode> {
@@ -471,17 +488,18 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
     let mut ids = UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural question ids admission failed"))?;
     ui_admit(ids.push(value_text(&payload.question_id)?))?;
     let blueprint = payload.surface == "blueprint";
-    let args = value_map([
-        ("questionIds", UiValue::List(ids.finish())),
-        ("field", value_text(if blueprint { "param" } else { "tryParam" })?),
-        ("paramKey", value_text(key)?),
-        ("key", value_text(&payload.question_id)?),
-    ])?;
+    let args = value_map([("questionIds", UiValue::List(ids.finish())), ("field", value_text(if blueprint { "param" } else { "tryParam" })?), ("paramKey", value_text(key)?), ("key", value_text(&payload.question_id)?)])?;
     let control: BuiltNode = match question.kind.as_str() {
         "text" | "longText" | "number" => {
-            let kind = match question.kind.as_str() { "longText" => InputKind::LongText, "number" => InputKind::Number, _ => InputKind::Text };
+            let kind = match question.kind.as_str() {
+                "longText" => InputKind::LongText,
+                "number" => InputKind::Number,
+                _ => InputKind::Text,
+            };
             let mut input = input(kind).value(ui_text(json_string_value(value))?);
-            if let Some(placeholder) = &question.placeholder { input = input.placeholder(ui_label(placeholder)?); }
+            if let Some(placeholder) = &question.placeholder {
+                input = input.placeholder(ui_label(placeholder)?);
+            }
             input.into()
         }
         "slider" => slider(json_f64_value(value)).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0)).into(),
@@ -495,15 +513,21 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
 
 fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiAssemblyResult<BuiltNode> {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
-    let Some(fixture_json) = fixture_json_for_slug(slug) else { return text_node(format!("Unknown fixture slug: {slug}")); };
+    let Some(fixture_json) = fixture_json_for_slug(slug) else {
+        return text_node(format!("Unknown fixture slug: {slug}"));
+    };
     let fixture: FlowFixture = pack::json::from_json_str(fixture_json).map_err(|error| PluginAssemblyError::new("procedural.fixture", error.to_string()))?;
     let spec = flow_fixture_to_form_spec(&fixture);
     let values: Map = params_as_json(&payload.params).as_object().cloned().unwrap_or_default();
-    let Some(step) = spec.steps.first() else { return text_node(labels.no_flow_inputs.as_str()); };
+    let Some(step) = spec.steps.first() else {
+        return text_node(labels.no_flow_inputs.as_str());
+    };
     let values_dsl: HashMap<String, DslValue> = values.iter().map(|(key, value)| (key.to_string(), json_to_dsl_value(value))).collect();
     let visible = visible_blocks(step, &values_dsl);
     let mut column = column();
-    if visible.is_empty() { column = ui_admit(column.try_child(text_node(labels.no_procedural_parameters.as_str())?))?; }
+    if visible.is_empty() {
+        column = ui_admit(column.try_child(text_node(labels.no_procedural_parameters.as_str())?))?;
+    }
     for question in visible {
         let value = values.get(&question.id).cloned().unwrap_or_else(|| pack::json!(0));
         column = ui_admit(column.try_child(render_question_control(question, &value, payload)?))?;
@@ -593,6 +617,7 @@ impl ArtifactApp for ModuleApp {
         doc: &ArtifactView<'_, ModuleRenderPayload>,
         _cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
+        _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<ModulePayloadMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -616,7 +641,8 @@ impl ArtifactApp for ModuleApp {
             BODY_PARAMS => render_params_body(doc.snapshot, labels),
             BODY_PREVIEW => render_preview_body(doc.snapshot),
             _ => text_node(format!("Unknown body: {body_key}")),
-        }.map(built_to_component_tree)
+        }
+        .map(built_to_component_tree)
     }
 }
 
@@ -645,7 +671,8 @@ async fn create_module_app() -> Result<App, PluginAssemblyError> {
             // arrives through the host file-open callback, so it is deliberately not a declared arg.
             .action_args(ACTION_EXPORT_SOLID, vec![solid_format_arg()]).await
             .action_args(ACTION_IMPORT_SOLID, vec![solid_format_arg()]).await,
-    ).await
+    )
+    .await
 }
 
 /// 🎛️ The shared `format` Select over the solid interchange formats, defaulting to OBJ (the handlers' default).
@@ -654,7 +681,13 @@ fn solid_format_arg() -> ActionArgDef {
 }
 
 fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssemblyError> {
-    Plugin::<ProceduralModuleApps>::builder(MODULE_PLUGIN_ID).label("Playbook Module Procedural").version("0.1.0").package_id("semio:playbook-module-procedural").foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(resolve_ready(create_module_app())?).try_build()
+    Plugin::<ProceduralModuleApps>::builder(MODULE_PLUGIN_ID)
+        .label("Playbook Module Procedural")
+        .version("0.1.0")
+        .package_id("semio:playbook-module-procedural")
+        .foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA)
+        .document_app::<ModuleApp>(resolve_ready(create_module_app())?)
+        .try_build()
 }
 
 fn module_extension_bundle() -> ExtensionBundle {

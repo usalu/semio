@@ -1,4 +1,3 @@
-
 use super::*;
 use dsl::os_pack as pack;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};

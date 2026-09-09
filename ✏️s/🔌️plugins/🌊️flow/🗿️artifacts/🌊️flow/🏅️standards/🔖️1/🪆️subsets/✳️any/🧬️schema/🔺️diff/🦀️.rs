@@ -1,9 +1,8 @@
 //! 🧬️ Flow diff schema — sparse field delta over the artifact.
 
-
 use crate::FlowContentChild;
-use semio_framework_artifact_flow_flow::CameraJson;
 use framework_schema::ArtifactSchema;
+use semio_framework_artifact_flow_flow::CameraJson;
 
 //#region 🔹Diff
 /// 🔺️ Sparse field delta for the flow artifact; persistent entries apply via
@@ -24,32 +23,6 @@ pub struct FlowDiff {
     pub camera: Option<CameraJson>,
     #[state(artifact)]
     pub content: Option<FlowContentChild>,
-    #[state(presence)]
-    pub selected_node_ids: Option<FlowStringList>,
-    #[state(presence)]
-    pub selected_edge_ids: Option<FlowStringList>,
-    #[state(presence)]
-    pub selected_handle_ids: Option<FlowStringList>,
-    #[state(presence)]
-    pub preview_off_node_ids: Option<FlowStringList>,
-    #[state(config)]
-    pub lod_mode: Option<String>,
-    #[state(config)]
-    pub proximity_distance: Option<f64>,
-    #[state(config)]
-    pub grid_visible: Option<bool>,
-    #[state(config)]
-    pub grid_snap_enabled: Option<bool>,
-    #[state(config)]
-    pub grid_factor: Option<f64>,
-    #[state(config)]
-    pub catalogue_sections_json: Option<String>,
-    #[state(config)]
-    pub automation_enabled_json: Option<String>,
-    #[state(config)]
-    pub contributions_json: Option<String>,
-    #[state(config)]
-    pub generation_json: Option<String>,
 }
 //#endregion 🔹Diff
 

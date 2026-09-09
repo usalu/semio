@@ -3,10 +3,11 @@
  * cross-language UI axes (`Locale`/`Terminology`) from `🎯️targets/🧊️wgpu/🔣️ui-axes.json` — single
  * source of truth for every `app_labels!` exhaustive match and every locale/terminology-typed field
  * in Rust and TypeScript. */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, buildBudgetMs, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 const uiOwnerRoot = join(packageRoot, "..", "..");
@@ -134,8 +135,7 @@ class GenerateAxesScript extends BundleScript {
     const repoRoot = getWorkspaceRoot();
     const axes = readUiAxes();
     for (const target of generatedTargets(repoRoot, axes)) {
-      mkdirSync(dirname(target.path), { recursive: true });
-      writeFileSync(target.path, target.content);
+      writeGeneratedFileIfChanged(target.path, target.content);
     }
     console.log(`ui axes refreshed (${axes.locales.length} locales, ${axes.terminologies.length} terminologies) -> 🤖️generated.rs, 🤖️generated/🎚️ui-axes.ts`);
   }

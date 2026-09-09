@@ -27,56 +27,13 @@
       ],
       "properties": {
         "dialect": {
-          "$ref": "#/$defs/ArtifactDialect"
+          "$ref": "https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactDialect"
         },
         "role": {
-          "$ref": "#/$defs/AppRole"
+          "$ref": "https://semio.tech/schema/framework/manifest/schema.json#/$defs/AppRole"
         },
         "app": {
-          "$ref": "#/$defs/AppRef"
-        }
-      }
-    },
-    "ArtifactDialect": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "artifactKind",
-        "standard",
-        "subset"
-      ],
-      "properties": {
-        "artifactKind": {
-          "type": "string"
-        },
-        "standard": {
-          "type": "string"
-        },
-        "subset": {
-          "type": "string"
-        }
-      }
-    },
-    "AppRole": {
-      "type": "string",
-      "enum": [
-        "viewer",
-        "editor"
-      ]
-    },
-    "AppRef": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "pluginId",
-        "appId"
-      ],
-      "properties": {
-        "pluginId": {
-          "type": "string"
-        },
-        "appId": {
-          "type": "string"
+          "$ref": "https://semio.tech/schema/framework/manifest/schema.json#/$defs/AppRef"
         }
       }
     }

@@ -2,8 +2,6 @@ syntax = "proto3";
 package semio.app.block.3d.config;
 message Block3dConfig {
   // @state config
-  repeated string selected_ids = 1;
-  // @state config
   optional string active_representation_id = 2;
   // @state config
   repeated string wanted_tags = 3;
@@ -17,18 +15,10 @@ message Block3dConfig {
   // @state config
   bool brush_flip = 8;
   // @state config
-  optional Block3dBrushPreview brush_preview = 9;
-  // @state config
   optional BlockCamera3d camera = 10;
-  // @state config
-  optional string hovered_vortex_full_id = 11;
 }
 
 message Block3dWindowView {
-  bool _placeholder = 1;
-}
-
-message Block3dBrushPreview {
   bool _placeholder = 1;
 }
 

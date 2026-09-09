@@ -37,7 +37,6 @@ type En1992Diff {
   anchorC1Mm: Float @state(class: ARTIFACT)
   anchorNEdKn: Float @state(class: ARTIFACT)
   anchorVEdKn: Float @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type En1992Artifact {
@@ -76,5 +75,4 @@ type En1992Artifact {
   anchorC1Mm: Float
   anchorNEdKn: Float
   anchorVEdKn: Float
-  selectedCheckIndex: Int
 }

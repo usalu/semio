@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ClearWidgetLayout` — a real id-keyed removal from the fixture's
 //! layout collection helper (never a whole-snapshot capture).
 
-use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, Generation2dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::Generation2dSnapshot;
 
 pub fn diff(payload: &super::ClearWidgetLayout, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

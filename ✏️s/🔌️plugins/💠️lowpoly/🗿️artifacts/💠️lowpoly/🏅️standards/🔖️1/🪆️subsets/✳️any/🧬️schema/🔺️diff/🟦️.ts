@@ -1,105 +1,43 @@
 /** 🧬️ Lowpoly diff schema — sparse field delta. */
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import {
+  parseLowpolyArtifact,
+  parseLowpolyObject,
+  parseLowpolyPaintLayer,
+  parseLowpolyTransform,
+  type LowpolyArtifact,
+  type LowpolyObject,
+  type LowpolyPaintLayer,
+  type LowpolyTransform,
+} from "../🟦️.ts";
 
 export interface LowpolyDiff {
   /** @state artifact */
-  artifact?: LowpolyArtifact;
+  artifact?: LowpolyArtifact | null;
   /** @state artifact */
-  schema?: string;
+  schema?: string | null;
   /** @state artifact */
-  objects?: LowpolyObjectsDelta;
-  /** @state presence */
-  activeObjectId?: string | null;
-  /** @state presence */
-  selection?: LowpolySelection;
-  /** @state presence */
-  selectedObjectIds?: LowpolyStringList;
-  /** @state presence */
-  paintUtility?: string;
-  /** @state presence */
-  activePaintLayer?: number;
-  /** @state presence */
-  /** @state config */
-  showEdges?: boolean;
-  /** @state config */
-  sunEnabled?: boolean;
-  /** @state config */
-  sunAzimuth?: number;
-  /** @state config */
-  sunElevation?: number;
-  /** @state config */
-  sunIntensity?: number;
-  /** @state config */
-  sunColor?: string;
-  /** @state config */
-  worldCameraPositionX?: number;
-  /** @state config */
-  worldCameraPositionY?: number;
-  /** @state config */
-  worldCameraPositionZ?: number;
-  /** @state config */
-  worldCameraTargetX?: number;
-  /** @state config */
-  worldCameraTargetY?: number;
-  /** @state config */
-  worldCameraTargetZ?: number;
-  /** @state config */
-  worldCameraFov?: number;
-  /** @state config */
-  utilityParamsJson?: string;
-  /** @state config */
-  paintColorR?: number;
-  /** @state config */
-  paintColorG?: number;
-  /** @state config */
-  paintColorB?: number;
-  /** @state config */
-  paintColorA?: number;
-  /** @state config */
-  selectionMethod?: string;
-  /** @state config */
-  selectionModeDefault?: string;
-  /** @state config */
-  engagementInput?: string;
-  /** @state config */
-  /** @state artifact */
-  hoveredObjectId?: string | null;
-  /** @state artifact */
-  hoveredTargetObjectId?: string | null;
-  /** @state artifact */
-  hoveredTargetMode?: string | null;
-  /** @state artifact */
-  hoveredTargetId?: number | null;
-  /** @state artifact */
-  strokeDragActive?: boolean;
-  /** @state artifact */
-  transformDragActive?: boolean;
-  /** @state artifact */
-  previewSeq?: number;
-}
-
-export interface LowpolyStringList {
-  values: string[];
+  objects?: LowpolyObjectsDelta | null;
 }
 
 export interface LowpolyObjectsDelta {
   added: LowpolyObject[];
   removed: string[];
   patched: LowpolyObjectPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface LowpolyObjectPatchEntry {
   id: string;
   patch: LowpolyObjectPatch;
-  paintLayers?: LowpolyPaintLayersDelta;
+  paintLayers: LowpolyPaintLayersDelta | null;
 }
 
 export interface LowpolyObjectPatch {
-  name?: string;
-  smoothShading?: boolean;
-  transform?: LowpolyTransform;
-  /** Double-optional on the wire: absent = untouched, `null` = cleared, present = new handle. */
-  mesh?: LowpolyMeshHandle | null;
+  name: string | null;
+  smoothShading: boolean | null;
+  transform: LowpolyTransform | null;
+  mesh: ArtifactChild | null;
 }
 
 export interface LowpolyPaintLayersDelta {
@@ -120,10 +58,10 @@ export interface LowpolyIndexedPaintLayerPatch {
 }
 
 export interface LowpolyPaintLayerPatch {
-  name?: string;
-  visible?: boolean;
-  opacity?: number;
-  blendMode?: string;
+  name: string | null;
+  visible: boolean | null;
+  opacity: number | null;
+  blendMode: string | null;
 }
 
 export interface LowpolyPaintStrokeAt {
@@ -134,65 +72,6 @@ export interface LowpolyPaintStrokeAt {
 export interface PixelRun {
   offset: number;
   bytes: string;
-}
-
-export interface LowpolyArtifact {
-  schema: string;
-  objects: LowpolyObject[];
-}
-
-export interface LowpolySelectionTargets {
-  mesh: boolean;
-  vertex: boolean;
-  edge: boolean;
-  face: boolean;
-}
-
-export interface LowpolySelection {
-  targets: LowpolySelectionTargets;
-  keys: string[];
-  mode: string;
-  ids: number[];
-}
-
-export interface LowpolyTransform {
-  position: [number, number, number];
-  rotation: [number, number, number];
-  scale: [number, number, number];
-}
-
-export interface LowpolyPaintLayer {
-  name: string;
-  visible: boolean;
-  opacity: number;
-  blendMode: string;
-  pixels: string;
-}
-
-export interface LowpolyObject {
-  id: string;
-  name: string;
-  transform: LowpolyTransform;
-  smoothShading: boolean;
-  /** `null` when the object owns no mesh yet — confirmed against the `create-object` mutation fixture. */
-  mesh: LowpolyMeshHandle | null;
-  paintLayers: LowpolyPaintLayer[];
-}
-
-export interface LowpolyMeshHandle {
-  childId: string;
-  target: ArtifactRef;
-}
-
-export interface ArtifactDialect {
-  artifactKind: string;
-  standard: string;
-  subset: string;
-}
-
-export interface ArtifactRef {
-  artifactId: string;
-  dialect: ArtifactDialect;
 }
 
 //#region 🚪️Parsers
@@ -242,10 +121,41 @@ export const lowpolyLowpolyDiffGuardConstant = <T extends string | number | bool
   value === expected ? expected : lowpolyLowpolyDiffGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export function parseLowpolyStringList(value: unknown, at = "$"): LowpolyStringList {
+export function parseLowpolyDiff(value: unknown, at = "$"): LowpolyDiff {
   const row = lowpolyLowpolyDiffGuardObject(value, at);
   return {
-    values: lowpolyLowpolyDiffGuardArray(row["values"], `${at}.values`).map((item, index) => lowpolyLowpolyDiffGuardString(item, `${at}.values[${index}]`)),
+    artifact: row["artifact"] === null ? null : parseLowpolyArtifact(row["artifact"], `${at}.artifact`),
+    schema: row["schema"] === null ? null : lowpolyLowpolyDiffGuardString(row["schema"], `${at}.schema`),
+    objects: row["objects"] === null ? null : parseLowpolyObjectsDelta(row["objects"], `${at}.objects`),
+  };
+}
+
+export function parseLowpolyObjectsDelta(value: unknown, at = "$"): LowpolyObjectsDelta {
+  const row = lowpolyLowpolyDiffGuardObject(value, at);
+  return {
+    added: lowpolyLowpolyDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseLowpolyObject(item, `${at}.added[${index}]`)),
+    removed: lowpolyLowpolyDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => lowpolyLowpolyDiffGuardString(item, `${at}.removed[${index}]`)),
+    patched: lowpolyLowpolyDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseLowpolyObjectPatchEntry(item, `${at}.patched[${index}]`)),
+    reordered: row["reordered"] === null ? null : lowpolyLowpolyDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => lowpolyLowpolyDiffGuardString(item, `${at}.reordered[${index}]`)),
+  };
+}
+
+export function parseLowpolyObjectPatchEntry(value: unknown, at = "$"): LowpolyObjectPatchEntry {
+  const row = lowpolyLowpolyDiffGuardObject(value, at);
+  return {
+    id: lowpolyLowpolyDiffGuardString(row["id"], `${at}.id`),
+    patch: parseLowpolyObjectPatch(row["patch"], `${at}.patch`),
+    paintLayers: row["paintLayers"] === null ? null : parseLowpolyPaintLayersDelta(row["paintLayers"], `${at}.paintLayers`),
+  };
+}
+
+export function parseLowpolyObjectPatch(value: unknown, at = "$"): LowpolyObjectPatch {
+  const row = lowpolyLowpolyDiffGuardObject(value, at);
+  return {
+    name: row["name"] === null ? null : lowpolyLowpolyDiffGuardString(row["name"], `${at}.name`),
+    smoothShading: row["smoothShading"] === null ? null : lowpolyLowpolyDiffGuardBoolean(row["smoothShading"], `${at}.smoothShading`),
+    transform: row["transform"] === null ? null : parseLowpolyTransform(row["transform"], `${at}.transform`),
+    mesh: row["mesh"] === null ? null : parseArtifactChild(row["mesh"]),
   };
 }
 
@@ -259,11 +169,29 @@ export function parseLowpolyPaintLayersDelta(value: unknown, at = "$"): LowpolyP
   };
 }
 
+export function parseLowpolyIndexedPaintLayer(value: unknown, at = "$"): LowpolyIndexedPaintLayer {
+  const row = lowpolyLowpolyDiffGuardObject(value, at);
+  return {
+    index: lowpolyLowpolyDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
+    layer: parseLowpolyPaintLayer(row["layer"], `${at}.layer`),
+  };
+}
+
 export function parseLowpolyIndexedPaintLayerPatch(value: unknown, at = "$"): LowpolyIndexedPaintLayerPatch {
   const row = lowpolyLowpolyDiffGuardObject(value, at);
   return {
     index: lowpolyLowpolyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
     patch: parseLowpolyPaintLayerPatch(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseLowpolyPaintLayerPatch(value: unknown, at = "$"): LowpolyPaintLayerPatch {
+  const row = lowpolyLowpolyDiffGuardObject(value, at);
+  return {
+    name: row["name"] === null ? null : lowpolyLowpolyDiffGuardString(row["name"], `${at}.name`),
+    visible: row["visible"] === null ? null : lowpolyLowpolyDiffGuardBoolean(row["visible"], `${at}.visible`),
+    opacity: row["opacity"] === null ? null : lowpolyLowpolyDiffGuardNumber(row["opacity"], `${at}.opacity`),
+    blendMode: row["blendMode"] === null ? null : lowpolyLowpolyDiffGuardString(row["blendMode"], `${at}.blendMode`),
   };
 }
 

@@ -1,13 +1,10 @@
 //! 🧱️ 🧱️ Note play app commands command — `duplicate-block`.
 
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
-use crate::schema::mutations::{
-    duplicate_block as duplicate_block_mutation,
-    duplicate_blocks as duplicate_blocks_mutation,
-};
+use crate::schema::mutations::{duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation};
 use crate::schema::{clone_block, find_block, offset_block_tree};
 use crate::NoteSnapshot;
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

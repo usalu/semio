@@ -1,11 +1,10 @@
-
 use super::*;
 use crate::editor::writer::testkit::{new_app_with_registry, WriterApp};
 use semio_framework_plugin::PluginApp;
 
 async fn context_menu_items(app: &mut WriterApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
     let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "writer.play".into(), args: None }, surface, window_instance_id: None, point: None };
-    serde_json::to_value(app.context_menu(&request).await).unwrap_or(Value::Null)
+    serde_json::to_value(app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await).unwrap_or(Value::Null)
 }
 
 fn writer_envelope_wire() -> Vec<u8> {
@@ -35,10 +34,6 @@ fn interactive_job_fixture_matches_the_exact_factory_join() {
     assert_eq!(fixture["payloadSchema"], WRITER_COMMAND_PAYLOAD_SCHEMA);
     assert_eq!(fixture["maxRawWireBytes"], MAX_WRITER_COMMAND_RAW_BYTES);
     assert_eq!(fixture["maxWorkUnitsPerStep"], 1);
-    assert_eq!(fixture["storePreparation"]["maxRetainedBytes"], WRITER_CONFIG_STORE_MAXIMUM_BYTES);
-    assert_eq!(fixture["storePreparation"]["workItemsPerAdvance"], 1);
-    assert_eq!(fixture["storePreparation"]["historyLane"], "Document");
-    assert_eq!(fixture["storePreparation"]["sealedByStore"], true);
     let actions = fixture["migrated"].as_array().expect("migrated action rows").iter().map(|row| row["action"].as_str().expect("action id")).collect::<Vec<_>>();
     assert_eq!(actions, WRITER_COMMAND_TOOL_IDS);
     assert_eq!(fixture["batchOnly"].as_array().map(Vec::len), Some(0));
@@ -46,26 +41,7 @@ fn interactive_job_fixture_matches_the_exact_factory_join() {
     assert_eq!(fixture["artifactPreparation"]["maxEditTextBytes"], MAX_WRITER_COMMAND_TEXT_BYTES);
     assert_eq!(fixture["artifactPreparation"]["workItemsPerAdvance"], 1);
     assert_eq!(fixture["artifactPreparation"]["sealedByStore"], true);
-    assert_eq!(fixture["localeAdmissionCases"][0]["localeBytes"], MAX_WRITER_LOCALE_BYTES);
-    assert_eq!(fixture["localeAdmissionCases"][1]["localeBytes"], MAX_WRITER_LOCALE_BYTES + 1);
-    assert_eq!(fixture["localeAdmissionCases"][1]["fuelDelta"], 0);
-    assert_eq!(fixture["localeAdmissionCases"][1]["cursorDelta"], 0);
-    assert_eq!(fixture["localeAdmissionCases"][1]["ownersPreserved"], true);
     assert_eq!(fixture["requiredLifecycle"].as_array().map(Vec::len), Some(10));
-}
-
-#[test]
-fn writer_config_store_preparation_is_exact_bounded_and_reversible() {
-    let base = WriterConfig { engagement_input: "format".into(), revision: 7, ..WriterConfig::default() };
-    let footprint = admit_writer_config_mutation(&mutation).expect("bounded config mutation");
-    assert_eq!(footprint.work_items, 1);
-    assert_eq!(footprint.retained_bytes, 5);
-    let (post, inverse, forward) = prepare_writer_config(&base, mutation.clone()).expect("exact one-item preparation");
-    assert_eq!(post.locale, "de-DE");
-    assert_eq!(post.engagement_input, base.engagement_input);
-    assert_eq!(forward, mutation);
-    assert_eq!(inverse, vec![WriterConfigMutation::ReplaceConfig(crate::editor::writer::config::ReplaceConfig { config: base.clone() })]);
-    assert!(admit_writer_config_mutation(&WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value: "x".repeat(WRITER_CONFIG_STORE_MAXIMUM_BYTES + 1) })).is_err());
 }
 
 #[test]
@@ -123,7 +99,9 @@ fn writer_command_job(command: WriterCommand, text: Arc<str>) -> WriterCommandTo
         command: Some(command),
         snapshot: Some(Arc::new(crate::schema::empty_writer_snapshot())),
         text: Some(text),
-        config: Some(Arc::new(WriterConfig::default())),
+        view_state: Some(testkit::main_window_view()),
+        window_config: Some(WriterMainWindowConfig::default()),
+        window_transient: Some(WriterMainWindowTransient::default()),
         completion: None,
         pending_completion_rejection: None,
         raw_input: None,
@@ -139,17 +117,18 @@ fn writer_command_job(command: WriterCommand, text: Arc<str>) -> WriterCommandTo
 
 #[test]
 fn writer_completion_rejection_retires_child_before_command_without_reemission() {
-    let mut emit: Emit<WriterMutation, WriterConfigMutation, NoDraftMutation> = Emit::default();
+    let mut emit: Emit<WriterMutation, NoConfigMutation, NoDraftMutation> = Emit::default();
     emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<WriterSnapshot, WriterMutation>("member", "writer-child", &[]));
     let rejected = ArtifactToolCompletionRejection::<EditorApp<WriterPlayApp>> {
         emit: Ok(emit),
         ephemeral: EphemeralEmit::default(),
         fault: Fault::new(semio_framework_plugin::FaultOrigin::Framework, semio_framework_plugin::FaultCode::new("test.completion-rejected"), "injected completion rejection"),
     };
+    let mut job = writer_command_job(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("lint".into()) }), Arc::from("writer text"));
     job.raw_bytes = Vec::new();
     job.pending_completion_rejection = Some(rejected);
     job.begin_close();
-    assert_eq!(job.close_step(0, 1), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 1 });
+    assert_eq!(job.close_step(0, 1), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert!(job.pending_completion_rejection.is_some());
     assert!(job.command.is_some());
     for _ in 0..128 {
@@ -194,13 +173,13 @@ fn bounded_text_admission_preserves_rejected_job_state_and_owners() {
         let rejected_cursor = (rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone());
         let rejected_command = rejected.command.clone();
         let rejected_snapshot = rejected.snapshot.clone();
-        let rejected_config = rejected.config.clone();
+        let rejected_window_config = rejected.window_config.clone();
         assert!(!rejected.admit_text());
         assert!(!rejected.text_admitted);
         assert_eq!((rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone()), rejected_cursor);
         assert_eq!(rejected.command, rejected_command);
         assert!(Arc::ptr_eq(rejected.snapshot.as_ref().expect("snapshot owner"), rejected_snapshot.as_ref().expect("saved snapshot owner")));
-        assert!(Arc::ptr_eq(rejected.config.as_ref().expect("config owner"), rejected_config.as_ref().expect("saved config owner")));
+        assert_eq!(rejected.window_config, rejected_window_config);
         assert_eq!(Arc::strong_count(&over), 2);
     }
 
@@ -209,14 +188,13 @@ fn bounded_text_admission_preserves_rejected_job_state_and_owners() {
     assert!(lint.admit_text());
 }
 
-
 #[test]
 fn bounded_open_document_admission_preserves_maximum_plus_one_job_state_and_owners() {
     let current: Arc<str> = Arc::from("");
     let accepted_command = WriterCommand::OpenDocument(open_document::OpenDocument { uri: "u".repeat(MAX_WRITER_COMMAND_URI_BYTES), text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) });
     let mut accepted = writer_command_job(accepted_command, current.clone());
     assert!(accepted.admit_text());
-    assert_eq!(accepted.emit().expect("bounded open document emission").effects.len(), 1);
+    assert_eq!(accepted.emit().expect("bounded open document emission").0.effects.len(), 1);
 
     for rejected_command in [
         WriterCommand::OpenDocument(open_document::OpenDocument { uri: "u".repeat(MAX_WRITER_COMMAND_URI_BYTES), text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
@@ -226,12 +204,12 @@ fn bounded_open_document_admission_preserves_maximum_plus_one_job_state_and_owne
         let rejected_cursor = (rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone());
         let rejected_command = rejected.command.clone();
         let rejected_snapshot = rejected.snapshot.clone();
-        let rejected_config = rejected.config.clone();
+        let rejected_window_config = rejected.window_config.clone();
         assert!(!rejected.admit_text());
         assert_eq!((rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone()), rejected_cursor);
         assert_eq!(rejected.command, rejected_command);
         assert!(Arc::ptr_eq(rejected.snapshot.as_ref().expect("snapshot owner"), rejected_snapshot.as_ref().expect("saved snapshot owner")));
-        assert!(Arc::ptr_eq(rejected.config.as_ref().expect("config owner"), rejected_config.as_ref().expect("saved config owner")));
+        assert_eq!(rejected.window_config, rejected_window_config);
     }
 }
 
@@ -268,11 +246,11 @@ fn bounded_host_load_and_engagement_admission_reject_plus_one_without_consuming_
         let mut job = writer_command_job(command, current.clone());
         let command_owner = job.command.clone();
         let snapshot_owner = job.snapshot.clone();
-        let config_owner = job.config.clone();
+        let window_config_owner = job.window_config.clone();
         assert!(!job.admit_text());
         assert_eq!(job.command, command_owner);
         assert!(Arc::ptr_eq(job.snapshot.as_ref().expect("snapshot owner"), snapshot_owner.as_ref().expect("saved snapshot owner")));
-        assert!(Arc::ptr_eq(job.config.as_ref().expect("config owner"), config_owner.as_ref().expect("saved config owner")));
+        assert_eq!(job.window_config, window_config_owner);
     }
 }
 
@@ -474,11 +452,11 @@ async fn ast_interaction_domain_is_declared_topology_and_transitive_on_the_main_
 /// root has no parent, every child's parent is its syntactic parent's id.
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_walks_the_jack_ast_into_parent_links() {
-    let document = crate::dsl::jack_example_document();
-    let config = WriterConfig::default();
+    let document = crate::document_dsl::jack_example_document();
+    let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let topology = WriterPlayApp::interaction_topology(&doc, &cfg);
     let ast = topology.domains.get("ast").expect("ast domain present in topology");
     assert!(!ast.ordered.is_empty(), "jack document must produce a non-empty ast topology");
@@ -492,10 +470,10 @@ async fn interaction_topology_walks_the_jack_ast_into_parent_links() {
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_is_empty_for_non_jack_documents() {
     let document = crate::schema::empty_writer_snapshot();
-    let config = WriterConfig::default();
+    let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let topology = WriterPlayApp::interaction_topology(&doc, &cfg);
     assert!(topology.domains.get("ast").expect("ast domain present in topology").ordered.is_empty());
 }
@@ -515,7 +493,7 @@ async fn writer_io_declares_the_extra_text_out_port() {
 
 #[semio_framework_async_macros::async_test]
 async fn export_media_text_out_projects_the_document_as_a_chapter() {
-    let document = crate::dsl::jack_example_document();
+    let document = crate::document_dsl::jack_example_document();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc_view = ArtifactView::new(&document, &history);
     let media = WriterPlayApp::export_media("text:out", &doc_view).expect("export text:out");
@@ -541,11 +519,11 @@ async fn export_media_rejects_unknown_ports() {
 /// of rows, and the destructive `cut` row stays the trailing item.
 #[semio_framework_async_macros::async_test]
 async fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
-    let document = crate::dsl::jack_example_document();
-    let config = WriterConfig::default();
+    let document = crate::document_dsl::jack_example_document();
+    let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let registry = AppActionRegistry::from_definition(&create_writer_app());
     let request = ContextMenuRequest {
         menu: semio_framework_plugin::UiMenuRef { id: WRITER_PLAY_BODY_MAIN.into(), args: None },
@@ -559,7 +537,7 @@ async fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
         window_instance_id: None,
         point: None,
     };
-    let items = WriterPlayApp::context_menu(&request, &doc, &cfg, &registry);
+    let items = WriterPlayApp::context_menu(&request, &doc, &cfg, &semio_framework_plugin::ViewModel::default(), &registry);
     assert!(items.len() <= 9, "top-level writer context menu should stay progressively disclosed: {items:?}");
     assert_eq!(items.last().map(|item| item.id.as_str()), Some("writer-cut"), "cut must stay the trailing destructive item: {items:?}");
     assert_eq!(items.last().and_then(|item| item.destructive), Some(true), "trailing writer-cut must be marked destructive: {items:?}");
@@ -594,8 +572,8 @@ async fn whole_document_operation_stays_the_trait_default_none() {
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_expose_format_lint_placeholder() {
     let mut app = testkit::new_app().await;
-    let engagements = app.window_engagements().await;
-    let main = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("main engagement");
+    let engagements = app.window_engagements(&testkit::main_window_view()).await;
+    let main = engagements.get(testkit::WRITER_TEST_WINDOW_ID).expect("main engagement");
     let placeholder = main.input.as_ref().and_then(|i| i.placeholder.as_ref()).expect("placeholder");
     assert!(placeholder.contains("Format"));
     assert_eq!(main.possible_engagements.as_ref().map(|v| v.len()), Some(3));
@@ -604,8 +582,8 @@ async fn window_engagements_expose_format_lint_placeholder() {
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_include_format_and_lint_possible_engagements() {
     let mut app = testkit::new_app().await;
-    let engagements = app.window_engagements().await;
-    let engagement = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("writer window engagement");
+    let engagements = app.window_engagements(&testkit::main_window_view()).await;
+    let engagement = engagements.get(testkit::WRITER_TEST_WINDOW_ID).expect("writer window engagement");
     let ids: Vec<&str> = engagement.possible_engagements.as_ref().expect("possible engagements").iter().map(|possible| possible.id.as_str()).collect();
     assert!(ids.contains(&"writer-format"));
     assert!(ids.contains(&"writer-lint"));
@@ -625,11 +603,11 @@ async fn writer_labels_resolve_native_english_by_default_across_every_surface() 
     let catalogue_json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(catalogue).expect("render JSON");
     assert!(catalogue_json.contains("\"Language\""));
     assert!(catalogue_json.contains("Cypher-inspired"));
-    let engagements = app.window_engagements().await;
+    let engagements = app.window_engagements(&testkit::main_window_view()).await;
     let engagements_json = serde_json::to_string(&engagements).unwrap();
     assert!(engagements_json.contains("\"Format\""));
     assert!(engagements_json.contains("\"Lint\""));
-    let measures = app.window_measures().await;
+    let measures = app.window_measures(&testkit::main_window_view()).await;
     let measures_json = serde_json::to_string(&measures).unwrap();
     assert!(measures_json.contains("Font size"));
     assert!(measures_json.contains("Line numbers"));

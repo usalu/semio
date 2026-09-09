@@ -1,8 +1,8 @@
 //! 📷 Shooting mutation payload — `ReplaceShotCamera`. Overwrites the *saved* camera `shot_id` references with a new pose — a no-op (empty diff) when that shot has no saved camera. The free/live viewport camera is session-only runtime state and never reaches this mutation.
 
-use crate::{ShootingCamera, ShootingSnapshot};
 use crate::diff::ShootingDiff;
 use crate::mutations::ShootingMutation;
+use crate::{ShootingCamera, ShootingSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

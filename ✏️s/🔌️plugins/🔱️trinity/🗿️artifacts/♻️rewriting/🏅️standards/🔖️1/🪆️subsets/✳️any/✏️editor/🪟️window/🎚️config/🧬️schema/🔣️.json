@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/trinity/rewriting/window/config/schema.json",
+  "title": "RewritingWindowConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "camera",
+    "lodMode"
+  ],
+  "properties": {
+    "camera": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "zoom"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "zoom": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "config",
+      "x-semio-owner": "window"
+    },
+    "lodMode": {
+      "type": "string",
+      "maxLength": 64,
+      "x-semio-state": "config",
+      "x-semio-owner": "window"
+    }
+  }
+}

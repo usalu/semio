@@ -56,7 +56,11 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-referenced", "delete-material/blocks-in-use-e99619: the refusal is reported as mutation.target-referenced");
     assert_eq!(messages[0].level, protocol::Severity::Error, "a live referrer is a property of THIS base, so it is an Error rather than a Fatal");
-    assert_eq!(messages[0].target, vec!["steel_s355".to_string(), "c1".to_string(), "c2".to_string(), "c3".to_string(), "c4".to_string(), "b1".to_string(), "b2".to_string(), "br1".to_string()], "the diagnostic addresses the target first, then every referrer");
+    assert_eq!(
+        messages[0].target,
+        vec!["steel_s355".to_string(), "c1".to_string(), "c2".to_string(), "c3".to_string(), "c4".to_string(), "b1".to_string(), "b2".to_string(), "br1".to_string()],
+        "the diagnostic addresses the target first, then every referrer"
+    );
     let semantics = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::semantics(&mutation());
     assert_eq!(semantics.kind, "delete-material", "the fixture must be bound to delete-material's own descriptor");
 }

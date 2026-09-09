@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::inference::schema::{INPUT_MAX_BYTES, InferenceIdentityV1 as Identity, PROGRESS_MAX_CURSOR};
 use std::future::Future;

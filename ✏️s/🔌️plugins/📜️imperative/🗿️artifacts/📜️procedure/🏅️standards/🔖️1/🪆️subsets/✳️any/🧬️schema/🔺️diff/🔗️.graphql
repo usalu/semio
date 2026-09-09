@@ -5,8 +5,6 @@ type ProcedureDiff {
   schema: String @state(class: ARTIFACT)
   path: ProcedurePathDelta @state(class: ARTIFACT)
   seed: [ProcedureSeedEntry!] @state(class: ARTIFACT)
-  selectedStepIds: ProcedureStringList @state(class: PRESENCE)
-  contributionsJson: String @state(class: CONFIG)
 }
 
 type ProcedureStringList {
@@ -60,9 +58,6 @@ type ProcedureArtifact {
   schema: String!
   path: ProcedurePath!
   seed: [ProcedureSeedEntry!]!
-  selectedStepIds: [String!]!
-  contributionsJson: String!
-  runOutputJson: String!
 }
 
 scalar JSON

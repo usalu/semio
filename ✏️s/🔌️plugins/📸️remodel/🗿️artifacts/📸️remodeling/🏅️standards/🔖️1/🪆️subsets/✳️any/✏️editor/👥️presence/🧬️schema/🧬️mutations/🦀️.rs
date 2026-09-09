@@ -1,6 +1,6 @@
 //! 🧬️ Remodeling presence mutation collection.
 
-use super::{RemodelingPresence};
+use super::RemodelingPresence;
 #[path = "👥️replace-presence/🦀️.rs"]
 mod snapshot;
 pub use snapshot::ReplacePresence;
@@ -35,8 +35,12 @@ impl protocol::OpText for RemodelingPresenceMutation {
 }
 
 impl protocol::OpBinary for RemodelingPresenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
 }
 
 #[cfg(test)]

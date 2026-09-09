@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::algebra::solve_llsq;
 
@@ -339,7 +338,11 @@ fn synthetic_line_data(seed: u64) -> (Vec<(f64, f64)>, f64, f64, usize) {
         .map(|i| {
             let x = i as f64 * 0.1;
             let clean = true_m * x + true_b;
-            if i < outlier_count { (x, clean + 10.0 + rng.next_f64() * 5.0) } else { (x, clean + (rng.next_f64() - 0.5) * 0.02) }
+            if i < outlier_count {
+                (x, clean + 10.0 + rng.next_f64() * 5.0)
+            } else {
+                (x, clean + (rng.next_f64() - 0.5) * 0.02)
+            }
         })
         .collect();
     (data, true_m, true_b, n - outlier_count)

@@ -1,6 +1,7 @@
 //! 📜️ Compile-time graph manifest kernel: schema, registry, and strict validation.
 
-use neural_engine::{Value, ValueType};
+use neural_engine::Value;
+pub use neural_engine::ValueType;
 
 pub mod generated {
     include!("../🤖️generated/🦀️registry.rs");
@@ -63,6 +64,9 @@ pub enum PropertyValue {
     Array(Vec<PropertyValue>),
     Object(std::collections::BTreeMap<String, PropertyValue>),
 }
+
+#[path = "♻️retirement/🦀️.rs"]
+mod retirement;
 
 impl PropertyValue {
     // 🚫️async: E1 pure accessor passed by name into `Option::and_then` (a sync fn-pointer slot) at

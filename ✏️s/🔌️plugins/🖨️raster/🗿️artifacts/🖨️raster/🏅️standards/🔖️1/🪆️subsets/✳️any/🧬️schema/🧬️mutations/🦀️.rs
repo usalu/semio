@@ -166,20 +166,8 @@ pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
 /// the last two join that tree to the document's root `assets` pool by id.
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against the enum,
 /// since the framework never parses Rust.
-pub const KINDS: &[&str] = &[
-    "create-layer",
-    "delete-layer",
-    "reorder-layers",
-    "rename-layer",
-    "change-layer-visible",
-    "change-layer-opacity",
-    "change-layer-blend-mode",
-    "move-layer",
-    "resize-layer",
-    "change-layer-adjustment-kind",
-    "add-layer-asset",
-    "remove-layer-asset",
-];
+pub const KINDS: &[&str] =
+    &["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset"];
 //#endregion 🔖️Kinds
 
 //#region 🧪️KindsCatalog

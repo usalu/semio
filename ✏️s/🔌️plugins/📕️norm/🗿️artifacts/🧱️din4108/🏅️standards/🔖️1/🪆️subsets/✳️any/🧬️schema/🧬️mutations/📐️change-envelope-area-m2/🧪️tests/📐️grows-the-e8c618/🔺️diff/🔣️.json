@@ -14,9 +14,8 @@
   "irradianceWM2": null,
   "moistureMuExterior": null,
   "moistureMuInterior": null,
-  "envelopeAreaM2": 150.0,
+  "envelopeAreaM2": 150,
   "bb2DetailsConform": null,
   "applicationType": null,
-  "declaredApplicationClass": null,
-  "selectedCheckIndex": null
+  "declaredApplicationClass": null
 }

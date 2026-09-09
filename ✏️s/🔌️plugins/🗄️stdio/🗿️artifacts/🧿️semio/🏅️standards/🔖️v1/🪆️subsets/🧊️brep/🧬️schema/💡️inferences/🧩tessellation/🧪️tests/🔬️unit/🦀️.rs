@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
 use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_cylinder, make_rectangle_wire, make_sphere};
@@ -6,8 +5,8 @@ use crate::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
 use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
 

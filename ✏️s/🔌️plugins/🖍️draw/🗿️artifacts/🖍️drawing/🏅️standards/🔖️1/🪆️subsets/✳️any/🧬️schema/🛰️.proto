@@ -17,19 +17,7 @@ message DrawingArtifact {
   // @state artifact
   optional DrawingArtboard artboard = 6;
   // @state presence
-  repeated string selected_ids = 7;
-  // @state presence
   // @state config
-  string engagement_input = 9;
-  // @state config
-  double camera_x = 10;
-  // @state config
-  double camera_y = 11;
-  // @state config
-  double camera_zoom = 12;
-  // @state config
-  // @state artifact
-  optional string hovered_id = 14;
 }
 
 message DrawingLayerNode {

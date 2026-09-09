@@ -2,12 +2,12 @@
 //! command in its group, so (per TEMPLATE.md §5.7's `module_inception` rule) the payload lives directly
 //! at this file's top level rather than in a same-named inner `pub mod`.
 
+use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
+use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::mutations::change_object_smooth_shading::ChangeObjectSmoothShading;
 use crate::mutations::rename_object::RenameObject;
 use crate::op::LowpolyMutation;
 use crate::LowpolySnapshot;
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
-use crate::editor::lowpoly::session::LowpolyScratch;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

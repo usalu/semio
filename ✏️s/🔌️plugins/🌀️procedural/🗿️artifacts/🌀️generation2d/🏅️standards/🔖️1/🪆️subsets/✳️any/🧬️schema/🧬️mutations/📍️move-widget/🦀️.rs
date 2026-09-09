@@ -6,8 +6,8 @@
 use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
-use semio_framework_artifact_flow_flow::WidgetLayout;
 use protocol::{MutationKind, SemanticDescriptor};
+use semio_framework_artifact_flow_flow::WidgetLayout;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️MoveWidget
 /// 📍 `move-widget` payload — the widget's new absolute canvas position.

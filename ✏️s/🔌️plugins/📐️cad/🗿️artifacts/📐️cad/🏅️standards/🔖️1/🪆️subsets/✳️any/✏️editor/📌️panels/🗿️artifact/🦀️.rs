@@ -1,11 +1,11 @@
 //! 📄️ CAD play app panel — the document tree: every pane's objects (with their primitive children)
 //! and reference overlays, plus the scene's nodes.
 
+use crate::editor::cad::terminology::{typology_label, CadLabels};
+use crate::editor::cad::{cad_action, cad_tree_item, ui_label, ui_node_list, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView};
 use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
 use crate::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use crate::{CadPaneId, CadReference, CadSnapshot};
-use crate::editor::cad::terminology::{typology_label, CadLabels};
-use crate::editor::cad::{cad_action, cad_tree_item, ui_label, ui_node_list, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, Label as UiLabel, RowAction, RowActionPlacement, Trigger};
 use semio_framework_plugin::{LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
@@ -28,21 +28,16 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let primitive_items = ui_node_list(object.primitives.iter().map(|primitive| {
-            // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `UiTreeItemNode` no longer
-            // carries `hoverAction`/`unhoverAction` — mesh hover is the framework-owned `"cad"`
-            // domain now. This tree stays un-bound to `interaction_domain` (see
-            // `document_tree_selected_ids`'s doc comment), so the click action below is a
-            // pending-domain-binding placeholder — already a documented no-op path today, since
-            // `build_document_tree` renders every pane's object section empty (UNIFIED-COMPOSABLE-
-            // ARTIFACT-SYSTEM gap).
-            let args = ui_value_map([("modelDefinitionId", ui_value_text(id_suffix)?)])?;
-            cad_tree_item(
-                format!("cad-primitive:{id_suffix}:{}:{}", object.id, primitive.primitive_id),
-                format!("{}: {}", primitive.slot, primitive.primitive_id),
-                Some("hexagon"),
-                cad_action("focusModelDefinition", Some(args))?,
-            )
-        }))?;
+        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `UiTreeItemNode` no longer
+        // carries `hoverAction`/`unhoverAction` — mesh hover is the framework-owned `"cad"`
+        // domain now. This tree stays un-bound to `interaction_domain` (see
+        // `document_tree_selected_ids`'s doc comment), so the click action below is a
+        // pending-domain-binding placeholder — already a documented no-op path today, since
+        // `build_document_tree` renders every pane's object section empty (UNIFIED-COMPOSABLE-
+        // ARTIFACT-SYSTEM gap).
+        let args = ui_value_map([("modelDefinitionId", ui_value_text(id_suffix)?)])?;
+        cad_tree_item(format!("cad-primitive:{id_suffix}:{}:{}", object.id, primitive.primitive_id), format!("{}: {}", primitive.slot, primitive.primitive_id), Some("hexagon"), cad_action("focusModelDefinition", Some(args))?)
+    }))?;
     let args = ui_value_map([("modelDefinitionId", ui_value_text(id_suffix)?)])?;
     let mut item = cad_tree_item(format!("cad-object:{id_suffix}:{}", object.id), &object.label, Some("box"), cad_action("focusModelDefinition", Some(args))?)?;
     for primitive in primitive_items {
@@ -57,8 +52,20 @@ pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &Cad
         props.default_open = Some(false);
         let mut row_actions = UiFixedList::default();
         let specs = [
-            (if object.visible { "eye-off" } else { "eye" }, if object.visible { labels.hide } else { labels.show }, "patchObject", Some(ui_value_map([("objectId", ui_value_text(&object.id)?), ("field", ui_value_text("hidden")?), ("value", ui_value_bool(object.visible))])?), RowActionPlacement::Row),
-            (if object.locked { "unlock" } else { "lock" }, if object.locked { labels.unlock } else { labels.lock }, "patchObject", Some(ui_value_map([("objectId", ui_value_text(&object.id)?), ("field", ui_value_text("locked")?), ("value", ui_value_bool(!object.locked))])?), RowActionPlacement::Row),
+            (
+                if object.visible { "eye-off" } else { "eye" },
+                if object.visible { labels.hide } else { labels.show },
+                "patchObject",
+                Some(ui_value_map([("objectId", ui_value_text(&object.id)?), ("field", ui_value_text("hidden")?), ("value", ui_value_bool(object.visible))])?),
+                RowActionPlacement::Row,
+            ),
+            (
+                if object.locked { "unlock" } else { "lock" },
+                if object.locked { labels.unlock } else { labels.lock },
+                "patchObject",
+                Some(ui_value_map([("objectId", ui_value_text(&object.id)?), ("field", ui_value_text("locked")?), ("value", ui_value_bool(!object.locked))])?),
+                RowActionPlacement::Row,
+            ),
             ("copy", labels.duplicate, "duplicateObject", Some(ui_value_map([("objectId", ui_value_text(&object.id)?)])?), RowActionPlacement::Menu),
             ("trash-2", labels.delete, "deleteObject", Some(ui_value_map([("objectId", ui_value_text(&object.id)?)])?), RowActionPlacement::Menu),
         ];
@@ -78,16 +85,8 @@ pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &Cad
 }
 
 pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let select_args = ui_value_map([
-        ("modelDefinitionId", ui_value_text(model_definition_id)?),
-        ("referenceId", ui_value_text(&reference.id)?),
-    ])?;
-    let mut item = cad_tree_item(
-        format!("cad-reference:{model_definition_id}:{}", reference.id),
-        &reference.id,
-        Some("image"),
-        cad_action("setReferenceSelection", Some(select_args))?,
-    )?;
+    let select_args = ui_value_map([("modelDefinitionId", ui_value_text(model_definition_id)?), ("referenceId", ui_value_text(&reference.id)?)])?;
+    let mut item = cad_tree_item(format!("cad-reference:{model_definition_id}:{}", reference.id), &reference.id, Some("image"), cad_action("setReferenceSelection", Some(select_args))?)?;
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `UiTreeItemNode` no longer carries
     // `hoverAction`/`unhoverAction` — no generic tree-hover mechanism replaces it for a non-
     // `interaction_domain`-bound tree; `referenceHover` stays reachable from the World3d surface only.
@@ -100,12 +99,7 @@ pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, 
         ];
         let mut row_actions = UiFixedList::default();
         for (icon, label, field, value) in specs {
-            let args = ui_value_map([
-                ("modelDefinitionId", ui_value_text(model_definition_id)?),
-                ("referenceId", ui_value_text(&reference.id)?),
-                ("field", ui_value_text(field)?),
-                ("value", ui_value_bool(value)),
-            ])?;
+            let args = ui_value_map([("modelDefinitionId", ui_value_text(model_definition_id)?), ("referenceId", ui_value_text(&reference.id)?), ("field", ui_value_text(field)?), ("value", ui_value_bool(value))])?;
             let (action, args) = cad_action("patchCadPlayReference", Some(args))?;
             let row_action = RowAction {
                 icon: UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad reference row action icon admission failed"))?,
@@ -134,8 +128,7 @@ pub fn references_for<'a>(document: &'a CadSnapshot, model_definition_id: &str) 
 pub fn document_tree_selected_ids(_document: &CadSnapshot, runtime: &CadPlayRuntime) -> semio_framework_plugin::UiAssemblyResult<Option<UiFixedList<String>>> {
     if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref(), runtime.selected_reference_id.as_deref()) {
         let mut ids = UiFixedList::default();
-        ids.try_push(format!("cad-reference:{model_definition_id}:{reference_id}"))
-            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad selected id admission failed"))?;
+        ids.try_push(format!("cad-reference:{model_definition_id}:{reference_id}")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad selected id admission failed"))?;
         return Ok(Some(ids));
     }
     Ok(None)
@@ -149,8 +142,7 @@ pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRu
         let model_definition_id = pane.model_definition_id();
         if document.references_by_model_definition_id.get(model_definition_id).is_some_and(|rows| rows.iter().any(|row| row.id == hovered)) {
             let mut ids = UiFixedList::default();
-            ids.try_push(format!("cad-reference:{model_definition_id}:{hovered}"))
-                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad highlighted id admission failed"))?;
+            ids.try_push(format!("cad-reference:{model_definition_id}:{hovered}")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad highlighted id admission failed"))?;
             return Ok(Some(ids));
         }
     }
@@ -158,21 +150,12 @@ pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRu
 }
 
 /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded.
-pub(crate) fn document_pane_section(
-    label: LabelText,
-    id_suffix: &str,
-    objects: &[CadObject],
-    labels: &CadLabels,
-) -> semio_framework_plugin::UiAssemblyResult<(String, Option<UiLabel>, bool, UiFixedList<BuiltNode>)> {
+pub(crate) fn document_pane_section(label: LabelText, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<(String, Option<UiLabel>, bool, UiFixedList<BuiltNode>)> {
     Ok((format!("cad-play-document.{id_suffix}"), Some(ui_label(label.as_str())?), true, ui_node_list(objects.iter().map(|object| object_tree_item(id_suffix, object, labels)))?))
 }
 
 /// 🌳️ One pane's references section: collapsed by default, "(none)"-placeholder when empty.
-pub fn artifact_references_section(
-    document: &CadSnapshot,
-    model_definition_id: &str,
-    labels: &CadLabels,
-) -> semio_framework_plugin::UiAssemblyResult<(String, Option<UiLabel>, bool, UiFixedList<BuiltNode>)> {
+pub fn artifact_references_section(document: &CadSnapshot, model_definition_id: &str, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<(String, Option<UiLabel>, bool, UiFixedList<BuiltNode>)> {
     Ok((
         format!("cad-play-document.references.{model_definition_id}"),
         Some(ui_label(labels.references.as_str())?),

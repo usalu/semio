@@ -63,7 +63,5 @@ pub struct En1999Diff {
     pub sigma_ed_shell_mpa: Option<f64>,
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff

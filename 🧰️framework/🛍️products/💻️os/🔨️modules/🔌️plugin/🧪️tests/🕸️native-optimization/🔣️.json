@@ -1,0 +1,8 @@
+{
+  "component": "fixture_component",
+  "module": "(module (func (export \"answer\") (result i32) (i32.add (i32.const 40) (i32.const 2))))",
+  "expected": 42,
+  "cores": ["fixture_component.core.wasm", "fixture_component.core2.wasm"],
+  "foreign": "other_component.core.wasm",
+  "flags": ["-Oz", "--low-memory-unused", "--strip-debug", "--strip-producers", "--enable-bulk-memory", "--enable-bulk-memory-opt", "--enable-call-indirect-overlong", "--enable-extended-const", "--enable-multivalue", "--enable-mutable-globals", "--enable-nontrapping-float-to-int", "--enable-reference-types", "--enable-sign-ext"]
+}

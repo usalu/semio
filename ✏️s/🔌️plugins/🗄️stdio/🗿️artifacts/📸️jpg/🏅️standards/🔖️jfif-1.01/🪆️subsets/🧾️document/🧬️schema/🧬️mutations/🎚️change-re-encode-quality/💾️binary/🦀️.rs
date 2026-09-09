@@ -17,9 +17,8 @@ pub fn encode_payload(payload: &ChangeReEncodeQualityMutation) -> Result<Vec<u8>
 pub fn decode(bytes: &[u8]) -> Result<JpgMutation, protocol::ProtocolError> {
     let mut reader = store::ByteReader::new(bytes);
     let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-    let result: Result<JpgMutation, protocol::ProtocolError> = Ok(JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation {
-        quality: read_opt(&mut reader, |r| r.read_u8().map_err(|e| e.to_string())).map_err(|e| malformed("op quality", reader.position(), e))?,
-    }));
+    let result: Result<JpgMutation, protocol::ProtocolError> =
+        Ok(JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: read_opt(&mut reader, |r| r.read_u8().map_err(|e| e.to_string())).map_err(|e| malformed("op quality", reader.position(), e))? }));
     let position = reader.position();
     if position != bytes.len() {
         return Err(protocol::ProtocolError::Malformed { what: "change-re-encode-quality", offset: position as u64, detail: "trailing payload bytes".into() });

@@ -1,9 +1,9 @@
 //! 🧹️ 🧹️ Remodeling play app commands command — `clear-result`.
 
+use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::mutations::{replace_dense, replace_geo_products, replace_mesh_result, replace_qc, replace_sparse, replace_tracks, replace_trajectory};
 use crate::op::RemodelingMutation;
 use crate::{MeshSource, RemodelingMesh, RemodelingSnapshot};
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

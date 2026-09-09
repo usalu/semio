@@ -5,8 +5,6 @@ export interface DrawingConfig {
   /** @state config */
   camera: DrawingCamera;
   /** @state config */
-  activeUtilityId: string;
-  /** @state config */
   tracePointerGeneration: number;
   /** @state config */
   tracePointerCompletedWork: number;
@@ -69,7 +67,6 @@ export function parseDrawingConfig(value: unknown, at = "$"): DrawingConfig {
   return {
     engagementInput: drawingDrawingConfigGuardString(row["engagementInput"], `${at}.engagementInput`),
     camera: parseDrawingCamera(row["camera"], `${at}.camera`),
-    activeUtilityId: drawingDrawingConfigGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
     tracePointerGeneration: drawingDrawingConfigGuardInteger(row["tracePointerGeneration"], `${at}.tracePointerGeneration`, {"minimum": 0}),
     tracePointerCompletedWork: drawingDrawingConfigGuardInteger(row["tracePointerCompletedWork"], `${at}.tracePointerCompletedWork`, {"minimum": 0}),
     tracePointerPendingWork: drawingDrawingConfigGuardInteger(row["tracePointerPendingWork"], `${at}.tracePointerPendingWork`, {"minimum": 0}),

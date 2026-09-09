@@ -17,44 +17,6 @@ export interface Process3dDiff {
   toolSolids?: ArtifactChildHandle[];
   /** @state artifact */
   resolvedUpTo?: number | null;
-  /** @state presence */
-  selectedId?: string | null;
-  /** @state presence */
-  selectedFaceId?: number | null;
-  /** @state presence */
-  /** @state config */
-  selectionMethod?: string;
-  /** @state config */
-  engagementInput?: string;
-  /** @state config */
-  cameraPositionX?: number;
-  /** @state config */
-  cameraPositionY?: number;
-  /** @state config */
-  cameraPositionZ?: number;
-  /** @state config */
-  cameraTargetX?: number;
-  /** @state config */
-  cameraTargetY?: number;
-  /** @state config */
-  cameraTargetZ?: number;
-  /** @state config */
-  cameraFov?: number;
-  /** @state config */
-  sunEnabled?: boolean;
-  /** @state config */
-  sunAzimuth?: number;
-  /** @state config */
-  sunElevation?: number;
-  /** @state config */
-  sunIntensity?: number;
-  /** @state config */
-  sunColor?: string;
-  /** @state config */
-  /** @state config */
-  contributionsJson?: string;
-  /** @state artifact */
-  hoveredId?: string | null;
 }
 
 export interface Process3dArtifact {

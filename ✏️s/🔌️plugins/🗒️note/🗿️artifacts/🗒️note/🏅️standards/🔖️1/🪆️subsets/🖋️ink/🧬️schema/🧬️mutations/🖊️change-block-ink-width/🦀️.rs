@@ -1,10 +1,10 @@
 //! 🖊️ Note mutation — `ChangeBlockInkWidth`: sets an ink block's stroke width.
 
-use crate::{NoteDiff, NoteSnapshot};
 use crate::schema::mutations::NoteMutation;
+use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🖊️ `change-block-ink-width` payload — sets an ink block's stroke width.

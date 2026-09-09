@@ -1,10 +1,10 @@
 //! 🆕 Note mutation — `CreateAsset`: brings a new id-keyed image asset into existence.
 
-use crate::{NoteDiff, NoteSnapshot};
 use crate::schema::mutations::NoteMutation;
+use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🆕 `create-asset` payload — brings a new id-keyed image asset into existence.

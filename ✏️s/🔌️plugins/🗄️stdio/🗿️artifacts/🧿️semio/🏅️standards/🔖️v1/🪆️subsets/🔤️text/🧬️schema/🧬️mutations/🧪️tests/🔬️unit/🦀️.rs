@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
 use protocol::{Mutation, MutationDiff, SemanticMutation};

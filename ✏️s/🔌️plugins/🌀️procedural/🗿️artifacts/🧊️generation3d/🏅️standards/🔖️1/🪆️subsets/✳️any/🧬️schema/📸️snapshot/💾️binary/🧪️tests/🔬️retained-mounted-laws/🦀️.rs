@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn synapse_digest(synapse: &semio_framework_artifact_flow_flow::SynapseSpec) -> u64 {

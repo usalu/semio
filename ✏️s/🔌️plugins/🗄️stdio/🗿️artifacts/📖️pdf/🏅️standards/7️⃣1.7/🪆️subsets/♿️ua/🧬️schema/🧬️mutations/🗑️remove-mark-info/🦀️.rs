@@ -2,9 +2,9 @@
 
 use super::set_mark_info::SetMarkInfo;
 use super::PdfUaMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
 #[cfg(test)]
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
@@ -24,10 +24,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveMarkInfo {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfUaMutation> {
-        support::catalog_flag(base, "MarkInfo", "Marked")
-            .map(|marked| PdfUaMutation::SetMarkInfo(SetMarkInfo { marked }))
-            .into_iter()
-            .collect()
+        support::catalog_flag(base, "MarkInfo", "Marked").map(|marked| PdfUaMutation::SetMarkInfo(SetMarkInfo { marked })).into_iter().collect()
     }
 
     fn label(&self) -> String {

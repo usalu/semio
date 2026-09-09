@@ -7,7 +7,6 @@
   "required": [
     "camera",
     "previewCamera",
-    "activeUtilityId",
     "showMode"
   ],
   "properties": {
@@ -17,10 +16,6 @@
     },
     "previewCamera": {
       "$ref": "#/$defs/Generation3dPreviewCamera",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "showMode": {

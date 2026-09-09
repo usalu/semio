@@ -10,10 +10,7 @@
     "manifest",
     "camera",
     "nodes",
-    "edges",
-    "jackQuery",
-    "lodModeByWindow",
-    "viewportCamera"
+    "edges"
   ],
   "properties": {
     "schema": {
@@ -53,25 +50,6 @@
     "rootNodeId": {
       "type": "string",
       "x-semio-state": "artifact"
-    },
-    "jackQuery": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "lodModeByWindow": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
-    "viewportCamera": {
-      "$ref": "#/$defs/Camera",
-      "x-semio-state": "config"
-    },
-    "editorSelection": {
-      "$ref": "#/$defs/JackEditorSelection",
-      "x-semio-state": "config"
     }
   },
   "$defs": {
@@ -265,25 +243,6 @@
         },
         "direction": {
           "type": "string"
-        }
-      }
-    },
-    "JackEditorSelection": {
-      "title": "JackEditorSelection",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "start",
-        "end"
-      ],
-      "properties": {
-        "start": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "end": {
-          "type": "integer",
-          "format": "int64"
         }
       }
     }

@@ -1,4 +1,6 @@
 /** 🧬️ Raster snapshot schema — artifact-lane fields only. */
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseRasterLayerNode, type RasterLayerNode } from "../🟦️.ts";
 
 export interface RasterSnapshot {
   /** @state artifact */
@@ -10,70 +12,7 @@ export interface RasterSnapshot {
   /** @state artifact */
   layers: RasterLayerNode[];
   /** @state artifact */
-  assets: Record<string, RasterAssetChild>;
-}
-
-export type RasterLayerNode = RasterLayerPixel | RasterLayerGroup | RasterLayerAdjustment;
-
-export interface RasterLayerPixel {
-  kind: "pixel";
-  id: string;
-  name: string;
-  visible: boolean;
-  opacity: number;
-  blendMode: string;
-  transform: RasterTransform;
-  mask?: RasterLayerMask;
-  width?: number;
-  height?: number;
-  imageKey?: string;
-}
-
-export interface RasterLayerGroup {
-  kind: "group";
-  id: string;
-  name: string;
-  visible: boolean;
-  opacity: number;
-  blendMode: string;
-  transform: RasterTransform;
-  mask?: RasterLayerMask;
-  children: RasterLayerNode[];
-}
-
-export interface RasterLayerAdjustment {
-  kind: "adjustment";
-  id: string;
-  name: string;
-  visible: boolean;
-  opacity: number;
-  blendMode: string;
-  transform: RasterTransform;
-  adjustmentKind: string;
-  params: Record<string, RasterDslValue>;
-}
-
-export type RasterDslValue = Record<string, unknown>;
-
-export interface RasterTransform {
-  x: number;
-  y: number;
-  scaleX: number;
-  scaleY: number;
-  rotation: number;
-}
-
-export interface RasterLayerMask {
-  enabled: boolean;
-  linked: boolean;
-  invert: boolean;
-  width?: number;
-  height?: number;
-}
-
-export interface RasterAssetChild {
-  childId: string;
-  target: string;
+  assets: Record<string, ArtifactChild>;
 }
 
 //#region 🚪️Parsers
@@ -127,6 +66,12 @@ export function parseRasterSnapshot(value: unknown, at = "$"): RasterSnapshot {
   const row = rasterRasterSnapshotGuardObject(value, at);
   return {
     schema: rasterRasterSnapshotGuardString(row["schema"], `${at}.schema`),
-    value: row["value"] === undefined ? undefined : rasterRasterSnapshotGuardString(row["value"], `${at}.value`),
+    id: rasterRasterSnapshotGuardString(row["id"], `${at}.id`),
+    title: row["title"] === undefined ? undefined : rasterRasterSnapshotGuardString(row["title"], `${at}.title`),
+    layers: rasterRasterSnapshotGuardArray(row["layers"], `${at}.layers`).map((item, index) => parseRasterLayerNode(item, `${at}.layers[${index}]`)),
+    assets: row["assets"] === undefined ? {} : Object.fromEntries(
+      Object.entries(rasterRasterSnapshotGuardObject(row["assets"], `${at}.assets`))
+        .map(([key, item]) => [key, parseArtifactChild(item)]),
+    ),
   };
 }

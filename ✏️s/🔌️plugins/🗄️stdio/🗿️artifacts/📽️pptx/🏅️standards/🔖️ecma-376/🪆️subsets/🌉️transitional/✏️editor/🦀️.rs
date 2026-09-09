@@ -3,11 +3,11 @@
 //! One real window, `🪟️main` (`DocumentWindowKit`), rendering one page per slide and editing the
 //! FIRST text-bearing shape on that slide through the artifact's own `PptxMutation::SetShapeText`.
 
+use crate::editor::pptx::standards::v_ecma_376::subsets::transitional::modes::edit;
+use crate::editor::pptx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
 use crate::schema::mutations::set_shape_text;
 use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide};
 use crate::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
-use crate::editor::pptx::standards::v_ecma_376::subsets::transitional::modes::edit;
-use crate::editor::pptx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };

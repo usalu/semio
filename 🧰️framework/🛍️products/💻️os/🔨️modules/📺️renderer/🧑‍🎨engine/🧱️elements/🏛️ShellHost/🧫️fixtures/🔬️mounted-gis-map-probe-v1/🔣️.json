@@ -8,6 +8,15 @@
     "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
     "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333",
     "browserActorSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "activeCheckpointId": "5555555555555555555555555555555555555555555555555555555555555555",
+    "descriptorDigestV1": "6666666666666666666666666666666666666666666666666666666666666666",
+    "frontier": {
+      "documentId": "map-a",
+      "headEditOrdinal": 3,
+      "headEditId": "edit-a",
+      "lastCommitSeq": 3,
+      "chainHash": [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]
+    },
     "uiRevision": 1,
     "verifiedSurfaceId": "s.gis.gismap@1/viewer",
     "surface": "gis-map-window",
@@ -24,9 +33,18 @@
     "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
     "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333",
     "browserActorSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "activeCheckpointId": "5555555555555555555555555555555555555555555555555555555555555555",
+    "descriptorDigestV1": "6666666666666666666666666666666666666666666666666666666666666666",
+    "frontier": {
+      "documentId": "map-a",
+      "headEditOrdinal": 3,
+      "headEditId": "edit-a",
+      "lastCommitSeq": 3,
+      "chainHash": [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]
+    },
     "uiRevision": 1,
     "rootKind": "tiled-map",
     "regionIds": ["region-a", "region-b"]
   },
-  "hostile": ["unacknowledged-identity", "stale-ui-revision", "non-map-root", "malformed-map-pack", "duplicate-region-id"]
+  "hostile": ["unacknowledged-identity", "unacknowledged-feedback", "stale-ui-revision", "substituted-checkpoint", "stale-frontier", "non-map-root", "malformed-map-pack", "duplicate-region-id"]
 }

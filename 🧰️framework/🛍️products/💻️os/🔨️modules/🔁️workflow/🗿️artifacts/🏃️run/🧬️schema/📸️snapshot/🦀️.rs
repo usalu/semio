@@ -109,7 +109,7 @@ impl dsl::DslField for RunNodeStatus {
 /// tag-plus-optional-fields encoding above — a real Rust sum type stays the API surface; the wire
 /// encoding is just a `kind` discriminator text field plus each variant's own optional columns.
 #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum RunTrigger {
     Manual { actor: String },
     Automation { automation_ref: String, event_fingerprint: String },

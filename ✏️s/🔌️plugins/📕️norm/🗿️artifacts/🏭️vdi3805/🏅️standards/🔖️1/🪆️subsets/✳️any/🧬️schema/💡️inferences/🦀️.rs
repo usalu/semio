@@ -8,7 +8,6 @@ use crate::Vdi3805Snapshot;
 use ::framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a vdi3805 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
@@ -56,11 +55,7 @@ pub fn vdi3805_artifact_inference_descriptor() -> ::framework_schema::ArtifactIn
     ::framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.vdi3805.inference",
         inference: ::framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }
 }
@@ -73,6 +68,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::document::{CheckReport, CheckResult, Quantity, QuantityKind};
 use crate::standards::v1::subsets::any::io::{catalog_from_json, catalog_to_json};
 use crate::standards::v1::subsets::any::schema::{clause, diagnostics_to_report, fail_check, na_check, parse_native_text, pass_check, serialize_native_text, validate_structure, ANNEX};
 /// 📋️ Full VDI 3805 compliance-report conformance law (ticket
@@ -83,7 +79,6 @@ use crate::standards::v1::subsets::any::schema::{clause, diagnostics_to_report, 
 /// `pass_check`/`fail_check`/`validate_structure`/`diagnostics_to_report` are pure helpers imported
 /// from the parent `🧬️schema`; the JSON (de)serializers come from `🚪️io`.
 use crate::*;
-use crate::document::{CheckReport, CheckResult, Quantity, QuantityKind};
 // #region SheetParts
 macro_rules! define_vdi_part {
     ($module:ident, $num:literal, reserved) => {

@@ -1,6 +1,5 @@
 //! 🏷️ `rename-product` — renames a catalogue product's display title, addressed by article number.
 
-
 use crate::{LocalizedText, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

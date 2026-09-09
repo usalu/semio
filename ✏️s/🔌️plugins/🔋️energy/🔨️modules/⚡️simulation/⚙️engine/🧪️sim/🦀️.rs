@@ -13,11 +13,11 @@ use crate::sizing::{SizingBuilder, SizingConfig};
 use crate::units::Unit;
 use crate::zone_air::ZoneAirState;
 use semio_framework_job::{allocate_operation_id, default_now_us, CancelToken, Checkpoint, CommitCandidate, Generation, InteractiveJob, JobFault, Operation, RevisionId, StepContext, StepOutcome};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 use std::sync::Mutex;
 use std::time::Instant;
-use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️RetainedWire
 const ENERGY_WIRE_MAGIC: [u8; 8] = *b"SMENERGY";
@@ -1176,8 +1176,7 @@ impl EnergyNumericalCensus {
             summary_rows,
         ];
         let observed_items = checked_sum(dimensions)?;
-        let observed_bytes =
-            observed_model_bytes(model, config)?.checked_add(weather_records.checked_mul(size_of::<Option<(usize, WeatherRecord)>>())?)?.checked_add(samples.checked_mul(size_of::<f64>() * 3)?)?.checked_add(identifier_bytes)?;
+        let observed_bytes = observed_model_bytes(model, config)?.checked_add(weather_records.checked_mul(size_of::<Option<(usize, WeatherRecord)>>())?)?.checked_add(samples.checked_mul(size_of::<f64>() * 3)?)?.checked_add(identifier_bytes)?;
         let pages = observed_bytes.checked_add(16_383)?.checked_div(16_384)?;
         Some(Self {
             zones: model.zones.capacity(),

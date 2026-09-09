@@ -52,7 +52,7 @@
   "eerActual": null,
   "qCKwh": null,
   "generationReferenceKwh": null,
-  "dataCenterSupplyC": 27.0,
+  "dataCenterSupplyC": 27,
   "hStWK": null,
   "thetaStC": null,
   "thetaAmbC": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

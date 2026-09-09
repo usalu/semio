@@ -1,9 +1,9 @@
 //! 🔍️ Shooting inspector — edits the selected or active shot through semantic field controls.
 
-use crate::{ShootingShot, ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::editor::shooting::{shooting_action, ui_capacity_error, ui_children, ui_label, ui_node, ui_text, ui_value_list, ui_value_map, ui_value_text};
+use crate::{ShootingShot, ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_ui_contract::{column, field, input, section, text, BuiltNode, HasBase, InputKind, Trigger};
 
@@ -33,7 +33,8 @@ fn shot_field(shot: &ShootingShot, name: &'static str, label: &str, value: &str,
         let builder = match args {
             Some(args) => builder.try_on_with(Trigger::Change, action, args),
             None => builder.try_on(Trigger::Change, action),
-        }.map_err(|_| ui_capacity_error())?;
+        }
+        .map_err(|_| ui_capacity_error())?;
         ui_node(builder, &format!("{id}.input"))?
     } else {
         ui_node(text(ui_label(value)?), &format!("{id}.value"))?

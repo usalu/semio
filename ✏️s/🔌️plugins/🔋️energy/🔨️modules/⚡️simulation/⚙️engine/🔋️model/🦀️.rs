@@ -1,8 +1,8 @@
 //! 🏗️ Typed building energy model entities, validation, and cross-references.
 
-use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use crate::error::{Diagnostics, Error, Severity};
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -113,7 +113,12 @@ impl<K: FromValue, V: FromValue> FromValue for FixedTable<K, V> {
                 .map_err(|error| error.under(index))
             })
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(Self { slots: slots.into_boxed_slice(), len: usize::from_value(field("len")).map_err(|error| error.under("len"))?, admitted: bool::from_value(field("admitted")).map_err(|error| error.under("admitted"))?, faulted: bool::from_value(field("faulted")).map_err(|error| error.under("faulted"))? })
+        Ok(Self {
+            slots: slots.into_boxed_slice(),
+            len: usize::from_value(field("len")).map_err(|error| error.under("len"))?,
+            admitted: bool::from_value(field("admitted")).map_err(|error| error.under("admitted"))?,
+            faulted: bool::from_value(field("faulted")).map_err(|error| error.under("faulted"))?,
+        })
     }
 }
 

@@ -9,7 +9,7 @@ const controller = new AbortController();
 process.on('SIGINT', () => controller.abort());
 process.on('SIGTERM', () => controller.abort());
 let completed = 0, sourceCount = 0, phase = '';
-const findings = await scanTestLayout(root, { signal: controller.signal, concurrency: 4, progress: progress => {
+const findings = await scanTestLayout(root, { signal: controller.signal, concurrency: 64, progress: progress => {
   if (progress.phase === "inspect") sourceCount = progress.total;
   if (phase !== progress.phase || progress.completed - completed >= 1000 || progress.completed === progress.total) {
     phase = progress.phase; completed = progress.completed;

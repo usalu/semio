@@ -23,30 +23,30 @@
 use crate::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
 use crate::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
 use crate::SvgSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use protocol::Mutation;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
 //#region 🔖️Mutations
+#[path = "➕insert-tiny-element/🦀️.rs"]
+pub mod insert_tiny_element;
+#[path = "➖remove-element/🦀️.rs"]
+pub mod remove_element;
 /// 📐️ Typed content mutation for `stdio.svg` 1.1/🔬️tiny. Nodes are addressed by `NodePath` (a
 /// child-index chain from the root `<svg>` element), exactly as the parent subset's own snapshot
 /// model does — the snapshot type is shared, only the vocabulary is this subset's.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🪧stamp-base-profile/🦀️.rs"]
-pub mod stamp_base_profile;
-#[path = "➕insert-tiny-element/🦀️.rs"]
-pub mod insert_tiny_element;
-#[path = "➖remove-element/🦀️.rs"]
-pub mod remove_element;
-#[path = "🏷️set-tiny-attribute/🦀️.rs"]
-pub mod set_tiny_attribute;
 #[path = "✍️set-text/🦀️.rs"]
 pub mod set_text;
-#[path = "🖼️set-view-box/🦀️.rs"]
-pub mod set_view_box;
+#[path = "🏷️set-tiny-attribute/🦀️.rs"]
+pub mod set_tiny_attribute;
 #[path = "🔄set-transform/🦀️.rs"]
 pub mod set_transform;
+#[path = "🖼️set-view-box/🦀️.rs"]
+pub mod set_view_box;
+#[path = "🪧stamp-base-profile/🦀️.rs"]
+pub mod stamp_base_profile;
 #[path = "🧹strip-non-tiny/🦀️.rs"]
 pub mod strip_non_tiny;
 //#endregion 🔖️Leaves
@@ -239,10 +239,9 @@ pub(crate) fn agg_diff(this: &SvgTinyMutation, base: &SvgSnapshot) -> protocol::
                 SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![SvgChildAdded { index: *index, item: node.clone() }] }) }),
             )),
         },
-        SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent, index }) => protocol::MutationOutcome::new(diff_at_path(
-            parent,
-            SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) }),
-        )),
+        SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent, index }) => {
+            protocol::MutationOutcome::new(diff_at_path(parent, SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) })))
+        }
         SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path, name, value }) => {
             if is_blocked_attribute(name) {
                 return protocol::MutationOutcome::error(CODE_REJECTED, format!("attribute '{name}' is forbidden anywhere in SVG Tiny 1.1"), Vec::<String>::new());
@@ -272,7 +271,9 @@ pub(crate) fn agg_inverse(this: &SvgTinyMutation, base: &SvgSnapshot) -> Vec<Svg
             },
             _ => Vec::new(),
         },
-        SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path, name, .. }) => vec![SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name) })],
+        SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path, name, .. }) => {
+            vec![SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name) })]
+        }
         SvgTinyMutation::SetText(set_text::SetText { path, .. }) => {
             let old = match node_at(&base.doc, path) {
                 Ok(XmlNode::Text { text }) => text.clone(),
@@ -281,7 +282,9 @@ pub(crate) fn agg_inverse(this: &SvgTinyMutation, base: &SvgSnapshot) -> Vec<Svg
             vec![SvgTinyMutation::SetText(set_text::SetText { path: path.clone(), text: old })]
         }
         SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path, .. }) => vec![SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path: path.clone(), view_box: prior_attribute(base, path, "viewBox").and_then(|v| parse_view_box(&v).ok()) })],
-        SvgTinyMutation::SetTransform(set_transform::SetTransform { path, .. }) => vec![SvgTinyMutation::SetTransform(set_transform::SetTransform { path: path.clone(), transform: prior_attribute(base, path, "transform").and_then(|v| parse_transform_list(&v).ok()) })],
+        SvgTinyMutation::SetTransform(set_transform::SetTransform { path, .. }) => {
+            vec![SvgTinyMutation::SetTransform(set_transform::SetTransform { path: path.clone(), transform: prior_attribute(base, path, "transform").and_then(|v| parse_transform_list(&v).ok()) })]
+        }
     }
 }
 //#endregion 🔖️MutationTrait

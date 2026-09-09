@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA, SemioModelElement, SpatialKind, SpatialNode};
+use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn placed(x: f64, y: f64, z: f64) -> SemioTransform {

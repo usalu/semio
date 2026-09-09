@@ -264,7 +264,7 @@ fn retained_tree_sibling_count(tree: &UiTreeNode, cursor: &RetainedNodePaintCurs
 
 fn retained_control_text(control: &UiControlNode) -> Option<&str> {
     match control {
-        UiControlNode::Input(node) => Some(if node.value.is_empty() { node.placeholder.as_ref().map(Label::as_str).unwrap_or("") } else { node.value.as_str() }),
+        UiControlNode::Input(node) => Some(if node.value.is_empty() { node.placeholder.as_ref().map_or("", Label::as_str) } else { node.value.as_str() }),
         UiControlNode::Select(node) => node.placeholder.as_ref().map(Label::as_str),
         UiControlNode::Toggle(node) => node.text.as_ref().map(Label::as_str),
         UiControlNode::Button(node) => Some(node.label.as_str()),
@@ -656,7 +656,7 @@ pub(crate) fn paint_node_step(
         UiNode::Input(input_node) => {
             let display = node.state.edit.as_ref().map(|edit| edit.text.as_str()).filter(|text| !text.is_empty()).unwrap_or_else(|| {
                 if input_node.value.is_empty() {
-                    input_node.placeholder.as_ref().map(Label::as_str).unwrap_or("")
+                    input_node.placeholder.as_ref().map_or("", Label::as_str)
                 } else {
                     input_node.value.as_str()
                 }
@@ -792,7 +792,7 @@ pub(crate) fn paint_node_step(
                 }
             }
             1 => {
-                let label = toggle.text.as_ref().map(Label::as_str).unwrap_or("");
+                let label = toggle.text.as_ref().map_or("", Label::as_str);
                 match retained_text_node_step(label, bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
                         cursor.advance(2);
@@ -975,7 +975,7 @@ pub(crate) fn paint_node_step(
                     RetainedNodePaintStep::Pending
                 }
             } else if cursor.phase == 1 {
-                let label = section.label.as_ref().map(Label::as_str).unwrap_or("");
+                let label = section.label.as_ref().map_or("", Label::as_str);
                 match retained_text_node_step(label, bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
                         cursor.advance(2);
@@ -1025,7 +1025,7 @@ pub(crate) fn paint_node_step(
                     RetainedNodePaintStep::Pending
                 }
             } else if cursor.phase == 1 {
-                let label = image.alt.as_ref().map(Label::as_str).unwrap_or(image.id.as_str());
+                let label = image.alt.as_ref().map_or(image.id.as_str(), Label::as_str);
                 match retained_text_node_step(label, bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
                         cursor.advance(2);

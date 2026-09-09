@@ -1,5 +1,6 @@
 
 use super::testkit::*;
+use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
 use super::*;
 
 use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, PluginApp, UiMenuRef};
@@ -252,13 +253,11 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
 fn engagement_submit_route_is_cursorized(source: &str) -> bool {
     source.contains(r#""engagementSubmit" => Box::new(Puzzle5dEngagementSubmitWork::default())"#)
         && source.contains("Puzzle5dEngagementSubmitStage::Parse")
-        && source.contains("Puzzle5dEngagementSubmitStage::BoardConfig")
-        && source.contains("Puzzle5dEngagementSubmitStage::WorldConfig")
         && source.contains("Puzzle5dEngagementSubmitStage::BoardEffect")
         && source.contains("Puzzle5dEngagementSubmitStage::WorldEffect")
         && source.contains("Puzzle5dEngagementSubmitStage::Input")
         && source.contains("Puzzle5dEngagementSubmitStage::Publish")
-        && source.contains("Puzzle5dConfigMutation::SetActiveUtility")
+        && source.contains("Effect::SetActiveUtility")
         && source.contains("Puzzle5dConfigMutation::SetEngagementInput")
         && !source.contains(r#""engagementSubmit" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
 }
@@ -269,8 +268,6 @@ fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfer
     assert!(engagement_submit_route_is_cursorized(source));
     for marker in [
         "Puzzle5dEngagementSubmitStage::Parse",
-        "Puzzle5dEngagementSubmitStage::BoardConfig",
-        "Puzzle5dEngagementSubmitStage::WorldConfig",
         "Puzzle5dEngagementSubmitStage::BoardEffect",
         "Puzzle5dEngagementSubmitStage::WorldEffect",
         "Puzzle5dEngagementSubmitStage::Input",
@@ -346,7 +343,7 @@ async fn context_menu_is_grouped_and_keeps_delete_selection_last() {
         window_instance_id: None,
         point: None,
     };
-    let menu = semio_framework::io::resolve_ready(app.context_menu(&request));
+    let menu = semio_framework::io::resolve_ready(app.context_menu(&request, &Default::default()));
     assert!(menu.len() <= 9, "top-level context menu should stay progressively disclosed: {menu:?}");
     let last = menu.last().expect("selection context menu should not be empty");
     let last_is_destructive_leaf = last.action.as_deref() == Some("deleteSelection") && last.destructive == Some(true);
@@ -543,7 +540,7 @@ async fn app_definition_declares_its_three_panel_tabs() {
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_cover_both_windows() {
     let mut app = app();
-    let engagements = semio_framework::io::resolve_ready(app.window_engagements());
+    let engagements = semio_framework::io::resolve_ready(app.window_engagements(&Default::default()));
     assert!(engagements.contains_key(board2d::WINDOW_KIND_ID));
     assert!(engagements.contains_key(world3d::WINDOW_KIND_ID));
 }
@@ -602,7 +599,6 @@ async fn every_dispatched_action_bridges_to_a_command() {
         "applyBoardEvents",
         "worldPointerDown",
         "canvasPointerDown",
-        SET_ACTIVE_UTILITY_ACTION_ID,
     ] {
         assert_eq!(Puzzle5dCommand::from_action(action, None, None).action_id(), action, "dispatched action {action} must have a Puzzle5dCommand variant");
     }
@@ -659,7 +655,7 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
     // 🧰️ select/brush/fill switching lives only on the framework utility bar; neither the 2D nor the 3D
     // engagement HUD may duplicate it as options.
     let mut app = app();
-    let engagements = semio_framework::io::resolve_ready(app.window_engagements());
+    let engagements = semio_framework::io::resolve_ready(app.window_engagements(&Default::default()));
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
         assert!(engagements.get(window).expect("engagement").options.is_none(), "the {window} engagement must not re-expose utility switching as options");
     }
@@ -670,7 +666,7 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
 /// utility), never `WindowEngagementControl`s on the HUD — for both the 2D and 3D windows.
 #[semio_framework_async_macros::async_test]
 async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
     let session = Puzzle5dPrecomputeSession::new();
     // 🪣️ Fill utility: the fill-count slider lives in a "fill"-tagged Utility Options group (per window),
     // NOT the engagement HUD.

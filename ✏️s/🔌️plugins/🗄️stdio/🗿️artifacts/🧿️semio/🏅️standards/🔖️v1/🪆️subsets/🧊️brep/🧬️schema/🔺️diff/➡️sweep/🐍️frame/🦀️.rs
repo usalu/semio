@@ -32,7 +32,10 @@ pub(super) fn sample_path(body: &Body, wire: &Wire, min_per_edge: usize, max_per
         let edge = body.edges.get(edge_id).ok_or_else(|| KernelError::MissingEntity(format!("edge {edge_id}")))?;
         let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
         let (a, b) = edge.range;
-        let high_curvature = (0..5).any(|i| { let t = a + (b - a) * i as f64 / 4.0; curve.curvature(t) > 0.5 });
+        let high_curvature = (0..5).any(|i| {
+            let t = a + (b - a) * i as f64 / 4.0;
+            curve.curvature(t) > 0.5
+        });
         let steps = if high_curvature { max_per_edge } else { min_per_edge };
         for i in 0..=steps {
             let s = i as f64 / steps as f64;

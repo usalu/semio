@@ -1,12 +1,12 @@
 //! 🧱️ EN 1996 artifact schema — every field with its state class.
 
+use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, Quantity};
 use crate::En1996Snapshot;
 use crate::MasonryClass;
-use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, Quantity};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full EN 1996 artifact state (persisted document + shared UI).
+/// 🧬️ EN 1996 document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -57,8 +57,6 @@ pub struct En1996Artifact {
     pub h_ef_mm: f64,
     #[state(artifact)]
     pub t_ef_mm: f64,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -127,7 +125,6 @@ impl En1996Artifact {
             storeys: snapshot.storeys,
             h_ef_mm: snapshot.h_ef_mm,
             t_ef_mm: snapshot.t_ef_mm,
-            selected_check_index: None,
         }
     }
 
@@ -162,13 +159,7 @@ impl En1996Artifact {
 pub fn en1996_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1996",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

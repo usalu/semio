@@ -1,0 +1,361 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/inference/opening/component.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "closed",
+    "request",
+    "opened",
+    "refused",
+    "indeterminate",
+    "routes"
+  ],
+  "properties": {
+    "closed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "operationEpoch", "scope"],
+      "properties": {
+        "kind": { "const": "inference-port-closed" },
+        "operationEpoch": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "scope": { "$ref": "#/properties/request/properties/scope" }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "operationEpoch",
+        "scope"
+      ],
+      "properties": {
+        "kind": {
+          "const": "inference-open"
+        },
+        "operationEpoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "spaceId",
+            "documentId"
+          ],
+          "properties": {
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "documentId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      }
+    },
+    "opened": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "operationEpoch",
+        "scope",
+        "outcome",
+        "code"
+      ],
+      "properties": {
+        "kind": {
+          "const": "inference-port-opened"
+        },
+        "operationEpoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "spaceId",
+            "documentId"
+          ],
+          "properties": {
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "documentId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        "outcome": {
+          "enum": [
+            "opened",
+            "refused",
+            "indeterminate"
+          ]
+        },
+        "code": {
+          "enum": [
+            null,
+            "inference.capacity",
+            "inference.invalid",
+            "inference.lease-unverified",
+            "inference.transport"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "outcome": {
+              "const": "opened"
+            },
+            "code": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "refused"
+            },
+            "code": {
+              "enum": [
+                "inference.capacity",
+                "inference.invalid",
+                "inference.lease-unverified"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "indeterminate"
+            },
+            "code": {
+              "const": "inference.transport"
+            }
+          }
+        }
+      ]
+    },
+    "refused": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "operationEpoch",
+        "scope",
+        "outcome",
+        "code"
+      ],
+      "properties": {
+        "kind": {
+          "const": "inference-port-opened"
+        },
+        "operationEpoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "spaceId",
+            "documentId"
+          ],
+          "properties": {
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "documentId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        "outcome": {
+          "enum": [
+            "opened",
+            "refused",
+            "indeterminate"
+          ]
+        },
+        "code": {
+          "enum": [
+            null,
+            "inference.capacity",
+            "inference.invalid",
+            "inference.lease-unverified",
+            "inference.transport"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "outcome": {
+              "const": "opened"
+            },
+            "code": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "refused"
+            },
+            "code": {
+              "enum": [
+                "inference.capacity",
+                "inference.invalid",
+                "inference.lease-unverified"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "indeterminate"
+            },
+            "code": {
+              "const": "inference.transport"
+            }
+          }
+        }
+      ]
+    },
+    "indeterminate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "operationEpoch",
+        "scope",
+        "outcome",
+        "code"
+      ],
+      "properties": {
+        "kind": {
+          "const": "inference-port-opened"
+        },
+        "operationEpoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "spaceId",
+            "documentId"
+          ],
+          "properties": {
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "documentId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        "outcome": {
+          "enum": [
+            "opened",
+            "refused",
+            "indeterminate"
+          ]
+        },
+        "code": {
+          "enum": [
+            null,
+            "inference.capacity",
+            "inference.invalid",
+            "inference.lease-unverified",
+            "inference.transport"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "outcome": {
+              "const": "opened"
+            },
+            "code": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "refused"
+            },
+            "code": {
+              "enum": [
+                "inference.capacity",
+                "inference.invalid",
+                "inference.lease-unverified"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "indeterminate"
+            },
+            "code": {
+              "const": "inference.transport"
+            }
+          }
+        }
+      ]
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "inference-open",
+          "inference-propose",
+          "inference-poll",
+          "inference-cancel",
+          "inference-approve",
+          "inference-close",
+          "inference-history-undo"
+        ]
+      }
+    }
+  }
+}

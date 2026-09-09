@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::mint_and_stash_mesh;
 use protocol::Inference;

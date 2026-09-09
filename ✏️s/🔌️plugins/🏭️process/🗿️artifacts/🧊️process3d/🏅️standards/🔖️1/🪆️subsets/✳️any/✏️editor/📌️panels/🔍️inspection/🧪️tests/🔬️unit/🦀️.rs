@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::editor::process3d::commands::step::add_step;
 use crate::editor::process3d::testkit;
-use crate::editor::process3d::{PROCESS3D_INTERACTION_DOMAIN, Process3dCommand};
+use crate::editor::process3d::{Process3dCommand, PROCESS3D_INTERACTION_DOMAIN};
 use semio_framework::DslValue;
 
 #[semio_framework_async_macros::async_test]

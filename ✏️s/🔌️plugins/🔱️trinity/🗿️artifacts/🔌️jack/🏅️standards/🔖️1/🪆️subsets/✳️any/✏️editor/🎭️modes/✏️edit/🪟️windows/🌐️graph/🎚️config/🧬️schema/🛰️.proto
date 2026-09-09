@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.trinity.jack.graph_window.config;
+message JackGraphWindowCamera { double x = 1; double y = 2; double zoom = 3; }
+message JackGraphWindowConfig {
+  // @state config
+  optional JackGraphWindowCamera camera = 1;
+  // @state config
+  string lod_mode = 2;
+}

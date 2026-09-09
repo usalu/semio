@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::generation3d::Generation3dCommand;
 use crate::editor::generation3d::commands::select_generation;
 use crate::editor::generation3d::testkit::{app, dispatch};
+use crate::editor::generation3d::Generation3dCommand;
 use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
 
 #[semio_framework_async_macros::async_test]

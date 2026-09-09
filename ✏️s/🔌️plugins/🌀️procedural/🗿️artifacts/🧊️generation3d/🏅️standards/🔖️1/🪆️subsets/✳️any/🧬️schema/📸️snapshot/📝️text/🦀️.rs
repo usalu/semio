@@ -11,8 +11,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
-use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
 use semio_framework_artifact_flow_flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
 use std::collections::BTreeMap;
 
 //#region 🔖️Examples

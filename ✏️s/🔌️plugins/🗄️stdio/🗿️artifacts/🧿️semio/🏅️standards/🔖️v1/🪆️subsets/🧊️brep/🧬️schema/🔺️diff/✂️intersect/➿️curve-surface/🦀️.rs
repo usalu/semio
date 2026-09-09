@@ -286,7 +286,18 @@ fn intersect_general(curve: &Curve3, surface: &Surface, tol: f64) -> Result<Vec<
 /// certified closest point is close enough), seeds a joint Newton refinement.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 #[allow(clippy::too_many_arguments)]
-fn subdivide_seed(bez: &crate::standards::v1::subsets::brep::schema::snapshot::curve::bezier::RationalBezier3, t0: f64, t1: f64, curve: &Curve3, surface: &Surface, domain_t: (f64, f64), surf_domain: ((f64, f64), (f64, f64)), tol: f64, depth: u32, hits: &mut Vec<CurveSurfaceHit>) {
+fn subdivide_seed(
+    bez: &crate::standards::v1::subsets::brep::schema::snapshot::curve::bezier::RationalBezier3,
+    t0: f64,
+    t1: f64,
+    curve: &Curve3,
+    surface: &Surface,
+    domain_t: (f64, f64),
+    surf_domain: ((f64, f64), (f64, f64)),
+    tol: f64,
+    depth: u32,
+    hits: &mut Vec<CurveSurfaceHit>,
+) {
     let (lo, hi) = bez.control_hull_box();
     let size = (hi.x - lo.x).max(hi.y - lo.y).max(hi.z - lo.z);
     let mid_t = 0.5 * (t0 + t1);
@@ -324,7 +335,6 @@ fn curve_sample_domain(curve: &Curve3, surface: &Surface, tol: f64) -> Result<(f
         }
     }
 }
-
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {

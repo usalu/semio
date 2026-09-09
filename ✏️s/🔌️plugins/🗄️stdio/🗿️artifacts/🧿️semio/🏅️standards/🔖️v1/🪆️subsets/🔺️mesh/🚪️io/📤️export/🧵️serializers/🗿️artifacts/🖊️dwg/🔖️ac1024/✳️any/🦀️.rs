@@ -10,12 +10,12 @@
 //! polyface-mesh field to round-trip through and are dropped (DWG entities carry vertex
 //! positions + face indices only).
 
-use semio_s_artifact_stdio_dwg::schema::snapshot::DwgLogicalDrawing;
-use semio_s_artifact_stdio_dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgSnapshot};
 #[cfg(test)]
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_dwg::schema::snapshot::DwgLogicalDrawing;
+use semio_s_artifact_stdio_dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };

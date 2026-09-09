@@ -1,9 +1,8 @@
 //! 🦭 `change-silo-q-nominal` payload — changes the En1998 document's `silo_q_nominal` (silo nominal behaviour factor q).
 
-
-use crate::En1998Snapshot;
 use crate::diff::En1998Diff;
 use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 //#region 🔖️ChangeSiloQNominal
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

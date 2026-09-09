@@ -1,8 +1,8 @@
 //! 🧬️ Direct set-trailing-newline mutation owner.
 //#region 🔖️Payload
-use crate::TxtSnapshot;
 use crate::schema::diff::TxtDiff;
 use crate::schema::mutation_support::{native_shape_error, native_snapshot_error, native_text_error};
+use crate::TxtSnapshot;
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;

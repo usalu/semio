@@ -14,9 +14,9 @@ use crate::wfc_engine::constraints_card::CardinalityConstraint;
 use crate::wfc_engine::constraints_conn::{ConnectivityConstraint, ReachabilityConstraint};
 use crate::wfc_engine::domain::DomainStore;
 use crate::wfc_engine::error::ConstraintError;
+use crate::wfc_engine::flow::FlowConstraint;
 use crate::wfc_engine::ids::{NodeId, PatternId, RegionId};
 use crate::wfc_engine::model::CompiledModel;
-use crate::wfc_engine::flow::FlowConstraint;
 use crate::wfc_engine::weights::WeightTable;
 // 🚦️ De-dyn (O1/R11 closed-set case): every `impl Constraint` lives in this same crate (4 total,
 // imported above), so the closed-set mechanism applies — `dyn_enum_close!` below generates
@@ -108,21 +108,9 @@ pub(crate) fn build_adjacency_view<T: crate::wfc_engine::topology::Topology>(top
 // #endregion 🔖️Adjacency
 
 // #region 🔖️Constraint
-/// 🧷️ Whether a constraint's [`Constraint::validate_complete`] is a sound-and-complete check (a
-/// failure there always means the assignment is genuinely invalid — safe to use in exhaustive/
-/// unsat-proof search) or merely a heuristic approximation.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Exactness {
-    Exact,
-    Heuristic,
-}
-
 /// 🧷️ One global constraint.
 #[dyn_enum]
 pub trait Constraint {
-    fn name(&self) -> &'static str;
-    fn exactness(&self) -> Exactness;
-
     /// 🧷️ Restricts initial per-node domains once, before search starts. Returning a narrower
     /// `PatternSet` than a node's current entry in `domains` intersects it in; returning the same
     /// set is a no-op. Called once per solve attempt, before the first propagation pass.

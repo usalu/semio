@@ -1,11 +1,11 @@
 //! 🖱️ 🖱️ Layout play app commands command — `canvas-pointer-move`.
 
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
 use crate::editor::layout::canvas::active_page;
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::config::LayoutConfigMutation;
 use crate::editor::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
+use crate::mutations::LayoutMutation;
+use crate::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

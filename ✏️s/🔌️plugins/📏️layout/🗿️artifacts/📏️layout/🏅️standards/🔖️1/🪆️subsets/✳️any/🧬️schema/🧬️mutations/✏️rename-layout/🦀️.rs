@@ -1,8 +1,7 @@
 //! ✏️ `rename-layout` — changes the document's identity `name` field.
 
-
-use crate::{LayoutDiff, LayoutSnapshot};
 use crate::mutations::LayoutMutation;
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -28,7 +27,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RenameLayout {
 }
 //#endregion ✏️RenameLayout
 
-
 //#region ✏️RenameLayout
 pub fn diff_rename_layout(payload: &RenameLayout, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.name == payload.new_name {
@@ -37,7 +35,6 @@ pub fn diff_rename_layout(payload: &RenameLayout, base: &LayoutSnapshot) -> prot
     protocol::MutationOutcome::new(LayoutDiff { name: Some(payload.new_name.clone()), ..Default::default() })
 }
 //#endregion ✏️RenameLayout
-
 
 //#region ✏️RenameLayout
 pub fn inverse_rename_layout(_payload: &RenameLayout, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

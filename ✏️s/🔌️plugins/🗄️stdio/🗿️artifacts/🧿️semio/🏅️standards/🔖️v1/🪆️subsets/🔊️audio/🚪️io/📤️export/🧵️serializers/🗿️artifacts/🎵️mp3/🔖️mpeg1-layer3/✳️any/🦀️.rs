@@ -10,9 +10,9 @@
 //! `audio←mp3` (metadata + opaque payload) therefore has NO general inverse in this bridge --
 //! documented here, not silently pretended otherwise.
 
-use semio_s_artifact_stdio_mp3::Mp3Snapshot;
 use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_mp3::Mp3Snapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };

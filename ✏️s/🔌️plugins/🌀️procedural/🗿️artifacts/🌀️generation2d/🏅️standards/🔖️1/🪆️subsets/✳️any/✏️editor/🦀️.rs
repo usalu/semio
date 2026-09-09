@@ -7,11 +7,9 @@
 //! → `Generation2dCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls
 //! one passthrough per node.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
-use crate::{artifact_kind, Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use crate::editor::generation2d::commands::{
-    add_generation, add_widget, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, connect_media_ports, enter_generate, flow_eval_tick, move_media_node, node_graph_edit, node_graph_viewport, remove_generation, remove_widget,
-    rename_generation, reorganize, select_generation, set_eval_outputs, set_show_mode, update_generation_values,
+    add_generation, add_widget, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, connect_media_ports, enter_generate, flow_eval_tick, generation, move_media_node, node_graph_edit, node_graph_viewport, remove_generation,
+    remove_widget, rename_generation, reorganize, select_generation, set_eval_outputs, set_show_mode, update_generation_values,
 };
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use crate::editor::generation2d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
@@ -19,14 +17,16 @@ use crate::editor::generation2d::modes::generate::windows::{form, generations, p
 use crate::editor::generation2d::modes::{edit, generate};
 use crate::editor::generation2d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::generation2d::terminology::{generation2d_labels, Generation2dLabels};
-use semio_framework_os_flow::FlowEvalSession;
+use crate::editor::generation2d::transient::{Generation2dTransient, Generation2dTransientMutation, SetGenerationPreview};
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
+use crate::{artifact_kind, Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_os_flow::{FlowEvalSession, FlowHost};
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
-    ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect,
-    DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass,
-    MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
+    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,
+    ArtifactView, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, EphemeralEmit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
+    InteractionTopology, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 use store::EngineHandles;
 
@@ -34,6 +34,13 @@ use store::EngineHandles;
 /// 🏷️ Plain string tag (NOT a trait const — `ArtifactEditor::DIALECT`+`ROLE` derive the real surface
 /// id now, contract §2.1) reused wherever a window/panel needs a stable controller/action-factory id.
 pub const GENERATION2D_PLAY_APP_ID: &str = "procedural2d-play";
+
+fn close_flow_session(session: &mut FlowEvalSession) {
+    session.begin_close();
+    while !session.terminal_is_empty() {
+        let _ = session.close_step(usize::MAX, usize::MAX);
+    }
+}
 
 fn categorized_action(id: &str, label: LocalizedLabel, kind: ActionKind, category: &str) -> ActionDefinition {
     ActionDefinition::bounded_catalog(id, label, kind).with_category(category)
@@ -111,7 +118,9 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const GENERATION2D_BOUNDED_TOOL_IDS: &[&str] = &["nodeGraphViewport", "setShowMode", "generate", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel"];
+const GENERATION2D_BOUNDED_TOOL_IDS: &[&str] =
+    &["nodeGraphViewport", "setShowMode", "generate", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel", "addGeneration", "removeGeneration", "renameGeneration", "updateGenerationValues", "selectGeneration"];
+const GENERATION2D_PREVIEW_TOOL_IDS: &[&str] = &["addGeneration", "removeGeneration", "renameGeneration", "updateGenerationValues", "selectGeneration"];
 const GENERATION2D_RETAINED_PAYLOAD_SCHEMA: &str = "generation.2d.tool-command.v1";
 const GENERATION2D_RETAINED_RAW_BYTES: usize = 8_192;
 
@@ -133,11 +142,97 @@ fn generation2d_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, Fault> {
-    if !GENERATION2D_BOUNDED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("generation2d-command-retained-route-rejected")); }
+    if !GENERATION2D_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::from("generation2d-command-retained-route-rejected"));
+    }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     let mut session = FlowEvalSession::new();
-    command.dispatch(&doc, &cfg, &mut session)
+    let result = command.dispatch(&doc, &cfg, &mut session);
+    close_flow_session(&mut session);
+    result
+}
+
+struct Generation2dPreviewCommandWork {
+    tool_id: &'static str,
+    initialized: bool,
+    emit: Option<Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>>,
+    host: Option<FlowHost>,
+    session: Option<FlowEvalSession>,
+    closing: bool,
+}
+
+impl Generation2dPreviewCommandWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self { tool_id, initialized: false, emit: None, host: None, session: None, closing: false }
+    }
+}
+
+impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dPreviewCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        _command: &Generation2dCommand,
+        snapshot: &Generation2dSnapshot,
+        _interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
+    ) -> Option<usize> {
+        Some(snapshot.fixture.widgets.len().max(1))
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+        if !self.initialized {
+            let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+            let cfg = ConfigView { snapshot: input.config, window: None };
+            let result = generation::prepare_command(input.command, &doc, &cfg).ok_or_else(|| Fault::from("generation2d-preview-command-route-rejected"))?;
+            self.initialized = true;
+            if !result.publishes_preview {
+                return Ok(ArtifactCommandWorkStep::Complete(result.emit));
+            }
+            let Some(values) = result.preview_values else {
+                return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: result.emit, ephemeral: EphemeralEmit { transient: vec![SetGenerationPreview { preview_text: None }.into()], ..Default::default() } });
+            };
+            let host = crate::standards::v1::subsets::any::schema::generation_preview_host(&input.snapshot.fixture, &values);
+            let mut session = FlowEvalSession::new();
+            session.sync(&host);
+            self.emit = Some(result.emit);
+            self.host = Some(host);
+            self.session = Some(session);
+            return Ok(ArtifactCommandWorkStep::Progress { stage: "generation2d-preview-evaluation", preview: br#"{"en":"Evaluating preview","de":"Vorschau wird ausgewertet"}"# });
+        }
+        let host = self.host.as_mut().ok_or_else(|| Fault::from("generation2d-preview-host-owner-missing"))?;
+        let session = self.session.as_mut().ok_or_else(|| Fault::from("generation2d-preview-session-owner-missing"))?;
+        if session.tick(host) {
+            return Ok(ArtifactCommandWorkStep::Progress { stage: "generation2d-preview-evaluation", preview: br#"{"en":"Evaluating preview","de":"Vorschau wird ausgewertet"}"# });
+        }
+        let preview_text = session.eval_json().to_string();
+        let emit = self.emit.take().ok_or_else(|| Fault::from("generation2d-preview-emit-owner-missing"))?;
+        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { transient: vec![SetGenerationPreview { preview_text: Some(preview_text) }.into()], ..Default::default() } })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(session) = self.session.as_mut() {
+            session.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        let Some(session) = self.session.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
+        let step = session.close_step(maximum_items, maximum_bytes);
+        if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete) && session.terminal_is_empty() {
+            self.session.take();
+            self.host.take();
+        }
+        step
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.session.is_none()
+    }
 }
 
 struct Generation2dBoundedCommandJobFactory {
@@ -200,6 +295,11 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dBounded
         ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasWheel", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "addGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "removeGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "renameGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "updateGenerationValues", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
     ];
 }
 
@@ -211,16 +311,19 @@ const GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES: usize = 4_096;
 
 //#region 🎟️Admission
 fn generation2d_config_text_bytes(config: &Generation2dConfig) -> usize {
-    [config.show_mode.len(), config.selected_generation_id.as_ref().map_or(0, String::len), config.generation_preview_text.as_ref().map_or(0, String::len)].into_iter().fold(0usize, usize::saturating_add)
+    [config.show_mode.len(), config.selected_generation_id.as_ref().map_or(0, String::len)].into_iter().fold(0usize, usize::saturating_add)
 }
 
 fn generation2d_config_publication_bytes(mutation: &Generation2dConfigMutation) -> Result<usize, String> {
     let bytes = match mutation {
         Generation2dConfigMutation::SetCamera { .. } => 0,
         Generation2dConfigMutation::SetShowMode { value } => value.len(),
+        Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id } => selected_generation_id.as_ref().map_or(0, String::len),
         _ => return Err("generation2d-config-unsupported-mutation".into()),
     };
-    if bytes > GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("generation2d-config-text-envelope".into()); }
+    if bytes > GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES {
+        return Err("generation2d-config-text-envelope".into());
+    }
     Ok(GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES)
 }
 
@@ -234,14 +337,28 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: generation2d_config_publication_bytes(mutation)? })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation>> {
-        if request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > 64 || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err() || generation2d_config_text_bytes(request.base.get()) > GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation>> {
+        if request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > 64
+            || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+            || generation2d_config_text_bytes(request.base.get()) > GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES
+        {
             return Err(request);
         }
         Ok(Box::new(Generation2dConfigPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
         }))
     }
 }
@@ -261,27 +378,58 @@ struct Generation2dConfigPreparation {
 
 impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || grant.maximum_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.checkpoint.cursor != 0 { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if !grant.permits_one() || grant.maximum_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.checkpoint.cursor != 0 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
         let base = self.base.as_ref().ok_or_else(|| "generation2d-config-base-owner-missing".to_string())?;
         let mutation = self.mutation.as_ref().ok_or_else(|| "generation2d-config-mutation-owner-missing".to_string())?;
         let mut next = base.get().clone();
         let inverse = match mutation {
-            Generation2dConfigMutation::SetCamera { camera } => { next.camera = camera.clone(); Generation2dConfigMutation::SetCamera { camera: base.get().camera.clone() } }
-            Generation2dConfigMutation::SetShowMode { value } => { next.show_mode = value.clone(); Generation2dConfigMutation::SetShowMode { value: base.get().show_mode.clone() } }
+            Generation2dConfigMutation::SetCamera { camera } => {
+                next.camera = camera.clone();
+                Generation2dConfigMutation::SetCamera { camera: base.get().camera.clone() }
+            }
+            Generation2dConfigMutation::SetShowMode { value } => {
+                next.show_mode = value.clone();
+                Generation2dConfigMutation::SetShowMode { value: base.get().show_mode.clone() }
+            }
+            Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id } => {
+                next.selected_generation_id.clone_from(selected_generation_id);
+                Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id: base.get().selected_generation_id.clone() }
+            }
             _ => return Err("generation2d-config-unsupported-mutation".into()),
         };
-        if generation2d_config_text_bytes(&next) > GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("generation2d-config-post-text-envelope".into()); }
+        if generation2d_config_text_bytes(&next) > GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES {
+            return Err("generation2d-config-post-text-envelope".into());
+        }
         let authority = self.authority.as_ref().ok_or_else(|| "generation2d-config-authority-missing".to_string())?;
         let id = format!("generation2d-config-{}", authority.next_sequence_number());
         let edit = protocol::Edit {
-            id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![mutation.clone()], inverse: vec![inverse],
+            id: id.clone(),
+            actor: Some(authority.actor().to_string()),
+            forwards: vec![mutation.clone()],
+            inverse: vec![inverse],
             mutation_meta: vec![protocol::MutationMeta {
-                mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-                author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())),
+                timestamp: authority.next_clock(),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: None,
+                origin: Default::default(),
             }],
-            description: self.description.clone(), coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+            description: self.description.clone(),
+            coalesce_key: None,
+            sequence_number: authority.next_sequence_number(),
+            started_at: String::new(),
+            finished_at: None,
         };
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(next))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
@@ -289,22 +437,38 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConf
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
         if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("generation2d-config-base-retirement-rejected".into()); }
+            if !base.return_to_registry() {
+                return Err("generation2d-config-base-retirement-rejected".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if self.authority.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES }); }
+        if self.authority.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
+        }
         Ok(store::SnapshotRetirementStep::Complete)
     }
 
@@ -337,8 +501,8 @@ impl ArtifactEditor for Generation2dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::editor::generation2d::presence::Generation2dPresence;
     type PresenceMutation = crate::editor::generation2d::presence::Generation2dPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = Generation2dTransient;
+    type TransientMutation = Generation2dTransientMutation;
 
     type Command = Generation2dCommand;
 
@@ -350,6 +514,14 @@ impl ArtifactEditor for Generation2dPlayApp {
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_document_store_owners())
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
     }
 
     fn build_document_store_initialization_job(
@@ -369,11 +541,43 @@ impl ArtifactEditor for Generation2dPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default Generation2d presence is the exact empty terminal")))
+    }
+
     const DIALECT: Dialect = GENERATION2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Generation2dConfigPreparationFactory))
+    }
+
+    fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -391,6 +595,11 @@ impl ArtifactEditor for Generation2dPlayApp {
             "canvasPointerMove" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "canvasPointerUp" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "canvasWheel" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "addGeneration" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "removeGeneration" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "renameGeneration" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "updateGenerationValues" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "selectGeneration" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         }
     }
 
@@ -407,7 +616,8 @@ impl ArtifactEditor for Generation2dPlayApp {
             return Err(Fault::from("generation2d-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, generation2d_retained_reduce, generation2d_bounded_extent));
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Generation2dPlayApp>>> =
+            if GENERATION2D_PREVIEW_TOOL_IDS.contains(&tool_id) { Box::new(Generation2dPreviewCommandWork::new(tool_id)) } else { Box::new(BoundedArtifactCommandWork::new(tool_id, generation2d_retained_reduce, generation2d_bounded_extent)) };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -416,7 +626,17 @@ impl ArtifactEditor for Generation2dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             Generation2dCommand::command_id,
             GENERATION2D_RETAINED_RAW_BYTES,
             1,
@@ -474,7 +694,9 @@ impl ArtifactEditor for Generation2dPlayApp {
                 }))
             }
             "nodeGraphViewport" => {
-                let viewport_json = str_arg(&["viewportJson", "viewport_json"]).or_else(|| args.get("camera").map(|value| if value.as_str().is_some() { value.as_str().unwrap_or("{}").to_string() } else { dsl::json::to_json_string(value) })).unwrap_or_else(|| "{}".into());
+                let viewport_json = str_arg(&["viewportJson", "viewport_json"])
+                    .or_else(|| args.get("camera").map(|value| if value.as_str().is_some() { value.as_str().unwrap_or("{}").to_string() } else { dsl::json::to_json_string(value) }))
+                    .unwrap_or_else(|| "{}".into());
                 Ok(Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json }))
             }
             "setShowMode" => Ok(Generation2dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode"]).unwrap_or_default() })),
@@ -507,10 +729,12 @@ impl ArtifactEditor for Generation2dPlayApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, Self::DraftMutation>, Fault> {
         let mut session = FlowEvalSession::new();
-        match command {
+        let result = match command {
             Generation2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, &mut session),
             _ => command.dispatch(doc, cfg, &mut session),
-        }
+        };
+        close_flow_session(&mut session);
+        result
     }
 
     /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every top-level widget is a "node" (root unless
@@ -552,30 +776,47 @@ impl ArtifactEditor for Generation2dPlayApp {
     fn pending_effects(doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>) -> Vec<Effect> {
         let mut session = FlowEvalSession::new();
         let host = crate::standards::v1::subsets::any::schema::host_from_fixture_with_session(&doc.snapshot.fixture, &session);
-        if session.sync(&host) {
-            vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(101), action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
-        } else {
-            Vec::new()
-        }
+        let effects = if session.sync(&host) { vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(101), action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+        close_flow_session(&mut session);
+        effects
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = generation2d_labels(view_state);
-        let session = FlowEvalSession::new();
-        let node = match body_key {
+        let mut session = FlowEvalSession::new();
+        let rendered = match body_key {
             flow_window::GENERATION2D_PLAY_BODY_MAIN => flow_window::render(document, config, &session),
             edit_preview::GENERATION2D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session),
-            generations::GENERATION2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, view_state.locale, semio_framework_plugin::Terminology::Native),
+            generations::GENERATION2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, view_state.locale, view_state.terminology),
             form::GENERATION2D_PLAY_BODY_GENERATE_FORM => form::render(document, &document.generation, labels),
-            generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(config, labels),
+            generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(config, None, labels),
             document_panel::GENERATION2D_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
             catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::GENERATION2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
-        }?;
+        };
+        close_flow_session(&mut session);
+        let node = rendered?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
+    }
+
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Generation2dSnapshot>,
+        cfg: &ConfigView<'_, Generation2dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        if body_key == generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW {
+            let labels = generation2d_labels(view_state);
+            let node = generate_preview::render(cfg.snapshot, transient.snapshot.generation_preview_text.as_deref(), labels)?;
+            return Ok(semio_framework_plugin::built_to_component_tree(node));
+        }
+        Self::render(body_key, doc, cfg, view_state)
     }
 
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level; the display-mode
@@ -588,22 +829,21 @@ impl ArtifactEditor for Generation2dPlayApp {
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, Generation2dSnapshot>,
-        cfg: &ConfigView<'_, Generation2dConfig>,
+        _cfg: &ConfigView<'_, Generation2dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         {
-            let config = cfg.snapshot;
             let labels = semio_framework_plugin::resolve_labels::<Generation2dLabels>(view_state);
             let is_de = view_state.locale == semio_framework_plugin::Locale::De;
             let selected: Vec<String> = Vec::new();
             let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
             let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate");
-            menu = menu.group("mode", |m| { m.action("setShowMode") });
-            menu = menu.group("create", |m| { m.action("addGeneration") });
-            menu = menu.group("methods", |m| { m.action("selectGeneration") });
+            menu = menu.group("mode", |m| m.action("setShowMode"));
+            menu = menu.group("create", |m| m.action("addGeneration"));
+            menu = menu.group("methods", |m| m.action("selectGeneration"));
             if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
                 menu = menu.item(spec);
             }
@@ -649,7 +889,14 @@ impl ArtifactEditor for Generation2dPlayApp {
             let Some(number) = value.as_f64() else { continue };
             let Some(widget) = doc.snapshot.fixture.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id_key) else { continue };
             if let semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
-                operations.push(crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step }));
+                operations.push(crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider {
+                    id: id.clone(),
+                    label: label.clone(),
+                    value: number,
+                    min: *min,
+                    max: *max,
+                    step: *step,
+                }));
             }
         }
         Ok(Emit::mutations(operations))
@@ -692,13 +939,13 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         // 👁️ Ephemeral view actions — camera, the show-mode display toggle, and evaluation scratch
         // (emit no operations). Selection/hover are the framework's `graph` interaction domain now
         // (`.interaction(...)` below) — the six framework verbs auto-inject.
-        .view_action("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"))
+        .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"), ActionKind::View, "camera"))
         .action_with(categorized_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View, "mode"))
         .action_with(categorized_action("generate", LocalizedLabel::native("Generate", "Generieren"), ActionKind::View, "actions"))
         .view_action("setEvalOutputs", LocalizedLabel::native("Set Eval Outputs", "Auswertungsausgaben festlegen"))
-        .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Canvas-Zeiger gedrückt"))
-        .view_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Canvas-Zeiger bewegt"))
-        .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Canvas-Zeiger losgelassen"))
+        .action_with(ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Canvas-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
+        .action_with(ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Canvas-Zeiger bewegt"), ActionKind::View, "mouse-pointer"))
+        .action_with(ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Canvas-Zeiger losgelassen"), ActionKind::View, "mouse-pointer"))
         .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Canvas-Mausrad"))
         .action_with(categorized_action("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View, "methods"))
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), ActionKind::View) })
@@ -708,10 +955,10 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("removeWidget", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("connectMediaPorts", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("reorganize", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("addGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("removeGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("renameGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("updateGenerationValues", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("addGeneration", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeGeneration", InteractiveJobClassification::Migrated)
+        .action_interactive_job("renameGeneration", InteractiveJobClassification::Migrated)
+        .action_interactive_job("updateGenerationValues", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
         .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
         .action_interactive_job("generate", InteractiveJobClassification::Migrated)
@@ -720,7 +967,7 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasWheel", InteractiveJobClassification::Migrated)
-        .action_interactive_job("selectGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
         .action_interactive_job("flowEvalTick", InteractiveJobClassification::BatchOnlyPendingRewrite)
         // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
         .action_args("addWidget", vec![

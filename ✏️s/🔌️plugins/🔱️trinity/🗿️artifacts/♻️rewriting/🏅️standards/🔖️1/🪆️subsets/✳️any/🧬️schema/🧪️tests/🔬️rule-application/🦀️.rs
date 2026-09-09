@@ -1,6 +1,5 @@
-
 use super::*;
-use semio_s_artifact_trinity_jack::dsl::NAKAGIN_EXAMPLE_TEXT;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::text::NAKAGIN_EXAMPLE_TEXT;
 use store::ArtifactDsl;
 
 fn nakagin_graph() -> Graph {

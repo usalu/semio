@@ -3,9 +3,9 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.imperative` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`), so run-output/locale edits are VCS'd exactly like document
-//! content — absorbing the former app-struct `RefCell` (`ImperativePlayRuntime`'s `run_output_json`) plus
-//! the locale the UI used to read off the deleted `ViewModel`. Step selection is no longer here: it is the
+//! `ArtifactStore` (with a real `backwards`), so run-output edits are VCS'd exactly like document
+//! content — absorbing the former app-struct `RefCell` (`ImperativePlayRuntime`'s `run_output_json`).
+//! Locale and terminology come from the shared host `ViewModel`. Step selection is no longer here: it is the
 //! framework-owned `steps` interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 
 //#region 🔖️Config

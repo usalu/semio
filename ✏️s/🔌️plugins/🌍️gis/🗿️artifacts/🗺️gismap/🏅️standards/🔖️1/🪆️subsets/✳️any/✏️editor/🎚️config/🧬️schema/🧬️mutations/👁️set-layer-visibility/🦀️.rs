@@ -1,5 +1,7 @@
 //! 👁️ Exact visibility override assignment or removal for one map layer.
 
+#[cfg(test)]
+use super::super::required_nullable;
 use super::super::{Gis2dConfig, Gis2dConfigDelta, Gis2dConfigDiff, Gis2dConfigMutation};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -13,7 +15,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "set-layer-visibility")]
 pub struct SetLayerVisibility {
     pub layer_id: String,
-    #[cfg_attr(test, serde(deserialize_with = "super::super::required_nullable"))]
+    #[value(required)]
+    #[cfg_attr(test, serde(deserialize_with = "required_nullable"))]
     pub visible: Option<bool>,
 }
 //#endregion 🧬️Payload
@@ -30,8 +33,12 @@ impl MutationKind<Gis2dConfig, Gis2dConfigMutation> for SetLayerVisibility {
     fn inverse(&self, base: &Gis2dConfig) -> Vec<Gis2dConfigMutation> {
         vec![Self { layer_id: self.layer_id.clone(), visible: base.layer_visibility.get(&self.layer_id).copied() }.into()]
     }
-    fn label(&self) -> String { format!("Set layer visibility {}", self.layer_id) }
-    fn target(&self) -> Vec<String> { vec!["layerVisibility".into(), self.layer_id.clone()] }
+    fn label(&self) -> String {
+        format!("Set layer visibility {}", self.layer_id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["layerVisibility".into(), self.layer_id.clone()]
+    }
 }
 //#endregion ⚙️Behavior
 

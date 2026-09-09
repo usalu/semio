@@ -239,7 +239,16 @@ pub fn register(registry: &mut Registry) {
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
 pub fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand};
-    build_manifest_json("dictionary", "Dictionary", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![])
+    build_manifest_json(
+        "dictionary",
+        "Dictionary",
+        "0.1.0",
+        &neural_engine::ColdOwner::new(module_registry()),
+        vec!["onStartup".into()],
+        vec![],
+        vec![FlowExtensionCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }],
+        vec![],
+    )
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
@@ -283,9 +292,7 @@ mod extension_guest {
         let bundle = bundle.mode(ExecutionMode::Linked);
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
         let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);
-        bundle.handler("evaluate", |req| {
-            evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
-        })
+        bundle.handler("evaluate", |req| evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err)))
     }
 
     #[cfg(test)]

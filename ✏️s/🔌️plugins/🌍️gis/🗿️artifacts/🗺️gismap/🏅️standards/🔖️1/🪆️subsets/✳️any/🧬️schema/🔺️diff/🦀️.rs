@@ -2,8 +2,8 @@
 
 use crate::{MapFeature, MapFeaturePatch};
 use ::semio_framework_schema::ArtifactSchema;
-use std::collections::BTreeMap;
 use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::BTreeMap;
 
 //#region 🔹Diff
 /// 🔺️ Sparse field delta for the GIS map artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -19,18 +19,6 @@ pub struct GisMapDiff {
     pub routes: Option<GisMapFeaturesDelta>,
     #[state(artifact)]
     pub regions: Option<GisMapFeaturesDelta>,
-    #[state(presence)]
-    pub layer_visibility: Option<GisMapBoolMapDelta>,
-    #[state(presence)]
-    pub layer_stroke_scale: Option<GisMapNumberMapDelta>,
-    #[state(config)]
-    pub camera_json: Option<String>,
-    #[state(config)]
-    pub render_mode: Option<String>,
-    #[state(config)]
-    pub vector_style: Option<String>,
-    #[state(config)]
-    pub lod_mode: Option<String>,
 }
 //#endregion 🔹Diff
 

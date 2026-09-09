@@ -5,13 +5,14 @@
 //! dispatches through the single typed `RasterCommand` channel via `app_commands!` — mirrors
 //! `shooting_ui`'s B1 pilot.
 
-use crate::op::RasterMutation;
-use crate::{RasterLayerNode, RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::editor::raster::modes::edit;
 use crate::editor::raster::modes::edit::windows::{composite, navigator};
 use crate::editor::raster::presence::{RasterPresence, RasterPresenceMutation};
 use crate::editor::raster::terminology::raster_play_labels;
+use crate::op::RasterMutation;
+use crate::{RasterLayerNode, RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
+use dsl::os_pack::json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -20,7 +21,6 @@ use semio_framework_plugin::{
     ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
-use dsl::os_pack::json::Value;
 use std::collections::HashMap;
 use store::ArtifactPack;
 use store::EngineHandles;
@@ -61,8 +61,7 @@ fn document_sync_json(document: &RasterSnapshot) -> String {
     let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(document));
     let value = match value {
         Value::Object(object) => {
-            let filtered: dsl::os_pack::json::Object =
-                object.iter().filter(|(key, _)| *key != "assets" && *key != "brushSize" && *key != "brushOpacity").map(|(key, value)| (key.to_string(), value.clone())).collect();
+            let filtered: dsl::os_pack::json::Object = object.iter().filter(|(key, _)| *key != "assets" && *key != "brushSize" && *key != "brushOpacity").map(|(key, value)| (key.to_string(), value.clone())).collect();
             Value::Object(filtered)
         }
         other => other,
@@ -78,8 +77,7 @@ fn document_sync_json(document: &RasterSnapshot) -> String {
 /// omitted rather than serialized as an empty/garbage blob (documented staleness gap, matches every
 /// other exemplar in this ticket).
 fn assets_json_from_document(document: &RasterSnapshot) -> String {
-    let resolved: std::collections::BTreeMap<String, crate::RasterImageAsset> =
-        document.assets.keys().filter_map(|asset_id| crate::raster_asset(&document.assets, asset_id).map(|asset| (asset_id.clone(), asset))).collect();
+    let resolved: std::collections::BTreeMap<String, crate::RasterImageAsset> = document.assets.keys().filter_map(|asset_id| crate::raster_asset(&document.assets, asset_id).map(|asset| (asset_id.clone(), asset))).collect();
     let object: dsl::os_pack::json::Object = resolved.into_iter().map(|(id, asset)| (id, dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&asset)))).collect();
     dsl::os_pack::json::to_string(&Value::Object(object))
 }
@@ -126,15 +124,12 @@ pub fn raster_measure_action(action: &str) -> ActionDescriptor {
 /// 🏷️ Admits one resolved raster string into the semantic UI contract's fixed-capacity label owner —
 /// every panel/window label goes through here rather than the renderer's unbounded `Label`.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref().to_string())
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster UI label admission failed"))
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -147,27 +142,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -177,9 +165,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
@@ -242,7 +228,7 @@ const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "setCompositeViewport",
     "setCamera",
     "setCameraZoom",
-        "setActiveExample",
+    "setActiveExample",
 ];
 const RASTER_RETAINED_PAYLOAD_SCHEMA: &str = "raster.tool-command.v1";
 const RASTER_RETAINED_RAW_BYTES: usize = 65_536;
@@ -305,7 +291,7 @@ fn raster_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<RasterMutation, RasterConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 /// 🏭️ The app-owned retained command job factory — `factory_type:` in the proof block below binds this
@@ -711,7 +697,17 @@ impl ArtifactEditor for RasterPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: None,
+                operation: operation_context,
+                completion: request.completion,
+            },
             RasterCommand::command_id,
             RASTER_RETAINED_RAW_BYTES,
             RASTER_RETAINED_WORK_ITEMS,
@@ -799,14 +795,15 @@ impl ArtifactEditor for RasterPlayApp {
         command: &RasterCommand,
         doc: &ArtifactView<'_, RasterSnapshot>,
         cfg: &ConfigView<'_, RasterConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, _view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(composite::RASTER_PLAY_WINDOW_COMPOSITE.into(), composite::window_measures(cfg.snapshot))])
     }
 
@@ -822,8 +819,7 @@ impl ArtifactEditor for RasterPlayApp {
             crate::editor::raster::panels::masks::RASTER_PLAY_BODY_MASKS => crate::editor::raster::panels::masks::render(document, config, labels)?,
             crate::editor::raster::panels::catalogue::RASTER_PLAY_BODY_CATALOGUE => crate::editor::raster::panels::catalogue::render(labels)?,
             crate::editor::raster::panels::inspection::RASTER_PLAY_BODY_PROPERTIES => crate::editor::raster::panels::inspection::render(document, config, labels)?,
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster unknown-body label admission failed"))?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster unknown-body label admission failed"))?,
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
@@ -954,7 +950,7 @@ pub fn create_raster_app() -> AppDefinition {
             // real, undoable batch of `RasterMutation`s rather than a snapshot swap, so it is an
             // ordinary palette mutation like block2d's and puzzle3d's.
             .mutation("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             // 🔧️ Internal content operations — layer-tree / catalogue-drop / inspector bound.
             .action_with(raster_internal_action("setLayerVisible", LocalizedLabel::native("Set Layer Visible", "Ebenensichtbarkeit festlegen"), ActionKind::Mutation))
             .action_with(raster_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Mutation))
@@ -988,7 +984,7 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("setBrushSize", LocalizedLabel::native("Set Brush Size", "Pinselgröße festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setBrushOpacity", LocalizedLabel::native("Set Brush Opacity", "Pinseldeckkraft festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setCompositeViewport", LocalizedLabel::native("Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"), ActionKind::View))
-            .action_with(raster_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(raster_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
             // 📝️ Staged palette-form arguments for the two palette operations.
             .action_args("addLayer", vec![
@@ -1007,7 +1003,7 @@ pub fn create_raster_app() -> AppDefinition {
             //
             // 🧰️ `setActiveUtility` — the 16th `RasterCommand` row — is NOT listed here on purpose: it is
             // framework-injected by `.utility(..)` inside `build_definition`, after this builder chain has
-            // run, and `ActionDefinition::resumable_framework_catalog` already classifies it `Migrated`.
+            // run, and this owning declaration already classifies it `Migrated`.
             // Calling `.action_interactive_job("setActiveUtility", ..)` here would silently match nothing.
             .action_interactive_job("addLayer", InteractiveJobClassification::Migrated)
             .action_interactive_job("dropLayerKind", InteractiveJobClassification::Migrated)

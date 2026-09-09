@@ -1,6 +1,5 @@
 //! 🗑️ `delete-product` — removes an id-keyed catalogue product, addressed by article number.
 
-
 use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

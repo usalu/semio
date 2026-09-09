@@ -42,11 +42,7 @@ async fn applies_to_committed_after() {
     let outcome = apply_step_mutation(&mut snapshot, &mutation());
     assert!(outcome.messages().is_empty(), "set-snapshot/restamps-the-product-long-name: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/restamps-the-product-long-name: applied state differs from committed after-snapshot");
-    assert_eq!(
-        snapshot.entities[0].args[1],
-        crate::standards::v_ap214::subsets::base::schema::snapshot::StepValue::String("Capsule Unit A".into()),
-        "set-snapshot/restamps-the-product-long-name: the PRODUCT long name must land on 'Capsule Unit A'"
-    );
+    assert_eq!(snapshot.entities[0].args[1], crate::standards::v_ap214::subsets::base::schema::snapshot::StepValue::String("Capsule Unit A".into()), "set-snapshot/restamps-the-product-long-name: the PRODUCT long name must land on 'Capsule Unit A'");
     assert_eq!(snapshot.entities[0].name, "PRODUCT", "set-snapshot/restamps-the-product-long-name: the entity keyword is untouched");
     assert_eq!(snapshot.entities[0].args.len(), 4, "set-snapshot/restamps-the-product-long-name: no argument is inserted or dropped");
     assert_eq!(snapshot.entities[1], before().entities[1], "set-snapshot/restamps-the-product-long-name: #2 is identical on both sides and must survive untouched");

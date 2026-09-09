@@ -14,32 +14,6 @@ message FlowArtifact {
   repeated SynapseSpec synapses = 4;
   // @state artifact
   map<string, WidgetLayout> layout = 5;
-  // @state presence
-  repeated string selected_node_ids = 6;
-  // @state presence
-  repeated string selected_edge_ids = 7;
-  // @state presence
-  repeated string selected_handle_ids = 8;
-  // @state presence
-  repeated string preview_off_node_ids = 9;
-  // @state config
-  string lod_mode = 10;
-  // @state config
-  double proximity_distance = 11;
-  // @state config
-  bool grid_visible = 12;
-  // @state config
-  bool grid_snap_enabled = 13;
-  // @state config
-  double grid_factor = 14;
-  // @state config
-  string catalogue_sections_json = 15;
-  // @state config
-  string automation_enabled_json = 16;
-  // @state config
-  string contributions_json = 17;
-  // @state config
-  string generation_json = 18;
   // @state config
 }
 

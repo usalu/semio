@@ -13,8 +13,6 @@ export interface Generation3dConfig {
   /** @state config */
   selectedGenerationId?: string;
   /** @state config */
-  generationPreviewText?: string;
-  /** @state config */
   previewEvalText?: string;
 }
 

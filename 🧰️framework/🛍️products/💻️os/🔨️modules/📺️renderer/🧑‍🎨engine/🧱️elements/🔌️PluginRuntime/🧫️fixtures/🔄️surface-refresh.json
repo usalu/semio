@@ -15,7 +15,7 @@
     },
     {
       "name": "panel-only refresh does not need a window probe",
-      "request": { "viewState": {}, "panels": [{ "key": "inspection" }] },
+      "request": { "viewState": {}, "panels": [{ "key": "inspection", "bodyKey": "inspection" }] },
       "bodyKeys": ["inspection"],
       "windowKeys": [],
       "panelKeys": ["inspection"]

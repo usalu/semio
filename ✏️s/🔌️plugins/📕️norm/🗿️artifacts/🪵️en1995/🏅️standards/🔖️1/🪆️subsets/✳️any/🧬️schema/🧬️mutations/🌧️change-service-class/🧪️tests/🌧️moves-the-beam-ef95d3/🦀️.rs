@@ -82,7 +82,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, r#"change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: `service_class` is a `String`, so `change-service-class` has no finiteness guard; "sc2" differs from the committed "sc1", so its equality guard stays shut"#);
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        r#"change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: `service_class` is a `String`, so `change-service-class` has no finiteness guard; "sc2" differs from the committed "sc1", so its equality guard stays shut"#
+    );
     assert!(produced.messages().is_empty(), "change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: an accepted change-service-class emits no diagnostics at all");
 }
 

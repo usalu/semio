@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCompression {
-        pub(crate) compression: u16,
-    }
+    pub(crate) compression: u16,
+}
 
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetCompression {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "compression", kind: "set-compression", record: "SetCompression" };

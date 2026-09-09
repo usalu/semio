@@ -4,7 +4,8 @@ type Block3dSnapshot {
   schema: String! @state(class: ARTIFACT)
   objectKind: BlockKindIdentity! @state(class: ARTIFACT)
   representations: [BlockRepresentation!]! @state(class: ARTIFACT)
-  vortexKinds: [Block3dVortexKind!]! @state(class: ARTIFACT)
+  catalog: ArtifactChild! @state(class: ARTIFACT)
+  vortexKindExtra: [Block3dVortexKindExtra!]! @state(class: ARTIFACT)
   vortices: [Block3dVortexTemplate!]! @state(class: ARTIFACT)
   compatibility: [BlockCompatibilityRule!]! @state(class: ARTIFACT)
   attributes: [BlockAttribute!]! @state(class: ARTIFACT)
@@ -19,6 +20,8 @@ type BlockRepresentation { _placeholder: Boolean }
 
 type Block3dVortexKind { _placeholder: Boolean }
 
+type Block3dVortexKindExtra { _placeholder: Boolean }
+
 type Block3dVortexTemplate { _placeholder: Boolean }
 
 type BlockCompatibilityRule { _placeholder: Boolean }
@@ -32,5 +35,3 @@ type BlockCamera3d { _placeholder: Boolean }
 type BlockMeta { _placeholder: Boolean }
 
 type Block3dWindowView { _placeholder: Boolean }
-
-type Block3dBrushPreview { _placeholder: Boolean }

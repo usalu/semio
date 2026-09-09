@@ -1,7 +1,6 @@
-
 use super::*;
-use protocol::MutationDiff;
 use protocol::os_spr::command::DiffAlgebra;
+use protocol::MutationDiff;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn base() -> BinarySnapshot {

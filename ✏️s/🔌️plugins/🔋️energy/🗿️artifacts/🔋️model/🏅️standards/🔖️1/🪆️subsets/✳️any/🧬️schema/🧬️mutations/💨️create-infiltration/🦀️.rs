@@ -29,8 +29,38 @@ pub struct CreateInfiltration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_infiltration(index: u32, id: crate::model::EntityId, zone_id: crate::model::EntityId, schedule_id: crate::model::ScheduleId, method: crate::air_exchange::InfiltrationMethod, design_flow_ach: f64, flow_per_exterior_area_m3_s_m2: f64, effective_leakage_area_m2: f64, discharge_coefficient: f64, stack_height_m: f64, constant_term_coefficient: f64, temperature_term_coefficient: f64, velocity_term_coefficient: f64, velocity_squared_term_coefficient: f64) -> EnergyModelMutation {
-    EnergyModelMutation::CreateInfiltration(CreateInfiltration { index, id, zone_id, schedule_id, method, design_flow_ach, flow_per_exterior_area_m3_s_m2, effective_leakage_area_m2, discharge_coefficient, stack_height_m, constant_term_coefficient, temperature_term_coefficient, velocity_term_coefficient, velocity_squared_term_coefficient })
+pub fn create_infiltration(
+    index: u32,
+    id: crate::model::EntityId,
+    zone_id: crate::model::EntityId,
+    schedule_id: crate::model::ScheduleId,
+    method: crate::air_exchange::InfiltrationMethod,
+    design_flow_ach: f64,
+    flow_per_exterior_area_m3_s_m2: f64,
+    effective_leakage_area_m2: f64,
+    discharge_coefficient: f64,
+    stack_height_m: f64,
+    constant_term_coefficient: f64,
+    temperature_term_coefficient: f64,
+    velocity_term_coefficient: f64,
+    velocity_squared_term_coefficient: f64,
+) -> EnergyModelMutation {
+    EnergyModelMutation::CreateInfiltration(CreateInfiltration {
+        index,
+        id,
+        zone_id,
+        schedule_id,
+        method,
+        design_flow_ach,
+        flow_per_exterior_area_m3_s_m2,
+        effective_leakage_area_m2,
+        discharge_coefficient,
+        stack_height_m,
+        constant_term_coefficient,
+        temperature_term_coefficient,
+        velocity_term_coefficient,
+        velocity_squared_term_coefficient,
+    })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateInfiltration {

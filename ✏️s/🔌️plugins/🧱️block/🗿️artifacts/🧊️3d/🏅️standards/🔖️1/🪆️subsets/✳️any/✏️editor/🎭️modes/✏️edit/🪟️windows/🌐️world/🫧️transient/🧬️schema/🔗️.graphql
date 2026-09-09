@@ -1,0 +1,17 @@
+type Block3dWorldWindowTransient {
+  brushPreview: Block3dBrushPreview @state(class: EPHEMERAL_LOCAL_WINDOW)
+}
+
+type Block3dBrushPreview {
+  position: [Float!]!
+  direction: [Float!]!
+}
+
+input SetBrushPreview {
+  preview: Block3dBrushPreviewInput
+}
+
+input Block3dBrushPreviewInput {
+  position: [Float!]!
+  direction: [Float!]!
+}

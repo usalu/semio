@@ -4,10 +4,10 @@ use crate::schema::mutation_support::attribute_diff_at_path;
 use crate::schema::snapshot::NodePath;
 use crate::SvgSnapshot;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -21,7 +21,10 @@ pub struct SetAttributePayload {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum SetAttributeMutation { Apply(SetAttributePayload), Restore(SvgDiff) }
+pub enum SetAttributeMutation {
+    Apply(SetAttributePayload),
+    Restore(SvgDiff),
+}
 
 impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetAttributeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "attribute", kind: "set-attribute", record: "SetAttribute" };
@@ -35,13 +38,19 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetAttributeMut
 
     fn inverse(&self, base: &SvgSnapshot) -> Vec<super::SvgMutation> {
         let outcome = <Self as protocol::MutationKind<SvgSnapshot, super::SvgMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::is_empty(outcome.diff()) { return Vec::new(); }
+        if !outcome.messages().is_empty() || <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::is_empty(outcome.diff()) {
+            return Vec::new();
+        }
         let inverse = <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::inverse(outcome.diff(), base);
         vec![super::SvgMutation::SetAttribute(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String { "Set Attribute".to_string() }
-    fn target(&self) -> Vec<String> { vec!["set-attribute".to_string()] }
+    fn label(&self) -> String {
+        "Set Attribute".to_string()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-attribute".to_string()]
+    }
 }
 
 #[cfg(test)]

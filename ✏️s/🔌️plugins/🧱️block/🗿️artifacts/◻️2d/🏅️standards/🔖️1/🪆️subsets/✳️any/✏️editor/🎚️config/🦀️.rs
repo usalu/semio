@@ -7,8 +7,7 @@
 use protocol::Mutation;
 
 //#region 🔖️Config
-/// 🧮️ `Block2dPlayApp`'s real `ArtifactEditor::Config` — B1 pure-trait conversion. Absorbs the former
-/// `Block2dPlayApp::selected_ids` `RefCell` field plus the locale this app resolves itself.
+/// 🧮️ `Block2dPlayApp`'s empty artifact config; selection and locale live in the shared view model.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
@@ -16,8 +15,7 @@ use protocol::Mutation;
 #[dsl(extension = "block2dcfg")]
 #[dsl(id = "block2d.config")]
 #[dsl(layout = "lines")]
-pub struct Block2dConfig {
-}
+pub struct Block2dConfig {}
 
 //#region 🔖️ArtifactCodec
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
@@ -65,7 +63,7 @@ impl store::ArtifactPack for Block2dConfig {
 
 impl Default for Block2dConfig {
     fn default() -> Self {
-        Self { }
+        Self {}
     }
 }
 
@@ -146,9 +144,22 @@ impl Mutation<Block2dConfig> for Block2dConfigMutation {
 
     /// 🧷️ Hand-written (no `dsl::Mutations` derive on this enum) — config authorities are session
     /// state, not document leaves, so the `owner` paths are metadata for the registry only.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
+        semantic_kind: "snapshot",
+        display_name: "Snapshot",
+        emoji: "📄",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
@@ -156,12 +167,10 @@ impl Mutation<Block2dConfig> for Block2dConfigMutation {
         }
     }
 
-    fn diff(&self, base: &Block2dConfig) -> protocol::MutationOutcome<Block2dConfig> {
-        let mut next = base.clone();
+    fn diff(&self, _base: &Block2dConfig) -> protocol::MutationOutcome<Block2dConfig> {
         match self {
-            Block2dConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
+            Block2dConfigMutation::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
         }
-        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &Block2dConfig) -> Vec<Self> {

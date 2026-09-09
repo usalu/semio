@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::dsl as generation3d_dsl;
+use crate::standards::v1::subsets::any::schema::snapshot::text as generation3d_dsl;
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_os_kernel::os_store::test_support;
 

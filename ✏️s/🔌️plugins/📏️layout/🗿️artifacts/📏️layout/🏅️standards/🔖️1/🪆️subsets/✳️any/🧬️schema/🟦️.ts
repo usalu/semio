@@ -34,29 +34,6 @@ export interface LayoutArtifact {
   printTarget?: string;
   /** @state artifact */
   dataFieldsJson?: string;
-  /** @state presence */
-  selectedIds: string[];
-  /** @state config */
-  activePageId: string;
-  /** @state config */
-  engagementInput: string;
-  /** @state config */
-  cameraX: number;
-  /** @state config */
-  cameraY: number;
-  /** @state config */
-  cameraZoom: number;
-  /** @state config */
-  previewCameraX: number;
-  /** @state config */
-  previewCameraY: number;
-  /** @state config */
-  previewCameraZoom: number;
-  /** @state config */
-  dropPreview: LayoutDropPreviewState;
-  /** @state config */
-  /** @state artifact */
-  hoveredId?: string;
 }
 
 export interface GridSettings { baselineGrid: number; baselineOffset: number; snapToBaseline: boolean; }
@@ -125,17 +102,6 @@ export function parseLayoutArtifact(value: unknown, at = "$"): LayoutArtifact {
     pages: layoutLayoutArtifactGuardArray(row["pages"], `${at}.pages`).map((item, index) => parsePage(item, `${at}.pages[${index}]`)),
     printTarget: row["printTarget"] === undefined ? undefined : layoutLayoutArtifactGuardString(row["printTarget"], `${at}.printTarget`),
     dataFieldsJson: row["dataFieldsJson"] === undefined ? undefined : layoutLayoutArtifactGuardString(row["dataFieldsJson"], `${at}.dataFieldsJson`),
-    selectedIds: layoutLayoutArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => layoutLayoutArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    activePageId: layoutLayoutArtifactGuardString(row["activePageId"], `${at}.activePageId`),
-    engagementInput: layoutLayoutArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),
-    cameraX: layoutLayoutArtifactGuardNumber(row["cameraX"], `${at}.cameraX`),
-    cameraY: layoutLayoutArtifactGuardNumber(row["cameraY"], `${at}.cameraY`),
-    cameraZoom: layoutLayoutArtifactGuardNumber(row["cameraZoom"], `${at}.cameraZoom`),
-    previewCameraX: layoutLayoutArtifactGuardNumber(row["previewCameraX"], `${at}.previewCameraX`),
-    previewCameraY: layoutLayoutArtifactGuardNumber(row["previewCameraY"], `${at}.previewCameraY`),
-    previewCameraZoom: layoutLayoutArtifactGuardNumber(row["previewCameraZoom"], `${at}.previewCameraZoom`),
-    dropPreview: parseLayoutDropPreviewState(row["dropPreview"], `${at}.dropPreview`),
-    hoveredId: row["hoveredId"] === undefined ? undefined : layoutLayoutArtifactGuardString(row["hoveredId"], `${at}.hoveredId`),
   };
 }
 

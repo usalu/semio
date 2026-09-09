@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::Din16798Snapshot;
 use crate::mutations::change_t_op_c;
+use crate::Din16798Snapshot;
 
 fn sample_mutation() -> Din16798Mutation {
     Din16798Mutation::ChangeTOpC(change_t_op_c::ChangeTOpC { new_t_op_c: 23.0 })

@@ -1,7 +1,5 @@
 //! 🛢️ `update-silo-shell-inputs` — atomically updates the silo-shell-inputs facet (silo_t_mm, silo_r_mm, shell_sigma_x_ed_mpa, silo_k, silo_gamma_kn_m3, silo_depth_m are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

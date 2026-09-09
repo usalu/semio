@@ -22,5 +22,4 @@ type En1995Diff {
   sectionDepthMm: Float @state(class: ARTIFACT)
   aVertMS2: Float @state(class: ARTIFACT)
   nCyclesBridge: Float @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }

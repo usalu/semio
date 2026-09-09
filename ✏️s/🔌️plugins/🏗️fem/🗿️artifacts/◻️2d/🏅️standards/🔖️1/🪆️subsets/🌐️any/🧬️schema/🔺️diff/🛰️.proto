@@ -23,19 +23,7 @@ message Fem2dDiff {
   optional Fem2dCombinationsDelta combinations = 9;
   // @state artifact
   optional FemAnalysisSettings analysis = 10;
-  // @state presence
-  optional string result_source_id = 11;
-  // @state presence
-  optional string result_mode = 12;
-  // @state presence
-  optional uint32 result_mode_index = 13;
   // @state config
-  optional FemCamera camera = 14;
-  // @state config
-  // @state artifact
-  optional string solver_results_json = 16;
-  // @state artifact
-  optional string mesh_preview_json = 17;
 }
 
 message Fem2dNodesDelta {

@@ -27,7 +27,13 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for CommitTryValue
         next.try_values = next.try_values.with_chunks(&self.key, self.content_id.clone(), chunks);
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> { vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Commit Try Value".into() }
-    fn target(&self) -> Vec<String> { vec!["try-value".into()] }
+    fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> {
+        vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Commit Try Value".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["try-value".into()]
+    }
 }

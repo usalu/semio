@@ -131,7 +131,7 @@ export function createFreshComponentTests(dependencies: Record<string, any>, sou
       capabilityRequests: [],
       extensionPoints: [],
       execution: "isolated",
-      executionProtocol: { appChannelVersion: 14 },
+      executionProtocol: { appChannelVersion: 15 },
       quotas: {},
       contributions: {},
       assets: [],
@@ -205,17 +205,17 @@ export function createFreshComponentTests(dependencies: Record<string, any>, sou
       return await stageFreshComponentInputs({ pluginId: "gis", componentPackageId: "semio:gis" }, input, stage, ["checkpoint", "describe", "jobs", "reactor"], buildControl, derive);
     };
     let retainedLease: FreshComponentLeaseV1 | undefined, retainedLoan: Uint8Array | undefined;
-    const source = cloneSnapshot();
-    const produced = await handoff("loan-success", source, control, async (lease) => {
+    const retainedInput = cloneSnapshot();
+    const produced = await handoff("loan-success", retainedInput, control, async (lease) => {
       retainedLease = lease;
       assert.deepEqual(Object.keys(lease), ["consume"]);
       assert(Object.isFrozen(lease));
       const digest = await lease.consume(async (bytes) => {
         retainedLoan = bytes;
-        assert.notEqual(bytes.buffer, source.componentBytes.buffer);
+        assert.notEqual(bytes.buffer, retainedInput.componentBytes.buffer);
         const sha256 = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
         bytes.fill(9);
-        assert.deepEqual(Buffer.from(source.componentBytes), component);
+        assert.deepEqual(Buffer.from(retainedInput.componentBytes), component);
         return sha256;
       });
       await assert.rejects(
@@ -229,8 +229,8 @@ export function createFreshComponentTests(dependencies: Record<string, any>, sou
     assert.deepEqual(readFileSync(join(evidence, "loan-success/component.wasm")), component);
     assert.deepEqual(Object.keys(produced.receipt).sort(), ["component", "coreSha256", "descriptor", "packageId", "pluginId", "version", "witExports"]);
     assert(retainedLoan!.every((byte) => byte === 0));
-    assert(source.componentBytes.every((byte) => byte === 0));
-    assert(source.descriptorBytes.every((byte) => byte === 0));
+    assert(retainedInput.componentBytes.every((byte) => byte === 0));
+    assert(retainedInput.descriptorBytes.every((byte) => byte === 0));
     await assert.rejects(
       retainedLease!.consume(async () => "late"),
       /expired/,

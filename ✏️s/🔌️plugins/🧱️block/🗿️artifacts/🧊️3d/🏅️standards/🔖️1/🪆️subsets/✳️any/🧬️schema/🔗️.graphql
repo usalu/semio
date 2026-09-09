@@ -4,23 +4,14 @@ type Block3dArtifact {
   schema: String! @state(class: ARTIFACT)
   objectKind: BlockKindIdentity! @state(class: ARTIFACT)
   representations: [BlockRepresentation!]! @state(class: ARTIFACT)
-  vortexKinds: [Block3dVortexKind!]! @state(class: ARTIFACT)
+  catalog: ArtifactChild! @state(class: ARTIFACT)
+  vortexKindExtra: [Block3dVortexKindExtra!]! @state(class: ARTIFACT)
   vortices: [Block3dVortexTemplate!]! @state(class: ARTIFACT)
   compatibility: [BlockCompatibilityRule!]! @state(class: ARTIFACT)
   attributes: [BlockAttribute!]! @state(class: ARTIFACT)
   authors: [BlockAuthor!]! @state(class: ARTIFACT)
   camera3d: BlockCamera3d! @state(class: ARTIFACT)
   meta: BlockMeta! @state(class: ARTIFACT)
-  selectedIds: [String!]! @state(class: PRESENCE)
-  activeRepresentationId: String @state(class: PRESENCE)
-  wantedTags: [String!]! @state(class: PRESENCE)
-  windows: [Block3dWindowView!]! @state(class: CONFIG)
-  brushVortexKindId: String @state(class: CONFIG)
-  brushRadius: Float! @state(class: CONFIG)
-  brushFlip: Boolean! @state(class: CONFIG)
-  brushPreview: Block3dBrushPreview @state(class: ARTIFACT)
-  camera: BlockCamera3d @state(class: CONFIG)
-  hoveredVortexFullId: String @state(class: ARTIFACT)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }
@@ -28,6 +19,8 @@ type BlockKindIdentity { _placeholder: Boolean }
 type BlockRepresentation { _placeholder: Boolean }
 
 type Block3dVortexKind { _placeholder: Boolean }
+
+type Block3dVortexKindExtra { _placeholder: Boolean }
 
 type Block3dVortexTemplate { _placeholder: Boolean }
 
@@ -42,5 +35,3 @@ type BlockCamera3d { _placeholder: Boolean }
 type BlockMeta { _placeholder: Boolean }
 
 type Block3dWindowView { _placeholder: Boolean }
-
-type Block3dBrushPreview { _placeholder: Boolean }

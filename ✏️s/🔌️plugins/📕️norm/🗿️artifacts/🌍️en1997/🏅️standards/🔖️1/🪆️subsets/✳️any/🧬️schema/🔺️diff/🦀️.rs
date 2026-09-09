@@ -55,7 +55,5 @@ pub struct En1997Diff {
     pub pile_n_profiles: Option<u32>,
     #[state(artifact)]
     pub z_investigated_m: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::mutations::En1999Mutation;
 use protocol::{Mutation as _, MutationDiff};

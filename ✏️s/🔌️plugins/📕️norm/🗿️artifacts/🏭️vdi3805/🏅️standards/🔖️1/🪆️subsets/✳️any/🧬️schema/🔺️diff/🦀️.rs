@@ -4,7 +4,6 @@ use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, 
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
-
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the Vdi3805 artifact.
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -33,8 +32,6 @@ pub struct Vdi3805Diff {
     pub curves: Option<BTreeMap<String, CharacteristicCurve>>,
     #[state(artifact)]
     pub limits: Option<SecurityLimits>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

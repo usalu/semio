@@ -90,10 +90,7 @@ fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
     assert!(outcome.diff().analysis.is_some(), "update-analysis-settings/🔢️doubles-the-modal-3fbb1a: the settings record must surface in the analysis field");
-    assert!(
-        outcome.diff().nodes.is_none() && outcome.diff().elements.is_none() && outcome.diff().load_cases.is_none(),
-        "update-analysis-settings/🔢️doubles-the-modal-3fbb1a: no collection delta may be opened by a settings edit"
-    );
+    assert!(outcome.diff().nodes.is_none() && outcome.diff().elements.is_none() && outcome.diff().load_cases.is_none(), "update-analysis-settings/🔢️doubles-the-modal-3fbb1a: no collection delta may be opened by a settings edit");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "update-analysis-settings/🔢️doubles-the-modal-3fbb1a: produced diff differs from the committed 🔺️diff/🔣️.json");

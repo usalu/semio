@@ -1,19 +1,17 @@
 //! 🎬️ Sequence artifact — the document entity this plugin's app edits (constitutional: general).
 
+extern crate infinite_canvas as infinite_board_port_directed_dag;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 #[cfg(test)]
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
-extern crate infinite_canvas as infinite_board_port_directed_dag;
 
 use neural_engine::{Dictionary, Value};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{
-    FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
-};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use std::collections::HashMap;
 
 pub use crate::schema::mutations::SequenceMutation;
@@ -53,9 +51,21 @@ pub const SEQUENCE_DIALECT: semio_framework_plugin::Dialect = semio_framework_pl
 #[value(transparent)]
 pub struct StepParams(pub Dictionary);
 
-impl neural_engine::ColdRetire for StepParams { fn retire_cold(self) { self.0.retire_cold(); } }
-impl neural_engine::ColdRetire for SequenceStep { fn retire_cold(self) { self.params.retire_cold(); } }
-impl neural_engine::ColdRetire for SequenceWorkingScene { fn retire_cold(self) { self.steps.retire_cold(); } }
+impl neural_engine::ColdRetire for StepParams {
+    fn retire_cold(self) {
+        self.0.retire_cold();
+    }
+}
+impl neural_engine::ColdRetire for SequenceStep {
+    fn retire_cold(self) {
+        self.params.retire_cold();
+    }
+}
+impl neural_engine::ColdRetire for SequenceWorkingScene {
+    fn retire_cold(self) {
+        self.steps.retire_cold();
+    }
+}
 
 impl StepParams {
     pub fn new() -> Self {
@@ -358,8 +368,14 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "sequence.sequence")?)?
                 .claim(ArtifactIdentityClaim::codec_extension("sequence.sequence", "sequence")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Sequence")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Sequence")?)?)?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Sequenz")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Sequenz")?)?)
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.localization.en")?, ArtifactCapabilityKind::localization())
+                .descriptor(b"Sequence")?
+                .localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Sequence")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Sequenz")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Sequenz")?)?,
+        )
 }
 
 //#endregion 🔖️Declaration
@@ -397,200 +413,141 @@ impl<A> SequenceApplication for A where
 //#endregion 🔖️ArtifactDeclaration
 
 #[path = "."]
-        pub mod standards {
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "🏅️standards/🔖️1/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod subsets {
             #[path = "."]
-            pub mod v1 {
-                #[path = "🏅️standards/🔖️1/🦀️.rs"]
+            pub mod any {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
                 mod component;
                 pub use component::*;
                 #[path = "."]
-                pub mod subsets {
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
                     #[path = "."]
-                    pub mod any {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod schema {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                        pub mod topology {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "."]
-                            pub mod inferences {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod topology {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                            }
-                            #[path = "."]
-                            pub mod snapshot {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod diff {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
-                            pub mod operations;
-                            #[path = "."]
-                            pub mod mutations {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
                         }
+                    }
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
+                    pub mod operations;
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod import {
                         #[path = "."]
-                        pub mod io {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
+                        pub mod deserializers {
                             #[path = "."]
-                            pub mod snapshot {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                                pub mod text;
-                            }
-                            #[path = "."]
-                            pub mod diff {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                                pub mod text;
-                            }
-                            #[path = "."]
-                            pub mod mutations {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
-                                pub mod text;
-                            }
-                            #[path = "."]
-                            pub mod inferences {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
-                                pub mod text;
-                            }
-                            #[path = "."]
-                            pub mod import {
+                            pub mod artifacts {
                                 #[path = "."]
-                                pub mod deserializers {
+                                pub mod txt {
                                     #[path = "."]
-                                    pub mod artifacts {
+                                    pub mod v_utf_8 {
                                         #[path = "."]
-                                        pub mod txt {
-                                            #[path = "."]
-                                            pub mod v_utf_8 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod csv {
-                                            #[path = "."]
-                                            pub mod v_rfc4180 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod md {
-                                            #[path = "."]
-                                            pub mod v_commonmark {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod json {
-                                            #[path = "."]
-                                            pub mod v_rfc8259 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
                                         }
                                     }
                                 }
-                            }
-                            #[path = "."]
-                            pub mod export {
                                 #[path = "."]
-                                pub mod serializers {
+                                pub mod csv {
                                     #[path = "."]
-                                    pub mod artifacts {
+                                    pub mod v_rfc4180 {
                                         #[path = "."]
-                                        pub mod txt {
-                                            #[path = "."]
-                                            pub mod v_utf_8 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
                                         }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod md {
+                                    #[path = "."]
+                                    pub mod v_commonmark {
                                         #[path = "."]
-                                        pub mod csv {
-                                            #[path = "."]
-                                            pub mod v_rfc4180 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
                                         }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod json {
+                                    #[path = "."]
+                                    pub mod v_rfc8259 {
                                         #[path = "."]
-                                        pub mod md {
-                                            #[path = "."]
-                                            pub mod v_commonmark {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod json {
-                                            #[path = "."]
-                                            pub mod v_rfc8259 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
                                         }
                                     }
                                 }
@@ -598,180 +555,239 @@ impl<A> SequenceApplication for A where
                         }
                     }
                     #[path = "."]
-                    pub mod step {
+                    pub mod export {
                         #[path = "."]
-                        pub mod schema {
+                        pub mod serializers {
                             #[path = "."]
-                            pub mod mutations {
+                            pub mod artifacts {
                                 #[path = "."]
-                                pub mod create_step {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🧪️tests/🚫️rejects-a-547ea4/🦀️.rs"]
-                                    mod tests_rejects_a_duplicate_step_id;
+                                pub mod txt {
+                                    #[path = "."]
+                                    pub mod v_utf_8 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
                                 }
                                 #[path = "."]
-                                pub mod delete_step {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects-deleting-1e4599/🦀️.rs"]
-                                    mod tests_rejects_deleting_a_missing_step;
+                                pub mod csv {
+                                    #[path = "."]
+                                    pub mod v_rfc4180 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
                                 }
                                 #[path = "."]
-                                pub mod move_step {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🧪️tests/🟰️no-ops-when-the-b925f0/🦀️.rs"]
-                                    mod tests_no_ops_when_the_step_is_already_at_that_position;
+                                pub mod md {
+                                    #[path = "."]
+                                    pub mod v_commonmark {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
                                 }
                                 #[path = "."]
-                                pub mod edit_step_params {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🧪️tests/🟰️no-ops-when-the-70413d/🦀️.rs"]
-                                    mod tests_no_ops_when_the_params_are_already_identical;
-                                }
-                                #[path = "."]
-                                pub mod change_step_collapsed {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🧪️tests/🟰️no-ops-when-the-bd4f9d/🦀️.rs"]
-                                    mod tests_no_ops_when_the_step_is_already_collapsed;
-                                }
-                                #[path = "."]
-                                pub mod duplicate_step {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🧪️tests/🚫️rejects-when-the-48fafc/🦀️.rs"]
-                                    mod tests_rejects_when_the_new_id_already_exists;
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod dependency {
-                        #[path = "."]
-                        pub mod schema {
-                            #[path = "."]
-                            pub mod mutations {
-                                #[path = "."]
-                                pub mod connect_steps {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🧪️tests/🚫️rejects-connectin-17a073/🦀️.rs"]
-                                    mod tests_rejects_connecting_a_step_to_itself;
-                                }
-                                #[path = "."]
-                                pub mod disconnect_steps {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🧪️tests/🚫️rejects-disconnec-c7496b/🦀️.rs"]
-                                    mod tests_rejects_disconnecting_a_missing_edge;
+                                pub mod json {
+                                    #[path = "."]
+                                    pub mod v_rfc8259 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
-
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod io {
-            pub use super::standards::v1::subsets::any::io::*;
-        }
-        pub mod op {
-            pub use crate::standards::v1::subsets::any::io::mutations::text::*;
-        }
-        pub mod document_dsl {
-            pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-        }
-        pub mod spr {
-            pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-        }
-        pub mod diff {
-            pub use crate::standards::v1::subsets::any::schema::diff::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::diff::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::io::diff::text::*;
-            }
-        }
-        pub mod mutations {
-            pub use crate::standards::v1::subsets::any::schema::mutations::*;
-        }
-        pub mod snapshot {
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-            }
-        }
-
-        #[path = "."]
-        pub mod examples {
             #[path = "."]
-            pub mod demo {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
-                mod tests;
+            pub mod step {
+                #[path = "."]
+                pub mod schema {
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "."]
+                        pub mod create_step {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🧪️tests/🚫️rejects-a-547ea4/🦀️.rs"]
+                            mod tests_rejects_a_duplicate_step_id;
+                        }
+                        #[path = "."]
+                        pub mod delete_step {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects-deleting-1e4599/🦀️.rs"]
+                            mod tests_rejects_deleting_a_missing_step;
+                        }
+                        #[path = "."]
+                        pub mod move_step {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🧪️tests/🟰️no-ops-when-the-b925f0/🦀️.rs"]
+                            mod tests_no_ops_when_the_step_is_already_at_that_position;
+                        }
+                        #[path = "."]
+                        pub mod edit_step_params {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🧪️tests/🟰️no-ops-when-the-70413d/🦀️.rs"]
+                            mod tests_no_ops_when_the_params_are_already_identical;
+                        }
+                        #[path = "."]
+                        pub mod change_step_collapsed {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🧪️tests/🟰️no-ops-when-the-bd4f9d/🦀️.rs"]
+                            mod tests_no_ops_when_the_step_is_already_collapsed;
+                        }
+                        #[path = "."]
+                        pub mod duplicate_step {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🧪️tests/🚫️rejects-when-the-48fafc/🦀️.rs"]
+                            mod tests_rejects_when_the_new_id_already_exists;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod dependency {
+                #[path = "."]
+                pub mod schema {
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "."]
+                        pub mod connect_steps {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🧪️tests/🚫️rejects-connectin-17a073/🦀️.rs"]
+                            mod tests_rejects_connecting_a_step_to_itself;
+                        }
+                        #[path = "."]
+                        pub mod disconnect_steps {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🧪️tests/🚫️rejects-disconnec-c7496b/🦀️.rs"]
+                            mod tests_rejects_disconnecting_a_missing_edge;
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+// ---- Shims: keep pre-migration module paths resolving for external callers ----
+pub mod schema {
+    pub use super::standards::v1::subsets::any::schema::*;
+}
+pub mod io {
+    pub use super::standards::v1::subsets::any::io::*;
+}
+pub mod op {
+    pub use crate::standards::v1::subsets::any::io::mutations::text::*;
+}
+pub mod document_dsl {
+    pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
+}
+pub mod spr {
+    pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
+}
+pub mod diff {
+    pub use crate::standards::v1::subsets::any::schema::diff::*;
+    pub mod schema {
+        pub use crate::standards::v1::subsets::any::schema::diff::*;
+    }
+    pub mod text {
+        pub use crate::standards::v1::subsets::any::io::diff::text::*;
+    }
+}
+pub mod mutations {
+    pub use crate::standards::v1::subsets::any::schema::mutations::*;
+}
+pub mod snapshot {
+    pub mod schema {
+        pub use crate::standards::v1::subsets::any::schema::snapshot::*;
+    }
+    pub mod pack {
+        pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
+    }
+}
+
+#[path = "."]
+pub mod examples {
+    #[path = "."]
+    pub mod demo {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[cfg(test)]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
+        mod tests;
+    }
+}
 
 #[path = "."]
 pub mod editor {
@@ -890,4 +906,3 @@ pub mod viewer {
         }
     }
 }
-

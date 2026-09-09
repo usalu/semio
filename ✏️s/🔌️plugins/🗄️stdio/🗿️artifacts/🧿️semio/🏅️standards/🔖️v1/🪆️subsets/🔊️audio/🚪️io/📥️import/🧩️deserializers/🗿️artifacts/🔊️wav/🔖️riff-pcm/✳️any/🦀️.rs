@@ -16,9 +16,9 @@
 //!   bytes this bridge's job explicitly excludes ("zero codec reimplementation").
 
 use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::WavData;
 use semio_s_artifact_stdio_wav::WavSnapshot;
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };

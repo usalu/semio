@@ -6,9 +6,9 @@
 //! (`policyViewerPurityBreaches` forbids it outright, including the substring in comments).
 
 use crate::schema::default_snapshot;
-use crate::{ProcedureSnapshot, PROCEDURE_DIALECT, PROCEDURE_DOCUMENT_SCHEMA};
 use crate::viewer::procedure::modes::view;
 use crate::viewer::procedure::modes::view::windows::{main, script};
+use crate::{ProcedureSnapshot, PROCEDURE_DIALECT, PROCEDURE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ComponentTree, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 // 🚧️ SDK GAP: `ArtifactViewer`/`Viewer`/`ViewEmit`/`Dialect` were closed by w0-f (bare-importable
 // from the crate root now); `Dialect`/`StandardId`/`SubsetId` and the window-kit types (contract
@@ -74,12 +74,13 @@ impl ArtifactViewer for ImperativeViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         (match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
+            main::BODY_KEY => main::render(doc.snapshot, view_state),
             script::BODY_KEY => script::render(doc.snapshot),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),
-        }).map(semio_framework_plugin::built_to_component_tree)
+        })
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer

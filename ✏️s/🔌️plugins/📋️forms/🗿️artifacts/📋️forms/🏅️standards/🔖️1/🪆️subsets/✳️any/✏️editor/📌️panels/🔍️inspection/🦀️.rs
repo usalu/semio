@@ -1,7 +1,7 @@
 //! 🔍️ Forms play app panel — the document-wide summary (schema, step count, question count).
 
-use crate::{forms_steps, FormsSnapshot};
 use crate::editor::forms::{ui_label, ui_node_list};
+use crate::{forms_steps, FormsSnapshot};
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants

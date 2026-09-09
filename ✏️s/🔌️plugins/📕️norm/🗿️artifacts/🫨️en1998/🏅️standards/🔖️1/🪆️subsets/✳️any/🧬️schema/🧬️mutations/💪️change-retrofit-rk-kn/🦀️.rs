@@ -1,9 +1,8 @@
 //! 🐞 `change-retrofit-rk-kn` payload — changes the En1998 document's `retrofit_r_k_kn` (retrofit capacity R_k [kN]).
 
-
-use crate::En1998Snapshot;
 use crate::diff::En1998Diff;
 use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 //#region 🔖️ChangeRetrofitRKKn
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

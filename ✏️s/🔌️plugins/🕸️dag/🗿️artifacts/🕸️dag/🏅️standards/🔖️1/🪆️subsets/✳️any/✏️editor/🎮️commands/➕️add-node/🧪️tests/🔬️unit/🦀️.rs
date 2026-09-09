@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::dag::DagCommand;
 use crate::editor::dag::commands::{patch_dag_nodes, remove_node, rename_dag_node};
 use crate::editor::dag::testkit;
+use crate::editor::dag::DagCommand;
 use semio_framework_artifact_infinite_dag::DagNodeKind;
 use semio_framework_plugin::PluginApp;
 

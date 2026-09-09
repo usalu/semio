@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateSurface` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateSurface, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -32,7 +32,21 @@ pub fn diff(payload: &super::CreateSurface, base: &EnergyModelSnapshot) -> proto
     };
     let mut model = base.model.clone();
     let position = model.surfaces.iter().position(|item| item.id > payload.id).unwrap_or(model.surfaces.len());
-    model.surfaces.insert(position, crate::model::Surface { id: payload.id, name: payload.name.clone(), zone_id: payload.zone_id, class: payload.class, vertices_m: payload.vertices_m.clone(), construction_id: payload.construction_id, outside_boundary_condition: boundary, sun_exposed: payload.sun_exposed, wind_exposed: payload.wind_exposed, multiplier: payload.multiplier });
+    model.surfaces.insert(
+        position,
+        crate::model::Surface {
+            id: payload.id,
+            name: payload.name.clone(),
+            zone_id: payload.zone_id,
+            class: payload.class,
+            vertices_m: payload.vertices_m.clone(),
+            construction_id: payload.construction_id,
+            outside_boundary_condition: boundary,
+            sun_exposed: payload.sun_exposed,
+            wind_exposed: payload.wind_exposed,
+            multiplier: payload.multiplier,
+        },
+    );
     protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

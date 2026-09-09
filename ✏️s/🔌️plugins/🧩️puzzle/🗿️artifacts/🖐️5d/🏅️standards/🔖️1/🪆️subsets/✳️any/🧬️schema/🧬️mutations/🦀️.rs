@@ -118,9 +118,9 @@ pub use super::move_part_2d::{move_part_2d, MovePart2d};
 pub use super::move_part_3d::{move_part_3d, MovePart3d};
 pub use super::remove_part_grip::{remove_part_grip, RemovePartGrip};
 pub use super::rename_puzzle5d::{rename_puzzle5d, RenamePuzzle5d};
-pub use super::replace_fastener_semio_framework_geometry::{replace_fastener_geometry, ReplaceFastenerGeometry};
+pub use super::replace_fastener_geometry::{replace_fastener_geometry, ReplaceFastenerGeometry};
 pub use super::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalogs};
-pub use super::replace_part_2d_semio_framework_geometry::{replace_part_2d_geometry, ReplacePart2dGeometry};
+pub use super::replace_part_2d_geometry::{replace_part_2d_geometry, ReplacePart2dGeometry};
 pub use super::replace_part_grip::{replace_part_grip, ReplacePartGrip};
 pub use super::rotate_part_3d::{rotate_part_3d, RotatePart3d};
 pub use super::scale_part_3d::{scale_part_3d, ScalePart3d};
@@ -241,7 +241,7 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
                     || prior.x != fastener.x
                     || prior.y != fastener.y
                 {
-                    mutations.push(replace_fastener_geometry(crate::standards::v1::subsets::any::schema::mutations::ReplaceFastenerGeometry { id: fastener.id.clone(), new_gap: fastener.gap, new_shift: fastener.shift, new_rise: fastener.rise, new_rotation: fastener.rotation, new_turn: fastener.turn, new_tilt: fastener.tilt, new_x: fastener.x, new_y: fastener.y }));
+                    mutations.push(replace_fastener_geometry(ReplaceFastenerGeometry { id: fastener.id.clone(), new_gap: fastener.gap, new_shift: fastener.shift, new_rise: fastener.rise, new_rotation: fastener.rotation, new_turn: fastener.turn, new_tilt: fastener.tilt, new_x: fastener.x, new_y: fastener.y }));
                 }
                 if prior.fastener_kind != fastener.fastener_kind {
                     mutations.push(change_fastener_kind(fastener.id.clone(), fastener.fastener_kind.clone()));

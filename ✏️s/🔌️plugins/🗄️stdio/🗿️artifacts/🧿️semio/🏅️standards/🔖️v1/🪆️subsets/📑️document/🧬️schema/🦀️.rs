@@ -49,13 +49,7 @@ impl SemioDocumentArtifact {
 pub fn semio_document_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.document",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -82,9 +76,9 @@ pub fn semio_document_artifact_schema_descriptor() -> framework_schema::Artifact
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::standards::v1::subsets::document::schema::diff::SemioDocumentDiff;
-    use crate::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, SemioDocumentMutation};
     #[cfg(test)]
-    use crate::standards::v1::subsets::document::schema::mutations::{insert_style};
+    use crate::standards::v1::subsets::document::schema::mutations::insert_style;
+    use crate::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, SemioDocumentMutation};
     use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocStyle, SemioDocumentSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 

@@ -1,4 +1,3 @@
-
 use super::*;
 use protocol::{Mutation as _, MutationDiff as _, OpBinary as _, OpText as _};
 

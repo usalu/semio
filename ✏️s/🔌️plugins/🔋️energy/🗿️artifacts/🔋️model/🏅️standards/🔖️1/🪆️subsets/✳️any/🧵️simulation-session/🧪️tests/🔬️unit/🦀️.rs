@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn render(app: u32, generation: u64) -> AppRenderOperationContext {
@@ -66,11 +65,10 @@ fn retirement_max_plus_one_retains_the_rejected_shell() {
 }
 
 #[test]
-fn checkpoint_selection_and_locale_do_not_change_numerical_digest() {
+fn checkpoint_selection_does_not_change_numerical_digest() {
     let base = EnergySimulationConfigProjection::default();
     let mut restored = base;
     restored.checkpoint_token = u64::MAX;
-    restored.locale_de = true;
     assert_eq!(base.digest(), restored.digest());
     restored.zone_timestep_minutes += 1;
     assert_ne!(base.digest(), restored.digest());

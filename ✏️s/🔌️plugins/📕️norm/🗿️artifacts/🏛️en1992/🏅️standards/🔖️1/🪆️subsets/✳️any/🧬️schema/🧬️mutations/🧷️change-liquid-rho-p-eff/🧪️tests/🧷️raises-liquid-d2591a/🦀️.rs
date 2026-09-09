@@ -96,14 +96,12 @@ async fn change_liquid_rho_p_eff_produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is canonical and decodes back into `En1992Diff` with `liquidRhoPEff` set.
-/// `selected_check_index` stays unset on purpose: it is an `Option<Option<u32>>` whose `None` and
-/// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-liquid-rho-p-eff`
-/// never writes it anyway.
+/// 🕹️ Presence selection is absent from the artifact diff encoding.
 #[semio_framework_async_macros::async_test]
 async fn change_liquid_rho_p_eff_committed_diff_is_canonical() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-liquid-rho-p-eff committed diff decodes");
     assert_eq!(decoded.liquid_rho_p_eff, Some(0.0078125), "change-liquid-rho-p-eff/raises-liquid-rho-p-eff-to-0-0078125: the committed diff must carry liquid_rho_p_eff at 0.0078125");
-    assert!(decoded.selected_check_index.is_none(), "change-liquid-rho-p-eff/raises-liquid-rho-p-eff-to-0-0078125: the committed diff must leave the presence-lane selected_check_index unset");
+    assert!(serde_json::to_value(&decoded).expect("diff JSON").get("selectedCheckIndex").is_none(), "change-liquid-rho-p-eff/raises-liquid-rho-p-eff-to-0-0078125: the committed diff must leave the presence-lane selectedCheckIndex absent");
     let reencoded = serde_json::to_value(&decoded).expect("change-liquid-rho-p-eff committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-liquid-rho-p-eff committed diff reparses");
     assert_eq!(reencoded, original, "change-liquid-rho-p-eff/raises-liquid-rho-p-eff-to-0-0078125: committed diff JSON is not canonical");

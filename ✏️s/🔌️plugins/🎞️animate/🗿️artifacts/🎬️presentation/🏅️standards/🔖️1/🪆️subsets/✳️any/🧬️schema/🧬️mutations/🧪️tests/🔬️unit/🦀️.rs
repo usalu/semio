@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::{FigureTileDraft, FigureTileFrame, default_presentation_snapshot, presentation_snapshot_with_tiles, presentation_working_scene};
-use protocol::SemanticMutation;
+use crate::{default_presentation_snapshot, presentation_snapshot_with_tiles, presentation_working_scene, FigureTileDraft, FigureTileFrame};
 use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+use protocol::SemanticMutation;
 
 fn tile(id: &str) -> FigureTileDraft {
     FigureTileDraft { id: id.into(), name: id.into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }

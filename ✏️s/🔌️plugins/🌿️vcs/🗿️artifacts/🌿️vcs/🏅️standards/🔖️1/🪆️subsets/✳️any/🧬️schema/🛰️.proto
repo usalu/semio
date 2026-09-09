@@ -16,7 +16,5 @@ message VcsArtifact {
   string status = 5;
   // @state artifact
   repeated string tags = 6;
-  // @state presence
-  repeated string selected_checkpoint_ids = 7;
   // @state config
 }

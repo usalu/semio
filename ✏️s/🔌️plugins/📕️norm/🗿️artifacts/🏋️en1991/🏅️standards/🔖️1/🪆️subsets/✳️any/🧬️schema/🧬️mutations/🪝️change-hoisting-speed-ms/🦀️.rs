@@ -1,6 +1,5 @@
 //! ⬆️ `change-hoisting-speed-ms` — sets the En1991 hoisting speed scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

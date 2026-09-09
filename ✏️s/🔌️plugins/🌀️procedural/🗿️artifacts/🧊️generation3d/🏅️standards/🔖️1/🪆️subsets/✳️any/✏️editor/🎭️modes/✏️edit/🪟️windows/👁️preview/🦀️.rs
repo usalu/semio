@@ -1,9 +1,9 @@
 //! 👁️ Generation3d play app — the 3D preview window (edit mode): the tessellated evaluated geometry.
 
-use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_scene_status_json, preview_selection_json, preview_status_json, PreviewInteractionMarks, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
+use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, ActionDescriptor, BuiltNode, LocalizedLabel, MeasureSelectItem, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
 

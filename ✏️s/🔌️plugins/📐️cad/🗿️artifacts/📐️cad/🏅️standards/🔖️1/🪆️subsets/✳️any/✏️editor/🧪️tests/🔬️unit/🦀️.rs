@@ -1,12 +1,11 @@
-
 use super::testkit::*;
 use super::*;
 use crate::standards::v1::subsets::any::io::scene_from_spatial_payload;
 use crate::standards::v1::subsets::any::schema::inferences::{
-    CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO, align_mesh_to_fixture_centroid,
-    default_document, object_mesh_data, run_derive_from_geometry,
+    align_mesh_to_fixture_centroid, default_document, object_mesh_data, run_derive_from_geometry, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
+    CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
 };
-use crate::{CAD_PLAY_DOCUMENT_SCHEMA, CadNode, empty_cad_snapshot};
+use crate::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ActionKind, AppActionRegistry, EditorApp, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
 use store::{Backbone, BackboneMessage, MemoryBackbone};
 
@@ -221,7 +220,11 @@ fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
         let id = route.get("id").and_then(Value::as_str);
         let disposition = route.get("disposition").and_then(Value::as_str);
         let blocker = route.get("blocker").and_then(Value::as_str);
-        if id.is_some_and(|id| CAD_RETAINED_TOOL_IDS.contains(&id)) { disposition == Some("migrated") && blocker == Some("none") } else { disposition == Some("batchOnlyPendingRewrite") && blocker.is_some_and(|blocker| blocker != "none") }
+        if id.is_some_and(|id| CAD_RETAINED_TOOL_IDS.contains(&id)) {
+            disposition == Some("migrated") && blocker == Some("none")
+        } else {
+            disposition == Some("batchOnlyPendingRewrite") && blocker.is_some_and(|blocker| blocker != "none")
+        }
     }));
     let manifest = create_cad_app();
     for tool_id in CAD_RETAINED_TOOL_IDS {
@@ -538,7 +541,7 @@ async fn internal_and_plumbing_actions_excluded_from_palette() {
 #[semio_framework_async_macros::async_test]
 async fn engagement_input_and_possible_engagements_present() {
     let mut app = new_app().await;
-    let engagements = app.window_engagements().await;
+    let engagements = app.window_engagements(&ViewModel::default()).await;
     let shape = engagements.get(shape::WINDOW_KIND_ID).expect("shape engagement");
     assert!(shape.input.is_some());
     assert!(shape.possible_engagements.as_ref().is_some_and(|rows| !rows.is_empty()));
@@ -547,7 +550,7 @@ async fn engagement_input_and_possible_engagements_present() {
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_registered_for_all_four_panes() {
     let mut app = new_app().await;
-    let engagements = app.window_engagements().await;
+    let engagements = app.window_engagements(&ViewModel::default()).await;
     for window_kind in [shape::WINDOW_KIND_ID, building::WINDOW_KIND_ID, energy::WINDOW_KIND_ID, structure_classic::WINDOW_KIND_ID] {
         assert!(engagements.contains_key(window_kind), "missing engagement for {window_kind}");
     }
@@ -715,7 +718,7 @@ async fn dislocate_move_and_rotate_options_are_per_pane() {
 #[semio_framework_async_macros::async_test]
 async fn engagement_hud_no_longer_carries_utility_switcher_options() {
     let mut app = new_app().await;
-    let engagements = app.window_engagements().await;
+    let engagements = app.window_engagements(&ViewModel::default()).await;
     for engagement in engagements.values() {
         assert!(engagement.options.is_none(), "utility switching now lives in the framework utility bar, not the engagement HUD");
     }

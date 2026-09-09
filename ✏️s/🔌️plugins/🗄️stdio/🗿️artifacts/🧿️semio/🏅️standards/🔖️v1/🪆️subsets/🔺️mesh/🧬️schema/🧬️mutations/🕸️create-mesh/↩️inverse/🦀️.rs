@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreateMesh`.
 
-use crate::standards::v1::subsets::mesh::schema::mutations::{SemioMeshMutation, delete_mesh};
+use crate::standards::v1::subsets::mesh::schema::mutations::{delete_mesh, SemioMeshMutation};
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Inverse

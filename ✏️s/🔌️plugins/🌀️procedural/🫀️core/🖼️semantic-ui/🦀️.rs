@@ -30,14 +30,6 @@ pub(crate) fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue>
     UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| ui_assembly_error("ui.value.text"))
 }
 
-pub(crate) fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> UiAssemblyResult<UiValue> {
-    let mut builder = UiListBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.list"))?;
-    for value in values {
-        builder.push(value).map_err(|_| ui_assembly_error("ui.value.list.item"))?;
-    }
-    Ok(UiValue::List(builder.finish()))
-}
-
 pub(crate) fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
     let mut builder = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.map"))?;
     for (key, value) in values {
@@ -46,9 +38,7 @@ pub(crate) fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiVal
     Ok(UiValue::Map(builder.finish()))
 }
 
-pub(crate) fn ui_node_list(
-    values: impl IntoIterator<Item = UiAssemblyResult<BuiltNode>>,
-) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+pub(crate) fn ui_node_list(values: impl IntoIterator<Item = UiAssemblyResult<BuiltNode>>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut nodes = UiFixedList::default();
     for value in values {
         nodes.try_push(value?).map_err(|_| ui_assembly_error("ui.node-list.item"))?;
@@ -63,13 +53,7 @@ pub(crate) fn scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(id: impl Into
 }
 
 /// 📖 Renders the shared generation list without routing through Flow's legacy renderer node.
-pub(crate) fn generation_tree(
-    controller_id: &'static str,
-    surface_prefix: &str,
-    generation: &semio_framework_artifact_playbook_playbook::GenerationPlayState,
-    locale: Locale,
-    terminology: Terminology,
-) -> UiAssemblyResult<BuiltNode> {
+pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str, generation: &semio_framework_artifact_playbook_playbook::GenerationPlayState, locale: Locale, terminology: Terminology) -> UiAssemblyResult<BuiltNode> {
     let _ = terminology;
     let label = |key: &str| {
         match (key, locale) {

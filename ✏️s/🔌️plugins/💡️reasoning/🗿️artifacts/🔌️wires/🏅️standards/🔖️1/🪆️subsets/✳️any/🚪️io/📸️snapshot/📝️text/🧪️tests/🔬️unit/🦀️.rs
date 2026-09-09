@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{empty_wires_snapshot, wires_working_board};
 

@@ -19,6 +19,7 @@ default = []
 component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
+semio-framework-dispatch-macros = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -32,7 +33,6 @@ semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-mesh"] }
 semio-s-artifact-stdio-stl = { workspace = true }
 pack = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-scene = { workspace = true, optional = true }
 

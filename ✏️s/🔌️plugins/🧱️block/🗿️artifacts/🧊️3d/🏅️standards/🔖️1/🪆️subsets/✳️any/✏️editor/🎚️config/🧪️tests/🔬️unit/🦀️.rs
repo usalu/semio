@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -6,7 +5,6 @@ async fn block3d_config_default_has_all_tags() {
     let config = Block3dConfig::default();
     assert!(config.active_representation_id.is_none());
     assert!(config.wanted_tags.is_empty());
-    assert_eq!(config.locale, "en-US");
     assert!(config.windows.is_empty());
     assert_eq!(config.brush_radius, 0.3);
 }

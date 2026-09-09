@@ -16,6 +16,24 @@ use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
 //#region 🔖️Mutations
+#[path = "➕insert-entity/🦀️.rs"]
+pub mod insert_entity;
+#[path = "🧩insert-entity-arg/🦀️.rs"]
+pub mod insert_entity_arg;
+#[path = "➖remove-entity/🦀️.rs"]
+pub mod remove_entity;
+#[path = "🧹remove-entity-arg/🦀️.rs"]
+pub mod remove_entity_arg;
+#[path = "🎛️set-entity-arg/🦀️.rs"]
+pub mod set_entity_arg;
+#[path = "🏷️set-entity-name/🦀️.rs"]
+pub mod set_entity_name;
+#[path = "🗒️set-file-description/🦀️.rs"]
+pub mod set_file_description;
+#[path = "📛️set-file-name/🦀️.rs"]
+pub mod set_file_name;
+#[path = "🧬️set-file-schema/🦀️.rs"]
+pub mod set_file_schema;
 /// 📐️ Typed content mutation for `stdio.ifc`.
 /// 🧪️ F6 CONFIRMED: `#[derive(dsl::DslOps)]` on this enum fails (independent confirmation beyond
 /// `IfcDiff`'s `DiffCodec` blocker — see that file's doc comment), real `cargo check -p
@@ -38,24 +56,6 @@ use protocol::{Mutation, OpText};
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🗒️set-file-description/🦀️.rs"]
-pub mod set_file_description;
-#[path = "📛️set-file-name/🦀️.rs"]
-pub mod set_file_name;
-#[path = "🧬️set-file-schema/🦀️.rs"]
-pub mod set_file_schema;
-#[path = "➕insert-entity/🦀️.rs"]
-pub mod insert_entity;
-#[path = "➖remove-entity/🦀️.rs"]
-pub mod remove_entity;
-#[path = "🏷️set-entity-name/🦀️.rs"]
-pub mod set_entity_name;
-#[path = "🎛️set-entity-arg/🦀️.rs"]
-pub mod set_entity_arg;
-#[path = "🧩insert-entity-arg/🦀️.rs"]
-pub mod insert_entity_arg;
-#[path = "🧹remove-entity-arg/🦀️.rs"]
-pub mod remove_entity_arg;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
@@ -89,18 +89,7 @@ pub enum IfcMutation {
 /// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &[
-    "set-snapshot",
-    "set-file-description",
-    "set-file-name",
-    "set-file-schema",
-    "insert-entity",
-    "remove-entity",
-    "set-entity-name",
-    "set-entity-arg",
-    "insert-entity-arg",
-    "remove-entity-arg",
-];
+pub const KINDS: &[&str] = &["set-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply

@@ -6,8 +6,6 @@ export interface DagDiff {
   /** @state artifact */ edges?: DagEdgesDelta;
     /** @state artifact */ setNodes?: DagNodeSpecList;
     /** @state artifact */ setEdges?: DagFixtureEdgeList;
-  /** @state presence */ selectedNodeIds?: DagStringList;
-  /** @state config */ camera?: DagCamera;
 }
 export interface DagStringList { values: string[]; }
 export interface DagNodesDelta { added: DagNodeSpec[]; removed: string[]; patched: DagNodePatchEntry[]; reordered?: string[]; }
@@ -23,7 +21,6 @@ export interface DagFixtureEdge { id: string; source: string; target: string; }
 export interface DagCamera { x: number; y: number; zoom: number; }
 export interface DagArtifact {
   schema: string; nodes: DagNodeSpec[]; edges: DagFixtureEdge[];
-  selectedNodeIds: string[]; camera: DagCamera;
 }
 
 //#region 🚪️Parsers

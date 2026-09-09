@@ -399,69 +399,50 @@ fi
 if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
   exec 201>"$INSTALL_LOCK_FILE"
   if flock -w 180 201; then  # Increased timeout from 120 to 180 seconds
-    needs_rebuild=""
-    if [ ! -f "$VSIX_PATH" ]; then
-      needs_rebuild="1"
-      echo "📦️ Extension VSIX not found, rebuilding..."
-    else
-      for src in "$VSCODE_PACKAGE_ROOT/🟦️extension.ts" "$VSCODE_PACKAGE_ROOT/package.json" "$VSCODE_PACKAGE_ROOT/📜️script.ts" "$VSCODE_PACKAGE_ROOT/.vscodeignore"; do
-        if [ -f "$src" ] && [ "$VSIX_PATH" -ot "$src" ]; then
-          needs_rebuild="1"
-          echo "📦️ Extension source updated, rebuilding..."
-          break
-        fi
-      done
-    fi
-    if [ -n "$needs_rebuild" ]; then
-      echo "🔨️ Building repo VS Code extension..."
-      if (bun nx run @semio-tech/repo-vscode:build && bun nx run @semio-tech/repo-vscode:build-vsix); then
-        echo "✅️ Extension build completed."
-      else
-        echo "⚠️  Extension build failed, continuing without extension install."
-        flock -u 201
-        exec 201>&-
-        # Continue with other setup even if extension build fails
+    echo "📦️ Resolving the extension package through Nx..."
+    if bun nx run @semio-tech/repo-vscode:build-vsix; then
+      if [ -f "$VSCODE_PACKAGE_ROOT/package.json" ]; then
+        EXTENSION_PUBLISHER=$(bun -e "console.log(require('$VSCODE_PACKAGE_ROOT/package.json').publisher)" 2>/dev/null || echo "")
+        EXTENSION_NAME=$(bun -e "console.log(require('$VSCODE_PACKAGE_ROOT/package.json').name)" 2>/dev/null || echo "")
       fi
-    fi
-    if [ -f "$VSCODE_PACKAGE_ROOT/package.json" ]; then
-      EXTENSION_PUBLISHER=$(bun -e "console.log(require('$VSCODE_PACKAGE_ROOT/package.json').publisher)" 2>/dev/null || echo "")
-      EXTENSION_NAME=$(bun -e "console.log(require('$VSCODE_PACKAGE_ROOT/package.json').name)" 2>/dev/null || echo "")
-    fi
-    if [ -n "$EXTENSION_PUBLISHER" ] && [ -n "$EXTENSION_NAME" ]; then
-      EXTENSION_ID="${EXTENSION_PUBLISHER}.${EXTENSION_NAME}"
-    fi
-    if [ -f "$VSIX_PATH" ]; then
-      installed_any=""
-      for ide_cli in "${IDE_CLIS[@]}"; do
-        echo "📦️ Trying to install extension via $ide_cli..."
-        install_output="$("$ide_cli" --install-extension "$VSIX_PATH" --force 2>&1)" || true
-        if echo "$install_output" | grep -Fq "$WSL_ERROR"; then
-          echo "⚠️  $ide_cli not available from WSL, trying next CLI..."
-          continue
-        fi
-        if [ -n "$EXTENSION_ID" ]; then
-          list_output="$("$ide_cli" --list-extensions 2>&1)" || true
-          if echo "$list_output" | grep -Fq "$WSL_ERROR"; then
+      if [ -n "$EXTENSION_PUBLISHER" ] && [ -n "$EXTENSION_NAME" ]; then
+        EXTENSION_ID="${EXTENSION_PUBLISHER}.${EXTENSION_NAME}"
+      fi
+      if [ -f "$VSIX_PATH" ]; then
+        installed_any=""
+        for ide_cli in "${IDE_CLIS[@]}"; do
+          echo "📦️ Trying to install extension via $ide_cli..."
+          install_output="$("$ide_cli" --install-extension "$VSIX_PATH" --force 2>&1)" || true
+          if echo "$install_output" | grep -Fq "$WSL_ERROR"; then
             echo "⚠️  $ide_cli not available from WSL, trying next CLI..."
             continue
           fi
-          if echo "$list_output" | grep -Fqx "$EXTENSION_ID"; then
+          if [ -n "$EXTENSION_ID" ]; then
+            list_output="$("$ide_cli" --list-extensions 2>&1)" || true
+            if echo "$list_output" | grep -Fq "$WSL_ERROR"; then
+              echo "⚠️  $ide_cli not available from WSL, trying next CLI..."
+              continue
+            fi
+            if echo "$list_output" | grep -Fqx "$EXTENSION_ID"; then
+              echo "✅️ Extension installed via $ide_cli"
+              installed_any="1"
+              break  # Success, no need to try other CLIs
+            fi
+          else
             echo "✅️ Extension installed via $ide_cli"
             installed_any="1"
             break  # Success, no need to try other CLIs
           fi
-        else
-          echo "✅️ Extension installed via $ide_cli"
-          installed_any="1"
-          break  # Success, no need to try other CLIs
+        done
+        if [ -z "$installed_any" ]; then
+          echo "⚠️  No IDE CLI could install the extension from this attach session."
+          echo "💡️ You may need to install the extension manually from the VSIX file: $VSIX_PATH"
         fi
-      done
-      if [ -z "$installed_any" ]; then
-        echo "⚠️  No IDE CLI could install the extension from this attach session."
-        echo "💡️ You may need to install the extension manually from the VSIX file: $VSIX_PATH"
+      else
+        echo "⚠️  Extension file not found at $VSIX_PATH"
       fi
     else
-      echo "⚠️  Extension file not found at $VSIX_PATH"
+      echo "⚠️  Extension packaging failed; skipping installation for this attach."
     fi
     flock -u 201
   else

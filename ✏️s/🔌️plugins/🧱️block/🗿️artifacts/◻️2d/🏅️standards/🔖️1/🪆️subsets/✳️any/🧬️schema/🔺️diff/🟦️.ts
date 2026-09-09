@@ -23,9 +23,6 @@ export interface Block2dDiff {
   camera2d?: BlockCamera2d;
   /** @state artifact */
   meta?: BlockMeta;
-  /** @state presence */
-  selectedIds?: Block2dStringList;
-  /** @state config */
 }
 
 export interface BlockKindIdentity { [key: string]: unknown; }

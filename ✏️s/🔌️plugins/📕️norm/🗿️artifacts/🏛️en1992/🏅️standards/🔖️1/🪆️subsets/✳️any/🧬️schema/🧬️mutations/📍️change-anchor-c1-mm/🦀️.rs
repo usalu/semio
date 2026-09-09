@@ -1,9 +1,8 @@
 //! 🔧 `change-anchor-c1-mm` payload — changes the En1992 document's `anchor_c1_mm` (EN 1992 input).
 
-
-use crate::En1992Snapshot;
 use crate::diff::En1992Diff;
 use crate::mutations::En1992Mutation;
+use crate::En1992Snapshot;
 //#region 🔖️ChangeAnchorC1Mm
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

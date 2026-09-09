@@ -112,15 +112,13 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "set-node-root/reports-a-no-op-when-an-unflagged-node-is-set-to-not-root: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
-/// 🔣️ The committed diff is canonical and decodes to `WiresDiff`; every one of its slots is
-/// spelled out as `null`, including the `config`-lane `locale`.
+/// 🔣️ The committed diff is canonical and decodes to `WiresDiff`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: WiresDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-node-root/reports-a-no-op-when-an-unflagged-node-is-set-to-not-root: committed diff JSON is not canonical");
-    assert!(original.get("locale").is_some_and(serde_json::Value::is_null), "the config-lane slot must be present and null — a node-flag verb never touches the locale");
 }
 
 /// 🩹 Applying the committed diff straight to `before` yields the committed `after`.

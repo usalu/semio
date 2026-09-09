@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::testkit::{meta, new_app as sdk_new_app, new_app_with_registry};
 use semio_framework_plugin::{App, EditorApp, HistoryView, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
@@ -50,7 +49,7 @@ pub fn drive(command: &ArchitectCommand, program: &ProgramSnapshot) -> Emit<Prog
 pub fn drive_with_config(command: &ArchitectCommand, program: &ProgramSnapshot, config: &ArchitectConfig) -> Emit<ProgramMutation, ArchitectConfigMutation> {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(program, &history);
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     command.dispatch(&doc, &cfg).expect("dispatch")
 }
 
@@ -71,6 +70,6 @@ pub fn project_render(node: semio_framework_plugin::UiAssemblyResult<semio_frame
 
 pub fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> String {
     let history = HistoryView::empty();
-    let tree = ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config }, &semio_framework_plugin::ViewModel::default()).expect("editor render");
+    let tree = ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config, window: None }, &ViewModel::default()).expect("editor render");
     semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("retire editor tree")
 }

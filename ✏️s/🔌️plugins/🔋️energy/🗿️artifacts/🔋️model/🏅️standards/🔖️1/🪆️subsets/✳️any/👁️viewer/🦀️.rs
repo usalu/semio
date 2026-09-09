@@ -4,9 +4,9 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact mutation.
 //! Must not import anything from the sibling mutation-capable surface (`policyViewerPurityBreaches`).
 
-use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use crate::viewer::model::modes::view;
 use crate::viewer::model::modes::view::windows::{simulation, structure, zones};
+use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer};
 
 //#region 🔖️Command
@@ -71,8 +71,9 @@ impl ArtifactViewer for EnergyModelViewer {
             structure::BODY_KEY => structure::render(doc.snapshot)?,
             zones::BODY_KEY => zones::render(doc.snapshot)?,
             simulation::BODY_KEY => crate::energy_simulation_session::with_adopted_projection(doc.render_operation(), |projection| simulation::render(projection, &doc.snapshot.model)),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.viewer.render", "the unknown-body label could not be assembled"))?,
+            _ => {
+                semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.viewer.render", "the unknown-body label could not be assembled"))?
+            }
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }

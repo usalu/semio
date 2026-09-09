@@ -1,8 +1,6 @@
 /** 🧬️ Block2dConfig */
 export interface Block2dConfig {
   /** @state config */
-  selectedIds: string[];
-  /** @state config */
 }
 
 //#region 🚪️Parsers
@@ -53,8 +51,5 @@ export const block2dConfigGuardConstant = <T extends string | number | boolean>(
 //#endregion 🚪️Parsers
 
 export function parseBlock2dConfig(value: unknown, at = "$"): Block2dConfig {
-  const row = block2dConfigGuardObject(value, at);
-  return {
-    selectedIds: block2dConfigGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => block2dConfigGuardString(item, `${at}.selectedIds[${index}]`)),
-  };
+  return block2dConfigGuardObject(value, `${at}`);
 }

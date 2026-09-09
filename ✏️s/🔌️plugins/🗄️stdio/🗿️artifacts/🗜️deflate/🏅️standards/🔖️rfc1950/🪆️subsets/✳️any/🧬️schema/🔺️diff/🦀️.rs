@@ -10,8 +10,8 @@ use crate::DeflateSnapshot;
 use protocol::MutationDiff;
 // 🧭️ `DiffAlgebra` lives at `command::DiffAlgebra` (not re-exported bare at the `protocol` crate
 // root the way `MutationDiff` is) -- see `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`.
-use protocol::command::DiffAlgebra;
 use framework_schema::ArtifactSchema;
+use protocol::command::DiffAlgebra;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.deflate`. No `snapshot: Option<DeflateSnapshot>` full-replace slot --

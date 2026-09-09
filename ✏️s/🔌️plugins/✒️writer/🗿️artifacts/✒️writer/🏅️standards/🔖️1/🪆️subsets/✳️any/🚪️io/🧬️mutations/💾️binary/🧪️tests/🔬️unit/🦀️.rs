@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{WriterSnapshot, schema};
+use crate::{schema, WriterSnapshot};
 
 #[semio_framework_async_macros::async_test]
 async fn writer_snapshot_and_mutation_owners_retire_one_exact_field_per_grant() {

@@ -116,57 +116,6 @@
         }
       ],
       "x-semio-state": "artifact"
-    },
-    "selection": {
-      "anyOf": [
-        {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingUiSelection"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "presence"
-    },
-    "reportTable": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "x-semio-state": "presence"
-    },
-    "frameCursor": {
-      "anyOf": [
-        {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingUiFrameCursor"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "presence"
-    },
-    "camera": {
-      "anyOf": [
-        {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingUiCamera"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "config"
-    },
-    "layers": {
-      "anyOf": [
-        {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingUiLayers"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "config"
     }
   },
   "$defs": {
@@ -184,12 +133,7 @@
         "params",
         "gcps",
         "job",
-        "results",
-        "selection",
-        "reportTable",
-        "frameCursor",
-        "camera",
-        "layers"
+        "results"
       ],
       "properties": {
         "schema": {
@@ -233,21 +177,6 @@
         },
         "results": {
           "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionResults"
-        },
-        "selection": {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingUiSelection"
-        },
-        "reportTable": {
-          "type": "string"
-        },
-        "frameCursor": {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingUiFrameCursor"
-        },
-        "camera": {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingUiCamera"
-        },
-        "layers": {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingUiLayers"
         }
       }
     },

@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.trinity.rewriting.window.config.mutations;
+message WindowCamera { double x = 1; double y = 2; double zoom = 3; }
+message SetCamera { optional WindowCamera camera = 1; }
+message SetLodMode { string value = 1; }
+message RewritingWindowConfigMutation { oneof mutation { SetCamera set_camera = 1; SetLodMode set_lod_mode = 2; } }

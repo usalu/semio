@@ -130,17 +130,6 @@
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
-    },
-    "selectedCheckIndex": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "integer"
-        }
-      ],
-      "x-semio-state": "presence"
     }
   }
 }

@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use store::ArtifactDsl;

@@ -1,6 +1,5 @@
 //! 🌡️ `change-t-int-c` — sets the DIN 4108 `t_int_c` scalar.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

@@ -2,6 +2,9 @@
 
 use super::*;
 
+#[path = "🌱️value/🦀️.rs"]
+mod value;
+
 #[path = "🧵️borrowed/🦀️.rs"]
 mod borrowed;
 use borrowed::ArtifactCanonicalEditEncoder;

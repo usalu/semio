@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::generation3d::Generation3dCommand;
 use crate::editor::generation3d::commands::set_active_example;
 use crate::editor::generation3d::testkit::{app_with_registry, dispatch, drain_flow_eval_ticks, render as render_body};
+use crate::editor::generation3d::Generation3dCommand;
 use crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
 
 /// 🔎️ Recursively finds a string-valued JSON field named `key` anywhere in `value` — needed

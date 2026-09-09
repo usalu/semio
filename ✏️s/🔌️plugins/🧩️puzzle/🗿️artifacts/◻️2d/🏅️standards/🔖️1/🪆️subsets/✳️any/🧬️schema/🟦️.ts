@@ -11,48 +11,6 @@ export interface Puzzle2dArtifact {
   edges: Puzzle2dEdge[];
   /** @state artifact */
   meta: Puzzle2dMeta;
-  /** @state presence */
-  selectedIds: string[];
-  /** @state presence */
-  activeUtilityId: string;
-  /** @state config */
-  cameraX: number;
-  /** @state config */
-  cameraY: number;
-  /** @state config */
-  cameraZoom: number;
-  /** @state config */
-  selectionMethod: string;
-  /** @state config */
-  gridSnapEnabled: boolean;
-  /** @state config */
-  gridFactor: number;
-  /** @state config */
-  suggestionOffset: number;
-  /** @state config */
-  fillCount: number;
-  /** @state config */
-  brushCandidateIndex: number;
-  /** @state config */
-  brushCandidateSourceHandleId: string;
-  /** @state config */
-  /** @state config */
-  /** @state config */
-  lodModeByPaneJson: string;
-  /** @state config */
-  engagementInputByPaneJson: string;
-  /** @state config */
-  brushCandidatesJson: string;
-  /** @state config */
-  nodeKindWeightsJson: string;
-  /** @state config */
-  handleKindWeightsJson: string;
-  /** @state config */
-  activeUtilityByWindowIdJson: string;
-  /** @state artifact */
-  hoveredNodeId?: string;
-  /** @state artifact */
-  previewSeq: number;
 }
 
 export type Puzzle2dNodeAnchor = "fixed" | "derived";
@@ -276,26 +234,6 @@ export function parsePuzzle2dArtifact(value: unknown, at = "$"): Puzzle2dArtifac
     nodes: puzzlePuzzle2dArtifactGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parsePuzzle2dNode(item, `${at}.nodes[${index}]`)),
     edges: puzzlePuzzle2dArtifactGuardArray(row["edges"], `${at}.edges`).map((item, index) => parsePuzzle2dEdge(item, `${at}.edges[${index}]`)),
     meta: parsePuzzle2dMeta(row["meta"], `${at}.meta`),
-    selectedIds: puzzlePuzzle2dArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => puzzlePuzzle2dArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    activeUtilityId: puzzlePuzzle2dArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
-    cameraX: puzzlePuzzle2dArtifactGuardNumber(row["cameraX"], `${at}.cameraX`),
-    cameraY: puzzlePuzzle2dArtifactGuardNumber(row["cameraY"], `${at}.cameraY`),
-    cameraZoom: puzzlePuzzle2dArtifactGuardNumber(row["cameraZoom"], `${at}.cameraZoom`),
-    selectionMethod: puzzlePuzzle2dArtifactGuardString(row["selectionMethod"], `${at}.selectionMethod`),
-    gridSnapEnabled: puzzlePuzzle2dArtifactGuardBoolean(row["gridSnapEnabled"], `${at}.gridSnapEnabled`),
-    gridFactor: puzzlePuzzle2dArtifactGuardNumber(row["gridFactor"], `${at}.gridFactor`),
-    suggestionOffset: puzzlePuzzle2dArtifactGuardNumber(row["suggestionOffset"], `${at}.suggestionOffset`),
-    fillCount: puzzlePuzzle2dArtifactGuardInteger(row["fillCount"], `${at}.fillCount`, {"minimum": 0}),
-    brushCandidateIndex: puzzlePuzzle2dArtifactGuardInteger(row["brushCandidateIndex"], `${at}.brushCandidateIndex`, {"minimum": 0}),
-    brushCandidateSourceHandleId: puzzlePuzzle2dArtifactGuardString(row["brushCandidateSourceHandleId"], `${at}.brushCandidateSourceHandleId`),
-    lodModeByPaneJson: puzzlePuzzle2dArtifactGuardString(row["lodModeByPaneJson"], `${at}.lodModeByPaneJson`),
-    engagementInputByPaneJson: puzzlePuzzle2dArtifactGuardString(row["engagementInputByPaneJson"], `${at}.engagementInputByPaneJson`),
-    brushCandidatesJson: puzzlePuzzle2dArtifactGuardString(row["brushCandidatesJson"], `${at}.brushCandidatesJson`),
-    nodeKindWeightsJson: puzzlePuzzle2dArtifactGuardString(row["nodeKindWeightsJson"], `${at}.nodeKindWeightsJson`),
-    handleKindWeightsJson: puzzlePuzzle2dArtifactGuardString(row["handleKindWeightsJson"], `${at}.handleKindWeightsJson`),
-    activeUtilityByWindowIdJson: puzzlePuzzle2dArtifactGuardString(row["activeUtilityByWindowIdJson"], `${at}.activeUtilityByWindowIdJson`),
-    hoveredNodeId: row["hoveredNodeId"] === undefined ? undefined : puzzlePuzzle2dArtifactGuardString(row["hoveredNodeId"], `${at}.hoveredNodeId`),
-    previewSeq: puzzlePuzzle2dArtifactGuardInteger(row["previewSeq"], `${at}.previewSeq`),
   };
 }
 

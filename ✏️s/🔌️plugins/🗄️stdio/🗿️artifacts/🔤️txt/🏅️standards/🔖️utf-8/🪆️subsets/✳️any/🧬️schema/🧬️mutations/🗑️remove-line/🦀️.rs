@@ -1,8 +1,8 @@
 //! 🧬️ Direct remove-line mutation owner.
 //#region 🔖️Payload
-use crate::TxtSnapshot;
 use crate::schema::diff::{TxtDiff, TxtLinesDiff};
 use crate::schema::mutation_support::{native_shape_error, native_snapshot_error, txt_u32_to_usize};
+use crate::TxtSnapshot;
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::document_dsl as dsl;
 
@@ -17,10 +16,10 @@ async fn pack_round_trips_and_agrees_with_dsl() {
 /// `command_envelope_round_trip_holds_for_an_applied_operation`).
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::DAG_DOCUMENT_SCHEMA;
     use crate::op::DagMutation;
+    use crate::DAG_DOCUMENT_SCHEMA;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, ArtifactStore, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content: crate::dag_content_child_with_owner(Vec::new(), Vec::new()) };
     let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None)).await.expect("valid artifact store fixture");

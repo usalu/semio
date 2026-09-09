@@ -1,7 +1,7 @@
 //! Serialize stdio.zip to stdio.deflate (encode ZIP then zlib-compress).
 
-use semio_s_artifact_stdio_deflate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 use crate::ZipSnapshot;
+use semio_s_artifact_stdio_deflate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 
 //#region Codec
 /// Register serializer hooks.

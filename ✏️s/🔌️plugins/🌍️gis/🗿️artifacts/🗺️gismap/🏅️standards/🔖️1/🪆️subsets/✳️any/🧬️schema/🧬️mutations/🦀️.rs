@@ -5,9 +5,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{
-    create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data,
-};
+use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data};
 use crate::GisMapSnapshot;
 use dsl::{FromValue, ToValue};
 use protocol::Mutation;
@@ -63,20 +61,8 @@ pub fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMuta
 /// (`../../🔣️oracle.json`) declares and the `mutate-gismap-1` exhaustive test case measures
 /// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
 /// what keeps this list honest in both directions.
-pub const KINDS: &[&str] = &[
-    "create-position",
-    "delete-position",
-    "replace-position-data",
-    "reorder-positions",
-    "create-route",
-    "delete-route",
-    "replace-route-data",
-    "reorder-routes",
-    "create-region",
-    "delete-region",
-    "replace-region-data",
-    "reorder-regions",
-];
+pub const KINDS: &[&str] =
+    &["create-position", "delete-position", "replace-position-data", "reorder-positions", "create-route", "delete-route", "replace-route-data", "reorder-routes", "create-region", "delete-region", "replace-region-data", "reorder-regions"];
 //#endregion 🔖️Kinds
 
 //#region 🌉️TestBridge
@@ -88,11 +74,8 @@ pub const KINDS: &[&str] = &[
 /// `GisMapSnapshot` can be named there, and hand-transcribing either into a Rust literal
 /// would be a second copy of the committed specification vector, free to drift away from it. This
 /// bridge is the whole surface an adapter needs, and every type in its signature is a `str`.
-/// Every committed snapshot is funnelled through `gis_map_snapshot_with_derived_children` on the way
-/// in — `std`'s `DefaultHasher` leaves its digest unspecified, so the two derived child handles are
-/// committed as readable placeholders rather than frozen values, and this is the same call the
-/// subset's own fixture tests make. Funnelling BOTH the base and the expected after-snapshot keeps the
-/// adapter's comparison exact instead of exempting a field.
+/// 🧩️ Committed snapshots include the stable drawing and value child identities. The report
+/// decodes them directly, so comparisons validate those identities alongside feature content.
 ///
 ///
 /// `after_json` is decoded through the SAME path as `base_json` and returned as `expectedSnapshot`,
@@ -103,10 +86,7 @@ pub const KINDS: &[&str] = &[
 ///
 /// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
 pub fn gis_map_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    let decode_snapshot = |text: &str| -> Result<GisMapSnapshot, String> {
-        let decoded: GisMapSnapshot = dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())?;
-        Ok(crate::gis_map_snapshot_with_derived_children(decoded))
-    };
+    let decode_snapshot = |text: &str| -> Result<GisMapSnapshot, String> { dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string()) };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
     let mutation: GisMapMutation = dsl::os_pack::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;

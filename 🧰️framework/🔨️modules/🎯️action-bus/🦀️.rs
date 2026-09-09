@@ -352,6 +352,7 @@ pub trait ToolJobFactory: Send + 'static {
 
     /// 🧬️ Takes the already-admitted raw page owner before application parsing or identity
     /// construction. Rejection returns every retained owner to the caller for bounded retirement.
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
     fn create_job_from_wire_pages(&mut self, _operation: Operation, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
         Err((ToolJobFactoryError::new("tool factory does not own a retained wire page decoder"), input, checkpoint))
     }
@@ -359,6 +360,7 @@ pub trait ToolJobFactory: Send + 'static {
     /// 🧬️ Builds the concrete factory payload while transferring the already-admitted raw
     /// pages into the same production job. Factories with a domain decoder override this so their job
     /// consumes one retained page per step; the default preserves the pages only as factory authority.
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
     fn create_job_from_wire_pages_with_payload(
         &mut self,
         _operation: Operation,
@@ -438,7 +440,9 @@ impl Error for ToolDispatchError {}
 trait ErasedToolJobFactory: Send {
     fn create_job(&mut self, spec: &mut ToolOperationSpec) -> Result<ErasedToolJob, ToolJobFactoryError>;
     fn create_job_from_wire(&mut self, operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<ErasedToolJob, ToolJobFactoryError>;
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
     fn create_job_from_wire_pages(&mut self, operation: Operation, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)>;
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
     fn create_job_from_wire_pages_with_payload(
         &mut self,
         spec: &mut ToolOperationSpec,
@@ -644,6 +648,7 @@ impl ActionBus {
 
     /// 🧬️ Moves one sealed raw-page owner into the exact registered application factory.
     /// No generic command or serialization value exists before this boundary.
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
     pub fn dispatch_wire_retained(&self, admission: ToolWireAdmission, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>, operation: Operation) -> Result<ToolJobDispatch, RetainedToolWireDispatchRejected> {
         let reject = |error, input, checkpoint| RetainedToolWireDispatchRejected { error, input, checkpoint };
         let controller_id = admission.key.controller_id.clone();
@@ -677,6 +682,7 @@ impl ActionBus {
     /// 🧬️ Transfers a concrete app payload and its exact retained ingress pages through the
     /// same registered factory. This is the production route for factories whose worker performs the
     /// domain decode incrementally before it starts the prepared reducer payload.
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
     pub fn dispatch_wire_retained_with_spec(&self, admission: &ToolWireAdmission, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>, mut spec: ToolOperationSpec) -> Result<ToolJobDispatch, RetainedToolWireDispatchRejected> {
         let reject = |error, input, checkpoint| RetainedToolWireDispatchRejected { error, input, checkpoint };
         let controller_id = admission.key.controller_id.clone();

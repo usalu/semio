@@ -8,9 +8,8 @@
   "internalGainsWM2": null,
   "solarGainsKwh": null,
   "systemLossesKwh": null,
-  "renewableKwh": 2250.0,
+  "renewableKwh": 2250,
   "annualLimitKwh": null,
   "energyCarrier": null,
-  "referenceQPKwh": null,
-  "selectedCheckIndex": null
+  "referenceQPKwh": null
 }

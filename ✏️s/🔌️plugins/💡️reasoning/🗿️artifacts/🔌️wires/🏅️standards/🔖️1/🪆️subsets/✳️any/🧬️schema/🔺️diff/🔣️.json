@@ -4,42 +4,46 @@
   "title": "WiresDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "artifact",
+    "wiresFixture",
+    "content",
+    "camera",
+    "meta"
+  ],
   "properties": {
     "artifact": {
-      "title": "WiresArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "wiresFixture": {
-      "title": "DslValue",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "boardFixture": {
-      "title": "DslValue",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "dragNodeId": {
-      "oneOf": [
+      "anyOf": [
         {
           "type": "null"
         },
         {
-          "type": "string"
+          "$ref": "https://semio.tech/schema/s/reasoning/wires/artifact.json"
         }
       ],
       "x-semio-state": "artifact"
     },
-    "dragLastX": {
-      "type": "number",
-      "format": "double",
+    "wiresFixture": {
+      "$ref": "https://semio.tech/schema/framework/value/schema.json",
       "x-semio-state": "artifact"
     },
-    "dragLastY": {
-      "type": "number",
-      "format": "double",
+    "content": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "camera": {
+      "$ref": "https://semio.tech/schema/framework/value/schema.json",
+      "x-semio-state": "artifact"
+    },
+    "meta": {
+      "$ref": "https://semio.tech/schema/framework/value/schema.json",
       "x-semio-state": "artifact"
     }
   }

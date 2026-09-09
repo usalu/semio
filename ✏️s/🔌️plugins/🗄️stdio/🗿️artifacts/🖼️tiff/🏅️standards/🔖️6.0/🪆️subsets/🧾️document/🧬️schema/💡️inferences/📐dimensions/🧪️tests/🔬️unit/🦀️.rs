@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::schema::snapshot::{TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+use crate::schema::snapshot::{TiffFieldType, TiffIfd, TiffTag, TiffValues, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snapshot_with_tags(tags: Vec<TiffTag>) -> TiffSnapshot {

@@ -1,7 +1,7 @@
 //! 🌿️ Environmental and resilience metrics.
 
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️Environmental
 /// 🌿️ Source energy conversion factors by fuel [J/J delivered].

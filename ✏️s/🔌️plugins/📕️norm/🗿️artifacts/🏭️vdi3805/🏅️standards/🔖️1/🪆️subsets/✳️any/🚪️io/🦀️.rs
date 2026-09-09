@@ -50,10 +50,10 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🚪️JsonSerializers
+use crate::document::NormError;
 /// 🚪️ Whole-artifact JSON (de)serializers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — relocated verbatim from the deleted `⚙️engine`; serialization is exactly what `🚪️io` is for.
 use crate::{ManufacturerCatalog, Vdi3805Snapshot};
-use crate::document::NormError;
 
 /// 📤️ JSON round-trip for manufacturer catalogues.
 pub fn catalog_to_json(catalog: &ManufacturerCatalog) -> Result<String, NormError> {

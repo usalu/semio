@@ -22,24 +22,26 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use db::db_storage::PayloadStorage as _;
+#[cfg(any(test, feature = "native-artifact-execution"))]
+use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationStatusV1, SPACE_ARTIFACT_CREATION_MAX_BYTES};
 use directory::os_directory::{
-    self, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1,
-    AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES, CHECKPOINT_PUBLICATION_DEADLINE_MS, CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES, CheckpointPublicationBlobV1,
-    CheckpointPublicationCommandV1, CheckpointPublicationCurrentV1, CheckpointPublicationFrontierV1, CheckpointPublicationReceiptV1, ConnectionView, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES,
-    DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
-    DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryConnectionPhase,
-    DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1,
-    DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1,
-    DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1,
-    DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1,
-    DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1, PublicSpaceViewV1,
-    PublishedArtifactCheckpoint, SpaceView, descriptor_digest_v1, directory_command_sha256, same_lease_fields_v1, validate_directory_event_page_event,
+    self, descriptor_digest_v1, directory_command_sha256, same_lease_fields_v1, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1,
+    AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, CheckpointPublicationBlobV1, CheckpointPublicationCommandV1,
+    CheckpointPublicationCurrentV1, CheckpointPublicationFrontierV1, CheckpointPublicationReceiptV1, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
+    DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectoryReadModel, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1,
+    DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1,
+    DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor,
+    DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1,
+    DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1,
+    MemberView, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactCheckpoint, SpaceView, CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES, CHECKPOINT_PUBLICATION_DEADLINE_MS, CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES,
+    DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA,
+    DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
 };
 use directory::os_spr::channel::{PRESENCE_ROSTER_MAXIMUM_BYTES, PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES, PRESENCE_ROSTER_MAXIMUM_ITEMS};
 use directory::{DslValue, FromValue, ToValue};
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use protocol::{AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame, decode_client_frame, encode_server_frame};
+use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 use semio_framework_async::ShardedMap;
 use semio_framework_hash::Sha256;
 #[cfg(feature = "neo4j")]
@@ -48,9 +50,11 @@ use semio_hub::artifact_authority::chunk_cas::Neo4jArtifactChunkCasStorage;
 use semio_hub::artifact_authority::chunk_cas::PostgresArtifactChunkCasStorage;
 #[cfg(feature = "sqlite")]
 use semio_hub::artifact_authority::chunk_cas::SqliteArtifactChunkCasStorage;
-use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
 #[cfg(test)]
-use semio_hub::artifact_authority::chunk_cas::{MemoryArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
+use semio_hub::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, MemoryArtifactChunkCasStorage};
+use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
+#[cfg(any(test, feature = "native-artifact-execution"))]
+use semio_hub::artifact_authority::creation::{ArtifactCreationActorV1, ArtifactCreationCommitAuthorityV1, ArtifactCreationCommitFutureV1, ArtifactCreationCommitLeaseV1, ArtifactCreationServiceV1};
 #[cfg(feature = "native-artifact-execution")]
 use semio_hub::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use semio_hub::artifact_authority::trusted_catalog::{NativeCodecProviderSourceV1, TrustedCatalogLoader, VerifiedDocumentOpenSelectionV1, VerifiedExecutionTargetAssets, VerifiedTrustedCatalog};
@@ -60,26 +64,24 @@ use semio_hub::artifact_authority::{
     ArtifactPair, AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, CanonicalArtifactAuthority, CheckpointPublicationOrchestrator, CheckpointRequest, OperationContext, ValidatingCanonicalArtifactAuthority,
     VerifiedCheckpointPublisher,
 };
-#[cfg(any(test, feature = "native-artifact-execution"))]
-use semio_hub::artifact_authority::creation::{ArtifactCreationActorV1, ArtifactCreationCommitAuthorityV1, ArtifactCreationCommitFutureV1, ArtifactCreationCommitLeaseV1, ArtifactCreationServiceV1};
-#[cfg(any(test, feature = "native-artifact-execution"))]
-use directory::os_directory::schema::space_artifact_creation::{SPACE_ARTIFACT_CREATION_MAX_BYTES, SpaceArtifactCreateV1, SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationStatusV1};
 use semio_hub::directory::error::DirectoryError;
 #[cfg(test)]
 use semio_hub::directory::model::AuthSessionIssue;
 use semio_hub::directory::model::{
-    AdminEffectCommitV1, AdminOperationAuditRecord, AuthSessionKind, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion,
-    DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
+    AdminEffectCommitV1, AdminOperationAuditRecord, AuthSessionKind, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DirectoryCommandClaimV1, DirectoryCommandDispositionV1,
+    DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
     SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord,
 };
 #[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
 use semio_hub::directory::{
-    ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CAPABILITY_MAX_TTL_SECS, CommandResult,
-    DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, DirectoryCommandExecutionV1, DirectoryService, HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress,
-    SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX, directory_command_result_kind, published_artifact_checkpoint, replay_directory_command_receipt,
+    directory_command_result_kind, published_artifact_checkpoint, replay_directory_command_receipt, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CommandResult, DirectoryCommandExecutionV1, DirectoryService,
+    HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, CAPABILITY_MAX_TTL_SECS,
+    DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX,
 };
-use semio_hub::directory::{AUTH_TEXT_MAX_BYTES, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, identity_subject_digest};
+use semio_hub::directory::{identity_subject_digest, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution", feature = "test-support"))]
+use semio_hub::inference::runtime::InferenceCheckpointTestGateV1;
 #[cfg(all(test, feature = "sqlite", feature = "test-support"))]
 use semio_hub::inference::runtime::UnavailableGisMapApprovalCommitterV1;
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -87,19 +89,17 @@ use semio_hub::inference::runtime::{
     GisMapApprovalCheckpointPublisherV1, GisMapApprovalCheckpointRequestV1, GisMapApprovalCommitErrorV1, GisMapApprovalIngressAuthorityV1, GisMapDocumentWriteAuthorityV1, HubInferenceRuntimeV1, InferenceApprovalRouteContextV1, InferenceRouteErrorV1,
     RetainedGisMapApprovalCommitterV1,
 };
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution", feature = "test-support"))]
-use semio_hub::inference::runtime::InferenceCheckpointTestGateV1;
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 use semio_hub::inference::sqlite::InferenceJobLedgerV1;
 #[cfg(feature = "native-artifact-execution")]
-use semio_hub::inference::{VerifiedGisMapArtifactBindingV1, verified_gis_map_binding};
+use semio_hub::inference::{verified_gis_map_binding, VerifiedGisMapArtifactBindingV1};
 #[cfg(test)]
 use semio_hub::lag_rebootstrap::decode_canonical_checkpoint_pair;
 use semio_hub::lag_rebootstrap::{
-    CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, CanonicalPairTerminal, REBOOTSTRAP_DEADLINE_MS, RebootstrapContext, RebootstrapError, RebootstrapProgress, RebootstrapProgressStage, RebootstrapTransferControl, VerifiedRebootstrapSource,
-    append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag,
+    append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag, CanonicalPairTerminal, RebootstrapContext, RebootstrapError, RebootstrapProgress, RebootstrapProgressStage,
+    RebootstrapTransferControl, VerifiedRebootstrapSource, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, REBOOTSTRAP_DEADLINE_MS,
 };
-use semio_hub::local_bootstrap::{InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS, serve_local_bootstrap};
+use semio_hub::local_bootstrap::{serve_local_bootstrap, InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::net::SocketAddr;
@@ -2396,10 +2396,7 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
         .await
         .map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?
         .ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
-    if checkpoint.scope != scope
-        || os_directory::hex_lower(&checkpoint.descriptor_digest_v1.0) != descriptor_digest_v1
-        || !(checkpoint.baseline_frontier.is_genesis_for(&scope) || checkpoint.baseline_frontier.is_edited_for(&scope))
-    {
+    if checkpoint.scope != scope || os_directory::hex_lower(&checkpoint.descriptor_digest_v1.0) != descriptor_digest_v1 || !(checkpoint.baseline_frontier.is_genesis_for(&scope) || checkpoint.baseline_frontier.is_edited_for(&scope)) {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
     }
     let checkpoint = document_open_checkpoint(checkpoint);
@@ -2602,10 +2599,7 @@ async fn document_execution_target_selection(space_id: String, document_id: Stri
         .await
         .map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?
         .ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
-    if checkpoint.scope != scope
-        || os_directory::hex_lower(&checkpoint.descriptor_digest_v1.0) != descriptor_digest_v1
-        || !(checkpoint.baseline_frontier.is_genesis_for(&scope) || checkpoint.baseline_frontier.is_edited_for(&scope))
-    {
+    if checkpoint.scope != scope || os_directory::hex_lower(&checkpoint.descriptor_digest_v1.0) != descriptor_digest_v1 || !(checkpoint.baseline_frontier.is_genesis_for(&scope) || checkpoint.baseline_frontier.is_edited_for(&scope)) {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
     }
     let checkpoint = document_open_checkpoint(checkpoint);
@@ -3527,19 +3521,10 @@ impl GisMapApprovalCheckpointPublisherV1 for GisMapApprovalCheckpointPublisherV1
 }
 
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
-fn publish_gis_map_checkpoint_change(
-    fanout: &ShardedMap<String, broadcast::Sender<ServerFrame>>,
-    fanout_capacity: usize,
-    checkpoint: &PublishedArtifactCheckpoint,
-) {
+fn publish_gis_map_checkpoint_change(fanout: &ShardedMap<String, broadcast::Sender<ServerFrame>>, fanout_capacity: usize, checkpoint: &PublishedArtifactCheckpoint) {
     let key = document_scope_key_v1(&checkpoint.scope);
     let sender = fanout.get_or_insert_with_cloned(key, || broadcast::channel(fanout_capacity).0);
-    let control = os_directory::RebootstrapRequired {
-        scope: checkpoint.scope.clone(),
-        checkpoint_id: checkpoint.checkpoint_id,
-        descriptor_digest_v1: checkpoint.descriptor_digest_v1,
-        baseline_frontier: checkpoint.baseline_frontier.clone(),
-    };
+    let control = os_directory::RebootstrapRequired { scope: checkpoint.scope.clone(), checkpoint_id: checkpoint.checkpoint_id, descriptor_digest_v1: checkpoint.descriptor_digest_v1, baseline_frontier: checkpoint.baseline_frontier.clone() };
     let _ = sender.send(ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) });
 }
 
@@ -4578,12 +4563,7 @@ impl ArtifactCreationCommitAuthorityV1 for HubArtifactCreationCommitAuthorityV1 
             )
             .await
             .map_err(|_| DirectoryError::Backend("artifact creation final authority unavailable".into()))?;
-            match tokio::time::timeout(
-                std::time::Duration::from_secs(2),
-                self.directory.socket_session_binding(&actor.session_id, &actor.user_id, actor.authorization_generation, Some(space_id), now_ms()),
-            )
-            .await
-            {
+            match tokio::time::timeout(std::time::Duration::from_secs(2), self.directory.socket_session_binding(&actor.session_id, &actor.user_id, actor.authorization_generation, Some(space_id), now_ms())).await {
                 Ok(Ok(SocketSessionBindingStatus::Active { role: Some(SpaceRole::Author), .. })) => Ok(Box::new(HubArtifactCreationCommitLeaseV1 { _guards: guards }) as Box<dyn ArtifactCreationCommitLeaseV1>),
                 Ok(Ok(SocketSessionBindingStatus::Unavailable)) | Ok(Err(_)) | Err(_) => Err(DirectoryError::Backend("artifact creation final authority unavailable".into())),
                 _ => Err(DirectoryError::Unauthorized),
@@ -4598,12 +4578,10 @@ fn artifact_creation_space_id_v1(space_id: &str) -> bool {
 }
 
 #[cfg(feature = "native-artifact-execution")]
-async fn acquire_artifact_creation_actor(
-    state: &HubState,
-    space_id: &str,
-    token: Option<&str>,
-) -> Result<(ArtifactCreationActorV1, Vec<tokio::sync::OwnedMutexGuard<()>>), StatusCode> {
-    if !artifact_creation_space_id_v1(space_id) { return Err(StatusCode::BAD_REQUEST); }
+async fn acquire_artifact_creation_actor(state: &HubState, space_id: &str, token: Option<&str>) -> Result<(ArtifactCreationActorV1, Vec<tokio::sync::OwnedMutexGuard<()>>), StatusCode> {
+    if !artifact_creation_space_id_v1(space_id) {
+        return Err(StatusCode::BAD_REQUEST);
+    }
     let caller = resolve_bearer_user(state, token).await.ok_or(StatusCode::UNAUTHORIZED)?;
     let guards = tokio::time::timeout(
         std::time::Duration::from_secs(2),
@@ -4616,11 +4594,7 @@ async fn acquire_artifact_creation_actor(
     )
     .await
     .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
-    let binding = tokio::time::timeout(
-        std::time::Duration::from_secs(2),
-        state.directory.socket_session_binding(&caller.session_id, &caller.user_id, caller.authorization_generation, Some(space_id), now_ms()),
-    )
-    .await;
+    let binding = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.socket_session_binding(&caller.session_id, &caller.user_id, caller.authorization_generation, Some(space_id), now_ms())).await;
     match binding {
         Ok(Ok(SocketSessionBindingStatus::Active { role: Some(SpaceRole::Author), .. })) => Ok((ArtifactCreationActorV1 { user_id: caller.user_id, session_id: caller.session_id, authorization_generation: caller.authorization_generation }, guards)),
         Ok(Ok(SocketSessionBindingStatus::Active { .. } | SocketSessionBindingStatus::MembershipLost)) => Err(StatusCode::FORBIDDEN),
@@ -4663,9 +4637,7 @@ impl AuthorityOperationControl for ArtifactCreationHttpControlV1 {
     }
 
     fn is_cancelled(&self) -> bool {
-        self.cancelled.load(std::sync::atomic::Ordering::Acquire)
-            || self.shutdown_cancelled.as_ref().is_some_and(|cancelled| cancelled.load(std::sync::atomic::Ordering::Acquire))
-            || std::time::Instant::now() >= self.deadline
+        self.cancelled.load(std::sync::atomic::Ordering::Acquire) || self.shutdown_cancelled.as_ref().is_some_and(|cancelled| cancelled.load(std::sync::atomic::Ordering::Acquire)) || std::time::Instant::now() >= self.deadline
     }
 
     fn report(&self, _progress: AuthorityProgress) {}
@@ -4728,11 +4700,15 @@ impl ArtifactCreationHttpTaskOwnerV1 {
     fn reserve(self: &Arc<Self>, key: String, control: Arc<ArtifactCreationHttpControlV1>) -> ArtifactCreationHttpAdmissionV1 {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.tasks.retain(|_, task| !task.task.is_finished());
-        if state.closing { return ArtifactCreationHttpAdmissionV1::Unavailable; }
+        if state.closing {
+            return ArtifactCreationHttpAdmissionV1::Unavailable;
+        }
         if let Some(pending) = state.reservations.get(&key).or_else(|| state.tasks.get(&key).map(|task| &task.pending)) {
             return ArtifactCreationHttpAdmissionV1::Join(pending.clone());
         }
-        if state.tasks.len().saturating_add(state.reservations.len()) >= ARTIFACT_CREATION_HTTP_CAPACITY { return ArtifactCreationHttpAdmissionV1::Unavailable; }
+        if state.tasks.len().saturating_add(state.reservations.len()) >= ARTIFACT_CREATION_HTTP_CAPACITY {
+            return ArtifactCreationHttpAdmissionV1::Unavailable;
+        }
         let pending = Arc::new(ArtifactCreationHttpPendingV1 { control, disposition: std::sync::atomic::AtomicU8::new(0), changed: tokio::sync::Notify::new() });
         state.reservations.insert(key.clone(), pending.clone());
         ArtifactCreationHttpAdmissionV1::Owner(ArtifactCreationHttpReservationV1 { owner: self.clone(), key, pending, activated: false })
@@ -4747,7 +4723,9 @@ impl ArtifactCreationHttpTaskOwnerV1 {
                     _ = tokio::time::sleep(std::time::Duration::from_secs(1)) => {}
                     _ = wake.notified() => {}
                 }
-                if cancelled.load(std::sync::atomic::Ordering::Acquire) { break; }
+                if cancelled.load(std::sync::atomic::Ordering::Acquire) {
+                    break;
+                }
                 let scan_now = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX));
                 let intents = match service.recovery_candidates(scan_now, 32).await {
                     Ok(intents) => intents,
@@ -4757,7 +4735,9 @@ impl ArtifactCreationHttpTaskOwnerV1 {
                     }
                 };
                 for intent in intents {
-                    if cancelled.load(std::sync::atomic::Ordering::Acquire) { break; }
+                    if cancelled.load(std::sync::atomic::Ordering::Acquire) {
+                        break;
+                    }
                     let control = ArtifactCreationHttpControlV1::recovery(cancelled.clone());
                     let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
                     let context = OperationContext::new(deadline, AuthorityLimits::maximum(), &control);
@@ -4777,8 +4757,12 @@ impl ArtifactCreationHttpTaskOwnerV1 {
 
     fn cancel(&self, key: &str) {
         let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(pending) = state.reservations.get(key) { pending.control.cancel(); }
-        if let Some(task) = state.tasks.get(key) { task.control.cancel(); }
+        if let Some(pending) = state.reservations.get(key) {
+            pending.control.cancel();
+        }
+        if let Some(task) = state.tasks.get(key) {
+            task.control.cancel();
+        }
     }
 
     async fn shutdown(&self) {
@@ -4792,11 +4776,19 @@ impl ArtifactCreationHttpTaskOwnerV1 {
         loop {
             let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             state.closing = true;
-            for pending in state.reservations.values() { pending.control.cancel(); }
-            for task in state.tasks.values() { task.control.cancel(); }
-            if state.reservations.is_empty() { break; }
+            for pending in state.reservations.values() {
+                pending.control.cancel();
+            }
+            for task in state.tasks.values() {
+                task.control.cancel();
+            }
+            if state.reservations.is_empty() {
+                break;
+            }
             drop(state);
-            if tokio::time::timeout_at(deadline, self.changed.notified()).await.is_err() { break; }
+            if tokio::time::timeout_at(deadline, self.changed.notified()).await.is_err() {
+                break;
+            }
         }
         let (mut tasks, recovery, reservations) = {
             let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -4813,8 +4805,12 @@ impl ArtifactCreationHttpTaskOwnerV1 {
             tasks.push(recovery);
         }
         if tokio::time::timeout_at(deadline, futures::future::join_all(tasks.iter_mut())).await.is_err() {
-            for task in &tasks { task.abort(); }
-            for task in tasks { let _ = task.await; }
+            for task in &tasks {
+                task.abort();
+            }
+            for task in tasks {
+                let _ = task.await;
+            }
         }
     }
 
@@ -4848,7 +4844,9 @@ impl ArtifactCreationHttpReservationV1 {
     fn finish(mut self) {
         let mut state = self.owner.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let owns_reservation = state.reservations.get(&self.key).is_some_and(|pending| Arc::ptr_eq(pending, &self.pending));
-        if owns_reservation { state.reservations.remove(&self.key); }
+        if owns_reservation {
+            state.reservations.remove(&self.key);
+        }
         let disposition = if !state.closing && owns_reservation { 1 } else { 2 };
         drop(state);
         self.activated = true;
@@ -4861,9 +4859,13 @@ impl ArtifactCreationHttpReservationV1 {
 #[cfg(feature = "native-artifact-execution")]
 impl Drop for ArtifactCreationHttpReservationV1 {
     fn drop(&mut self) {
-        if self.activated { return; }
+        if self.activated {
+            return;
+        }
         let mut state = self.owner.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if state.reservations.get(&self.key).is_some_and(|pending| Arc::ptr_eq(pending, &self.pending)) { state.reservations.remove(&self.key); }
+        if state.reservations.get(&self.key).is_some_and(|pending| Arc::ptr_eq(pending, &self.pending)) {
+            state.reservations.remove(&self.key);
+        }
         drop(state);
         let _ = self.pending.disposition.compare_exchange(0, 2, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire);
         self.pending.changed.notify_waiters();
@@ -4874,12 +4876,16 @@ impl Drop for ArtifactCreationHttpReservationV1 {
 #[cfg(feature = "native-artifact-execution")]
 async fn await_artifact_creation_http_admission_v1(pending: &ArtifactCreationHttpPendingV1) -> Option<u8> {
     let disposition = pending.disposition.load(std::sync::atomic::Ordering::Acquire);
-    if disposition != 0 { return Some(disposition); }
+    if disposition != 0 {
+        return Some(disposition);
+    }
     tokio::time::timeout(std::time::Duration::from_secs(2), async {
         loop {
             let changed = pending.changed.notified();
             let disposition = pending.disposition.load(std::sync::atomic::Ordering::Acquire);
-            if disposition != 0 { return disposition; }
+            if disposition != 0 {
+                return disposition;
+            }
             changed.await;
         }
     })
@@ -4920,7 +4926,9 @@ fn artifact_creation_status_response(status: SpaceArtifactCreationStatusV1) -> R
 
 #[cfg(feature = "native-artifact-execution")]
 async fn get_space_artifact_creation_catalog(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Response {
-    if uri.query().is_some() { return StatusCode::BAD_REQUEST.into_response(); }
+    if uri.query().is_some() {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
     let Some(service) = state.artifact_creation.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
     let (actor, _guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
         Ok(actor) => actor,
@@ -4991,13 +4999,17 @@ async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(
                 eprintln!("[DEBUG] artifact creation retained execution unavailable: {error}");
             }
         });
-    } else if let Some(reservation) = reservation { reservation.finish(); }
+    } else if let Some(reservation) = reservation {
+        reservation.finish();
+    }
     artifact_creation_status_response(acceptance.status)
 }
 
 #[cfg(feature = "native-artifact-execution")]
 async fn get_space_artifact_creation_status(Path((space_id, request_id)): Path<(String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Response {
-    if uri.query().is_some() || !artifact_creation_request_id_v1(&request_id) { return StatusCode::BAD_REQUEST.into_response(); }
+    if uri.query().is_some() || !artifact_creation_request_id_v1(&request_id) {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
     let Some(service) = state.artifact_creation.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
     let (actor, _guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
         Ok(actor) => actor,
@@ -5011,7 +5023,9 @@ async fn get_space_artifact_creation_status(Path((space_id, request_id)): Path<(
 
 #[cfg(feature = "native-artifact-execution")]
 async fn post_space_artifact_creation_cancel(Path((space_id, request_id)): Path<(String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
-    if uri.query().is_some() || !body.is_empty() || !artifact_creation_request_id_v1(&request_id) { return StatusCode::BAD_REQUEST.into_response(); }
+    if uri.query().is_some() || !body.is_empty() || !artifact_creation_request_id_v1(&request_id) {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
     let Some(service) = state.artifact_creation.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
     let (actor, _guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
         Ok(actor) => actor,
@@ -5242,7 +5256,11 @@ async fn authorize_directory_command(state: &HubState, actor_user_id: &str, admi
         DirectoryCommand::CreateSpace { .. } => Ok(()),
         DirectoryCommand::DeleteSpace { space_id } | DirectoryCommand::ArchiveSpace { space_id } => {
             let space = state.directory.get_space(space_id).await.map_err(directory_error_status)?.ok_or(StatusCode::NOT_FOUND)?;
-            if space.owner_user_id == actor_user_id { Ok(()) } else { Err(StatusCode::FORBIDDEN) }
+            if space.owner_user_id == actor_user_id {
+                Ok(())
+            } else {
+                Err(StatusCode::FORBIDDEN)
+            }
         }
         DirectoryCommand::RenameSpace { space_id, .. }
         | DirectoryCommand::SetVisibility { space_id, .. }
@@ -5315,22 +5333,14 @@ fn invalidate_directory_event_authority(state: &HubState, events: &[DirectoryEve
     }
 }
 
-
-
 #[cfg(not(test))]
 async fn pause_directory_command_authority(_state: &HubState, _user_id: &str, _fenced: bool) {}
-
-
 
 #[cfg(not(test))]
 async fn pause_directory_command_membership_fence(_state: &HubState) {}
 
-
-
 #[cfg(not(test))]
 async fn pause_admin_effect_started(_state: &HubState) {}
-
-
 
 /// 🆔️ Reauthenticates inside the mutation fence before consulting any durable receipt.
 async fn execute_directory_command_receipt_fenced(
@@ -5865,7 +5875,11 @@ impl DirectoryEventPageHttpControl {
     }
 
     fn checkpoint(&self) -> Result<(), StatusCode> {
-        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) { Err(StatusCode::SERVICE_UNAVAILABLE) } else { Ok(()) }
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            Err(StatusCode::SERVICE_UNAVAILABLE)
+        } else {
+            Ok(())
+        }
     }
 
     fn cancel(&self) {
@@ -6219,9 +6233,15 @@ async fn send_directory_message(sender: &mut SplitSink<WebSocket, Message>, mess
     sender.send(Message::Text(text.into())).await.is_ok()
 }
 
-
-
-async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, delivery_space_id: Option<&str>, delivery_epoch: u64, message: &DirectoryStreamMessage) -> ScopedDirectoryFrameDecisionV1 {
+async fn send_socket_directory_message(
+    sender: &mut SplitSink<WebSocket, Message>,
+    state: &HubState,
+    record: &SocketGrantRecordV1,
+    live_id: &str,
+    delivery_space_id: Option<&str>,
+    delivery_epoch: u64,
+    message: &DirectoryStreamMessage,
+) -> ScopedDirectoryFrameDecisionV1 {
     #[cfg(test)]
     pause_global_directory_send_for_test(state, record, 1).await;
     #[cfg(test)]
@@ -6277,7 +6297,15 @@ async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message
     }
 }
 
-async fn send_socket_directory_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, delivery_space_id: Option<&str>, delivery_epoch: u64, scope: &DocumentScope) -> SocketBindingValidityV1 {
+async fn send_socket_directory_rebootstrap(
+    sender: &mut SplitSink<WebSocket, Message>,
+    state: &HubState,
+    record: &SocketGrantRecordV1,
+    live_id: &str,
+    delivery_space_id: Option<&str>,
+    delivery_epoch: u64,
+    scope: &DocumentScope,
+) -> SocketBindingValidityV1 {
     let _admission = match socket_live_authority_with_bindings(state, record, live_id, directory_space_message_bindings(record, Some(&scope.space_id))).await {
         Ok(admission) => admission,
         Err(validity) => return validity,
@@ -6483,22 +6511,25 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
     }
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct SessionMeResponse {
-    user_id: String,
-    email: String,
-    display_name: String,
-    expires_at: i64,
-    session_kind: AuthSessionKind,
-    authorization_generation: u64,
-}
-
-async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Result<Json<SessionMeResponse>, StatusCode> {
+async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DirectorySessionAuthorityV1>, StatusCode> {
     let capability = SessionCapability::parse(&bearer(&headers).ok_or(StatusCode::UNAUTHORIZED)?).map_err(directory_error_status)?;
     let session = state.directory.authenticate_session(&capability).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.ok_or(StatusCode::UNAUTHORIZED)?;
     let user = state.directory.get_user(&session.user_id).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.ok_or(StatusCode::UNAUTHORIZED)?;
-    Ok(Json(SessionMeResponse { user_id: user.id, email: user.email, display_name: user.display_name, expires_at: session.expires_at, session_kind: session.session_kind, authorization_generation: session.authorization_generation }))
+    let caller = AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability };
+    let response = DirectorySessionAuthorityV1 {
+        schema: "semio.directory.session-authority.v1".into(),
+        session_binding_sha256: os_directory::hex_lower(&directory_event_page_session_binding_v1(&caller)?),
+        authorization_generation: caller.authorization_generation,
+        user_id: user.id,
+        email: user.email,
+        display_name: user.display_name,
+        expires_at: caller.expires_at,
+        session_kind: match session.session_kind {
+            AuthSessionKind::External => DirectorySessionKindV1::External,
+            AuthSessionKind::DevelopmentLocal => DirectorySessionKindV1::DevelopmentLocal,
+        },
+    };
+    response.validate().then_some(Json(response)).ok_or(StatusCode::INTERNAL_SERVER_ERROR)
 }
 
 async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) -> StatusCode {
@@ -7215,21 +7246,11 @@ fn admin_effect_receipt_claim(operation_id: &str, intent_digest: &str, outcome_c
 }
 
 fn admin_effect_uncertain() -> AdminIntentExecution {
-    AdminIntentExecution {
-        phase: "uncertain",
-        event_range: None,
-        secret: None,
-        outcome: AdminIntentOutcomeV1 { code: "admin-effect-outcome-uncertain".into(), durable: false, kick_attempted: None, kick_signalled: None },
-    }
+    AdminIntentExecution { phase: "uncertain", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "admin-effect-outcome-uncertain".into(), durable: false, kick_attempted: None, kick_signalled: None } }
 }
 
 fn admin_effect_rejected_before_commit() -> AdminIntentExecution {
-    AdminIntentExecution {
-        phase: "failed",
-        event_range: None,
-        secret: None,
-        outcome: AdminIntentOutcomeV1 { code: "admin-effect-rejected-before-commit".into(), durable: false, kick_attempted: None, kick_signalled: None },
-    }
+    AdminIntentExecution { phase: "failed", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "admin-effect-rejected-before-commit".into(), durable: false, kick_attempted: None, kick_signalled: None } }
 }
 
 async fn execute_admin_intent(
@@ -7970,6 +7991,19 @@ async fn post_inference_gis_map_job(Path((space_id, document_id)): Path<(String,
 }
 
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+async fn post_inference_gis_map_job_reconcile(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+    let token = bearer(&headers);
+    let context = match inference_context(&state, &space_id, &document_id, &token) {
+        Ok(context) => context,
+        Err(response) => return response,
+    };
+    match semio_hub::inference::runtime::reconcile_gis_map_job(context, &body).await {
+        Ok(result) => Json(result).into_response(),
+        Err(error) => inference_error_response(error),
+    }
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn get_inference_gis_map_job_events(Path((space_id, document_id, job_id)): Path<(String, String, String)>, Query(query): Query<InferenceEventQueryV1>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     let token = bearer(&headers);
     let context = match inference_context(&state, &space_id, &document_id, &token) {
@@ -8049,6 +8083,7 @@ async fn post_inference_gis_map_approval_undo(Path((space_id, document_id)): Pat
 fn inference_routes(router: Router<HubState>) -> Router<HubState> {
     router
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs", post(post_inference_gis_map_job).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
+        .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/reconcile", post(post_inference_gis_map_job_reconcile).layer(DefaultBodyLimit::max(semio_hub::inference::schema::RECONCILE_REQUEST_MAX_BYTES)))
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/events", get(get_inference_gis_map_job_events))
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/cancel", post(post_inference_gis_map_job_cancel).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/approval", post(post_inference_gis_map_job_approval).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
@@ -8256,7 +8291,9 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirector
 
 #[tokio::main]
 async fn main() -> Result<(), HubError> {
-    if trusted_catalog_command::dispatch(&std::env::args_os().skip(1).collect::<Vec<_>>()).await? { return Ok(()); }
+    if trusted_catalog_command::dispatch(&std::env::args_os().skip(1).collect::<Vec<_>>()).await? {
+        return Ok(());
+    }
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(8787);
     let bind: std::net::IpAddr = std::env::var("OS_HUB_BIND").unwrap_or_else(|_| "0.0.0.0".into()).parse().map_err(|_| HubError::UnsafeAuthConfiguration("OS_HUB_BIND must be an IP address".into()))?;
     let mode = HubMode::from_environment(bind)?;
@@ -8482,4 +8519,3 @@ mod trusted_catalog_command;
 #[path = "../../🧪️tests/🔬️bin-unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
-

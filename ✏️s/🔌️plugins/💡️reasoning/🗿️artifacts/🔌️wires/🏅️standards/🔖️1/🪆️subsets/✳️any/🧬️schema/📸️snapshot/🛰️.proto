@@ -1,17 +1,11 @@
 syntax = "proto3";
 package semio.s.reasoning.wires.snapshot;
-
-// 🧬️ Wires snapshot schema.
-
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message WiresSnapshot {
-  // @state artifact
-  DslValue wires_fixture = 1;
-  // @state artifact
-  DslValue board_fixture = 2;
+  semio.framework.value.DslValue wires_fixture = 1;
+  semio.os.store.ArtifactChild content = 2;
+  semio.framework.value.DslValue camera = 3;
+  semio.framework.value.DslValue meta = 4;
 }
-
-message WiresStringList {
-  repeated string values = 1;
-}
-
-message DslValue {}
+message WiresStringList { repeated string values = 1; }

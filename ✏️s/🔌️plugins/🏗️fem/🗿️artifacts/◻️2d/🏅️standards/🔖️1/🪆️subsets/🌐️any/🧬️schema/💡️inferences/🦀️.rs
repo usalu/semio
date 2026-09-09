@@ -4,11 +4,11 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
+use super::bounds::compute_fem2d_bounds;
 use crate::Fem2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
-use super::bounds::{compute_fem2d_bounds};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a fem2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
@@ -56,11 +56,7 @@ pub fn fem2d_artifact_inference_descriptor() -> ::semio_framework_schema::Artifa
     ::semio_framework_schema::ArtifactInferenceDescriptor {
         id: "s.fem.fem2d.inference",
         inference: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }
 }

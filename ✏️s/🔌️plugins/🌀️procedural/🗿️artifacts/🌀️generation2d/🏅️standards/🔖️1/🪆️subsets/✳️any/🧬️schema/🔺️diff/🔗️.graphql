@@ -4,11 +4,6 @@ type Generation2dDiff {
   artifact: Generation2dArtifact @state(class: ARTIFACT)
   fixture: FlowFixture @state(class: ARTIFACT)
   generation: GenerationPlayState @state(class: ARTIFACT)
-  selectedIds: Generation2dStringList @state(class: PRESENCE)
-  graphCamera: CameraJson @state(class: CONFIG)
-  showMode: String @state(class: CONFIG)
-  selectedGenerationId: String @state(class: PRESENCE)
-  generationPreviewText: String @state(class: ARTIFACT)
 }
 
 type CameraJson {

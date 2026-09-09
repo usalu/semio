@@ -70,9 +70,8 @@
   "pileSigmaMpa": null,
   "pileKRed": null,
   "pileNEdKn": null,
-  "craneFZEdKn": 75.0,
-  "craneWheelContactLengthMm": 125.0,
+  "craneFZEdKn": 75,
+  "craneWheelContactLengthMm": 125,
   "craneDispersionMm": 62.5,
-  "craneTWMm": 12.0,
-  "selectedCheckIndex": null
+  "craneTWMm": 12
 }

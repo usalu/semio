@@ -14,17 +14,7 @@
     "links",
     "parentPages",
     "spreads",
-    "pages",
-    "selectedIds",
-    "activePageId",
-    "engagementInput",
-    "cameraX",
-    "cameraY",
-    "cameraZoom",
-    "previewCameraX",
-    "previewCameraY",
-    "previewCameraZoom",
-    "dropPreview"
+    "pages"
   ],
   "properties": {
     "schema": {
@@ -93,59 +83,6 @@
       "x-semio-state": "artifact"
     },
     "dataFieldsJson": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "activePageId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "cameraX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "previewCameraX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "previewCameraY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "previewCameraZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "dropPreview": {
-      "$ref": "#/$defs/LayoutDropPreviewState",
-      "x-semio-state": "config"
-    },
-    "hoveredId": {
       "type": "string",
       "x-semio-state": "artifact"
     }

@@ -2,7 +2,6 @@
 
 use crate::{FormQuestion, FormStep, FormsResultsChild, FormsStructureChild};
 use framework_schema::ArtifactSchema;
-use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the forms artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -38,14 +37,6 @@ pub struct FormsDiff {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
     pub results: Option<FormsResultsChild>,
-    #[state(presence)]
-    pub selected_ids: Option<FormsStringList>,
-    #[state(config)]
-    pub current_step_index: Option<u32>,
-    #[state(config)]
-    pub try_values: Option<BTreeMap<String, Vec<String>>>,
-    #[state(config)]
-    pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff
 

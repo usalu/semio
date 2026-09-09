@@ -6,9 +6,8 @@ export const CAD_EDITOR_DIALECT = { artifactKind: "s.cad.cad", standard: "1", su
 
 export const CAD_PLAY_MODE_EDIT = "edit" as const;
 
-// 🪟️ Namespaced (not `export *`): all four windows independently export a same-named
-// `CadDislocateOptions` interface, and a blanket `export *` from more than one of them would be an
-// ambiguous re-export.
+export type { CadDislocateOptions } from "./🎚️config/🧬️schema/🟦️";
+
 export * as shapeWindow from "./🎭️modes/✏️edit/🪟️windows/📐️shape/🟦️";
 export * as buildingWindow from "./🎭️modes/✏️edit/🪟️windows/🏢️building/🟦️";
 export * as energyWindow from "./🎭️modes/✏️edit/🪟️windows/🔥️energy/🟦️";

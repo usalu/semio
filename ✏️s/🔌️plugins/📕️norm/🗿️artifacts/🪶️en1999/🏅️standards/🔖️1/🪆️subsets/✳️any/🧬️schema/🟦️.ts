@@ -53,6 +53,4 @@ export interface En1999Artifact {
   sigmaEdShellMpa: number;
   /** @state artifact */
   annex: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

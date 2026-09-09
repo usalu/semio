@@ -1,4 +1,3 @@
-
 //! 🧪️ The one cad-app test harness — every other taxonomy node's `🧪️Tests` region builds on it
 //! instead of re-deriving a store/dispatch/render scaffold of its own.
 use super::*;
@@ -63,24 +62,24 @@ pub fn drive_with_operation(app: &CadPlayApp, scene: &CadSnapshot, action: &str,
     let _ = app;
     let history = empty_history();
     let doc = ArtifactView::new(scene, &history);
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     let command = command_from_action(action, args.as_ref());
     let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation, view_state: None };
     command.dispatch(&doc, &cfg, &mut ctx)
 }
 
 pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     CadPlayApp::render(body_key, doc, &cfg, view_state).map(|tree| tree.root)
 }
 
 pub fn window_measures_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     CadPlayApp::window_measures(doc, &cfg, view_state)
 }
 
 pub fn context_menu_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
     CadPlayApp::context_menu(&request, doc, &cfg, view_state, registry)
 }

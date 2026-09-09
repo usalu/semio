@@ -1,5 +1,0 @@
-type WiresPresence {
-  dragNodeId: String @state(class: PRESENCE)
-  dragLastX: Float! @state(class: PRESENCE)
-  dragLastY: Float! @state(class: PRESENCE)
-}

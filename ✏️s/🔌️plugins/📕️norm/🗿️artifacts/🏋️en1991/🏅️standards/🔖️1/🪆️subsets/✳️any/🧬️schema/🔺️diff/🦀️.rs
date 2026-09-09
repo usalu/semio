@@ -76,8 +76,6 @@ pub struct En1991Diff {
     pub c_s: Option<f64>,
     #[state(artifact)]
     pub c_d: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::lie::So3;
-use geometry::random::{Rng, normal};
+use geometry::random::{normal, Rng};
 
 // #region 🔖️GeodesyTests
 #[test]

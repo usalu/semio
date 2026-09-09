@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -96,7 +95,7 @@ fn retained_bytes(mut payload: semio_framework_job::RetainedJobPayload) -> Vec<u
 }
 
 fn drive_encode_job(mut job: DeflateEncodeJob, fuel: u64) -> Vec<u8> {
-    use semio_framework_job::{Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome, root_cancel_token};
+    use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome};
     let cancel = root_cancel_token();
     let mut sequence = 0;
     loop {
@@ -125,7 +124,7 @@ fn streaming_encode_matches_pre_refactor_golden_bytes() {
 
 #[test]
 fn streaming_checkpoint_restore_is_byte_identical() {
-    use semio_framework_job::{Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome, root_cancel_token};
+    use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome};
     let payload = b"checkpointed owned compression ".repeat(256);
     let expected = deflate_raw(&payload);
     let mut job = DeflateEncodeJob::new(payload, 31);
@@ -144,7 +143,7 @@ fn streaming_checkpoint_restore_is_byte_identical() {
 
 #[test]
 fn streaming_encode_observes_cancellation_without_progress() {
-    use semio_framework_job::{Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome, root_cancel_token};
+    use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome};
     let mut job = DeflateEncodeJob::new(vec![7; 4096], 64);
     let before = job.checkpoint_bytes();
     let cancel = root_cancel_token();
@@ -157,7 +156,7 @@ fn streaming_encode_observes_cancellation_without_progress() {
 
 #[test]
 fn adversarial_streaming_transition_stays_below_watchdog_ceiling() {
-    use semio_framework_job::{Generation, InteractiveJob, OperationId, StepBudget, StepContext, root_cancel_token};
+    use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext};
     let mut input = Vec::with_capacity(256 * 1024);
     for index in 0..256 * 1024 {
         input.push(((index * 31) ^ (index >> 5)) as u8);

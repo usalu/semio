@@ -58,10 +58,10 @@
   "tensionComponentFUkKn": null,
   "tensionComponentFKKn": null,
   "tensionComponentNEdKn": null,
-  "hssWElMm3": 320000.0,
-  "hssFYMpa": 355.0,
+  "hssWElMm3": 320000,
+  "hssFYMpa": 355,
   "hssSectionClass": 3,
-  "hssMEdKnm": 75.0,
+  "hssMEdKnm": 75,
   "bridgeLambda": null,
   "bridgePhi2": null,
   "bridgeDeltaSigmaPMpa": null,
@@ -73,6 +73,5 @@
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

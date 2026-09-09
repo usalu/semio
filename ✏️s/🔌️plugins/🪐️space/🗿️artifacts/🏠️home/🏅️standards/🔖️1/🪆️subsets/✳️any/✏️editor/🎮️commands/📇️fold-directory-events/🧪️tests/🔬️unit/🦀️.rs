@@ -7,7 +7,7 @@ async fn one_config_mutation_per_event() {
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let events_json = pack::json!([
         {"seq": 1, "id": "e1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
          "body": {"kind": "space.created", "spaceId": "sp-1", "name": "A", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"}, "recordedAtMs": 1},
@@ -27,7 +27,7 @@ async fn malformed_events_json_yields_no_mutations() {
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&FoldDirectoryEvents { events_json: "not json".into() }, &doc, &cfg).expect("handle");
     assert!(emit.config_mutations.is_empty());
 }

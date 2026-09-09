@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::WiresSnapshot;
 use crate::mutations::create_node;
+use crate::WiresSnapshot;
 
 /// 🗄️ Local envelope/store alias for the whole-store tests below — mirrors the `pub type
 /// MindmapWiresEnvelope`/`MindmapWiresStore` the pre-split `semio_s_mindmap` crate exported,

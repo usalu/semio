@@ -5,17 +5,17 @@ use crate::mutations::{create_position, create_region, create_route, delete_posi
 use crate::op::GisMapMutation;
 use crate::{gis_map_snapshot_with_derived_children, GisMapImageChild, GisMapSnapshot, MapFeature};
 use ::semio_framework_schema::ArtifactSchema;
+use dsl::{FromValue, ToValue};
 use semio_framework_plugin::{io_dispatch, resolve_ready, ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_s_artifact_stdio_svg::SvgSnapshot;
 use serde_json::Value;
-use std::collections::{BTreeMap, HashSet};
-use dsl::{FromValue, ToValue};
+use std::collections::HashSet;
 
 //#region 🔹Artifact
-/// 🧬️ Full GIS map artifact state across the artifact, presence and config lanes.
+/// 🧬️ GIS map document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap")]
@@ -35,36 +35,13 @@ pub struct GisMapArtifact {
     #[child(kind = "s.stdio.semio.image")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
-    #[state(presence)]
-    pub layer_visibility: BTreeMap<String, bool>,
-    #[state(presence)]
-    pub layer_stroke_scale: BTreeMap<String, f64>,
-    #[state(config)]
-    pub camera_json: String,
-    #[state(config)]
-    pub render_mode: String,
-    #[state(config)]
-    pub vector_style: String,
-    #[state(config)]
-    pub lod_mode: String,
 }
 //#endregion 🔹Artifact
 
 //#region 🔹Conversions
 impl Default for GisMapArtifact {
     fn default() -> Self {
-        Self {
-            positions: Vec::new(),
-            routes: Vec::new(),
-            regions: Vec::new(),
-            image: None,
-            layer_visibility: BTreeMap::new(),
-            layer_stroke_scale: BTreeMap::new(),
-            camera_json: r#"{"x":0,"y":0,"zoom":1}"#.into(),
-            render_mode: "combined".into(),
-            vector_style: "colored".into(),
-            lod_mode: "automatic".into(),
-        }
+        Self { positions: Vec::new(), routes: Vec::new(), regions: Vec::new(), image: None }
     }
 }
 
@@ -75,7 +52,7 @@ impl GisMapArtifact {
         gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: self.positions.clone(), routes: self.routes.clone(), regions: self.regions.clone(), image: self.image.clone(), ..Default::default() })
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: GisMapSnapshot) -> Self {
         Self { positions: snapshot.positions, routes: snapshot.routes, regions: snapshot.regions, image: snapshot.image, ..Self::default() }
     }
@@ -96,11 +73,7 @@ pub fn gismap_artifact_schema_descriptor() -> ::semio_framework_schema::Artifact
     ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.gis.gismap",
         artifact: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
@@ -497,7 +470,7 @@ fn render_drawing_to_svg(drawing: &SemioDrawingSnapshot) -> Result<(String, u32,
         IoPayload::Text(_) => return Err("drawing->svg bridge returned Text, expected an ArtifactPack-encoded SvgSnapshot".into()),
     };
     let svg_snapshot = <SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| error.to_string())?;
-    let svg_text = <SvgSnapshot as store::ArtifactDsl>::print_dsl(&svg_snapshot);
+    let svg_text = String::from_utf8(svg_snapshot.export_utf8()?).map_err(|error| error.to_string())?;
     Ok((svg_text, width, height))
 }
 //#endregion 🔖️DrawingBridge
@@ -512,8 +485,6 @@ pub fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), S
     render_drawing_to_svg(&drawing)
 }
 //#endregion 🔖️MediaExport
-
-
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -24,12 +24,6 @@ pub struct EquationArtifact {
     pub computed: EquationComputedChild,
     #[state(artifact)]
     pub equation: EquationExprSnapshot,
-    #[state(config)]
-    pub camera_x: f64,
-    #[state(config)]
-    pub camera_y: f64,
-    #[state(config)]
-    pub camera_zoom: f64,
 }
 
 // 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::ArtifactChild<S>`
@@ -43,9 +37,6 @@ impl ToValue for EquationArtifact {
             ("results".to_string(), to_dsl_value(&self.results).unwrap_or(DslValue::Null)),
             ("computed".to_string(), to_dsl_value(&self.computed).unwrap_or(DslValue::Null)),
             ("equation".to_string(), self.equation.to_value()),
-            ("cameraX".to_string(), self.camera_x.to_value()),
-            ("cameraY".to_string(), self.camera_y.to_value()),
-            ("cameraZoom".to_string(), self.camera_zoom.to_value()),
         ])
     }
 }
@@ -58,9 +49,6 @@ impl FromValue for EquationArtifact {
             results: from_dsl_value(field("results")).map_err(ValueError::new)?,
             computed: from_dsl_value(field("computed")).map_err(ValueError::new)?,
             equation: EquationExprSnapshot::from_value(field("equation"))?,
-            camera_x: f64::from_value(field("cameraX"))?,
-            camera_y: f64::from_value(field("cameraY"))?,
-            camera_zoom: f64::from_value(field("cameraZoom"))?,
         })
     }
 }
@@ -79,14 +67,14 @@ impl EquationArtifact {
         crate::EquationSnapshot { notation: self.notation.clone(), results: self.results.clone(), computed: self.computed.clone(), equation: self.equation.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::EquationSnapshot) -> Self {
         Self { notation: snapshot.notation, results: snapshot.results, computed: snapshot.computed, equation: snapshot.equation, ..Self::default_ui() }
     }
 
     fn default_ui() -> Self {
         let default_snapshot = crate::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default());
-        Self { notation: default_snapshot.notation, results: default_snapshot.results, computed: default_snapshot.computed, equation: default_snapshot.equation, camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0 }
+        Self { notation: default_snapshot.notation, results: default_snapshot.results, computed: default_snapshot.computed, equation: default_snapshot.equation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -104,13 +92,7 @@ impl EquationArtifact {
 pub fn equation_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.mathematical.equation",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -137,7 +119,7 @@ pub fn equation_artifact_schema_descriptor() -> framework_schema::ArtifactSchema
 //#endregion 🔖️Descriptor
 
 //#region 🔁️Re-exports
+pub use crate::EquationGeometry;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::EquationGraph;
-pub use crate::EquationGeometry;
 //#endregion 🔁️Re-exports

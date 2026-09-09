@@ -2,7 +2,10 @@
 
 use super::insert_object::InsertObject;
 use super::PdfMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff}, snapshot::{ObjRef, PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{
+    diff::{self, PdfDiff},
+    snapshot::{ObjRef, PdfSnapshot},
+};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation

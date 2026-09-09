@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::LOWPOLY_DOCUMENT_SCHEMA;
 use crate::mutations::rename_object;
 use crate::schema::default_snapshot;
+use crate::LOWPOLY_DOCUMENT_SCHEMA;
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {

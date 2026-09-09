@@ -2,11 +2,11 @@
 //! mirror of this pair's deserializer. Lossless: every `FlowNode`/`FlowEdge` field has a
 //! direct JSON member, so `serialize`+`deserialize` round-trips exactly.
 
-use semio_s_artifact_stdio_json::schema::snapshot::{JsonMember, JsonValue};
-use semio_s_artifact_stdio_json::JsonSnapshot;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_json::schema::snapshot::{JsonMember, JsonValue};
+use semio_s_artifact_stdio_json::JsonSnapshot;
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

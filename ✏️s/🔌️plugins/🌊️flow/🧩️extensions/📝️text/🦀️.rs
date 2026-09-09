@@ -106,9 +106,7 @@ mod extension_guest {
         let bundle = bundle.mode(ExecutionMode::Linked);
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
         let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);
-        bundle.handler("evaluate", |req| {
-            evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
-        })
+        bundle.handler("evaluate", |req| evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err)))
     }
 
     #[cfg(test)]

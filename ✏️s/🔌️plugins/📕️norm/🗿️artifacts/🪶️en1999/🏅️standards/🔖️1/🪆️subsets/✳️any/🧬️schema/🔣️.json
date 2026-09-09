@@ -160,17 +160,6 @@
     "annex": {
       "type": "string",
       "x-semio-state": "artifact"
-    },
-    "selectedCheckIndex": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "integer"
-        }
-      ],
-      "x-semio-state": "presence"
     }
   }
 }

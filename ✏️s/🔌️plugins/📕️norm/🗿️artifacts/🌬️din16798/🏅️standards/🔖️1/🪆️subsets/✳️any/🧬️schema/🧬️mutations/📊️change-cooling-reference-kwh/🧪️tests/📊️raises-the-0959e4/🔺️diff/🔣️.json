@@ -47,7 +47,7 @@
   "coolingDeltaTH": null,
   "coolingGainsKwh": null,
   "coolingUtilizationFactor": null,
-  "coolingReferenceKwh": 25.0,
+  "coolingReferenceKwh": 25,
   "chillerType": null,
   "eerActual": null,
   "qCKwh": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

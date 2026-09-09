@@ -248,10 +248,5 @@
       "denseCoverageRatio": 0.8125,
       "warnings": []
     }
-  },
-  "selection": null,
-  "reportTable": null,
-  "frameCursor": null,
-  "camera": null,
-  "layers": null
+  }
 }

@@ -45,19 +45,6 @@
     "exchangeProcess": {
       "type": "object",
       "x-semio-state": "artifact"
-    },
-    "selectedCheckIndex": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        }
-      ],
-      "x-semio-state": "presence"
     }
   }
 }

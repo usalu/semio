@@ -3,9 +3,16 @@
   "lhsJson": null,
   "rhsJson": null,
   "parameterBindings": {
-    "caption": "Capsule Tower"
+    "entries": [
+      {
+        "key": "caption",
+        "precondition": "any",
+        "operation": {
+          "kind": "set",
+          "value": "Capsule Tower"
+        }
+      }
+    ]
   },
-  "ruleLayout": null,
-  "lodModeByWindow": null,
-  "beforePaneCamera": null
+  "ruleLayout": null
 }

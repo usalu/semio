@@ -3,7 +3,7 @@
   "textMaximumBytes": 128,
   "grantBytes": 4096,
   "sources": [
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
     "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
     "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
     "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
@@ -15,9 +15,129 @@
   "owners": [
     {
       "id": "fem2d",
-      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
       "prefix": "FEM2D",
       "routes": [
+        {
+          "id": "addAreaLoad",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addBar",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addBeam",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addCombination",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addLoadCase",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addMaterial",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addMemberUdl",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addNodalLoad",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addNode",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addRegion",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addSection",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addSupport",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "removeSelection",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "setActiveExample",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "setAnalysisSettings",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
         {
           "id": "setCamera",
           "disposition": "Migrated",
@@ -35,108 +155,12 @@
           "blocker": ""
         },
         {
-          "id": "setLocale",
+          "id": "setSelfWeight",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "Artifact"
           ],
           "blocker": ""
-        },
-        {
-          "id": "addNode",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addBar",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addBeam",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addMaterial",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addSection",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addSupport",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addNodalLoad",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addMemberUdl",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addAreaLoad",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addRegion",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addLoadCase",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "addCombination",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "setSelfWeight",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "setAnalysisSettings",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "removeSelection",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
-        },
-        {
-          "id": "setActiveExample",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Bundled example parsing and LoadDocument replacement are one-shot and mixed with Config reset; requires retained document replacement publication."
         }
       ]
     },
@@ -146,28 +170,16 @@
       "prefix": "GENERATION2D",
       "routes": [
         {
-          "id": "nodeGraphViewport",
-          "disposition": "Migrated",
-          "lanes": [
-            "Config"
-          ],
-          "blocker": ""
+          "id": "addGeneration",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
         },
         {
-          "id": "setShowMode",
-          "disposition": "Migrated",
-          "lanes": [
-            "Config"
-          ],
-          "blocker": ""
-        },
-        {
-          "id": "generate",
-          "disposition": "Migrated",
-          "lanes": [
-            "Config"
-          ],
-          "blocker": ""
+          "id": "addWidget",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
         },
         {
           "id": "canvasPointerDown",
@@ -202,10 +214,24 @@
           "blocker": ""
         },
         {
-          "id": "nodeGraphEdit",
+          "id": "connectMediaPorts",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
           "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+        },
+        {
+          "id": "flowEvalTick",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "FlowEvalSession is reconstructed per call; app-instance evaluator authority and retained evaluator state must own this route before it can be interactive."
+        },
+        {
+          "id": "generate",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
         },
         {
           "id": "moveMediaNode",
@@ -214,34 +240,18 @@
           "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
         },
         {
-          "id": "addWidget",
+          "id": "nodeGraphEdit",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
           "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
         },
         {
-          "id": "removeWidget",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
-        },
-        {
-          "id": "connectMediaPorts",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
-        },
-        {
-          "id": "reorganize",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
-        },
-        {
-          "id": "addGeneration",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+          "id": "nodeGraphViewport",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
         },
         {
           "id": "removeGeneration",
@@ -250,16 +260,22 @@
           "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
         },
         {
+          "id": "removeWidget",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+        },
+        {
           "id": "renameGeneration",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
           "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
         },
         {
-          "id": "updateGenerationValues",
+          "id": "reorganize",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
-          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
         },
         {
           "id": "selectGeneration",
@@ -274,16 +290,18 @@
           "blocker": "FlowEvalSession is reconstructed per call; app-instance evaluator authority and retained evaluator state must own this route before it can be interactive."
         },
         {
-          "id": "flowEvalTick",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "FlowEvalSession is reconstructed per call; app-instance evaluator authority and retained evaluator state must own this route before it can be interactive."
+          "id": "setShowMode",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
         },
         {
-          "id": "setLocale",
-          "disposition": "ForbiddenFromUi",
+          "id": "updateGenerationValues",
+          "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
-          "blocker": "Existing locale command is intentionally not exposed as a Generation2d UI route."
+          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
         }
       ]
     },
@@ -293,34 +311,22 @@
       "prefix": "LAYOUT",
       "routes": [
         {
-          "id": "setActivePage",
+          "id": "addFrame",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+        },
+        {
+          "id": "addPage",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+        },
+        {
+          "id": "canvasDragLeave",
           "disposition": "Migrated",
           "lanes": [
             "Config"
-          ],
-          "blocker": ""
-        },
-        {
-          "id": "focusPreflightIssue",
-          "disposition": "Migrated",
-          "lanes": [
-            "Config"
-          ],
-          "blocker": ""
-        },
-        {
-          "id": "engagementInput",
-          "disposition": "Migrated",
-          "lanes": [
-            "Config"
-          ],
-          "blocker": ""
-        },
-        {
-          "id": "canvasPointerUp",
-          "disposition": "Migrated",
-          "lanes": [
-            "HostOnly"
           ],
           "blocker": ""
         },
@@ -333,23 +339,33 @@
           "blocker": ""
         },
         {
-          "id": "canvasDragLeave",
+          "id": "canvasDrop",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+        },
+        {
+          "id": "canvasPointerDown",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Hit testing builds a full page display list before selection/hover effects; requires retained scene/hit-test cursor."
+        },
+        {
+          "id": "canvasPointerMove",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Hit testing builds a full page display list before selection/hover effects; requires retained scene/hit-test cursor."
+        },
+        {
+          "id": "canvasPointerUp",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "HostOnly"
           ],
           "blocker": ""
         },
         {
-          "id": "setCamera",
-          "disposition": "Migrated",
-          "lanes": [
-            "Config"
-          ],
-          "blocker": ""
-        },
-        {
-          "id": "setLocale",
+          "id": "engagementInput",
           "disposition": "Migrated",
           "lanes": [
             "Config"
@@ -358,6 +374,22 @@
         },
         {
           "id": "engagementSubmit",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "exportPackage",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "exportPdf",
           "disposition": "Migrated",
           "lanes": [
             "HostOnly"
@@ -381,29 +413,15 @@
           "blocker": ""
         },
         {
-          "id": "exportPdf",
+          "id": "focusPreflightIssue",
           "disposition": "Migrated",
           "lanes": [
-            "HostOnly"
+            "Config"
           ],
           "blocker": ""
         },
         {
-          "id": "exportPackage",
-          "disposition": "Migrated",
-          "lanes": [
-            "HostOnly"
-          ],
-          "blocker": ""
-        },
-        {
-          "id": "addFrame",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
-        },
-        {
-          "id": "addPage",
+          "id": "patchFrame",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
           "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
@@ -415,28 +433,20 @@
           "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
         },
         {
-          "id": "patchFrame",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+          "id": "setActivePage",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
         },
         {
-          "id": "canvasDrop",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
-        },
-        {
-          "id": "canvasPointerDown",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Hit testing builds a full page display list before selection/hover effects; requires retained scene/hit-test cursor."
-        },
-        {
-          "id": "canvasPointerMove",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Hit testing builds a full page display list before selection/hover effects; requires retained scene/hit-test cursor."
+          "id": "setCamera",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
         }
       ]
     }

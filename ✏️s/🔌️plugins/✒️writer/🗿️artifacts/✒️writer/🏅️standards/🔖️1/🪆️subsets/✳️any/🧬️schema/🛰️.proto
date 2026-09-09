@@ -1,43 +1,11 @@
 syntax = "proto3";
-package semio.s.writer.writer;
+package semio.s.writer.writer.artifact;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
 message WriterArtifact {
-  reserved 6, 17, 18;
   string schema = 1;
   string id = 2;
   string language_id = 3;
   string uri = 4;
-  string text = 5;
-  optional WriterEditorSelection editor_selection = 7;
-  WriterEditorSettings editor_settings = 8;
-  uint32 format_signal = 9;
-  uint32 lint_signal = 10;
-  uint32 revision = 11;
-  string engagement_input = 12;
-  double camera_x = 13;
-  double camera_y = 14;
-  double camera_zoom = 15;
-}
-
-message WriterEditorSelection {
-  uint32 start = 1;
-  uint32 end = 2;
-}
-
-message WriterEditorSettings {
-  bool show_line_numbers = 1;
-  uint32 font_px = 2;
-  uint32 line_height = 3;
-  uint32 tab_size = 4;
-}
-
-message WriterTextRangeEdit {
-  uint32 start = 1;
-  uint32 end = 2;
-  string insert = 3;
-}
-
-message WriterTextDelta {
-  optional string replacement = 1;
-  repeated WriterTextRangeEdit edits = 2;
+  semio.os.store.ArtifactChild document = 5;
 }

@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::wires::WiresCommand;
 use crate::editor::wires::testkit::{dispatch, new_app};
+use crate::editor::wires::WiresCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn add_relationship_appends_edge_and_selects() {

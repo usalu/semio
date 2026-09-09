@@ -6,8 +6,6 @@ type DagDiff {
   edges: DagEdgesDelta @state(class: ARTIFACT)
   setNodes: DagNodeSpecList @state(class: ARTIFACT)
   setEdges: DagFixtureEdgeList @state(class: ARTIFACT)
-  selectedNodeIds: DagStringList @state(class: PRESENCE)
-  camera: DagCamera @state(class: CONFIG)
 }
 type DagStringList { values: [String!]! }
 type DagNodeSpecList { values: [DagNodeSpec!]! }

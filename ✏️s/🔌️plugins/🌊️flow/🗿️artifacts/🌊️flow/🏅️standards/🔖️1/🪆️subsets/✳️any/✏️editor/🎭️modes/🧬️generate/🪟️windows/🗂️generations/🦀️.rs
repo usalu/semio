@@ -111,9 +111,7 @@ pub fn render(config: &FlowConfig, locale: Locale, terminology: Terminology) -> 
         generation_tree_label("empty", locale, terminology),
     )?;
     let mut add_items = UiFixedList::default();
-    add_items
-        .try_push(tree_item_with_action(format!("{surface_prefix}.add-generation"), generation_tree_label("add", locale, terminology), None, flow_action("addGeneration", None)?)?)
-        .map_err(|_| generation_error("actions"))?;
+    add_items.try_push(tree_item_with_action(format!("{surface_prefix}.add-generation"), generation_tree_label("add", locale, terminology), None, flow_action("addGeneration", None)?)?).map_err(|_| generation_error("actions"))?;
     builder = builder.section(format!("{surface_prefix}.actions"), Some(ui_label(generation_tree_label("actions", locale, terminology))?), true, add_items)?;
     builder.build()
 }

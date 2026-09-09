@@ -12,10 +12,6 @@
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<DrawingMutation, DrawingConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
@@ -29,15 +25,21 @@ extern crate semio_framework_schema as schema;
 // hard error under `-D warnings` without this crate-wide allow.
 
 //#region 🗿️Artifacts
-mod artifacts { pub use semio_s_artifact_draw_drawing as drawing; }
+mod artifacts {
+    pub use semio_s_artifact_draw_drawing as drawing;
+}
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_draw_drawing::editor::*; }
+mod editor {
+    pub use semio_s_artifact_draw_drawing::editor::*;
+}
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_draw_drawing::viewer::*; }
+mod viewer {
+    pub use semio_s_artifact_draw_drawing::viewer::*;
+}
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin
@@ -45,6 +47,5 @@ mod viewer { pub use semio_s_artifact_draw_drawing::viewer::*; }
 mod plugin;
 pub use plugin::DrawApps;
 semio_framework_plugin::plugin_exports!(plugin::plugin, DrawApps);
-
 
 //#endregion 🔖️Plugin

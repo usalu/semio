@@ -1,10 +1,9 @@
 //! ✍️ ✍️ Writer play app commands command — `open-document`.
 
+use crate::editor::writer::reset_document_effect;
 use crate::op::WriterMutation;
 use crate::{writer_snapshot_with_text, WriterSnapshot};
-use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
-use crate::editor::writer::reset_document_effect;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -14,7 +13,7 @@ pub struct OpenDocument {
     pub text: String,
 }
 
-pub(crate) fn emit(payload: &OpenDocument) -> Emit<WriterMutation, WriterConfigMutation> {
+pub(crate) fn emit(payload: &OpenDocument) -> Emit<WriterMutation, NoConfigMutation> {
     let id = payload.uri.rsplit('/').next().unwrap_or("document").to_string();
     let ext = payload.uri.rsplit('.').next().filter(|s| *s != &id);
     let language_id = dsl::language_for_semio_content(payload.text.as_bytes()).or_else(|| ext.and_then(|e| dsl::language_for_extension(e))).map(|spec| spec.id.to_string()).unwrap_or_else(|| "plaintext".to_string());
@@ -23,6 +22,6 @@ pub(crate) fn emit(payload: &OpenDocument) -> Emit<WriterMutation, WriterConfigM
     Emit { effects: vec![reset_document_effect(&document)], ..Default::default() }
 }
 
-pub fn handle(payload: &OpenDocument, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub fn handle(payload: &OpenDocument, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WriterMutation, NoConfigMutation>, Fault> {
     Ok(emit(payload))
 }

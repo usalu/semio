@@ -38,10 +38,16 @@ const VALIDATED_ONLY: FacetLeaves = FacetLeaves { rust: "", typescript: include_
 const MODULE_JSON: &str = include_str!("🔣️.json");
 
 /// 🏷️ `$defs` of `🔣️.json`, in declaration order.
-const EXPORTS: [SchemaExport; 45] = [
+const EXPORTS: [SchemaExport; 51] = [
     SchemaExport { id: "InferenceServerIdV1", leaves: VALIDATED_ONLY },
     SchemaExport { id: "InferenceDocumentScopeV1", leaves: VALIDATED_ONLY },
     SchemaExport { id: "InferenceRequestV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceJobReconcileRequestV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceJobReconcileApprovalStateV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceJobReconcileApprovalV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceJobReconcilePageV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceJobReconcileJobV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceJobReconcileResultV1", leaves: ALL_LEAVES },
     SchemaExport { id: "InferenceParentDialectV1", leaves: ALL_LEAVES },
     SchemaExport { id: "InferenceBindingIdentityV1", leaves: ALL_LEAVES },
     SchemaExport { id: "InferenceIdentityV1", leaves: ALL_LEAVES },
@@ -101,6 +107,7 @@ mod scope_schema_export_law;
 //#endregion 🔖️ScopeSchemaExports
 
 pub const REQUEST_MAX_BYTES: usize = 1024;
+pub const RECONCILE_REQUEST_MAX_BYTES: usize = 256;
 pub const SERVER_ID_MAX_BYTES: usize = 96;
 pub const INPUT_MAX_BYTES: usize = 65_536;
 pub const RESULT_MAX_BYTES: usize = 16_384;
@@ -145,6 +152,28 @@ impl InferenceRequestV1 {
             return Err(super::InferenceErrorV1::Invalid);
         }
         Ok(())
+    }
+}
+
+/// 🧭️ The exact original submit identity used only for owner-private lookup; it can never create a job.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InferenceJobReconcileRequestV1 {
+    pub schema: String,
+    pub version: u32,
+    pub request_id: String,
+}
+
+impl InferenceJobReconcileRequestV1 {
+    pub fn decode(bytes: &[u8]) -> Result<Self, super::InferenceErrorV1> {
+        if bytes.is_empty() || bytes.len() > RECONCILE_REQUEST_MAX_BYTES {
+            return Err(super::InferenceErrorV1::Bounds);
+        }
+        let request: Self = serde_json::from_slice(bytes).map_err(|_| super::InferenceErrorV1::Invalid)?;
+        if request.schema != "semio.hub.inference-job-reconcile/v1" || request.version != 1 || !hex(&request.request_id, 32) {
+            return Err(super::InferenceErrorV1::Invalid);
+        }
+        Ok(request)
     }
 }
 
@@ -416,6 +445,58 @@ pub struct InferenceApprovalReceiptV1 {
     pub undo: GisMapApprovalUndoHandleV1,
 }
 
+/// 🔁️ Whether the recovered approval still owns an actionable undo target.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum InferenceJobReconcileApprovalStateV1 {
+    Available,
+    UndoPrepared,
+    Undone,
+}
+
+/// ✅️ The approval authority recovered from durable ledger facts, never from a repeated approval request.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InferenceJobReconcileApprovalV1 {
+    pub state: InferenceJobReconcileApprovalStateV1,
+    pub receipt: Option<InferenceApprovalReceiptV1>,
+}
+
+/// 📃️ Expiry-independent owner-private lifecycle state used only to settle an uncertain submit.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InferenceJobReconcilePageV1 {
+    pub job_id: String,
+    pub state: InferenceJobStateV1,
+    pub proposal_state: InferenceProposalStateV1,
+    pub cancel_requested: bool,
+    pub expired: bool,
+    pub proposal_hash: Option<String>,
+    pub events: Vec<InferenceEventV1>,
+    pub progress: Vec<InferenceProgressV1>,
+    pub next_cursor: u64,
+}
+
+/// 🪪️ The exact existing job and any still-actionable approval authority resolved for the reader.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InferenceJobReconcileJobV1 {
+    pub receipt: InferenceJobReceiptV1,
+    pub page: InferenceJobReconcilePageV1,
+    pub approval: Option<InferenceJobReconcileApprovalV1>,
+}
+
+/// 🧭️ A closed existing-only observation; absence is not a terminal non-admission witness.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InferenceJobReconcileResultV1 {
+    pub schema: &'static str,
+    pub version: u32,
+    pub request_id: String,
+    pub found: bool,
+    pub job: Option<InferenceJobReconcileJobV1>,
+}
+
 /// ⏸️ The exact length-prefixed frame the checkpoint-control pipe carries in both directions.
 #[cfg(feature = "test-support")]
 #[derive(Deserialize, Serialize, PartialEq, Eq)]
@@ -426,6 +507,9 @@ pub struct GisInferenceCheckpointControlFrameV1 {
     pub sequence: u8,
     pub kind: String,
     pub job_id: String,
+    pub progress_cursor: u64,
+    pub completed: u64,
+    pub total: u64,
 }
 
 pub fn hex(value: &str, length: usize) -> bool {

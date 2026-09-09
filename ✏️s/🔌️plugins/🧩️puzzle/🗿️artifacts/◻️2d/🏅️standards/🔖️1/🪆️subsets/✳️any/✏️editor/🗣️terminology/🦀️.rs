@@ -2,8 +2,7 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use crate::editor::puzzle2d::config::Puzzle2dConfig;
-use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel, Terminology};
+use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel};
 
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the 2d app; one field per label makes every terminology×locale
@@ -52,35 +51,14 @@ semio_framework_plugin::app_labels! {
         fill_result: native_en "Fill result", native_de "Füllergebnis", reuse_en "Fill result", reuse_de "Füllergebnis";
         // example picker
         example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
-        // locale/terminology switches — the two actions that carry the axes themselves, so their own
-        // wording is terminology-invariant on purpose (same text in the `reuse` cells).
-        set_locale: native_en "Set Locale", native_de "Sprache festlegen", reuse_en "Set Locale", reuse_de "Sprache festlegen";
-        set_terminology: native_en "Set Terminology", native_de "Terminologie festlegen", reuse_en "Set Terminology", reuse_de "Terminologie festlegen";
     }
 }
 
 //#endregion 🔖️Labels
 
-//#region 🔖️Locale
-fn puzzle2d_locale(value: &str) -> Option<Locale> {
-    match value {
-        "en" | "en-US" => Some(Locale::En),
-        "de" | "de-DE" => Some(Locale::De),
-        _ => None,
-    }
-}
-
-/// 🗣️ Resolves the locale `Puzzle2dConfig` persists, through the explicit EN/DE BCP-47 tags only —
-/// the one seam a caller that needs the axis itself (rather than a label) reads; an unsupported or
-/// unset tag yields `None` so the caller fails closed instead of speaking English by accident.
-pub fn puzzle2d_config_locale(view_state: &semio_framework_plugin::ViewModel) -> Option<Locale> {
-    Some(view_state.locale)
-}
-
-/// 🗣️ Resolves the active label set from `Puzzle2dConfig`'s own persisted locale/terminology strings
-/// through the explicit EN/DE BCP-47 tags and generated terminology axis; unsupported values fail closed.
-pub fn puzzle2d_labels(view_state: &semio_framework_plugin::ViewModel) -> Option<&'static Puzzle2dLabels> {
-    Some(semio_framework_plugin::resolve_labels::<Puzzle2dLabels>(view_state))
+/// 🗣️ Resolves the active label set from the shared view state.
+pub fn puzzle2d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Puzzle2dLabels {
+    semio_framework_plugin::resolve_labels::<Puzzle2dLabels>(view_state)
 }
 
 /// 🗺️ Builds the full locale×terminology `LocalizedLabel` matrix from one `Puzzle2dLabels` field —

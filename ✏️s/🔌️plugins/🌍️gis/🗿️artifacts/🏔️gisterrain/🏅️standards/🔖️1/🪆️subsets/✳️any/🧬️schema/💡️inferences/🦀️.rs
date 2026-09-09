@@ -206,11 +206,7 @@ pub fn gisterrain_artifact_inference_descriptor() -> ::semio_framework_schema::A
     ::semio_framework_schema::ArtifactInferenceDescriptor {
         id: "s.gis.gisterrain.inference",
         inference: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }
 }

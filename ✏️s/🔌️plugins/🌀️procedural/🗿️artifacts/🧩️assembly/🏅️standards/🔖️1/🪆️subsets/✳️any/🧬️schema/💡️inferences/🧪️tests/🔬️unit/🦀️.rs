@@ -1,10 +1,9 @@
-
 use super::*;
 use crate::schema::snapshot::{AssemblyModuleWeight, AssemblyRule, AssemblySlot, AssemblySlotEdge};
 use semio_framework::ToolJobFactory as _;
-use semio_framework_job::{CommitValidation, Generation, InteractiveJob, Operation, RevisionId, StepBudget, StepContext, StepOutcome, allocate_operation_id, root_cancel_token};
-use semio_framework_plugin::app::{ARTIFACT_INFERENCE_WIRE_VERSION, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest, WireArtifactInferenceResult};
-use semio_framework_plugin::reactor::jobs::{JOB_KIND_INFER, JobBudget, JobStep, cancel_job, checkpoint_jobs, restore_job, start_job, step_job as step_reactor_job};
+use semio_framework_job::{allocate_operation_id, root_cancel_token, CommitValidation, Generation, InteractiveJob, Operation, RevisionId, StepBudget, StepContext, StepOutcome};
+use semio_framework_plugin::app::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest, WireArtifactInferenceResult, ARTIFACT_INFERENCE_WIRE_VERSION};
+use semio_framework_plugin::reactor::jobs::{cancel_job, checkpoint_jobs, restore_job, start_job, step_job as step_reactor_job, JobBudget, JobStep, JOB_KIND_INFER};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 

@@ -1,7 +1,5 @@
 //! 🌉 `update-bridge-inputs` — atomically updates the bridge-inputs facet (bridge_lambda, bridge_phi_2, bridge_delta_sigma_p_mpa are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

@@ -2192,13 +2192,13 @@ fn chunk_distance_visible_uses_hysteresis() {
 fn mesh_pool_release_clears_at_zero_refcount() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.mesh_pool.acquire("mesh-1".into());
-    assert!(state.mesh_pool.release("mesh-1".into()));
+    assert!(state.mesh_pool.release(&"mesh-1".into()));
     assert!(!state.mesh_pool.contains(&"mesh-1".to_string()));
     state.mesh_pool.acquire("mesh-1".into());
     state.mesh_pool.acquire("mesh-1".into());
-    assert!(!state.mesh_pool.release("mesh-1".into()));
+    assert!(!state.mesh_pool.release(&"mesh-1".into()));
     assert!(state.mesh_pool.contains(&"mesh-1".to_string()));
-    assert!(state.mesh_pool.release("mesh-1".into()));
+    assert!(state.mesh_pool.release(&"mesh-1".into()));
     assert!(!state.mesh_pool.contains(&"mesh-1".to_string()));
 }
 

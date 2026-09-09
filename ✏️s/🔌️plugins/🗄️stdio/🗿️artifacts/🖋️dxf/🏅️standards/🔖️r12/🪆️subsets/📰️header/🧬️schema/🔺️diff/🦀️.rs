@@ -38,9 +38,9 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
 use crate::DxfSnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexCollectionCore
 /// 🧮 Per-item sparse-diff behavior shared by the two index-keyed collections (`DxfEntity`,
@@ -117,14 +117,7 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// ➕️ Absorbs `d1` (base→mid) then `d2` (mid→after) into a single base→after triple.
 #[allow(clippy::type_complexity)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn generic_absorb_pair<T: DxfIndexElem>(
-    d1_removed: &[usize],
-    d1_modified: &[(usize, T::Diff)],
-    d1_added: &[(usize, T)],
-    d2_removed: &[usize],
-    d2_modified: &[(usize, T::Diff)],
-    d2_added: &[(usize, T)],
-) -> IndexedDiffParts<T::Diff, T> {
+fn generic_absorb_pair<T: DxfIndexElem>(d1_removed: &[usize], d1_modified: &[(usize, T::Diff)], d1_added: &[(usize, T)], d2_removed: &[usize], d2_modified: &[(usize, T::Diff)], d2_added: &[(usize, T)]) -> IndexedDiffParts<T::Diff, T> {
     use std::collections::HashMap;
     let max_ref =
         d1_removed.iter().copied().chain(d1_modified.iter().map(|(i, _)| *i)).chain(d1_added.iter().map(|(i, _)| *i)).chain(d2_removed.iter().copied()).chain(d2_modified.iter().map(|(i, _)| *i)).chain(d2_added.iter().map(|(i, _)| *i)).max();
@@ -262,14 +255,7 @@ fn named_between<T: DxfNamedElem>(base: &[T], other: &[T]) -> NamedDiffParts<T::
 
 #[allow(clippy::type_complexity)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn named_absorb_pair<T: DxfNamedElem>(
-    d1_removed: &[String],
-    d1_modified: &[(String, T::Diff)],
-    d1_added: &[(usize, T)],
-    d2_removed: &[String],
-    d2_modified: &[(String, T::Diff)],
-    d2_added: &[(usize, T)],
-) -> NamedDiffParts<T::Diff, T> {
+fn named_absorb_pair<T: DxfNamedElem>(d1_removed: &[String], d1_modified: &[(String, T::Diff)], d1_added: &[(usize, T)], d2_removed: &[String], d2_modified: &[(String, T::Diff)], d2_added: &[(usize, T)]) -> NamedDiffParts<T::Diff, T> {
     let added_keys: HashSet<String> = d1_added.iter().map(|(_, t)| t.key().to_string()).collect();
     let mut merged_removed: Vec<String> = d1_removed.to_vec();
     let mut annihilated: HashSet<String> = HashSet::new();
@@ -3323,11 +3309,7 @@ fn enc_name_triple_bin<T, D>(removed: &[String], modified: &[(String, D)], added
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_name_triple_bin<T, D>(
-    reader: &mut store::ByteReader<'_>,
-    dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
-    dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<NamedDiffParts<D, T>, String> {
+fn dec_name_triple_bin<T, D>(reader: &mut store::ByteReader<'_>, dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<NamedDiffParts<D, T>, String> {
     let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
@@ -3367,11 +3349,7 @@ fn enc_index_triple_bin<T, D>(removed: &[usize], modified: &[(usize, D)], added:
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_index_triple_bin<T, D>(
-    reader: &mut store::ByteReader<'_>,
-    dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
-    dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<IndexedDiffParts<D, T>, String> {
+fn dec_index_triple_bin<T, D>(reader: &mut store::ByteReader<'_>, dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<IndexedDiffParts<D, T>, String> {
     let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {

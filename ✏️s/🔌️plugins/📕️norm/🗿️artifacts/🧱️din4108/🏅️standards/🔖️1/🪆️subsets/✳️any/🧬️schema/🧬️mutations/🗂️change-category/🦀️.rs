@@ -1,6 +1,5 @@
 //! 🏷️ `change-category` — sets the DIN 4108 `category` scalar.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

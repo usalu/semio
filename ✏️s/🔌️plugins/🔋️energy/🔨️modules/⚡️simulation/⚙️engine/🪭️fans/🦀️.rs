@@ -1,8 +1,8 @@
 //! 🌀️ Fan performance: pressure rise, efficiency curves, fan laws, and part-load power.
 
 use crate::curves::PerformanceCurve;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️Fan
 /// 🌀️ Fan type and performance specification.

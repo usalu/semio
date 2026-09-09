@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::FemNode;
 use protocol::Inference;

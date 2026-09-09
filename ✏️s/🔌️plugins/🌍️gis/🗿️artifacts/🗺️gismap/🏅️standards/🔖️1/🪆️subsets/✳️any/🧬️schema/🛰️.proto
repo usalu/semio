@@ -10,28 +10,6 @@ message GisMapArtifact {
   repeated GisMapFeature routes = 2;
   // @state artifact
   repeated GisMapFeature regions = 3;
-  // @state presence
-  repeated string selected_ids = 4;
-  // @state presence
-  string feature_selection_json = 5;
-  // @state presence
-  map<string, bool> layer_visibility = 6;
-  // @state presence
-  map<string, double> layer_stroke_scale = 7;
-  // @state config
-  string camera_json = 8;
-  // @state config
-  string render_mode = 9;
-  // @state config
-  string vector_style = 10;
-  // @state config
-  string lod_mode = 11;
-  // @state config
-  string hover_json = 12;
-  // @state config
-  string selection_method = 13;
-  // @state config
-  string selection_mode = 14;
   // @state config
 }
 

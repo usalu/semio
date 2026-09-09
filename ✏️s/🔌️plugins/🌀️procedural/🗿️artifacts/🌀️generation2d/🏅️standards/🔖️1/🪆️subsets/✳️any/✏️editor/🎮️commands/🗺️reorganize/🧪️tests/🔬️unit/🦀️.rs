@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::generation2d::Generation2dCommand;
 use crate::editor::generation2d::commands::node_graph_viewport;
 use crate::editor::generation2d::testkit::{app, dispatch};
+use crate::editor::generation2d::Generation2dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn reorganize_emits_operations() {

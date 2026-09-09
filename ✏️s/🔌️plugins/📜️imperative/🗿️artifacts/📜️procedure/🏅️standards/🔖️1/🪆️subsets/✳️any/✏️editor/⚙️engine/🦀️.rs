@@ -6,7 +6,7 @@
 //! `AppIo`, this app's typed media surface. `default_snapshot()` stayed at `🧬️schema` (pure, no app
 //! type in its signature, and still needed by the artifact's own mutation/diff tests).
 
-use crate::{Dictionary, ProcedureSnapshot, Path, PathRef, Registry, Step};
+use crate::{Dictionary, Path, PathRef, ProcedureSnapshot, Registry, Step};
 use imperative_engine::{compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, RunResult};
 
 //#region ⚠️ Errors

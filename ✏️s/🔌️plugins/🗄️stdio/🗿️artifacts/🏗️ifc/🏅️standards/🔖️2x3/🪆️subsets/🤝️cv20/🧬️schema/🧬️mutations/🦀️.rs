@@ -31,9 +31,9 @@
 use crate::standards::v2x3::mvd;
 use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use semio_s_artifact_stdio_step::engine::part21::Part21Value;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
+use semio_s_artifact_stdio_step::engine::part21::Part21Value;
 
 pub use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
 
@@ -56,18 +56,18 @@ pub struct Cv20StructuralEntity {
     pub name: String,
 }
 
+#[path = "📍️set-product-placement/🦀️.rs"]
+pub mod set_product_placement;
+#[path = "📐️set-project-units/🦀️.rs"]
+pub mod set_project_units;
 /// 📐️ Typed Coordination View 2.0 mutation for `stdio.ifc.2x3`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "👁️set-view-definition/🦀️.rs"]
-pub mod set_view_definition;
 #[path = "🏗️set-structural-entity/🦀️.rs"]
 pub mod set_structural_entity;
-#[path = "📐️set-project-units/🦀️.rs"]
-pub mod set_project_units;
-#[path = "📍️set-product-placement/🦀️.rs"]
-pub mod set_product_placement;
+#[path = "👁️set-view-definition/🦀️.rs"]
+pub mod set_view_definition;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -162,35 +162,39 @@ fn edit(base: &Ifc2x3Snapshot, mutation: &Ifc2x3Cv20Mutation) -> Result<Ifc2x3Sn
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
-        match this {
-            Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
-                Ok(()) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot)),
-                Err(message) => rejected(message),
-            },
-            _ => match edit(base, this) {
-                Ok(next) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, &next)),
-                Err(message) => rejected(message),
-            },
-        }
+    match this {
+        Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
+            Ok(()) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot)),
+            Err(message) => rejected(message),
+        },
+        _ => match edit(base, this) {
+            Ok(next) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, &next)),
+            Err(message) => rejected(message),
+        },
     }
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Cv20Mutation> {
-        match this {
-            Ifc2x3Cv20Mutation::SetSnapshot(_) => vec![Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) })],
-            Ifc2x3Cv20Mutation::SetViewDefinition(_) => vec![Ifc2x3Cv20Mutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: mvd::view_definition_name(base).unwrap_or_default() })],
-            Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id, .. }) => {
-                let entity = base.document.instance(*id).and_then(|instance| instance.primary()).map(|(name, args)| Cv20StructuralEntity {
-                    type_name: name.to_string(),
-                    global_id: args.first().and_then(Part21Value::as_str).unwrap_or_default().to_string(),
-                    name: args.get(2).and_then(Part21Value::as_str).unwrap_or_default().to_string(),
-                });
-                vec![Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: *id, entity })]
-            }
-            Ifc2x3Cv20Mutation::SetProjectUnits(set_project_units::SetProjectUnits { project, .. }) => vec![Ifc2x3Cv20Mutation::SetProjectUnits(set_project_units::SetProjectUnits { project: *project, units: mvd::reference_argument(base, *project, PROJECT_UNITS_INDEX) })],
-            Ifc2x3Cv20Mutation::SetProductPlacement(set_product_placement::SetProductPlacement { product, .. }) => vec![Ifc2x3Cv20Mutation::SetProductPlacement(set_product_placement::SetProductPlacement { product: *product, placement: mvd::reference_argument(base, *product, PRODUCT_PLACEMENT_INDEX) })],
+    match this {
+        Ifc2x3Cv20Mutation::SetSnapshot(_) => vec![Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) })],
+        Ifc2x3Cv20Mutation::SetViewDefinition(_) => vec![Ifc2x3Cv20Mutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: mvd::view_definition_name(base).unwrap_or_default() })],
+        Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id, .. }) => {
+            let entity = base.document.instance(*id).and_then(|instance| instance.primary()).map(|(name, args)| Cv20StructuralEntity {
+                type_name: name.to_string(),
+                global_id: args.first().and_then(Part21Value::as_str).unwrap_or_default().to_string(),
+                name: args.get(2).and_then(Part21Value::as_str).unwrap_or_default().to_string(),
+            });
+            vec![Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: *id, entity })]
+        }
+        Ifc2x3Cv20Mutation::SetProjectUnits(set_project_units::SetProjectUnits { project, .. }) => {
+            vec![Ifc2x3Cv20Mutation::SetProjectUnits(set_project_units::SetProjectUnits { project: *project, units: mvd::reference_argument(base, *project, PROJECT_UNITS_INDEX) })]
+        }
+        Ifc2x3Cv20Mutation::SetProductPlacement(set_product_placement::SetProductPlacement { product, .. }) => {
+            vec![Ifc2x3Cv20Mutation::SetProductPlacement(set_product_placement::SetProductPlacement { product: *product, placement: mvd::reference_argument(base, *product, PRODUCT_PLACEMENT_INDEX) })]
         }
     }
+}
 //#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests

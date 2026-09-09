@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::writer::testkit::{app_with_jack, new_app, render as render_body};
 
@@ -6,7 +5,7 @@ use crate::editor::writer::testkit::{app_with_jack, new_app, render as render_bo
 async fn renders_document_tree_for_jack() {
     use semio_framework_plugin::PluginApp;
     let mut app = new_app().await;
-    let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).await.expect("render");
+    let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::document_dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).await.expect("render");
     let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("render JSON");
     assert!(json.contains("\"type\":\"tree\""));
     assert!(json.contains("Query"));

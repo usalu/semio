@@ -1,41 +1,9 @@
 # 🧬️ Writer artifact schema.
 
 type WriterArtifact {
-  schema: String!
-  id: String!
-  languageId: String!
-  uri: String!
-  text: String!
-  editorSelection: WriterEditorSelection
-  editorSettings: WriterEditorSettings!
-  formatSignal: Int!
-  lintSignal: Int!
-  revision: Int!
-  engagementInput: String!
-  cameraX: Float!
-  cameraY: Float!
-  cameraZoom: Float!
-}
-
-type WriterEditorSelection {
-  start: Int!
-  end: Int!
-}
-
-type WriterEditorSettings {
-  showLineNumbers: Boolean!
-  fontPx: Int!
-  lineHeight: Int!
-  tabSize: Int!
-}
-
-type WriterTextRangeEdit {
-  start: Int!
-  end: Int!
-  insert: String!
-}
-
-type WriterTextDelta {
-  replacement: String
-  edits: [WriterTextRangeEdit!]
+  schema: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  languageId: String! @state(class: ARTIFACT)
+  uri: String! @state(class: ARTIFACT)
+  document: ArtifactChild! @state(class: ARTIFACT)
 }

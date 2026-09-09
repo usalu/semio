@@ -21,15 +21,15 @@ pub mod mutations;
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun};
     #[cfg(test)]
     use crate::schema::mutations::set_snapshot;
+    use crate::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun};
     use crate::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_REL_BASE};
     use crate::{DocxDiff, DocxMutation, DocxSnapshot};
-    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-    use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
+    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+    use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
     //#region 🔖️Namespaces
     const STRICT_MAIN_NS: &str = "http://purl.oclc.org/ooxml/wordprocessingml/main";
@@ -192,9 +192,9 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::base::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
     use crate::DocxSnapshot;
-    use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };

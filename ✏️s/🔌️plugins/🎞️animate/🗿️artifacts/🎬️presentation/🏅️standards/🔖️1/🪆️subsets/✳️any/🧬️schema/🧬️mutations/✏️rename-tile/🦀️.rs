@@ -1,8 +1,8 @@
 //! ✏️ `rename-tile` mutation payload — sets a figure tile crop's display name.
 
-use crate::PresentationSnapshot;
 use crate::diff::PresentationDiff;
 use crate::mutations::PresentationMutation;
+use crate::PresentationSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔹Payload

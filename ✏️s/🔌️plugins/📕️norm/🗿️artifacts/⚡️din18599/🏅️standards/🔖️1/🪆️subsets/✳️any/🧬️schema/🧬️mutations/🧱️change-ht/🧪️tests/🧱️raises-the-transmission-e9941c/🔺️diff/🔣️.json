@@ -2,7 +2,7 @@
   "useClass": null,
   "heatedAreaM2": null,
   "occupants": null,
-  "hT": 118.0,
+  "hT": 118,
   "hV": null,
   "climate": null,
   "internalGainsWM2": null,
@@ -11,6 +11,5 @@
   "renewableKwh": null,
   "annualLimitKwh": null,
   "energyCarrier": null,
-  "referenceQPKwh": null,
-  "selectedCheckIndex": null
+  "referenceQPKwh": null
 }

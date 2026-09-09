@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn slider(id: &str) -> Widget {

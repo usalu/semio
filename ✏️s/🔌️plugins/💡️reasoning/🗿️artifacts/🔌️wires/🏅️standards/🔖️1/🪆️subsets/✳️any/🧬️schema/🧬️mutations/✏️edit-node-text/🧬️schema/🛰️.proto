@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.mutation.edit_node_text;
+
+message EditNodeText {
+  string node_id = 1;
+  string new_text = 2;
+}

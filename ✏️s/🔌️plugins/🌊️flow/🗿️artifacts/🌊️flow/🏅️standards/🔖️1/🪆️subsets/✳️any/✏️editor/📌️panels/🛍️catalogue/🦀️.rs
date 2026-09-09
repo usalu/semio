@@ -1,11 +1,11 @@
 //! 🛍️ Flow play app panel — the catalogue: draggable widget/operator palette plus the extension sections.
 
-use crate::FlowSnapshot;
 use crate::editor::flow::commands::run_extension_action::FLOW_AUTOMATIONS;
 use crate::editor::flow::config::FlowConfig;
-use crate::editor::flow::{flow_action, ui_node_list, ui_value_bool, ui_value_map, ui_value_text};
 use crate::editor::flow::host_from_snapshot;
 use crate::editor::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
+use crate::editor::flow::{flow_action, ui_node_list, ui_value_bool, ui_value_map, ui_value_text};
+use crate::FlowSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
 use semio_framework_plugin::{
@@ -76,13 +76,7 @@ pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSes
                 Some(neuron_kind) => ui_value_map([("kind", ui_value_text("neuron")?), ("neuronKind", ui_value_text(neuron_kind)?)])?,
                 None => ui_value_map([("kind", ui_value_text(kind)?)])?,
             };
-            tree_item_with_action_draggable(
-                format!("flow-play-catalogue.{id}.{kind}.{label}"),
-                label,
-                Some(kind.to_string()),
-                flow_action("addWidget", Some(action_args))?,
-                &flow_widget_drag_json(&descriptor),
-            )
+            tree_item_with_action_draggable(format!("flow-play-catalogue.{id}.{kind}.{label}"), label, Some(kind.to_string()), flow_action("addWidget", Some(action_args))?, &flow_widget_drag_json(&descriptor))
         }))?;
         builder = builder.section(format!("flow-play-catalogue.{id}"), Some(ui_label(title)?), true, items)?;
     }
@@ -93,22 +87,14 @@ pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSes
 fn append_extension_sections(mut builder: PanelTreeBuilder, config: &FlowConfig, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<PanelTreeBuilder> {
     let extension_enabled = config.automation_enabled();
     let installed = ui_node_list(FLOW_AUTOMATIONS.iter().map(|(id, name, _, _, _)| {
-            let enabled = extension_enabled.get(*id).copied().unwrap_or(false);
-            let args = ui_value_map([("enabled", ui_value_bool(!enabled)), ("id", ui_value_text(id)?)])?;
-            tree_item_with_action(
-                format!("flow-play-extensions.{id}"),
-                flow_extension_label(id, name, labels).into_string(),
-                Some(if enabled { "enabled".into() } else { "disabled".into() }),
-                flow_action("toggleExtension", Some(args))?,
-            )
-        }))?;
-    let actions = ui_node_list(FLOW_AUTOMATIONS
-        .iter()
-        .filter(|(id, ..)| extension_enabled.get(*id).copied().unwrap_or(false))
-        .map(|(_, _, action_id, title, _)| {
-            let args = ui_value_map([("actionId", ui_value_text(action_id)?)])?;
-            tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels).into_string(), Some((*action_id).into()), flow_action("runExtensionAction", Some(args))?)
-        }))?;
+        let enabled = extension_enabled.get(*id).copied().unwrap_or(false);
+        let args = ui_value_map([("enabled", ui_value_bool(!enabled)), ("id", ui_value_text(id)?)])?;
+        tree_item_with_action(format!("flow-play-extensions.{id}"), flow_extension_label(id, name, labels).into_string(), Some(if enabled { "enabled".into() } else { "disabled".into() }), flow_action("toggleExtension", Some(args))?)
+    }))?;
+    let actions = ui_node_list(FLOW_AUTOMATIONS.iter().filter(|(id, ..)| extension_enabled.get(*id).copied().unwrap_or(false)).map(|(_, _, action_id, title, _)| {
+        let args = ui_value_map([("actionId", ui_value_text(action_id)?)])?;
+        tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels).into_string(), Some((*action_id).into()), flow_action("runExtensionAction", Some(args))?)
+    }))?;
     builder = builder.section("flow-play-extensions.installed", Some(ui_label(labels.extensions.as_str())?), false, installed)?;
     if !actions.is_empty() {
         builder = builder.section("flow-play-extensions.actions", Some(ui_label(labels.extension_actions.as_str())?), false, actions)?;

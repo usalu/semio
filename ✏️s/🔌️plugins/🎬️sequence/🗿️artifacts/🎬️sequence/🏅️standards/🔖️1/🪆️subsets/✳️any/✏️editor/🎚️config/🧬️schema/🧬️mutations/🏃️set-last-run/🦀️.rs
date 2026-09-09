@@ -17,7 +17,13 @@ impl protocol::MutationKind<SequenceConfig, SequenceConfigMutation> for SetLastR
         next.last_run_json = self.json.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &SequenceConfig) -> Vec<SequenceConfigMutation> { vec![SequenceConfigMutation::SetLastRun(Self { json: base.last_run_json.clone() })] }
-    fn label(&self) -> String { "Set Last Run".into() }
-    fn target(&self) -> Vec<String> { vec!["last_run_json".into()] }
+    fn inverse(&self, base: &SequenceConfig) -> Vec<SequenceConfigMutation> {
+        vec![SequenceConfigMutation::SetLastRun(Self { json: base.last_run_json.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Last Run".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["last_run_json".into()]
+    }
 }

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::empty_playbook_snapshot;
 

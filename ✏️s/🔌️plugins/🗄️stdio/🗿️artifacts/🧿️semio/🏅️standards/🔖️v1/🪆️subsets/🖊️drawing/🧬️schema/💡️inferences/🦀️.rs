@@ -18,7 +18,7 @@ use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use std::collections::BTreeMap;
 
-use super::flattened_scene::{DrawFlattenedScene};
+use super::flattened_scene::DrawFlattenedScene;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a drawing snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `flattenedScene`, backed by the `🎛️flattened-scene/` slug dir).
@@ -70,13 +70,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::drawing::schema::SemioD
 pub fn semio_drawing_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.drawing.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

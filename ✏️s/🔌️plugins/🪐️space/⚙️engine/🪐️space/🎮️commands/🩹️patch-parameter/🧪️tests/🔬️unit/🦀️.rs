@@ -21,7 +21,7 @@ async fn patch_parameter_action_updates_value() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
     let config = SpaceConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&PatchParameter { parameter_id: "param-brush-size".into(), field: "value".into(), value: "48".into() }, &doc, &cfg).expect("handle");
     assert_eq!(emit.artifact_mutations.len(), 1);
     let next = apply_mutations(&projection, &emit.artifact_mutations).await;
@@ -47,7 +47,7 @@ async fn unbind_parameter_field_removes_binding() {
     let parameter_id = parameter_entity_id(projection.parameters.first().expect("parameter")).await.to_string();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit =
         crate::engine::space::commands::bind_parameter_field::handle(&crate::engine::space::commands::bind_parameter_field::BindParameterField { node_id: node.id.clone(), field_path: "label".into(), parameter_id }, &doc, &cfg).expect("handle");
     projection = apply_mutations(&projection, &emit.artifact_mutations).await;

@@ -21,13 +21,11 @@
 //! fails with `Option<T>: DslField` is not satisfied. `DiffCodec` is hand-rolled below, following
 //! the svg/gif/docx template exactly.
 
-use crate::standards::v1::subsets::base::schema::triples::{
-    dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff,
-};
+use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️DocumentDiffTypes
 pub type StylesDiff = NamedTripleDiff<String, DocStyleDiff, DocStyle>;

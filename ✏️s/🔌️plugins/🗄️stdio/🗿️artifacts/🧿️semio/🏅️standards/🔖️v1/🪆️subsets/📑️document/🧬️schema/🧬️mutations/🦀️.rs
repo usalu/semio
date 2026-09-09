@@ -135,40 +135,40 @@ fn wrap_body_diff(path: &DocBlockPath, leaf: DocBlockLeaf) -> SemioDocumentDiff 
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🧱insert-block/🦀️.rs"]
 pub mod insert_block;
-#[path = "🪓remove-block/🦀️.rs"]
-pub mod remove_block;
-#[path = "📦set-block-content/🦀️.rs"]
-pub mod set_block_content;
-#[path = "🪶set-paragraph-style/🦀️.rs"]
-pub mod set_paragraph_style;
-#[path = "📐set-heading-level/🦀️.rs"]
-pub mod set_heading_level;
-#[path = "🔢set-list-ordered/🦀️.rs"]
-pub mod set_list_ordered;
-#[path = "🧵set-run-text/🦀️.rs"]
-pub mod set_run_text;
-#[path = "🎨set-run-style/🦀️.rs"]
-pub mod set_run_style;
-#[path = "📷set-image-block/🦀️.rs"]
-pub mod set_image_block;
-#[path = "🧶insert-style/🦀️.rs"]
-pub mod insert_style;
-#[path = "🧽️remove-style/🦀️.rs"]
-pub mod remove_style;
-#[path = "🏷️set-style-name/🦀️.rs"]
-pub mod set_style_name;
-#[path = "🧬️set-style-based-on/🦀️.rs"]
-pub mod set_style_based_on;
 #[path = "🖼️insert-image/🦀️.rs"]
 pub mod insert_image;
+#[path = "🧶insert-style/🦀️.rs"]
+pub mod insert_style;
+#[path = "🪓remove-block/🦀️.rs"]
+pub mod remove_block;
 #[path = "🪦remove-image/🦀️.rs"]
 pub mod remove_image;
+#[path = "🧽️remove-style/🦀️.rs"]
+pub mod remove_style;
+#[path = "📦set-block-content/🦀️.rs"]
+pub mod set_block_content;
+#[path = "📐set-heading-level/🦀️.rs"]
+pub mod set_heading_level;
+#[path = "📷set-image-block/🦀️.rs"]
+pub mod set_image_block;
 #[path = "📀️set-image-bytes/🦀️.rs"]
 pub mod set_image_bytes;
+#[path = "🔢set-list-ordered/🦀️.rs"]
+pub mod set_list_ordered;
+#[path = "🪶set-paragraph-style/🦀️.rs"]
+pub mod set_paragraph_style;
+#[path = "🎨set-run-style/🦀️.rs"]
+pub mod set_run_style;
+#[path = "🧵set-run-text/🦀️.rs"]
+pub mod set_run_text;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
+#[path = "🧬️set-style-based-on/🦀️.rs"]
+pub mod set_style_based_on;
+#[path = "🏷️set-style-name/🦀️.rs"]
+pub mod set_style_name;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -325,9 +325,7 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
             _ => SemioDocumentDiff::default(),
         },
         SemioDocumentMutation::SetListOrdered(set_list_ordered::SetListOrdered { path, ordered }) => match block_at(base, path) {
-            Some(DocBlock::List { ordered: old, .. }) if old != ordered => {
-                wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::List(crate::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: Some(*ordered), items: None })))
-            }
+            Some(DocBlock::List { ordered: old, .. }) if old != ordered => wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::List(crate::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: Some(*ordered), items: None }))),
             _ => SemioDocumentDiff::default(),
         },
         SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path, run_index, text }) => {
@@ -384,10 +382,7 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
         SemioDocumentMutation::SetStyleName(set_style_name::SetStyleName { id, name }) => match style_at(base, id) {
             Some(old) if &old.name != name => SemioDocumentDiff {
                 styles: Some(crate::standards::v1::subsets::document::schema::diff::StylesDiff {
-                    modified: vec![crate::standards::v1::subsets::base::schema::triples::NamedModified {
-                        key: id.clone(),
-                        diff: crate::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: Some(name.clone()), based_on: None },
-                    }],
+                    modified: vec![crate::standards::v1::subsets::base::schema::triples::NamedModified { key: id.clone(), diff: crate::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: Some(name.clone()), based_on: None } }],
                     ..Default::default()
                 }),
                 images: None,
@@ -398,10 +393,7 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
         SemioDocumentMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id, based_on }) => match style_at(base, id) {
             Some(old) if &old.based_on != based_on => SemioDocumentDiff {
                 styles: Some(crate::standards::v1::subsets::document::schema::diff::StylesDiff {
-                    modified: vec![crate::standards::v1::subsets::base::schema::triples::NamedModified {
-                        key: id.clone(),
-                        diff: crate::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: None, based_on: Some(based_on.clone()) },
-                    }],
+                    modified: vec![crate::standards::v1::subsets::base::schema::triples::NamedModified { key: id.clone(), diff: crate::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: None, based_on: Some(based_on.clone()) } }],
                     ..Default::default()
                 }),
                 images: None,
@@ -728,11 +720,8 @@ impl OpBinary for SemioDocumentMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioDocumentMutation> {
-    let table_block = DocBlock::Table {
-        rows: vec![crate::standards::v1::subsets::document::schema::snapshot::DocTableRow {
-            cells: vec![crate::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }],
-        }],
-    };
+    let table_block =
+        DocBlock::Table { rows: vec![crate::standards::v1::subsets::document::schema::snapshot::DocTableRow { cells: vec![crate::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] };
     vec![
         SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::document::schema::diff::snapshot_b() }),
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(1), block: table_block.clone() }),

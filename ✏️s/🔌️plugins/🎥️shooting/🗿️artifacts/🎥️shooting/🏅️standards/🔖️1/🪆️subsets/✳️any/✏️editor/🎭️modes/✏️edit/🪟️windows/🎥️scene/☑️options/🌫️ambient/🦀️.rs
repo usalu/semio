@@ -1,8 +1,8 @@
 //! 🌫️ Scene-window option — the ambient-intensity slider.
 //! Its command handler lives in `🎮️commands/☀️scene::set_ambient_intensity`.
 
-use crate::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
+use crate::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

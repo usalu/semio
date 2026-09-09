@@ -1,4 +1,3 @@
-
 use super::*;
 
 //#region 🧪️RetainedConfigOracle
@@ -16,7 +15,7 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_snapshot_inpu
     assert_eq!(DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024, 4_096);
 }
 //#endregion 🧪️RetainedConfigOracle
-use crate::editor::dag::testkit::{DagApp, new_app_with_registry};
+use crate::editor::dag::testkit::{new_app_with_registry, DagApp};
 use semio_framework_plugin::PluginApp;
 
 //#region 🔖️CommandSurface
@@ -157,7 +156,7 @@ async fn interaction_topology_covers_every_node_and_edge_via_their_edges() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = DagConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let topology = DagPlayApp::interaction_topology(&doc, &cfg);
     let domain = topology.domains.get(DAG_PLAY_INTERACTION_DOMAIN).expect("graph domain topology present");
     assert!(domain.ordered.iter().any(|node| node.id == node_id && node.granularity == "node"), "every seed node is registered");
@@ -191,7 +190,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request).await;
+    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");

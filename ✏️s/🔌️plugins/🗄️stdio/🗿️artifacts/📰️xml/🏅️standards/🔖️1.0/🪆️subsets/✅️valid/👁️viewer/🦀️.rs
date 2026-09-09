@@ -5,9 +5,9 @@
 //! not import anything from the sibling mutation-capable surface.
 
 use crate::standards::v1_0::subsets::valid::schema::XmlValidMutation;
-use crate::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use crate::viewer::xml_valid::modes::view;
 use crate::viewer::xml_valid::modes::view::windows::main;
+use crate::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 
 //#region 🔖️Dialect

@@ -16,8 +16,6 @@ message En1990Artifact {
   string annex = 5;
   // @state artifact
   double seismic_a_ed_kn = 6;
-  // @state presence
-  optional uint32 selected_check_index = 7;
 }
 
 message En1990QkEntry {

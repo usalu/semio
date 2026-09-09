@@ -28,5 +28,4 @@ type En1999Diff {
   shellRMm: Float @state(class: ARTIFACT)
   sigmaEdShellMpa: Float @state(class: ARTIFACT)
   annex: Float @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }

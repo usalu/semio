@@ -117,7 +117,7 @@ async fn committed_diff_is_canonical() {
     let reencoded = pack::json_from_dsl_value(&decoded.to_value());
     let original = pack::parse_json(DIFF).expect("committed diff reparses");
     assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "change-graph-directed/keeps-an-already-directed-graph-directed: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
-    assert_eq!(original.as_object().expect("the diff is a JSON object").len(), 8, "EquationDiff emits all eight slots, `null` for the untouched ones");
+    assert_eq!(original.as_object().expect("the diff is a JSON object").len(), 4, "EquationDiff emits all four artifact slots, `null` for the untouched ones");
 }
 
 /// 🩹 Applying the committed (empty) diff to `before` yields the committed `after` unchanged.

@@ -7,19 +7,20 @@
 //! typed media I/O surface (`map:in` overlay, ports, scene media) below in `🔖️Io` — relocated from
 //! the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 
-use crate::op::GisTerrainMutation;
-use crate::schema::default_terrain_document;
-use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use crate::editor::gis3d::commands::{exaggeration, view};
 use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetCamera};
 use crate::editor::gis3d::modes::view as view_mode;
 use crate::editor::gis3d::modes::view::windows::terrain;
+use crate::op::GisTerrainMutation;
+use crate::schema::default_terrain_document;
+use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
+    AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod,
+    SelectionMode, SelectionSpec,
 };
 use serde_json::Value;
 use store::ArtifactPack;
@@ -122,7 +123,7 @@ use view::set_camera;
 pub struct Gis3dPlayApp;
 
 //#region 🧵️RetainedCommands
-const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera", ];
+const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera"];
 const GIS3D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.terrain.tool-command.v1";
 const GIS3D_RETAINED_RAW_BYTES: usize = 8_192;
 const GIS3D_RETAINED_WORK_ITEMS: usize = 1;
@@ -150,7 +151,7 @@ fn gis3d_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gis3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 struct Gis3dCommandJobFactory {
@@ -205,10 +206,8 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFact
     type Owner = EditorApp<Gis3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GIS3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
-        ArtifactToolPublicationContract { tool_id: "setExaggeration", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-    ];
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] =
+        &[ArtifactToolPublicationContract { tool_id: "setExaggeration", lanes: &[ArtifactToolPublicationLane::Artifact] }, ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] }];
 }
 //#endregion 🧵️RetainedCommands
 
@@ -372,10 +371,7 @@ where
 struct Gis3dArtifactStorePreparationFactory;
 struct Gis3dConfigStorePreparationFactory;
 
-fn begin_gis3d_preparation<P, M>(
-    request: store::ArtifactStoreOneItemPreparationRequest<P, M>,
-    prepare: Gis3dPrepareOne<P, M>,
-) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>>
+fn begin_gis3d_preparation<P, M>(request: store::ArtifactStoreOneItemPreparationRequest<P, M>, prepare: Gis3dPrepareOne<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>>
 where
     P: Send + Sync + 'static,
     M: dsl::ToValue + Send + 'static,
@@ -405,15 +401,16 @@ where
 
 impl store::ArtifactStoreOneItemPreparationFactory<GisTerrainSnapshot, GisTerrainMutation> for Gis3dArtifactStorePreparationFactory {
     fn preflight(&self, mutation: &GisTerrainMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document
-            || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES)
-            || !matches!(mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite())
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || !matches!(mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite())
         {
             return Err("GIS terrain Artifact preparation rejected its lane, description, or mutation".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 8 })
     }
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>, store::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation>> {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>, store::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation>> {
         begin_gis3d_preparation(request, prepare_gis3d_artifact)
     }
 }
@@ -429,7 +426,10 @@ impl store::ArtifactStoreOneItemPreparationFactory<Gis3dConfig, Gis3dConfigMutat
         };
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
     }
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Gis3dConfig, Gis3dConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Gis3dConfig, Gis3dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Gis3dConfig, Gis3dConfigMutation>> {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Gis3dConfig, Gis3dConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Gis3dConfig, Gis3dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Gis3dConfig, Gis3dConfigMutation>> {
         begin_gis3d_preparation(request, prepare_gis3d_config)
     }
 }
@@ -458,6 +458,50 @@ impl ArtifactEditor for Gis3dPlayApp {
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Gis3dConfigStorePreparationFactory))
+    }
+
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default GIS terrain presence is the exact empty terminal")))
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -498,7 +542,17 @@ impl ArtifactEditor for Gis3dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             Gis3dCommand::command_id,
             GIS3D_RETAINED_RAW_BYTES,
             GIS3D_RETAINED_WORK_ITEMS,
@@ -586,7 +640,8 @@ impl ArtifactEditor for Gis3dPlayApp {
         command: &Gis3dCommand,
         doc: &ArtifactView<'_, GisTerrainSnapshot>,
         cfg: &ConfigView<'_, Gis3dConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -599,7 +654,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         semio_framework_plugin::ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, cfg.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -646,7 +701,7 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
                 },
             })
             .window_kind_interactions(terrain::GIS3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
-            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
             .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setExaggeration", InteractiveJobClassification::Migrated)

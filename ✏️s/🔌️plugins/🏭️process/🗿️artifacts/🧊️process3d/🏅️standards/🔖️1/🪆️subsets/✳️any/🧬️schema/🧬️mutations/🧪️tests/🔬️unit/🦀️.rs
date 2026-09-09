@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::{
-    Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine, brep_child_handle,
-    brep_snapshot_for_working_solid, empty_process3d_snapshot, process_working_scene_to_snapshot,
+    brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin,
+    Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine,
 };
 use change_cursor::ChangeCursor;
 use change_machine_icon::ChangeMachineIcon;

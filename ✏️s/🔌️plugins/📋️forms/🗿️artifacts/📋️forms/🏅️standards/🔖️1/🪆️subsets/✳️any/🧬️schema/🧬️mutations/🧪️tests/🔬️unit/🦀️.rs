@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::mutations::{change_form_title, change_step_description, create_block, create_step, delete_block, delete_step, move_block_to_step, rename_step, reorder_step, replace_block};
-use crate::{FORMS_DOCUMENT_SCHEMA, FormQuestion, FormStep};
+use crate::{FormQuestion, FormStep, FORMS_DOCUMENT_SCHEMA};
 use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 use protocol::{MutationDiff, SemanticMutation};
 

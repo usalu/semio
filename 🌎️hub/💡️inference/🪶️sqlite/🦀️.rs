@@ -1,7 +1,7 @@
 //! 🪶️ Bounded SQLite private-job ledger with durable idempotency and first-terminal-wins.
 
-use super::{InferenceErrorV1, InferencePrivateBytesV1, schema::*, sha256};
-use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, params};
+use super::{schema::*, sha256, InferenceErrorV1, InferencePrivateBytesV1};
+use rusqlite::{params, Connection, OptionalExtension, Transaction, TransactionBehavior};
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -542,6 +542,115 @@ impl InferenceJobLedgerV1 {
         Ok(accepted)
     }
 
+    /// 🧭️ Resolves one existing submit identity for its exact original reader without applying expiry or creating work.
+    pub fn reconcile_request(&self, request_id: &str, reader: &InferenceReaderV1<'_>, now: u64) -> Result<Option<InferenceJobReconcileJobV1>, InferenceErrorV1> {
+        if !hex(request_id, 32) || now > SAFE_INTEGER_MAX {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(storage)?;
+        let row: Option<(String, String, String, u64, String, String, bool, Vec<u8>)> = tx
+            .query_row(
+                "SELECT job_id,identity_digest,identity_json,expires_at,state,proposal_state,cancel_requested_at IS NOT NULL,proposal FROM inference_job_v1 WHERE user_id=?1 AND authorization_generation=?2 AND space_id=?3 AND document_id=?4 AND request_id=?5",
+                params![reader.user_id, sql_integer(reader.authorization_generation)?, reader.space_id, reader.document_id, request_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, read_integer(row, 3)?, row.get(4)?, row.get(5)?, row.get(6)?, row.get(7)?)),
+            )
+            .optional()
+            .map_err(storage)?;
+        let Some((job_id, identity_digest, identity_json, expires_at_ms, state_value, proposal_state_value, cancel_requested, proposal)) = row else {
+            tx.commit().map_err(storage)?;
+            return Ok(None);
+        };
+        let accepted: InferenceIdentityV1 = serde_json::from_str(&identity_json).map_err(|_| InferenceErrorV1::Storage)?;
+        if !reader.matches(&accepted) {
+            return Err(InferenceErrorV1::Denied);
+        }
+        if accepted.request.request_id != request_id || accepted.digest()? != identity_digest {
+            return Err(InferenceErrorV1::Storage);
+        }
+        let state: InferenceJobStateV1 = serde_json::from_value(serde_json::Value::String(state_value)).map_err(|_| InferenceErrorV1::Storage)?;
+        let proposal_state: InferenceProposalStateV1 = serde_json::from_value(serde_json::Value::String(proposal_state_value)).map_err(|_| InferenceErrorV1::Storage)?;
+        let mut events = Vec::with_capacity(EVENT_PAGE_MAX_ITEMS);
+        {
+            let mut query = tx.prepare("SELECT ordinal,kind,at_ms FROM inference_job_event_v1 WHERE job_id=?1 ORDER BY ordinal LIMIT ?2").map_err(storage)?;
+            let mut found = query.query(params![job_id, EVENT_PAGE_MAX_ITEMS as i64]).map_err(storage)?;
+            while let Some(row) = found.next().map_err(storage)? {
+                events.push(InferenceEventV1 { ordinal: read_integer(row, 0).map_err(storage)?, kind: row.get(1).map_err(storage)?, at_ms: read_integer(row, 2).map_err(storage)? });
+            }
+        }
+        let mut progress = Vec::with_capacity(PROGRESS_MAX_CURSOR as usize);
+        {
+            let mut query = tx.prepare("SELECT cursor,run_epoch,completed,total,at_ms FROM inference_job_progress_v1 WHERE job_id=?1 ORDER BY cursor LIMIT ?2").map_err(storage)?;
+            let mut found = query.query(params![job_id, PROGRESS_MAX_CURSOR as i64]).map_err(storage)?;
+            while let Some(row) = found.next().map_err(storage)? {
+                progress.push(InferenceProgressV1 {
+                    cursor: read_integer(row, 0).map_err(storage)?,
+                    run_epoch: read_integer(row, 1).map_err(storage)?,
+                    completed: read_integer(row, 2).map_err(storage)?,
+                    total: read_integer(row, 3).map_err(storage)?,
+                    at_ms: read_integer(row, 4).map_err(storage)?,
+                });
+            }
+        }
+        let next_cursor = progress.last().map_or(0, |row| row.cursor);
+        let mut proposal_hash = (!proposal.is_empty()).then(|| sha256(&proposal));
+        let approval = if proposal_state == InferenceProposalStateV1::Approved {
+            let approval: (String, String, String, String, String, u64, String, u64, String, String, String, u64, String, String, String) = tx
+                .query_row(
+                    "SELECT o.mutation_id,o.command_hash,o.proposal_hash,o.phase,u.target_id,u.after_head_ordinal,u.after_head_edit_id,u.after_commit_seq,u.after_chain_sha256,u.phase,u.user_id,u.authorization_generation,u.session_id,u.space_id,u.document_id FROM inference_approval_outbox_v1 o JOIN inference_approval_undo_v1 u ON u.job_id=o.job_id WHERE o.job_id=?1",
+                    [&job_id],
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, read_integer(row, 5)?, row.get(6)?, read_integer(row, 7)?, row.get(8)?, row.get(9)?, row.get(10)?, read_integer(row, 11)?, row.get(12)?, row.get(13)?, row.get(14)?)),
+                )
+                .optional()
+                .map_err(storage)?
+                .ok_or(InferenceErrorV1::Storage)?;
+            if approval.3 != "committed"
+                || !hex(&approval.0, 32)
+                || !hex(&approval.1, 64)
+                || !hex(&approval.2, 64)
+                || !hex(&approval.4, 32)
+                || !hex(&approval.8, 64)
+                || approval.10 != reader.user_id
+                || approval.11 != reader.authorization_generation
+                || approval.12 != reader.session_id
+                || approval.13 != reader.space_id
+                || approval.14 != reader.document_id
+            {
+                return Err(InferenceErrorV1::Storage);
+            }
+            proposal_hash = Some(approval.2.clone());
+            let expected_current =
+                directory::os_directory::CheckpointPublicationFrontierV1 { document_id: reader.document_id.to_owned(), head_edit_ordinal: approval.5, head_edit_id: approval.6, last_commit_seq: approval.7, chain_sha256: approval.8 };
+            if !expected_current.validate() {
+                return Err(InferenceErrorV1::Storage);
+            }
+            let (state, receipt) = match approval.9.as_str() {
+                "available" => (
+                    InferenceJobReconcileApprovalStateV1::Available,
+                    Some(InferenceApprovalReceiptV1 {
+                        schema: "semio.hub.inference-approval-receipt/v1",
+                        job_id: job_id.clone(),
+                        mutation_id: approval.0,
+                        command_hash: approval.1,
+                        proposal_hash: approval.2,
+                        applied: true,
+                        undo: GisMapApprovalUndoHandleV1 { target_id: approval.4, expected_current },
+                    }),
+                ),
+                "prepared" => (InferenceJobReconcileApprovalStateV1::UndoPrepared, None),
+                "committed" => (InferenceJobReconcileApprovalStateV1::Undone, None),
+                _ => return Err(InferenceErrorV1::Storage),
+            };
+            Some(InferenceJobReconcileApprovalV1 { state, receipt })
+        } else {
+            None
+        };
+        let receipt = InferenceJobReceiptV1 { schema: "semio.hub.inference-job-receipt/v1", job_id: job_id.clone(), state, proposal_state, proposal_hash: proposal_hash.clone(), cursor: next_cursor, expires_at_ms };
+        let page = InferenceJobReconcilePageV1 { job_id, state, proposal_state, cancel_requested, expired: now >= expires_at_ms, proposal_hash, events, progress, next_cursor };
+        tx.commit().map_err(storage)?;
+        Ok(Some(InferenceJobReconcileJobV1 { receipt, page, approval }))
+    }
+
     /// 📃️ Returns the owner-private ordered event/progress page after an exact cursor.
     pub fn events(&self, job_id: &str, reader: &InferenceReaderV1<'_>, after: u64, now: u64) -> Result<InferenceLedgerEventPageV1, InferenceErrorV1> {
         if now > SAFE_INTEGER_MAX || after > PROGRESS_MAX_CURSOR {
@@ -980,14 +1089,7 @@ impl InferenceJobLedgerV1 {
         command_hash: &str,
         command: &InferencePrivateBytesV1,
     ) -> Result<GisMapApprovalUndoAdmissionV1, InferenceErrorV1> {
-        if !hex(idempotency_key, 32)
-            || !hex(operation_id, 32)
-            || !hex(proposal_hash, 64)
-            || !hex(mutation_id, 32)
-            || !hex(command_hash, 64)
-            || command.as_slice().is_empty()
-            || sha256(command.as_slice()) != command_hash
-        {
+        if !hex(idempotency_key, 32) || !hex(operation_id, 32) || !hex(proposal_hash, 64) || !hex(mutation_id, 32) || !hex(command_hash, 64) || command.as_slice().is_empty() || sha256(command.as_slice()) != command_hash {
             return Err(InferenceErrorV1::Bounds);
         }
         let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
@@ -1004,11 +1106,12 @@ impl InferenceJobLedgerV1 {
         let exact = row.1.as_deref() == Some(idempotency_key) && row.2.as_deref() == Some(operation_id) && row.3.as_deref() == Some(proposal_hash) && row.4.as_deref() == Some(mutation_id) && row.5.as_deref() == Some(command_hash);
         match row.0.as_str() {
             "available" => {
-                let updated = tx.execute(
-                    "UPDATE inference_approval_undo_v1 SET undo_idempotency_key=?2,undo_job_id=?3,undo_proposal_hash=?4,undo_mutation_id=?5,undo_command_hash=?6,undo_command=?7,phase='prepared' WHERE target_id=?1 AND phase='available'",
-                    params![target.target_id, idempotency_key, operation_id, proposal_hash, mutation_id, command_hash, command.as_slice()],
-                )
-                .map_err(storage)?;
+                let updated = tx
+                    .execute(
+                        "UPDATE inference_approval_undo_v1 SET undo_idempotency_key=?2,undo_job_id=?3,undo_proposal_hash=?4,undo_mutation_id=?5,undo_command_hash=?6,undo_command=?7,phase='prepared' WHERE target_id=?1 AND phase='available'",
+                        params![target.target_id, idempotency_key, operation_id, proposal_hash, mutation_id, command_hash, command.as_slice()],
+                    )
+                    .map_err(storage)?;
                 if updated != 1 {
                     return Err(InferenceErrorV1::Conflict);
                 }
@@ -1096,10 +1199,7 @@ impl InferenceJobLedgerV1 {
             return Err(InferenceErrorV1::Conflict);
         }
         if row.0 == "committed" {
-            let exact_terminal = row.11 == Some(frontier.head_edit_ordinal)
-                && row.12.as_deref() == Some(frontier.head_edit_id.as_str())
-                && row.13 == Some(frontier.last_commit_seq)
-                && row.14.as_deref() == Some(frontier.chain_sha256.as_str());
+            let exact_terminal = row.11 == Some(frontier.head_edit_ordinal) && row.12.as_deref() == Some(frontier.head_edit_id.as_str()) && row.13 == Some(frontier.last_commit_seq) && row.14.as_deref() == Some(frontier.chain_sha256.as_str());
             return if exact_terminal { Ok(false) } else { Err(InferenceErrorV1::Conflict) };
         }
         if row.0 != "prepared" {
@@ -1156,13 +1256,7 @@ impl InferenceJobLedgerV1 {
             .optional()
             .map_err(storage)?;
         let Some(row) = row else { return Ok(None) };
-        let after_frontier = directory::os_directory::CheckpointPublicationFrontierV1 {
-            document_id: row.9.clone(),
-            head_edit_ordinal: row.10,
-            head_edit_id: row.11.clone(),
-            last_commit_seq: row.12,
-            chain_sha256: row.13.clone(),
-        };
+        let after_frontier = directory::os_directory::CheckpointPublicationFrontierV1 { document_id: row.9.clone(), head_edit_ordinal: row.10, head_edit_id: row.11.clone(), last_commit_seq: row.12, chain_sha256: row.13.clone() };
         let prepared = row.23 == "prepared";
         if !after_frontier.validate()
             || !hex(&row.0, 32)

@@ -1,6 +1,5 @@
 //! 💥 `change-accidental-mass-t` — sets the En1991 accidental impact mass scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

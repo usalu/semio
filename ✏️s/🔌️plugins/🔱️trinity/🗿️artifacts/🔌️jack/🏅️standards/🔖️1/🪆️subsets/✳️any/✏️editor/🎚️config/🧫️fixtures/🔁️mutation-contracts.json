@@ -1,18 +1,6 @@
 {
   "base": {
-    "camera": {
-      "x": 1,
-      "y": 2,
-      "zoom": 2
-    },
-    "jackQuery": "MATCH base",
-    "editorSelection": {
-      "start": 1,
-      "end": 3
-    },
-    "lodModeByWindow": {
-      "main": "compact"
-    }
+    "jackQuery": "MATCH base"
   },
   "cases": [
     {
@@ -20,63 +8,12 @@
       "mutation": {
         "ReplaceConfig": {
           "config": {
-            "camera": {
-              "x": 1,
-              "y": 2,
-              "zoom": 2
-            },
-            "jackQuery": "MATCH base",
-            "editorSelection": {
-              "start": 1,
-              "end": 3
-            },
-            "lodModeByWindow": {
-              "main": "compact"
-            }
+            "jackQuery": "MATCH base"
           }
         }
       },
       "expected": {
-        "camera": {
-          "x": 1,
-          "y": 2,
-          "zoom": 2
-        },
-        "jackQuery": "MATCH base",
-        "editorSelection": {
-          "start": 1,
-          "end": 3
-        },
-        "lodModeByWindow": {
-          "main": "compact"
-        }
-      }
-    },
-    {
-      "kind": "set-camera",
-      "mutation": {
-        "SetCamera": {
-          "camera": {
-            "x": 4.5,
-            "y": 6.5,
-            "zoom": 3.5
-          }
-        }
-      },
-      "expected": {
-        "camera": {
-          "x": 4.5,
-          "y": 6.5,
-          "zoom": 3.5
-        },
-        "jackQuery": "MATCH base",
-        "editorSelection": {
-          "start": 1,
-          "end": 3
-        },
-        "lodModeByWindow": {
-          "main": "compact"
-        }
+        "jackQuery": "MATCH base"
       }
     },
     {
@@ -87,65 +24,9 @@
         }
       },
       "expected": {
-        "camera": {
-          "x": 1,
-          "y": 2,
-          "zoom": 2
-        },
-        "jackQuery": "MATCH (n) RETURN n",
-        "editorSelection": {
-          "start": 1,
-          "end": 3
-        },
-        "lodModeByWindow": {
-          "main": "compact"
-        }
-      }
-    },
-    {
-      "kind": "set-editor-selection",
-      "mutation": {
-        "SetEditorSelection": {
-          "selection": null
-        }
-      },
-      "expected": {
-        "camera": {
-          "x": 1,
-          "y": 2,
-          "zoom": 2
-        },
-        "jackQuery": "MATCH base",
-        "editorSelection": null,
-        "lodModeByWindow": {
-          "main": "compact"
-        }
-      }
-    },
-    {
-      "kind": "set-lod-mode",
-      "mutation": {
-        "SetLodMode": {
-          "value": "expanded",
-          "window_id": "detail"
-        }
-      },
-      "expected": {
-        "camera": {
-          "x": 1,
-          "y": 2,
-          "zoom": 2
-        },
-        "jackQuery": "MATCH base",
-        "editorSelection": {
-          "start": 1,
-          "end": 3
-        },
-        "lodModeByWindow": {
-          "main": "compact",
-          "detail": "expanded"
-        }
+        "jackQuery": "MATCH (n) RETURN n"
       }
     }
   ]
 }
+

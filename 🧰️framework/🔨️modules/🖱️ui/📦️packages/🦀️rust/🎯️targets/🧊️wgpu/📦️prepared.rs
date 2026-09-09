@@ -936,10 +936,12 @@ struct PreparedRasterClaim {
 }
 
 impl PreparedRasterReservation {
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected preparation returns its exact source, key, and reservation credit without allocating beyond admission."))]
     pub fn try_reserve(key: String) -> Result<Self, PreparedRasterRejected> {
         Self::try_reserve_source(key, 0)
     }
 
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected preparation returns its exact source, key, and reservation credit without allocating beyond admission."))]
     pub fn try_reserve_source(key: String, source_bytes: usize) -> Result<Self, PreparedRasterRejected> {
         let reject = |fault, key| PreparedRasterRejected { fault, key, source: Vec::new(), retained_source: Vec::new(), credit: None, source_released: false, retained_source_released: false, key_released: false };
         if key.len() > PREPARED_RASTER_KEY_BYTES {
@@ -964,10 +966,12 @@ impl PreparedRasterReservation {
         PreparedRasterRejected { fault, key: std::mem::take(&mut self.key), source, retained_source, credit: self.credit.take(), source_released: false, retained_source_released: false, key_released: false }
     }
 
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected preparation returns its exact source, key, and reservation credit without allocating beyond admission."))]
     pub fn claim(self, width: u32, height: u32) -> Result<Self, PreparedRasterRejected> {
         self.claim_with_retained(width, height, Vec::new()).map(|(reservation, _)| reservation)
     }
 
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected preparation returns its exact source, key, and reservation credit without allocating beyond admission."))]
     pub fn claim_with_retained(mut self, width: u32, height: u32, retained_source: Vec<u8>) -> Result<(Self, Vec<u8>), PreparedRasterRejected> {
         let reject = |reservation: Self, fault, retained_source| reservation.reject_with_retained(fault, Vec::new(), retained_source);
         if retained_source.capacity() > self.source_bytes {
@@ -994,6 +998,7 @@ impl PreparedRasterReservation {
         Ok((self, retained_source))
     }
 
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected preparation returns its exact source, key, and reservation credit without allocating beyond admission."))]
     pub fn finalize(mut self, source: Vec<u8>, retained_source: Vec<u8>, width: u32, height: u32) -> Result<(PreparedRasterProducer, String), PreparedRasterRejected> {
         let reject = |reservation: Self, fault, source, retained_source| reservation.reject_with_retained(fault, source, retained_source);
         let Some(claim) = self.claim else { return Err(reject(self, "raster producer was not claimed before materialization", source, retained_source)) };
@@ -1046,6 +1051,7 @@ impl PreparedRasterProducer {
         self.pages.as_ref().map_or_else(PreparedRasterGeneration::default, PreparedRasterPages::source_generation)
     }
 
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected preparation returns its exact source, key, and reservation credit without allocating beyond admission."))]
     pub fn try_admit(key: String, source: Vec<u8>, width: u32, height: u32) -> Result<(Self, String), PreparedRasterRejected> {
         match PreparedRasterReservation::try_reserve(key) {
             Ok(reservation) => match reservation.claim(width, height) {
@@ -1861,6 +1867,7 @@ impl PreparedRenderInput {
         }
     }
 
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected preparation returns its exact source, key, and reservation credit without allocating beyond admission."))]
     pub fn try_push_upload(&mut self, upload: PreparedRenderUpload) -> Result<(), PreparedRenderUpload> {
         if self.raster_producers.len().checked_add(self.uploads.len()).is_none_or(|items| items >= self.limits.max_upload_items) {
             return Err(upload);

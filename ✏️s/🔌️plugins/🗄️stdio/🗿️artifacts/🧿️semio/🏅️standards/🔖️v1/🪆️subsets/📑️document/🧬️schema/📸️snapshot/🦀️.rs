@@ -660,7 +660,6 @@ pub fn decode_semio_document_snapshot_json(text: &str) -> Result<SemioDocumentSn
 }
 //#endregion 🌉️ExternalCodecBridge
 
-
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.document` snapshot — one style, one image, and one block of every
 /// kind (Heading/Paragraph/List/Table/Code/Quote/Image/PageBreak), exercising every leaf shape at

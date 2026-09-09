@@ -58,6 +58,45 @@ fn test_shell_state() -> ShellState {
     ShellState::new(Vec::new(), String::new())
 }
 
+#[test]
+fn window_action_context_nested_menu_actions_preserve_the_clicked_window() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🔬️window-action-context/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let spec = ui_wgpu::wgpu::ContextMenuItemSpec { id: "nested".into(), action: Some("setValue".into()), args: semio_framework::optional_json_to_dsl((!case["args"].is_null()).then(|| case["args"].clone())), ..Default::default() };
+        let group = ui_wgpu::wgpu::ContextMenuItemSpec { id: "group".into(), children: Some(vec![spec]), ..Default::default() };
+        let mut items = vec![shell_context_menu_item_from_spec(group, "test", false)];
+        scope_context_menu_items(&mut items, fixture["clickedWindowId"].as_str().unwrap());
+        let actual: Value = serde_json::from_str(&dsl::json::from_dsl_value(items[0].children[0].action.as_ref().unwrap().args.as_ref().unwrap()).to_string()).unwrap();
+        assert_eq!(actual, case["expected"]);
+    }
+    eprintln!("[DEBUG] nested native context-menu actions retained the clicked window through activation");
+}
+
+#[test]
+fn window_action_context_fallback_uses_the_clicked_window_kind() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🔬️window-action-context/🔣️.json")).unwrap();
+    let mut shell = test_shell_state();
+    let app = test_app(Vec::new(), Vec::new());
+    let mut kinds = vec![app.window_kinds.first().clone(), app.window_kinds.first().clone()];
+    kinds[0].id = "left-kind".into();
+    kinds[1].id = "right-kind".into();
+    kinds[0].actions = vec![semio_framework::ActionDefinition::new("left-action", LocalizedLabel::data("Left"), ActionKind::View, "eye")];
+    kinds[1].actions = vec![semio_framework::ActionDefinition::new("right-action", LocalizedLabel::data("Right"), ActionKind::View, "eye")];
+    let app = AppDefinition { window_kinds: WindowKinds::try_from(kinds).unwrap(), ..app };
+    let left = fixture["activeWindowId"].as_str().unwrap();
+    let right = fixture["clickedWindowId"].as_str().unwrap();
+    shell.active_window_id = Some(left.into());
+    shell.dock.root = crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance(left, "left-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft), DockStackTab::instance(right, "right-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft)], active: left.into() };
+    shell.dock_drop_bodies = vec![(Vec::new(), Rect::new(100.0, 0.0, 100.0, 100.0), right.into())];
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    semio_framework_async::block_on(shell.open_context_menu(125.0, 25.0, None));
+    let menu = shell.context_menu.as_ref().unwrap();
+    let action = menu.items.iter().find_map(|item| item.action.as_ref().filter(|action| action.action == "right-action")).expect("clicked window contributes its own fallback actions");
+    assert_eq!(action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str), Some(right));
+    assert!(!menu.items.iter().any(|item| item.action.as_ref().is_some_and(|action| action.action == "left-action")));
+    eprintln!("[DEBUG] native fallback menu used the clicked window kind while another window remained active");
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Default)]
 struct DirectoryBootstrapFakeTransport {
@@ -144,7 +183,7 @@ const INFERENCE_TEST_HASH: &str = "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4
 #[cfg(not(target_arch = "wasm32"))]
 fn inference_test_receipt() -> GisMapInferenceJobReceiptV1 {
     GisMapInferenceJobReceiptV1 {
-        schema: "semio.hub.inference-receipt/v1".into(),
+        schema: "semio.hub.inference-job-receipt/v1".into(),
         job_id: INFERENCE_TEST_JOB.into(),
         state: GisMapInferenceJobStateV1::Accepted,
         proposal_state: GisMapInferenceProposalStateV1::None,
@@ -170,7 +209,7 @@ fn inference_test_preview(job_id: &str, proposal_hash: &str) -> GisMapInferenceP
 #[cfg(not(target_arch = "wasm32"))]
 fn inference_test_page(state: GisMapInferenceJobStateV1, proposal_state: GisMapInferenceProposalStateV1, proposal_hash: Option<&str>, cancel_requested: bool, stale: bool) -> GisMapInferenceEventPageV1 {
     GisMapInferenceEventPageV1 {
-        schema: "semio.hub.inference-events/v1".into(),
+        schema: "semio.hub.inference-job-events/v1".into(),
         job_id: INFERENCE_TEST_JOB.into(),
         state,
         proposal_state,
@@ -725,8 +764,11 @@ fn native_document_admission_is_bound_to_verified_package_app_window_and_rendere
 #[test]
 fn build_os_commands_covers_every_wired_setting() {
     let shell = test_shell_state();
-    let ids: Vec<String> = shell.build_os_commands().into_iter().map(|command| command.id).collect();
+    let commands = shell.build_os_commands();
+    let ids: Vec<String> = commands.iter().map(|command| command.id.clone()).collect();
     assert_eq!(ids, vec!["os.toggleFullscreen", "os.setAppearance", "os.setDriver", "os.setLocale", "os.setTerminology", "os.setThemeId", "os.resetDock",]);
+    let icons: Vec<&str> = commands.iter().map(|command| command.icon_id.as_str()).collect();
+    assert_eq!(icons, vec!["code", "settings", "settings", "settings", "settings", "settings", "panel-left"]);
 }
 
 #[test]
@@ -750,7 +792,7 @@ fn build_os_commands_terminology_options_include_app_terminologies() {
 
 #[test]
 fn resolve_commands_tags_every_source() {
-    let os_commands = vec![CommandDefinition::bounded_catalog("os.setLocale", LocalizedLabel::data("Set Locale"), "language", ActionKind::Shell)];
+    let os_commands = vec![CommandDefinition::new("os.setLocale", LocalizedLabel::data("Set Locale"), "language", "settings", ActionKind::Shell)];
     let app_command = CommandDefinition::bounded_catalog("export", LocalizedLabel::data("Export"), "app", ActionKind::Mutation);
     let mode_command = CommandDefinition::bounded_catalog("focus", LocalizedLabel::data("Focus Mode"), "mode", ActionKind::View);
     let app = test_app(vec![app_command.clone()], vec![mode_command.clone()]);

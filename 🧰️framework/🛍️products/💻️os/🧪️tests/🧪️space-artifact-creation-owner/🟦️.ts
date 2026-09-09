@@ -9,13 +9,50 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     executionTargetStatusObserver: typeof executionTargetStatusObserver;
     inferenceApprovalUndoEpoch: typeof inferenceApprovalUndoEpoch;
     inferenceApprovalUndoOwner: typeof inferenceApprovalUndoOwner;
+    inferencePort: typeof dependencies.testSeams.inferencePort;
     localBrowserBrokerProofExpiresAtMs: typeof localBrowserBrokerProofExpiresAtMs;
     localBrowserBrokerQueued: typeof localBrowserBrokerQueued;
+    readonly browserSessionAuthority: unknown;
+    attachLocalBrokerPort(port: MessagePort): void;
+    detachLocalBrokerPort(): void;
     socketGrantTestIssue: typeof socketGrantTestIssue;
     spaceArtifactCreationTestFetch: typeof spaceArtifactCreationTestFetch;
     workerPostTestSink: typeof workerPostTestSink;
   };
   const { DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck } = dependencies;
+  vitest.it("retains the preceding inference job when a successor opening is refused", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { default: Ajv } = await import("ajv");
+    const { default: equal } = await import("fast-deep-equal");
+    const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧫️fixture/🔣️.json", source.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧬️schema/🔣️.json", source.url), "utf8"));
+    vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    for (const kind of fixture.routes) {
+      const routes: string[] = [];
+      const request = kind === "inference-open" ? fixture.request
+        : kind === "inference-propose" ? { kind, operationEpoch: 21, requestId: "request-a" }
+        : kind === "inference-history-undo" ? { kind, historyEpoch: 21, clientInstanceId: "12345678-1234-4123-8123-123456789abc", scope: fixture.request.scope }
+        : { kind, operationEpoch: 21 };
+      dispatchBackboneWorkerRequest(request, { handleRequestBytes: () => { routes.push("rust"); } }, () => { routes.push("typescript"); });
+      vitest.expect(equal(routes, ["typescript"])).toBe(true);
+    }
+    const seams = dependencies.testSeams;
+    const previous = seams.inferencePort;
+    const sink = seams.workerPostTestSink;
+    const messages: unknown[] = [];
+    const retained = { operationEpoch: 20, scope: fixture.request.scope, abort: new AbortController(), status: { ...idleGisMapInferencePortStatusV1(), phase: "running", jobId: "1".repeat(32) }, turns: 0, pollTimer: null, inFlight: false, cancelSent: false, closed: false };
+    try {
+      seams.inferencePort = retained;
+      seams.workerPostTestSink = (message: unknown) => { messages.push(message); };
+      await handleTsRequest(fixture.request);
+      vitest.expect(seams.inferencePort).toBe(retained);
+      vitest.expect(retained.abort.signal.aborted).toBe(false);
+      vitest.expect(equal(messages, [fixture.refused])).toBe(true);
+    } finally {
+      seams.inferencePort = previous;
+      seams.workerPostTestSink = sink;
+    }
+  });
   type ActorInstanceLifetime = any;
   type ArtifactActorConfig = any;
   type ArtifactEvent = any;
@@ -291,7 +328,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           return new Response("{}");
         };
         const pending = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000, signal: abort.signal });
-        await Promise.resolve();
+        for (let turn = 0; calls < 3 && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(calls).toBe(3);
         abort.abort();
         await expect(pending).rejects.toThrow("browser broker rebootstrap required");
         await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
@@ -394,7 +432,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const exactBatch = extractServerCommandsDocumentBackboneBatchExact(serverFrame);
       if (typeof decoded === "string" || !("Commands" in decoded) || exactBatch === null) throw new Error("expected exact server Commands frame");
       const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
-      const state = { config, actor: "local", openClientInstanceId: "client-1", artifactBootstrap: null, frontier: null, requiredTailFrontier: null } as unknown as ArtifactState;
+      const state = { config, actor: "local", openClientInstanceId: "client-1", artifactBootstrap: null, frontier: null, requiredTailFrontier: null, browserActorReservation: null } as unknown as ArtifactState;
       const priorSink = testSeams.workerPostTestSink;
       const posted: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);
@@ -538,6 +576,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             fields = structuredClone(leaseFixture.manifest),
             frontier = bootstrap.baseline_frontier;
           fields.scope = { spaceId: binding.spaceId, documentId: config.documentId };
+          fields.browserActor = { kind: "none" };
+          fields.surface.rendererTarget = "react";
           fields.descriptorDigestV1 = executionTargetHex(new Uint8Array(bootstrap.descriptor_hash));
           fields.artifact = { kind: bootstrap.artifact_kind, schema: bootstrap.artifact_schema, packSchemaHash: executionTargetHex(new Uint8Array(bootstrap.pack_schema_hash)) };
           fields.parentDialect.artifactKind = fields.artifact.kind;
@@ -1795,6 +1835,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           historyEpoch: ++testSeams.inferenceApprovalUndoEpoch,
           scope,
           clientInstanceId: state.openClientInstanceId,
+          sessionEpoch: testSeams.directorySessionEpoch,
           receipt: {
             schema: "semio.hub.inference-approval-receipt/v1",
             jobId: "1".repeat(32),
@@ -1906,15 +1947,20 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const requests: string[] = [];
       const bodies: string[] = [];
       const statuses: number[] = [];
-      (globalThis as unknown as { fetch: unknown }).fetch = async (input: string, init?: { method?: string }) => {
+      const gates: Promise<void>[] = [];
+      const proofs: string[] = [];
+      (globalThis as unknown as { fetch: unknown }).fetch = async (input: string, init?: { method?: string; headers?: Record<string, string> }) => {
         requests.push(`${init?.method ?? "GET"} ${input}`);
+        proofs.push(init?.headers?.["x-semio-browser-broker"] ?? "");
         const status = statuses.shift() ?? 200;
         const body = bodies.shift() ?? "";
+        await gates.shift();
         return {
           ok: status < 400,
           status,
           statusText: "",
           headers: new Headers({ "content-type": "application/json", "content-length": String(new TextEncoder().encode(body).length), "x-semio-browser-broker-advanced": "1" }),
+          body: new Response(body).body,
           text: async () => body,
           json: async () => JSON.parse(body),
         };
@@ -1933,9 +1979,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         requests,
         bodies,
         statuses,
+        gates,
+        proofs,
         state,
         ports: () => posted.filter((message) => message.kind === "inference-port-status").map((message) => (message as Extract<BackboneWorkerResponse, { kind: "inference-port-status" }>).status),
         release: () => {
+          const retained = testSeams.inferencePort;
+          if (retained !== null) {
+            retained.closed = true;
+            if (retained.pollTimer !== null) clearTimeout(retained.pollTimer);
+            retained.abort.abort();
+            testSeams.inferencePort = null;
+          }
           closeArtifact(DOCUMENT, SPACE);
           clearLocalBrowserBrokerProof();
           testSeams.workerPostTestSink = original;
@@ -1946,7 +2001,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     const receiptBody = (state: string, proposalState: string, cursor: number, proposalHash?: string): string =>
-      JSON.stringify({ schema: "semio.hub.inference-receipt/v1", jobId: JOB, state, proposalState, ...(proposalHash === undefined ? {} : { proposalHash }), cursor, expiresAtMs: 1_700_000_060_000 });
+      JSON.stringify({ schema: "semio.hub.inference-job-receipt/v1", jobId: JOB, state, proposalState, proposalHash: proposalHash ?? null, cursor, expiresAtMs: 1_700_000_060_000 });
 
     const pageBody = (
       state: string,
@@ -1954,25 +2009,45 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       options: { readonly nextCursor: number; readonly completed: number; readonly total: number; readonly proposalHash?: string; readonly preview?: GisMapInferencePreviewV1; readonly cancelRequested?: boolean; readonly stale?: boolean },
     ): string =>
       JSON.stringify({
-        schema: "semio.hub.inference-events/v1",
+        schema: "semio.hub.inference-job-events/v1",
         jobId: JOB,
         state,
         proposalState,
         cancelRequested: options.cancelRequested ?? false,
         stale: options.stale ?? false,
-        ...(options.proposalHash === undefined ? {} : { proposalHash: options.proposalHash }),
+        proposalHash: options.proposalHash ?? null,
         ...(options.preview === undefined ? {} : { preview: options.preview }),
         events: [],
         progress: [{ cursor: options.nextCursor, runEpoch: 1, completed: options.completed, total: options.total, atMs: 1_700_000_001_000 }],
         nextCursor: options.nextCursor,
       });
 
+    it("accepts the exact current Hub inference receipt and events wire", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const { default: Ajv } = await import("ajv");
+      const wire = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).wire;
+      const schema = JSON.parse(readFileSync(new URL("../../../🌎️hub/💡️inference/🧬️schema/🔣️.json", source.url), "utf8"));
+      const production = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
+      for (const [name, definition, parse] of [
+        ["receipt", "InferenceJobReceiptV1", production.parseGisMapInferenceJobReceiptV1],
+        ["page", "InferenceEventPageV1", production.parseGisMapInferenceEventPageV1],
+      ] as const) {
+        const valid = new Ajv({ strict: true }).addKeyword("x-semio-formats").compile({ $defs: schema.$defs, $ref: `#/$defs/${definition}` });
+        expect(valid(wire[name]), JSON.stringify(valid.errors)).toBe(true);
+        expect(equal(parse(wire[name]), wire[name])).toBe(true);
+        for (const candidate of [{ ...wire[name], schema: "foreign" }, { ...wire[name], proposalHash: undefined }]) expect(() => parse(candidate)).toThrow();
+      }
+      console.log("[DEBUG] browser inference consumed exact Hub nullable-hash receipt and event page");
+    });
+
     it("refuses to start at all without a verified live execution-target lease", async () => {
       const harness = inferenceHarness({ lease: "none" });
       try {
         handleTsRequest({ kind: "inference-open", operationEpoch: 1, scope: { spaceId: SPACE, documentId: DOCUMENT } });
         await Promise.resolve();
-        expect(harness.ports()).toEqual([{ phase: "failed", jobId: null, cursor: 0, completed: 0, total: 0, proposalHash: null, cancelRequested: false, code: "inference.lease-unverified" }]);
+        expect(harness.ports()).toEqual([]);
+        expect(harness.posted.at(-1)).toEqual({ kind: "inference-port-opened", operationEpoch: 1, scope: { spaceId: SPACE, documentId: DOCUMENT }, outcome: "refused", code: "inference.lease-unverified" });
         expect(harness.requests).toEqual([]);
         handleTsRequest({ kind: "inference-propose", operationEpoch: 1, requestId: "2".repeat(32) });
         await Promise.resolve();
@@ -1987,7 +2062,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       try {
         handleTsRequest({ kind: "inference-open", operationEpoch: 2, scope: { spaceId: SPACE, documentId: DOCUMENT } });
         await Promise.resolve();
-        expect(harness.ports().at(-1)?.code).toBe("inference.lease-unverified");
+        expect(harness.ports()).toEqual([]);
+        expect(harness.posted.at(-1)).toMatchObject({ kind: "inference-port-opened", operationEpoch: 2, outcome: "refused", code: "inference.lease-unverified" });
         expect(harness.requests).toEqual([]);
       } finally {
         harness.release();
@@ -2011,6 +2087,391 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(harness.posted.some((message) => message.kind === "event" && "event" in message && (message as { event: { kind: string } }).event.kind === "remoteMutations")).toBe(false);
       } finally {
         harness.release();
+      }
+    });
+
+    it("retains cancellation requested while inference submission is pending", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).cancelBeforeReceipt;
+      for (const kind of fixture.intents) {
+      const harness = inferenceHarness({ lease: "editor" });
+      const projection = () => { const { phase, jobId, cancelRequested } = harness.ports().at(-1)!; return { phase, jobId, cancelRequested }; };
+      try {
+        handleTsRequest({ kind: "inference-open", operationEpoch: fixture.operationEpoch, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+        harness.statuses.push(200, 200);
+        harness.bodies.push(receiptBody("accepted", "none", 0), pageBody("cancelled", "cancelled", { nextCursor: 1, completed: 0, total: 4, cancelRequested: true }));
+        handleTsRequest({ kind: "inference-propose", operationEpoch: fixture.operationEpoch, requestId: fixture.requestId });
+        handleTsRequest({ kind, operationEpoch: fixture.operationEpoch });
+        expect(equal(projection(), fixture.expectedBeforeReceipt)).toBe(true);
+        await settleInferenceTurns();
+        expect(harness.ports().some(({ phase, jobId, cancelRequested }) => equal({ phase, jobId, cancelRequested }, fixture.expectedAfterReceipt))).toBe(true);
+        await driveInferencePort(fixture.operationEpoch);
+        expect(harness.ports().at(-1)?.phase).toBe(fixture.expectedTerminal);
+        expect(equal(harness.requests, fixture.expectedRequests)).toBe(true);
+        console.log("[DEBUG] inference cancel survived pending submit and waited for exact Hub terminal");
+      } finally { harness.release(); }
+      }
+    });
+
+    it("retains the sealed inference owner through uncertain submit and document retirement", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
+      for (const scenario of fixture.cases) {
+        const harness = inferenceHarness({ lease: "editor" });
+        const sessionEpoch = testSeams.directorySessionEpoch;
+        try {
+          const scope = { spaceId: SPACE, documentId: DOCUMENT };
+          handleTsRequest({ kind: "inference-open", operationEpoch: fixture.operationEpoch, scope });
+          harness.bodies.push(scenario === "retired-document" ? receiptBody("accepted", "none", 0) : "{");
+          let releaseReceipt: (() => void) | undefined;
+          if (scenario === "retired-document") harness.gates.push(new Promise<void>((resolve) => { releaseReceipt = resolve; }));
+          handleTsRequest({ kind: "inference-propose", operationEpoch: fixture.operationEpoch, requestId: fixture.requestId });
+          const original = testSeams.inferencePort;
+          if (scenario === "retired-document") {
+            for (let turn = 0; harness.requests.length === 0 && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+            expect(harness.requests).toHaveLength(1);
+            closeArtifact(DOCUMENT, SPACE);
+            releaseReceipt!();
+          }
+          else handleTsRequest({ kind: "inference-close", operationEpoch: fixture.operationEpoch });
+          await settleInferenceTurns();
+          expect(testSeams.inferencePort).toBe(original);
+          expect(original?.request?.requestId).toBe(fixture.requestId);
+          expect(harness.posted.some((message) => message.kind === fixture.closedKind)).toBe(false);
+          handleTsRequest({ kind: "inference-open", operationEpoch: fixture.operationEpoch + 1, scope });
+          expect(harness.posted.at(-1)).toMatchObject({ kind: "inference-port-opened", outcome: "refused", code: "inference.capacity" });
+          if (scenario === "rotated-session") {
+            testSeams.directorySessionEpoch += 1;
+            const count = harness.requests.length;
+            await driveInferencePort(fixture.operationEpoch);
+            expect(harness.requests).toHaveLength(count);
+            expect(harness.ports().at(-1)?.phase).toBe(fixture.unknownPhase);
+            expect(testSeams.inferencePort).toBe(original);
+            continue;
+          }
+          if (scenario === "lost-submit") {
+            expect(harness.ports().at(-1)?.phase).toBe(fixture.unknownPhase);
+            harness.bodies.push(JSON.stringify({
+              schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, requestId: fixture.requestId, found: true,
+              job: {
+                receipt: { schema: "semio.hub.inference-job-receipt/v1", jobId: JOB, state: "running", proposalState: "none", proposalHash: null, cursor: 0, expiresAtMs: 1_700_000_060_000 },
+                page: { jobId: JOB, state: "running", proposalState: "none", cancelRequested: false, expired: false, proposalHash: null, events: [], progress: [], nextCursor: 0 },
+                approval: null,
+              },
+            }));
+            await driveInferencePort(fixture.operationEpoch);
+            expect(harness.requests.at(-1)).toBe(fixture.reconcilePath);
+            expect(original?.status.jobId).toBe(JOB);
+          }
+          harness.bodies.push(pageBody("cancelled", "cancelled", { nextCursor: 1, completed: 0, total: 4, cancelRequested: true }));
+          await driveInferencePort(fixture.operationEpoch);
+          expect(harness.ports().at(-1)?.phase).toBe(fixture.terminalPhase);
+          expect(testSeams.inferencePort).toBeNull();
+          const closed = harness.posted.filter((message) => message.kind === fixture.closedKind);
+          expect(equal(closed, [{ kind: fixture.closedKind, operationEpoch: fixture.operationEpoch, scope }])).toBe(true);
+          expect(harness.requests.filter((request) => request.endsWith("/jobs"))).toHaveLength(1);
+          console.log(`[DEBUG] inference retained owner resolved ${scenario} without resubmission`);
+        } finally {
+          testSeams.directorySessionEpoch = sessionEpoch;
+          const retained = testSeams.inferencePort;
+          if (retained?.pollTimer) clearTimeout(retained.pollTimer);
+          retained?.abort.abort();
+          testSeams.inferencePort = null;
+          harness.release();
+        }
+      }
+    });
+
+    it("never restores an inference Undo owner after the document closes", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
+      for (const scenario of fixture.approvalClose) {
+        const harness = inferenceHarness({ lease: "editor" });
+        try {
+          const operationEpoch = fixture.operationEpoch + 2;
+          handleTsRequest({ kind: "inference-open", operationEpoch, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+          harness.bodies.push(receiptBody("succeeded", "offered", 1, HASH));
+          handleTsRequest({ kind: "inference-propose", operationEpoch, requestId: fixture.requestId });
+          await settleInferenceTurns();
+          harness.bodies.push(pageBody("succeeded", "offered", { nextCursor: 1, completed: 4, total: 4, proposalHash: HASH, preview: PREVIEW }));
+          await driveInferencePort(operationEpoch);
+          const receipt = { schema: "semio.hub.inference-approval-receipt/v1", jobId: JOB, mutationId: JOB, commandHash: HASH, proposalHash: HASH, applied: true, undo: { targetId: "2".repeat(32), expectedCurrent: { documentId: DOCUMENT, headEditOrdinal: 2, headEditId: "edit-2", lastCommitSeq: 2, chainSha256: "3".repeat(64) } } };
+          let release: () => void = () => undefined;
+          if (scenario === "approval-response") {
+            harness.bodies.push(JSON.stringify(receipt));
+            harness.gates.push(new Promise<void>((resolve) => { release = resolve; }));
+          } else harness.bodies.push("{");
+          handleTsRequest({ kind: "inference-approve", operationEpoch });
+          for (let turn = 0; harness.requests.length < 3 && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+          expect(harness.requests).toHaveLength(3);
+          if (scenario === "reconcile-response") await settleInferenceTurns();
+          closeArtifact(DOCUMENT, SPACE);
+          const statusCount = harness.posted.filter((message) => message.kind === "inference-history-status").length;
+          if (scenario === "approval-response") release();
+          else {
+            harness.bodies.push(JSON.stringify({
+              schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, requestId: fixture.requestId, found: true,
+              job: {
+                receipt: { schema: "semio.hub.inference-job-receipt/v1", jobId: JOB, state: "succeeded", proposalState: "approved", proposalHash: HASH, cursor: 1, expiresAtMs: 1_700_000_060_000 },
+                page: { jobId: JOB, state: "succeeded", proposalState: "approved", cancelRequested: false, expired: true, proposalHash: HASH, events: [], progress: [], nextCursor: 1 },
+                approval: { state: "available", receipt },
+              },
+            }));
+          }
+          await settleInferenceTurns();
+          if (scenario === "reconcile-response") await driveInferencePort(operationEpoch);
+          expect(testSeams.inferenceApprovalUndoOwner).toBeNull();
+          expect(harness.posted.filter((message) => message.kind === "inference-history-status")).toHaveLength(statusCount);
+          expect(equal(harness.ports().at(-1)?.phase, "applied")).toBe(true);
+          console.log(`[DEBUG] inference late ${scenario} discarded retired document Undo presentation`);
+        } finally { harness.release(); }
+      }
+    });
+
+    it("preserves the successor broker proof when an old inference owner responds", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
+      const harness = inferenceHarness({ lease: "editor" });
+      const epoch = testSeams.directorySessionEpoch;
+      try {
+        let release: () => void = () => undefined;
+        harness.gates.push(new Promise<void>((resolve) => { release = resolve; }));
+        harness.bodies.push("{}");
+        const pending = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, admit: () => testSeams.directorySessionEpoch === epoch });
+        const rejected = expect(pending).rejects.toThrow();
+        for (let turn = 0; harness.requests.length === 0 && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(harness.requests).toHaveLength(1);
+        testSeams.directorySessionEpoch += 1;
+        clearLocalBrowserBrokerProof();
+        expect(installLocalBrowserBrokerProof(fixture.successorProof)).toBe(true);
+        release();
+        await rejected;
+        harness.bodies.push("{}");
+        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+        expect(equal(harness.proofs, ["b".repeat(64), fixture.successorProof])).toBe(true);
+        console.log("[DEBUG] old inference response preserved successor broker proof");
+      } finally { testSeams.directorySessionEpoch = epoch; harness.release(); }
+    });
+
+    it("validates the exact canonical authenticated Directory client response", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+      for (const row of fixture.rows) {
+        const client = new DirectoryClient("http://hub.test", { request: async () => new Response(JSON.stringify(row.value), { status: 200 }) });
+        if (row.accepted) expect(equal(await client.me(), row.value)).toBe(true);
+        else await expect(client.me()).rejects.toThrow();
+      }
+      for (const row of fixture.raw) {
+        const client = new DirectoryClient("http://hub.test", { request: async () => new Response(row.source, { status: 200 }) });
+        if (row.accepted) expect(equal(await client.me(), JSON.parse(row.source))).toBe(true);
+        else await expect(client.me()).rejects.toThrow();
+      }
+      console.log("[DEBUG] Directory client consumed only canonical authenticated session authority");
+    });
+
+    it("binds the verified broker session and retains uncertain inference across authenticated replacement", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+      const authorities = fixture.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
+      const retained = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
+      const harness = inferenceHarness({ lease: "editor" });
+      const channel = new MessageChannel();
+      testSeams.attachLocalBrokerPort(channel.port1);
+      const me = async (value: unknown): Promise<{ status: number; body: string }> => {
+        harness.bodies.push(JSON.stringify(value));
+        return await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error("session authority RPC timed out")), 3000);
+          channel.port2.onmessage = (event) => { clearTimeout(timer); resolve(event.data); };
+          channel.port2.postMessage({ kind: "request", operation: "me", requestId: crypto.randomUUID() });
+        });
+      };
+      try {
+        expect((await me(authorities[0])).status).toBe(200);
+        expect(equal(testSeams.browserSessionAuthority, authorities[0])).toBe(true);
+        const epoch = testSeams.directorySessionEpoch;
+        expect((await me(authorities[0])).status).toBe(200);
+        expect(testSeams.directorySessionEpoch).toBe(epoch);
+        handleTsRequest({ kind: "inference-open", operationEpoch: retained.operationEpoch + 5, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+        harness.bodies.push(receiptBody("accepted", "none", 0));
+        handleTsRequest({ kind: "inference-propose", operationEpoch: retained.operationEpoch + 5, requestId: retained.requestId });
+        await settleInferenceTurns();
+        const original = testSeams.inferencePort;
+        expect(original?.request?.requestId).toBe(retained.requestId);
+        expect((await me(authorities[1])).status).toBe(200);
+        expect(testSeams.directorySessionEpoch).toBe(epoch + 1);
+        expect(equal(testSeams.browserSessionAuthority, authorities[1])).toBe(true);
+        expect(artifactState(DOCUMENT, SPACE)).toBeUndefined();
+        expect(testSeams.inferencePort).toBe(original);
+        expect(original.status.phase).toBe("indeterminate");
+        expect(original.request.requestId).toBe(retained.requestId);
+        await driveInferencePort(original.operationEpoch);
+        expect(harness.requests.filter((entry: string) => entry.endsWith("/jobs"))).toHaveLength(1);
+        expect(harness.requests.filter((entry: string) => entry.endsWith("/cancel") || entry.endsWith("/reconcile"))).toHaveLength(0);
+        console.log("[DEBUG] authenticated broker replacement retained the original request without replay under its successor");
+      } finally { testSeams.detachLocalBrokerPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
+    });
+
+    it("retires unverified session responses without letting old bodies overwrite replacement authority", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+      const value = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
+      const retained = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
+      for (const scenario of retained.authorityRetirement) {
+        const harness = inferenceHarness({ lease: "editor" });
+        const channel = new MessageChannel();
+        testSeams.attachLocalBrokerPort(channel.port1);
+        const read = async (body: unknown): Promise<{ status: number; body: string }> => {
+          harness.bodies.push(JSON.stringify(body));
+          return await new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error("session authority RPC timed out")), 3000);
+            channel.port2.onmessage = (event) => { clearTimeout(timer); resolve(event.data); };
+            channel.port2.postMessage({ kind: "request", operation: "me", requestId: crypto.randomUUID() });
+          });
+        };
+        let release: () => void = () => undefined;
+        const heldBody: { current: ReadableStream<Uint8Array> | null } = { current: null };
+        try {
+          expect((await read(value)).status).toBe(200);
+          const epoch = testSeams.directorySessionEpoch;
+          if (scenario === "http-401") harness.statuses.push(401);
+          if (scenario === "non-200") harness.statuses.push(201);
+          if (scenario === "old-body-after-proof-replacement") {
+            const originalFetch = globalThis.fetch;
+            const gate = new Promise<void>((resolve) => { release = resolve; });
+            (globalThis as unknown as { fetch: unknown }).fetch = async (...args: Parameters<typeof fetch>) => {
+              const response = await originalFetch(...args);
+              heldBody.current = new ReadableStream({ async start(controller) { await gate; controller.enqueue(new TextEncoder().encode(JSON.stringify(value))); controller.close(); } });
+              return { ...response, body: heldBody.current };
+            };
+          }
+          const pending = read(scenario === "invalid-response" ? {} : value);
+          if (scenario === "old-body-after-proof-replacement") {
+            for (let turn = 0; !heldBody.current?.locked && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+            expect(harness.requests).toHaveLength(2);
+            expect(heldBody.current?.locked).toBe(true);
+            clearLocalBrowserBrokerProof();
+            expect(installLocalBrowserBrokerProof(retained.successorProof)).toBe(true);
+            release();
+          }
+          expect((await pending).status).toBe(428);
+          expect(testSeams.browserSessionAuthority).toBeNull();
+          expect(testSeams.directorySessionEpoch).toBe(epoch + 1);
+          expect(artifactState(DOCUMENT, SPACE)).toBeUndefined();
+          if (scenario === "old-body-after-proof-replacement") {
+            harness.bodies.push("{}");
+            await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+            expect(equal(harness.proofs.at(-1), retained.successorProof)).toBe(true);
+          }
+          console.log(`[DEBUG] session authority ${scenario} retired only its original owner`);
+        } finally { release(); testSeams.detachLocalBrokerPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
+      }
+    });
+
+    it("retires an attached broker port before its old session body can authorize the successor", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+      const authority = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
+      const retained = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
+      const harness = inferenceHarness({ lease: "editor" });
+      const prior = new MessageChannel(), successor = new MessageChannel();
+      const body = JSON.stringify(authority);
+      let release: () => void = () => undefined;
+      const gate = new Promise<void>((resolve) => { release = resolve; });
+      let cancelled = false;
+      const stream = new ReadableStream<Uint8Array>({ async start(controller) { await gate; if (!cancelled) { controller.enqueue(new TextEncoder().encode(body)); controller.close(); } }, cancel() { cancelled = true; } });
+      const request = { kind: "request", operation: "me", requestId: crypto.randomUUID() };
+      try {
+        testSeams.attachLocalBrokerPort(prior.port1);
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => ({ ok: true, status: 200, statusText: "", headers: new Headers({ "x-semio-browser-broker-advanced": "1", "content-length": String(new TextEncoder().encode(body).length) }), body: stream });
+        prior.port2.postMessage(request);
+        for (let turn = 0; !stream.locked && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(stream.locked).toBe(true);
+        testSeams.attachLocalBrokerPort(successor.port1);
+        for (let turn = 0; !cancelled && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(cancelled).toBe(true);
+        release();
+        await settleInferenceTurns();
+        expect(equal(testSeams.browserSessionAuthority, null), retained.portReplacement).toBe(true);
+        expect(cancelled).toBe(true);
+        expect(installLocalBrowserBrokerProof(retained.successorProof)).toBe(true);
+        console.log("[DEBUG] broker port replacement cancelled old body ownership before successor authorization");
+      } finally { release(); testSeams.detachLocalBrokerPort(); prior.port1.close(); prior.port2.close(); successor.port1.close(); successor.port2.close(); harness.release(); }
+    });
+
+    it("never dispatches an old queued request under a replacement broker admission", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
+      const harness = inferenceHarness({ lease: "editor" });
+      let release: () => void = () => undefined;
+      try {
+        harness.gates.push(new Promise<void>((resolve) => { release = resolve; }));
+        harness.bodies.push("{}");
+        const first = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+        const firstRejected = expect(first).rejects.toThrow();
+        for (let turn = 0; harness.requests.length === 0 && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(harness.requests).toHaveLength(1);
+        const queued = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+        const queuedOutcome = queued.then(() => "dispatched", () => fixture.brokerReplacement);
+        clearLocalBrowserBrokerProof();
+        expect(installLocalBrowserBrokerProof(fixture.successorProof)).toBe(true);
+        release();
+        await firstRejected;
+        expect(await queuedOutcome).toBe(fixture.brokerReplacement);
+        expect(equal(harness.requests.length, 1)).toBe(true);
+        harness.bodies.push("{}");
+        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+        expect(equal(harness.proofs, ["b".repeat(64), fixture.successorProof])).toBe(true);
+        console.log("[DEBUG] replacement broker admission denied old queued work and preserved its fresh proof");
+      } finally { release(); harness.release(); }
+    });
+
+    it("does not spend the active broker proof on queued retired inference work", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
+      for (const scenario of fixture.queuedRetirement) {
+        const harness = inferenceHarness({ lease: "editor" });
+        const epoch = testSeams.directorySessionEpoch;
+        try {
+          const operationEpoch = fixture.operationEpoch + 3;
+          handleTsRequest({ kind: "inference-open", operationEpoch, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+          harness.bodies.push(receiptBody("accepted", "none", 0));
+          handleTsRequest({ kind: "inference-propose", operationEpoch, requestId: fixture.requestId });
+          await settleInferenceTurns();
+          let release: () => void = () => undefined;
+          harness.gates.push(new Promise<void>((resolve) => { release = resolve; }));
+          harness.bodies.push("{}");
+          const blocker = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+          for (let turn = 0; harness.requests.length < 2 && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+          expect(harness.requests).toHaveLength(2);
+          let rejected: Promise<unknown> | undefined;
+          if (scenario === "abort") {
+            const abort = new AbortController();
+            rejected = expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, signal: abort.signal })).rejects.toThrow();
+            abort.abort();
+          } else {
+            handleTsRequest({ kind: "inference-cancel", operationEpoch });
+            testSeams.directorySessionEpoch += 1;
+          }
+          release();
+          await blocker;
+          await rejected;
+          await settleInferenceTurns();
+          expect(equal(harness.requests.length, 2)).toBe(true);
+          harness.bodies.push("{}");
+          await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+          expect(harness.requests).toHaveLength(3);
+          console.log(`[DEBUG] queued inference ${scenario} preserved the active broker proof`);
+        } finally { testSeams.directorySessionEpoch = epoch; harness.release(); }
       }
     });
 
@@ -2097,7 +2558,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
-    it("terminates on valid-looking cross-job or cross-hash previews without sending approval", async () => {
+    it("retains an indeterminate owner on cross-job or cross-hash previews without sending approval", async () => {
       const substituted = [
         { ...PREVIEW, jobId: "8".repeat(32), regionId: `inference-${"8".repeat(32)}` },
         { ...PREVIEW, proposalHash: "9".repeat(64) },
@@ -2114,7 +2575,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           harness.statuses.push(200);
           harness.bodies.push(pageBody("succeeded", "offered", { nextCursor: 1, completed: 4, total: 4, proposalHash: HASH, preview }));
           await driveInferencePort(operationEpoch);
-          expect(harness.ports().at(-1)).toMatchObject({ phase: "failed", code: "inference.transport" });
+          expect(harness.ports().at(-1)).toMatchObject({ phase: "indeterminate", code: "inference.transport" });
           handleTsRequest({ kind: "inference-approve", operationEpoch });
           await settleInferenceTurns();
           expect(harness.requests.filter((entry) => entry.endsWith("/approval"))).toEqual([]);
@@ -2132,7 +2593,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         harness.bodies.push(JSON.stringify({ schema: "semio.hub.inference-error/v1", code: "inference.unavailable" }));
         handleTsRequest({ kind: "inference-propose", operationEpoch: 7, requestId: "7".repeat(32) });
         await settleInferenceTurns();
-        expect(harness.ports().at(-1)).toMatchObject({ phase: "failed", code: "inference.unavailable" });
+        expect(harness.ports().at(-1)).toMatchObject({ phase: "indeterminate", code: "inference.unavailable" });
       } finally {
         harness.release();
       }
@@ -2140,7 +2601,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("keeps explicit English and German text for every phase, code and control with no default language", async () => {
       const { GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1, GIS_MAP_INFERENCE_PORT_TEXT_V1, gisMapInferencePortRoleV1 } = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
-      const phases: readonly GisMapInferencePortStatusV1["phase"][] = ["idle", "submitting", "running", "offered", "approving", "applied", "cancelled", "stale", "failed"];
+      const phases: readonly GisMapInferencePortStatusV1["phase"][] = ["idle", "submitting", "running", "offered", "approving", "indeterminate", "applied", "cancelled", "stale", "failed"];
       for (const phase of phases) {
         const row = GIS_MAP_INFERENCE_PORT_TEXT_V1[phase];
         expect(Object.keys(row).sort()).toEqual(["de", "en"]);
@@ -2227,7 +2688,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       return { documentId, schema: "demo/v1", bindings: [{ kind: "folder", path: `/tmp/${documentId}` }], actor: "actor-1" };
     }
 
-    function exactDocumentBackboneMessage(envelope: MutationEnvelope, diffPayload = encodePackValue(envelope.diff.payload)): Uint8Array {
+    function exactDocumentBackboneMessage(
+      envelope: MutationEnvelope,
+      diffPayload = encodePackValue(envelope.diff.payload),
+      timestamp: Readonly<{ actor: bigint; physical_ms: bigint; logical: bigint }> = { actor: 1n, physical_ms: 9_007_199_254_740_992n, logical: 3n },
+    ): Uint8Array {
       return encodeBackboneMessage({
         kind: "mutations",
         envelopes: encodeDocumentBackboneEnvelopeBatchExact([{
@@ -2237,7 +2702,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           dependencies: envelope.deps ?? [],
           diff: { schema: envelope.diff.schemaId, payload: diffPayload },
           inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodePackValue(envelope.inverse.inverseDiff.payload) },
-          timestamp: { actor: 1n, physical_ms: 9_007_199_254_740_992n, logical: 3n },
+          timestamp,
         }]),
       });
     }
@@ -3369,9 +3834,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
                   expect(message.path).toEqual(["reactor", "poll"]);
                   const events = message.args[0] as Record<string, any>[];
                   const open = events[0]?.tag === "instance-open" ? events[0].val : null;
-                  const acknowledged = events[0]?.tag === "instance-lifecycle-ack";
-                  const lifecycleReceipt = open ? { tag: "captured", val: { lifetime: { activationGeneration: open.activationGeneration, instanceId: open.instance, guestLifetime: 1n }, requestSequence: open.requestSequence } } : null;
-                  if (acknowledged) activated++;
+                  const close = events[0]?.tag === "instance-close" ? events[0].val : null;
+                  const lifecycleAck = events[0]?.tag === "instance-lifecycle-ack" ? events[0].val : null;
+                  const lifecycleReceipt = open
+                    ? { tag: "captured", val: { lifetime: { activationGeneration: open.activationGeneration, instanceId: open.instance, guestLifetime: 1n }, requestSequence: open.requestSequence } }
+                    : close
+                      ? { tag: "accepted", val: { lifetime: close.lifetime, requestSequence: close.requestSequence, closeGeneration: 1n } }
+                      : lifecycleAck?.tag === "accepted"
+                        ? { tag: "retired", val: { lifetime: lifecycleAck.val.lifetime, requestSequence: lifecycleAck.val.requestSequence, closeGeneration: lifecycleAck.val.closeGeneration } }
+                        : null;
+                  if (lifecycleAck?.tag === "captured") activated++;
                   this.port.postMessage({
                     ...this.binding,
                     kind: "result",
@@ -3528,10 +4000,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             expect(statuses.every((status) => !JSON.stringify(status).includes("open.v1.") && !JSON.stringify(status).includes("socket.v1."))).toBe(true);
           } finally {
             verifySpy?.mockRestore();
+            const retirementOutcomes: Promise<unknown>[] = [];
             for (const record of records) {
+              const outcome = record.state.browserActorReservation?.retirementOutcome;
               closeArtifactRuntime(record.state.runtimeKey);
+              if (outcome !== undefined) retirementOutcomes.push(outcome);
               await record.connected.catch(() => {});
             }
+            await Promise.all(retirementOutcomes);
+            await wait(() => workers.every((worker) => worker.terminations === 1));
             for (const worker of workers) expect(worker.terminations).toBe(1);
             expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
             testSeams.executionTargetStatusObserver = null;
@@ -3549,6 +4026,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("browser document actor transfers one verified cold pair only after lifecycle ACK and exact page receipts", async () => {
       const fixture = await executionTargetLeaseFixture();
       const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const actionFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
       const Ajv = (await import("ajv")).default;
       const schema = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧬️schema/🔣️.json", source.url), "utf8"));
       expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
@@ -3576,11 +4054,22 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         publishedPack = Uint8Array.from(pack),
         publishedSpr = Uint8Array.from(spr),
         actorBytes = new TextEncoder().encode("abc"),
-        descriptor = executionTargetBytes(fixture.descriptorHex),
-        guest = decodePackValue(descriptor) as Record<string, any>,
+        sourceDescriptor = executionTargetBytes(fixture.descriptorHex),
+        guest = decodePackValue(sourceDescriptor) as Record<string, any>,
         originalWorker = globalThis.Worker,
         originalFetch = globalThis.fetch;
+      const descriptorApp = guest.manifest.apps.find((app: Record<string, unknown>) => app.id === fixture.manifest.surface.appId);
+      if (descriptorApp === undefined) throw new Error("direct browser actor fixture: descriptor app absent");
+      descriptorApp.role = "editor";
+      const descriptor = encodePackValue(guest),
+        descriptorByteSha256 = await executionTargetSha256Hex(descriptor);
       const { UiDocumentStore } = await import("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
+      const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
+      const { decodeAppCommand, encodeAppFrame } = await import("../../🟦️.ts");
+      const { readActorBytePage } = await import("../../../../🔨️modules/🎭️actor/📃️page/🟦️.ts");
+      const { createBrowserActorAppCommandRequestV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts");
+      const { createBrowserActorUiIntentRequestV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts");
+      const { decodeBrowserActorHostEffectsV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts");
       const windowKindId = fixture.manifest.surface.windowKindId;
       const hostFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧪️tests/🪟️host-opening-context/🔣️.json", source.url), "utf8"));
       const hostView = { ...hostFixture.valid.viewState, windowId: windowKindId, activeWindowKindId: windowKindId, activeUtilityId: "pan", activeUtilityByWindowId: { [windowKindId]: "pan" }, windowInstances: [{ id: windowKindId, windowKindId }] };
@@ -3594,11 +4083,21 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         pageIndexes: number[] = [],
         statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [],
         historyStatuses: Extract<BackboneWorkerResponse, { kind: "inference-history-status" }>[] = [],
+        workerResponses: BackboneWorkerResponse[] = [],
         patchOffers: BrowserActorUiPatchOfferV1[] = [],
+        documentControls: string[] = [],
+        lifecycleClose: string[] = [],
+        actionSequences: bigint[] = [],
+        commandSequences: number[] = [],
+        commandInvocations: Record<string, unknown>[] = [],
+        commandViews: Record<string, unknown>[] = [],
+        backboneIngress: Uint8Array[] = [],
         uiStore = new UiDocumentStore(windowKindId);
       let lifecycleAcknowledged = false,
         patchAcknowledged = false,
         patchRejected = false,
+        actionPatchAcknowledged = false,
+        heldActionPatch: BrowserActorUiPatchOfferV1 | null = null,
         loaded = 0,
         described = 0,
         terminated = 0;
@@ -3629,11 +4128,35 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             expect(message.path).toEqual(["reactor", "poll"]);
             const events = message.args[0] as Record<string, any>[];
             const open = events[0]?.tag === "instance-open" ? events[0].val : null;
-            const acknowledged = events[0]?.tag === "instance-lifecycle-ack";
+            const close = events[0]?.tag === "instance-close" ? events[0].val : null;
+            const lifecycleAck = events[0]?.tag === "instance-lifecycle-ack" ? events[0].val : null;
+            const acknowledged = lifecycleAck?.tag === "captured";
             const patchAck = events[0]?.tag === "patch-ack" ? events[0].val : null;
             const patchRejection = events[0]?.tag === "patch-rejected" ? events[0].val : null;
             const visible = events[0]?.tag === "surface-visible" ? events[0].val : null;
             const wake = events[0]?.tag === "wake";
+            const shellMessage = events[0]?.tag === "message" && events[0].val?.source?.tag === "shell" ? events[0].val : null;
+            const backboneMessage = events[0]?.tag === "message" && events[0].val?.source?.tag === "backbone" ? events[0].val : null;
+            const uiIntent = events[0]?.tag === "ui-intent" ? events[0].val : null;
+            const commandPage = message.args[1] as Record<string, any> | null;
+            if (uiIntent !== null) {
+              expect(uiIntent.instance).toBe(0);
+              const decoded = decodePackValue(uiIntent.intent) as Record<string, any>;
+              expect(decoded.surface).toBe(`0:${windowKindId}`);
+              actionSequences.push(decoded.seq.value);
+            }
+            let commandSequence: number | null = null;
+            if (commandPage !== null) {
+              expect(commandPage.cursor).toMatchObject({ owner: 0n, generation: reservation!.generation, commandIndex: 0, commandCount: 1, instance: 0, pageIndex: 0, pageCount: 1 });
+              const command = decodeAppCommand(readActorBytePage(commandPage.page));
+              if (!("Command" in command)) throw new Error("expected browser actor AppCommand::Command");
+              commandSequence = command.Command.seq;
+              expect(commandPage.cursor.seq).toBe(BigInt(commandSequence));
+              commandSequences.push(commandSequence);
+              commandInvocations.push(decodePackValue(Uint8Array.from(command.Command.command)) as Record<string, unknown>);
+              commandViews.push(decodePackValue(Uint8Array.from(command.Command.view_state)) as Record<string, unknown>);
+            }
+            if (backboneMessage !== null) backboneIngress.push(Uint8Array.from(backboneMessage.payload));
             if (visible) {
               expect(lifecycleAcknowledged).toBe(true);
               expect(pageIndexes).toHaveLength(exact.pageCount);
@@ -3653,9 +4176,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             if (acknowledged) lifecycleAcknowledged = true;
             if (patchAck) {
               expect(patchAck.surface).toEqual({ instance: 0, surface: windowKindId });
-              expect(patchAck.revision).toBe(1n);
-              expect(patchAck.receipt.patchSequence).toBe(1n);
-              patchAcknowledged = true;
+              if (patchAck.receipt.patchSequence === 1n) {
+                expect(patchAck.revision).toBe(1n);
+                patchAcknowledged = true;
+              } else {
+                expect(patchAck.receipt.patchSequence).toBe(3n);
+                expect(patchAck.revision).toBe(2n);
+                actionPatchAcknowledged = true;
+              }
             }
             if (patchRejection) {
               expect(patchRejection.surface).toEqual({ instance: 0, surface: windowKindId });
@@ -3682,7 +4210,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
                   ? { tag: "applied", val: { lifetime: header.lifetime, transferGeneration: header.transferGeneration, baselineFrontier: header.baselineFrontier, aggregateSha256: header.aggregateSha256 } }
                   : { tag: "page-accepted", val: cursor };
             }
-            const lifecycleReceipt = open ? { tag: "captured", val: { lifetime: { activationGeneration: open.activationGeneration, instanceId: open.instance, guestLifetime: 1n }, requestSequence: open.requestSequence } } : null;
+            if (close) lifecycleClose.push("close");
+            if (lifecycleAck?.tag === "accepted") lifecycleClose.push("accepted-ack");
+            if (lifecycleAck?.tag === "retired") lifecycleClose.push("retired-ack");
+            const lifecycleReceipt = open
+              ? { tag: "captured", val: { lifetime: { activationGeneration: open.activationGeneration, instanceId: open.instance, guestLifetime: 1n }, requestSequence: open.requestSequence } }
+              : close
+                ? { tag: "accepted", val: { lifetime: close.lifetime, requestSequence: close.requestSequence, closeGeneration: 1n } }
+                : lifecycleAck?.tag === "accepted"
+                  ? { tag: "retired", val: { lifetime: lifecycleAck.val.lifetime, requestSequence: lifecycleAck.val.requestSequence, closeGeneration: lifecycleAck.val.closeGeneration } }
+                  : null;
             const initialScene = wake && renderWakes === corpus.browserRender.lazyWakeTurns;
             const lifetime = activeLifetime;
             const node = {
@@ -3699,10 +4236,64 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               menu: null,
               children: [],
             };
-            const emitsPatch = initialScene || Boolean(patchAck);
+            const emitsPatch = initialScene || uiIntent !== null || patchAck?.receipt.patchSequence === 1n;
             const nodeBytes = initialScene ? encodePackValue(node) : null;
-            const patchReceiptBytes = emitsPatch ? encodeActorUiPatchReceipt({ lifetime: lifetime!, patchSequence: initialScene ? 1n : 2n }) : null;
-            const resultTransfers = initialScene ? [nodeBytes!.buffer, patchReceiptBytes!.buffer] : patchReceiptBytes ? [patchReceiptBytes.buffer] : [];
+            const patchReceiptBytes = emitsPatch ? encodeActorUiPatchReceipt({ lifetime: lifetime!, patchSequence: initialScene ? 1n : uiIntent !== null ? 3n : 2n }) : null;
+            const effects: Record<string, unknown>[] = [];
+            let controlReceipt: Uint8Array | null = null;
+            if (shellMessage !== null) {
+              const command = decodeDocumentBackboneControlV1(shellMessage.payload);
+              documentControls.push(command.operation);
+              controlReceipt = encodeDocumentBackboneControlV1({ ...command, schema: "semio.plugin.document-backbone-binding-receipt.v1", operation: command.operation === "bind" ? "bound" : "retired" });
+              effects.push({ tag: "send-message", val: { target: { tag: "shell", val: 0 }, payload: controlReceipt } });
+            }
+            let commandBackbone: Uint8Array | null = null;
+            const commandMutation = commandSequence === 3
+              ? (() => {
+                  const mutationId = "direct-command-mutation",
+                    invocationId = "direct-command:0:3",
+                    forward = encodePackValue({ sequenceNumber: 3 }),
+                    inverse = encodePackValue(null),
+                    inverseVector = Uint8Array.of(1, inverse.byteLength, ...inverse),
+                    mutation = {
+                      id: mutationId,
+                      document: "0",
+                      baseVersion: 0,
+                      invocationId,
+                      diff: { schema: `${fields.artifact.schema}.operation`, payload: Array.from(forward) },
+                      inverse: { targetMutation: mutationId, inverseDiff: { schema: `${fields.artifact.schema}.operation.inverse`, payload: Array.from(inverseVector) }, baseVersion: 0, dependencies: [], undoPolicy: "ExactBaseOnly" },
+                      dependencies: [],
+                      author: "actor-1",
+                      timestamp: { actor: 7, physical_ms: 8, logical: 9 },
+                    },
+                    envelope: MutationEnvelope = {
+                      id: mutationId,
+                      actor: "actor-1",
+                      document: documentId,
+                      schemaVersion: fields.artifact.schema,
+                      deps: [],
+                      payloadHash: "unused",
+                      diff: { schemaId: fields.artifact.schema, payload: { sequenceNumber: 3 } },
+                      inverse: { targetOperation: mutationId, inverseDiff: { schemaId: fields.artifact.schema, payload: null }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
+                    };
+                  commandBackbone = exactDocumentBackboneMessage(envelope, forward, { actor: 7n, physical_ms: 8n, logical: 9n });
+                  return { mutations: Array.from(encodePackValue([mutation])), inverseGroup: Array.from(encodePackValue({ invocationId, mutations: [mutationId], inverseMutations: [mutation.inverse] })) };
+                })()
+              : null;
+            const actionPublication = uiIntent !== null
+              ? encodeAppFrame(actionFixture.publication.emit)
+              : commandSequence !== null
+                ? encodeAppFrame({ Invocation: { in_reply_to: commandSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: commandMutation?.mutations ?? [], inverse_group: commandMutation?.inverseGroup ?? [] } })
+                : null;
+            if (actionPublication !== null) {
+              effects.push({ tag: "send-message", val: { target: { tag: "shell", val: 0 }, payload: actionPublication } });
+              effects.push(actionFixture.publication.hostEffect);
+            }
+            if (commandBackbone !== null) effects.push({ tag: "send-message", val: { target: { tag: "backbone", val: `actor://${state.runtimeKey}` }, payload: commandBackbone } });
+            const resultTransfers: ArrayBuffer[] = initialScene ? [nodeBytes!.buffer, patchReceiptBytes!.buffer] : patchReceiptBytes ? [patchReceiptBytes.buffer] : [];
+            if (controlReceipt !== null) resultTransfers.push(controlReceipt.buffer);
+            if (actionPublication !== null) resultTransfers.push(actionPublication.buffer);
+            if (commandBackbone !== null) resultTransfers.push(commandBackbone.buffer);
             this.port.postMessage(
               {
                 ...this.binding,
@@ -3721,15 +4312,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
                           ],
                         },
                       ]
-                    : patchAck
+                    : uiIntent !== null
+                      ? [{ surface: { instance: 0, surface: windowKindId }, baseRevision: 1n, revision: 2n, ops: [] }]
+                    : patchAck?.receipt.patchSequence === 1n
                       ? [{ surface: { instance: 0, surface: windowKindId }, baseRevision: 0n, revision: 2n, ops: [] }]
                       : [],
-                  effects: [],
+                  effects,
                   presence: [],
                   nextWake: null,
                   status: { tag: (visible && visibleViews.length === 1) || (wake && !initialScene) ? "more-work" : "idle" },
                   fuelUsed: 1n,
-                  commandIngress: { tag: "idle" },
+                  commandIngress: { tag: commandSequence === null ? "idle" : "command-complete" },
                   coldPairIngress,
                   lifecycleReceipt,
                   uiPatchReceipt: patchReceiptBytes,
@@ -3762,6 +4355,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(state.browserActorViewState).toEqual(hostView);
       const fields = structuredClone(fixture.manifest);
       fields.scope = { spaceId: binding.spaceId, documentId };
+      fields.grant = { ...fields.grant, write: true };
+      fields.surface = { ...fields.surface, role: "editor" };
+      fields.package = { ...fields.package, descriptorByteSha256 };
+      fields.descriptor = { sha256: descriptorByteSha256, byteLength: descriptor.byteLength };
+      fields.browserActor = { ...fields.browserActor, sourceDescriptorByteSha256: descriptorByteSha256 };
       fields.checkpoint = {
         ...fields.checkpoint!,
         aggregateSha256: exact.aggregateSha256,
@@ -3790,12 +4388,21 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       socket.open();
       testSeams.executionTargetStatusObserver = (status) => statuses.push(status);
       testSeams.workerPostTestSink = (message) => {
+        workerResponses.push(message);
         if (message.kind === "inference-history-status") {
           historyStatuses.push(message);
           return;
         }
+        if (message.kind === "browser-actor-ui-mounted") {
+          expect(patchAcknowledged).toBe(true);
+          return;
+        }
         if (message.kind !== "browser-actor-ui-patch") return;
         patchOffers.push(message);
+        if (message.patch.baseRevision === 1 && message.patch.revision === 2) {
+          heldActionPatch = message;
+          return;
+        }
         const before = uiStore.getState();
         const applied = uiStore.applyPatch(message.patch);
         if (applied.ok) {
@@ -3834,8 +4441,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         return executionTargetBodyResponse(actorBytes);
       };
       let owner: VerifiedColdDocumentPair | null = null;
+      let reservation: Awaited<ReturnType<typeof reserveDocumentBrowserActorChild>> = null;
       try {
-        const reservation = await reserveDocumentBrowserActorChild(state);
+        reservation = await reserveDocumentBrowserActorChild(state);
         expect(reservation).not.toBeNull();
         await reservation!.activate(state.socket);
         const bootstrap: WireArtifactBootstrap = {
@@ -3878,6 +4486,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           operationEpoch: 1,
           scope: { spaceId: binding.spaceId, documentId },
           abort: new AbortController(),
+          sessionEpoch: testSeams.directorySessionEpoch,
+          clientInstanceId: state.openClientInstanceId,
+          leaseFields: lease.fields(),
+          request: null,
+          closeRequested: false,
+          reconcileRequired: false,
           status: idleGisMapInferencePortStatusV1(),
           turns: 0,
           pollTimer: null,
@@ -3902,6 +4516,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(patchOffers).toHaveLength(2);
         expect(patchAcknowledged).toBe(true);
         expect(patchRejected).toBe(true);
+        expect(documentControls).toEqual(["bind"]);
+        const mounted = workerResponses.find((message) => message.kind === "browser-actor-ui-mounted") as Extract<BackboneWorkerResponse, { kind: "browser-actor-ui-mounted" }>;
+        expect(mounted).toMatchObject({
+          scope: fields.scope,
+          activeCheckpointId: fields.checkpoint.checkpointId,
+          descriptorDigestV1: fields.checkpoint.descriptorDigestV1,
+          frontier: fields.checkpoint.baselineFrontier,
+          uiRevision: 1,
+        });
         expect(uiStore.getRevisionSnapshot()).toBe(rendererOracle.revision);
         expect(uiStore.getState().nodes.get(uiStore.getState().root!)?.component).toMatchObject({ type: "surface", kind: rendererOracle.nodeKind });
 
@@ -3912,7 +4535,104 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(visibleViews.at(-1)?.terminology).toBe("native");
         expect(JSON.stringify(state.config)).toBe(beforeConfig);
         expect(JSON.stringify(state.frontier)).toBe(beforeFrontier);
+        await vi.waitFor(() => expect((reservation as unknown as { viewRefresh: Promise<void> | null }).viewRefresh).toBeNull());
         console.log("[DEBUG] browser-host-context live-preference-refresh=1 artifact-config-unchanged=1 stale-opening-rejected=1");
+
+        const actionRequest = createBrowserActorUiIntentRequestV1(
+          {
+            scope: { spaceId: binding.spaceId, documentId },
+            verifiedSurfaceId: fields.surface.surfaceId,
+            appChannelVersion: actionFixture.request.appChannelVersion,
+            activationGeneration: reservation!.generation.toString(),
+            instanceId: 0,
+            surfaceRevision: 1,
+            actionSequence: 2,
+          },
+          windowKindId,
+          { ...actionFixture.uiIntent, surface: windowKindId, revision: 1, seq: 9_007_199_254_740_993n },
+        );
+        handleTsRequest({ ...actionRequest, clientInstanceId: state.openClientInstanceId });
+        await vi.waitFor(() => expect(heldActionPatch !== null || workerResponses.some((message) => message.kind === "browser-actor-action-result")).toBe(true));
+        expect(workerResponses.find((message) => message.kind === "browser-actor-action-result")).toBeUndefined();
+        const remoteEnvelope: MutationEnvelope = {
+          id: "remote-direct-turn",
+          actor: "remote-actor",
+          document: documentId,
+          schemaVersion: fixture.manifest.artifact.schema,
+          deps: [],
+          payloadHash: "unused",
+          diff: { schemaId: fixture.manifest.artifact.schema, payload: { source: "remote" } },
+          inverse: { targetOperation: "remote-direct-turn", inverseDiff: { schemaId: fixture.manifest.artifact.schema, payload: { source: "before" } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
+        };
+        const remoteMessage = exactDocumentBackboneMessage(remoteEnvelope),
+          remoteDelivery = reservation!.receiveBackbone(remoteMessage);
+        await Promise.resolve();
+        expect(backboneIngress).toHaveLength(0);
+        const actionPatch = heldActionPatch!;
+        const actionApplied = uiStore.applyPatch(actionPatch.patch);
+        expect(actionApplied.ok).toBe(true);
+        handleTsRequest({
+          kind: "browser-actor-ui-patch-result",
+          clientInstanceId: actionPatch.clientInstanceId,
+          scope: actionPatch.scope,
+          verifiedSurfaceId: actionPatch.verifiedSurfaceId,
+          activationGeneration: actionPatch.activationGeneration,
+          instanceId: actionPatch.instanceId,
+          receipt: actionPatch.receipt,
+          outcome: "acknowledged",
+          revision: uiStore.getRevisionSnapshot(),
+        });
+        await vi.waitFor(() => expect(workerResponses.some((message) => message.kind === "browser-actor-action-result")).toBe(true));
+        await remoteDelivery;
+        const actionResult = workerResponses.find((message) => message.kind === "browser-actor-action-result") as Extract<BackboneWorkerResponse, { kind: "browser-actor-action-result" }>;
+        expect(actionResult).toMatchObject({
+          clientInstanceId: state.openClientInstanceId,
+          actionSequence: 2,
+          surfaceRevision: 1,
+          outcome: "guest-applied",
+          mutationCount: 0,
+        });
+        expect(decodeBrowserActorHostEffectsV1(actionResult.hostEffects)).toEqual([actionFixture.publication.projectedEffect]);
+        expect(actionSequences).toEqual([9_007_199_254_740_993n]);
+        expect(actionPatchAcknowledged).toBe(true);
+        expect(backboneIngress).toHaveLength(1);
+        expect(backboneIngress[0]).toEqual(remoteMessage);
+        expect(workerResponses.some((message) => message.kind === "event" && message.event.kind === "documentBackbone")).toBe(false);
+        console.log("[DEBUG] direct-browser-actor-action: skipped-sequence=1 u64-preserved=1 shell-frame=1 host-effect=1 full-turn-serialized=1 remote-echo=0");
+
+        const directActionInvocation = {
+            ...actionFixture.actionInvocation,
+            address: { ...actionFixture.actionInvocation.address, pluginId: fields.package.pluginId, appId: fields.surface.appId, windowKindId, windowInstanceId: windowKindId },
+          },
+          directCommandInvocation = {
+            ...actionFixture.commandInvocation,
+            address: { ...actionFixture.commandInvocation.address, owner: { app: { pluginId: fields.package.pluginId, appId: fields.surface.appId } } },
+          },
+          directCommandView = { ...actionFixture.commandViewState, activeWindowKindId: windowKindId, windowId: windowKindId };
+        for (const [index, invocation] of [directActionInvocation, directCommandInvocation].entries()) {
+          const commandRequest = createBrowserActorAppCommandRequestV1(
+            {
+              scope: { spaceId: binding.spaceId, documentId },
+              verifiedSurfaceId: fields.surface.surfaceId,
+              appChannelVersion: actionFixture.request.appChannelVersion,
+              activationGeneration: reservation!.generation.toString(),
+              instanceId: 0,
+              surfaceRevision: 2,
+              actionSequence: index + 3,
+            },
+            invocation,
+            directCommandView,
+          );
+          handleTsRequest({ ...commandRequest, clientInstanceId: state.openClientInstanceId });
+          await vi.waitFor(() => expect(workerResponses.filter((message) => message.kind === "browser-actor-action-result")).toHaveLength(index + 2));
+          const commandResult = workerResponses.filter((message): message is Extract<BackboneWorkerResponse, { kind: "browser-actor-action-result" }> => message.kind === "browser-actor-action-result").at(-1)!;
+          expect(commandResult).toMatchObject({ actionSequence: index + 3, surfaceRevision: 2, outcome: "guest-applied", mutationCount: index === 0 ? 1 : 0 });
+          expect(decodeBrowserActorHostEffectsV1(commandResult.hostEffects)).toEqual([actionFixture.publication.projectedEffect]);
+        }
+        expect(commandSequences).toEqual([3, 4]);
+        expect(commandInvocations).toEqual([directActionInvocation, directCommandInvocation]);
+        expect(commandViews).toEqual([directCommandView, directCommandView]);
+        console.log("[DEBUG] direct-browser-actor-command: action-invocation=1 command-invocation=1 canonical-page=1 shell-publication=1 raw-backbone-projection=1 singleton-host-effect=1");
 
         retainInferenceApprovalUndo(operation, approvalReceipt);
         reissueInferenceApprovalUndoForRebootstrap(state);
@@ -4010,7 +4730,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(historyStatuses.some((message) => message.historyEpoch === submittingOwner.historyEpoch && message.status.phase === "applied")).toBe(false);
         expect(testSeams.inferenceApprovalUndoOwner?.phase).toBe("awaiting-mount");
 
-        const renderDriver = reservation as unknown as { renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> };
+        const renderDriver = reservation as unknown as { child: DocumentBrowserActorChild; renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> };
+        const retainedChild = renderDriver.child;
         for (const row of corpus.browserRender.hostile) {
           let turns = 0,
             current = row.name !== "stale-before-turn";
@@ -4030,11 +4751,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               };
             },
           } as unknown as DocumentBrowserActorChild;
-          await expect(
-            renderDriver.renderSurface(child, () => {
-              if (!current) throw new Error("fixture-stale-render");
-            }),
-          ).rejects.toThrow(row.error);
+          renderDriver.child = child;
+          try {
+            await expect(
+              renderDriver.renderSurface(child, () => {
+                if (!current) throw new Error("fixture-stale-render");
+              }),
+            ).rejects.toThrow(row.error);
+          } finally {
+            renderDriver.child = retainedChild;
+          }
           expect(turns).toBe(row.turns);
           console.log("[DEBUG] browser-render-refusal: " + row.name + " turns=" + turns);
         }
@@ -4053,8 +4779,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         );
       } finally {
         closeArtifactRuntime(state.runtimeKey);
+        expect(await reservation?.retirementOutcome).toBe("retired");
         expect(state.browserActorViewState).toBeNull();
         expect(terminated).toBe(1);
+        expect(documentControls).toEqual(["bind", "retire"]);
+        expect(lifecycleClose).toEqual(["close", "accepted-ack", "retired-ack"]);
         expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
         testSeams.executionTargetStatusObserver = null;
         testSeams.workerPostTestSink = null;

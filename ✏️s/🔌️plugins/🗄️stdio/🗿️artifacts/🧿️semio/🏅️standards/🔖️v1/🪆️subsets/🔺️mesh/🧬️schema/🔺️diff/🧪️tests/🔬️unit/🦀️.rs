@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use protocol::DiffCodec;

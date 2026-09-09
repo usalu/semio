@@ -1,52 +1,11 @@
 syntax = "proto3";
 package semio.s.lowpoly.lowpoly.mutation;
+import "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
 // 🧬️ LowpolyMutation dispatch — real facet mirror of the Rust `🦀️.rs` sibling's
 // `LowpolyMutation` enum (`dsl::Mutations`-derived, seventeen variants: nine object-lane verbs, a
 // create/delete pair for the `mesh` CHILD slot, and six paint-layer verbs plus one pixel edit).
-
-message LowpolyTransform {
-  repeated float position = 1;
-  repeated float rotation = 2;
-  repeated float scale = 3;
-}
-
-message LowpolyPaintLayer {
-  string name = 1;
-  bool visible = 2;
-  float opacity = 3;
-  string blend_mode = 4;
-  bytes pixels = 5;
-}
-
-message ArtifactDialect {
-  string artifact_kind = 1;
-  string standard = 2;
-  string subset = 3;
-}
-
-message ArtifactRef {
-  string artifact_id = 1;
-  ArtifactDialect dialect = 2;
-}
-
-// 🕸️ Owned CHILD handle for an object's mesh slot (`store::ArtifactChild<SemioMeshSnapshot>`);
-// `target` is the full `ArtifactRef`, never a flattened URI string — confirmed against the
-// `create-mesh` mutation/diff fixtures.
-message LowpolyMeshHandle {
-  string child_id = 1;
-  ArtifactRef target = 2;
-}
-
-message LowpolyObject {
-  string id = 1;
-  string name = 2;
-  LowpolyTransform transform = 3;
-  bool smooth_shading = 4;
-  // absent when the object owns no mesh yet — confirmed against the `create-object` mutation fixture.
-  LowpolyMeshHandle mesh = 5;
-  repeated LowpolyPaintLayer paint_layers = 6;
-}
 
 // One contiguous run of RGBA bytes written into a paint-layer pixel buffer at `offset`.
 message PixelRun {
@@ -56,7 +15,7 @@ message PixelRun {
 
 message CreateObject {
   uint64 index = 1;
-  LowpolyObject object = 2;
+  semio.s.lowpoly.lowpoly.artifact.LowpolyObject object = 2;
 }
 
 message DeleteObject {
@@ -96,7 +55,7 @@ message ScaleObject {
 message CreateMesh {
   string id = 1;
   string child_id = 2;
-  ArtifactRef target = 3;
+  semio.framework.io.ArtifactRef target = 3;
   string mesh_workspace = 4;
 }
 
@@ -107,7 +66,7 @@ message DeleteMesh {
 message InsertPaintLayer {
   string object_id = 1;
   uint64 index = 2;
-  LowpolyPaintLayer layer = 3;
+  semio.s.lowpoly.lowpoly.artifact.LowpolyPaintLayer layer = 3;
 }
 
 message RemovePaintLayer {

@@ -4,10 +4,10 @@ use crate::schema::mutation_support::attribute_diff_at_path;
 use crate::schema::snapshot::{view_box_to_string, NodePath, ViewBox};
 use crate::SvgSnapshot;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -20,7 +20,10 @@ pub struct SetViewBoxPayload {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum SetViewBoxMutation { Apply(SetViewBoxPayload), Restore(SvgDiff) }
+pub enum SetViewBoxMutation {
+    Apply(SetViewBoxPayload),
+    Restore(SvgDiff),
+}
 
 impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetViewBoxMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "view-box", kind: "set-view-box", record: "SetViewBox" };
@@ -34,13 +37,19 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetViewBoxMutat
 
     fn inverse(&self, base: &SvgSnapshot) -> Vec<super::SvgMutation> {
         let outcome = <Self as protocol::MutationKind<SvgSnapshot, super::SvgMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::is_empty(outcome.diff()) { return Vec::new(); }
+        if !outcome.messages().is_empty() || <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::is_empty(outcome.diff()) {
+            return Vec::new();
+        }
         let inverse = <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::inverse(outcome.diff(), base);
         vec![super::SvgMutation::SetViewBox(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String { "Set View Box".to_string() }
-    fn target(&self) -> Vec<String> { vec!["set-view-box".to_string()] }
+    fn label(&self) -> String {
+        "Set View Box".to_string()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-view-box".to_string()]
+    }
 }
 
 #[cfg(test)]

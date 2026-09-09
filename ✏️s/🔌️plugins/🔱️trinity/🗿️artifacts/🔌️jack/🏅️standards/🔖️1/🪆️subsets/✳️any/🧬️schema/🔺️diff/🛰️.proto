@@ -22,22 +22,6 @@ message JackDiff {
   optional JackEdgesDelta edges = 8;
   // @state artifact
   optional string root_node_id = 9;
-  // @state config
-  // @state config
-  optional string jack_query = 12;
-  // @state config
-  optional map<string, string> lod_mode_by_window = 13;
-  // @state config
-  optional Camera viewport_camera = 14;
-  // @state config
-  // @state config
-  // @state config
-  // @state config
-  // @state config
-  // @state config
-  optional JackEditorSelection editor_selection = 20;
-  // @state config
-  // @state config
 }
 
 message JackNodesDelta {
@@ -82,10 +66,6 @@ message JackArtifact {
   string name = 2;
 }
 
-message JackEditorSelection {
-  int64 start = 1;
-  int64 end = 2;
-}
 
 message Camera {
   double x = 1;

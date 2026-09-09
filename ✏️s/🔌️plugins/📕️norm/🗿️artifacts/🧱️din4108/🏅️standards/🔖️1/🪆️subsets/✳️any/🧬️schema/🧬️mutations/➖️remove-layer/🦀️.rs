@@ -1,6 +1,5 @@
 //! ➖️ `remove-layer` — takes a construction layer out of the build-up by BASE-state index.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

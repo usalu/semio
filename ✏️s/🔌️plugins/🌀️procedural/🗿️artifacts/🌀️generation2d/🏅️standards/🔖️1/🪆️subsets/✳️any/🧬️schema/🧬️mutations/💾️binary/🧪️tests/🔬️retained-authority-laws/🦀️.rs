@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn close_session(session: &mut Generation2dMutationSession) {

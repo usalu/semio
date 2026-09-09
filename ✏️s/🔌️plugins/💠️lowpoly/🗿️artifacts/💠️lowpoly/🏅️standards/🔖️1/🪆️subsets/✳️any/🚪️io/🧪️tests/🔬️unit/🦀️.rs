@@ -1,5 +1,4 @@
-
-use crate::{LOWPOLY_DOCUMENT_SCHEMA, LowpolyObject, LowpolyPaintLayer, LowpolySnapshot, LowpolyTransform, mesh_child_handle};
+use crate::{mesh_child_handle, LowpolyObject, LowpolyPaintLayer, LowpolySnapshot, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
 
 /// 🧪️ A small (deliberately NOT the real `LOWPOLY_PAINT_TEXTURE_SIZE`-scoped canvas) but
 /// structurally representative fixture: two objects, one carrying a mesh handle and a paint

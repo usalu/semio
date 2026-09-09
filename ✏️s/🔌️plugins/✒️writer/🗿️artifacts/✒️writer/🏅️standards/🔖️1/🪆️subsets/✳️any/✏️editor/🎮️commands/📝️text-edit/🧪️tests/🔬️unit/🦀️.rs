@@ -1,4 +1,3 @@
-
 use crate::editor::writer::commands::{commit_rename, format_document, set_active_example, set_text};
 use crate::editor::writer::testkit::{app_with_jack, dispatch, new_app};
 use crate::editor::writer::WriterCommand;
@@ -79,7 +78,7 @@ async fn commit_rename_renames_all_spans_at_the_config_selection() {
     let occurrences = jack_variable_occurrences(CANONICAL_QUERY, "a");
     assert_eq!(occurrences.len(), 3);
     let (start, _) = occurrences[0];
-    // 🎯️ `CommitRename` reads the rename target off `WriterConfig::editor_selection` — set it via
+    // 🎯️ `CommitRename` reads the rename target from the exact main-window transient selection — set it via
     // a real selection command first (mirrors what the editor surface does before offering rename).
     dispatch(&mut app, WriterCommand::SetEditorSelection(crate::editor::writer::commands::set_editor_selection::SetEditorSelection { start, end: start })).await;
     let result = app.dispatch_typed(WriterCommand::CommitRename(commit_rename::CommitRename { text: "piece".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("commit rename");

@@ -7,6 +7,7 @@ export const TEST_BROWSER_MODULE_ROOT_ENV = "SEMIO_TEST_BROWSER_MODULE_ROOT";
 export const TEST_BROWSER_ACTIVATION_ROOT_ENV = "SEMIO_TEST_BROWSER_ACTIVATION_ROOT";
 export const TEST_BROWSER_HOST_RECEIPT_ENV = "SEMIO_TEST_BROWSER_HOST_RECEIPT";
 export const TEST_BROWSER_HOST_RECEIPT_FILE = "🔣️receipt.json";
+export const TEST_BROWSER_GIS_MATERIALIZATION_RECEIPT_FILE = "🔗️materialization.json";
 
 const DIGEST = /^[0-9a-f]{64}$/u;
 const MODULE_DIRECTORIES = ["🪞️vendor", "🧵️shard", "🪐️space", "🌍️gis"] as const;
@@ -14,6 +15,19 @@ const MODULE_FILES_MAX = 512;
 const MODULE_BYTES_MAX = 768 * 1024 * 1024;
 const HOST_COMPONENT_MAX_BYTES = 64 * 1024 * 1024;
 const HOST_DESCRIPTOR_JSON_MAX_BYTES = 4 * 1024 * 1024;
+const GIS_GENERATED_CORES_MAX = 16;
+
+export type TestBrowserGeneratedCoreV1 = Readonly<{ relativePath: string; byteLength: number; sha256: string }>;
+
+export type TestBrowserGisMaterializationReceiptV1 = Readonly<{
+  schema: "semio.os.test-browser-host-gis-materialization/v1";
+  pluginId: "gis";
+  componentSha256: string;
+  descriptorSha256: string;
+  stagedDescriptorSha256: string;
+  bridgeSha256: string;
+  generatedCores: readonly TestBrowserGeneratedCoreV1[];
+}>;
 
 export type TestBrowserHostStagingReceiptV1 = Readonly<{
   schema: "semio.os.test-browser-host-staging/v1";
@@ -22,7 +36,16 @@ export type TestBrowserHostStagingReceiptV1 = Readonly<{
   moduleSetSha256: string;
   activationReceiptSha256: string;
   host: Readonly<{ pluginId: "space"; componentByteLength: number; componentSha256: string; coreSha256: string; descriptorSha256: string }>;
-  selectedGis: Readonly<{ generationId: string; currentSha256: string }>;
+  selectedGis: Readonly<{
+    generationId: string;
+    currentSha256: string;
+    componentSha256: string;
+    descriptorSha256: string;
+    stagedDescriptorSha256: string;
+    bridgeSha256: string;
+    generatedCores: readonly TestBrowserGeneratedCoreV1[];
+    materializationReceiptSha256: string;
+  }>;
 }>;
 
 export type TestBrowserHostRootsV1 = Readonly<{
@@ -49,6 +72,34 @@ function digest(value: unknown): value is string {
   return typeof value === "string" && DIGEST.test(value);
 }
 
+function generatedCore(value: unknown): value is TestBrowserGeneratedCoreV1 {
+  if (!record(value) || !exactKeys(value, ["relativePath", "byteLength", "sha256"])) return false;
+  return typeof value.relativePath === "string" && /^[^/\\\u0000]+\.wasm$/u.test(value.relativePath) && typeof value.byteLength === "number" && Number.isSafeInteger(value.byteLength) && value.byteLength > 0 && value.byteLength <= MODULE_BYTES_MAX && digest(value.sha256);
+}
+
+/** 🧬 Parses the selected GIS transpilation receipt as one closed input/output derivation. */
+export function parseTestBrowserGisMaterializationReceiptV1(value: unknown): TestBrowserGisMaterializationReceiptV1 {
+  if (!record(value) || !exactKeys(value, ["schema", "pluginId", "componentSha256", "descriptorSha256", "stagedDescriptorSha256", "bridgeSha256", "generatedCores"])) throw new Error("Invalid test browser GIS materialization receipt");
+  const cores = Array.isArray(value.generatedCores) ? value.generatedCores : [];
+  if (
+    value.schema !== "semio.os.test-browser-host-gis-materialization/v1" ||
+    value.pluginId !== "gis" ||
+    !digest(value.componentSha256) || !digest(value.descriptorSha256) || !digest(value.stagedDescriptorSha256) || value.descriptorSha256 !== value.stagedDescriptorSha256 || !digest(value.bridgeSha256) ||
+    cores.length < 1 || cores.length > GIS_GENERATED_CORES_MAX || !cores.every(generatedCore)
+  ) throw new Error("Invalid test browser GIS materialization receipt fields");
+  const generatedCores = cores.map((core) => Object.freeze({ relativePath: core.relativePath, byteLength: core.byteLength, sha256: core.sha256 }));
+  if (new Set(generatedCores.map((core) => core.relativePath)).size !== generatedCores.length || JSON.stringify(generatedCores.map((core) => core.relativePath)) !== JSON.stringify(generatedCores.map((core) => core.relativePath).sort((left, right) => Buffer.from(left).compare(Buffer.from(right))))) throw new Error("Invalid test browser GIS generated core order");
+  return Object.freeze({
+    schema: "semio.os.test-browser-host-gis-materialization/v1",
+    pluginId: "gis",
+    componentSha256: value.componentSha256,
+    descriptorSha256: value.descriptorSha256,
+    stagedDescriptorSha256: value.stagedDescriptorSha256,
+    bridgeSha256: value.bridgeSha256,
+    generatedCores: Object.freeze(generatedCores),
+  });
+}
+
 /** 🧾️ Parses the closed browser-host receipt without admitting extra authority fields. */
 export function parseTestBrowserHostStagingReceiptV1(value: unknown): TestBrowserHostStagingReceiptV1 {
   if (!record(value) || !exactKeys(value, ["schema", "variant", "profile", "moduleSetSha256", "activationReceiptSha256", "host", "selectedGis"])) throw new Error("Invalid test browser-host receipt");
@@ -64,9 +115,12 @@ export function parseTestBrowserHostStagingReceiptV1(value: unknown): TestBrowse
     !host || !exactKeys(host, ["pluginId", "componentByteLength", "componentSha256", "coreSha256", "descriptorSha256"]) ||
     host.pluginId !== "space" || typeof host.componentByteLength !== "number" || !Number.isSafeInteger(host.componentByteLength) || host.componentByteLength < 1 || host.componentByteLength > HOST_COMPONENT_MAX_BYTES ||
     !digest(host.componentSha256) || !digest(host.coreSha256) || !digest(host.descriptorSha256) ||
-    !selectedGis || !exactKeys(selectedGis, ["generationId", "currentSha256"]) ||
-    !digest(selectedGis.generationId) || !digest(selectedGis.currentSha256)
+    !selectedGis || !exactKeys(selectedGis, ["generationId", "currentSha256", "componentSha256", "descriptorSha256", "stagedDescriptorSha256", "bridgeSha256", "generatedCores", "materializationReceiptSha256"]) ||
+    !digest(selectedGis.generationId) || !digest(selectedGis.currentSha256) || !digest(selectedGis.componentSha256) || !digest(selectedGis.descriptorSha256) || !digest(selectedGis.stagedDescriptorSha256) || selectedGis.descriptorSha256 !== selectedGis.stagedDescriptorSha256 || !digest(selectedGis.bridgeSha256) || !digest(selectedGis.materializationReceiptSha256) ||
+    !Array.isArray(selectedGis.generatedCores) || selectedGis.generatedCores.length < 1 || selectedGis.generatedCores.length > GIS_GENERATED_CORES_MAX || !selectedGis.generatedCores.every(generatedCore)
   ) throw new Error("Invalid test browser-host receipt fields");
+  const generatedCores = selectedGis.generatedCores.map((core) => Object.freeze({ relativePath: core.relativePath, byteLength: core.byteLength, sha256: core.sha256 }));
+  if (new Set(generatedCores.map((core) => core.relativePath)).size !== generatedCores.length || JSON.stringify(generatedCores.map((core) => core.relativePath)) !== JSON.stringify(generatedCores.map((core) => core.relativePath).sort((left, right) => Buffer.from(left).compare(Buffer.from(right))))) throw new Error("Invalid test browser-host GIS core order");
   return Object.freeze({
     schema: "semio.os.test-browser-host-staging/v1",
     variant: "s",
@@ -74,7 +128,7 @@ export function parseTestBrowserHostStagingReceiptV1(value: unknown): TestBrowse
     moduleSetSha256: row.moduleSetSha256,
     activationReceiptSha256: row.activationReceiptSha256,
     host: Object.freeze({ pluginId: "space", componentByteLength: host.componentByteLength, componentSha256: host.componentSha256, coreSha256: host.coreSha256, descriptorSha256: host.descriptorSha256 }),
-    selectedGis: Object.freeze({ generationId: selectedGis.generationId, currentSha256: selectedGis.currentSha256 }),
+    selectedGis: Object.freeze({ generationId: selectedGis.generationId, currentSha256: selectedGis.currentSha256, componentSha256: selectedGis.componentSha256, descriptorSha256: selectedGis.descriptorSha256, stagedDescriptorSha256: selectedGis.stagedDescriptorSha256, bridgeSha256: selectedGis.bridgeSha256, generatedCores: Object.freeze(generatedCores), materializationReceiptSha256: selectedGis.materializationReceiptSha256 }),
   });
 }
 
@@ -143,6 +197,17 @@ function moduleSubset(entries: readonly FileEntry[], directory: string): readonl
   return entries.filter((entry) => entry.relativePath.startsWith(prefix)).map((entry) => Object.freeze({ ...entry, relativePath: entry.relativePath.slice(prefix.length) }));
 }
 
+function gisMaterialization(entries: readonly FileEntry[]): Readonly<{ receipt: TestBrowserGisMaterializationReceiptV1; receiptSha256: string }> {
+  const receiptEntry = entries.find((entry) => entry.relativePath === TEST_BROWSER_GIS_MATERIALIZATION_RECEIPT_FILE);
+  if (!receiptEntry || receiptEntry.size > HOST_DESCRIPTOR_JSON_MAX_BYTES) throw new Error("Test browser GIS materialization receipt is absent or exceeds its bound");
+  const receipt = parseTestBrowserGisMaterializationReceiptV1(JSON.parse(readFileSync(receiptEntry.path, "utf8")));
+  const descriptor = entries.find((entry) => entry.relativePath === "🛂️.descriptor.semio");
+  const bridge = entries.find((entry) => entry.relativePath === "🌉️bridge.js");
+  const generatedCores = entries.filter((entry) => entry.relativePath.endsWith(".wasm")).map((entry) => Object.freeze({ relativePath: entry.relativePath, byteLength: entry.size, sha256: entry.sha256 }));
+  if (!descriptor || !bridge || receipt.descriptorSha256 !== receipt.stagedDescriptorSha256 || descriptor.sha256 !== receipt.stagedDescriptorSha256 || bridge.sha256 !== receipt.bridgeSha256 || JSON.stringify(generatedCores) !== JSON.stringify(receipt.generatedCores)) throw new Error("Test browser GIS materialization differs from its staged bytes");
+  return Object.freeze({ receipt, receiptSha256: receiptEntry.sha256 });
+}
+
 function exactModuleEntries(moduleRoot: string): readonly FileEntry[] {
   const names = readdirSync(moduleRoot, { withFileTypes: true });
   if (names.some((entry) => !entry.isDirectory() || !(MODULE_DIRECTORIES as readonly string[]).includes(entry.name)) || names.length !== MODULE_DIRECTORIES.length) throw new Error("Test browser-host module set is not exact");
@@ -166,13 +231,46 @@ function hostDescriptorComponentHashes(entries: readonly FileEntry[]): Readonly<
   return Object.freeze({ componentSha256: hashes.wasmSha256, coreSha256: hashes.coreWasmSha256 });
 }
 
+/** 🧱️ Writes the selected GIS component transpilation's exact source-to-staged byte closure. */
+export function writeTestBrowserGisMaterializationReceiptV1(
+  moduleDirectoryInput: string,
+  selected: Readonly<{ componentSha256: string; descriptorSha256: string }>,
+): TestBrowserGisMaterializationReceiptV1 {
+  if (!digest(selected.componentSha256) || !digest(selected.descriptorSha256)) throw new Error("Invalid selected GIS source identity");
+  const moduleDirectory = regularDirectory(moduleDirectoryInput, "Test browser GIS module");
+  const receiptPath = join(moduleDirectory, TEST_BROWSER_GIS_MATERIALIZATION_RECEIPT_FILE);
+  if (existsSync(receiptPath)) throw new Error("Test browser GIS materialization receipt already exists");
+  const entries = moduleEntries(moduleDirectory);
+  const descriptor = entries.find((entry) => entry.relativePath === "🛂️.descriptor.semio");
+  const bridge = entries.find((entry) => entry.relativePath === "🌉️bridge.js");
+  const generatedCores = entries.filter((entry) => entry.relativePath.endsWith(".wasm")).map((entry) => Object.freeze({ relativePath: entry.relativePath, byteLength: entry.size, sha256: entry.sha256 }));
+  if (!descriptor || !bridge || descriptor.sha256 !== selected.descriptorSha256) throw new Error("Selected GIS staged descriptor differs from its source");
+  const receipt = parseTestBrowserGisMaterializationReceiptV1({
+    schema: "semio.os.test-browser-host-gis-materialization/v1",
+    pluginId: "gis",
+    componentSha256: selected.componentSha256,
+    descriptorSha256: selected.descriptorSha256,
+    stagedDescriptorSha256: descriptor.sha256,
+    bridgeSha256: bridge.sha256,
+    generatedCores,
+  });
+  const temporary = join(moduleDirectory, `.gis-materialization-${process.pid}.stage`);
+  try {
+    writeFileSync(temporary, `${JSON.stringify(receipt)}\n`, { flag: "wx", mode: 0o600 });
+    renameSync(temporary, receiptPath);
+  } finally {
+    rmSync(temporary, { force: true });
+  }
+  return receipt;
+}
+
 /** 🔐 Closes an already atomically materialized Space/GIS module set with an exact activation and receipt. */
 export function closeTestBrowserHostStagingV1(
   artifactRootInput: string,
-  selectedGis: Readonly<{ generationId: string; currentSha256: string }>,
+  selectedGis: Readonly<{ generationId: string; currentSha256: string; componentSha256: string; descriptorSha256: string }>,
   hostComponent: Readonly<{ byteLength: number; sha256: string }>,
 ): TestBrowserHostRootsV1 {
-  if (!digest(selectedGis.generationId) || !digest(selectedGis.currentSha256)) throw new Error("Invalid selected GIS current identity");
+  if (!digest(selectedGis.generationId) || !digest(selectedGis.currentSha256) || !digest(selectedGis.componentSha256) || !digest(selectedGis.descriptorSha256)) throw new Error("Invalid selected GIS current identity");
   if (!Number.isSafeInteger(hostComponent.byteLength) || hostComponent.byteLength < 1 || hostComponent.byteLength > HOST_COMPONENT_MAX_BYTES || !digest(hostComponent.sha256)) throw new Error("Invalid test browser host component identity");
   if (!isAbsolute(artifactRootInput)) throw new Error("Test browser-host owner must be absolute");
   const artifactRoot = regularDirectory(artifactRootInput, "Test artifact root");
@@ -189,6 +287,8 @@ export function closeTestBrowserHostStagingV1(
   const descriptorHashes = hostDescriptorComponentHashes(hostEntries);
   if (!descriptor) throw new Error("Test browser host descriptor is absent");
   if (descriptorHashes.componentSha256 !== hostComponent.sha256 || descriptorHashes.coreSha256 !== component.sha256) throw new Error("Test browser host descriptor component identity differs from its materialized owner");
+  const materializedGis = gisMaterialization(moduleSubset(entries, "🌍️gis"));
+  if (materializedGis.receipt.componentSha256 !== selectedGis.componentSha256 || materializedGis.receipt.descriptorSha256 !== selectedGis.descriptorSha256) throw new Error("Test browser GIS materialization differs from its selected current");
   const supportEntries = [...moduleSubset(entries, "🪞️vendor"), ...moduleSubset(entries, "🧵️shard")];
   const supportSha256 = entriesDigest(supportEntries, "support/");
   const plugins = (["gis", "space"] as const).map((pluginId) => {
@@ -207,7 +307,16 @@ export function closeTestBrowserHostStagingV1(
     moduleSetSha256: entriesDigest(entries),
     activationReceiptSha256,
     host: { pluginId: "space", componentByteLength: hostComponent.byteLength, componentSha256: hostComponent.sha256, coreSha256: component.sha256, descriptorSha256: descriptor.sha256 },
-    selectedGis,
+    selectedGis: {
+      generationId: selectedGis.generationId,
+      currentSha256: selectedGis.currentSha256,
+      componentSha256: materializedGis.receipt.componentSha256,
+      descriptorSha256: materializedGis.receipt.descriptorSha256,
+      stagedDescriptorSha256: materializedGis.receipt.stagedDescriptorSha256,
+      bridgeSha256: materializedGis.receipt.bridgeSha256,
+      generatedCores: materializedGis.receipt.generatedCores,
+      materializationReceiptSha256: materializedGis.receiptSha256,
+    },
   });
   const receiptPath = join(browserHostRoot, TEST_BROWSER_HOST_RECEIPT_FILE);
   const temporary = join(browserHostRoot, `.browser-host-receipt-${process.pid}.stage`);
@@ -248,6 +357,10 @@ export function resolveTestBrowserHostRootsV1(environment: Environment): TestBro
   const hostEntries = moduleSubset(entries, "🪐️space");
   const descriptorHashes = hostDescriptorComponentHashes(hostEntries);
   if (descriptorHashes.componentSha256 !== receipt.host.componentSha256 || descriptorHashes.coreSha256 !== receipt.host.coreSha256 || onlyCoreComponent(hostEntries).sha256 !== receipt.host.coreSha256 || hostEntries.find((entry) => entry.relativePath === "🛂️.descriptor.semio")?.sha256 !== receipt.host.descriptorSha256) throw new Error("Test browser host identity changed after closure");
+  const materializedGis = gisMaterialization(moduleSubset(entries, "🌍️gis"));
+  const selectedMaterialization = { componentSha256: receipt.selectedGis.componentSha256, descriptorSha256: receipt.selectedGis.descriptorSha256, stagedDescriptorSha256: receipt.selectedGis.stagedDescriptorSha256, bridgeSha256: receipt.selectedGis.bridgeSha256, generatedCores: receipt.selectedGis.generatedCores };
+  const actualMaterialization = { componentSha256: materializedGis.receipt.componentSha256, descriptorSha256: materializedGis.receipt.descriptorSha256, stagedDescriptorSha256: materializedGis.receipt.stagedDescriptorSha256, bridgeSha256: materializedGis.receipt.bridgeSha256, generatedCores: materializedGis.receipt.generatedCores };
+  if (materializedGis.receiptSha256 !== receipt.selectedGis.materializationReceiptSha256 || JSON.stringify(actualMaterialization) !== JSON.stringify(selectedMaterialization)) throw new Error("Test browser GIS identity changed after closure");
   return Object.freeze({ artifactRoot, browserHostRoot, moduleRoot, activationRoot, receiptPath, receipt });
 }
 

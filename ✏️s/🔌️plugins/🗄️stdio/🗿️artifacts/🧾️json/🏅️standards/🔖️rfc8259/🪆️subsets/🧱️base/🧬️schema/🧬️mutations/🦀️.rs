@@ -2,10 +2,10 @@
 use crate::schema::diff::JsonDiff;
 use crate::JsonSnapshot;
 
-pub use super::set_member::{SetMemberMutation, SetMemberPayload};
-pub use super::remove_member::{RemoveMemberMutation, RemoveMemberPayload};
 pub use super::insert_array_element::{InsertArrayElementMutation, InsertArrayElementPayload};
 pub use super::remove_array_element::{RemoveArrayElementMutation, RemoveArrayElementPayload};
+pub use super::remove_member::{RemoveMemberMutation, RemoveMemberPayload};
+pub use super::set_member::{SetMemberMutation, SetMemberPayload};
 pub use super::set_scalar::{SetScalarMutation, SetScalarPayload};
 pub use crate::schema::mutation_support::{JsonPath, JsonPathSegment};
 
@@ -22,7 +22,9 @@ pub enum JsonMutation {
 
 pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) -> protocol::MutationOutcome<JsonDiff> {
     let outcome = <JsonMutation as protocol::Mutation<JsonSnapshot>>::diff(mutation, snapshot);
-    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), snapshot) { *snapshot = next; }
+    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        *snapshot = next;
+    }
     outcome
 }
 

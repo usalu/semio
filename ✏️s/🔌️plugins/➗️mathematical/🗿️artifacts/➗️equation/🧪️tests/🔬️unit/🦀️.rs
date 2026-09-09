@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn scene(directed: bool) -> EquationWorkingScene {

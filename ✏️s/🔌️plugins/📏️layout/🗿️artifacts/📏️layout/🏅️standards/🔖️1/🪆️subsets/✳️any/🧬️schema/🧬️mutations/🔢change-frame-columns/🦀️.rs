@@ -1,9 +1,8 @@
 //! 🔢 `change-frame-columns` — sets a `Frame::Text`'s `columns` count. A no-op on non-text frames.
 
-
-use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -34,7 +33,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameColumns {
 }
 //#endregion 🔢ChangeFrameColumns
 
-
 //#region 🔢ChangeFrameColumns
 pub fn diff_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
@@ -60,7 +58,6 @@ pub fn diff_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutSnap
     })
 }
 //#endregion 🔢ChangeFrameColumns
-
 
 //#region 🔢ChangeFrameColumns
 pub fn inverse_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

@@ -18,15 +18,15 @@ use crate::standards::v1::subsets::brep::schema::diff::primitives::{attach_face,
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::{CoedgeId, EdgeId, FaceId, LoopId, SolidId, VertexId};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
-use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2;
-use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::standards::v1::subsets::brep::schema::snapshot::surface::{IsoDirection, Surface};
 use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 /// ↔️ Default working tolerance for offset topology surgery (edge/vertex recomputation and NURBS
@@ -642,7 +642,15 @@ fn face_surface(body: &Body, f: FaceId, new_surface_map: &HashMap<FaceId, Surfac
 /// into new [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Face`]s (used by [`shell_solid_with_open_faces`] to
 /// skip the removed open faces while still using their offset surface to trim the kept faces).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn rebuild_topology<FV, FE, FF>(body: &mut Body, solid: SolidId, new_surface_map: &HashMap<FaceId, Surface>, materialize: &HashSet<FaceId>, (flip_new, vertex_target, edge_target): (FF, FV, FE), tol: f64, rec: &mut OpRecorder) -> Result<RebuiltTopology, KernelError>
+fn rebuild_topology<FV, FE, FF>(
+    body: &mut Body,
+    solid: SolidId,
+    new_surface_map: &HashMap<FaceId, Surface>,
+    materialize: &HashSet<FaceId>,
+    (flip_new, vertex_target, edge_target): (FF, FV, FE),
+    tol: f64,
+    rec: &mut OpRecorder,
+) -> Result<RebuiltTopology, KernelError>
 where
     FV: Fn(&Body, VertexId, &[(FaceId, Vec3)]) -> Pnt3,
     FE: Fn(&Body, EdgeId, Vec3) -> Pnt3,
@@ -1183,10 +1191,8 @@ fn draft_one_surface(surface: &Surface, neutral_plane: &Surface, pull: Vec3, ang
         }
         _ => {
             let branches = intersect_surface_surface(surface, neutral_plane, tol)?;
-            let (origin, dir) = branches
-                .into_iter()
-                .find_map(|c| if let Curve3::Line { origin, dir } = c.curve3 { Some((origin, dir)) } else { None })
-                .ok_or_else(|| KernelError::Operation("draft: face does not meet the neutral plane in a line".into()))?;
+            let (origin, dir) =
+                branches.into_iter().find_map(|c| if let Curve3::Line { origin, dir } = c.curve3 { Some((origin, dir)) } else { None }).ok_or_else(|| KernelError::Operation("draft: face does not meet the neutral plane in a line".into()))?;
             let axis = dir.normalized().ok_or_else(|| KernelError::Operation("degenerate draft rotation axis".into()))?;
             let map = Affine3::rotation_about(origin, axis, angle);
             Ok(surface.transformed(&map))

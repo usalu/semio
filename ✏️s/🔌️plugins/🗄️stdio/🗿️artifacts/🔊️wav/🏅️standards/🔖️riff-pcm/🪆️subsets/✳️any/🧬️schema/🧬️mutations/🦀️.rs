@@ -8,14 +8,14 @@ use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "🎚️set-fmt/🦀️.rs"]
-pub mod set_fmt;
 #[path = "🔊️set-data/🦀️.rs"]
 pub mod set_data;
+#[path = "🎚️set-fmt/🦀️.rs"]
+pub mod set_fmt;
 #[path = "📎️set-other-chunks/🦀️.rs"]
 pub mod set_other_chunks;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires

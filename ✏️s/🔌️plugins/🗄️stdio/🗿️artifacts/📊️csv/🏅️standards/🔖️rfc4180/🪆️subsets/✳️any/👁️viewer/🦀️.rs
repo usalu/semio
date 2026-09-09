@@ -4,9 +4,9 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact mutation. Must
 //! not import anything from the sibling mutation-capable surface (a repo policy forbids it outright).
 
-use crate::{CsvMutation, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 use crate::viewer::csv::modes::view;
 use crate::viewer::csv::modes::view::windows::main;
+use crate::{CsvMutation, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 
 //#region 🔖️Dialect

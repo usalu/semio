@@ -213,7 +213,7 @@ fn block2d_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Block2dMutation, Block2dConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 struct Block2dRetainedCommandJobFactory {
@@ -530,7 +530,7 @@ impl ArtifactEditor for Block2dPlayApp {
         InteractionTopology { domains }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = block2d_labels(view_state);
         let node = match body_key {
             board::BLOCK2D_BODY_BOARD => board::render(doc.snapshot, labels)?,
@@ -616,7 +616,7 @@ pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("removeHandle", LocalizedLabel::native("Remove Handle", "Griff entfernen"))
             .mutation("addCompatibilityRule", LocalizedLabel::native("Add Compatibility Rule", "Kompatibilitätsregel hinzufügen"))
             .mutation("removeCompatibilityRule", LocalizedLabel::native("Remove Compatibility Rule", "Kompatibilitätsregel entfernen"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .action_interactive_job("patchNodeKind", InteractiveJobClassification::Migrated)
             .action_interactive_job("addHandleKind", InteractiveJobClassification::Migrated)

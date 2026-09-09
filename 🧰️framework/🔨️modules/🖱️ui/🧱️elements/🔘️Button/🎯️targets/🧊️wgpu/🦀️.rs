@@ -14,13 +14,16 @@ use crate::wgpu::input::{HitKind, HitTarget};
 use crate::wgpu::widgets::{draw_text, WidgetContext};
 use crate::wgpu::IconName;
 
-pub(crate) fn render_button<E: Clone>(id: Option<&String>, icon_id: Option<IconName>, label: &str, event: Option<E>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_button<'a, E: Clone>(id: Option<&String>, icon_id: Option<IconName>, label: &'a str, event: Option<E>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let control_id = id.cloned().or_else(|| Some(label.to_string()));
     let hovered = ctx.input.hovered_id == control_id;
     let bg = item_bg(ctx.theme, false, hovered);
     push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, bg);
     let mut text_x = bounds.x + ctx.theme.padding_standard;
-    let icon_key = icon_id.filter(|id| *id != IconName::CircleDot).map(IconName::as_str).unwrap_or(label);
+    let icon_key: &'a str = match icon_id.filter(|id| *id != IconName::CircleDot) {
+        Some(icon) => icon.as_str(),
+        None => label,
+    };
     if let Some(icons) = ctx.icons {
         if icons.icon_uv(icon_key).is_some() {
             push_icon(ctx.draw, icons, icon_key, text_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(ctx.theme, false, hovered));

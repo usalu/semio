@@ -1,12 +1,15 @@
 //! 🧬️ Drawing artifact schema — every field of the artifact with its state class.
 
-use crate::{default_drawing_trace_params, default_drawing_transform, ArtifactDsl, DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageBody, DrawingLayerBase, DrawingLine, DrawingMutation, DrawingPathBody, DrawingPolygon, DrawingRect, DrawingShapeBody, DrawingSnapshot, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
+use crate::{
+    default_drawing_trace_params, default_drawing_transform, ArtifactDsl, DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageBody, DrawingLayerBase, DrawingLine, DrawingMutation, DrawingPathBody, DrawingPolygon,
+    DrawingRect, DrawingShapeBody, DrawingSnapshot, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA,
+};
 use framework_schema::ArtifactSchema;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 //#region 🔖️Artifact
-/// 🧬️ Full drawing artifact state across the artifact, presence and config lanes.
+/// 🧬️ drawing document artifact state.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -25,38 +28,13 @@ pub struct DrawingArtifact {
     pub assets: BTreeMap<String, DrawingImageAsset>,
     #[state(artifact)]
     pub artboard: Option<DrawingArtboard>,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
-    #[state(config)]
-    pub engagement_input: String,
-    #[state(config)]
-    pub camera_x: f64,
-    #[state(config)]
-    pub camera_y: f64,
-    #[state(config)]
-    pub camera_zoom: f64,
-    #[state(artifact)]
-    pub hovered_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for DrawingArtifact {
     fn default() -> Self {
-        Self {
-            schema: DRAWING_DOCUMENT_SCHEMA.into(),
-            id: String::new(),
-            title: None,
-            layers: Vec::new(),
-            assets: BTreeMap::new(),
-            artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }),
-            selected_ids: Vec::new(),
-            engagement_input: String::new(),
-            camera_x: 512.0,
-            camera_y: 512.0,
-            camera_zoom: 0.75,
-            hovered_id: None,
-        }
+        Self { schema: DRAWING_DOCUMENT_SCHEMA.into(), id: String::new(), title: None, layers: Vec::new(), assets: BTreeMap::new(), artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }) }
     }
 }
 
@@ -66,7 +44,7 @@ impl DrawingArtifact {
         DrawingSnapshot { schema: self.schema.clone(), id: self.id.clone(), title: self.title.clone(), layers: self.layers.clone(), assets: self.assets.clone(), artboard: self.artboard.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: DrawingSnapshot) -> Self {
         Self { schema: snapshot.schema, id: snapshot.id, title: snapshot.title, layers: snapshot.layers, assets: snapshot.assets, artboard: snapshot.artboard, ..Self::default() }
     }
@@ -88,13 +66,7 @@ impl DrawingArtifact {
 pub fn drawing_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.draw.drawing",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -242,21 +214,48 @@ pub fn default_layer_base(name: &str) -> DrawingLayerBase {
 
 pub fn create_drawing_path_layer(name: &str, segments: Vec<PathSegment>) -> DrawingLayerNode {
     DrawingLayerNode::Path(DrawingPathBody {
-        base: DrawingLayerBase { id: create_drawing_id("path", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() },
+        base: DrawingLayerBase {
+            id: create_drawing_id("path", name.as_bytes()),
+            name: name.into(),
+            visible: true,
+            locked: false,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+            transform: default_drawing_transform(),
+            attributes: DrawingAttributes::default(),
+        },
         segments,
     })
 }
 
 pub fn create_drawing_group_layer(name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Group(DrawingGroupBody {
-        base: DrawingLayerBase { id: create_drawing_id("group", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() },
+        base: DrawingLayerBase {
+            id: create_drawing_id("group", name.as_bytes()),
+            name: name.into(),
+            visible: true,
+            locked: false,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+            transform: default_drawing_transform(),
+            attributes: DrawingAttributes::default(),
+        },
         children: Vec::new(),
     })
 }
 
 pub fn create_drawing_boolean_layer(name: &str, operation: &str, children: Vec<String>) -> DrawingLayerNode {
     DrawingLayerNode::Boolean(DrawingBooleanBody {
-        base: DrawingLayerBase { id: create_drawing_id("boolean", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() },
+        base: DrawingLayerBase {
+            id: create_drawing_id("boolean", name.as_bytes()),
+            name: name.into(),
+            visible: true,
+            locked: false,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+            transform: default_drawing_transform(),
+            attributes: DrawingAttributes::default(),
+        },
         operation: operation.into(),
         children,
     })
@@ -264,7 +263,16 @@ pub fn create_drawing_boolean_layer(name: &str, operation: &str, children: Vec<S
 
 pub fn create_drawing_trace_layer(name: &str, source_key: &str) -> DrawingLayerNode {
     DrawingLayerNode::Trace(DrawingTraceBody {
-        base: DrawingLayerBase { id: create_drawing_id("trace", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() },
+        base: DrawingLayerBase {
+            id: create_drawing_id("trace", name.as_bytes()),
+            name: name.into(),
+            visible: true,
+            locked: false,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+            transform: default_drawing_transform(),
+            attributes: DrawingAttributes::default(),
+        },
         source_key: source_key.into(),
         params: default_drawing_trace_params(),
     })
@@ -272,7 +280,16 @@ pub fn create_drawing_trace_layer(name: &str, source_key: &str) -> DrawingLayerN
 
 pub fn create_drawing_shape_layer_rect(name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Shape(DrawingShapeBody {
-        base: DrawingLayerBase { id: create_drawing_id("shape", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() },
+        base: DrawingLayerBase {
+            id: create_drawing_id("shape", name.as_bytes()),
+            name: name.into(),
+            visible: true,
+            locked: false,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+            transform: default_drawing_transform(),
+            attributes: DrawingAttributes::default(),
+        },
         shape_kind: "rect".into(),
         rect: Some(DrawingRect { x: 0.0, y: 0.0, width: 128.0, height: 96.0 }),
         ellipse: None,
@@ -303,7 +320,16 @@ pub fn create_drawing_text_layer(name: &str) -> DrawingLayerNode {
 
 pub fn create_drawing_image_layer(name: &str, image_key: &str) -> DrawingLayerNode {
     DrawingLayerNode::Image(DrawingImageBody {
-        base: DrawingLayerBase { id: create_drawing_id("image", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() },
+        base: DrawingLayerBase {
+            id: create_drawing_id("image", name.as_bytes()),
+            name: name.into(),
+            visible: true,
+            locked: false,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+            transform: default_drawing_transform(),
+            attributes: DrawingAttributes::default(),
+        },
         image_key: image_key.into(),
         width: 256.0,
         height: 256.0,
@@ -816,9 +842,15 @@ pub fn create_layer_by_kind(kind: &str) -> DrawingLayerNode {
     if let Some(shape_kind) = kind.strip_prefix("shape:") {
         return match shape_kind {
             "rect" => create_drawing_shape_layer_rect("Rectangle"),
-            "ellipse" => {
-                DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base("Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawingEllipse { cx: 0.0, cy: 0.0, rx: 64.0, ry: 48.0 }), circle: None, line: None, polygon: None })
-            }
+            "ellipse" => DrawingLayerNode::Shape(DrawingShapeBody {
+                base: default_layer_base("Ellipse"),
+                shape_kind: "ellipse".into(),
+                rect: None,
+                ellipse: Some(DrawingEllipse { cx: 0.0, cy: 0.0, rx: 64.0, ry: 48.0 }),
+                circle: None,
+                line: None,
+                polygon: None,
+            }),
             "line" => DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base("Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawingLine { x1: 0.0, y1: 0.0, x2: 128.0, y2: 0.0 }), polygon: None }),
             "polygon" => DrawingLayerNode::Shape(DrawingShapeBody {
                 base: default_layer_base("Polygon"),
@@ -1236,8 +1268,8 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
+pub use crate::DrawingArtboard;
+pub use crate::DrawingImageAsset;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::DrawingLayerNode;
-pub use crate::DrawingImageAsset;
-pub use crate::DrawingArtboard;
 //#endregion 🔁️Re-exports

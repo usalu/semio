@@ -8,14 +8,13 @@
   "partNumberInputs": {
     "height": {
       "kind": "decimal",
-      "value": 750.0
+      "value": 750
     },
     "length": {
       "kind": "decimal",
-      "value": 1200.0
+      "value": 1200
     }
   },
   "scriptLimits": null,
-  "exchangeProcess": null,
-  "selectedCheckIndex": null
+  "exchangeProcess": null
 }

@@ -1,9 +1,8 @@
 //! 🔧 `change-fan-t-run-h` payload — changes the Din16798 document's `fan_t_run_h` (fan running time).
 
-
-use crate::Din16798Snapshot;
 use crate::diff::Din16798Diff;
 use crate::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
 //#region 🔖️ChangeFanTRunH
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

@@ -13,12 +13,7 @@
     "supports",
     "loadCases",
     "combinations",
-    "analysis",
-    "resultMode",
-    "resultModeIndex",
-    "camera",
-    "solverResultsJson",
-    "meshPreviewJson"
+    "analysis"
   ],
   "properties": {
     "nodes": {
@@ -79,34 +74,6 @@
     },
     "analysis": {
       "$ref": "#/$defs/FemAnalysisSettings",
-      "x-semio-state": "artifact"
-    },
-    "resultSourceId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "resultMode": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "resultModeIndex": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "presence"
-    },
-    "camera": {
-      "$ref": "#/$defs/FemCamera",
-      "x-semio-state": "config"
-    },
-    "solverResultsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "artifact"
-    },
-    "meshPreviewJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
       "x-semio-state": "artifact"
     }
   },

@@ -8,10 +8,7 @@ pub mod derived_composition {
     use crate::standards::v1::subsets::model::schema::SemioModelAnalyzer;
     #[cfg(feature = "conversion-model")]
     use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
-    use semio_framework_plugin::{
-        register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload,
-        StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-    };
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::collections::HashSet;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("model") };
@@ -124,7 +121,8 @@ pub mod derived_composition {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::model::schema::semio_model_artifact_schema_descriptor());
         store::register_document_codec(store::ArtifactCodec::of::<SemioModelSnapshot, crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation>(
             crate::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,
-        )).expect("static Stdio registration must be available and conflict-free");
+        ))
+        .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         #[cfg(feature = "conversion-model")]
         register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");

@@ -30,7 +30,7 @@
     "parameterBindings": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/$defs/PropertyValue"
+        "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/DslValue"
       },
       "x-semio-state": "artifact"
     },
@@ -40,12 +40,6 @@
         "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/LayoutPoint"
       },
       "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "PropertyValue": {
-      "title": "PropertyValue",
-      "description": "JSON-equivalent property value (null, bool, number, string, array, or object)."
     }
   }
 }

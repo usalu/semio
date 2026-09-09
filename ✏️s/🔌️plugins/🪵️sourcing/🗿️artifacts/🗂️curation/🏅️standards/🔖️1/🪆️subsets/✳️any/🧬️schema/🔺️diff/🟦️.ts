@@ -101,11 +101,6 @@ export interface CurationDiff {
   stockExtra?: CurationStockExtraDelta | null;
   /** @state artifact */
   curated?: CurationCuratedDelta | null;
-  /** @state config */
-  filters?: Filters | null;
-  /** @state config */
-  /** @state config */
-  contributionsJson?: string | null;
 }
 
 //#region 🚪️Parsers

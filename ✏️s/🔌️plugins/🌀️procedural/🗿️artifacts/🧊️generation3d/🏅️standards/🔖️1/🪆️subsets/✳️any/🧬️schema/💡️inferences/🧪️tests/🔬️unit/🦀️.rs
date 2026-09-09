@@ -1,4 +1,3 @@
-
 use super::*;
 use protocol::Inference;
 use semio_framework_artifact_flow_flow::{FlowFixture, SynapseSpec, Widget};

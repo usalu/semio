@@ -22,7 +22,7 @@ fn mutations() -> Vec<FlowMutation> {
         FlowMutation::AddWidget(AddWidget { index: 0, widget: widget.clone() }),
         FlowMutation::RemoveWidget(RemoveWidget { id: widget_id.clone() }),
         FlowMutation::MoveWidget(MoveWidget { id: widget_id.clone(), to_index: 0 }),
-        FlowMutation::ChangeWidget(ChangeWidget { id: widget_id.clone(), widget }),
+        FlowMutation::ChangeWidget(ChangeWidget { id: widget_id, widget }),
         FlowMutation::AddSynapse(AddSynapse { index: 0, synapse: synapse.clone() }),
         FlowMutation::RemoveSynapse(RemoveSynapse { id: synapse_id.clone() }),
         FlowMutation::MoveSynapse(MoveSynapse { id: synapse_id.clone(), to_index: 0 }),

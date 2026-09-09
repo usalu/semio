@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::forms::FORMS_PLAY_BODY_CATALOGUE as BODY_CATALOGUE;
 use crate::editor::forms::testkit::{forms_app, render as render_body};
+use crate::editor::forms::FORMS_PLAY_BODY_CATALOGUE as BODY_CATALOGUE;
 
 #[semio_framework_async_macros::async_test]
 async fn catalogue_lists_question_kinds() {

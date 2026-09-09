@@ -89,7 +89,7 @@ impl SceneTarget {
 pub fn supported_mip_levels(width: u32, height: u32) -> u32 {
     let largest = width.max(height).max(1);
     let available = 32 - largest.leading_zeros();
-    available.min(SCENE_MIP_LEVELS).max(1)
+    available.clamp(1, SCENE_MIP_LEVELS)
 }
 
 fn allocate(device: &Device, format: MTLPixelFormat, width: u32, height: u32, label: &str) -> Owned<MetalTexture> {

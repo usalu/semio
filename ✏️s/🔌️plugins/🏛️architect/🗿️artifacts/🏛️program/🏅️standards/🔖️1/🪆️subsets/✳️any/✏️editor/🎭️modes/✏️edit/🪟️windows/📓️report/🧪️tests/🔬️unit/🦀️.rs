@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::registers::ReportKind;
 use crate::sample_plugin;

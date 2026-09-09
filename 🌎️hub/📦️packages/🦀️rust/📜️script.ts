@@ -25,6 +25,9 @@ import { decodeBackboneWorkerResponse, decodePackValue, encodeBackboneWorkerRequ
 import type { PackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import {
   DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
+  GIS_MAP_INFERENCE_REQUEST_MAX_BYTES,
+  GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
+  GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR,
   DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,
   DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1,
   type DocumentExecutionProtocolV1,
@@ -460,6 +463,21 @@ function localRelaySpaceArtifactCreationPath(method: string, path: string): bool
   return (method === "POST" && requestId === undefined && !cancel) || (method === "GET" && !cancel) || (method === "POST" && requestId !== undefined && cancel);
 }
 
+function localRelayInferencePath(method: string, path: string): boolean {
+  const matched = /^\/spaces\/([^/]+)\/documents\/([^/]+)\/inference\/gis-map\/(.+)$/u.exec(path);
+  if (!matched) return false;
+  try {
+    for (const encoded of [matched[1]!, matched[2]!]) {
+      const id = decodeURIComponent(encoded);
+      if (!/^[A-Za-z0-9._:-]{1,96}$/u.test(id) || id === "." || id === ".." || encodeURIComponent(id) !== encoded) return false;
+    }
+  } catch { return false; }
+  const suffix = matched[3]!;
+  if (method === "POST") return /^(?:jobs|jobs\/reconcile|jobs\/[0-9a-f]{32}\/(?:cancel|approval)|approval-undos)$/u.test(suffix);
+  const events = /^jobs\/[0-9a-f]{32}\/events\?after=(0|[1-9][0-9]*)$/u.exec(suffix);
+  return method === "GET" && events !== null && Number(events[1]) <= GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR;
+}
+
 function localRelayUpstreamPath(method: string, url: URL): string | undefined {
   if (!url.pathname.startsWith("/_semio/hub/")) return undefined;
   const upstream = url.pathname.slice("/_semio/hub".length);
@@ -473,6 +491,7 @@ function localRelayUpstreamPath(method: string, url: URL): string | undefined {
   if (method === "POST" && /^\/spaces\/[^/]+\/documents\/[^/]+\/socket-grants$/u.test(upstream) && noQuery) return upstream;
   if (method === "POST" && localRelayExecutionTargetAsset(upstream) && noQuery) return upstream;
   if (noQuery && localRelaySpaceArtifactCreationPath(method, upstream)) return upstream;
+  if (localRelayInferencePath(method, upstream + url.search)) return upstream + url.search;
   return undefined;
 }
 
@@ -599,9 +618,10 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
       if (!upstreamPath || inFlight >= LOCAL_RELAY_MAX_IN_FLIGHT) return new Response("unavailable", { status: upstreamPath ? 503 : 404 });
       const executionTarget = localRelayExecutionTargetAsset(upstreamPath);
       const spaceArtifactCreation = localRelaySpaceArtifactCreationPath(request.method, upstreamPath);
+      const inference = localRelayInferencePath(request.method, upstreamPath);
       const spaceArtifactCreationCatalog = request.method === "GET" && /^\/spaces\/[^/]+\/artifact-creations$/u.test(upstreamPath);
       if (executionTarget && executionTargetsInFlight >= EXECUTION_TARGET_RELAY_MAX_IN_FLIGHT) return new Response("unavailable", { status: 503 });
-      const requestMaxBytes = executionTarget ? EXECUTION_TARGET_RELAY_REQUEST_MAX_BYTES : spaceArtifactCreation ? SPACE_ARTIFACT_CREATION_MAX_BYTES : LOCAL_RELAY_MAX_BODY_BYTES;
+      const requestMaxBytes = executionTarget ? EXECUTION_TARGET_RELAY_REQUEST_MAX_BYTES : spaceArtifactCreation ? SPACE_ARTIFACT_CREATION_MAX_BYTES : inference ? GIS_MAP_INFERENCE_REQUEST_MAX_BYTES : LOCAL_RELAY_MAX_BODY_BYTES;
       const responseMaxBytes =
         executionTarget === "browser-actor"
           ? DOCUMENT_BROWSER_ACTOR_MAX_BYTES
@@ -615,7 +635,9 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
                   ? SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES
                   : spaceArtifactCreation
                   ? SPACE_ARTIFACT_CREATION_MAX_BYTES
-                  : LOCAL_RELAY_MAX_BODY_BYTES;
+                  : inference
+                    ? GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES
+                    : LOCAL_RELAY_MAX_BODY_BYTES;
       const contentLength = Number(request.headers.get("content-length") ?? "0");
       if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > requestMaxBytes) return new Response("payload too large", { status: 413 });
       const currentProof = request.headers.get("x-semio-browser-broker");
@@ -830,6 +852,7 @@ type LocalHubRun = {
   readonly inferenceCheckpointPipe?: Duplex;
   readonly inferenceCheckpointReader?: LocalFrameReader;
   inferenceCheckpointEnteredJobId?: string;
+  inferenceCheckpointProgress?: Readonly<{ progressCursor: number; completed: number; total: number }>;
   inferenceCheckpointReleased?: boolean;
   finishPromise?: Promise<void>;
 };
@@ -4106,6 +4129,107 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
   }
 }
 
+type InferenceRelayFixture = {
+  readonly schema: string;
+  readonly limits: { readonly requestBytes: number; readonly responseBytes: number; readonly progressCursor: number };
+  readonly routes: readonly { readonly id: string; readonly method: string; readonly path: string; readonly admitted: boolean }[];
+  readonly responses: readonly { readonly id: string; readonly bytes: number; readonly streamed: boolean; readonly status: number }[];
+};
+
+async function proveInferenceRelay(repoRoot: string): Promise<number> {
+  const fixture = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧪️fixtures/💡️inference-relay-v1/🔣️.json"), "utf8")) as InferenceRelayFixture;
+  const schema = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/💡️inference/🌐️relay/🔣️.json"), "utf8"));
+  const oracle = new Ajv({ strict: true }).compile(schema);
+  if (fixture.schema !== "semio.hub.inference-relay-fixture/v1" || fixture.routes.length < 29 || new Set(fixture.routes.map((row) => row.id)).size !== fixture.routes.length) throw new Error("inference relay fixture inventory drift");
+  if (fixture.limits.requestBytes !== GIS_MAP_INFERENCE_REQUEST_MAX_BYTES || fixture.limits.responseBytes !== GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES || fixture.limits.progressCursor !== GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR) throw new Error("inference relay bound drift");
+  for (const row of fixture.routes) if (oracle({ method: row.method, path: row.path }) !== row.admitted) throw new Error(`inference relay independent schema mismatch: ${row.id}`);
+  const uiOrigin = "http://127.0.0.1:6066";
+  let calls = 0;
+  let responseBytes = 2;
+  let responseStreamed = false;
+  let expectedPath = "";
+  let expectedMethod = "";
+  let expectedBody = "";
+  const upstream = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request): Promise<Response> {
+      calls += 1;
+      const url = new URL(request.url);
+      if (request.headers.get("authorization") !== `Bearer ${browserBrokerOracleEnvelope().capability}` || request.headers.has("x-semio-browser-broker")) throw new Error("inference relay upstream credential boundary failed");
+      if (url.pathname + url.search !== expectedPath || request.method !== expectedMethod || await request.text() !== expectedBody) throw new Error("inference relay changed upstream intent");
+      const bytes = new Uint8Array(responseBytes).fill(73);
+      const body = responseStreamed ? new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(bytes.subarray(0, 8192)); controller.enqueue(bytes.subarray(8192)); controller.close(); } }) : bytes;
+      return new Response(body, { headers: { "content-type": "application/json" } });
+    },
+  });
+  let proof = randomBytes(32);
+  const relay = startLocalBrowserRelay(`http://127.0.0.1:${upstream.port}`, uiOrigin, browserBrokerOracleEnvelope(), Buffer.from(proof));
+  const request = async (path: string, method: string, body = "{}", streamed = false): Promise<Response> => {
+    const current = proof;
+    const next = randomBytes(32);
+    expectedPath = path.slice("/_semio/hub".length);
+    expectedMethod = method;
+    expectedBody = method === "GET" ? "" : body;
+    const requestBody = streamed ? new ReadableStream<Uint8Array>({ start(controller) { const bytes = new TextEncoder().encode(body); controller.enqueue(bytes.subarray(0, 512)); controller.enqueue(bytes.subarray(512)); controller.close(); } }) : body;
+    const response = await fetch(`${relay.url}${path}`, {
+      method,
+      body: method === "GET" ? undefined : requestBody,
+      redirect: "error",
+      headers: {
+        host: new URL(uiOrigin).host,
+        origin: uiOrigin,
+        referer: `${uiOrigin}/`,
+        "sec-fetch-site": "same-origin",
+        "x-semio-local-relay": relay.secret.toString("hex"),
+        "x-semio-browser-broker": current.toString("hex"),
+        "x-semio-browser-broker-next": browserBrokerProofDigest(next).toString("hex"),
+        "content-type": "application/json",
+      },
+    });
+    if (response.headers.get("x-semio-browser-broker-advanced") === "1") { current.fill(0); proof = next; } else next.fill(0);
+    return response;
+  };
+  try {
+    for (const row of fixture.routes) {
+      const before = calls;
+      const response = await request(row.path, row.method);
+      if (response.status !== (row.admitted ? 200 : 404) || calls !== before + Number(row.admitted) || response.headers.has("x-semio-browser-broker-advanced") !== row.admitted) throw new Error(`inference live relay route mismatch: ${row.id}: status=${response.status} calls=${calls - before}`);
+      await response.arrayBuffer();
+    }
+    const path = fixture.routes[0]!.path;
+    const before = calls;
+    const oversized = await request(path, "POST", "x".repeat(fixture.limits.requestBytes + 1));
+    if (oversized.status !== 413 || calls !== before || oversized.headers.has("x-semio-browser-broker-advanced")) throw new Error("inference request overflow consumed proof or reached upstream");
+    const streamed = await request(path, "POST", "x".repeat(fixture.limits.requestBytes + 1), true);
+    if (streamed.status !== 413 || calls !== before || streamed.headers.get("x-semio-browser-broker-advanced") !== "1") throw new Error("inference streamed overflow reached upstream or failed its single proof advance");
+    const exact = await request(path, "POST", "x".repeat(fixture.limits.requestBytes));
+    if (exact.status !== 200 || calls !== before + 1) throw new Error("inference request exact bound rejected");
+    await exact.arrayBuffer();
+    for (const row of fixture.responses) {
+      responseBytes = row.bytes;
+      responseStreamed = row.streamed;
+      const response = await request(path, "POST");
+      if (response.status !== row.status || response.headers.get("x-semio-browser-broker-advanced") !== "1") throw new Error(`inference response bound mismatch: ${row.id}: ${response.status}`);
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      if (row.status === 200 && (bytes.length !== row.bytes || bytes.some((byte) => byte !== 73) || response.headers.get("cache-control") !== "no-store")) throw new Error("inference response bytes or privacy changed");
+    }
+    console.log(`[DEBUG] inference live relay routes=${fixture.routes.length} response-bounds=${fixture.responses.length} proof-ratchet=true upstream-auth=true`);
+    return fixture.routes.length + fixture.responses.length + 3;
+  } finally {
+    proof.fill(0);
+    await relay.stop();
+    await upstream.stop(true);
+  }
+}
+
+class InferenceRelayCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("inference-relay-check accepts no arguments");
+    console.log(`inference-relay-check: checks=${await proveInferenceRelay(this.repoRoot)}`);
+  }
+}
+
 class ExecutionTargetRelayCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("execution-target-relay-check accepts only --native");
@@ -4213,7 +4337,7 @@ function documentOpenCatalogEncoding(rows: readonly Record<string, any>[]): Buff
       Buffer.from(row.package.descriptorByteSha256, "hex"),
       (() => {
         const version = row.package.executionProtocol?.appChannelVersion;
-        if (version !== 14) throw new Error("document-open oracle unsupported execution protocol");
+        if (version !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error("document-open oracle unsupported execution protocol");
         const encoded = Buffer.alloc(4);
         encoded.writeUInt32BE(version);
         return encoded;
@@ -4366,7 +4490,7 @@ function documentOpenNeutralIssueOutcome(candidate: Record<string, any>, subject
       documentOpenNeutralParentDialect(row);
       const packageValue = documentOpenNeutralObject(row.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol"]);
       const executionProtocol = documentOpenNeutralObject(packageValue.executionProtocol, ["appChannelVersion"]);
-      if (executionProtocol.appChannelVersion !== 14) throw new Error("execution-protocol");
+      if (executionProtocol.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error("execution-protocol");
       const artifact = documentOpenNeutralObject(row.artifact, ["kind", "schema", "packSchemaHash"]);
       const surface = documentOpenNeutralObject(row.surface, ["surfaceId", "appId", "windowKindId", "role", "rendererTarget"]);
       documentOpenNeutralBrowserActor(row.browserActor, packageValue, surface.rendererTarget, false);
@@ -4422,7 +4546,7 @@ function documentOpenNeutralStructure(candidate: Record<string, any>, nowMs: num
   hash(catalog.generationId);
   const packageValue = documentOpenNeutralObject(root.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol"]);
   const executionProtocol = documentOpenNeutralObject(packageValue.executionProtocol, ["appChannelVersion"]);
-  if (executionProtocol.appChannelVersion !== 14) throw new Error("execution-protocol");
+  if (executionProtocol.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error("execution-protocol");
   documentOpenNeutralText(packageValue.pluginId);
   documentOpenNeutralText(packageValue.packageId);
   documentOpenNeutralText(packageValue.version);
@@ -5352,8 +5476,13 @@ class TrustedCatalogOpenedRootCheckScript extends BundleScript {
 }
 
 class OpenPlanCheckScript extends BundleScript {
-  async run(): Promise<void> {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--source")) throw new Error("open-plan-check accepts only --source");
     await proveDocumentOpenPlanFixture(this.repoRoot);
+    if (segments[0] === "--source") {
+      console.log("open-plan-source-check: neutral fixture, independent framing and owned schema; no native or mounted browser acceptance");
+      return;
+    }
     const env = { ...process.env, RUST_MIN_STACK: "268435456" };
     const exactLaw = (target: string[], suffix: string): string => {
       const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--all-features", ...target, suffix, "--", "--list"], { cwd: this.root, env, ...orchestratorBudgetOpts() });
@@ -5551,7 +5680,7 @@ function executionTargetLeaseFieldsAdmissible(candidate: Record<string, any>, ex
     candidate.component.sha256 === candidate.package.componentSha256 &&
     candidate.component.blake3 === candidate.package.componentBlake3 &&
     candidate.descriptor.sha256 === candidate.package.descriptorByteSha256 &&
-    candidate.package.executionProtocol?.appChannelVersion === 14 &&
+    candidate.package.executionProtocol?.appChannelVersion === 15 &&
     length(candidate.component?.byteLength, expected.componentMaxBytes) &&
     length(candidate.descriptor?.byteLength, expected.descriptorMaxBytes) &&
     candidate.parentDialect?.artifactKind === candidate.artifact?.kind &&
@@ -7165,7 +7294,7 @@ async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Prom
   const validateFrame = hubSchemaExport(repoRoot, "schema://hub.inference/GisInferenceCheckpointControlFrameV1");
   const validateDirection = hubSchemaExport(repoRoot, "schema://hub.inference/GisInferenceCheckpointControlDirectionV1");
   if (fixture.schema !== "semio.hub.gis-inference-checkpoint-control-fixture/v1" || fixture.version !== 1) throw new Error("GIS inference checkpoint control fixture envelope drifted");
-  const expectedHostiles = ["wrong-schema", "wrong-version", "wrong-sequence", "wrong-kind", "unknown-field", "zero-length", "oversized-frame", "closed-before-release"];
+  const expectedHostiles = ["wrong-schema", "wrong-version", "wrong-sequence", "wrong-kind", "zero-progress-cursor", "zero-completed", "completed-past-total", "unknown-field", "zero-length", "oversized-frame", "closed-before-release"];
   if (JSON.stringify(fixture.hostiles) !== JSON.stringify(expectedHostiles) || fixture.descriptor !== 4 || fixture.frameMaximumBytes !== GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES) {
     throw new Error("GIS inference checkpoint control fixture lost its closed bounded protocol");
   }
@@ -7175,19 +7304,25 @@ async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Prom
     if (!validateFrame(row.frame)) throw new Error("GIS inference checkpoint control frame is not a hub.inference/GisInferenceCheckpointControlFrameV1");
   }
   const [entered, release] = fixture.frames.map((row: any) => row.frame);
-  assertGisInferenceCheckpointControlFrame(entered, 1, "entered", entered.jobId);
+  assertGisInferenceCheckpointControlFrame(entered, 1, "progress-persisted", entered.jobId);
   assertGisInferenceCheckpointControlFrame(release, 2, "release", entered.jobId);
+  if (JSON.stringify({ progressCursor: entered.progressCursor, completed: entered.completed, total: entered.total }) !== JSON.stringify({ progressCursor: release.progressCursor, completed: release.completed, total: release.total })) {
+    throw new Error("GIS inference checkpoint release does not echo the exact persisted progress identity");
+  }
   const malformed = [
     { ...entered, schema: `${entered.schema}.substituted` },
     { ...entered, version: 2 },
     { ...entered, sequence: 2 },
     { ...entered, kind: "release" },
+    { ...entered, progressCursor: 0 },
+    { ...entered, completed: 0 },
+    { ...entered, completed: entered.total + 1 },
     { ...entered, unknown: true },
     { ...entered, jobId: "f".repeat(GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES) },
   ];
   for (const [index, frame] of malformed.entries()) {
     try {
-      assertGisInferenceCheckpointControlFrame(frame, 1, "entered", entered.jobId);
+      assertGisInferenceCheckpointControlFrame(frame, 1, "progress-persisted", entered.jobId);
     } catch {
       continue;
     }
@@ -7208,6 +7343,7 @@ async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Prom
     "GisInferenceCheckpointControlFrameV1",
     "INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES: usize = 256",
     "control.checkpoint(control.progress().0)",
+    "progress_persisted(job_id, progress_cursor, completed, total)",
   ])
     if (!runtime.includes(symbol)) throw new Error(`GIS inference checkpoint runtime is missing ${symbol}`);
   if (!hubBin.includes('std::env::var_os("OS_HUB_TEST_INFERENCE_CHECKPOINT_FD")') || !hubBin.includes('descriptor.to_str() != Some("4")') || !hubBin.includes("mode != HubMode::Development")) {
@@ -7215,7 +7351,10 @@ async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Prom
   }
   for (const symbol of ["inferenceCheckpointControl: true", "waitForGisInferenceCheckpointControl(run, jobIdB)", "releaseGisInferenceCheckpointControl(run, jobIdB)", 'name: "inference_cancel"'])
     if (!runner.includes(symbol)) throw new Error(`GIS inference process runner is missing ${symbol}`);
-  console.log(`gis-inference-checkpoint-control-oracle: ajv=1 exact=2 hostile=${fixture.hostiles.length} fd=4 test-support-only=1 passed`);
+  const heartbeat = runtime.indexOf("ledger().heartbeat(");
+  const pause = runtime.indexOf("gate.checkpoint(&owner.control", heartbeat);
+  if (heartbeat < 0 || pause <= heartbeat) throw new Error("GIS inference test checkpoint is not downstream of its durable heartbeat");
+  console.log(`gis-inference-checkpoint-control-oracle: ajv=1 exact=2 hostile=${fixture.hostiles.length} fd=4 post-heartbeat=1 test-support-only=1 passed`);
   return fixture.hostiles.length;
 }
 
@@ -7544,6 +7683,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     const publication = source.indexOf("await publishCheckpointPublicationProcessPairV1(");
     const peerSubmit = source.indexOf('name: "inference_submit"');
     const checkpointEntered = source.indexOf("await waitForGisInferenceCheckpointControl(");
+    const persistedProgress = source.indexOf("const observedB = await callGisMapProcessMcp(", checkpointEntered);
     const peerCancel = source.indexOf('name: "inference_cancel"');
     const checkpointRelease = source.indexOf("await releaseGisInferenceCheckpointControl(");
     const peerCancelled = source.indexOf('page.state === "cancelled"');
@@ -7562,7 +7702,8 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
       publication > current &&
       peerSubmit > publication &&
       checkpointEntered > peerSubmit &&
-      peerCancel > checkpointEntered &&
+      persistedProgress > checkpointEntered &&
+      peerCancel > persistedProgress &&
       checkpointRelease > peerCancel &&
       peerCancelled > checkpointRelease &&
       ownerSubmit > peerCancelled &&
@@ -7578,6 +7719,9 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
       source.includes("inferenceCheckpointControl: true") &&
       source.includes('selected.executionProtocol?.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1') &&
       source.includes("cancelledBPage?.jobId !== jobIdB") &&
+      source.includes("observedProgress.completed !== persistedProgress.completed") &&
+      source.includes("observedProgress.total !== persistedProgress.total") &&
+      source.includes("observedBPage.progress.length > 16") &&
       source.includes('!cancelledKinds.includes("cancel-requested")') &&
       source.includes('!cancelledKinds.includes("cancelled")') &&
       source.includes('terminalB?.proposalHash !== null') &&
@@ -7603,6 +7747,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     processSource.replace("inferenceCheckpointControl: true", "inferenceCheckpointControl: false"),
     processSource.replace('name: "inference_submit"', 'name: "inference_events"'),
     processSource.replace("await waitForGisInferenceCheckpointControl(", "void waitForGisInferenceCheckpointControl("),
+    processSource.replace("observedProgress.completed !== persistedProgress.completed", "false"),
     processSource.replace('name: "inference_cancel"', 'name: "inference_events"'),
     processSource.replace("await releaseGisInferenceCheckpointControl(", "void releaseGisInferenceCheckpointControl("),
     processSource.replace('page.state === "cancelled"', 'page.state === "succeeded"'),
@@ -7692,6 +7837,62 @@ async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number
   const checks = fixture.hostile.length + required.length + 5;
   console.log(`gis-map-frozen-binding-check: checks=${checks} clean; no route, provider, inference execution, or publication claim`);
   return checks;
+}
+
+/** 🧭️ Proves request-id reconciliation is closed, reader-bound and expiry-independent. */
+async function proveInferenceJobReconcileFixture(repoRoot: string): Promise<void> {
+  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🧭️inference-job-reconcile-v1");
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+  const validateRequest = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceJobReconcileRequestV1");
+  const validateResult = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceJobReconcileResultV1");
+  const { parseInferenceJobReconcileRequestV1, parseInferenceJobReconcileResultV1 } = await import(join(repoRoot, "🌎️hub", "💡️inference", "🧬️schema", "🟦️.ts"));
+  if (fixture.schema !== "semio.hub.inference-job-reconcile-fixture/v1" || fixture.maximumRequestBytes !== 256 || fixture.requestCases.length !== 8 || fixture.results.length !== 11 || fixture.readerCases.length !== 6) {
+    throw new Error("inference reconcile fixture envelope drifted");
+  }
+  const mutate = (value: unknown, path: string[], replacement: unknown): unknown => {
+    const candidate = structuredClone(value);
+    if (path.length === 0) return candidate;
+    let at = candidate as Record<string, unknown>;
+    for (const segment of path.slice(0, -1)) at = at[segment] as Record<string, unknown>;
+    at[path.at(-1)!] = replacement;
+    return candidate;
+  };
+  for (const row of fixture.requestCases) {
+    const candidate = mutate(fixture.request, row.path, row.value);
+    let parsed = false;
+    try {
+      parsed = JSON.stringify(parseInferenceJobReconcileRequestV1(candidate)) === JSON.stringify(candidate);
+    } catch {}
+    if (validateRequest(candidate) !== row.accepted || parsed !== row.accepted) throw new Error(`inference reconcile request parity ${row.name}`);
+  }
+  const requestBytes = Buffer.from(JSON.stringify(fixture.request));
+  const decodeRequest = (bytes: Buffer): boolean => {
+    if (bytes.length === 0 || bytes.length > fixture.maximumRequestBytes) return false;
+    try {
+      return validateRequest(JSON.parse(bytes.toString("utf8"))) as boolean;
+    } catch {
+      return false;
+    }
+  };
+  const boundary = Buffer.alloc(fixture.maximumRequestBytes, 0x20);
+  requestBytes.copy(boundary);
+  if (!decodeRequest(requestBytes) || !decodeRequest(boundary) || decodeRequest(Buffer.concat([boundary, Buffer.from(" ")]))) throw new Error("inference reconcile request byte boundary differs");
+  const named = new Map(fixture.results.filter((row: { value?: unknown }) => row.value !== undefined).map((row: { name: string; value: unknown }) => [row.name, row.value]));
+  for (const row of fixture.results) {
+    const candidate = row.copy === undefined ? row.value : mutate(named.get(row.copy), row.path, row.value);
+    let parsed = false;
+    try {
+      parsed = JSON.stringify(parseInferenceJobReconcileResultV1(candidate)) === JSON.stringify(candidate);
+    } catch {}
+    if (validateResult(candidate) !== row.accepted || parsed !== row.accepted) throw new Error(`inference reconcile result parity ${row.name}`);
+  }
+  const identity = { userId: "a".repeat(32), sessionId: "b".repeat(32), authorizationGeneration: 1, spaceId: "c".repeat(32), documentId: "d".repeat(32) };
+  for (const row of fixture.readerCases) {
+    const reader = { ...identity, ...(row.field === "none" ? {} : { [row.field]: row.value }) };
+    const matches = Object.keys(identity).every((key) => reader[key as keyof typeof reader] === identity[key as keyof typeof identity]);
+    if (matches !== row.accepted) throw new Error(`inference reconcile reader predicate ${row.name}`);
+  }
+  console.log(`inference-job-reconcile-oracle: requests=${fixture.requestCases.length} results=${fixture.results.length} readers=${fixture.readerCases.length} byte-boundaries=3 ajv+typescript=1; no lookup, route, cancel, or recovery claim`);
 }
 
 class GisInferenceLedgerOracleScript extends BundleScript {
@@ -7812,6 +8013,7 @@ class GisInferenceLedgerOracleScript extends BundleScript {
     console.log(
       `gis-inference-ledger-oracle: traces=${fixture.traces.length} hostile=${fixture.hostileRequests.length} identity-hostile=${fixture.hostileIdentities.length} sqlite-integers=${fixture.sqliteIntegers.length} ajv+typescript=1 hashes=6 independent-bounds=1; no executor/route/approval claim`,
     );
+    await proveInferenceJobReconcileFixture(this.repoRoot);
     await proveInferenceWalProofFixture(this.repoRoot);
     await proveInferenceCommandFixture(this.repoRoot);
     await proveInferenceApprovalRequestFixture(this.repoRoot);
@@ -8230,7 +8432,7 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
   }
   console.log(`exact-integer-value-oracle: AJV=1 targets=${integerFixture.targets.length} raw=${integerFixture.raw.length} admitted=${integerAccepted} arithmetic=BigInt; native production parity is a separate exact group`);
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor");
-  const fixture = JSON.parse(readFileSync(join(root, "🧪️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🔣️.json"), "utf8"));
   const validators = {
     plan: hubSchemaExport(repoRoot, "schema://os.directory/DocumentBrowserActorPlan"),
     lease: hubSchemaExport(repoRoot, "schema://os.directory/DocumentBrowserActorLease"),
@@ -8954,7 +9156,7 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
     const selected = structuredClone(fixture.selectedClosure);
     const owner = selected.find((identity: any) => identity.pluginId === row.owner);
     const dependencies: any[] = row.owner === "gis" ? [{ pluginId: "stdio", version: "=0.1.0" }] : [];
-    const descriptor: any = { packageId: owner.packageId, manifest: { pluginId: row.owner, version: owner.version, dependencies }, executionProtocol: { appChannelVersion: 14 } };
+    const descriptor: any = { packageId: owner.packageId, manifest: { pluginId: row.owner, version: owner.version, dependencies }, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } };
     if (row.change === "selected-order") selected.reverse();
     if (row.change === "missing") dependencies.length = 0;
     if (row.change === "duplicate") dependencies.push({ ...dependencies[0] });
@@ -8977,7 +9179,7 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
     if (row.change === "owner-version") descriptor.manifest.version = "0.2.0";
     if (row.change === "selected-version") selected[1].version = "0.2.0";
     if (row.change === "missing-protocol") delete descriptor.executionProtocol;
-    if (row.change === "unsupported-protocol") descriptor.executionProtocol.appChannelVersion = 15;
+    if (row.change === "unsupported-protocol") descriptor.executionProtocol.appChannelVersion = DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 + 1;
     const operation = () => trustedBootstrapResolveDependencies(trustedBootstrapDescriptorClaims(encodePackValue(descriptor)), selected);
     if (!row.accepted) { assert.throws(operation, row.change === "extra-field" ? /keys/ : /dependenc|descriptor|identity|version|manifest|protocol|object/); continue; }
     const actual = operation();
@@ -9357,10 +9559,10 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
   assert.equal(fixture.schema, "semio.hub.generation-stage.v1");
   assert.equal(fixture.componentHex, "616263");
   assert.deepEqual(fixture.descriptors, {
-    gis: { packageId: "semio:gis", manifest: { pluginId: "gis", version: "0.1.0", dependencies: [{ pluginId: "stdio", version: "=0.1.0" }] }, executionProtocol: { appChannelVersion: 14 } },
-    stdio: { packageId: "semio:stdio", manifest: { pluginId: "stdio", version: "0.1.0", dependencies: [] }, executionProtocol: { appChannelVersion: 14 } },
+    gis: { packageId: "semio:gis", manifest: { pluginId: "gis", version: "0.1.0", dependencies: [{ pluginId: "stdio", version: "=0.1.0" }] }, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } },
+    stdio: { packageId: "semio:stdio", manifest: { pluginId: "stdio", version: "0.1.0", dependencies: [] }, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } },
   });
-  assert.deepEqual(fixture.executionProtocol, { appChannelVersion: 14 });
+  assert.deepEqual(fixture.executionProtocol, { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 });
   for (const protocol of [fixture.executionProtocol, fixture.descriptors.gis.executionProtocol, fixture.descriptors.stdio.executionProtocol]) assert(validateProtocol(protocol), "generation-stage execution protocol must satisfy the scope-owned contract");
   assert.deepEqual(fixture.cases.map((row: any) => row.change), [
     "none", "component", "descriptor", "bundle", "extra-file", "missing-file", "symlink-file", "symlink-directory", "post-read-component",
@@ -11146,20 +11348,26 @@ type GisInferenceCheckpointControlFrameV1 = Readonly<{
   schema: typeof GIS_INFERENCE_CHECKPOINT_CONTROL_SCHEMA;
   version: 1;
   sequence: 1 | 2;
-  kind: "entered" | "release";
+  kind: "progress-persisted" | "release";
   jobId: string;
+  progressCursor: number;
+  completed: number;
+  total: number;
 }>;
 
-function assertGisInferenceCheckpointControlFrame(frame: Record<string, any>, sequence: 1 | 2, kind: "entered" | "release", jobId: string): void {
+function assertGisInferenceCheckpointControlFrame(frame: Record<string, any>, sequence: 1 | 2, kind: "progress-persisted" | "release", jobId: string): void {
   const canonical = JSON.stringify(frame);
   if (
-    Object.keys(frame).join(",") !== "schema,version,sequence,kind,jobId" ||
+    Object.keys(frame).join(",") !== "schema,version,sequence,kind,jobId,progressCursor,completed,total" ||
     frame.schema !== GIS_INFERENCE_CHECKPOINT_CONTROL_SCHEMA ||
     frame.version !== 1 ||
     frame.sequence !== sequence ||
     frame.kind !== kind ||
     frame.jobId !== jobId ||
     !/^[0-9a-f]{32}$/u.test(frame.jobId) ||
+    !Number.isSafeInteger(frame.progressCursor) || frame.progressCursor < 1 || frame.progressCursor > 16 ||
+    !Number.isSafeInteger(frame.completed) || frame.completed < 1 ||
+    !Number.isSafeInteger(frame.total) || frame.total < 1 || frame.completed > frame.total ||
     Buffer.byteLength(canonical) === 0 ||
     Buffer.byteLength(canonical) > GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES
   ) {
@@ -11167,20 +11375,23 @@ function assertGisInferenceCheckpointControlFrame(frame: Record<string, any>, se
   }
 }
 
-async function waitForGisInferenceCheckpointControl(run: LocalHubRun, jobId: string): Promise<void> {
+async function waitForGisInferenceCheckpointControl(run: LocalHubRun, jobId: string): Promise<Readonly<{ progressCursor: number; completed: number; total: number }>> {
   if (!run.inferenceCheckpointReader || run.inferenceCheckpointEnteredJobId || run.inferenceCheckpointReleased !== false) {
     throw new Error("GIS inference checkpoint control has no fresh process-owned reader");
   }
   const frame = await run.inferenceCheckpointReader.read(120_000);
-  assertGisInferenceCheckpointControlFrame(frame, 1, "entered", jobId);
+  assertGisInferenceCheckpointControlFrame(frame, 1, "progress-persisted", jobId);
   run.inferenceCheckpointEnteredJobId = jobId;
+  const progress = Object.freeze({ progressCursor: frame.progressCursor, completed: frame.completed, total: frame.total });
+  run.inferenceCheckpointProgress = progress;
+  return progress;
 }
 
 async function releaseGisInferenceCheckpointControl(run: LocalHubRun, jobId: string): Promise<void> {
-  if (!run.inferenceCheckpointPipe || run.inferenceCheckpointEnteredJobId !== jobId || run.inferenceCheckpointReleased !== false) {
+  if (!run.inferenceCheckpointPipe || run.inferenceCheckpointEnteredJobId !== jobId || !run.inferenceCheckpointProgress || run.inferenceCheckpointReleased !== false) {
     throw new Error("GIS inference checkpoint release did not own the exact entered job");
   }
-  const frame: GisInferenceCheckpointControlFrameV1 = { schema: GIS_INFERENCE_CHECKPOINT_CONTROL_SCHEMA, version: 1, sequence: 2, kind: "release", jobId };
+  const frame: GisInferenceCheckpointControlFrameV1 = { schema: GIS_INFERENCE_CHECKPOINT_CONTROL_SCHEMA, version: 1, sequence: 2, kind: "release", jobId, ...run.inferenceCheckpointProgress };
   assertGisInferenceCheckpointControlFrame(frame, 2, "release", jobId);
   await writeLocalFrame(run.inferenceCheckpointPipe, frame);
   run.inferenceCheckpointReleased = true;
@@ -11305,7 +11516,25 @@ async function cancelGisMapProcessMcpOwner(run: LocalHubRun, mcpB: GisMapProcess
   ) {
     throw new Error("GIS Map Author B did not receive one MCP-owned retained Running job");
   }
-  await waitForGisInferenceCheckpointControl(run, jobIdB);
+  const persistedProgress = await waitForGisInferenceCheckpointControl(run, jobIdB);
+  const observedB = await callGisMapProcessMcp(mcpB, "tools/call", { name: "inference_events", arguments: { jobHandle: jobHandleB, after: 0 } });
+  const observedBPage = observedB.result?.structuredContent?.page;
+  const observedProgress = Array.isArray(observedBPage?.progress) ? observedBPage.progress.find((row: any) => row?.cursor === persistedProgress.progressCursor) : undefined;
+  if (
+    observedB.result?.isError !== false ||
+    observedB.result?.structuredContent?.jobHandle !== jobHandleB ||
+    observedBPage?.jobId !== jobIdB ||
+    observedBPage?.state !== "running" ||
+    observedBPage?.cancelRequested !== false ||
+    !observedProgress ||
+    observedProgress.completed !== persistedProgress.completed ||
+    observedProgress.total !== persistedProgress.total ||
+    !Number.isSafeInteger(observedProgress.runEpoch) || observedProgress.runEpoch < 1 ||
+    observedBPage.nextCursor < persistedProgress.progressCursor ||
+    observedBPage.progress.length > 16
+  ) {
+    throw new Error("GIS Map Author B did not observe the exact bounded persisted progress before cancellation");
+  }
   const cancelledB = await callGisMapProcessMcp(mcpB, "tools/call", { name: "inference_cancel", arguments: { jobHandle: jobHandleB } });
   const cancelledBPage = cancelledB.result?.structuredContent?.page;
   if (
@@ -11355,6 +11584,9 @@ type GisMapMountedShellProbeV1 = Readonly<{
   componentSha256: string;
   descriptorSha256: string;
   browserActorSha256: string;
+  activeCheckpointId: string;
+  descriptorDigestV1: string;
+  frontier: ArtifactFrontier;
   uiRevision: number;
   rootKind: "tiled-map";
   regionIds: readonly string[];
@@ -11369,12 +11601,29 @@ type GisMapShellPeerV1 = Readonly<{
   stop(): Promise<void>;
 }>;
 
+/** 🌿️ Parses one closed scope-bound frontier from the mounted browser's public acknowledgement. */
+function parseGisMapMountedFrontierV1(value: unknown, scope: Readonly<{ spaceId: string; documentId: string }>): ArtifactFrontier | null {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  const frontier = value as ArtifactFrontier;
+  if (
+    JSON.stringify(Object.keys(frontier).sort()) !== JSON.stringify(["chainHash", "documentId", "headEditId", "headEditOrdinal", "lastCommitSeq"]) ||
+    !Array.isArray(frontier.chainHash) ||
+    frontier.chainHash.length !== 32 ||
+    frontier.chainHash.some((byte) => !Number.isInteger(byte) || byte < 0 || byte > 255) ||
+    !Number.isSafeInteger(frontier.headEditOrdinal) ||
+    !Number.isSafeInteger(frontier.lastCommitSeq) ||
+    frontier.lastCommitSeq > frontier.headEditOrdinal ||
+    (!artifactFrontierIsGenesisForV1(scope, frontier) && !artifactFrontierIsEditedForV1(scope, frontier))
+  ) return null;
+  return structuredClone(frontier);
+}
+
 /** 🔬️ Validates the closed dev probe before the process harness compares scene facts. */
 function parseGisMapMountedShellProbeV1(value: unknown, scope: Readonly<{ spaceId: string; documentId: string }>): GisMapMountedShellProbeV1 | null {
   if (value === null) return null;
   if (typeof value !== "object" || Array.isArray(value)) throw new Error("mounted GIS Map probe is not an object");
   const row = value as Record<string, unknown>;
-  const keys = ["activationGeneration", "browserActorSha256", "catalogGenerationId", "clientInstanceId", "componentSha256", "descriptorSha256", "regionIds", "rootKind", "scope", "uiRevision"].sort();
+  const keys = ["activationGeneration", "activeCheckpointId", "browserActorSha256", "catalogGenerationId", "clientInstanceId", "componentSha256", "descriptorDigestV1", "descriptorSha256", "frontier", "regionIds", "rootKind", "scope", "uiRevision"].sort();
   if (JSON.stringify(Object.keys(row).sort()) !== JSON.stringify(keys)) throw new Error("mounted GIS Map probe fields are not closed");
   const probeScope = row.scope;
   if (
@@ -11397,6 +11646,9 @@ function parseGisMapMountedShellProbeV1(value: unknown, scope: Readonly<{ spaceI
   const componentSha256 = row.componentSha256;
   const descriptorSha256 = row.descriptorSha256;
   const browserActorSha256 = row.browserActorSha256;
+  const activeCheckpointId = row.activeCheckpointId;
+  const descriptorDigestV1 = row.descriptorDigestV1;
+  const frontier = parseGisMapMountedFrontierV1(row.frontier, scope);
   const uiRevision = row.uiRevision;
   if (
     !boundedIdentity(clientInstanceId) ||
@@ -11405,6 +11657,9 @@ function parseGisMapMountedShellProbeV1(value: unknown, scope: Readonly<{ spaceI
     !digest(componentSha256) ||
     !digest(descriptorSha256) ||
     !digest(browserActorSha256) ||
+    !digest(activeCheckpointId) ||
+    !digest(descriptorDigestV1) ||
+    frontier === null ||
     !Number.isSafeInteger(uiRevision) ||
     (uiRevision as number) < 1 ||
     row.rootKind !== "tiled-map" ||
@@ -11425,6 +11680,9 @@ function parseGisMapMountedShellProbeV1(value: unknown, scope: Readonly<{ spaceI
     componentSha256,
     descriptorSha256,
     browserActorSha256,
+    activeCheckpointId,
+    descriptorDigestV1,
+    frontier: structuredClone(frontier),
     uiRevision: uiRevision as number,
     rootKind: "tiled-map",
     regionIds: Object.freeze(regionIds as string[]),
@@ -11564,7 +11822,7 @@ async function startGisMapShellPeerV1(options: {
       mountedScope = Object.freeze({ spaceId: options.scope.spaceId, documentId: existingDocumentId! });
       const artifactRow = page.locator("[data-row-id=" + JSON.stringify("artifact:" + mountedScope.documentId) + "]");
       await artifactRow.waitFor({ state: "visible", timeout: 120_000 });
-      await artifactRow.getByRole("button", { name: "Open", exact: true }).click();
+      await artifactRow.getByRole("button", { name: options.locale === "de" ? "Öffnen" : "Open", exact: true }).click();
     }
     await page.waitForFunction(
       (scope) => typeof (globalThis as any).__semioMountedGisMapProbe === "function" && (globalThis as any).__semioMountedGisMapProbe(scope.spaceId, scope.documentId) !== null,
@@ -11664,6 +11922,12 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
   });
   assert.equal(browserHost.receipt.selectedGis.generationId, prepared.current.generationId);
   assert.equal(browserHost.receipt.selectedGis.currentSha256, prepared.current.currentSha256);
+  assert.equal(browserHost.receipt.selectedGis.componentSha256, selected.component.sha256);
+  assert.equal(browserHost.receipt.selectedGis.descriptorSha256, selected.descriptor.sha256);
+  assert.equal(browserHost.receipt.selectedGis.stagedDescriptorSha256, selected.descriptor.sha256);
+  assert.match(browserHost.receipt.selectedGis.bridgeSha256, /^[0-9a-f]{64}$/u);
+  assert.match(browserHost.receipt.selectedGis.materializationReceiptSha256, /^[0-9a-f]{64}$/u);
+  assert.ok(browserHost.receipt.selectedGis.generatedCores.length > 0);
   const profiles: readonly LocalProfile[] = [
     { profileId: "gis-map-shell-a", subject: "gis-map-shell-author-a", displayName: "GIS Map Author A", allowedClientClasses: ["native", "mcp", "react-relay"] },
     { profileId: "gis-map-shell-b", subject: "gis-map-shell-author-b", displayName: "GIS Map Author B", allowedClientClasses: ["native", "mcp", "react-relay"] },
@@ -11740,7 +12004,7 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
       const pairs = await Promise.all(clients.map((client) => readGisMapProcessCheckpoint(client, scope.spaceId, scope.documentId)));
       assert.equal(pairs.length, 2); assert.deepEqual(pairs[0], pairs[1]); return pairs[0]!;
     };
-    const waitMaps = async (expectedRegions?: readonly string[]): Promise<readonly Record<string, any>[]> => {
+    const waitMaps = async (expectedPair: GisMapCheckpointProjectionV1, expectedRegions?: readonly string[]): Promise<readonly GisMapMountedShellProbeV1[]> => {
       const deadline = Date.now() + 120_000;
       while (Date.now() < deadline) {
         const maps = await Promise.all(shells.map((shell) => shell.readMap()));
@@ -11750,10 +12014,13 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
             assert.equal(map!.catalogGenerationId, prepared.current.generationId);
             assert.equal(map!.componentSha256, selected.component.sha256); assert.equal(map!.descriptorSha256, selected.descriptor.sha256);
             assert.equal(map!.browserActorSha256, selected.browserActor.sha256); assert.ok(map!.uiRevision > 0);
+            assert.equal(map!.activeCheckpointId, expectedPair.activeCheckpointId);
+            assert.equal(map!.descriptorDigestV1, expectedPair.descriptorDigestV1);
+            assert.deepEqual(map!.frontier, expectedPair.frontier);
           }
           assert.notEqual(maps[0]!.clientInstanceId, maps[1]!.clientInstanceId);
           const regions = JSON.stringify(maps[0]!.regionIds);
-          if (regions === JSON.stringify(maps[1]!.regionIds) && (expectedRegions === undefined || regions === JSON.stringify(expectedRegions))) return maps as readonly Record<string, any>[];
+          if (regions === JSON.stringify(maps[1]!.regionIds) && (expectedRegions === undefined || regions === JSON.stringify(expectedRegions))) return maps as readonly GisMapMountedShellProbeV1[];
         }
         await Bun.sleep(50);
       }
@@ -11775,9 +12042,11 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
     await openPeers(false);
     const initial = await readPair();
     assert.equal(artifactFrontierIsGenesisForV1(scope, initial.frontier), true);
-    const initialMaps = await waitMaps();
-    const initialRegions = initialMaps[0]!.regionIds as string[];
+    const initialMaps = await waitMaps(initial);
+    const initialRegions = [...initialMaps[0]!.regionIds];
     const cancelledJobId = await cancelGisMapProcessMcpOwner(run, clients[1]!, scope.documentId);
+    const cancelledProgress = run.inferenceCheckpointProgress;
+    assert.ok(cancelledProgress && cancelledProgress.progressCursor >= 1 && cancelledProgress.completed >= 1 && cancelledProgress.completed <= cancelledProgress.total);
     assert.deepEqual(await readPair(), initial);
     const regionId = await shells[0]!.propose();
     assert.match(regionId, /^inference-[0-9a-f]{32}$/u);
@@ -11794,13 +12063,13 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
     const approvalOffsets = sockets.map((socket) => socket.frames.length);
     await shells[0]!.approve();
     const applied = await changedPair(initial, approvalOffsets);
-    const appliedMaps = await waitMaps([...initialRegions, regionId].sort());
+    const appliedMaps = await waitMaps(applied, [...initialRegions, regionId].sort());
     const undoOffsets = sockets.map((socket) => socket.frames.length);
     await shells[0]!.undo();
     const undone = await changedPair(applied, undoOffsets);
     assert.equal(undone.packSha256, initial.packSha256);
     assert.notEqual(undone.frontier.headEditId, applied.frontier.headEditId);
-    const undoneMaps = await waitMaps(initialRegions);
+    const undoneMaps = await waitMaps(undone, initialRegions);
     const port = run.port, priorPid = run.child.pid;
     await closePeers();
     await finishLocalHub(run);
@@ -11811,9 +12080,9 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
     for (const profile of profiles) authors.push(await issueLocalCredential(run, profile.profileId, "native", nonce++));
     await openPeers(true);
     assert.deepEqual(await readPair(), undone);
-    const restartedMaps = await waitMaps(initialRegions);
+    const restartedMaps = await waitMaps(undone, initialRegions);
     assertGisMapCompositionCurrent(prepared);
-    completedReceipt = { schema: "semio.hub.gis-map-two-author-shell-receipt/v1", current: prepared.current, browserHost: browserHost.receipt, scope, locales, cancelledJobId, regionId, initial, applied, undone, initialMaps, appliedMaps, undoneMaps, restartedMaps, ownerPrivateJobDenials: 3, rebootstrapControls: 4, actualMapObservations: 8, restartedProcess: true, nonclaims: ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo", "private-job-restart-recovery", "wgpu-rendering"] };
+    completedReceipt = { schema: "semio.hub.gis-map-two-author-shell-receipt/v1", current: prepared.current, browserHost: browserHost.receipt, scope, locales, cancelledJobId, cancelledProgress, regionId, initial, applied, undone, initialMaps, appliedMaps, undoneMaps, restartedMaps, ownerPrivateJobDenials: 3, rebootstrapControls: 4, actualMapObservations: 8, restartedProcess: true, nonclaims: ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo", "private-job-restart-recovery", "wgpu-rendering"] };
   } finally {
     const errors: unknown[] = [];
     await closePeers().catch((error) => errors.push(error));
@@ -12064,7 +12333,7 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
           privatePeerDenials: 3,
           independentPeerJobCancelled: true,
           cancelledPeerJobId: jobIdB,
-          cancellationControl: { descriptor: 4, entered: true, released: true, exactJobIdentity: true },
+          cancellationControl: { descriptor: 4, progressPersisted: true, released: true, exactJobIdentity: true, progress: run.inferenceCheckpointProgress },
           liveRebootstrapControls: 4,
           refreshedCanonicalPairs: 4,
           hubBinarySha256: createHash("sha256").update(readFileSync(binaryPath)).digest("hex"),
@@ -12113,6 +12382,7 @@ class GisMapProposalCheckScript extends BundleScript {
         "gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstrap_pair",
         "gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding",
         "gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation",
+        "inference_reconciliation_route_is_existing_only_reader_bound_and_body_bounded",
         "gis_map_inference_runtime_close_signals_and_joins_actual_codec_work",
         "gis_map_inference_revocation_after_compute_refuses_late_publication",
         "gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller",
@@ -12428,16 +12698,18 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
   const root = join(repoRoot, "🌎️hub/🧪️fixtures/🤝️two-author-shell-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const assert = await import("node:assert/strict");
+  assert.equal(fixture.selection.executionProtocol, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, "two-author fixture must name the currently compiled AppChannel");
   const laws: readonly (readonly [string, unknown])[] = [
     ["schema", "semio.hub.gis-map-two-author-composition-fixture/v1"],
     ["version", 1],
     ["selection.closure", ["stdio", "gis"]],
-    ["selection.executionProtocol", 14],
+    ["selection.executionProtocol", 15],
     ["selection.sameDataRoot", true],
     ["selection.receiptIdentity", ["generationId", "bundleSha256", "profileId", "publicationRevision", "currentSha256"]],
-    ["selection.browserHostReceipt", ["moduleSetSha256", "activationReceiptSha256", "spaceComponentByteLength", "spaceComponentSha256", "spaceCoreSha256", "spaceDescriptorSha256", "selectedGisGenerationId", "selectedGisCurrentSha256"]],
+    ["selection.browserHostReceipt", ["moduleSetSha256", "activationReceiptSha256", "spaceComponentByteLength", "spaceComponentSha256", "spaceCoreSha256", "spaceDescriptorSha256", "selectedGisGenerationId", "selectedGisCurrentSha256", "selectedGisComponentSha256", "selectedGisDescriptorSha256", "selectedGisStagedDescriptorSha256", "selectedGisBridgeSha256", "selectedGisGeneratedCores", "selectedGisMaterializationReceiptSha256"]],
     ["authors", ["author-a", "author-b"]],
     ["locales", { "author-a": "en", "author-b": "de" }],
+    ["artifactOpen", { en: "Open", de: "Öffnen", exact: true, scope: "artifact-row" }],
     ["observations.mapSurface", ["actual-ui-document-store", "tiled-map", "actual-worker-ui-patch-ack"]],
     ["observations.cancel", ["running-receipt-before-compute", "fd4-entered", "author-b-own-private-mcp-cancel", "cancelled-without-offer"]],
     ["observations.approval", ["author-a-shell-worker-approval", "one-server-stamped-create-region", "same-peer-rebootstrap-control", "same-pair-and-frontier", "author-b-private-job-denied"]],
@@ -12470,6 +12742,7 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
   assert.ok(processOwner.indexOf("creation: { kindId: target.artifactKind") < processOwner.indexOf("await openPeers(false)"), "ordinary author-a Shell creation must precede document-scoped MCP and peer join");
   assert.ok(processOwner.includes('"private-job-restart-recovery"'), "process receipt must not claim an unobserved private job after restart");
   assert.ok(peerStart >= 0 && peerEnd > peerStart, "ticket-owned browser peer owner is missing");
+  assert.ok(peerOwner.includes('artifactRow.getByRole("button", { name: options.locale === "de" ? "Öffnen" : "Open", exact: true })'), "each author must open its exact artifact row using its explicitly selected locale");
   assert.ok(!processOwner.includes("materializeTrustedStdioGisBundle(") && !processOwner.includes("validateAndPublishTrustedStdioGisCandidate("), "Shell composition cannot create another current or data root");
   assert.ok(processOwner.includes("assertGisMapCompositionCurrent(prepared)") && processOwner.includes("dataDir: prepared.dataRoot"), "Shell starts and restarts must retain the prepared current owner");
   assert.ok(processOwner.includes("stageTestBrowserHostV1({") && processOwner.includes("browserHost: browserHost.receipt"), "Shell composition must close one selected ticket browser host before launch");
@@ -16754,6 +17027,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("scoped-directory-socket-check", ScopedDirectorySocketCheckScript)
   .register("browser-broker-check", BrowserBrokerCheckScript)
   .register("execution-target-relay-check", ExecutionTargetRelayCheckScript)
+  .register("inference-relay-check", InferenceRelayCheckScript)
   .register("admin-relay-check", AdminRelayCheckScript)
   .register("admin-backend-check", AdminBackendCheckScript)
   .register("admin-live-journey-check", AdminLiveJourneyCheckScript)

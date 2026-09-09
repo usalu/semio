@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::mutations::change_cursor::ChangeCursor;
 use crate::mutations::change_step_enabled::ChangeStepEnabled;
@@ -8,8 +7,8 @@ use crate::mutations::create_step::CreateStep;
 use crate::mutations::delete_step::DeleteStep;
 use crate::mutations::replace_stock_solid::ReplaceStockSolid;
 use crate::op::Process3dMutation;
-use crate::{PROCESS_3D_SCHEMA, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot};
-use store::{ArtifactCommand, Author, create_document_envelope};
+use crate::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, PROCESS_3D_SCHEMA};
+use store::{create_document_envelope, ArtifactCommand, Author};
 
 fn cut_step(id: &str) -> ProcessStep {
     ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }

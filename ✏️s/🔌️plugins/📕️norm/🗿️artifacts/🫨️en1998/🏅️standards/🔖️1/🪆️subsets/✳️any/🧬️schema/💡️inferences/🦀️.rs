@@ -8,7 +8,6 @@ use crate::En1998Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1998 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
@@ -55,13 +54,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1998Buil
 pub fn en1998_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1998.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor
@@ -73,12 +66,12 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::standards::v1::subsets::any::schema::{check_building_seismic_with_annex, na_de, part_1, part_2, part_3, part_4, part_5, part_6, AnnexParams};
 /// 📋️ Full EN 1998 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1998Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport};
+use crate::standards::v1::subsets::any::schema::{check_building_seismic_with_annex, na_de, part_1, part_2, part_3, part_4, part_5, part_6, AnnexParams};
 /// 📋️ Full seismic check across EN 1998 parts 1 through 6.
 pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
     let zone = parse_seismic_zone(document.seismic_zone);

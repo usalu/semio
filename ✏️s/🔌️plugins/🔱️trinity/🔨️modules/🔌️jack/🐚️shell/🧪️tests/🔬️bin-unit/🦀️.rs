@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag};
 

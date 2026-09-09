@@ -2,8 +2,8 @@
 
 use flow_extension_sdk::brep_geometry::*;
 use flow_extension_sdk::build_manifest_json;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{operation_quality, BrepKernel};
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{operation_quality, BrepKernel};
 
 /// 🎯️ Appends a node's live [`OpQuality`] (looked up by the `BrepKernel` method it wraps) to a
 /// human-readable summary, so both `register()`'s catalogue and the packaged `🔣️.json` descriptor
@@ -596,10 +596,7 @@ impl Operator for CurveClosestParameter {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let (parameter, point, distance) = kernel.curve_closest_parameter(&read_geometry(input, "curve")?, read_xyz(input, "point")?).map_err(map_kernel_error)?;
-            Ok(Dictionary::new()
-                .insert("parameter", Value::Dictionary(number_dictionary(parameter)))
-                .insert("point", Value::Dictionary(point_dictionary(point)))
-                .insert("distance", Value::Dictionary(number_dictionary(distance))))
+            Ok(Dictionary::new().insert("parameter", Value::Dictionary(number_dictionary(parameter))).insert("point", Value::Dictionary(point_dictionary(point))).insert("distance", Value::Dictionary(number_dictionary(distance))))
         })
     }
 }
@@ -908,7 +905,18 @@ pub async fn register(registry: &mut Registry) {
         &["Primitives 3D"],
         Box::new(TorusPrim),
     );
-    reg_geo(registry, "brep.prim3d.convexHull", "Convex Hull", "Hull", "emoji:📦️", &q("convex_hull", "Convex hull from points"), vec![list_channel("points", "brep.prim3d.convexHull")], out_solid("ConvexHullSolid"), &["Primitives 3D"], Box::new(ConvexHullPrim));
+    reg_geo(
+        registry,
+        "brep.prim3d.convexHull",
+        "Convex Hull",
+        "Hull",
+        "emoji:📦️",
+        &q("convex_hull", "Convex hull from points"),
+        vec![list_channel("points", "brep.prim3d.convexHull")],
+        out_solid("ConvexHullSolid"),
+        &["Primitives 3D"],
+        Box::new(ConvexHullPrim),
+    );
 
     reg_geo(registry, "brep.curve.line", "Line", "Line", "emoji:📏️", &q("line_curve", "Line curve"), vec![point_channel("start", "brep.curve.line"), point_channel("end", "brep.curve.line")], out_curve("LineCurve"), &["Curves"], Box::new(LineCurve));
     reg_geo(
@@ -1021,9 +1029,42 @@ pub async fn register(registry: &mut Registry) {
         Box::new(HelixCurve),
     );
 
-    reg_geo(registry, "brep.surf.plane", "Plane", "Plane", "emoji:⬜️", &q("plane_surface", "Plane surface"), vec![point_channel("origin", "brep.surf.plane"), point_channel("normal", "brep.surf.plane")], out_surface("PlaneSurface"), &["Surfaces"], Box::new(PlaneSurface));
-    reg_geo(registry, "brep.surf.planarFace", "Planar Face", "PFace", "emoji:⬜️", &q("planar_face_from_points", "Planar face from points"), vec![list_channel("points", "brep.surf.planarFace")], out_face("PlanarFace"), &["Surfaces"], Box::new(PlanarFacePoints));
-    reg_geo(registry, "brep.surf.planarFaceWire", "Planar Face Wire", "PFW", "emoji:⬜️", &q("planar_face_from_wire", "Planar face from wire"), vec![geometry_channel("wire", "brep.surf.planarFaceWire")], out_face("PlanarFaceWire"), &["Surfaces"], Box::new(PlanarFaceWire));
+    reg_geo(
+        registry,
+        "brep.surf.plane",
+        "Plane",
+        "Plane",
+        "emoji:⬜️",
+        &q("plane_surface", "Plane surface"),
+        vec![point_channel("origin", "brep.surf.plane"), point_channel("normal", "brep.surf.plane")],
+        out_surface("PlaneSurface"),
+        &["Surfaces"],
+        Box::new(PlaneSurface),
+    );
+    reg_geo(
+        registry,
+        "brep.surf.planarFace",
+        "Planar Face",
+        "PFace",
+        "emoji:⬜️",
+        &q("planar_face_from_points", "Planar face from points"),
+        vec![list_channel("points", "brep.surf.planarFace")],
+        out_face("PlanarFace"),
+        &["Surfaces"],
+        Box::new(PlanarFacePoints),
+    );
+    reg_geo(
+        registry,
+        "brep.surf.planarFaceWire",
+        "Planar Face Wire",
+        "PFW",
+        "emoji:⬜️",
+        &q("planar_face_from_wire", "Planar face from wire"),
+        vec![geometry_channel("wire", "brep.surf.planarFaceWire")],
+        out_face("PlanarFaceWire"),
+        &["Surfaces"],
+        Box::new(PlanarFaceWire),
+    );
     reg_geo(
         registry,
         "brep.surf.nurbsGrid",
@@ -1098,7 +1139,18 @@ pub async fn register(registry: &mut Registry) {
         &["Sweeps"],
         Box::new(Revolve),
     );
-    reg_geo(registry, "brep.sweep.loft", "Loft", "Loft", "emoji:🌉️", &q("loft", "Loft profiles"), vec![list_channel("profiles", "brep.sweep.loft"), number_channel("smooth", "brep.sweep.loft", 0.0)], out_solid("LoftedSolid"), &["Sweeps"], Box::new(Loft));
+    reg_geo(
+        registry,
+        "brep.sweep.loft",
+        "Loft",
+        "Loft",
+        "emoji:🌉️",
+        &q("loft", "Loft profiles"),
+        vec![list_channel("profiles", "brep.sweep.loft"), number_channel("smooth", "brep.sweep.loft", 0.0)],
+        out_solid("LoftedSolid"),
+        &["Sweeps"],
+        Box::new(Loft),
+    );
     reg_geo(
         registry,
         "brep.sweep.sweep",
@@ -1583,21 +1635,31 @@ pub async fn register(registry: &mut Registry) {
             "emoji:🎯️",
             &q("surface_closest_uv", "Certified closest (u, v), point, and achieved distance on a surface"),
             vec![geometry_channel("surface", "brep.eval.surfaceClosestUv"), point_channel("point", "brep.eval.surfaceClosestUv")],
-            vec![
-                ChannelSpec::named("U", "U", "u", "ClosestU"),
-                ChannelSpec::named("V", "V", "v", "ClosestV"),
-                out_point("ClosestPoint"),
-                ChannelSpec::named("D", "Dst", "distance", "AchievedDistance"),
-            ],
+            vec![ChannelSpec::named("U", "U", "u", "ClosestU"), ChannelSpec::named("V", "V", "v", "ClosestV"), out_point("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance")],
             &["Evaluate"],
         ),
         Box::new(SurfaceClosestUv),
         &["number", "point"],
     );
 
-    register_typed(registry, operator_info_with_outputs("brep.measure.volume", "Volume", "Vol", "emoji:📐️", &q("volume", "Solid volume"), vec![geometry_channel("geometry", "brep.measure.volume")], vec![out_volume()], &["Measure"]), Box::new(Volume), &["number"]);
-    register_typed(registry, operator_info_with_outputs("brep.measure.area", "Area", "Area", "emoji:📐️", &q("area", "Surface area"), vec![geometry_channel("geometry", "brep.measure.area")], vec![out_area()], &["Measure"]), Box::new(Area), &["number"]);
-    register_typed(registry, operator_info_with_outputs("brep.measure.length", "Length", "Len", "emoji:📐️", &q("length", "Curve length"), vec![geometry_channel("geometry", "brep.measure.length")], vec![out_length()], &["Measure"]), Box::new(Length), &["number"]);
+    register_typed(
+        registry,
+        operator_info_with_outputs("brep.measure.volume", "Volume", "Vol", "emoji:📐️", &q("volume", "Solid volume"), vec![geometry_channel("geometry", "brep.measure.volume")], vec![out_volume()], &["Measure"]),
+        Box::new(Volume),
+        &["number"],
+    );
+    register_typed(
+        registry,
+        operator_info_with_outputs("brep.measure.area", "Area", "Area", "emoji:📐️", &q("area", "Surface area"), vec![geometry_channel("geometry", "brep.measure.area")], vec![out_area()], &["Measure"]),
+        Box::new(Area),
+        &["number"],
+    );
+    register_typed(
+        registry,
+        operator_info_with_outputs("brep.measure.length", "Length", "Len", "emoji:📐️", &q("length", "Curve length"), vec![geometry_channel("geometry", "brep.measure.length")], vec![out_length()], &["Measure"]),
+        Box::new(Length),
+        &["number"],
+    );
     register_typed(
         registry,
         operator_info_with_outputs("brep.measure.centerOfMass", "Center Of Mass", "CoM", "emoji:📐️", &q("center_of_mass", "Center of mass"), vec![geometry_channel("geometry", "brep.measure.centerOfMass")], vec![out_center()], &["Measure"]),
@@ -1607,7 +1669,16 @@ pub async fn register(registry: &mut Registry) {
     reg_geo(registry, "brep.measure.boundingBox", "Bounding Box", "BBox", "emoji:📐️", &q("bounding_box", "Axis-aligned bounding box"), vec![geometry_channel("geometry", "brep.measure.boundingBox")], out_box(), &["Measure"], Box::new(BoundingBox));
     register_typed(
         registry,
-        operator_info_with_outputs("brep.measure.distance", "Distance", "Dist", "emoji:📐️", &q("distance", "Minimum distance"), vec![geometry_channel("a", "brep.measure.distance"), geometry_channel("b", "brep.measure.distance")], vec![out_distance()], &["Measure"]),
+        operator_info_with_outputs(
+            "brep.measure.distance",
+            "Distance",
+            "Dist",
+            "emoji:📐️",
+            &q("distance", "Minimum distance"),
+            vec![geometry_channel("a", "brep.measure.distance"), geometry_channel("b", "brep.measure.distance")],
+            vec![out_distance()],
+            &["Measure"],
+        ),
         Box::new(Distance),
         &["number"],
     );
@@ -1649,8 +1720,30 @@ pub async fn register(registry: &mut Registry) {
     );
 
     reg_geo(registry, "brep.util.vertex", "Vertex", "Vtx", "emoji:📍️", &q("vertex", "Create vertex"), vec![point_channel("point", "brep.util.vertex")], out_vertex(), &["Utilities"], Box::new(Vertex));
-    reg_geo(registry, "brep.util.faceFromWire", "Face From Wire", "FFW", "emoji:⬜️", &q("face_from_wire", "Face from closed wire"), vec![geometry_channel("wire", "brep.util.faceFromWire")], out_face("FaceFromWire"), &["Utilities"], Box::new(FaceFromWire));
-    reg_geo(registry, "brep.util.sew", "Sew", "Sew", "emoji:🧵️", &q("sew_faces", "Sew faces"), vec![list_channel("faces", "brep.util.sew"), number_channel("tolerance", "brep.util.sew", 0.001)], out_solid("SewnSolid"), &["Utilities"], Box::new(SewFaces));
+    reg_geo(
+        registry,
+        "brep.util.faceFromWire",
+        "Face From Wire",
+        "FFW",
+        "emoji:⬜️",
+        &q("face_from_wire", "Face from closed wire"),
+        vec![geometry_channel("wire", "brep.util.faceFromWire")],
+        out_face("FaceFromWire"),
+        &["Utilities"],
+        Box::new(FaceFromWire),
+    );
+    reg_geo(
+        registry,
+        "brep.util.sew",
+        "Sew",
+        "Sew",
+        "emoji:🧵️",
+        &q("sew_faces", "Sew faces"),
+        vec![list_channel("faces", "brep.util.sew"), number_channel("tolerance", "brep.util.sew", 0.001)],
+        out_solid("SewnSolid"),
+        &["Utilities"],
+        Box::new(SewFaces),
+    );
     reg_geo(
         registry,
         "brep.util.heal",
@@ -1663,7 +1756,18 @@ pub async fn register(registry: &mut Registry) {
         &["Utilities"],
         Box::new(HealSolid),
     );
-    reg_geo(registry, "brep.util.convertToNurbs", "Convert To Nurbs", "Nrb", "emoji:〰", &q("convert_to_nurbs", "Convert to NURBS"), vec![geometry_channel("geometry", "brep.util.convertToNurbs")], out_geometry("NurbsGeometry"), &["Utilities"], Box::new(ConvertToNurbs));
+    reg_geo(
+        registry,
+        "brep.util.convertToNurbs",
+        "Convert To Nurbs",
+        "Nrb",
+        "emoji:〰",
+        &q("convert_to_nurbs", "Convert to NURBS"),
+        vec![geometry_channel("geometry", "brep.util.convertToNurbs")],
+        out_geometry("NurbsGeometry"),
+        &["Utilities"],
+        Box::new(ConvertToNurbs),
+    );
 
     register_typed(
         registry,
@@ -1698,12 +1802,26 @@ pub async fn register(registry: &mut Registry) {
     );
     register_typed(
         registry,
-        operator_info_with_outputs("brep.topology.label", "Label", "Lbl", "emoji:🏷️", &q("label", "Handle's persistent label"), vec![geometry_channel("geometry", "brep.topology.label")], vec![ChannelSpec::named("L", "Lbl", "label", "PersistentLabel")], &["Topology"]),
+        operator_info_with_outputs(
+            "brep.topology.label",
+            "Label",
+            "Lbl",
+            "emoji:🏷️",
+            &q("label", "Handle's persistent label"),
+            vec![geometry_channel("geometry", "brep.topology.label")],
+            vec![ChannelSpec::named("L", "Lbl", "label", "PersistentLabel")],
+            &["Topology"],
+        ),
         Box::new(GeometryLabel),
         &["number"],
     );
 
-    register_typed(registry, operator_info_with_outputs("brep.io.exportStep", "Export Step", "Stp", "emoji:💾️", &q("export_step", "Export STEP"), vec![geometry_channel("geometry", "brep.io.exportStep")], vec![out_step()], &["IO"]), Box::new(ExportStep), &["text"]);
+    register_typed(
+        registry,
+        operator_info_with_outputs("brep.io.exportStep", "Export Step", "Stp", "emoji:💾️", &q("export_step", "Export STEP"), vec![geometry_channel("geometry", "brep.io.exportStep")], vec![out_step()], &["IO"]),
+        Box::new(ExportStep),
+        &["text"],
+    );
     register_typed(
         registry,
         operator_info_with_outputs(
@@ -1721,7 +1839,16 @@ pub async fn register(registry: &mut Registry) {
     );
     register_typed(
         registry,
-        operator_info_with_outputs("brep.io.exportObj", "Export Obj", "Obj", "emoji:💾️", &q("export_obj", "Export OBJ"), vec![geometry_channel("geometry", "brep.io.exportObj"), number_channel("deflection", "brep.io.exportObj", 0.1)], vec![out_obj()], &["IO"]),
+        operator_info_with_outputs(
+            "brep.io.exportObj",
+            "Export Obj",
+            "Obj",
+            "emoji:💾️",
+            &q("export_obj", "Export OBJ"),
+            vec![geometry_channel("geometry", "brep.io.exportObj"), number_channel("deflection", "brep.io.exportObj", 0.1)],
+            vec![out_obj()],
+            &["IO"],
+        ),
         Box::new(ExportObj),
         &["text"],
     );
@@ -1821,14 +1948,14 @@ mod extension_guest {
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
         let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);
         let bundle = bundle.handler("evaluate", |req| {
-                evaluate_invoke_json(&neural_engine::ColdOwner::new(semio_framework::io::resolve_ready(module_registry())), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
-            });
+            evaluate_invoke_json(&neural_engine::ColdOwner::new(semio_framework::io::resolve_ready(module_registry())), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
+        });
         bundle.handler("tessellate", |req| {
-                let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
-                let handle = request.get("handle").and_then(pack::json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
-                let tolerance = request.get("tolerance").and_then(pack::json::Value::as_f64).unwrap_or(0.05);
-                Ok(flow_extension_sdk::brep_geometry::tessellate_geometry_json_for_wasm(handle, tolerance).into_bytes())
-            })
+            let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
+            let handle = request.get("handle").and_then(pack::json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
+            let tolerance = request.get("tolerance").and_then(pack::json::Value::as_f64).unwrap_or(0.05);
+            Ok(flow_extension_sdk::brep_geometry::tessellate_geometry_json_for_wasm(handle, tolerance).into_bytes())
+        })
     }
 
     #[cfg(test)]

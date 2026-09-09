@@ -27,8 +27,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::{widget_id, Generation3dSnapshot};
-use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_artifact_flow_flow::FlowFixture;
+use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
 
@@ -52,12 +52,12 @@ pub(crate) fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
 // sibling `pub mod` blocks, unchanged — imported by those names just below.
 #[path = "."]
 pub mod create_widget {
+    #[path = "🌱️create-widget/🦀️.rs"]
+    mod component;
     #[path = "🌱️create-widget/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌱️create-widget/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🌱️create-widget/🦀️.rs"]
-    mod component;
     pub use component::*;
     #[cfg(test)]
     #[path = "🌱️create-widget/🧪️tests/📝️inserts-node-c-92255f/🦀️.rs"]
@@ -66,12 +66,12 @@ pub mod create_widget {
 
 #[path = "."]
 pub mod connect_synapse {
+    #[path = "🔗️connect-synapse/🦀️.rs"]
+    mod component;
     #[path = "🔗️connect-synapse/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔗️connect-synapse/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🔗️connect-synapse/🦀️.rs"]
-    mod component;
     pub use component::*;
     #[cfg(test)]
     #[path = "🔗️connect-synapse/🧪️tests/🔌️wires-node-b-to-c90f7f/🦀️.rs"]
@@ -80,12 +80,12 @@ pub mod connect_synapse {
 
 #[path = "."]
 pub mod create_generation {
+    #[path = "➕create-generation/🦀️.rs"]
+    mod component;
     #[path = "➕create-generation/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "➕create-generation/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "➕create-generation/🦀️.rs"]
-    mod component;
     pub use component::*;
     #[cfg(test)]
     #[path = "➕create-generation/🧪️tests/🌱️appends-generatio-5c9205/🦀️.rs"]
@@ -94,12 +94,12 @@ pub mod create_generation {
 
 #[path = "."]
 pub mod delete_generation {
+    #[path = "🗑️delete-generation/🦀️.rs"]
+    mod component;
     #[path = "🗑️delete-generation/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🗑️delete-generation/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🗑️delete-generation/🦀️.rs"]
-    mod component;
     pub use component::*;
     #[cfg(test)]
     #[path = "🗑️delete-generation/🧪️tests/🔬️t007/🦀️.rs"]
@@ -108,12 +108,12 @@ pub mod delete_generation {
 
 #[path = "."]
 pub mod rename_generation {
+    #[path = "🏷️rename-generation/🦀️.rs"]
+    mod component;
     #[path = "🏷️rename-generation/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🏷️rename-generation/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🏷️rename-generation/🦀️.rs"]
-    mod component;
     pub use component::*;
     #[cfg(test)]
     #[path = "🏷️rename-generation/🧪️tests/🏷️retitles-f090d2/🦀️.rs"]
@@ -122,12 +122,12 @@ pub mod rename_generation {
 
 #[path = "."]
 pub mod change_generation_value {
+    #[path = "🔧️change-generation-value/🦀️.rs"]
+    mod component;
     #[path = "🔧️change-generation-value/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔧️change-generation-value/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🔧️change-generation-value/🦀️.rs"]
-    mod component;
     pub use component::*;
     #[cfg(test)]
     #[path = "🔧️change-generation-value/🧪️tests/🔬️t006/🦀️.rs"]

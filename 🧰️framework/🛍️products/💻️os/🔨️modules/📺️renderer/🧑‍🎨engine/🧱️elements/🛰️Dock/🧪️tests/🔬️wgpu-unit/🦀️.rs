@@ -90,13 +90,18 @@ fn concrete_window_instances_round_trip_without_kind_collapse() {
     let actual = dock.window_instances();
     assert_eq!(actual, fixture.expected.iter().map(|window| (window.id.clone(), window.window_kind_id.clone())).collect::<Vec<_>>());
     assert_eq!(dock.active_window_id.as_deref(), Some("canvas-copy"));
+    let DockNode::Stack { windows, .. } = &dock.root else { panic!("fixture root must be a stack") };
+    let labels = HashMap::from([("canvas".to_string(), "Canvas".to_string())]);
+    let mut atlas = FontAtlas::builtin();
+    let chrome = layout_stack_cap(windows, &labels, &HashMap::new(), &mut atlas, &Theme::default(), Rect::new(0.0, 0.0, 640.0, 480.0));
+    assert_eq!(chrome.groups[0].tabs.iter().map(|tab| tab.label.as_str()).collect::<Vec<_>>(), vec!["Canvas", "Canvas"]);
     let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "canvas-copy".into(), window_kind_id: "canvas".into(), source_path: Vec::new(), tab_index: 1, ghost_label: "Canvas copy".into() };
     assert!(dock.remove_window("canvas-copy"));
     assert!(dock.apply_drop(&payload, &DockDropZone::RootSplit { side: DockSide::Right }));
     assert_eq!(dock.window_kind_id("canvas-copy"), Some("canvas"));
     let persisted = serde_json::to_value(dock.to_window_layout()).expect("persisted layout");
     assert!(persisted.to_string().contains("canvas-copy"));
-    println!("[DEBUG] native dock retained two concrete instances of one window kind across render and drag persistence");
+    println!("[DEBUG] native dock retained two concrete instances of one window kind across chrome, render and drag persistence");
 }
 
 #[test]

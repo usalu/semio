@@ -12,6 +12,8 @@
     "key": {
       "type": "string"
     },
-    "newValue": {}
+    "newValue": {
+      "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/DslValue"
+    }
   }
 }

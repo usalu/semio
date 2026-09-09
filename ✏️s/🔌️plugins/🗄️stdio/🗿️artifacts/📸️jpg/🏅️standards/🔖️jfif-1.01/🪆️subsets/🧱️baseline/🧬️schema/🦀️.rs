@@ -21,8 +21,8 @@ pub mod mutations;
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgBuilder as JpgAnyBuilder;
     use crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
+    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgBuilder as JpgAnyBuilder;
     use crate::{JpgDiff, JpgMutation, JpgSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 

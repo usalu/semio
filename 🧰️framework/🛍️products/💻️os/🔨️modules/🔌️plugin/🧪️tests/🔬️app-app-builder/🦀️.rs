@@ -60,10 +60,6 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn catalog_chrome_icons_resolve_to_vendored_icon_names() {
-        for mode in ["edit", "paint", "generate", "explore", "builder", "review", "report"] {
-            let icon = semio_framework::catalog_mode_icon_id(mode).await;
-            assert_eq!(IconName::from_str(icon.as_str()), Some(icon), "mode {mode} -> {}", icon.as_str());
-        }
         assert_eq!(IconName::from("menu").as_str(), "list");
         assert_eq!(IconName::from("square-pen").as_str(), "pencil");
         assert_eq!(IconName::from("trees").as_str(), "list-tree");
@@ -237,7 +233,7 @@ mod app_builder_tests {
             .await
             .mutation("addLayer", LocalizedLabel::data("Add Layer"))
             .await
-            .view_action("setCamera", LocalizedLabel::data("Set Camera"))
+            .action_with(ActionDefinition::new("setCamera", LocalizedLabel::data("Set Camera"), ActionKind::View, "camera"))
             .await
             .shell_action("exportPng", LocalizedLabel::data("Export PNG"))
             .await
@@ -719,9 +715,9 @@ mod app_builder_tests {
         use semio_framework::CommandDefinition;
         let definition = minimal_app("command-app")
             .await
-            .app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell)
+            .command(CommandDefinition::new("app.export", LocalizedLabel::data("Export"), "document", "download", ActionKind::Shell))
             .await
-            .mode_command("edit", CommandDefinition::bounded_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View))
+            .mode_command("edit", CommandDefinition::new("mode.focus", LocalizedLabel::data("Focus"), "view", "focus", ActionKind::View))
             .await
             .build_definition();
         assert_eq!(definition.commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["app.export"]);
@@ -731,7 +727,11 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_duplicate_command_ids() {
         let __base = minimal_app("dupe-command-app").await;
-        let __chain = __base.app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell).await.app_command("app.export", LocalizedLabel::data("Export Again"), "document", ActionKind::Shell).await;
+        let __chain = __base
+            .command(CommandDefinition::new("app.export", LocalizedLabel::data("Export"), "document", "download", ActionKind::Shell))
+            .await
+            .command(CommandDefinition::new("app.export", LocalizedLabel::data("Export Again"), "document", "download", ActionKind::Shell))
+            .await;
         let result = std::panic::catch_unwind(move || __chain.build_definition());
         assert!(result.is_err());
     }
@@ -741,9 +741,9 @@ mod app_builder_tests {
         use semio_framework::CommandDefinition;
         let __base = minimal_app("dupe-mode-command-app").await;
         let __chain = __base
-            .mode_command("edit", CommandDefinition::bounded_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View))
+            .mode_command("edit", CommandDefinition::new("mode.focus", LocalizedLabel::data("Focus"), "view", "focus", ActionKind::View))
             .await
-            .mode_command("edit", CommandDefinition::bounded_catalog("mode.focus", LocalizedLabel::data("Focus Again"), "view", ActionKind::View))
+            .mode_command("edit", CommandDefinition::new("mode.focus", LocalizedLabel::data("Focus Again"), "view", "focus", ActionKind::View))
             .await;
         let result = std::panic::catch_unwind(move || __chain.build_definition());
         assert!(result.is_err());

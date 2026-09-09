@@ -1,4 +1,3 @@
-
 use super::*;
 
 const REAL_FIXTURE: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🧪️example/🌦️.epw");

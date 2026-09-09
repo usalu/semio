@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v_rfc1950::subsets::any::schema::demo_deflate_snapshot;
 use protocol::Inference;

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{EquationGraph, EquationPoint, equation_geometry, equation_graph};
+use crate::{equation_geometry, equation_graph, EquationGraph, EquationPoint};
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 
 #[semio_framework_async_macros::async_test]

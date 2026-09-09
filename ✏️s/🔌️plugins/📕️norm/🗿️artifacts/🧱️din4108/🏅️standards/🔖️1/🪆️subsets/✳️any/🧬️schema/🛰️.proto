@@ -40,8 +40,6 @@ message Din4108Artifact {
   string application_type = 17;
   // @state artifact
   string declared_application_class = 18;
-  // @state presence
-  optional uint32 selected_check_index = 19;
 }
 
 message Din4108LayerDocument {

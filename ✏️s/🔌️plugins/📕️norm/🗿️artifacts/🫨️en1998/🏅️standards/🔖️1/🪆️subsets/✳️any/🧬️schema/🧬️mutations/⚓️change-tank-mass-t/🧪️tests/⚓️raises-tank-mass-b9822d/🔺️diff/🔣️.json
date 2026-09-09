@@ -31,7 +31,7 @@
   "siloQNominal": null,
   "tankHeightM": null,
   "tankRadiusM": null,
-  "tankMassT": 425.0,
+  "tankMassT": 425,
   "tankVRdKn": null,
   "towerMEdKnm": null,
   "towerMRdKnm": null,
@@ -48,6 +48,5 @@
   "wallPhiDeg": null,
   "wallSoilGammaKnM3": null,
   "wallR": null,
-  "wallHRdKn": null,
-  "selectedCheckIndex": null
+  "wallHRdKn": null
 }

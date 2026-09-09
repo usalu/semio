@@ -47,14 +47,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution {
-        identity: "pdf",
-        schema: ARTIFACT_DEFINITION_SCHEMA,
-        definition,
-        assembly,
-        formats,
-        native_codecs,
-    }
+    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "pdf", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Declaration
@@ -75,8 +68,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     let builder = builder.schema(standards::v1_7::subsets::base::schema::pdf_artifact_schema_descriptor());
     let builder = builder.formats(formats);
     let builder = builder.schemas([standards::v1_4::subsets::base::schema::pdf_artifact_schema_descriptor()]);
-    let builder = builder
-        .inferences([standards::v1_7::subsets::base::schema::inferences::pdf17_artifact_inference_descriptor(), standards::v1_4::subsets::base::schema::inferences::pdf_artifact_inference_descriptor()]);
+    let builder = builder.inferences([standards::v1_7::subsets::base::schema::inferences::pdf17_artifact_inference_descriptor(), standards::v1_4::subsets::base::schema::inferences::pdf_artifact_inference_descriptor()]);
     let builder = builder.composers(standards::v1_7::subsets::base::io::io_registry::entries());
     let builder = builder.composers(standards::v1_4::subsets::base::io::io_registry::entries());
     let builder = builder.subset_validators(pdf_1_7_subset_validators());
@@ -113,14 +105,7 @@ fn pdf_1_7_subset_validators() -> &'static [semio_framework_plugin::SubsetValida
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn pdf_1_4_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES
-        .get_or_init(|| {
-            vec![
-                semio_framework_plugin::subset_validator_entry_of::<standards::v1_4::subsets::a::io::PdfAValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<standards::v1_4::subsets::x::io::PdfXValidator>(),
-            ]
-        })
-        .as_slice()
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v1_4::subsets::a::io::PdfAValidator>(), semio_framework_plugin::subset_validator_entry_of::<standards::v1_4::subsets::x::io::PdfXValidator>()]).as_slice()
 }
 
 /// 📌️ `standards::v1_7`'s five `LanguageSpec` rows, copied verbatim from that standard's own

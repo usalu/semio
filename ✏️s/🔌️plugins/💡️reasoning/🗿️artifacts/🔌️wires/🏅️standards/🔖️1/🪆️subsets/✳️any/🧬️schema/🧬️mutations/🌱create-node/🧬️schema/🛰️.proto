@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.mutation.create_node;
+
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+
+message CreateNode {
+  semio.framework.value.DslValue node = 1;
+}

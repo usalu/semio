@@ -2,6 +2,4 @@ syntax = "proto3";
 package semio.app.block.2d.config;
 message Block2dConfig {
   // @state config
-  repeated string selected_ids = 1;
-  // @state config
 }

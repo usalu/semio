@@ -8,6 +8,20 @@ use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
 //#region 🔖️Mutations
+#[path = "🔷insert-shape/🦀️.rs"]
+pub mod insert_shape;
+#[path = "➕insert-slide/🦀️.rs"]
+pub mod insert_slide;
+#[path = "🔀move-slide/🦀️.rs"]
+pub mod move_slide;
+#[path = "🔶remove-shape/🦀️.rs"]
+pub mod remove_shape;
+#[path = "➖remove-slide/🦀️.rs"]
+pub mod remove_slide;
+#[path = "📐set-shape-position/🦀️.rs"]
+pub mod set_shape_position;
+#[path = "✍️set-shape-text/🦀️.rs"]
+pub mod set_shape_text;
 /// 📐️ Typed content mutation for `stdio.pptx`. Addresses `presentation.slides` by index
 /// (slide order matters -- see `MoveSlide`) and, within a slide, `shapes` by
 /// `(slide_index, shape_index)` -- a flat two-level address is sufficient since PresentationML
@@ -25,20 +39,6 @@ use protocol::{Mutation, OpText};
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "➕insert-slide/🦀️.rs"]
-pub mod insert_slide;
-#[path = "➖remove-slide/🦀️.rs"]
-pub mod remove_slide;
-#[path = "🔀move-slide/🦀️.rs"]
-pub mod move_slide;
-#[path = "🔷insert-shape/🦀️.rs"]
-pub mod insert_shape;
-#[path = "🔶remove-shape/🦀️.rs"]
-pub mod remove_shape;
-#[path = "✍️set-shape-text/🦀️.rs"]
-pub mod set_shape_text;
-#[path = "📐set-shape-position/🦀️.rs"]
-pub mod set_shape_position;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -210,7 +210,9 @@ struct PptxMutationRecord {
 impl OpText for PptxMutation {
     fn print_op(&self) -> String {
         let record = match self {
-            PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) },
+            PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
+                PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) }
+            }
             mutation => PptxMutationRecord { kind: "mutation".into(), value: dsl::ToValue::to_value(mutation), snapshot: None },
         };
         dsl::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), dsl::JoinMode::Inline)

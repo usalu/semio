@@ -18,10 +18,18 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for VerifyTryValue
         let next = base.clone();
         let expected = base.try_values.content_chunk_by_id(&self.content_id, self.index);
         let staged = try_value_blobs().lock().expect("forms try-value blob lock").get(&self.staging_id).and_then(|blob| blob.chunks.get(&self.index)).cloned();
-        if expected.as_deref() != staged.as_deref() || self.index.saturating_add(1) > self.chunk_count { return protocol::MutationOutcome::new(next).absorb_messages([FormsStageError::Conflict.message()]); }
+        if expected.as_deref() != staged.as_deref() || self.index.saturating_add(1) > self.chunk_count {
+            return protocol::MutationOutcome::new(next).absorb_messages([FormsStageError::Conflict.message()]);
+        }
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, _base: &FormsConfig) -> Vec<FormsConfigMutation> { Vec::new() }
-    fn label(&self) -> String { "Verify Try Value Chunk".into() }
-    fn target(&self) -> Vec<String> { vec!["try-value".into()] }
+    fn inverse(&self, _base: &FormsConfig) -> Vec<FormsConfigMutation> {
+        Vec::new()
+    }
+    fn label(&self) -> String {
+        "Verify Try Value Chunk".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["try-value".into()]
+    }
 }

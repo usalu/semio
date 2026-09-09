@@ -49,7 +49,7 @@
   "weldFUMpa": null,
   "weldSteelGrade": null,
   "weldFEdKn": null,
-  "deltaSigmaMpa": 90.0,
+  "deltaSigmaMpa": 90,
   "fatigueCategory": 56,
   "fatigueMethod": "safe_life",
   "t10SteelSubgrade": null,
@@ -73,6 +73,5 @@
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

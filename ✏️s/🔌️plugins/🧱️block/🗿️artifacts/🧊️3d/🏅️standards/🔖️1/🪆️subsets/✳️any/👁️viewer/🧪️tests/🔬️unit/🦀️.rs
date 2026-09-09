@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -6,6 +5,9 @@ async fn create_block3d_viewer_builds_a_definition_for_the_viewer_role() {
     let def = create_block3d_viewer();
     assert_eq!(def.role, semio_framework::AppRole::Viewer);
     assert_eq!(def.dialect, BLOCK3D_DIALECT.into());
+    assert_eq!(def.breadcrumb, vec!["semio", "block", "3d"]);
+    let descriptor = serde_json::to_value(&def).expect("language-neutral app descriptor");
+    assert_eq!(descriptor["document"], serde_json::json!(["semio", "block", "3d"]));
 }
 
 #[semio_framework_async_macros::async_test]

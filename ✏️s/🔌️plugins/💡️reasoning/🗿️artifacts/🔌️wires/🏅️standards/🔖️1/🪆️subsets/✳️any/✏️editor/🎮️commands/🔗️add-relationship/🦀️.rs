@@ -1,12 +1,12 @@
 //! 🔗️ 🔗️ Wires play app commands command — `add-relationship`.
 
+use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
+use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_EDGE};
 use crate::op::WiresMutation;
 use crate::schema::fixture_edges;
 use crate::WiresSnapshot;
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_EDGE};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use dsl::DslValue;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -22,18 +22,9 @@ pub fn handle(payload: &AddRelationship, doc: &ArtifactView<'_, WiresSnapshot>, 
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "owns" } else { payload.kind.as_str() };
     let edge_id = format!("edge-{}", fixture_edges(&crate::wires_working_board(document)).len() + 1);
-    let edge = DslValue::object([
-        ("id".into(), DslValue::String(edge_id.clone())),
-        ("edgeKind".into(), DslValue::String(format!("wires.{kind}"))),
-        ("source".into(), DslValue::String("node-1".into())),
-        ("target".into(), DslValue::String("node-2".into())),
-    ]);
-    let relationship = DslValue::object([
-        ("edgeId".into(), DslValue::String(edge_id.clone())),
-        ("kind".into(), DslValue::String(kind.into())),
-        ("sourceIdentityId".into(), DslValue::uint(1)),
-        ("targetIdentityId".into(), DslValue::uint(2)),
-    ]);
+    let edge =
+        DslValue::object([("id".into(), DslValue::String(edge_id.clone())), ("edgeKind".into(), DslValue::String(format!("wires.{kind}"))), ("source".into(), DslValue::String("node-1".into())), ("target".into(), DslValue::String("node-2".into()))]);
+    let relationship = DslValue::object([("edgeId".into(), DslValue::String(edge_id.clone())), ("kind".into(), DslValue::String(kind.into())), ("sourceIdentityId".into(), DslValue::uint(1)), ("targetIdentityId".into(), DslValue::uint(2))]);
     Ok(Emit { artifact_mutations: vec![crate::mutations::connect_nodes(edge, relationship)], effects: vec![wires_select_effect(&[edge_id], WIRES_GRANULARITY_EDGE, "replace")], ..Default::default() })
 }
 

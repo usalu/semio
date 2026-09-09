@@ -6,8 +6,7 @@ message NoteConfig {
   string engagement_input = 3;
   // @state config
   NoteCamera camera = 4;
-  // @state config
-  string active_utility_id = 5;
+  reserved 5;
   // @state config
 }
 

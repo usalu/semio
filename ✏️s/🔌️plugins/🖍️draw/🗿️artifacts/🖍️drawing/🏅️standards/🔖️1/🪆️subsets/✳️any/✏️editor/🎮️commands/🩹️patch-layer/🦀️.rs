@@ -1,11 +1,11 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `patch-layer`.
 
-use crate::op::{drawing_op_for_layer_field, DrawingMutation};
-use crate::DrawingSnapshot;
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use crate::op::{drawing_op_for_layer_field, DrawingMutation};
+use crate::DrawingSnapshot;
 use dsl::{FromValue, ToValue};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️DocumentHelpers
 /// 🩹️ Parses a `PatchLayer`/`PatchLayers` wire `value` as JSON text (falling back to a plain JSON

@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn compressed_rope(bytes: &[u8], max_bytes: usize) -> CompressedChunkRope {
@@ -350,7 +349,11 @@ fn flat_rgba8(width: u32, height: u32, rgb: [u8; 3]) -> ImageRgba8 {
 
 fn psnr_rgba8(a: &ImageRgba8, b: &ImageRgba8) -> f64 {
     let mse = a.data.iter().zip(b.data.iter()).map(|(&x, &y)| (f64::from(x) - f64::from(y)).powi(2)).sum::<f64>() / a.data.len() as f64;
-    if mse <= 0.0 { f64::INFINITY } else { 20.0 * 255.0f64.log10() - 10.0 * mse.log10() }
+    if mse <= 0.0 {
+        f64::INFINITY
+    } else {
+        20.0 * 255.0f64.log10() - 10.0 * mse.log10()
+    }
 }
 
 #[test]

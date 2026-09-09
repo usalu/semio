@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::schema::mutations::{connect_steps, create_step, delete_step};
-use crate::{SequenceSnapshot, SequenceStep, StepParams, default_snapshot};
+use crate::{default_snapshot, SequenceSnapshot, SequenceStep, StepParams};
 use neural_engine::{Atom, Value};
 
 #[semio_framework_async_macros::async_test]

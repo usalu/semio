@@ -3,8 +3,6 @@ export interface DagArtifact {
   /** @state artifact */ schema: string;
   /** @state artifact */ nodes: DagNodeSpec[];
   /** @state artifact */ edges: DagFixtureEdge[];
-  /** @state presence */ selectedNodeIds: string[];
-  /** @state config */ camera: DagCamera;
 }
 export interface DagNodeSpec { id: string; [key: string]: unknown; }
 export interface DagFixtureEdge { id: string; source: string; target: string; }
@@ -63,8 +61,6 @@ export function parseDagArtifact(value: unknown, at = "$"): DagArtifact {
     schema: dagDagArtifactGuardString(row["schema"], `${at}.schema`),
     nodes: dagDagArtifactGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parseDagNodeSpec(item, `${at}.nodes[${index}]`)),
     edges: dagDagArtifactGuardArray(row["edges"], `${at}.edges`).map((item, index) => parseDagFixtureEdge(item, `${at}.edges[${index}]`)),
-    selectedNodeIds: dagDagArtifactGuardArray(row["selectedNodeIds"], `${at}.selectedNodeIds`).map((item, index) => dagDagArtifactGuardString(item, `${at}.selectedNodeIds[${index}]`)),
-    camera: parseDagCamera(row["camera"], `${at}.camera`),
   };
 }
 

@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn checkerboard_model() -> CompiledModel {

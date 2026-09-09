@@ -3,10 +3,6 @@
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
 
-#[cfg(feature = "component-app-assembly")]
-extern crate semio_framework_os_kernel as protocol;
-#[cfg(feature = "component-app-assembly")]
-extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
 #[cfg(feature = "component-app-assembly")]

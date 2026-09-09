@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::{ArtifactApp, EditorApp, PluginCloseStep};
 

@@ -10,9 +10,9 @@
 
 use crate::schema::inferences::processed_mesh;
 use crate::Process3dSnapshot;
+use semio_framework_os_kernel::json;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
-use semio_framework_os_kernel::json;
 
 //#region 🔖️Constants
 pub const PROCESS3D_VIEW_WINDOW_MAIN: &str = "process-workpiece-view";
@@ -76,12 +76,7 @@ fn view_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
 /// 👁️ The viewer's own pure render function — never calls into the sibling `editor` module.
 pub fn render(fixture: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = view_preview_payload(fixture);
-    MeshWindowKit::render(&MeshView {
-        camera_json: default_camera_json(),
-        meshes_json,
-        instances_json,
-        selection_json: world3d_selection_json("rectangle", &[], None),
-    })
+    MeshWindowKit::render(&MeshView { camera_json: default_camera_json(), meshes_json, instances_json, selection_json: world3d_selection_json("rectangle", &[], None) })
 }
 //#endregion 🔖️Render
 

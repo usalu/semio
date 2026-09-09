@@ -13,11 +13,12 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, getWorkspaceRoot, runC
 import plugin, { cacheInternals } from "../🟨️.mjs";
 import { stageArtifacts } from "./📦️artifacts/🟦️.ts";
 import { createArtifactRegistry, measureArtifactRegistry, artifactBudgets, type ArtifactRegistry } from "./📦️artifacts/📇️registry/🟦️.ts";
+import { readInventoryGraph, type InventoryProject } from "./📇️inventory/🟦️.ts";
 
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
 const POLICY = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🔣️policy.json"), "utf8"));
 const slash = (path: string): string => path.split(sep).join("/");
-type Project = { name: string; root: string; targets: Record<string, any>; namedInputs?: Record<string, any>; [key: string]: any };
+type Project = InventoryProject;
 type Finding = { rule: string; path: string; line: number; entry_point: string; evidence: string; replacement: string; severity: string; status: string };
 
 /** 🎫️ Keeps every diagnostic artifact within an explicitly selected repository ticket. */
@@ -48,11 +49,10 @@ function sourceFiles(root: string): string[] {
   return files.sort();
 }
 
-/** 🧭️ Produces a reviewable inventory from the same project normalizer used by Nx. */
-function inventory(root: string): { projects: Project[]; commands: any[]; artifacts: any[]; artifactRegistry: ArtifactRegistry; violations: Finding[] } {
+/** 🧭️ Audits the complete resolved Nx graph and its source entry points. */
+export function inventory(root: string): { projects: Project[]; commands: any[]; artifacts: any[]; artifactRegistry: ArtifactRegistry; violations: Finding[] } {
   const files = sourceFiles(root);
-  const defaults = JSON.parse(readFileSync(join(root, "nx.json"), "utf8")).targetDefaults ?? {};
-  const projects = plugin.createNodesV2[1](files.filter((file) => file.endsWith("📋️project.json") || file.endsWith("Cargo.toml")), {}, { workspaceRoot: root }).flatMap(([, result]: any) => Object.values(result.projects)) as Project[];
+  const { projects, sources } = readInventoryGraph(root);
   const commands: any[] = [];
   const artifacts: any[] = [];
   const violations: Finding[] = [];
@@ -62,11 +62,10 @@ function inventory(root: string): { projects: Project[]; commands: any[]; artifa
     violations.push({ rule, path, line: at < 0 ? 1 : text.slice(0, at).split("\n").length, entry_point, evidence, replacement, severity: "error", status: "open" });
   };
   for (const project of projects) {
-    for (const [name, declared] of Object.entries(project.targets)) {
-      const target = { ...defaults[name], ...declared };
-      const path = slash(join(project.root, existsSync(join(root, project.root, "📋️project.json")) ? "📋️project.json" : "Cargo.toml"));
+    for (const [name, target] of Object.entries(project.targets)) {
+      const path = sources[project.name][name];
       const identity = `${project.name}:${name}`;
-      commands.push({ project: project.name, target: name, file: path, cwd: target.options?.cwd ?? root, command: target.options?.command, cache: target.cache === true, continuous: target.continuous === true, inputs: target.inputs, outputs: target.outputs ?? [], dependsOn: target.dependsOn ?? [] });
+      commands.push({ project: project.name, target: name, file: path, executor: target.executor, configurations: target.configurations, cwd: target.options?.cwd ?? root, command: target.options?.command, cache: target.cache === true, continuous: target.continuous === true, inputs: target.inputs, outputs: target.outputs ?? [], dependsOn: target.dependsOn ?? [] });
       if (typeof target.options?.command === "string" && (!/^bun(?: --watch)? (?:"[^"\n]*📜️script\.ts"|[^\s]*📜️script\.ts) [^\n]+$/.test(target.options.command) || /(?:&&|\|\|)/.test(target.options.command))) report("ORCH-01", path, identity, target.options.command, "Invoke one script and declare prerequisite ordering in dependsOn");
       if ((target.cache || /^(build(?:-|$)|wasm$|native-build$|package$|extension-package$)/.test(name)) && !Object.hasOwn(target, "outputs")) report("CACHE-06", path, identity, "Target still needs an explicit output contract", "Declare complete owned deliverables, or outputs: [] for a verified read-only task");
       for (const output of target.outputs ?? []) {
@@ -112,7 +111,7 @@ class AuditScript extends BundleScript {
     const output = ticketOutput(this.repoRoot, args);
     const result = inventory(this.repoRoot);
     for (const [name, value] of Object.entries(result)) writeFileSync(join(output, `${name}.json`), JSON.stringify(value, null, 2) + "\n");
-    writeFileSync(join(dirname(dirname(output)), "📓️nx-inventory.md"), `# Nx Inventory\n\n${result.projects.length} projects; ${result.commands.length} commands; ${result.artifacts.length} declared artifacts; ${result.violations.length} unresolved contract findings.\n\nGenerated machine-readable inventories are in 🗑️generated/nx while the ticket is active.\n`);
+    writeFileSync(join(dirname(dirname(output)), "📓️nx-inventory.md"), `# Nx Inventory\n\n${result.projects.length} projects from every native Nx provider; ${result.commands.length} commands; ${result.artifacts.length} declared artifacts; ${result.violations.length} unresolved contract findings.\n\nResolved target settings and configuration provenance come from the graph constructed by the outer Nx invocation. Generated machine-readable inventories are in 🗑️generated/nx while the ticket is active.\n`);
     console.log(`[nx-audit] projects=${result.projects.length} commands=${result.commands.length} artifacts=${result.artifacts.length} violations=${result.violations.length}`);
   }
 }
@@ -133,7 +132,9 @@ class GraphScript extends BundleScript {
     const edges = Object.values(graph.dependencies).flat() as any[];
     assert.ok(edges.length > 0, "A monorepo graph must contain dependency edges");
     for (const edge of edges) assert.ok(graph.nodes[edge.target] || graph.externalNodes?.[edge.target], `Unknown dependency ${edge.target}`);
-    for (const project of inventory(this.repoRoot).projects) {
+    const files = sourceFiles(this.repoRoot);
+    const declared = plugin.createNodesV2[1](files.filter(file => file.endsWith("📋️project.json") || file.endsWith("Cargo.toml")), {}, { workspaceRoot: this.repoRoot }).flatMap(([, result]: any) => Object.values(result.projects)) as Project[];
+    for (const project of declared) {
       const resolved = graph.nodes[project.name]?.data;
       assert.ok(resolved, `Nx omitted ${project.name}`);
       for (const [name, target] of Object.entries(project.targets)) {
@@ -175,38 +176,6 @@ class DoctorScript extends BundleScript {
         console.log(`[nx-doctor] ${command}: ${result.exitCode === 0 ? result.stdout.toString().split("\n")[0] : "unavailable"}`);
       } catch { console.log(`[nx-doctor] ${command}: unavailable`); }
     }
-  }
-}
-
-/** 🔧️ Fingerprints optional native tools without downloading or installing during hashing. */
-class ToolchainScript extends BundleScript {
-  run(args: string[]): void {
-    if (args[0] !== "wasm") throw new Error("toolchain wasm");
-    const versions = Object.fromEntries(["wasm-pack", "wasm-bindgen", "wasm-opt", "trunk"].map((tool) => {
-      const override = tool === "wasm-bindgen" ? process.env.SEMIO_WASM_BINDGEN_BIN : tool === "wasm-opt" ? process.env.SEMIO_WASM_OPT_BIN : undefined;
-      const path = override ? resolve(this.repoRoot, override) : Bun.which(tool, { PATH: process.env.PATH });
-      if (!path) return [tool, "unavailable"];
-      const result = Bun.spawnSync([path, "--version"], { stdout: "pipe", stderr: "pipe", timeout: 10000 });
-      if (result.exitCode !== 0) throw new Error(`Cannot fingerprint ${tool}`);
-      return [tool, result.stdout.toString().trim() || result.stderr.toString().trim()];
-    }));
-    console.log(JSON.stringify(versions));
-  }
-}
-
-/** 🔐️ Hashes catalog membership and exact source bytes, including ignored generator inputs. */
-class GeneratorInputsScript extends BundleScript {
-  async run(args: string[]): Promise<void> {
-    if (args[0] !== "registry-catalog") throw new Error("generator-inputs registry-catalog");
-    const { loadCatalogTaxonomy, registryCatalogInputPaths, registryCatalogInputView } = await import("../🔍️discovery/🟦️.ts");
-    const taxonomy = loadCatalogTaxonomy(), view = registryCatalogInputView(this.repoRoot, taxonomy), hash = createHash("sha256");
-    for (const path of registryCatalogInputPaths(this.repoRoot, taxonomy, view)) {
-      const kind = view.kind(path);
-      if (kind === "symlink") throw new Error(`Generator input is a symlink: ${path}`);
-      const content = kind === "file" ? readFileSync(join(this.repoRoot, path)) : Buffer.alloc(0);
-      hash.update(JSON.stringify([path, kind, content.byteLength]) + "\n").update(content);
-    }
-    console.log(hash.digest("hex"));
   }
 }
 
@@ -527,7 +496,7 @@ class ArtifactPackageContractScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(SCRIPT_ROOT).register("test", TestScript).register("audit", AuditScript).register("policy-check", PolicyScript).register("artifact-check", PolicyScript).register("artifact-package-contract", ArtifactPackageContractScript).register("graph-check", GraphScript).register("doctor", DoctorScript).register("disk-report", DiskScript).register("disk-prune", DiskPruneScript).register("cache-verify", CacheVerifyScript).register("toolchain", ToolchainScript).register("generator-inputs", GeneratorInputsScript);
+const router = new ScriptRouter(SCRIPT_ROOT).register("test", TestScript).register("audit", AuditScript).register("policy-check", PolicyScript).register("artifact-check", PolicyScript).register("artifact-package-contract", ArtifactPackageContractScript).register("graph-check", GraphScript).register("doctor", DoctorScript).register("disk-report", DiskScript).register("disk-prune", DiskPruneScript).register("cache-verify", CacheVerifyScript);
 const createCachePolicyTestsInstance = createCachePolicyTests({ assert, cacheInternals, chmodSync, copyFileSync, createRequire, devToolingEnv, dirname, EventEmitter, existsSync, getWorkspaceRoot, inventory, join, lstatSync, mkdirSync, mkdtempSync, plugin, readFileSync, relative, resolve, rmSync, SCRIPT_ROOT, slash, spawn, stageArtifacts, ticketOutput, utimesSync, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 export const testCacheContracts = createCachePolicyTestsInstance.testCacheContracts;
 

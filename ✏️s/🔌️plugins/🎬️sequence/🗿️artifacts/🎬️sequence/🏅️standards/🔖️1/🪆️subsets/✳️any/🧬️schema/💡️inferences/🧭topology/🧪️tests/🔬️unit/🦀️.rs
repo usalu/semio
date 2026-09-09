@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{SequenceEdge, SequenceFixture, SequenceStep, StepParams};
 

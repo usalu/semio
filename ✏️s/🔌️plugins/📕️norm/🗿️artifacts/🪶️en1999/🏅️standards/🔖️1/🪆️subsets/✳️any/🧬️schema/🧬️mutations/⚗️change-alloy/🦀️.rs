@@ -1,9 +1,8 @@
 //! 🦗 `change-alloy` payload — changes the En1999 document's `alloy` (aluminium alloy designation).
 
-
-use crate::En1999Snapshot;
 use crate::diff::En1999Diff;
 use crate::mutations::En1999Mutation;
+use crate::En1999Snapshot;
 //#region 🔖️ChangeAlloy
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

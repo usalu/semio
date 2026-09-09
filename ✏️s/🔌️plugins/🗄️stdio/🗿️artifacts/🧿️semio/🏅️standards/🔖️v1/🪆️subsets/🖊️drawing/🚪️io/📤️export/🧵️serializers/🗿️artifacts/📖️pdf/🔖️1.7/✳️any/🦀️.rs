@@ -6,9 +6,9 @@
 //! own module doc — it has no path-painting operator emission at all) and are dropped, documented,
 //! not fabricated.
 
-use semio_s_artifact_stdio_pdf::{schema::snapshot::PdfPage, PdfSnapshot};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_pdf::{schema::snapshot::PdfPage, PdfSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId::ANY };

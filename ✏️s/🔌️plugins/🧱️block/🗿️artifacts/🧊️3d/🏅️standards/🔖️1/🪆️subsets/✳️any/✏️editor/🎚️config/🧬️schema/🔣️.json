@@ -5,20 +5,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "wantedTags",
     "windows",
     "brushRadius",
     "brushFlip"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
     "activeRepresentationId": {
       "type": "string",
       "x-semio-state": "config"
@@ -49,16 +41,8 @@
       "type": "boolean",
       "x-semio-state": "config"
     },
-    "brushPreview": {
-      "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dBrushPreview",
-      "x-semio-state": "config"
-    },
     "camera": {
       "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockCamera3d",
-      "x-semio-state": "config"
-    },
-    "hoveredVortexFullId": {
-      "type": "string",
       "x-semio-state": "config"
     }
   }

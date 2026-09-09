@@ -7,9 +7,7 @@
   "required": [
     "schema",
     "nodes",
-    "edges",
-    "selectedNodeIds",
-    "camera"
+    "edges"
   ],
   "properties": {
     "schema": {
@@ -29,17 +27,6 @@
         "$ref": "#/$defs/DagFixtureEdge"
       },
       "x-semio-state": "artifact"
-    },
-    "selectedNodeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "camera": {
-      "$ref": "#/$defs/DagCamera",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

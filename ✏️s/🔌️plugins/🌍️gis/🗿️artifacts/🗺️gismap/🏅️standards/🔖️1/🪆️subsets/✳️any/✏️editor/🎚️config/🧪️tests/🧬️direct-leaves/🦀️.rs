@@ -9,7 +9,9 @@ fn fixture() -> serde_json::Value {
 }
 
 pub(crate) fn assert_leaf<T>(sample: usize, wrap: fn(T) -> Gis2dConfigMutation, descriptor: &str)
-where T: MutationLeaf + dsl::ToValue + dsl::FromValue + PartialEq + std::fmt::Debug {
+where
+    T: MutationLeaf + dsl::ToValue + dsl::FromValue + PartialEq + std::fmt::Debug,
+{
     let fixture = fixture();
     let envelope = &fixture["valid"][sample]["payload"];
     let mut payload = envelope.clone();
@@ -68,18 +70,30 @@ fn neutral_state_cases_match_stored_and_replayed_inverse_order() {
             let operation: Gis2dConfigMutation = dsl::json::from_json_str(&(value.clone()).to_string()).unwrap();
             inverses.extend(operation.inverse(&after));
             let outcome = operation.diff(&after);
-            if row["expected"]["outcome"] == "warning" { assert_eq!(outcome.worst_level(), Some(dsl::Severity::Warning)); }
+            if row["expected"]["outcome"] == "warning" {
+                assert_eq!(outcome.worst_level(), Some(dsl::Severity::Warning));
+            }
             after = outcome.diff().apply(&after).unwrap();
         }
-        if row["expected"]["afterEqualsBefore"] == true { assert_eq!(after, before); }
+        if row["expected"]["afterEqualsBefore"] == true {
+            assert_eq!(after, before);
+        }
         if let Some(expected) = row.get("after") {
             let actual = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&after)).unwrap();
-            for (key, value) in expected.as_object().unwrap() { assert_eq!(&actual[key], value); }
+            for (key, value) in expected.as_object().unwrap() {
+                assert_eq!(&actual[key], value);
+            }
         }
-        if let Some(expected) = row.get("inverseStoredOrder") { assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&inverses)).unwrap(), *expected); }
+        if let Some(expected) = row.get("inverseStoredOrder") {
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&inverses)).unwrap(), *expected);
+        }
         inverses.reverse();
-        if let Some(expected) = row.get("inverseReplayOrder") { assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&inverses)).unwrap(), *expected); }
-        for operation in inverses { after = apply(&after, &operation); }
+        if let Some(expected) = row.get("inverseReplayOrder") {
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&inverses)).unwrap(), *expected);
+        }
+        for operation in inverses {
+            after = apply(&after, &operation);
+        }
         assert_eq!(after, before);
     }
 }
@@ -121,7 +135,9 @@ fn visibility_inverse_distinguishes_absence_and_explicit_default() {
     for previous in [None, Some(false), Some(true)] {
         let mut base = populated();
         base.layer_visibility.remove("water");
-        if let Some(value) = previous { base.layer_visibility.insert("water".into(), value); }
+        if let Some(value) = previous {
+            base.layer_visibility.insert("water".into(), value);
+        }
         for visible in [None, Some(false), Some(true)] {
             let operation = Gis2dConfigMutation::SetLayerVisibility(SetLayerVisibility { layer_id: "water".into(), visible });
             assert_eq!(undo(&base, &operation), base);
@@ -136,7 +152,9 @@ fn stroke_inverse_distinguishes_absence_and_explicit_default() {
     for previous in [None, Some(1.0), Some(2.0)] {
         let mut base = populated();
         base.layer_stroke_scale.remove("roads");
-        if let Some(value) = previous { base.layer_stroke_scale.insert("roads".into(), value); }
+        if let Some(value) = previous {
+            base.layer_stroke_scale.insert("roads".into(), value);
+        }
         for value in [None, Some(1.0), Some(2.0)] {
             let operation = Gis2dConfigMutation::SetLayerStrokeScale(SetLayerStrokeScale { layer_id: "roads".into(), value });
             assert_eq!(undo(&base, &operation), base);
@@ -172,16 +190,15 @@ fn invalid_numeric_delta_cannot_be_hidden_by_a_later_write() {
 }
 
 #[test]
-fn non_finite_values_cannot_serialize_as_override_removals() {
+fn non_finite_operations_are_rejected_before_persisting_config_diff() {
     for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
         let operation = Gis2dConfigMutation::SetLayerStrokeScale(SetLayerStrokeScale { layer_id: "roads".into(), value: Some(value) });
         let base = populated();
         let outcome = operation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
         assert_eq!(outcome.diff().apply(&base).unwrap(), base);
-        assert!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).is_err());
         let delta = Gis2dConfigDelta { layer_stroke_scale: BTreeMap::from([("roads".into(), Some(value))]), ..Default::default() };
-        assert!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&Gis2dConfigDiff::from(delta))).is_err());
+        assert!(serde_json::to_string(&Gis2dConfigDiff::from(delta)).is_err());
     }
 }
 //#endregion 🧪️Composition

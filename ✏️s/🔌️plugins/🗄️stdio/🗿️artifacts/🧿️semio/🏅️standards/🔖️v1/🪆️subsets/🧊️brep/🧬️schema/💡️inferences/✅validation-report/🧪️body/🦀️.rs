@@ -82,9 +82,7 @@ fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
         for coedge_id in body.face_coedges(face_id) {
             let Some(coedge) = body.coedges.get(coedge_id) else { continue };
             let Some(edge) = body.edges.get(coedge.edge) else { continue };
-            if let Some((finer, coarser)) =
-                crate::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol)
-            {
+            if let Some((finer, coarser)) = crate::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol) {
                 issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
             }
         }
@@ -123,18 +121,21 @@ fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
             let samples = same_parameter_deviations(surface, pcurve, curve3, coedge.prange, edge.range, BASE_SAMPLES);
             let Some(&(worst_s, worst_dev)) = samples.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)) else { continue };
             if worst_dev > edge.tol.value() {
-                issues.push(ValidationIssue {
-                    entity: format!("coedge-{}", coedge_id.raw_index()),
-                    code: "same-parameter-violated",
-                    message: format!("pcurve and 3D curve disagree by {worst_dev} at s={worst_s} (tol {})", edge.tol.value()),
-                });
+                issues.push(ValidationIssue { entity: format!("coedge-{}", coedge_id.raw_index()), code: "same-parameter-violated", message: format!("pcurve and 3D curve disagree by {worst_dev} at s={worst_s} (tol {})", edge.tol.value()) });
             }
         }
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn same_parameter_deviation_at(surface: &Surface, pcurve: &crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2, curve3: &crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, prange: (f64, f64), range: (f64, f64), s: f64) -> f64 {
+fn same_parameter_deviation_at(
+    surface: &Surface,
+    pcurve: &crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2,
+    curve3: &crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3,
+    prange: (f64, f64),
+    range: (f64, f64),
+    s: f64,
+) -> f64 {
     let p = prange.0 + (prange.1 - prange.0) * s;
     let t = range.0 + (range.1 - range.0) * s;
     let uv = pcurve.eval(p);

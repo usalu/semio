@@ -13,17 +13,6 @@ type LayoutArtifact {
   pages: [Page!]! @state(class: ARTIFACT)
   printTarget: String @state(class: ARTIFACT)
   dataFieldsJson: String @state(class: ARTIFACT)
-  selectedIds: [String!]! @state(class: PRESENCE)
-  activePageId: String! @state(class: CONFIG)
-  engagementInput: String! @state(class: CONFIG)
-  cameraX: Float! @state(class: CONFIG)
-  cameraY: Float! @state(class: CONFIG)
-  cameraZoom: Float! @state(class: CONFIG)
-  previewCameraX: Float! @state(class: CONFIG)
-  previewCameraY: Float! @state(class: CONFIG)
-  previewCameraZoom: Float! @state(class: CONFIG)
-  dropPreview: LayoutDropPreviewState! @state(class: CONFIG)
-  hoveredId: String @state(class: ARTIFACT)
 }
 
 type GridSettings {

@@ -19,7 +19,6 @@ type Din4108Artifact {
   bb2DetailsConform: Boolean! @state(class: ARTIFACT)
   applicationType: String! @state(class: ARTIFACT)
   declaredApplicationClass: String! @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type Din4108LayerDocument {

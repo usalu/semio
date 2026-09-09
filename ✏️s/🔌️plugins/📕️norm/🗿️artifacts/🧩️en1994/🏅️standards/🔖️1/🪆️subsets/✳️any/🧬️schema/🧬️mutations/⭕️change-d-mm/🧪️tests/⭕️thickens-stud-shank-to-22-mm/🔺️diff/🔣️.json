@@ -12,7 +12,7 @@
   "deckType": null,
   "deltaSigmaMpa": null,
   "fatigueDetail": null,
-  "dMm": 22.0,
+  "dMm": 22,
   "hScMm": null,
   "fCkMpa": null,
   "fUMpa": null,
@@ -21,6 +21,5 @@
   "spanM": null,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

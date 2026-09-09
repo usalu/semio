@@ -1,10 +1,10 @@
 //! 🔍️ Generation3d play app panel — the selection inspector.
 
-use crate::widget_id;
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
+use crate::widget_id;
 use semio_framework_artifact_flow_flow::{FlowFixture, Widget};
-use semio_framework_plugin::plugin_app_close_prelude::{field, input, Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{field, input, Buildable, HasBase, HasChildren, InputKind, Trigger, UiAssemblyResult, UiListBuilder, UiValue};
 use semio_framework_plugin::{tree_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(selected_id) = selected_node_ids.first() else {
         return PanelTreeBuilder::new("procedural-play-inspector")?
             .section(
@@ -48,7 +48,7 @@ pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Gene
         .try_push(tree_item("procedural-play-inspector.id", format!("{}: {}", labels.id_field.as_str(), widget_id(widget)))?)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     if let Widget::InputSlider { value, min, max, .. } = widget {
-        let widget_ids = crate::ui_value_list([crate::ui_value_text(selected_id)?])?;
+        let widget_ids = ui_value_list([crate::ui_value_text(selected_id)?])?;
         let action_args = crate::ui_value_map([("field", crate::ui_value_text("value")?), ("widgetIds", widget_ids)])?;
         let (action, args) = ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("patchFlowWidgets", Some(action_args))?;
         let control = input(InputKind::Number)
@@ -110,3 +110,11 @@ pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Gene
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> UiAssemblyResult<UiValue> {
+    let mut builder = UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.value.list", "fixed UI admission failed"))?;
+    for value in values {
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.value.list.item", "fixed UI admission failed"))?;
+    }
+    Ok(UiValue::List(builder.finish()))
+}

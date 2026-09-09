@@ -1,0 +1,12 @@
+{
+  "firstCamera": {
+    "x": 1,
+    "y": 2,
+    "zoom": 1
+  },
+  "incomingCamera": {
+    "x": 4,
+    "y": -3,
+    "zoom": 2
+  }
+}

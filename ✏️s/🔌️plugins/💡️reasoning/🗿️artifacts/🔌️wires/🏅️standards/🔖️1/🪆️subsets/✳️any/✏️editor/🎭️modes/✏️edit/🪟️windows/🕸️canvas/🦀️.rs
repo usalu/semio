@@ -1,9 +1,9 @@
 //! 🕸️ Wires play app — the canvas window: the editable WIRES mindmap board.
 
 use crate::schema::{dsl_to_json, fixture_camera, fixture_edges, fixture_nodes, wires_relationships};
-use dsl::DslValue;
 use dsl::os_pack::json::Value;
-use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use dsl::DslValue;
+use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_WINDOW_CANVAS: &str = "reasoning-wires-composite";

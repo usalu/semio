@@ -17,7 +17,13 @@ impl protocol::MutationKind<SequenceConfig, SequenceConfigMutation> for SetOrien
         next.orientation = self.value.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &SequenceConfig) -> Vec<SequenceConfigMutation> { vec![SequenceConfigMutation::SetOrientation(Self { value: base.orientation.clone() })] }
-    fn label(&self) -> String { "Set Orientation".into() }
-    fn target(&self) -> Vec<String> { vec!["orientation".into()] }
+    fn inverse(&self, base: &SequenceConfig) -> Vec<SequenceConfigMutation> {
+        vec![SequenceConfigMutation::SetOrientation(Self { value: base.orientation.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Orientation".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["orientation".into()]
+    }
 }

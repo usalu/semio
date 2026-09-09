@@ -7,10 +7,8 @@
 //! the VCS'd document. The former `selected_object_id` field/`SetSelectedObject` mutation dissolved
 //! into the framework-owned "rows" interaction domain (ticket
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `SourcingCurationApp::create_sourcing_curation_app`'s
-//! `.interaction(...)` declaration. `locale` is the config-derived
-//! counterpart to a host-pushed `ViewModel.locale` — `ArtifactApp::render`/`handle` no longer receive a
-//! `ViewModel` at all, so locale-aware label resolution reads it off here (see
-//! `crate::editor::sourcing::terminology::sourcing_curation_labels`).
+//! `.interaction(...)` declaration. Locale and terminology come from the shared host `ViewModel`
+//! (see `crate::editor::sourcing::terminology::sourcing_curation_labels`).
 
 use crate::{Filters, TableSort};
 use protocol::Mutation;

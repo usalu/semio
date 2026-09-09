@@ -51,7 +51,5 @@ pub struct En1995Diff {
     pub a_vert_m_s2: Option<f64>,
     #[state(artifact)]
     pub n_cycles_bridge: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff

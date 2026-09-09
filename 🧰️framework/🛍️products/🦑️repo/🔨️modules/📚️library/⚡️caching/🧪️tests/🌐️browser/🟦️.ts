@@ -15,9 +15,14 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
   put(manifest, JSON.stringify(marker));
   const require = createRequire(import.meta.url), schema = JSON.parse(readFileSync(join(moduleRoot, "../../../🌐️browser-bundle/🧬️schema/🔣️.json"), "utf8"));
   const validator = new (require("ajv").default)(); validator.addSchema(schema);
+  const viteRoot = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite");
+  const lifecycle = JSON.parse(readFileSync(join(viteRoot, "🧫️cases.json"), "utf8"));
+  assert.ok(new (require("ajv").default)().validate(JSON.parse(readFileSync(join(viteRoot, "🧬️schema/🔣️.json"), "utf8")), lifecycle));
   assert.ok(validator.validate({ $ref: schema.$id + "#/$defs/BrowserArtifactDistributionV1" }, marker));
   const sources = [{ root: source, destination: fixture.destination, owner: fixture.owner, shimDirectory: fixture.shimDirectory }];
   try {
+    put(join(temporary, "package.json"), JSON.stringify(lifecycle.storage.package));
+    mkdirSync(join(temporary, lifecycle.storage.modules));
     const { collectArtifactFiles } = await import(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts"));
     const oracle = (await require("fast-glob")("**/*", { cwd: source, dot: true, onlyFiles: true, followSymbolicLinks: false })).sort();
     assert.deepEqual([...(await collectArtifactFiles(source)).keys()], oracle);
@@ -58,7 +63,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     const app = join(temporary, "app"), buildOutput = join(temporary, "vite-output");
     put(join(app, "index.html"), '<!doctype html><title>Artifact fixture</title><script type="module" src="/entry.js"></script>');
     put(join(app, "entry.js"), 'document.body.dataset.ready = "true";');
-    const { build } = await import("vite");
+    const { build, resolveConfig } = await import("vite");
     await build({ root: app, configFile: false, publicDir: false, logLevel: "silent", plugins: [browserArtifactVitePlugin(sources)], build: { outDir: buildOutput, emptyOutDir: true } });
     assert.ok(readFileSync(join(buildOutput, "index.html"), "utf8").includes("/assets/"));
     for (const [name, value] of Object.entries(fixture.files)) assert.equal(readFileSync(join(buildOutput, fixture.destination, name), "utf8"), name.endsWith("bridge.js") ? fixture.rewrittenBridge : value);
@@ -68,6 +73,9 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     const config = join(app, "⚙️vite.config.ts"), published = join(temporary, "published");
     put(config, 'export default { publicDir: false, logLevel: "silent" };');
     await buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, temporaryRoot: temporary });
+    assert.ok(existsSync(join(temporary, lifecycle.storage.config)), "Vite config compilation must stay inside the private fixture");
+    const resolvedConfig = await resolveConfig({ root: app, configFile: false }, "serve");
+    assert.equal(resolvedConfig.cacheDir, join(temporary, lifecycle.storage.optimizer), "Vite dependency optimization must stay inside the private fixture");
     const publishedIndex = readFileSync(join(published, "index.html"), "utf8"), publishedMarker = JSON.parse(readFileSync(join(published, ".nx-artifact.json"), "utf8"));
     assert.equal(publishedMarker.owner, fixture.owner);
     assert.ok(publishedMarker.files.includes("index.html"));
@@ -78,9 +86,6 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     await assert.rejects(() => buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, temporaryRoot: temporary, signal: abort.signal }), /abort/i);
     assert.equal((await (await import("node:fs/promises")).readdir(temporary)).some(name => name.startsWith("vite-build-")), false);
     put(config, 'export default { publicDir: false, logLevel: "silent" };');
-    const viteRoot = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite");
-    const lifecycle = JSON.parse(readFileSync(join(viteRoot, "🧫️cases.json"), "utf8"));
-    assert.ok(new (require("ajv").default)().validate(JSON.parse(readFileSync(join(viteRoot, "🧬️schema/🔣️.json"), "utf8")), lifecycle));
     const serving = new AbortController();
     let ready!: (url: string) => void, failed!: (error: unknown) => void;
     const listening = new Promise<string>((resolve, reject) => { ready = resolve; failed = reject; });
@@ -110,6 +115,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     await new Promise<void>((resolve, reject) => rebound.close(error => error ? reject(error) : resolve()));
     await assert.rejects(() => serveVite({ root: app, config, host: lifecycle.server.host, port: 0, signal: abort.signal, ready: () => assert.fail("Cancelled server became ready") }), /abort/i);
     console.log("[DEBUG] Vite serves HTTP and real HMR updates on one allocated listener, rejects occupied ports and closes live sockets on cancellation PASS");
+    console.log("[DEBUG] Vite config compilation and dependency optimization use the private fixture's module directory PASS");
     console.log("[DEBUG] Vite publication owns the complete file inventory, preserves prior bytes after build failure and cleans private staging PASS");
     console.log("[DEBUG] Real Vite production build emits owned runtime bytes and rejects a mismatched producer PASS");
     console.log(`[DEBUG] Browser distribution copies ${count} owned files, relocates module imports, excludes ambient metadata, rejects corrupt ownership/paths and pre-cancellation PASS`);

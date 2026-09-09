@@ -1,8 +1,8 @@
 //! 🔧️ Equipment fault models: sensor offsets, fouling, dampers, refrigerant charge.
 
 use crate::error::Severity;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️SeveritySchedule
 /// 📅️ Time-varying fault severity multiplier (0 = none, 1 = full fault).

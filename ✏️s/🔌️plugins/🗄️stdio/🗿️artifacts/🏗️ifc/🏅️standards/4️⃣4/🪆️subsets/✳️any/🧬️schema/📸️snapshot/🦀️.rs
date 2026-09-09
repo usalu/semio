@@ -12,8 +12,8 @@
 //! https://www.iso.org/standard/70303.html (IFC4) / https://www.iso.org/standard/63141.html (Part 21)
 
 use crate::STDIO_IFC_DOCUMENT_SCHEMA;
-use semio_s_artifact_stdio_step::engine::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 use framework_schema::ArtifactSchema;
+use semio_s_artifact_stdio_step::engine::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 
 //#region 🔖️Value
 /// 🔤️ One typed value in IFC4's Part-21 argument-list syntax — own enum, mirrors
@@ -38,9 +38,11 @@ pub enum IfcValue {
     /// Part-21 syntax level).
     Aggregate(Vec<IfcValue>),
     /// `IFCLENGTHMEASURE(3000.)` — a "defined type" wrapper: EXPRESS keyword + its own arg list.
-    TypedValue { name: String, items: Vec<IfcValue> },
+    TypedValue {
+        name: String,
+        items: Vec<IfcValue>,
+    },
 }
-
 
 impl IfcValue {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

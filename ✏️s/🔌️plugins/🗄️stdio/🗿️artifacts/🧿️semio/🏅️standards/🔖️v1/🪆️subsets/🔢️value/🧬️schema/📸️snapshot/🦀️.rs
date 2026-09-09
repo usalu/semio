@@ -62,14 +62,30 @@ pub struct SemioValueEntry {
 pub enum SemioValue {
     #[default]
     Null,
-    Bool { value: bool },
-    Int { lexeme: String },
-    Float { lexeme: String },
-    Str { value: String },
-    Bytes { value: Vec<u8> },
-    List { items: Vec<SemioValue> },
-    Map { entries: Vec<SemioValueEntry> },
-    Ref { id: ValueId },
+    Bool {
+        value: bool,
+    },
+    Int {
+        lexeme: String,
+    },
+    Float {
+        lexeme: String,
+    },
+    Str {
+        value: String,
+    },
+    Bytes {
+        value: Vec<u8>,
+    },
+    List {
+        items: Vec<SemioValue>,
+    },
+    Map {
+        entries: Vec<SemioValueEntry>,
+    },
+    Ref {
+        id: ValueId,
+    },
 }
 
 //#endregion 🔖️SemioValue

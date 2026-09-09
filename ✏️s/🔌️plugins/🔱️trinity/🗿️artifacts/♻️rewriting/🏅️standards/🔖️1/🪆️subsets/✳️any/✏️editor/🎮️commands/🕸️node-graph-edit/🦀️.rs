@@ -1,13 +1,15 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `node-graph-edit`.
 
-use semio_s_artifact_trinity_jack::{Graph, JackSnapshot};
+use crate::standards::v1::subsets::any::schema;
+
 use crate::rewriting_snapshot_mutations;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::Rhs;
 use crate::RewritingSnapshot;
-use crate::editor::rewriting::config::RewritingConfigMutation;
-use semio_framework_plugin::Emit;
 use pack::JsonValue as Value;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::NoConfigMutation;
+use semio_s_artifact_trinity_jack::{Graph, JackSnapshot};
 
 /// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
 /// `rhs-merge-N`, `rhs-set-N`, `rhs-delete-N`, `rhs-parameter-N`) — parsed back from its synthetic
@@ -163,7 +165,7 @@ fn apply_rewriting_node_graph_edit_operations(state: &mut RewritingSnapshot, sel
 /// deleting a selected id here is enough on its own: the framework re-validates/prunes the "graph"
 /// domain's selection against the fresh `interaction_topology` right after this document dispatch
 /// lands, so no explicit selection-clearing mutation is emitted anymore.
-pub(crate) fn node_graph_edit(state: &RewritingSnapshot, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Emit<RewriteRuleMutation, RewritingConfigMutation> {
+pub(crate) fn node_graph_edit(state: &RewritingSnapshot, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Emit<RewriteRuleMutation, NoConfigMutation> {
     let operations: Vec<Value> = pack::from_json_str(operations_json).unwrap_or_default();
     let mut next = state.clone();
     let changed = apply_rewriting_node_graph_edit_operations(&mut next, selected_node_ids, surface_id, &operations);

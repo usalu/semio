@@ -131,7 +131,7 @@ impl MetalBackend {
         let RawWindowHandle::AppKit(handle) = window_handle.as_raw() else {
             return Err(BackendError::UnsupportedFormat("metal backend requires an AppKit window handle"));
         };
-        let (device, queue, layer) = create_device_queue_layer(size, dpr)?;
+        let DeviceQueueLayer { device, queue, layer } = create_device_queue_layer(size, dpr)?;
         // 🔓️ SAFETY: `handle.ns_view` is guaranteed by `raw_window_handle::AppKitWindowHandle`'s own
         // contract to be a valid, live `NSView*` for the lifetime of `window_handle`; `setWantsLayer:`/
         // `setLayer:` are ordinary AppKit calls with no return value, called on the main thread (the
@@ -152,7 +152,7 @@ impl MetalBackend {
     // 🚫️async: U1 — the ONE permitted async fn per the `GraphicsBackend` docstring; construction only.
     pub async fn new_headless(size: PhysicalSize, dpr: f32) -> Result<Self, BackendError> {
         let _pool = AutoreleasePool::new();
-        let (device, queue, layer) = create_device_queue_layer(size, dpr)?;
+        let DeviceQueueLayer { device, queue, layer } = create_device_queue_layer(size, dpr)?;
         Ok(Self::from_parts(device, queue, layer, size, dpr))
     }
 
@@ -221,10 +221,16 @@ impl MetalBackend {
     }
 }
 
+struct DeviceQueueLayer {
+    device: Owned<Device>,
+    queue: Owned<Queue>,
+    layer: Owned<MetalLayer>,
+}
+
 /// 🏗️ Shared by `new`/`new_headless`: device, queue, and a fully-configured (but not-yet-attached)
 /// `CAMetalLayer`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn create_device_queue_layer(size: PhysicalSize, _dpr: f32) -> Result<(Owned<Device>, Owned<Queue>, Owned<MetalLayer>), BackendError> {
+fn create_device_queue_layer(size: PhysicalSize, _dpr: f32) -> Result<DeviceQueueLayer, BackendError> {
     let device = system_default_device().ok_or(BackendError::DeviceLost(LossReason::Device))?;
     let queue = device.newCommandQueue().ok_or(BackendError::DeviceLost(LossReason::Device))?;
     let layer = MetalLayer::new();
@@ -232,7 +238,7 @@ fn create_device_queue_layer(size: PhysicalSize, _dpr: f32) -> Result<(Owned<Dev
     layer.set_pixel_format(SURFACE_FORMAT);
     layer.set_framebuffer_only(true);
     set_drawable_size(&layer, size.width.max(1), size.height.max(1));
-    Ok((device, queue, layer))
+    Ok(DeviceQueueLayer { device, queue, layer })
 }
 
 /// 📐️ Updates the layer's typed drawable-size value without naming its provider crate.

@@ -67,8 +67,15 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome = semio_framework_os_kernel::json::parse(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(semio_framework_os_kernel::json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> =
-        outcome.get("messages").and_then(semio_framework_os_kernel::json::Value::as_array).map(|rows| rows.iter().map(|row| (row.get("level").and_then(semio_framework_os_kernel::json::Value::as_str).unwrap_or_default().to_string(), row.get("code").and_then(semio_framework_os_kernel::json::Value::as_str).unwrap_or_default().to_string())).collect()).unwrap_or_default();
+    let declared: Vec<(String, String)> = outcome
+        .get("messages")
+        .and_then(semio_framework_os_kernel::json::Value::as_array)
+        .map(|rows| {
+            rows.iter()
+                .map(|row| (row.get("level").and_then(semio_framework_os_kernel::json::Value::as_str).unwrap_or_default().to_string(), row.get("code").and_then(semio_framework_os_kernel::json::Value::as_str).unwrap_or_default().to_string()))
+                .collect()
+        })
+        .unwrap_or_default();
     let raised = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()

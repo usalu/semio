@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `RemoveMark`.
 
-use crate::standards::v1::subsets::text::schema::mutations::{SemioTextMutation, add_mark};
+use crate::standards::v1::subsets::text::schema::mutations::{add_mark, SemioTextMutation};
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Inverse

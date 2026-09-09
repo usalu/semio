@@ -1,0 +1,22 @@
+{
+  "context": {"repositoryId": 7, "workflowId": 17, "runId": 100, "branch": "release/next", "head": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "full": false},
+  "runs": [
+    {"id": 70, "number": 7, "repositoryId": 7, "workflowId": 17, "branch": "release/next", "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "event": "push", "status": "completed", "conclusion": "success"},
+    {"id": 90, "number": 9, "repositoryId": 7, "workflowId": 17, "branch": "release/next", "head": "cccccccccccccccccccccccccccccccccccccccc", "event": "push", "status": "completed", "conclusion": "failure"},
+    {"id": 80, "number": 8, "repositoryId": 7, "workflowId": 17, "branch": "release/next", "head": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "event": "push", "status": "completed", "conclusion": "success"}
+  ],
+  "ancestors": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "cccccccccccccccccccccccccccccccccccccccc"],
+  "cases": [
+    {"name": "failed-intervening-run", "change": {}, "expectedRunId": 80},
+    {"name": "wrong-workflow", "change": {"workflowId": 18}, "expectedRunId": 70},
+    {"name": "wrong-branch", "change": {"branch": "main"}, "expectedRunId": 70},
+    {"name": "fork-repository", "change": {"repositoryId": 8}, "expectedRunId": 70},
+    {"name": "unfinished-rerun", "change": {"status": "in_progress"}, "expectedRunId": 70},
+    {"name": "current-run", "change": {"id": 100}, "expectedRunId": 70},
+    {"name": "pull-request-result", "change": {"event": "pull_request"}, "expectedRunId": 70},
+    {"name": "pull-request-target-result", "change": {"event": "pull_request_target"}, "expectedRunId": 70},
+    {"name": "non-ancestor", "change": {"head": "ffffffffffffffffffffffffffffffffffffffff"}, "expectedRunId": 70},
+    {"name": "manual-validation", "change": {"event": "workflow_dispatch"}, "expectedRunId": 80},
+    {"name": "scheduled-validation", "change": {"event": "schedule"}, "expectedRunId": 80}
+  ]
+}

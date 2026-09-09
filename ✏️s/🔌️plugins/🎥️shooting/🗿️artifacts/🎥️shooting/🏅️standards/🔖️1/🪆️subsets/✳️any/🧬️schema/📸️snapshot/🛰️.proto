@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.shooting.shooting.snapshot;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Shooting snapshot schema — artifact-lane fields only.
 
@@ -18,6 +19,8 @@ message ShootingSnapshot {
   string active_shot_id = 6;
   // @state artifact
   string active_asset_id = 7;
+  // @state artifact
+  optional semio.os.store.ArtifactChild emblem = 8;
 }
 
 message ShootingCamera {

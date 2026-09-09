@@ -489,8 +489,6 @@ pub mod render {
         }
     }
 
-    /// 🧪️ Native/host-only: `render_scene` calls the real `VelloRenderer` transitively, which
-    /// always reports "no adapter" on `wasm32-wasip2` by design — see `renderer::VelloRenderer`.
     #[cfg(all(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
     include!("🧪️tests/🔬️render-unit/🦀️.rs");
 }
@@ -499,12 +497,12 @@ pub mod renderer {
     use crate::editor::animate::engine::camera::camera::Camera;
     use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
-    use crate::editor::animate::engine::video::VideoError;
-    use semio_framework_raster::RasterError;
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use crate::editor::animate::engine::text::color::Color;
+    use crate::editor::animate::engine::video::VideoError;
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use geometry::Affine;
+    use semio_framework_raster::RasterError;
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use semio_framework_raster::{SceneRasterizer, VectorScene};
 
@@ -659,8 +657,6 @@ pub mod renderer {
         hash_parts(&[format_number_for_hash(capture.time), static_layer_hash(capture, config)])
     }
 
-    /// 🧪️ Native/host-only: asserts real GPU pixel output, meaningless against the
-    /// `wasm32-wasip2` `VelloRenderer` above, which always reports "no adapter" by design.
     #[cfg(all(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
     include!("🧪️tests/🔬️renderer-unit/🦀️.rs");
 }

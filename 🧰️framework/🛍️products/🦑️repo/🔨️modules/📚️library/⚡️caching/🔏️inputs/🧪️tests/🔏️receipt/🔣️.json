@@ -1,0 +1,12 @@
+{
+  "kind": "registry-catalog",
+  "output": "receipts/registry/🔣️.json",
+  "initialDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+  "changedDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "invalidDigests": [
+    "",
+    "not-a-digest",
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  ],
+  "mtime": 1700000000
+}

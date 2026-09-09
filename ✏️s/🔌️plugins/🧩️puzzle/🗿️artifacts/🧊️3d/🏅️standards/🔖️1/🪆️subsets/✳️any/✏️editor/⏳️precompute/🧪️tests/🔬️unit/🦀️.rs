@@ -1118,3 +1118,156 @@ fn fill_first_substantive_preview_arrives_below_fifty_ms_and_every_step_below_ei
     );
     assert!(completed, "fill did not complete within the bounded resume budget");
 }
+
+/// 🗺️ Wave W-P: a Nakagin-scale scene (180 objects, one per spatial cell) driven through the persistent
+/// interactive brush broad phase. The former implementation rebuilt a `Vec<PlacedCollisionEntry>` from a
+/// full fixture scan and linear-scanned it for every candidate — `O(N × C)` per popped vortex. The index
+/// must instead visit only the cells the preview's own bounds span, which is what the examined-cell and
+/// examined-member witnesses assert: strictly fewer members than the scene holds.
+#[test]
+fn nakagin_scale_brush_broad_phase_visits_only_the_queried_cells() {
+    const OBJECTS: usize = 180;
+    const SPACING: f64 = 12.0;
+    let mut engine = Puzzle3dCollision::new();
+    let (positions, indices) = unit_cube_mesh_buffers();
+    engine.register_mesh("/test/host.glb".to_string(), &positions, &indices);
+    let objects = (0..OBJECTS)
+        .map(|index| FixtureObject {
+            id: format!("object-{index}"),
+            object_kind: Some("Host".to_string()),
+            anchor: Default::default(),
+            mesh_url: Some("/test/host.glb".to_string()),
+            origin: [SPACING * index as f64, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+            reveal_index: None,
+        })
+        .collect::<Vec<_>>();
+    let scene = SceneConfig {
+        fixture: Fixture { objects, attractions: vec![], target_volumes: vec![] },
+        kind_catalogs: Some(KindCatalogBundle {
+            objects: vec![ObjectKind {
+                id: "Host".to_string(),
+                representations: vec![ObjectKindRepresentation { id: "host".into(), name: String::new(), url: "/test/host.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                scale: None,
+                vortices: vec![],
+            }],
+            vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None, ..Default::default() }],
+            cables: vec![],
+        }),
+        kind_compatibility: vec![],
+        overlap_budget: DEFAULT_OVERLAP_BUDGET,
+        seed: 1,
+        host_rules: BrushHostRules::default(),
+        weights: BrushKindWeights::default(),
+    };
+    engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("set scene");
+
+    let mut steps = 0_usize;
+    while engine.step_brush_index() {
+        steps += 1;
+        assert!(steps < 64 * OBJECTS, "brush index reconciliation must terminate in bounded steps");
+    }
+    assert!(engine.brush_index_ready, "the broad phase must report ready once reconciliation drains");
+    assert_eq!(engine.brush_index.entry_len(), OBJECTS, "every meshed object owns exactly one indexed entry");
+    assert_eq!(engine.brush_placed.len(), OBJECTS, "every indexed owner resolves to a placement in constant time");
+
+    let preview = BrushPreviewState {
+        target_vortex_full_id: "object-0:v0".to_string(),
+        object_kind_id: "Host".to_string(),
+        source_vortex_index: 0,
+        mesh_url: "/test/host.glb".to_string(),
+        origin: [SPACING, 0.0, 0.0],
+        orientation: [0.0, 0.0, 0.0, 1.0],
+        scale: None,
+    };
+    let deadline = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US * 64).expect("clock");
+    let (page, (cells, members)) = engine.brush_broad_phase_page(&preview, "object-0", deadline).expect("broad phase page");
+    assert!(cells <= 32, "a one-cube query may only walk its own cell span, walked {cells}");
+    assert!(members < OBJECTS, "the query examined {members} members of a {OBJECTS}-object scene — that is a linear scan");
+    assert!(page.iter().all(|entry| entry.object_id != "object-0"), "the queried host is never its own collision pair");
+    assert!(page.len() <= 2, "only the immediate spatial neighbours may reach the narrow phase, got {}", page.len());
+}
+
+/// 🔁️ Wave W-P: moving one object must reconcile the persistent index incrementally — the moved owner's
+/// entry follows it and every other entry stays put — instead of rebuilding the whole scene.
+#[test]
+fn brush_broad_phase_follows_one_moved_object_without_a_rebuild() {
+    let mut engine = fill_capable_engine();
+    while engine.step_brush_index() {}
+    let before = *engine.brush_index.entry_bounds("host").expect("host entry");
+    let mut scene = (*engine.scene.clone().expect("scene")).clone();
+    scene.fixture.objects[0].origin = [64.0, 0.0, 0.0];
+    engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("moved scene");
+    while engine.step_brush_index() {}
+    let after = *engine.brush_index.entry_bounds("host").expect("host entry after move");
+    assert_ne!(before.min, after.min, "the moved owner's indexed bounds must follow it");
+    assert_eq!(engine.brush_index.entry_len(), 1, "an incremental move must not leave a stale duplicate entry");
+    assert!(engine.brush_placed.contains_key("host"), "the placement lookup follows the same move");
+}
+
+/// 🗑️ Wave W-P: an owner the new scene no longer carries must leave the broad phase through the
+/// production `CollisionIndexRemoval` path — the same withdrawal that used to be `#[cfg(test)]`-gated. The
+/// object is re-identified rather than deleted outright, because a fixture that drops to zero objects is
+/// indistinguishable from an already-applied fill projection to `set_scene`'s own heuristic and would not
+/// install a new scene at all.
+#[test]
+fn brush_broad_phase_withdraws_an_owner_the_scene_dropped() {
+    let mut engine = fill_capable_engine();
+    while engine.step_brush_index() {}
+    assert!(engine.brush_index.entry_bounds("host").is_some(), "the original owner is indexed");
+    let mut scene = (*engine.scene.clone().expect("scene")).clone();
+    scene.fixture.objects[0].id = "successor".to_string();
+    engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("re-identified scene");
+    while engine.step_brush_index() {}
+    assert!(engine.brush_index.entry_bounds("host").is_none(), "the dropped owner must be withdrawn, not orphaned");
+    assert!(engine.brush_index.entry_bounds("successor").is_some(), "the new owner is indexed in its place");
+    assert_eq!(engine.brush_index.entry_len(), 1, "withdrawal and insertion leave exactly one live entry");
+    assert!(!engine.brush_placed.contains_key("host") && engine.brush_placed.contains_key("successor"), "the placement lookup follows the same withdrawal");
+}
+
+/// 🥽️ Wave W-P: one mesh identity decodes once per process through the `puzzle3d.mesh-decode` engine, and
+/// a brand-new session adopts the derived geometry by id alone — the wire never carries buffers twice.
+#[test]
+fn a_registered_mesh_is_shared_by_id_across_sessions() {
+    let (positions, indices) = unit_cube_mesh_buffers();
+    let url = "/test/shared-by-id.glb";
+    let (derived_positions, derived_indices) = derive_brush_mesh(url, &positions, &indices).expect("derived geometry");
+    assert_eq!(derived_positions, positions, "the decode kernel returns the exact validated geometry");
+    assert_eq!(derived_indices, indices);
+    assert_eq!(shared_brush_mesh(url).expect("cached geometry").0, positions, "a second read hits the content-addressed cache");
+    let mut fresh = Puzzle3dCollision::new();
+    assert!(!fresh.has_mesh(url), "a fresh engine starts without any mesh");
+    assert!(fresh.adopt_shared_mesh(url), "the id alone is enough to install real geometry");
+    assert!(fresh.has_mesh(url), "the adopted mesh is live in the collision engine");
+    assert!(derive_brush_mesh(url, &positions[..6], &indices).is_none(), "a malformed upload is refused by the kernel, not cached");
+}
+
+/// 🛑 Wave W-P: the user-facing fill cancel is identity-guarded. A cancel naming a superseded run must
+/// not touch the live job; the exact `(job, operation, generation)` triple must stop it and drive its
+/// envelope to terminal-empty. `cancel_fill_job` had zero callers before `cancelFillBuild`.
+#[test]
+fn fill_cancel_stops_only_the_named_job_and_a_stale_cancel_is_a_no_operation() {
+    let _guard = fill_envelope_test_guard();
+    let mut session = fill_worker_session(37);
+    let (_, token) = enqueue_measured_fill_job(&mut session).expect("fill envelope");
+    let request = decode_fill_envelope_token(&token).expect("request");
+    let identity = session.fill_job_identity().expect("live fill identity");
+    assert_eq!(identity, (request.job, request.operation, request.generation));
+    let (job, operation, generation) = identity;
+    assert!(!session.cancel_fill_job_for(job.wrapping_add(1), operation, generation), "a stale job id must not cancel the live run");
+    assert!(!session.cancel_fill_job_for(job, operation.wrapping_add(1), generation), "a stale operation must not cancel the live run");
+    assert!(!session.cancel_fill_job_for(job, operation, generation.wrapping_add(1)), "a stale generation must not cancel the live run");
+    let live = {
+        let registry = fill_envelope_registry().lock().expect("registry");
+        registry.slots[usize::from(request.slot)].as_ref().and_then(|authority| authority.cancel.clone()).expect("live cancel token")
+    };
+    assert!(!live.is_cancelled_now(), "every stale cancel left the live job running");
+    assert!(session.cancel_fill_job_for(job, operation, generation), "the exact identity cancels the live run");
+    assert!(live.is_cancelled_now(), "the named cancel reached the job's own cancel token");
+    let _ = session.drive_fill_job(&request);
+    let mut terminal = session.take_terminal_fill_job().expect("terminal handle");
+    while !matches!(terminal.close_step(), FillEnvelopeCloseStep::Complete) {}
+    assert!(terminal.terminal_is_empty());
+}

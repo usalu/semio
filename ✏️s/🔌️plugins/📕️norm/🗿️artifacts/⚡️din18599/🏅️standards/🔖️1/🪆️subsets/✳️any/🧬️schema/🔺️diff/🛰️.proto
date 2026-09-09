@@ -30,8 +30,6 @@ message Din18599Diff {
   optional string energy_carrier = 13;
   // @state artifact
   optional double reference_q_p_kwh = 14;
-  // @state presence
-  optional uint32 selected_check_index = 15;
 }
 
 message Din18599Artifact {
@@ -48,7 +46,6 @@ message Din18599Artifact {
   double annual_limit_kwh = 11;
   string energy_carrier = 12;
   double reference_q_p_kwh = 13;
-  optional uint32 selected_check_index = 14;
 }
 
 message Din18599StringList { repeated string values = 1; }

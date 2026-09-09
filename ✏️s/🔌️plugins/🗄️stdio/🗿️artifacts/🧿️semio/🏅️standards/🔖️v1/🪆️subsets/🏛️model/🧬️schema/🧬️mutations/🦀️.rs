@@ -33,26 +33,26 @@ fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "🏗️insert-spatial-node/🦀️.rs"]
-pub mod insert_spatial_node;
-#[path = "🕳️remove-spatial-node/🦀️.rs"]
-pub mod remove_spatial_node;
-#[path = "🧭set-spatial-node/🦀️.rs"]
-pub mod set_spatial_node;
 #[path = "🧱insert-element/🦀️.rs"]
 pub mod insert_element;
-#[path = "🔨remove-element/🦀️.rs"]
-pub mod remove_element;
-#[path = "🎛️set-element/🦀️.rs"]
-pub mod set_element;
 #[path = "🪢insert-relation/🦀️.rs"]
 pub mod insert_relation;
+#[path = "🏗️insert-spatial-node/🦀️.rs"]
+pub mod insert_spatial_node;
+#[path = "🔨remove-element/🦀️.rs"]
+pub mod remove_element;
 #[path = "✂️remove-relation/🦀️.rs"]
 pub mod remove_relation;
+#[path = "🕳️remove-spatial-node/🦀️.rs"]
+pub mod remove_spatial_node;
+#[path = "🎛️set-element/🦀️.rs"]
+pub mod set_element;
 #[path = "🔧️set-relation/🦀️.rs"]
 pub mod set_relation;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
+#[path = "🧭set-spatial-node/🦀️.rs"]
+pub mod set_spatial_node;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -176,7 +176,9 @@ pub(crate) fn agg_inverse(this: &SemioModelMutation, base: &SemioModelSnapshot) 
             None => Vec::new(),
         },
         SemioModelMutation::SetRelation(set_relation::SetRelation { id, kind, from, to }) => match base.relations.iter().find(|r| &r.id == id) {
-            Some(original) => vec![SemioModelMutation::SetRelation(set_relation::SetRelation { id: id.clone(), kind: kind.as_ref().map(|_| original.kind.clone()), from: from.as_ref().map(|_| original.from.clone()), to: to.as_ref().map(|_| original.to.clone()) })],
+            Some(original) => {
+                vec![SemioModelMutation::SetRelation(set_relation::SetRelation { id: id.clone(), kind: kind.as_ref().map(|_| original.kind.clone()), from: from.as_ref().map(|_| original.from.clone()), to: to.as_ref().map(|_| original.to.clone()) })]
+            }
             None => Vec::new(),
         },
     }
@@ -273,7 +275,9 @@ fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> 
         })),
         "insert-relation" => Ok(SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation: dec_relation(arg("relation")?)? })),
         "remove-relation" => Ok(SemioModelMutation::RemoveRelation(remove_relation::RemoveRelation { id: dec_str(arg("id")?)? })),
-        "set-relation" => Ok(SemioModelMutation::SetRelation(set_relation::SetRelation { id: dec_str(arg("id")?)?, kind: decode_option(arg("kind")?, dec_relation_kind)?, from: decode_option(arg("from")?, dec_str)?, to: decode_option(arg("to")?, dec_str)? })),
+        "set-relation" => {
+            Ok(SemioModelMutation::SetRelation(set_relation::SetRelation { id: dec_str(arg("id")?)?, kind: decode_option(arg("kind")?, dec_relation_kind)?, from: decode_option(arg("from")?, dec_str)?, to: decode_option(arg("to")?, dec_str)? }))
+        }
         other => Err(format!("model mutation: unknown keyword {other:?}")),
     }
 }
@@ -376,7 +380,9 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioModelMutation> {
         SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s2".into(), kind: SpatialKind::Space, name: "Room".into(), parent_id: None, placement: SemioTransform::identity() } }),
         SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: "s1".into() }),
         SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode { id: "s1".into(), kind: Some(SpatialKind::Storey), name: None, parent_id: Some(Some("root".into())), placement: None }),
-        SemioModelMutation::InsertElement(insert_element::InsertElement { element: SemioModelElement { id: "e2".into(), class: ElementClass::Beam, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] } }),
+        SemioModelMutation::InsertElement(insert_element::InsertElement {
+            element: SemioModelElement { id: "e2".into(), class: ElementClass::Beam, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] },
+        }),
         SemioModelMutation::RemoveElement(remove_element::RemoveElement { id: "e1".into() }),
         SemioModelMutation::SetElement(set_element::SetElement { id: "e1".into(), class: None, placement: None, geometry: Some(GeometryRef::None), spatial_id: Some(None), psets: None }),
         SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation: ModelRelation { id: "r2".into(), kind: RelationKind::Other { label: "custom".into() }, from: "e1".into(), to: "s1".into() } }),

@@ -3,10 +3,10 @@ use crate::schema::diff::{diff_at_path, XmlDiff, XmlNodeDiff};
 use crate::schema::mutation_support::XmlNodePath;
 use crate::XmlSnapshot;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -19,7 +19,10 @@ pub struct SetTextPayload {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum SetTextMutation { Apply(SetTextPayload), Restore(XmlDiff) }
+pub enum SetTextMutation {
+    Apply(SetTextPayload),
+    Restore(XmlDiff),
+}
 
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetTextMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
@@ -33,13 +36,19 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetTextMutation
 
     fn inverse(&self, base: &XmlSnapshot) -> Vec<super::XmlMutation> {
         let outcome = <Self as protocol::MutationKind<XmlSnapshot, super::XmlMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::is_empty(outcome.diff()) { return Vec::new(); }
+        if !outcome.messages().is_empty() || <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::is_empty(outcome.diff()) {
+            return Vec::new();
+        }
         let inverse = <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::inverse(outcome.diff(), base);
         vec![super::XmlMutation::SetText(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String { "Set Text".to_string() }
-    fn target(&self) -> Vec<String> { vec!["set-text".to_string()] }
+    fn label(&self) -> String {
+        "Set Text".to_string()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-text".to_string()]
+    }
 }
 
 #[cfg(test)]

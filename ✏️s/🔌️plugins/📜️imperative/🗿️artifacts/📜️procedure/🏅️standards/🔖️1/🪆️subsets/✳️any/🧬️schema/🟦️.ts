@@ -7,13 +7,6 @@ export interface ProcedureArtifact {
   path: ProcedurePath;
   /** @state artifact */
   seed: Record<string, unknown>;
-  /** @state presence */
-  selectedStepIds: string[];
-  /** @state config */
-  /** @state config */
-  contributionsJson: string;
-  /** @state transient */
-  runOutputJson: string;
 }
 
 export interface ProcedurePath {
@@ -80,9 +73,6 @@ export function parseProcedureArtifact(value: unknown, at = "$"): ProcedureArtif
     schema: imperativeImperativeArtifactGuardString(row["schema"], `${at}.schema`),
     path: parseProcedurePath(row["path"], `${at}.path`),
     seed: imperativeImperativeArtifactGuardObject(row["seed"], `${at}.seed`),
-    selectedStepIds: imperativeImperativeArtifactGuardArray(row["selectedStepIds"], `${at}.selectedStepIds`).map((item, index) => imperativeImperativeArtifactGuardString(item, `${at}.selectedStepIds[${index}]`)),
-    contributionsJson: imperativeImperativeArtifactGuardString(row["contributionsJson"], `${at}.contributionsJson`),
-    runOutputJson: imperativeImperativeArtifactGuardString(row["runOutputJson"], `${at}.runOutputJson`),
   };
 }
 

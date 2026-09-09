@@ -13,16 +13,5 @@
   "printTarget": null,
   "dataFieldsJson": "{\"client\":\"acme\"}",
   "backgroundDrawing": null,
-  "referencedModel": null,
-  "selectedIds": null,
-  "activePageId": null,
-  "engagementInput": null,
-  "cameraX": null,
-  "cameraY": null,
-  "cameraZoom": null,
-  "previewCameraX": null,
-  "previewCameraY": null,
-  "previewCameraZoom": null,
-  "dropPreview": null,
-  "hoveredId": null
+  "referencedModel": null
 }

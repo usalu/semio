@@ -6,9 +6,9 @@
 
 use crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
-use crate::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
 use crate::viewer::wav::modes::view;
 use crate::viewer::wav::modes::view::windows::main;
+use crate::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

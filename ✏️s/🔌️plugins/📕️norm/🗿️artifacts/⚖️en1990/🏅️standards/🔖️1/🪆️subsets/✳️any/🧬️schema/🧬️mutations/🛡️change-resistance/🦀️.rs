@@ -1,7 +1,6 @@
 //! 🛡️ `change-resistance` — sets the EN 1990 document's design resistance `R_d` [kN], checked
 //! against the combined design actions.
 
-
 use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload

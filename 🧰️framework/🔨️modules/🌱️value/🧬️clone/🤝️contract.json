@@ -1,0 +1,17 @@
+{
+  "id": "framework.value.clone",
+  "source": "One immutable typed owner retained until output transfer or bounded cancellation completes",
+  "ownership": "Framework value; no application, window, document-store, or OS dependency",
+  "limits": {
+    "maximumDepth": 64,
+    "maximumCopiedBytesPerStep": 256,
+    "maximumStructuralItemsPerStep": 1,
+    "retainedCapacity": "Caller-supplied byte limit checked before each payload allocation"
+  },
+  "completion": "Preserve variant, object entry order, duplicate keys, integer precision, and UTF-8 bytes",
+  "cancellation": "Retire partial values by structural item; return the exact source only after completion or cancellation",
+  "sourceAccess": "At most maximumDepth indexed array/object lookups; no scanning or recursive cloning",
+  "checkpoint": ["completedItems", "copiedBytes", "retainedBytes"],
+  "states": ["active", "complete", "closing", "closed"],
+  "errors": ["invalid-depth-limit", "depth-limit", "retained-byte-limit", "allocation-failed", "invalid-source-path", "closing"]
+}

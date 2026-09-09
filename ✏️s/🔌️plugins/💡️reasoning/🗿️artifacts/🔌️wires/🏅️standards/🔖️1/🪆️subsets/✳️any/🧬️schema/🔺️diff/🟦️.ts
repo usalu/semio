@@ -1,33 +1,17 @@
-/** 🧬️ Wires diff schema — sparse field delta. */
-
-export type DslValue = Record<string, unknown>;
+/** 🔺️ Canonical sparse document delta with explicit null slots. */
+import type { DslValue } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import type { WiresArtifact } from "../🟦️.ts";
 
 export interface WiresDiff {
   /** @state artifact */
-  artifact?: WiresArtifact;
-  /** @state artifact */
-  wiresFixture?: DslValue;
-  /** @state artifact */
-  boardFixture?: DslValue;
-  /** @state artifact */
-  dragNodeId?: string | null;
-  /** @state artifact */
-  dragLastX?: number;
-  /** @state artifact */
-  dragLastY?: number;
-  /** @state config */
-}
-
-export interface WiresArtifact {
+  artifact: WiresArtifact | null;
   /** @state artifact */
   wiresFixture: DslValue;
   /** @state artifact */
-  boardFixture: DslValue;
+  content: ArtifactChild | null;
   /** @state artifact */
-  dragNodeId?: string;
+  camera: DslValue;
   /** @state artifact */
-  dragLastX: number;
-  /** @state artifact */
-  dragLastY: number;
-  /** @state config */
+  meta: DslValue;
 }

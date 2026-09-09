@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn from_indices(len: usize, idxs: &[usize]) -> PatternSet {

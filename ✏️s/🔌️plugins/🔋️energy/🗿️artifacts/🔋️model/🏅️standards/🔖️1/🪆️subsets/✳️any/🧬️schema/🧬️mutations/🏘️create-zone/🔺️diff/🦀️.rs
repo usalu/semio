@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateZone` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateZone, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -23,7 +23,9 @@ pub fn diff(payload: &super::CreateZone, base: &EnergyModelSnapshot) -> protocol
     }
     let mut model = base.model.clone();
     let position = model.zones.iter().position(|item| item.id > payload.id).unwrap_or(model.zones.len());
-    model.zones.insert(position, crate::model::Zone { id: payload.id, name: payload.name.clone(), volume_m3: payload.volume_m3, multiplier: payload.multiplier, conditioned: payload.conditioned, part_of_total_floor_area: payload.part_of_total_floor_area });
+    model
+        .zones
+        .insert(position, crate::model::Zone { id: payload.id, name: payload.name.clone(), volume_m3: payload.volume_m3, multiplier: payload.multiplier, conditioned: payload.conditioned, part_of_total_floor_area: payload.part_of_total_floor_area });
     protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

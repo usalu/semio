@@ -1,14 +1,14 @@
 //! 👁️ Generation3d play app — the generation output-preview window (generate mode): a tessellated
 //! preview of the patched fixture's evaluated geometry.
 
-use crate::standards::v1::subsets::any::schema::generation_fixture_for;
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::modes::edit::windows::preview::show_mode_measure;
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, PreviewInteractionMarks, PreviewPayload, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
-use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
+use crate::standards::v1::subsets::any::schema::generation_fixture_for;
 use semio_framework_artifact_flow_flow::FlowFixture;
+use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
@@ -45,17 +45,24 @@ pub fn window_measures(config: &Generation3dConfig, procedural_action: impl Fn(&
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Generation3dConfig, labels: &Generation3dLabels, active_utility: &str, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(
+    fixture: &FlowFixture,
+    generation: &GenerationPlayState,
+    generation_preview_text: Option<&str>,
+    cfg: &Generation3dConfig,
+    labels: &Generation3dLabels,
+    active_utility: &str,
+    marks: &PreviewInteractionMarks,
+) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let payload = match selected_generation(generation) {
         Some(_) => {
             let gen_fixture = generation_fixture_for(fixture, generation);
-            let eval_json = generation.preview_text.clone().unwrap_or_default();
-            preview_payload(&eval_json, &gen_fixture, cfg, None, marks)
+            preview_payload(generation_preview_text.unwrap_or_default(), &gen_fixture, cfg, None, marks)
         }
         None => PreviewPayload::default(),
     };
     if payload.meshes_json == "[]" && payload.instances_json == "[]" {
-        let text = generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or(labels.preview_hint.as_str());
+        let text = generation_preview_text.filter(|value| !value.is_empty()).unwrap_or(labels.preview_hint.as_str());
         let scene = TextEditorScene::base(text.to_string(), Some("json".into()), None);
         return crate::scene_surface(GENERATION_3D_PLAY_SURFACE_GENERATE_PREVIEW, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::TextEditor, &scene);
     }

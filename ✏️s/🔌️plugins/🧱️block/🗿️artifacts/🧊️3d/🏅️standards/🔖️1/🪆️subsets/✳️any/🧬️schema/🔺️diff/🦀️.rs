@@ -1,6 +1,6 @@
 //! 🧬️ Block3d diff schema — sparse field delta over the artifact.
 
-use crate::{Block3dBrushPreview, Block3dWindowView};
+use crate::Block3dWindowView;
 use crate::{Block3dVortexKind, Block3dVortexTemplate};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use ::semio_framework_schema::ArtifactSchema;
@@ -33,26 +33,6 @@ pub struct Block3dDiff {
     pub camera3d: Option<BlockCamera3d>,
     #[state(artifact)]
     pub meta: Option<BlockMeta>,
-    #[state(presence)]
-    pub selected_ids: Option<Block3dStringList>,
-    #[state(presence)]
-    pub active_representation_id: Option<Option<String>>,
-    #[state(presence)]
-    pub wanted_tags: Option<Block3dStringList>,
-    #[state(config)]
-    pub windows: Option<Block3dWindowsList>,
-    #[state(config)]
-    pub brush_vortex_kind_id: Option<Option<String>>,
-    #[state(config)]
-    pub brush_radius: Option<f64>,
-    #[state(config)]
-    pub brush_flip: Option<bool>,
-    #[state(artifact)]
-    pub brush_preview: Option<Option<Block3dBrushPreview>>,
-    #[state(config)]
-    pub camera: Option<Option<BlockCamera3d>>,
-    #[state(artifact)]
-    pub hovered_vortex_full_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 

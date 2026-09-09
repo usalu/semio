@@ -5,8 +5,7 @@ message DrawingConfig {
   string engagement_input = 1;
   // @state config
   DrawingCamera camera = 2;
-  // @state config
-  string active_utility_id = 3;
+  reserved 3;
   // @state config
   uint64 trace_pointer_generation = 5;
   uint64 trace_pointer_completed_work = 6;

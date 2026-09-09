@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetStripOffsets {
-        pub(crate) offsets: Vec<u32>,
-    }
+    pub(crate) offsets: Vec<u32>,
+}
 
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetStripOffsets {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "strip-offsets", kind: "set-strip-offsets", record: "SetStripOffsets" };

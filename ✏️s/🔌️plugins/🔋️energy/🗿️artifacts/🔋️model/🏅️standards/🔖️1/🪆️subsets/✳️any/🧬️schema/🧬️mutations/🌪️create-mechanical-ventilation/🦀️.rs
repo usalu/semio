@@ -22,7 +22,15 @@ pub struct CreateMechanicalVentilation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_mechanical_ventilation(index: u32, id: crate::model::EntityId, zone_id: crate::model::EntityId, schedule_id: crate::model::ScheduleId, design_flow_m3_s: f64, fan_total_efficiency: f64, fan_delta_pressure_pa: f64) -> EnergyModelMutation {
+pub fn create_mechanical_ventilation(
+    index: u32,
+    id: crate::model::EntityId,
+    zone_id: crate::model::EntityId,
+    schedule_id: crate::model::ScheduleId,
+    design_flow_m3_s: f64,
+    fan_total_efficiency: f64,
+    fan_delta_pressure_pa: f64,
+) -> EnergyModelMutation {
     EnergyModelMutation::CreateMechanicalVentilation(CreateMechanicalVentilation { index, id, zone_id, schedule_id, design_flow_m3_s, fan_total_efficiency, fan_delta_pressure_pa })
 }
 

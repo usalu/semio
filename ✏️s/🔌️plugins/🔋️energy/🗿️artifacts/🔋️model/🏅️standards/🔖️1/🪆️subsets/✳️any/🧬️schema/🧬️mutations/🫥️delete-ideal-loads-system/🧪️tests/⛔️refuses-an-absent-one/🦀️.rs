@@ -22,7 +22,16 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
-    model.ideal_loads.push(crate::model::IdealLoadsSystem { id: crate::model::EntityId(12), zone_id: crate::model::EntityId(1), max_heating_supply_air_temp_c: 50.0, min_cooling_supply_air_temp_c: 13.0, max_heating_capacity_w: None, max_cooling_capacity_w: None, outdoor_air_per_person_m3_s: 0.0, outdoor_air_per_area_m3_s_m2: 0.0 });
+    model.ideal_loads.push(crate::model::IdealLoadsSystem {
+        id: crate::model::EntityId(12),
+        zone_id: crate::model::EntityId(1),
+        max_heating_supply_air_temp_c: 50.0,
+        min_cooling_supply_air_temp_c: 13.0,
+        max_heating_capacity_w: None,
+        max_cooling_capacity_w: None,
+        outdoor_air_per_person_m3_s: 0.0,
+        outdoor_air_per_area_m3_s_m2: 0.0,
+    });
     (snapshot(model), super::delete_ideal_loads_system(crate::model::EntityId(99)))
 }
 

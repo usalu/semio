@@ -1,12 +1,11 @@
-
 use super::*;
-use crate::editor::playbook::PlaybookCommand;
 use crate::editor::playbook::commands::move_step::MoveStep;
 use crate::editor::playbook::commands::remove_step::RemoveStep;
 use crate::editor::playbook::commands::update_playbook::UpdatePlaybook;
 use crate::editor::playbook::testkit::{dispatch, playbook_app};
-use AddStep;
+use crate::editor::playbook::PlaybookCommand;
 use semio_framework_plugin::PluginApp;
+use AddStep;
 
 #[semio_framework_async_macros::async_test]
 async fn add_step_action_appends_step() {

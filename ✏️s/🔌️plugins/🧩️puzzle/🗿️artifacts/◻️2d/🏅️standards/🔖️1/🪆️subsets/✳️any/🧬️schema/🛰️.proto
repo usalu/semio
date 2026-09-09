@@ -14,48 +14,8 @@ message Puzzle2dArtifact {
   repeated Puzzle2dEdge edges = 4;
   // @state artifact
   Puzzle2dMeta meta = 5;
-  // @state presence
-  repeated string selected_ids = 6;
-  // @state presence
-  string active_utility_id = 7;
-  // @state config
-  double camera_x = 8;
-  // @state config
-  double camera_y = 9;
-  // @state config
-  double camera_zoom = 10;
-  // @state config
-  string selection_method = 11;
-  // @state config
-  bool grid_snap_enabled = 12;
-  // @state config
-  double grid_factor = 13;
-  // @state config
-  double suggestion_offset = 14;
-  // @state config
-  uint32 fill_count = 15;
-  // @state config
-  uint32 brush_candidate_index = 16;
-  // @state config
-  string brush_candidate_source_handle_id = 17;
   // @state config
   // @state config
-  // @state config
-  string lod_mode_by_pane_json = 20;
-  // @state config
-  string engagement_input_by_pane_json = 21;
-  // @state config
-  string brush_candidates_json = 22;
-  // @state config
-  string node_kind_weights_json = 23;
-  // @state config
-  string handle_kind_weights_json = 24;
-  // @state config
-  string active_utility_by_window_id_json = 25;
-  // @state artifact
-  optional string hovered_node_id = 26;
-  // @state artifact
-  int64 preview_seq = 27;
 }
 
 

@@ -2,8 +2,7 @@
 
 use crate::op::EquationMutation;
 use crate::{EquationCamera, EquationSnapshot};
-use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 /// 👁️ Config-only: the node-graph viewport never touches the document — it's written into `cfg`,
@@ -15,6 +14,6 @@ pub struct NodeGraphViewport {
     pub camera: EquationCamera,
 }
 
-pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
-    Ok(Emit::config(vec![EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: payload.camera.clone() })]))
+pub fn handle(_payload: &NodeGraphViewport, _doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
+    Ok(Emit::default())
 }

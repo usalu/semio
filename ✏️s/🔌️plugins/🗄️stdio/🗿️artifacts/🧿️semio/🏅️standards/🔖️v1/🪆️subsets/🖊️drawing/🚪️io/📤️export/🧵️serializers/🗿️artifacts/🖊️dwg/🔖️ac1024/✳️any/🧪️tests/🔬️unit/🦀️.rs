@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
 use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioDrawingFromDwg;

@@ -1,10 +1,10 @@
 //! 🖼️ Note play app — the composite (editable) canvas window: the full infinite-canvas surface.
 
-use crate::{NoteCamera, NoteSnapshot};
 use crate::editor::note::config::NoteConfig;
 use crate::editor::note::modes::edit::windows::composite::options;
 use crate::editor::note::terminology::NotePlayLabels;
-use semio_framework_plugin::{InkCanvasScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
+use crate::{NoteCamera, NoteSnapshot};
+use semio_framework_plugin::{BuiltNode, InkCanvasScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
 pub const NOTE_PLAY_WINDOW_COMPOSITE: &str = "note-composite";
@@ -92,8 +92,8 @@ pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_
     semio_framework_plugin::scene_surface(surface_id, semio_framework_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, active_utility.into(), view_mode.into(), view_mode == "composite"))
 }
 
-pub fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiAssemblyResult<BuiltNode> {
-    render_canvas_scene(document, &cfg.camera, &cfg.active_utility_id, NOTE_PLAY_SURFACE_COMPOSITE, "composite")
+pub fn render(document: &NoteSnapshot, cfg: &NoteConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
+    render_canvas_scene(document, &cfg.camera, active_utility, NOTE_PLAY_SURFACE_COMPOSITE, "composite")
 }
 //#endregion 🔖️Render
 

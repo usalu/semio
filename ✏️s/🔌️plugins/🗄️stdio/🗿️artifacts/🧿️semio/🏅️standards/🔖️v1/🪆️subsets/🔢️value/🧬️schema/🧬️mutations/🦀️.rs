@@ -51,6 +51,18 @@ fn resolve<'a>(root: &'a SemioValue, path: &[SemioValuePathSegment]) -> Option<&
 //#endregion 🔖️SemioValuePath
 
 //#region 🔖️Mutations
+#[path = "➕insert-list-item/🦀️.rs"]
+pub mod insert_list_item;
+#[path = "➖remove-list-item/🦀️.rs"]
+pub mod remove_list_item;
+#[path = "✖️remove-map-entry/🦀️.rs"]
+pub mod remove_map_entry;
+#[path = "✂️remove-node/🦀️.rs"]
+pub mod remove_node;
+#[path = "🗝️set-map-entry/🦀️.rs"]
+pub mod set_map_entry;
+#[path = "🧷set-node/🦀️.rs"]
+pub mod set_node;
 /// 📐️ Typed content mutation for `stdio.semio.value`. `SetValue`/`SetMapEntry`/`RemoveMapEntry`/
 /// `InsertListItem`/`RemoveListItem` address `root`'s own value tree via [`SemioValuePath`];
 /// `SetNode`/`RemoveNode` address the top-level id-keyed `nodes` GRAPH directly (flat, no
@@ -69,18 +81,6 @@ fn resolve<'a>(root: &'a SemioValue, path: &[SemioValuePathSegment]) -> Option<&
 pub mod set_snapshot;
 #[path = "🔁set-value/🦀️.rs"]
 pub mod set_value;
-#[path = "🗝️set-map-entry/🦀️.rs"]
-pub mod set_map_entry;
-#[path = "✖️remove-map-entry/🦀️.rs"]
-pub mod remove_map_entry;
-#[path = "➕insert-list-item/🦀️.rs"]
-pub mod insert_list_item;
-#[path = "➖remove-list-item/🦀️.rs"]
-pub mod remove_list_item;
-#[path = "🧷set-node/🦀️.rs"]
-pub mod set_node;
-#[path = "✂️remove-node/🦀️.rs"]
-pub mod remove_node;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -584,7 +584,9 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
 
     let mixed_path = vec![SemioValuePathSegment::Key { key: "outer".into() }, SemioValuePathSegment::Index { index: 2 }, SemioValuePathSegment::Key { key: "inner".into() }];
     vec![
-        SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snap(mapv(vec![("a", intv("1")), ("b", listv(vec![strv("x"), SemioValue::Null, SemioValue::Bool { value: true }]))]), vec![node("n1", SemioValue::Bytes { value: vec![1, 2, 3] })]) }),
+        SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot {
+            snapshot: snap(mapv(vec![("a", intv("1")), ("b", listv(vec![strv("x"), SemioValue::Null, SemioValue::Bool { value: true }]))]), vec![node("n1", SemioValue::Bytes { value: vec![1, 2, 3] })]),
+        }),
         SemioValueMutation::SetValue(set_value::SetValue { path: vec![], value: SemioValue::Ref { id: ValueId::new("n1") } }),
         SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: SemioValue::Float { lexeme: "2.5e10".into() } }),
         SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: mixed_path.clone(), key: "k".into(), value: mapv(vec![("nested", strv("v"))]) }),

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::standards::v1::subsets::text::schema::snapshot::{STDIO_SEMIOTEXT_DOCUMENT_SCHEMA, SemioTextMark, SemioTextMarkKind, SemioTextRun};
+use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn populated() -> SemioTextSnapshot {

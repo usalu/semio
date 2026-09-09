@@ -1,6 +1,5 @@
-
 use super::*;
-use flow_extension_sdk::{FlowExtensionCommand, FlowExtensionSetting, build_manifest_json, evaluate_json};
+use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionCommand, FlowExtensionSetting};
 
 #[semio_framework_async_macros::async_test]
 async fn add_sums_number_dictionaries() {

@@ -1,10 +1,10 @@
 //! 📄️ 📄️ Drawing play app commands command — `commit-document`.
 
+use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use crate::op::DrawingMutation;
 use crate::DrawingSnapshot;
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use dsl::{FromValue, ToValue};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "commit-document")]

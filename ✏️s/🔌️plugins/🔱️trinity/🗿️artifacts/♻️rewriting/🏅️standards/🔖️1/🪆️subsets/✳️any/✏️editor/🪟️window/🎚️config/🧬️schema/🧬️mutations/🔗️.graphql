@@ -1,0 +1,4 @@
+input SetRewritingWindowCamera { camera: RewritingWindowCameraInput }
+input RewritingWindowCameraInput { x: Float!, y: Float!, zoom: Float! }
+input SetRewritingWindowLodMode { value: String! }
+input RewritingWindowConfigMutation @oneOf { setCamera: SetRewritingWindowCamera, setLodMode: SetRewritingWindowLodMode }

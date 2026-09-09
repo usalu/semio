@@ -12,9 +12,9 @@
 //! `audio→wav→audio` round trip; every numeric/sample field does.
 
 use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavFmt};
 use semio_s_artifact_stdio_wav::WavSnapshot;
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };

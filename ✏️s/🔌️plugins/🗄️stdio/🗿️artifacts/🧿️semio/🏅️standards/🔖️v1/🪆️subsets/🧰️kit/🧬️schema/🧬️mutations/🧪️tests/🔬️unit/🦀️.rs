@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitDesign, SemioKitPiece, demo_kit_snapshot};
+use crate::standards::v1::subsets::kit::schema::snapshot::{demo_kit_snapshot, SemioKitDesign, SemioKitPiece};
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

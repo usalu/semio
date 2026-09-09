@@ -8,6 +8,7 @@
 //! modules by `semio_framework_plugin::app_commands!`.
 
 use crate::op::WriterMutation;
+use crate::schema;
 use crate::WriterSnapshot;
 use protocol::{Mutation, MutationDiff, OpBinary};
 use store::ArtifactEnvelopeMutationFieldTarget;
@@ -398,10 +399,10 @@ impl WriterMutationDecodeAuthority {
         }
         let payload = self.payload.take().ok_or_else(|| self.diagnostic("writer-envelope.missing-mutation-payload", 0))?;
         *self.value = Some(match kind {
-            WriterMutationKind::RenameWriter => WriterMutation::RenameWriter(crate::schema::mutations::RenameWriter { new_id: payload }),
-            WriterMutationKind::ChangeUri => WriterMutation::ChangeUri(crate::schema::mutations::ChangeUri { new_uri: payload }),
-            WriterMutationKind::ChangeLanguage => WriterMutation::ChangeLanguage(crate::schema::mutations::ChangeLanguage { new_language_id: payload }),
-            WriterMutationKind::EditText => WriterMutation::EditText(crate::schema::mutations::EditText { text: payload }),
+            WriterMutationKind::RenameWriter => WriterMutation::RenameWriter(schema::mutations::RenameWriter { new_id: payload }),
+            WriterMutationKind::ChangeUri => WriterMutation::ChangeUri(schema::mutations::ChangeUri { new_uri: payload }),
+            WriterMutationKind::ChangeLanguage => WriterMutation::ChangeLanguage(schema::mutations::ChangeLanguage { new_language_id: payload }),
+            WriterMutationKind::EditText => WriterMutation::EditText(schema::mutations::EditText { text: payload }),
         });
         Ok(())
     }

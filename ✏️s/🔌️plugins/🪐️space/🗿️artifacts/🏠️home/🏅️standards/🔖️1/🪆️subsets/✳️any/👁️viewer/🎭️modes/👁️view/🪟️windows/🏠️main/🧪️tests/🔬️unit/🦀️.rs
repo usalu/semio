@@ -82,7 +82,7 @@ async fn render_with_a_folded_space_renders_a_table_row() {
         recorded_at_ms: 1000,
     };
     let directory = store::os_directory::fold(store::os_directory::DirectoryReadModel::default(), &event);
-    let json = project(render(&directory, "en-US", "u1").expect("folded Home viewer row"));
+    let json = project(render(&directory, &semio_framework_plugin::ViewModel::default(), "u1").expect("folded Home viewer row"));
     assert!(json.contains("Fabrication"), "the folded space renders: {json}");
     assert!(json.contains("hub"), "hub-folded spaces render origin=hub: {json}");
 }

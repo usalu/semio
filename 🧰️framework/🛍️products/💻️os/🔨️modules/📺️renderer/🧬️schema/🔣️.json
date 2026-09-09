@@ -4,6 +4,133 @@
   "title": "Renderer",
   "description": "Renderer-owned presentation contracts: shell dialog/effect origin admission, tutorial drive and playback, document opening and instance admission, host identity bootstrap, extension invocation, mounted probe projection, and the runtime/graph/helper element contracts. Renderer elements (🧱️elements/*) and rendering targets (🎯️targets/*) are consumers; this module is the sole owner.",
   "$defs": {
+    "BrowserDocumentMountFixtureV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "opening",
+        "retained",
+        "receipt",
+        "sequence"
+      ],
+      "properties": {
+        "opening": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "clientInstanceId",
+            "scope",
+            "instanceId"
+          ],
+          "properties": {
+            "clientInstanceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "scope": {
+              "$ref": "#/$defs/ShellScopeV1"
+            },
+            "instanceId": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "retained": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "clientInstanceId",
+            "scope",
+            "instanceId",
+            "activationGeneration",
+            "verifiedSurfaceId",
+            "revision"
+          ],
+          "properties": {
+            "clientInstanceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "scope": {
+              "$ref": "#/$defs/ShellScopeV1"
+            },
+            "instanceId": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "activationGeneration": {
+              "type": "string",
+              "minLength": 1
+            },
+            "verifiedSurfaceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "receipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "clientInstanceId",
+            "scope",
+            "instanceId",
+            "activationGeneration",
+            "verifiedSurfaceId",
+            "revision"
+          ],
+          "properties": {
+            "clientInstanceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "scope": {
+              "$ref": "#/$defs/ShellScopeV1"
+            },
+            "instanceId": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "activationGeneration": {
+              "type": "string",
+              "minLength": 1
+            },
+            "verifiedSurfaceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "sequence": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "enum": [
+              "socket",
+              "attach",
+              "mounted",
+              "commit",
+              "retire"
+            ]
+          }
+        }
+      }
+    },
     "ActorDocumentPortFixtureV1": {
       "type": "object", "additionalProperties": false,
       "required": ["owner", "limits", "cases", "retirement", "bindingRetirement", "disposal"],
@@ -1253,8 +1380,46 @@
         }
       }
     },
+    "MountedArtifactFrontierV1": {
+      "description": "🌿 The exact scope-bound checkpoint frontier acknowledged by one mounted browser actor.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash"],
+      "properties": {
+        "documentId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "headEditOrdinal": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "headEditId": { "type": "string", "maxLength": 256 },
+        "lastCommitSeq": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "chainHash": {
+          "type": "array",
+          "minItems": 32,
+          "maxItems": 32,
+          "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+        }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "headEditOrdinal": { "const": 0 },
+            "headEditId": { "const": "" },
+            "lastCommitSeq": { "const": 0 },
+            "chainHash": { "type": "array", "items": { "const": 0 } }
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "headEditOrdinal": { "type": "integer", "minimum": 1 },
+            "headEditId": { "type": "string", "minLength": 1 },
+            "lastCommitSeq": { "type": "integer", "minimum": 1 },
+            "chainHash": { "type": "array", "contains": { "type": "integer", "minimum": 1 } }
+          }
+        }
+      ]
+    },
     "MountedGisMapProbeSourceV1": {
-      "description": "🔬️ The mounted state a GIS map probe is taken from: the exact scope, activation identity, content digests and UI revision it observed.",
+      "description": "🔬️ The mounted state a GIS map probe is taken from: the exact scope, activation identity, checkpoint frontier, content digests and guest-acknowledged UI revision it observed.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1265,6 +1430,9 @@
         "componentSha256",
         "descriptorSha256",
         "browserActorSha256",
+        "activeCheckpointId",
+        "descriptorDigestV1",
+        "frontier",
         "uiRevision",
         "verifiedSurfaceId",
         "surface",
@@ -1293,6 +1461,15 @@
         },
         "browserActorSha256": {
           "$ref": "#/$defs/Sha256HexV1"
+        },
+        "activeCheckpointId": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "frontier": {
+          "$ref": "#/$defs/MountedArtifactFrontierV1"
         },
         "uiRevision": {
           "type": "integer",
@@ -1329,7 +1506,7 @@
       }
     },
     "MountedGisMapProbeV1": {
-      "description": "🗺️ The projection a mounted GIS map publishes. It repeats the mounted identity exactly and reduces the map root to its region ids; the root kind is fixed by the artifact standard.",
+      "description": "🗺️ The projection a mounted GIS map publishes. It repeats the acknowledged checkpoint, frontier and mounted identity exactly and reduces the map root to its region ids; the root kind is fixed by the artifact standard.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1340,6 +1517,9 @@
         "componentSha256",
         "descriptorSha256",
         "browserActorSha256",
+        "activeCheckpointId",
+        "descriptorDigestV1",
+        "frontier",
         "uiRevision",
         "rootKind",
         "regionIds"
@@ -1369,6 +1549,15 @@
         "browserActorSha256": {
           "$ref": "#/$defs/Sha256HexV1"
         },
+        "activeCheckpointId": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "frontier": {
+          "$ref": "#/$defs/MountedArtifactFrontierV1"
+        },
         "uiRevision": {
           "type": "integer",
           "minimum": 1,
@@ -1392,7 +1581,10 @@
     "MountedGisMapProbeRefusalV1": {
       "enum": [
         "unacknowledged-identity",
+        "unacknowledged-feedback",
         "stale-ui-revision",
+        "substituted-checkpoint",
+        "stale-frontier",
         "non-map-root",
         "malformed-map-pack",
         "duplicate-region-id"

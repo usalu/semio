@@ -1,8 +1,8 @@
 //! 📝️ VCS play app — the editor window: counter/commit/branch/undo/redo actions plus a projection summary.
 
-use crate::VcsSnapshot;
 use crate::editor::vcs::terminology::VcsPlayLabels;
 use crate::editor::vcs::{ui_fixed_label, ui_node_list, vcs_action};
+use crate::VcsSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::{built_text_node, Buildable, BuiltNode, HasBase, HasChildren, Label, LocalizedLabel, PluginAssemblyError, SurfaceKind, Trigger, UiAssemblyResult, UiText, WindowKindDefinition, WindowOptions};
 
@@ -76,15 +76,11 @@ fn editor_button(id: &str, icon_id: &str, label: ui::Label, action: &str) -> UiA
 pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let heading = editor_text(ui_fixed_label(labels.actions)?)?;
     let increment_row = editor_row("vcs-play-editor.increment-row", [editor_button("increment", "plus", data_label(format!("+ {} ({})", labels.counter.as_str(), projection.counter))?, "incrementCounter")])?;
-    let commit_row = editor_row(
-        "vcs-play-editor.commit-row",
-        [editor_button("commit", "git-commit", ui_fixed_label(labels.commit)?, "commitCheckpoint"), editor_button("new-alternative", "git-branch", ui_fixed_label(labels.branch)?, "createAlternative")],
-    )?;
+    let commit_row =
+        editor_row("vcs-play-editor.commit-row", [editor_button("commit", "git-commit", ui_fixed_label(labels.commit)?, "commitCheckpoint"), editor_button("new-alternative", "git-branch", ui_fixed_label(labels.branch)?, "createAlternative")])?;
     let history_row = editor_row("vcs-play-editor.history-row", [editor_button("undo", "undo", ui_fixed_label(labels.undo)?, "undo"), editor_button("redo", "redo", ui_fixed_label(labels.redo)?, "redo")])?;
-    let summary_children = ui_node_list([
-        editor_data_text(format!("{} · {} {}", projection.title, labels.counter.as_str(), projection.counter)),
-        editor_data_text(if projection.notes.is_empty() { "—".to_string() } else { projection.notes.clone() }),
-    ])?;
+    let summary_children =
+        ui_node_list([editor_data_text(format!("{} · {} {}", projection.title, labels.counter.as_str(), projection.counter)), editor_data_text(if projection.notes.is_empty() { "—".to_string() } else { projection.notes.clone() })])?;
     let summary = ui::column().try_id("vcs-play-editor.summary").map_err(|_| ui_error("vcs editor summary id admission failed"))?;
     let summary = summary.try_children(summary_children).map_err(|_| ui_error("vcs editor summary children admission failed"))?.try_build().map_err(|_| ui_error("vcs editor summary admission failed"))?;
     let root_children = ui_node_list([Ok(heading), Ok(increment_row), Ok(commit_row), Ok(history_row), Ok(summary)])?;

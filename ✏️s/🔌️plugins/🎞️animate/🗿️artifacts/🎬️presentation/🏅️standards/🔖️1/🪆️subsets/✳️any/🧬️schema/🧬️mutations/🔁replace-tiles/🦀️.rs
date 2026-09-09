@@ -3,9 +3,9 @@
 //! this is `replace` on the collection field, per the taxonomy's rule 6 "targeted verb, not a
 //! document-level snapshot swap" guidance).
 
-use crate::{FigureTileDraft, PresentationSnapshot};
 use crate::diff::PresentationDiff;
 use crate::mutations::PresentationMutation;
+use crate::{FigureTileDraft, PresentationSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔹Payload

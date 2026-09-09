@@ -1,6 +1,5 @@
 //! 🚗 `change-accidental-speed-km-h` — sets the En1991 accidental impact speed scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

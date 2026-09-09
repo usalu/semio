@@ -2,9 +2,9 @@
 
 use crate::diff::GisTerrainDiff;
 use crate::GisTerrainSnapshot;
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 pub use super::change_exaggeration::ChangeExaggeration;
 pub use super::change_imported_features::ChangeImportedFeatures;

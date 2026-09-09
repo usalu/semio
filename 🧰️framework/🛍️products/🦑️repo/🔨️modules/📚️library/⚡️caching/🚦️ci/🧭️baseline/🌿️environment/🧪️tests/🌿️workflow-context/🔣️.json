@@ -1,0 +1,19 @@
+{
+  "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "environment": { "GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": "semio/fixture", "GITHUB_REPOSITORY_ID": "41", "GITHUB_RUN_ID": "500", "GITHUB_SHA": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "GITHUB_REF": "refs/heads/⛳️integration", "GITHUB_EVENT_NAME": "push" },
+  "event": { "repository": { "id": 41, "full_name": "semio/fixture" }, "pull_request": { "base": { "ref": "target/🌐️branch", "repo": { "id": 41 } } } },
+  "cases": [
+    { "name": "branch push", "change": {}, "full": false, "branch": "⛳️integration" },
+    { "name": "pull request uses destination branch", "change": { "GITHUB_EVENT_NAME": "pull_request", "GITHUB_REF": "refs/pull/7/merge" }, "full": false, "branch": "target/🌐️branch" },
+    { "name": "manual branch validation", "change": { "GITHUB_EVENT_NAME": "workflow_dispatch" }, "full": false, "branch": "⛳️integration" },
+    { "name": "scheduled full validation", "change": { "GITHUB_EVENT_NAME": "schedule" }, "full": true, "branch": null },
+    { "name": "tag cannot use a branch baseline", "change": { "GITHUB_REF": "refs/tags/v1" }, "full": true, "branch": null }
+  ],
+  "invalid": [
+    { "GITHUB_SHA": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+    { "GITHUB_REPOSITORY": "fork/fixture" },
+    { "GITHUB_REPOSITORY_ID": "99" },
+    { "GITHUB_RUN_ID": "500junk" },
+    { "GITHUB_EVENT_NAME": "pull_request_target" }
+  ]
+}

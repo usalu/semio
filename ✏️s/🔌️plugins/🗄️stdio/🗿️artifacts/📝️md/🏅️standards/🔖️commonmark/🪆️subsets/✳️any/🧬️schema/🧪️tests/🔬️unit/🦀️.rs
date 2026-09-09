@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::schema::diff::{MdBlockAdded, MdBlockDiff, MdBlockModified, MdBlocksDiff, MdListItemAdded, MdListItemModified, MdListItemsDiff, diff_at_path};
+use crate::schema::diff::{diff_at_path, MdBlockAdded, MdBlockDiff, MdBlockModified, MdBlocksDiff, MdListItemAdded, MdListItemModified, MdListItemsDiff};
 use crate::schema::mutations::MdPathStep;
 use crate::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
 use crate::schema::snapshot::{MdBlock, MdInline};

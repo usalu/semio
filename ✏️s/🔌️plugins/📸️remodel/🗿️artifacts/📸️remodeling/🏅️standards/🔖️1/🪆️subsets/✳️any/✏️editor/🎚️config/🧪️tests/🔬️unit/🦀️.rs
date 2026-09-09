@@ -1,4 +1,3 @@
-
 use super::*;
 use protocol::Mutation;
 
@@ -42,7 +41,6 @@ async fn config_mutations_apply_and_backwards_restore_the_pre_edit_snapshot() {
 
     let op = RemodelingConfigMutation::SetReportTable(SetReportTable { table: "gcps".into() });
     assert_eq!(op.diff(&base).diff().report_table, "gcps");
-
 }
 
 #[semio_framework_async_macros::async_test]

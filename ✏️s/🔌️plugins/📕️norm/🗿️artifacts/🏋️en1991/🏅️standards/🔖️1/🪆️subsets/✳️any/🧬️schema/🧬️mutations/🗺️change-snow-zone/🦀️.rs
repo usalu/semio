@@ -1,6 +1,5 @@
 //! ❄️ `change-snow-zone` — sets the En1991 snow zone scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

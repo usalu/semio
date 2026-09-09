@@ -50,15 +50,29 @@ pub enum ScenePaintStep {
     Fault,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ScenePaintCursorError {
+    NodeMismatch,
+    CounterExhausted,
+}
+
+impl std::fmt::Display for ScenePaintCursorError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(match self { Self::NodeMismatch => "scene paint cursor belongs to another node", Self::CounterExhausted => "scene paint cursor counter exhausted" })
+    }
+}
+
+impl std::error::Error for ScenePaintCursorError {}
+
 impl ScenePaintCursor {
-    pub fn bind(&mut self, node: NodeId) -> Result<bool, ()> {
+    pub fn bind(&mut self, node: NodeId) -> Result<bool, ScenePaintCursorError> {
         match self.node {
             None => {
                 self.node = Some(node);
                 Ok(false)
             }
             Some(active) if active == node => Ok(true),
-            Some(_) => Err(()),
+            Some(_) => Err(ScenePaintCursorError::NodeMismatch),
         }
     }
 
@@ -66,8 +80,8 @@ impl ScenePaintCursor {
         self.phase
     }
 
-    pub fn advance_phase(&mut self) -> Result<(), ()> {
-        self.phase = self.phase.checked_add(1).ok_or(())?;
+    pub fn advance_phase(&mut self) -> Result<(), ScenePaintCursorError> {
+        self.phase = self.phase.checked_add(1).ok_or(ScenePaintCursorError::CounterExhausted)?;
         self.item = 0;
         self.page = 0;
         self.byte = 0;
@@ -78,8 +92,8 @@ impl ScenePaintCursor {
         self.item
     }
 
-    pub fn advance_item(&mut self) -> Result<(), ()> {
-        self.item = self.item.checked_add(1).ok_or(())?;
+    pub fn advance_item(&mut self) -> Result<(), ScenePaintCursorError> {
+        self.item = self.item.checked_add(1).ok_or(ScenePaintCursorError::CounterExhausted)?;
         Ok(())
     }
 
@@ -87,8 +101,8 @@ impl ScenePaintCursor {
         self.page
     }
 
-    pub fn advance_page(&mut self) -> Result<(), ()> {
-        self.page = self.page.checked_add(1).ok_or(())?;
+    pub fn advance_page(&mut self) -> Result<(), ScenePaintCursorError> {
+        self.page = self.page.checked_add(1).ok_or(ScenePaintCursorError::CounterExhausted)?;
         Ok(())
     }
 
@@ -96,8 +110,8 @@ impl ScenePaintCursor {
         self.byte
     }
 
-    pub fn advance_byte(&mut self) -> Result<(), ()> {
-        self.byte = self.byte.checked_add(1).ok_or(())?;
+    pub fn advance_byte(&mut self) -> Result<(), ScenePaintCursorError> {
+        self.byte = self.byte.checked_add(1).ok_or(ScenePaintCursorError::CounterExhausted)?;
         Ok(())
     }
 

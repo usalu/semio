@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn sample_with_composition() -> EnergyModelSnapshot {

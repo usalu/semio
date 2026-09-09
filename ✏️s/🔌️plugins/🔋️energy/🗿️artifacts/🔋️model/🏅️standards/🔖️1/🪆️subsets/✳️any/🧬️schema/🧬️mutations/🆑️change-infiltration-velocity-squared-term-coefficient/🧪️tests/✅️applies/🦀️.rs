@@ -23,12 +23,35 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 1.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 120.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(3), value: 0.5 });
-    model.infiltrations.push(crate::model::Infiltration { id: crate::model::EntityId(50), zone_id: crate::model::EntityId(1), schedule_id: crate::model::ScheduleId(1), method: crate::air_exchange::InfiltrationMethod::ScheduledAch, design_flow_ach: 0.5, flow_per_exterior_area_m3_s_m2: 0.0, effective_leakage_area_m2: 0.0, discharge_coefficient: 1.0, stack_height_m: 2.7, constant_term_coefficient: 1.0, temperature_term_coefficient: 0.0, velocity_term_coefficient: 0.0, velocity_squared_term_coefficient: 0.0 });
+    model.infiltrations.push(crate::model::Infiltration {
+        id: crate::model::EntityId(50),
+        zone_id: crate::model::EntityId(1),
+        schedule_id: crate::model::ScheduleId(1),
+        method: crate::air_exchange::InfiltrationMethod::ScheduledAch,
+        design_flow_ach: 0.5,
+        flow_per_exterior_area_m3_s_m2: 0.0,
+        effective_leakage_area_m2: 0.0,
+        discharge_coefficient: 1.0,
+        stack_height_m: 2.7,
+        constant_term_coefficient: 1.0,
+        temperature_term_coefficient: 0.0,
+        velocity_term_coefficient: 0.0,
+        velocity_squared_term_coefficient: 0.0,
+    });
     (snapshot(model), super::change_infiltration_velocity_squared_term_coefficient(crate::model::EntityId(50), 0.000103))
 }
 
 fn case() -> Case {
-    Case { kind: "change-infiltration-velocity-squared-term-coefficient", directory: "🆑️change-infiltration-velocity-squared-term-coefficient/🧪️tests/✅️applies", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case {
+        kind: "change-infiltration-velocity-squared-term-coefficient",
+        directory: "🆑️change-infiltration-velocity-squared-term-coefficient/🧪️tests/✅️applies",
+        before: BEFORE,
+        after: AFTER,
+        mutation: MUTATION,
+        diff: DIFF,
+        outcome: OUTCOME,
+        scenario,
+    }
 }
 
 #[semio_framework_async_macros::async_test]

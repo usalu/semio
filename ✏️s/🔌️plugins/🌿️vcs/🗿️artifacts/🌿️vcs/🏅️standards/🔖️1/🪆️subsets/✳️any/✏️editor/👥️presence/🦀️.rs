@@ -1,7 +1,7 @@
 //! 👥️ VCS presence — shareable live ephemeral state + mutations.
 //!
 //! Empty: the VCS play demo keeps all view state in [`crate::editor::vcs::config::VcsDemoConfig`]; there is
-//! no separate shareable live surface (history selection and locale are local config).
+//! no separate shareable live surface (history selection is framework interaction state).
 
 use protocol::Mutation;
 use store::ArtifactPack;

@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// ✍️ Hand-built representative document — used across the artifact's own component tests.

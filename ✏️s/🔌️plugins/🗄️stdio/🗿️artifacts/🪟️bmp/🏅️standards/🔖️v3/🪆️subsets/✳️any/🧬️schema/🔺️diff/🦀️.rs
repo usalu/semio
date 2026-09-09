@@ -10,9 +10,9 @@ use std::collections::HashSet;
 // 🔗 `DiffAlgebra` (spine S-1) isn't in the `protocol` facade's curated re-export list yet —
 // reach it via the same crate's directly-mounted `command` module (F1 precedent, see
 // `f1-csv-report.md` `## Deviations`).
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️PaletteDiff

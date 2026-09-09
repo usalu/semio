@@ -31,8 +31,6 @@ pub struct Vdi3805Artifact {
     pub curves: BTreeMap<String, CharacteristicCurve>,
     #[state(artifact)]
     pub limits: SecurityLimits,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -53,7 +51,7 @@ impl Vdi3805Artifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Vdi3805Snapshot) -> Self {
         Self {
             manufacturer_file: snapshot.manufacturer_file,
@@ -65,14 +63,11 @@ impl Vdi3805Artifact {
             geometry: snapshot.geometry,
             curves: snapshot.curves,
             limits: snapshot.limits,
-            selected_check_index: None,
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
     pub fn set_snapshot(&mut self, snapshot: Vdi3805Snapshot) {
-        let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
-        self.selected_check_index = selected;
     }
 }
 
@@ -83,13 +78,7 @@ impl Vdi3805Artifact {
 pub fn vdi3805_artifact_schema_descriptor() -> ::framework_schema::ArtifactSchemaDescriptor {
     ::framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.vdi3805",
-        artifact: ::framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: ::framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: ::framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -229,6 +218,7 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ComplianceHelpers
+use crate::document::{AnnexChoice, CheckResult, CheckStatus, ClauseId, NormError, Quantity, QuantityKind};
 /// 📐️ Pure VDI 3805 compliance helpers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — relocated verbatim from the deleted `⚙️engine`. Native-text parsing/serialization, structural
 /// validation, the linear-map utility and diagnostic-to-check mapping are all pure helpers over
@@ -238,7 +228,6 @@ semio_framework_plugin::derive_artifact_facets!(
 /// artifacts' `part_N` modules — take the whole snapshot directly, so they live in `inferences` not
 /// here). The whole-artifact JSON (de)serializers live in `🚪️io`.
 use crate::*;
-use crate::document::{AnnexChoice, CheckResult, CheckStatus, ClauseId, NormError, Quantity, QuantityKind};
 // 🔀️ Explicit single-item import: the glob above also pulls in `crate::dsl`
 // (the mounted native-text grammar submodule, see `🦀️.rs`), which would otherwise shadow the
 // `extern crate semio_framework_os_kernel as dsl;` alias for every unqualified `dsl::…` path in this

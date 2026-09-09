@@ -15,9 +15,6 @@ export interface VcsDiff {
   status?: string;
   /** @state artifact */
   tags?: VcsTagsDelta;
-  /** @state presence */
-  selectedCheckpointIds?: VcsStringList;
-  /** @state config */
 }
 
 export interface VcsStringList {
@@ -36,7 +33,6 @@ export interface VcsArtifact {
   notes: string;
   status: string;
   tags: string[];
-  selectedCheckpointIds: string[];
 }
 
 //#region 🚪️Parsers
@@ -96,7 +92,6 @@ export function parseVcsDiff(value: unknown, at = "$"): VcsDiff {
     notes: row["notes"] === undefined ? undefined : vcsVcsDiffGuardString(row["notes"], `${at}.notes`),
     status: row["status"] === undefined ? undefined : vcsVcsDiffGuardString(row["status"], `${at}.status`),
     tags: row["tags"] === undefined ? undefined : parseVcsTagsDelta(row["tags"], `${at}.tags`),
-    selectedCheckpointIds: row["selectedCheckpointIds"] === undefined ? undefined : parseVcsStringList(row["selectedCheckpointIds"], `${at}.selectedCheckpointIds`),
   };
 }
 

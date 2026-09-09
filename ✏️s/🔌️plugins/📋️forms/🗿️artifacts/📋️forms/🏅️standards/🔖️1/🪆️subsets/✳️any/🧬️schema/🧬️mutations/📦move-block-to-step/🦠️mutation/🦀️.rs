@@ -11,8 +11,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 🚚️ Moves the block `block_id` (currently inside `step_id`) into `to_step_id`'s `blocks`, at a
 /// FINAL-state `index` within the destination. `step_id == to_step_id` is a plain reorder within one
 /// step.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[derive(dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct MoveBlockToStep {
     pub step_id: String,

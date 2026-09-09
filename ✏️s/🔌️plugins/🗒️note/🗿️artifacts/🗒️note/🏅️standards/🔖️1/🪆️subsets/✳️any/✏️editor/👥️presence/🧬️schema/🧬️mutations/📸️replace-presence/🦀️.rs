@@ -16,7 +16,13 @@ impl protocol::MutationKind<NotePresence, NotePresenceMutation> for ReplacePrese
     fn diff(&self, _base: &NotePresence) -> protocol::MutationOutcome<NotePresence> {
         protocol::MutationOutcome::new(self.presence.clone())
     }
-    fn inverse(&self, base: &NotePresence) -> Vec<NotePresenceMutation> { vec![NotePresenceMutation::ReplacePresence(Self { presence: base.clone() })] }
-    fn label(&self) -> String { "Replace Presence".into() }
-    fn target(&self) -> Vec<String> { vec!["presence".into()] }
+    fn inverse(&self, base: &NotePresence) -> Vec<NotePresenceMutation> {
+        vec![NotePresenceMutation::ReplacePresence(Self { presence: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Presence".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["presence".into()]
+    }
 }

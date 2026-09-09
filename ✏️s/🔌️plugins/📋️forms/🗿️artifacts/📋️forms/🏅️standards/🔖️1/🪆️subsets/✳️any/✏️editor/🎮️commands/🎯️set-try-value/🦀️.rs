@@ -1,9 +1,10 @@
 //! 🧪️ Forms try-value updates with bounded vector expansion.
 
-use crate::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{discard_staged_try_value, FormsConfig, FormsConfigMutation};
+use crate::{op::FormMutation, FormsSnapshot};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::de::Deserializer;
 #[cfg(test)]
@@ -15,7 +16,6 @@ use serde_json::json;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
 pub const SET_TRY_VALUE_STEP_ACTION_ID: &str = "setTryValueStep";
@@ -99,13 +99,19 @@ impl<'de> Deserialize<'de> for ChunkAddressableJson {
 }
 
 impl dsl::ToValue for ChunkAddressableJson {
-    fn to_value(&self) -> dsl::DslValue { dsl::DslValue::String(self.to_string()) }
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::String(self.to_string())
+    }
 }
 
 impl dsl::FromValue for ChunkAddressableJson {
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let dsl::DslValue::String(value) = value else { return Err(dsl::ValueError::new("expected a JSON chunk string")); };
-        if value.len() > MAX_TRY_VALUE_BYTES_PER_STEP { return Err(dsl::ValueError::new("Forms command JSON chunks are limited to 4,096 UTF-8 bytes")); }
+        let dsl::DslValue::String(value) = value else {
+            return Err(dsl::ValueError::new("expected a JSON chunk string"));
+        };
+        if value.len() > MAX_TRY_VALUE_BYTES_PER_STEP {
+            return Err(dsl::ValueError::new("Forms command JSON chunks are limited to 4,096 UTF-8 bytes"));
+        }
         Ok(value.into())
     }
 }
@@ -1143,12 +1149,7 @@ fn copy_text_chunk(source: &str, cursor: &mut usize, end: usize, output: &mut Ve
 
 //#region 🔖️Continuation
 fn queue(payload: &SetTryValueStep) -> Effect {
-    Effect::DispatchAction {
-        req: RequestId(NEXT_TRY_VALUE_REQUEST.fetch_add(1, Ordering::Relaxed)),
-        action: SET_TRY_VALUE_STEP_ACTION_ID.into(),
-        args: Some(dsl::ToValue::to_value(payload)),
-        delay_ms: 0,
-    }
+    Effect::DispatchAction { req: RequestId(NEXT_TRY_VALUE_REQUEST.fetch_add(1, Ordering::Relaxed)), action: SET_TRY_VALUE_STEP_ACTION_ID.into(), args: Some(dsl::ToValue::to_value(payload)), delay_ms: 0 }
 }
 
 fn continuation_emit(generation: u64, next: SetTryValueStep) -> Emit<FormMutation, FormsConfigMutation> {

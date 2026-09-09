@@ -117,6 +117,22 @@
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       }
     },
+    "directory-session-authority-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts directory-session-authority-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "directory-session-authority-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts directory-session-authority-check --native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
     "directory-event-page-contract-check": {
       "executor": "nx:run-commands",
       "cache": false,

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::algebra::VecD;
 use std::f64::consts::PI;

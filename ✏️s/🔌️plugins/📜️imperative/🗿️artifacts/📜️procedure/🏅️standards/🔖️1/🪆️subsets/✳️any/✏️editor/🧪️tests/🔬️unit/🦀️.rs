@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::editor::procedure::testkit::{dispatch, imperative_app, imperative_app_with_registry, render};
-use semio_framework_plugin::PluginApp;
 use semio_framework_plugin::testkit::meta;
+use semio_framework_plugin::{EditorApp, PluginApp};
 use std::collections::BTreeMap;
 use store::{Backbone, BackboneMessage, MemoryBackbone};
 
@@ -10,19 +9,15 @@ const RETAINED_ROUTES: &str = include_str!("../../🧫️fixtures/🛣️retaine
 
 #[test]
 fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-    let fixture: serde_json::Value = serde_json::from_str(RETAINED_ROUTES).expect("Imperative retained route fixture decodes through serde_json");
-    assert_eq!(fixture.get("maximumRawBytes").and_then(serde_json::Value::as_u64), Some(IMPERATIVE_RETAINED_RAW_BYTES as u64));
-    assert_eq!(fixture.get("maximumWorkItems").and_then(serde_json::Value::as_u64), Some(IMPERATIVE_RETAINED_WORK_ITEMS as u64));
+    let fixture: serde_json::Value = serde_json::from_str(RETAINED_ROUTES).expect("Imperative route fixture decodes through serde_json");
     let routes = fixture.get("routes").and_then(serde_json::Value::as_array).expect("routes");
-    let migrated = routes.iter().filter(|route| route.get("disposition").and_then(serde_json::Value::as_str) == Some("migrated")).map(|route| route.get("id").and_then(serde_json::Value::as_str).expect("route id")).collect::<Vec<_>>();
-    assert_eq!(migrated, IMPERATIVE_RETAINED_TOOL_IDS);
-    assert_eq!(routes.len(), 11);
-    assert_eq!(<ImperativeRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS);
-    assert!(IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS.iter().all(|row| row.lanes == [ArtifactToolPublicationLane::Config]));
-    assert!(routes.iter().filter(|route| route.get("disposition").and_then(serde_json::Value::as_str) == Some("batch-only-pending-rewrite")).all(|route| route.get("lanes").and_then(serde_json::Value::as_array).is_some_and(Vec::is_empty)));
+    let commands = every_command();
+    let ids: Vec<_> = commands.iter().map(ImperativeCommand::command_id).collect();
+    let recorded: Vec<_> = routes.iter().map(|route| route.get("id").and_then(serde_json::Value::as_str).expect("route id")).collect();
+    assert_eq!(recorded, ids);
+    assert!(<ImperativePlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().is_empty());
+    assert!(routes.iter().all(|route| route.get("disposition").and_then(serde_json::Value::as_str) == Some("batch-only-pending-rewrite") && route.get("lanes").and_then(serde_json::Value::as_array).is_some_and(Vec::is_empty)));
 }
-
 
 #[semio_framework_async_macros::async_test]
 async fn app_definition_builds_without_panicking() {
@@ -50,7 +45,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 11, "every ImperativeCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 10, "every ImperativeCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -155,7 +150,7 @@ async fn interaction_topology_walks_nested_control_bodies_into_parent_links() {
     let config = ImperativeConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let topology = ImperativePlayApp::interaction_topology(&doc, &cfg);
     let steps = topology.domains.get(IMPERATIVE_INTERACTION_STEPS).expect("steps domain present in topology");
     let owner_row_id = document_panel::step_row_id(&owner_id);
@@ -173,7 +168,7 @@ async fn interaction_topology_is_empty_for_a_document_with_no_steps() {
     let config = ImperativeConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let topology = ImperativePlayApp::interaction_topology(&doc, &cfg);
     assert!(topology.domains.get(IMPERATIVE_INTERACTION_STEPS).expect("steps domain present in topology").ordered.is_empty());
 }

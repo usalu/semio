@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_s_artifact_stdio_gltf::engine::GltfAccessorType;
 use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView};

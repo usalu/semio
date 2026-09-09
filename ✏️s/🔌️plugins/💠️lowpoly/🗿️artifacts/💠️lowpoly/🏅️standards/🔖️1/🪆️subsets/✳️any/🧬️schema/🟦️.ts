@@ -1,78 +1,11 @@
 /** 🧬️ Lowpoly artifact schema — every field with its state class. */
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
 export interface LowpolyArtifact {
   /** @state artifact */
   schema: string;
   /** @state artifact */
   objects: LowpolyObject[];
-  /** @state presence */
-  activeObjectId?: string;
-  /** @state presence */
-  selection: LowpolySelection;
-  /** @state presence */
-  selectedObjectIds: string[];
-  /** @state presence */
-  paintUtility: string;
-  /** @state presence */
-  activePaintLayer: number;
-  /** @state presence */
-  /** @state config */
-  showEdges: boolean;
-  /** @state config */
-  sunEnabled: boolean;
-  /** @state config */
-  sunAzimuth: number;
-  /** @state config */
-  sunElevation: number;
-  /** @state config */
-  sunIntensity: number;
-  /** @state config */
-  sunColor: string;
-  /** @state config */
-  worldCameraPositionX: number;
-  /** @state config */
-  worldCameraPositionY: number;
-  /** @state config */
-  worldCameraPositionZ: number;
-  /** @state config */
-  worldCameraTargetX: number;
-  /** @state config */
-  worldCameraTargetY: number;
-  /** @state config */
-  worldCameraTargetZ: number;
-  /** @state config */
-  worldCameraFov: number;
-  /** @state config */
-  utilityParamsJson: string;
-  /** @state config */
-  paintColorR: number;
-  /** @state config */
-  paintColorG: number;
-  /** @state config */
-  paintColorB: number;
-  /** @state config */
-  paintColorA: number;
-  /** @state config */
-  selectionMethod: string;
-  /** @state config */
-  selectionModeDefault: string;
-  /** @state config */
-  engagementInput: string;
-  /** @state config */
-  /** @state artifact */
-  hoveredObjectId?: string;
-  /** @state artifact */
-  hoveredTargetObjectId?: string;
-  /** @state artifact */
-  hoveredTargetMode?: string;
-  /** @state artifact */
-  hoveredTargetId?: number;
-  /** @state artifact */
-  strokeDragActive: boolean;
-  /** @state artifact */
-  transformDragActive: boolean;
-  /** @state artifact */
-  previewSeq: number;
 }
 
 export interface LowpolySelectionTargets {
@@ -109,24 +42,8 @@ export interface LowpolyObject {
   transform: LowpolyTransform;
   smoothShading: boolean;
   /** `null` when the object owns no mesh yet — confirmed against the `create-object` mutation fixture. */
-  mesh: LowpolyMeshHandle | null;
+  mesh: ArtifactChild | null;
   paintLayers: LowpolyPaintLayer[];
-}
-
-export interface LowpolyMeshHandle {
-  childId: string;
-  target: ArtifactRef;
-}
-
-export interface ArtifactDialect {
-  artifactKind: string;
-  standard: string;
-  subset: string;
-}
-
-export interface ArtifactRef {
-  artifactId: string;
-  dialect: ArtifactDialect;
 }
 
 //#region 🚪️Parsers
@@ -181,64 +98,18 @@ export function parseLowpolyArtifact(value: unknown, at = "$"): LowpolyArtifact 
   return {
     schema: lowpolyLowpolyArtifactGuardString(row["schema"], `${at}.schema`),
     objects: lowpolyLowpolyArtifactGuardArray(row["objects"], `${at}.objects`).map((item, index) => parseLowpolyObject(item, `${at}.objects[${index}]`)),
-    activeObjectId: row["activeObjectId"] === undefined ? undefined : lowpolyLowpolyArtifactGuardString(row["activeObjectId"], `${at}.activeObjectId`),
-    selection: parseLowpolySelection(row["selection"], `${at}.selection`),
-    selectedObjectIds: lowpolyLowpolyArtifactGuardArray(row["selectedObjectIds"], `${at}.selectedObjectIds`).map((item, index) => lowpolyLowpolyArtifactGuardString(item, `${at}.selectedObjectIds[${index}]`)),
-    paintUtility: lowpolyLowpolyArtifactGuardString(row["paintUtility"], `${at}.paintUtility`),
-    activePaintLayer: lowpolyLowpolyArtifactGuardInteger(row["activePaintLayer"], `${at}.activePaintLayer`, {"minimum": 0}),
-    showEdges: lowpolyLowpolyArtifactGuardBoolean(row["showEdges"], `${at}.showEdges`),
-    sunEnabled: lowpolyLowpolyArtifactGuardBoolean(row["sunEnabled"], `${at}.sunEnabled`),
-    sunAzimuth: lowpolyLowpolyArtifactGuardNumber(row["sunAzimuth"], `${at}.sunAzimuth`),
-    sunElevation: lowpolyLowpolyArtifactGuardNumber(row["sunElevation"], `${at}.sunElevation`),
-    sunIntensity: lowpolyLowpolyArtifactGuardNumber(row["sunIntensity"], `${at}.sunIntensity`),
-    sunColor: lowpolyLowpolyArtifactGuardString(row["sunColor"], `${at}.sunColor`),
-    worldCameraPositionX: lowpolyLowpolyArtifactGuardNumber(row["worldCameraPositionX"], `${at}.worldCameraPositionX`),
-    worldCameraPositionY: lowpolyLowpolyArtifactGuardNumber(row["worldCameraPositionY"], `${at}.worldCameraPositionY`),
-    worldCameraPositionZ: lowpolyLowpolyArtifactGuardNumber(row["worldCameraPositionZ"], `${at}.worldCameraPositionZ`),
-    worldCameraTargetX: lowpolyLowpolyArtifactGuardNumber(row["worldCameraTargetX"], `${at}.worldCameraTargetX`),
-    worldCameraTargetY: lowpolyLowpolyArtifactGuardNumber(row["worldCameraTargetY"], `${at}.worldCameraTargetY`),
-    worldCameraTargetZ: lowpolyLowpolyArtifactGuardNumber(row["worldCameraTargetZ"], `${at}.worldCameraTargetZ`),
-    worldCameraFov: lowpolyLowpolyArtifactGuardNumber(row["worldCameraFov"], `${at}.worldCameraFov`),
-    utilityParamsJson: lowpolyLowpolyArtifactGuardString(row["utilityParamsJson"], `${at}.utilityParamsJson`),
-    paintColorR: lowpolyLowpolyArtifactGuardInteger(row["paintColorR"], `${at}.paintColorR`, {"minimum": 0}),
-    paintColorG: lowpolyLowpolyArtifactGuardInteger(row["paintColorG"], `${at}.paintColorG`, {"minimum": 0}),
-    paintColorB: lowpolyLowpolyArtifactGuardInteger(row["paintColorB"], `${at}.paintColorB`, {"minimum": 0}),
-    paintColorA: lowpolyLowpolyArtifactGuardInteger(row["paintColorA"], `${at}.paintColorA`, {"minimum": 0}),
-    selectionMethod: lowpolyLowpolyArtifactGuardString(row["selectionMethod"], `${at}.selectionMethod`),
-    selectionModeDefault: lowpolyLowpolyArtifactGuardString(row["selectionModeDefault"], `${at}.selectionModeDefault`),
-    engagementInput: lowpolyLowpolyArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),
-    hoveredObjectId: row["hoveredObjectId"] === undefined ? undefined : lowpolyLowpolyArtifactGuardString(row["hoveredObjectId"], `${at}.hoveredObjectId`),
-    hoveredTargetObjectId: row["hoveredTargetObjectId"] === undefined ? undefined : lowpolyLowpolyArtifactGuardString(row["hoveredTargetObjectId"], `${at}.hoveredTargetObjectId`),
-    hoveredTargetMode: row["hoveredTargetMode"] === undefined ? undefined : lowpolyLowpolyArtifactGuardString(row["hoveredTargetMode"], `${at}.hoveredTargetMode`),
-    hoveredTargetId: row["hoveredTargetId"] === undefined ? undefined : lowpolyLowpolyArtifactGuardInteger(row["hoveredTargetId"], `${at}.hoveredTargetId`, {"minimum": 0}),
-    strokeDragActive: lowpolyLowpolyArtifactGuardBoolean(row["strokeDragActive"], `${at}.strokeDragActive`),
-    transformDragActive: lowpolyLowpolyArtifactGuardBoolean(row["transformDragActive"], `${at}.transformDragActive`),
-    previewSeq: lowpolyLowpolyArtifactGuardInteger(row["previewSeq"], `${at}.previewSeq`),
   };
 }
 
-export function parseLowpolyMeshHandle(value: unknown, at = "$"): LowpolyMeshHandle {
+export function parseLowpolyObject(value: unknown, at = "$"): LowpolyObject {
   const row = lowpolyLowpolyArtifactGuardObject(value, at);
   return {
-    childId: lowpolyLowpolyArtifactGuardString(row["childId"], `${at}.childId`),
-    target: parseArtifactRef(row["target"], `${at}.target`),
-  };
-}
-
-export function parseArtifactRef(value: unknown, at = "$"): ArtifactRef {
-  const row = lowpolyLowpolyArtifactGuardObject(value, at);
-  return {
-    artifactId: lowpolyLowpolyArtifactGuardString(row["artifactId"], `${at}.artifactId`),
-    dialect: parseArtifactDialect(row["dialect"], `${at}.dialect`),
-  };
-}
-
-export function parseArtifactDialect(value: unknown, at = "$"): ArtifactDialect {
-  const row = lowpolyLowpolyArtifactGuardObject(value, at);
-  return {
-    artifactKind: lowpolyLowpolyArtifactGuardString(row["artifactKind"], `${at}.artifactKind`),
-    standard: lowpolyLowpolyArtifactGuardString(row["standard"], `${at}.standard`),
-    subset: lowpolyLowpolyArtifactGuardString(row["subset"], `${at}.subset`),
+    id: lowpolyLowpolyArtifactGuardString(row["id"], `${at}.id`),
+    name: lowpolyLowpolyArtifactGuardString(row["name"], `${at}.name`),
+    transform: parseLowpolyTransform(row["transform"], `${at}.transform`),
+    smoothShading: lowpolyLowpolyArtifactGuardBoolean(row["smoothShading"], `${at}.smoothShading`),
+    mesh: row["mesh"] === null ? null : parseArtifactChild(row["mesh"]),
+    paintLayers: lowpolyLowpolyArtifactGuardArray(row["paintLayers"], `${at}.paintLayers`).map((item, index) => parseLowpolyPaintLayer(item, `${at}.paintLayers[${index}]`)),
   };
 }
 

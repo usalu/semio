@@ -45,14 +45,14 @@ pub use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step
 const CLASS: &str = "ISO 10303-214 CC1 (config data only)";
 
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
+#[path = "🗑️remove-shape-representation/🦀️.rs"]
+pub mod remove_shape_representation;
 #[path = "🏷️set-file-schema/🦀️.rs"]
 pub mod set_file_schema;
 #[path = "🪪set-product-identity/🦀️.rs"]
 pub mod set_product_identity;
-#[path = "🗑️remove-shape-representation/🦀️.rs"]
-pub mod remove_shape_representation;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed conformance-class mutation for `stdio.step` at `ap214/1️⃣cc1`.
@@ -146,7 +146,6 @@ pub(crate) fn edited(base: &StepSnapshot, edit: &ClassEdit) -> Result<StepSnapsh
     Ok(StepSnapshot::from_part21_document(&doc))
 }
 //#endregion 🔖️Apply
-
 
 //#region 🚪️Reachability
 /// ▶️ [`apply_step_cc1_mutation`] in a signature that names only this subset's own public types, so

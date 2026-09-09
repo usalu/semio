@@ -11,7 +11,7 @@ use crate::RewritingSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::bounds::{compute_bounds};
+use super::bounds::compute_bounds;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a rewrite-rule snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
@@ -58,11 +58,7 @@ pub fn rewriting_artifact_inference_descriptor() -> ::semio_framework_schema::Ar
     ::semio_framework_schema::ArtifactInferenceDescriptor {
         id: "s.trinity.rewriting.inference",
         inference: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }
 }

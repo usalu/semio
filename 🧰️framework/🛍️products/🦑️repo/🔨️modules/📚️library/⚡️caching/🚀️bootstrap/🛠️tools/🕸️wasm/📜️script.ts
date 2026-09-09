@@ -6,9 +6,10 @@ import { Script, ScriptRouter } from "../../../../🏃️process/🧭️routing/
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { withResourceLeases } from "../../../🔒️leases/🟦️.ts";
 import { runTool } from "../../📦️dependencies/📜️script.ts";
+import binaryenManifest from "./🔣️.json";
 
 export type BinaryenDistribution = { readonly platform: string; readonly architecture: string; readonly archive: string; readonly bytes: number; readonly sha256: string };
-const manifest: { version: string; release: string; platforms: BinaryenDistribution[] } = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+const manifest: { version: string; release: string; platforms: BinaryenDistribution[] } = binaryenManifest;
 const store = ".🧬semio/🦑️repo/⚡️cache/tools/binaryen", owner = "workspace:deps-wasm-opt";
 const digest = (path: string): string => createHash("sha256").update(readFileSync(path)).digest("hex");
 
@@ -122,4 +123,27 @@ class PrepareScript extends Script {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("prepare", PrepareScript).run(process.argv.slice(2));
+/** 🔏️ Hashes tool versions without application imports or acquisition side effects. */
+class FingerprintScript extends Script {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw new Error("Tool fingerprint accepts no arguments");
+    const controller = new AbortController(), stop = (): void => controller.abort(new Error("Tool fingerprint cancelled"));
+    process.once("SIGINT", stop); process.once("SIGTERM", stop);
+    try {
+      const versions: Record<string, string> = {};
+      for (const tool of ["wasm-pack", "wasm-bindgen", "wasm-opt", "trunk"]) {
+        controller.signal.throwIfAborted();
+        const override = tool === "wasm-bindgen" ? process.env.SEMIO_WASM_BINDGEN_BIN : tool === "wasm-opt" ? process.env.SEMIO_WASM_OPT_BIN : undefined;
+        if (tool === "wasm-opt" && !override) { versions[tool] = binaryenIdentity(); continue; }
+        const path = override ? resolve(this.root, override) : Bun.which(tool, { PATH: process.env.PATH });
+        if (!path) { versions[tool] = "unavailable"; continue; }
+        const version = (await runTool(path, ["--version"], this.root, AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]), true)).trim();
+        if (!version) throw new Error(`Cannot fingerprint ${tool}`);
+        versions[tool] = version;
+      }
+      console.log(JSON.stringify(versions));
+    } finally { process.removeListener("SIGINT", stop); process.removeListener("SIGTERM", stop); }
+  }
+}
+
+if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("prepare", PrepareScript).register("fingerprint", FingerprintScript).run(process.argv.slice(2));

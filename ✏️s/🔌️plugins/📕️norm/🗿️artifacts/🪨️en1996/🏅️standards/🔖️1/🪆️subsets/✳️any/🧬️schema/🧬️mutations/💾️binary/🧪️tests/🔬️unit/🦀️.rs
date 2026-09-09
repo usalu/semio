@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::En1996Snapshot;
 use crate::mutations::change_m_ed_knm;
+use crate::En1996Snapshot;
 
 fn sample_mutation() -> En1996Mutation {
     En1996Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 12.5 })

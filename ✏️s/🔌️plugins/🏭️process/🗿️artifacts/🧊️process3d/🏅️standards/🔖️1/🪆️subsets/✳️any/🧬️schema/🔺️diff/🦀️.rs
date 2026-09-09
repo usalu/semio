@@ -10,9 +10,9 @@
 
 use crate::{Pose, ProcessStep, Stock, Workshop};
 use framework_schema::ArtifactSchema;
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the process3d artifact.
@@ -44,42 +44,6 @@ pub struct Process3dDiff {
     pub tool_solids: Option<Process3dToolSolidChildList>,
     #[state(artifact)]
     pub resolved_up_to: Option<Option<usize>>,
-    #[state(presence)]
-    pub selected_id: Option<Option<String>>,
-    #[state(presence)]
-    pub selected_face_id: Option<Option<usize>>,
-    #[state(config)]
-    pub selection_method: Option<String>,
-    #[state(config)]
-    pub engagement_input: Option<String>,
-    #[state(config)]
-    pub camera_position_x: Option<f64>,
-    #[state(config)]
-    pub camera_position_y: Option<f64>,
-    #[state(config)]
-    pub camera_position_z: Option<f64>,
-    #[state(config)]
-    pub camera_target_x: Option<f64>,
-    #[state(config)]
-    pub camera_target_y: Option<f64>,
-    #[state(config)]
-    pub camera_target_z: Option<f64>,
-    #[state(config)]
-    pub camera_fov: Option<f64>,
-    #[state(config)]
-    pub sun_enabled: Option<bool>,
-    #[state(config)]
-    pub sun_azimuth: Option<f64>,
-    #[state(config)]
-    pub sun_elevation: Option<f64>,
-    #[state(config)]
-    pub sun_intensity: Option<f64>,
-    #[state(config)]
-    pub sun_color: Option<String>,
-    #[state(config)]
-    pub contributions_json: Option<String>,
-    #[state(artifact)]
-    pub hovered_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 

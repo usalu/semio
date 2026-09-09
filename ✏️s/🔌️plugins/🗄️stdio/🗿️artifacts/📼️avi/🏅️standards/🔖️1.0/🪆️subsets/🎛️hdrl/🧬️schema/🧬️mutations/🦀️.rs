@@ -8,30 +8,30 @@ use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "🎬set-main-header/🦀️.rs"]
-pub mod set_main_header;
-#[path = "📇️set-idx1-present/🦀️.rs"]
-pub mod set_idx1_present;
-#[path = "📥️insert-stream/🦀️.rs"]
-pub mod insert_stream;
-#[path = "📤️remove-stream/🦀️.rs"]
-pub mod remove_stream;
-#[path = "🎞️set-stream-header/🦀️.rs"]
-pub mod set_stream_header;
-#[path = "🎨set-stream-format/🦀️.rs"]
-pub mod set_stream_format;
-#[path = "🧩insert-chunk/🦀️.rs"]
-pub mod insert_chunk;
-#[path = "🗑️remove-chunk/🦀️.rs"]
-pub mod remove_chunk;
-#[path = "🔑set-chunk-keyframe/🦀️.rs"]
-pub mod set_chunk_keyframe;
 #[path = "🧱add-unknown-chunk/🦀️.rs"]
 pub mod add_unknown_chunk;
+#[path = "🧩insert-chunk/🦀️.rs"]
+pub mod insert_chunk;
+#[path = "📥️insert-stream/🦀️.rs"]
+pub mod insert_stream;
+#[path = "🗑️remove-chunk/🦀️.rs"]
+pub mod remove_chunk;
+#[path = "📤️remove-stream/🦀️.rs"]
+pub mod remove_stream;
 #[path = "🧹remove-unknown-chunk/🦀️.rs"]
 pub mod remove_unknown_chunk;
+#[path = "🔑set-chunk-keyframe/🦀️.rs"]
+pub mod set_chunk_keyframe;
+#[path = "📇️set-idx1-present/🦀️.rs"]
+pub mod set_idx1_present;
+#[path = "🎬set-main-header/🦀️.rs"]
+pub mod set_main_header;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
+#[path = "🎨set-stream-format/🦀️.rs"]
+pub mod set_stream_format;
+#[path = "🎞️set-stream-header/🦀️.rs"]
+pub mod set_stream_header;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
@@ -59,20 +59,8 @@ pub enum AviMutation {
 /// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &[
-    "set-snapshot",
-    "set-main-header",
-    "set-idx1-present",
-    "insert-stream",
-    "remove-stream",
-    "set-stream-header",
-    "set-stream-format",
-    "insert-chunk",
-    "remove-chunk",
-    "set-chunk-keyframe",
-    "add-unknown-chunk",
-    "remove-unknown-chunk",
-];
+pub const KINDS: &[&str] =
+    &["set-snapshot", "set-main-header", "set-idx1-present", "insert-stream", "remove-stream", "set-stream-header", "set-stream-format", "insert-chunk", "remove-chunk", "set-chunk-keyframe", "add-unknown-chunk", "remove-unknown-chunk"];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn stream_diff_for(stream_index: usize, inner: AviStreamDiff) -> AviDiff {
@@ -100,7 +88,9 @@ pub(crate) fn agg_diff(this: &AviMutation, base: &AviSnapshot) -> protocol::Muta
         AviMutation::SetChunkKeyframe(set_chunk_keyframe::SetChunkKeyframe { stream_index, index, keyframe }) => {
             chunk_diff_for(*stream_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: AviChunkDiff { data: None, keyframe: Some(*keyframe) } }], added: vec![] })
         }
-        AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index, item }) => AviDiff { unknown_chunks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: item.clone() }] }), ..AviDiff::default() },
+        AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index, item }) => {
+            AviDiff { unknown_chunks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: item.clone() }] }), ..AviDiff::default() }
+        }
         AviMutation::RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk { index }) => AviDiff { unknown_chunks: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }), ..AviDiff::default() },
     })
 }

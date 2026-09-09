@@ -13,6 +13,7 @@ import { availableParallelism, devNull, homedir, tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
+import { preparedBinaryen } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
 import { canonicalFilenameForKind, fixedContractFilename, loadTaxonomy, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -2903,7 +2904,7 @@ export function wasmBuildEnvironment(repoRoot: string, env: NodeJS.ProcessEnv = 
 
 /** 🧭️ Makes wasm-pack resolve the selected optimizer while preserving the pinned binding generator. */
 export function wasmPackEnvironment(repoRoot: string, bindgen: string, env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  const optimizer = env.SEMIO_WASM_OPT_BIN ? resolve(repoRoot, env.SEMIO_WASM_OPT_BIN) : undefined;
+  const optimizer = env.SEMIO_WASM_OPT_BIN ? resolve(repoRoot, env.SEMIO_WASM_OPT_BIN) : preparedBinaryen(repoRoot);
   if (optimizer && basename(optimizer) !== (process.platform === "win32" ? "wasm-opt.exe" : "wasm-opt")) throw new Error("SEMIO_WASM_OPT_BIN must name a wasm-opt executable");
   const environment = { ...env, PATH: [dirname(bindgen), ...(optimizer ? [dirname(optimizer)] : []), env.PATH].filter(Boolean).join(process.platform === "win32" ? ";" : ":") };
   if (optimizer) {

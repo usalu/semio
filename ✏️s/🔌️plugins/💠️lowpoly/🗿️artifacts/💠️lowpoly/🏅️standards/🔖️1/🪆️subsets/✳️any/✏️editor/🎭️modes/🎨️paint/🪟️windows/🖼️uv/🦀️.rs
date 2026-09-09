@@ -1,13 +1,13 @@
 //! 🖼️ Lowpoly play app — the UV window: the 2D UV-canvas paint surface. Only the paint operations it
 //! shares with the Model window are scoped here (no mesh-editing/transform ops).
 
-use crate::LOWPOLY_PAINT_TEXTURE_SIZE;
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::modes::edit::windows::model::LOWPOLY_TRANSFORM_UTILITY_DEFAULT;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::LowpolyView;
 use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
+use crate::LOWPOLY_PAINT_TEXTURE_SIZE;
 use semio_framework_plugin::{scene_surface, Canvas2dScene, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use std::collections::HashMap;
 
@@ -99,11 +99,9 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
 
 pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     match loaded {
-        Some(loaded) => scene_surface(
-            LOWPOLY_PLAY_SURFACE_UV,
-            semio_framework_ui_contract::SurfaceKind::Canvas2d,
-            &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache), snapshot: None },
-        ),
+        Some(loaded) => {
+            scene_surface(LOWPOLY_PLAY_SURFACE_UV, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache), snapshot: None })
+        }
         None => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Failed to load UV canvas")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly uv window failed-load text admission failed")),
     }
 }

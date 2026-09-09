@@ -16,11 +16,11 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use store::ArtifactOwnedValueRetirementFactory as _;
-use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::empty_presentation_snapshot;
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use protocol::{Mutation as _, MutationDiff as _, OpBinary};
+use store::ArtifactOwnedValueRetirementFactory as _;
 use store::{create_document_envelope, ArtifactEnvelope, ArtifactStore};
 
 //#region 🧬️OwnedEnvelopeCatalog
@@ -1181,7 +1181,9 @@ impl PresentationEnvelopeMaterializeHandle {
                 self.pending = Some(ticket);
                 PresentationEnvelopeMaterializeHandleStep::Progress
             }
-            Err(semio_framework_job::WorkerJobSubmitFault::Contention(_)) | Err(semio_framework_job::WorkerJobSubmitFault::Pool(_)) | Err(semio_framework_job::WorkerJobSubmitFault::SequenceExhausted) => PresentationEnvelopeMaterializeHandleStep::Pending,
+            Err(semio_framework_job::WorkerJobSubmitFault::Contention(_)) | Err(semio_framework_job::WorkerJobSubmitFault::Pool(_)) | Err(semio_framework_job::WorkerJobSubmitFault::SequenceExhausted) => {
+                PresentationEnvelopeMaterializeHandleStep::Pending
+            }
         }
     }
 
@@ -1286,7 +1288,11 @@ impl Drop for PresentationEnvelopeMaterializeHandle {
 }
 
 /// 📨️ Creates the sole app-retained Presentation materialization handle from sealed fixed pages.
-pub fn submit_materialize_presentation_projection(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, pages: store::OwnedSchemaDecodePages) -> Result<PresentationEnvelopeMaterializeHandle, store::OwnedSchemaDecodePages> {
+pub fn submit_materialize_presentation_projection(
+    operation: semio_framework_job::OperationId,
+    generation: semio_framework_job::Generation,
+    pages: store::OwnedSchemaDecodePages,
+) -> Result<PresentationEnvelopeMaterializeHandle, store::OwnedSchemaDecodePages> {
     let (job, completion) = begin_materialize_presentation_projection(operation, generation, pages)?;
     let cancel = semio_framework_job::root_cancel_token();
     let params = semio_framework_job::BatchJobParams {
@@ -1360,7 +1366,12 @@ impl PresentationEnvelopeMaterializeRegistry {
     }
 
     /// 📥️ Preflights the fixed slot before constructing any nested decode/job owner.
-    pub fn try_submit(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, pages: store::OwnedSchemaDecodePages) -> Result<(), (PresentationEnvelopeMaterializeRegistryFault, store::OwnedSchemaDecodePages)> {
+    pub fn try_submit(
+        &mut self,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        pages: store::OwnedSchemaDecodePages,
+    ) -> Result<(), (PresentationEnvelopeMaterializeRegistryFault, store::OwnedSchemaDecodePages)> {
         let index = Self::index(operation);
         if self.slots[index].occupied {
             let fault = if self.slots[index].operation == operation { PresentationEnvelopeMaterializeRegistryFault::Collision } else { PresentationEnvelopeMaterializeRegistryFault::Capacity };

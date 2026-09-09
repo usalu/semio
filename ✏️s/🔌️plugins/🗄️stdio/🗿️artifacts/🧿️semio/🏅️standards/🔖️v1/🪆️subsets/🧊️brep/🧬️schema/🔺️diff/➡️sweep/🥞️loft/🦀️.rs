@@ -76,7 +76,10 @@ pub fn loft_profiles(body: &mut Body, profiles: &[FaceId], smooth: bool, rec: &m
             return Err(KernelError::InvalidInput("loft: corresponding loops must have the same number of edges across all profiles".into()));
         }
         for k in 0..m {
-            let (edge0, f0) = { let c = body.coedges.get(coedge_sets[0][k]).unwrap(); (c.edge, c.forward) };
+            let (edge0, f0) = {
+                let c = body.coedges.get(coedge_sets[0][k]).unwrap();
+                (c.edge, c.forward)
+            };
             let range0 = body.edges.get(edge0).unwrap().range;
             let mut per_profile = Vec::with_capacity(n);
             let mut target_degree = 0usize;
@@ -119,8 +122,18 @@ pub fn loft_profiles(body: &mut Body, profiles: &[FaceId], smooth: bool, rec: &m
             let (start_v0, start_v1) = body.coedge_endpoints(coedge_sets[0][k]).unwrap();
             let (end_v0, end_v1) = body.coedge_endpoints(coedge_sets[n - 1][k]).unwrap();
             let last_forward = body.coedges.get(coedge_sets[n - 1][k]).unwrap().forward;
-            let left_positions: Vec<Pnt3> = (0..n).map(|j| { let (a, _) = body.coedge_endpoints(coedge_sets[j][k]).unwrap(); body.vertices.get(a).unwrap().position }).collect();
-            let right_positions: Vec<Pnt3> = (0..n).map(|j| { let (_, b) = body.coedge_endpoints(coedge_sets[j][k]).unwrap(); body.vertices.get(b).unwrap().position }).collect();
+            let left_positions: Vec<Pnt3> = (0..n)
+                .map(|j| {
+                    let (a, _) = body.coedge_endpoints(coedge_sets[j][k]).unwrap();
+                    body.vertices.get(a).unwrap().position
+                })
+                .collect();
+            let right_positions: Vec<Pnt3> = (0..n)
+                .map(|j| {
+                    let (_, b) = body.coedge_endpoints(coedge_sets[j][k]).unwrap();
+                    body.vertices.get(b).unwrap().position
+                })
+                .collect();
             let left_fit = fit_column(&left_positions, degree_v);
             let right_fit = fit_column(&right_positions, degree_v);
             let left_curve = body.curves3.insert(Curve3::Nurbs { knots: left_fit.knots.clone(), controls: left_fit.controls, weights: vec![1.0; n] });
@@ -148,8 +161,22 @@ pub fn loft_profiles(body: &mut Body, profiles: &[FaceId], smooth: bool, rec: &m
     let bottom = profiles[0];
     let top = profiles[n - 1];
     let n0 = super::core::planar_outward_normal(body, bottom).unwrap_or(crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::Z);
-    let bottom_origin = body.faces.get(bottom).and_then(|f| match body.surfaces.get(f.surface) { Some(Surface::Plane { frame }) => Some(frame.origin), _ => None }).unwrap_or(Pnt3::new(0.0, 0.0, 0.0));
-    let top_origin = body.faces.get(top).and_then(|f| match body.surfaces.get(f.surface) { Some(Surface::Plane { frame }) => Some(frame.origin), _ => None }).unwrap_or(bottom_origin);
+    let bottom_origin = body
+        .faces
+        .get(bottom)
+        .and_then(|f| match body.surfaces.get(f.surface) {
+            Some(Surface::Plane { frame }) => Some(frame.origin),
+            _ => None,
+        })
+        .unwrap_or(Pnt3::new(0.0, 0.0, 0.0));
+    let top_origin = body
+        .faces
+        .get(top)
+        .and_then(|f| match body.surfaces.get(f.surface) {
+            Some(Surface::Plane { frame }) => Some(frame.origin),
+            _ => None,
+        })
+        .unwrap_or(bottom_origin);
     let travel = top_origin - bottom_origin;
     if n0.dot(travel) > 0.0 {
         let label = body.faces.get(bottom).unwrap().label;
@@ -173,4 +200,3 @@ pub fn loft_profiles(body: &mut Body, profiles: &[FaceId], smooth: bool, rec: &m
 fn v_knots_domain(_grid: &[Vec<Pnt3>], _cc: usize) -> (f64, f64) {
     (0.0, 1.0)
 }
-

@@ -1,6 +1,5 @@
-
 use super::*;
-use flow_extension_sdk::{FlowExtensionCommand, build_manifest_json, evaluate_json};
+use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionCommand};
 
 fn sample_dict() -> Dictionary {
     Dictionary::with_schema("dictionary").insert("number", Value::Dictionary(number_dictionary(3.0))).insert("text", Value::Dictionary(text_dictionary("hi".into())))

@@ -143,24 +143,26 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ The produced delta is exactly the committed one: all three co-derived children replaced
-/// together, and `equation` plus every config-lane slot left `null`. This is what pins that a
-/// geometry insert may not smuggle an equation or camera edit alongside it.
+/// together, and the artifact's equation slot left null. Its owned encoding contains
+/// exactly the four artifact fields.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = produced();
     assert_eq!(outcome.diff(), &expected_diff(), "insert-point/seeds-the-empty-cloud-with-its-first-point: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert!(outcome.diff().equation.is_none() && outcome.diff().camera_x.is_none() && outcome.diff().locale.is_none(), "insert-point fills only the three composed-child slots");
+    assert!(outcome.diff().equation.is_none(), "insert-point fills only the three composed-child slots");
+    let encoded: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(outcome.diff())).expect("third-party diff decoder");
+    assert_eq!(encoded.as_object().unwrap().keys().map(String::as_str).collect::<std::collections::BTreeSet<_>>(), std::collections::BTreeSet::from(["notation", "results", "computed", "equation"]));
 }
 
-/// 🔣️ The committed diff is itself canonical and decodes to `EquationDiff`, whose container
-/// `#[serde(default)]` carries no per-field `skip_serializing_if` — all eight slots are present.
+/// 🔣️ The committed diff is itself canonical and decodes to `EquationDiff`, whose owned codec
+/// emits all four artifact slots, including null values.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: EquationDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = pack::json_from_dsl_value(&decoded.to_value());
     let original = pack::parse_json(DIFF).expect("committed diff reparses");
     assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "insert-point/seeds-the-empty-cloud-with-its-first-point: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
-    assert_eq!(original.as_object().expect("the diff is a JSON object").len(), 8, "EquationDiff emits all eight slots, `null` for the untouched ones");
+    assert_eq!(original.as_object().expect("the diff is a JSON object").len(), 4, "EquationDiff emits all four artifact slots, `null` for the untouched ones");
     assert_eq!(original.pointer("/results/target/artifactId").and_then(pack::JsonValue::as_str), Some("equation-table"), "the results slot always targets this plugin's `table` child, whatever its digest");
 }
 

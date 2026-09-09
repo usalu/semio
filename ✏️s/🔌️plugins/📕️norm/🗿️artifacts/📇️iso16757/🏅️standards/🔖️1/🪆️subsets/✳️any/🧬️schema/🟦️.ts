@@ -17,6 +17,4 @@ export interface Iso16757Artifact {
   scriptLimits: string;
   /** @state artifact */
   exchangeProcess: string;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

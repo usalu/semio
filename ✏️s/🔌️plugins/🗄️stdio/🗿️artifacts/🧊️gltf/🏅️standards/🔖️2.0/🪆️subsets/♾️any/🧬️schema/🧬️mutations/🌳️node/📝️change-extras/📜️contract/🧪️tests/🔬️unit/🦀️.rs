@@ -1,47 +1,23 @@
-mod tests {
-    use crate::schema::mutations::change_node_extra_data::{diff, inverse, mutation};
-    use crate::GltfSnapshot;
+use crate::schema::mutations::change_node_extra_data as mutation;
+use crate::schema::mutations::contract_tests::{assert_laws, decode};
+use crate::GltfSnapshot;
 
-    #[derive(value_derive::FromValue)]
-    struct Vector {
-        base: GltfSnapshot,
-        mutation: mutation::GltfChangeNodeExtraDataPayload,
-        diff: diff::GltfChangeNodeExtraDataDiff,
-        inverse: inverse::GltfChangeNodeExtraDataInverse,
-        after: GltfSnapshot,
+#[test]
+fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
+    assert_eq!(contract["id"], mutation::ID);
+    let vectors = contract["vectors"].as_array().unwrap();
+    assert!(!vectors.is_empty());
+    for vector in vectors {
+        let payload: mutation::GltfChangeNodeExtraDataPayload = decode(&vector["mutation"]);
+        let base: GltfSnapshot = decode(&vector["base"]);
+        let expected: GltfSnapshot = decode(&vector["after"]);
+        assert_eq!(mutation::apply(&payload, &base).unwrap(), expected);
+        assert_laws(&mutation::ChangeNodeExtraDataMutation::Apply(payload.clone()), &base, &expected);
+        let mut invalid = payload.clone();
+        invalid.node = base.document.nodes.len().try_into().unwrap();
+        assert!(mutation::apply(&invalid, &base).is_err());
+        assert!(mutation::apply(&payload, &expected).is_err());
     }
-    #[derive(value_derive::FromValue)]
-    struct Contract {
-        vectors: Vec<Vector>,
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn canonical_vector_plans_applies_replays_undoes_and_rejects_forged_paths() {
-        let contract: Contract = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
-        let vector = &contract.vectors[0];
-        let planned = diff::derive(&vector.mutation, &vector.base).unwrap();
-        let inverted = inverse::derive(&vector.mutation, &vector.base).unwrap();
-        assert_eq!(planned, vector.diff);
-        assert_eq!(inverted, vector.inverse);
-        let forward = mutation::apply(&vector.mutation, &vector.base).unwrap();
-        let applied = diff::apply(&vector.base, &planned).unwrap();
-        let replay = diff::apply(&vector.base, &planned).unwrap();
-        let mut forged_diff = planned.clone();
-        forged_diff.touched_paths = vec!["document/forged".into()];
-        let mut forged_inverse = inverted.clone();
-        forged_inverse.touched_paths = vec!["document/forged".into()];
-        let mut out_of_range = vector.mutation.clone();
-        out_of_range.node = vector.base.document.nodes.len();
-        assert_eq!(forward, vector.after);
-        assert_eq!(applied, vector.after);
-        assert_eq!(replay, applied);
-        assert_eq!(serde_json::from_slice::<diff::GltfChangeNodeExtraDataDiff>(&diff::encode(&planned).unwrap()).unwrap(), planned);
-        assert_eq!(serde_json::from_slice::<inverse::GltfChangeNodeExtraDataInverse>(&inverse::encode(&inverted).unwrap()).unwrap(), inverted);
-        assert!(mutation::apply(&vector.mutation, &applied).is_err());
-        assert!(mutation::apply(&out_of_range, &vector.base).is_err());
-        assert!(diff::apply(&vector.base, &forged_diff).is_err());
-        assert!(inverse::apply(&applied, &forged_inverse).is_err());
-        assert_eq!(inverse::apply(&applied, &inverted).unwrap(), vector.base);
-        assert!(diff::apply(&applied, &planned).is_err());
-    }
+    println!("[DEBUG] change_node_extra_data: {} canonical vectors verified through direct mutations, inverse restoration and the independent JSON oracle.", vectors.len());
 }

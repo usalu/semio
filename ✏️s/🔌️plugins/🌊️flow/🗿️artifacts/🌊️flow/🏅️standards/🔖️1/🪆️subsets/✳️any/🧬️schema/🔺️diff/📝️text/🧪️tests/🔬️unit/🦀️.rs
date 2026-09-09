@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::mutations::FlowMutation;
 use protocol::Mutation;

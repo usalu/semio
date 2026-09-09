@@ -29,21 +29,18 @@
 //! 50 domain modules below relocated to a plugin-level `🔨️modules/` engine rather than an app engine.
 
 #![allow(clippy::too_many_arguments)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
 
 use semio_s_artifact_energy_model::*;
-mod artifacts { pub use semio_s_artifact_energy_model as model; }
-mod editor { pub use semio_s_artifact_energy_model::editor::*; }
-mod viewer { pub use semio_s_artifact_energy_model::viewer::*; }
+mod editor {
+    pub use semio_s_artifact_energy_model::editor::*;
+}
+mod viewer {
+    pub use semio_s_artifact_energy_model::viewer::*;
+}
 
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 pub mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::EnergyApps);
 
-
 //#endregion 🔖️Plugin
-

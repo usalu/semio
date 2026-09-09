@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::model::{NodalLoad, Node, Support};
 
@@ -218,7 +217,7 @@ fn hex8_rigid_translation_gives_zero_force() {
 /// through the sparse `analyses::solve_multi_case` pipeline (the refined mesh has 702 DOFs, well
 /// past what the dense `solve_linear_static` path is meant for). Returns the mean tip `Tz`.
 fn hex8_cantilever_tip_deflection(nx: usize, ny: usize, nz: usize) -> f64 {
-    use crate::analyses::{AnalysisModel, LoadCase, solve_multi_case};
+    use crate::analyses::{solve_multi_case, AnalysisModel, LoadCase};
     let (e, nu) = (200e9, 0.3);
     let (length, width, height) = (4.0_f64, 1.0_f64, 2.0_f64);
     let id = |i: usize, j: usize, k: usize| format!("n{i}_{j}_{k}");

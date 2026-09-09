@@ -1,9 +1,9 @@
 //! 🗂️ 🗂️ FEM 3D app commands command — `remove-selection`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{delete_combination, delete_element, delete_load_case, delete_material, delete_node, delete_section, delete_solid, delete_support};
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
-use crate::Fem3dSnapshot;
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{delete_combination, delete_element, delete_load_case, delete_material, delete_node, delete_section, delete_solid, delete_support};
+use crate::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

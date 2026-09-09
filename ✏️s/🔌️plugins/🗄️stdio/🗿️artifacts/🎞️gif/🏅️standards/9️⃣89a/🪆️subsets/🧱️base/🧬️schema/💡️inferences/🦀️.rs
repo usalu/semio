@@ -9,7 +9,7 @@
 use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::dimensions::{compute_gif_dimensions};
+use super::dimensions::compute_gif_dimensions;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gif89a snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
@@ -67,13 +67,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v89a::subset
 pub fn gif89a_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.gif.89a.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

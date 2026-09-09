@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::remodeling::RemodelingCommand;
 use crate::editor::remodeling::commands::{set_frame_cursor, set_layer_visibility, set_report_table};
 use crate::editor::remodeling::testkit::{app, dispatch};
+use crate::editor::remodeling::RemodelingCommand;
 
 /// 🕹️ Relocated from the deleted `set-selection` command file (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): remodeling's selection now lives in the

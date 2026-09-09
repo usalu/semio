@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::wfc_engine::ids::{PatternId, RelationId};
 use crate::wfc_engine::model::ModelBuilder;

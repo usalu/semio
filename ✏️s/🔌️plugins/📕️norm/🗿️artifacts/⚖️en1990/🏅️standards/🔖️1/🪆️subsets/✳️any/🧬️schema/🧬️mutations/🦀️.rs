@@ -20,6 +20,10 @@ use crate::diff::En1990Diff;
 use crate::En1990Snapshot;
 
 //#region 🔖️Mutations
+/// 🧬️ Closed semantic mutation vocabulary for the en1990 document, derived per
+/// `📓️derivation-rules.md` from `En1990Snapshot`'s flat scalar + `q_k` table shape.
+//#region 🔖️Leaves
+use super::change_annex;
 use super::change_consequence_class;
 use super::change_permanent_action;
 use super::change_resistance;
@@ -29,10 +33,6 @@ use super::change_variable_action_value;
 use super::insert_variable_action;
 use super::remove_variable_action;
 use super::reorder_variable_actions;
-/// 🧬️ Closed semantic mutation vocabulary for the en1990 document, derived per
-/// `📓️derivation-rules.md` from `En1990Snapshot`'s flat scalar + `q_k` table shape.
-//#region 🔖️Leaves
-use super::change_annex;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
@@ -118,7 +118,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
-
 
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON

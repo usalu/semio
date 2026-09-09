@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v89a::subsets::any::schema::demo_gif_snapshot;
 

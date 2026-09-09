@@ -1,8 +1,8 @@
 //! 📅️ Schedule definitions and runtime lookup.
 
 use crate::model::ScheduleId;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️ScheduleType
 /// 📆️ Schedule interpolation mode.

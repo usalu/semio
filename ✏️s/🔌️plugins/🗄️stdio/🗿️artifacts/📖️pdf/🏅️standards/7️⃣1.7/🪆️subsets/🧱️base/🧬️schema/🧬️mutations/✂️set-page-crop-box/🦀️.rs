@@ -1,7 +1,10 @@
 //! ✂️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-page-crop-box`.
 
 use super::PdfMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{
+    diff::{self, PdfDiff},
+    snapshot::PdfSnapshot,
+};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation

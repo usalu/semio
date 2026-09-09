@@ -1,11 +1,11 @@
 //! 🗃️ 🗃️ Note play app commands command — `set-fixture-json`.
 
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde_json::Value;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "set-fixture-json")]

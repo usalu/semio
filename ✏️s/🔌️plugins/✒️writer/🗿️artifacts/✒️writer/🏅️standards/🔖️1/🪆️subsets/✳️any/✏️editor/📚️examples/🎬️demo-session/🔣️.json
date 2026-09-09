@@ -159,22 +159,6 @@
     }
   ],
   "batchOnly": [],
-  "localeAdmissionCases": [
-    {
-      "localeBytes": 64,
-      "accepted": true,
-      "fuelDelta": 1,
-      "cursorDelta": 0,
-      "ownersPreserved": true
-    },
-    {
-      "localeBytes": 65,
-      "accepted": false,
-      "fuelDelta": 0,
-      "cursorDelta": 0,
-      "ownersPreserved": true
-    }
-  ],
   "requiredLifecycle": [
     "exact-wire-admission",
     "retained-page-consume",

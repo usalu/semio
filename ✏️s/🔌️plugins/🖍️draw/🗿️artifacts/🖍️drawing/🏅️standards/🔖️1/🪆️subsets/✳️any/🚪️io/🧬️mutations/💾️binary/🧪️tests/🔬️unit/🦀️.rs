@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::schema::{create_drawing_shape_layer_rect, default_drawing_document, layer_id};
-use crate::{DRAWING_DOCUMENT_SCHEMA, DrawingSnapshot};
+use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {

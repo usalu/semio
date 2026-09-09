@@ -7,19 +7,6 @@ type FlowDiff {
   widgets: FlowWidgetsDelta @state(class: ARTIFACT)
   synapses: FlowSynapsesDelta @state(class: ARTIFACT)
   layout: FlowLayoutMapDelta @state(class: ARTIFACT)
-  selectedNodeIds: FlowStringList @state(class: PRESENCE)
-  selectedEdgeIds: FlowStringList @state(class: PRESENCE)
-  selectedHandleIds: FlowStringList @state(class: PRESENCE)
-  previewOffNodeIds: FlowStringList @state(class: PRESENCE)
-  lodMode: String @state(class: CONFIG)
-  proximityDistance: Float @state(class: CONFIG)
-  gridVisible: Boolean @state(class: CONFIG)
-  gridSnapEnabled: Boolean @state(class: CONFIG)
-  gridFactor: Float @state(class: CONFIG)
-  catalogueSectionsJson: String @state(class: CONFIG)
-  automationEnabledJson: String @state(class: CONFIG)
-  contributionsJson: String @state(class: CONFIG)
-  generationJson: String @state(class: CONFIG)
 }
 
 type FlowArtifact {
@@ -28,19 +15,6 @@ type FlowArtifact {
   widgets: [Widget!]!
   synapses: [SynapseSpec!]!
   layout: [WidgetLayoutEntry!]!
-  selectedNodeIds: [String!]!
-  selectedEdgeIds: [String!]!
-  selectedHandleIds: [String!]!
-  previewOffNodeIds: [String!]!
-  lodMode: String!
-  proximityDistance: Float!
-  gridVisible: Boolean!
-  gridSnapEnabled: Boolean!
-  gridFactor: Float!
-  catalogueSectionsJson: String!
-  automationEnabledJson: String!
-  contributionsJson: String!
-  generationJson: String!
 }
 
 type CameraJson {

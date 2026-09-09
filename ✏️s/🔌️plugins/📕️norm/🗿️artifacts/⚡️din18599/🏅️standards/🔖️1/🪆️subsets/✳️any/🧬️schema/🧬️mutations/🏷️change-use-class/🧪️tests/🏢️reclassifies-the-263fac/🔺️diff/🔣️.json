@@ -11,6 +11,5 @@
   "renewableKwh": null,
   "annualLimitKwh": null,
   "energyCarrier": null,
-  "referenceQPKwh": null,
-  "selectedCheckIndex": null
+  "referenceQPKwh": null
 }

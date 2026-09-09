@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport, element_id, load_id};
+use crate::{element_id, load_id, FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use protocol::MutationDiff;
 use protocol::SemanticMutation;
 

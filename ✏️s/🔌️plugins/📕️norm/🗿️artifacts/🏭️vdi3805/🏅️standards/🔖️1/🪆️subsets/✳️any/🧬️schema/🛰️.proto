@@ -22,6 +22,4 @@ message Vdi3805Artifact {
   map<string, string> curves = 8;
   // @state artifact
   string limits = 9;
-  // @state presence
-  optional uint32 selected_check_index = 10;
 }

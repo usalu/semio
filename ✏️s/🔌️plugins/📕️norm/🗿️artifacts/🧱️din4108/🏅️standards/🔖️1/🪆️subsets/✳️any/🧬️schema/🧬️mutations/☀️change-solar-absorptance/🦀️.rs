@@ -1,6 +1,5 @@
 //! ☀️ `change-solar-absorptance` — sets the DIN 4108 `solar_absorptance` scalar.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

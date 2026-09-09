@@ -15,7 +15,13 @@ impl protocol::MutationKind<RemodelingPresence, RemodelingPresenceMutation> for 
     fn diff(&self, _base: &RemodelingPresence) -> protocol::MutationOutcome<RemodelingPresence> {
         protocol::MutationOutcome::new(self.presence.clone())
     }
-    fn inverse(&self, base: &RemodelingPresence) -> Vec<RemodelingPresenceMutation> { vec![RemodelingPresenceMutation::ReplacePresence(ReplacePresence { presence: base.clone() })] }
-    fn label(&self) -> String { "Replace Presence".into() }
-    fn target(&self) -> Vec<String> { vec!["presence".into()] }
+    fn inverse(&self, base: &RemodelingPresence) -> Vec<RemodelingPresenceMutation> {
+        vec![RemodelingPresenceMutation::ReplacePresence(ReplacePresence { presence: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Presence".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["presence".into()]
+    }
 }

@@ -1,7 +1,7 @@
 //! Deserialize stdio.zip from stdio.deflate (inflate then parse ZIP).
 
-use semio_s_artifact_stdio_deflate::DeflateSnapshot;
 use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_deflate::DeflateSnapshot;
 
 //#region Codec
 /// Register deserializer hooks.

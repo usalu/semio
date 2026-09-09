@@ -76,7 +76,7 @@ macro_rules! apply_delta {
 }
 
 impl Block3dDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &Block3dArtifact) -> protocol::MutationApplyResult<Block3dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -114,36 +114,6 @@ impl Block3dDiff {
             }
             if let Some(v) = &self.meta {
                 next.meta = v.clone();
-            }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
-            }
-            if let Some(v) = &self.active_representation_id {
-                next.active_representation_id = v.clone();
-            }
-            if let Some(list) = &self.wanted_tags {
-                next.wanted_tags = list.values.clone();
-            }
-            if let Some(list) = &self.windows {
-                next.windows = list.values.clone();
-            }
-            if let Some(v) = &self.brush_vortex_kind_id {
-                next.brush_vortex_kind_id = v.clone();
-            }
-            if let Some(v) = self.brush_radius {
-                next.brush_radius = v;
-            }
-            if let Some(v) = self.brush_flip {
-                next.brush_flip = v;
-            }
-            if let Some(v) = &self.brush_preview {
-                next.brush_preview = v.clone();
-            }
-            if let Some(v) = &self.camera {
-                next.camera = v.clone();
-            }
-            if let Some(v) = &self.hovered_vortex_full_id {
-                next.hovered_vortex_full_id = v.clone();
             }
             next
         })
@@ -209,16 +179,6 @@ impl MutationDiff<Block3dSnapshot> for Block3dDiff {
         take!(authors);
         take!(camera3d);
         take!(meta);
-        take!(selected_ids);
-        take!(active_representation_id);
-        take!(wanted_tags);
-        take!(windows);
-        take!(brush_vortex_kind_id);
-        take!(brush_radius);
-        take!(brush_flip);
-        take!(brush_preview);
-        take!(camera);
-        take!(hovered_vortex_full_id);
         fn absorb_col<D: Default>(target: &mut Option<D>, incoming: Option<D>, merge: impl FnOnce(&mut D, D)) {
             if let Some(src) = incoming {
                 match target {

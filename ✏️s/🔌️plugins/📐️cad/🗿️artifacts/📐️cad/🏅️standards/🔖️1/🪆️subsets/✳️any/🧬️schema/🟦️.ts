@@ -27,75 +27,6 @@ export interface CadArtifact {
   structureClassicGeometry?: CadGeometry;
   /** @state artifact */
   activeModelDefinitionId: string;
-  /** @state presence */
-  selectedObjectIds: string[];
-  /** @state presence */
-  selectedNodeIds: string[];
-  /** @state presence */
-  activeObjectId?: string;
-  /** @state presence */
-  componentSelection: CadComponentSelection;
-  /** @state presence */
-  selectedReferenceModelDefinitionId?: string;
-  /** @state presence */
-  selectedReferenceId?: string;
-  /** @state presence */
-  selectedPrimitiveId?: string;
-  /** @state presence */
-  selectedPrimitiveKind?: string;
-  /** @state presence */
-  /** @state presence */
-  activeExampleId?: string;
-  /** @state config */
-  selectionMethod: string;
-  /** @state config */
-  engagementInput: string;
-  /** @state config */
-  engagementStep: string;
-  /** @state config */
-  engagementPane?: string;
-  /** @state config */
-  engagementSessionJson?: string;
-  /** @state config */
-  lastFinalizedInteractionId?: string;
-  /** @state config */
-  sunEnabled: boolean;
-  /** @state config */
-  sunAzimuth: number;
-  /** @state config */
-  sunElevation: number;
-  /** @state config */
-  sunIntensity: number;
-  /** @state config */
-  sunColor: string;
-  /** @state config */
-  camera: CadCamera;
-  /** @state config */
-  cameraBuilding: CadCamera;
-  /** @state config */
-  cameraEnergy: CadCamera;
-  /** @state config */
-  cameraStructureClassic: CadCamera;
-  /** @state config */
-  dislocateShape: CadDislocateOptions;
-  /** @state config */
-  dislocateBuilding: CadDislocateOptions;
-  /** @state config */
-  dislocateEnergy: CadDislocateOptions;
-  /** @state config */
-  dislocateStructureClassic: CadDislocateOptions;
-  /** @state config */
-  /** @state config */
-  /** @state config */
-  contributionsJson: string;
-  /** @state artifact */
-  hoveredObjectId?: string;
-  /** @state artifact */
-  hoveredTargetObjectId?: string;
-  /** @state artifact */
-  hoveredTargetMode?: string;
-  /** @state artifact */
-  hoveredTargetId?: number;
 }
 
 export interface CadObject { id: string; [key: string]: unknown }
@@ -103,17 +34,6 @@ export interface CadNode { id: string; [key: string]: unknown }
 export interface CadReferenceList { values: unknown[] }
 export interface CadGeometry { [key: string]: unknown }
 export interface CadCamera { [key: string]: unknown }
-export interface CadComponentSelection { [key: string]: unknown }
-export interface CadDislocateOptions { moveEnabled: boolean; rotateEnabled: boolean }
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class cadCadArtifactGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
-}
-
 const cadCadArtifactGuardReject = (at: string, why: string): never => {
   throw new cadCadArtifactGuardRefusal(at, why);
 };
@@ -169,39 +89,6 @@ export function parseCadArtifact(value: unknown, at = "$"): CadArtifact {
     energyGeometry: row["energyGeometry"] === undefined ? undefined : parseCadGeometry(row["energyGeometry"], `${at}.energyGeometry`),
     structureClassicGeometry: row["structureClassicGeometry"] === undefined ? undefined : parseCadGeometry(row["structureClassicGeometry"], `${at}.structureClassicGeometry`),
     activeModelDefinitionId: cadCadArtifactGuardString(row["activeModelDefinitionId"], `${at}.activeModelDefinitionId`),
-    selectedObjectIds: cadCadArtifactGuardArray(row["selectedObjectIds"], `${at}.selectedObjectIds`).map((item, index) => cadCadArtifactGuardString(item, `${at}.selectedObjectIds[${index}]`)),
-    selectedNodeIds: cadCadArtifactGuardArray(row["selectedNodeIds"], `${at}.selectedNodeIds`).map((item, index) => cadCadArtifactGuardString(item, `${at}.selectedNodeIds[${index}]`)),
-    activeObjectId: row["activeObjectId"] === undefined ? undefined : cadCadArtifactGuardString(row["activeObjectId"], `${at}.activeObjectId`),
-    componentSelection: parseCadComponentSelection(row["componentSelection"], `${at}.componentSelection`),
-    selectedReferenceModelDefinitionId: row["selectedReferenceModelDefinitionId"] === undefined ? undefined : cadCadArtifactGuardString(row["selectedReferenceModelDefinitionId"], `${at}.selectedReferenceModelDefinitionId`),
-    selectedReferenceId: row["selectedReferenceId"] === undefined ? undefined : cadCadArtifactGuardString(row["selectedReferenceId"], `${at}.selectedReferenceId`),
-    selectedPrimitiveId: row["selectedPrimitiveId"] === undefined ? undefined : cadCadArtifactGuardString(row["selectedPrimitiveId"], `${at}.selectedPrimitiveId`),
-    selectedPrimitiveKind: row["selectedPrimitiveKind"] === undefined ? undefined : cadCadArtifactGuardString(row["selectedPrimitiveKind"], `${at}.selectedPrimitiveKind`),
-    activeExampleId: row["activeExampleId"] === undefined ? undefined : cadCadArtifactGuardString(row["activeExampleId"], `${at}.activeExampleId`),
-    selectionMethod: cadCadArtifactGuardString(row["selectionMethod"], `${at}.selectionMethod`),
-    engagementInput: cadCadArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),
-    engagementStep: cadCadArtifactGuardString(row["engagementStep"], `${at}.engagementStep`),
-    engagementPane: row["engagementPane"] === undefined ? undefined : cadCadArtifactGuardString(row["engagementPane"], `${at}.engagementPane`),
-    engagementSessionJson: row["engagementSessionJson"] === undefined ? undefined : cadCadArtifactGuardString(row["engagementSessionJson"], `${at}.engagementSessionJson`),
-    lastFinalizedInteractionId: row["lastFinalizedInteractionId"] === undefined ? undefined : cadCadArtifactGuardString(row["lastFinalizedInteractionId"], `${at}.lastFinalizedInteractionId`),
-    sunEnabled: cadCadArtifactGuardBoolean(row["sunEnabled"], `${at}.sunEnabled`),
-    sunAzimuth: cadCadArtifactGuardNumber(row["sunAzimuth"], `${at}.sunAzimuth`),
-    sunElevation: cadCadArtifactGuardNumber(row["sunElevation"], `${at}.sunElevation`),
-    sunIntensity: cadCadArtifactGuardNumber(row["sunIntensity"], `${at}.sunIntensity`),
-    sunColor: cadCadArtifactGuardString(row["sunColor"], `${at}.sunColor`),
-    camera: parseCadCamera(row["camera"], `${at}.camera`),
-    cameraBuilding: parseCadCamera(row["cameraBuilding"], `${at}.cameraBuilding`),
-    cameraEnergy: parseCadCamera(row["cameraEnergy"], `${at}.cameraEnergy`),
-    cameraStructureClassic: parseCadCamera(row["cameraStructureClassic"], `${at}.cameraStructureClassic`),
-    dislocateShape: parseCadDislocateOptions(row["dislocateShape"], `${at}.dislocateShape`),
-    dislocateBuilding: parseCadDislocateOptions(row["dislocateBuilding"], `${at}.dislocateBuilding`),
-    dislocateEnergy: parseCadDislocateOptions(row["dislocateEnergy"], `${at}.dislocateEnergy`),
-    dislocateStructureClassic: parseCadDislocateOptions(row["dislocateStructureClassic"], `${at}.dislocateStructureClassic`),
-    contributionsJson: cadCadArtifactGuardString(row["contributionsJson"], `${at}.contributionsJson`),
-    hoveredObjectId: row["hoveredObjectId"] === undefined ? undefined : cadCadArtifactGuardString(row["hoveredObjectId"], `${at}.hoveredObjectId`),
-    hoveredTargetObjectId: row["hoveredTargetObjectId"] === undefined ? undefined : cadCadArtifactGuardString(row["hoveredTargetObjectId"], `${at}.hoveredTargetObjectId`),
-    hoveredTargetMode: row["hoveredTargetMode"] === undefined ? undefined : cadCadArtifactGuardString(row["hoveredTargetMode"], `${at}.hoveredTargetMode`),
-    hoveredTargetId: row["hoveredTargetId"] === undefined ? undefined : cadCadArtifactGuardInteger(row["hoveredTargetId"], `${at}.hoveredTargetId`, {"minimum": 0}),
   };
 }
 
@@ -232,18 +119,6 @@ export function parseCadGeometry(value: unknown, at = "$"): CadGeometry {
 
 export function parseCadCamera(value: unknown, at = "$"): CadCamera {
   return cadCadArtifactGuardObject(value, `${at}`);
-}
-
-export function parseCadComponentSelection(value: unknown, at = "$"): CadComponentSelection {
-  return cadCadArtifactGuardObject(value, `${at}`);
-}
-
-export function parseCadDislocateOptions(value: unknown, at = "$"): CadDislocateOptions {
-  const row = cadCadArtifactGuardObject(value, at);
-  return {
-    moveEnabled: cadCadArtifactGuardBoolean(row["moveEnabled"], `${at}.moveEnabled`),
-    rotateEnabled: cadCadArtifactGuardBoolean(row["rotateEnabled"], `${at}.rotateEnabled`),
-  };
 }
 
 export interface CadStringList {

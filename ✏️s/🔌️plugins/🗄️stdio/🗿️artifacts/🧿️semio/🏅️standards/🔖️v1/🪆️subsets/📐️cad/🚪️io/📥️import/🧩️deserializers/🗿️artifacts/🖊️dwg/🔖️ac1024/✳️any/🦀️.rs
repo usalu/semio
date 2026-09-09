@@ -9,9 +9,9 @@
 //! `SemioCadSnapshot` (zero layers/blocks/entities), and is asserted to do so by its own test
 //! rather than silently claiming content that was never decoded.
 
-use semio_s_artifact_stdio_dwg::DwgSnapshot;
 use crate::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_dwg::DwgSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };

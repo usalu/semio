@@ -1,13 +1,17 @@
 //! 🔺️ Sparse diff builder for `UpdateGroundTemperature` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateGroundTemperature, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     if payload.building_surface_c.len() != 12 || payload.shallow_c.len() != 12 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Ground temperatures need twelve monthly values each, got {} building-surface and {} shallow.", payload.building_surface_c.len(), payload.shallow_c.len()), Vec::<String>::new());
+        return protocol::MutationOutcome::error(
+            "mutation.invariant",
+            format!("Ground temperatures need twelve monthly values each, got {} building-surface and {} shallow.", payload.building_surface_c.len(), payload.shallow_c.len()),
+            Vec::<String>::new(),
+        );
     }
     let mut building_surface_c = [0.0f64; 12];
     let mut shallow_c = [0.0f64; 12];

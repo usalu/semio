@@ -24,7 +24,7 @@
   "liquidSigmaSMpa": null,
   "liquidRhoPEff": null,
   "liquidFCtEffMpa": null,
-  "liquidESMpa": 205000.0,
+  "liquidESMpa": 205000,
   "liquidSRMaxMm": null,
   "anchorHEfMm": null,
   "anchorCracked": null,
@@ -34,6 +34,5 @@
   "anchorDMm": null,
   "anchorC1Mm": null,
   "anchorNEdKn": null,
-  "anchorVEdKn": null,
-  "selectedCheckIndex": null
+  "anchorVEdKn": null
 }

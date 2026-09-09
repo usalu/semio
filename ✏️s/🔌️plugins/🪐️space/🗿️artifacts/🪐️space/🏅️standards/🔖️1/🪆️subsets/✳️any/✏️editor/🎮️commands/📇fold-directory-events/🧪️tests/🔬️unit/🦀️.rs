@@ -27,7 +27,7 @@ async fn folds_visibility_and_members_for_this_space_into_config() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config_snapshot = SpaceIndexConfig::default();
-    let cfg = ConfigView { snapshot: &config_snapshot };
+    let cfg = ConfigView { snapshot: &config_snapshot, window: None };
     let events = vec![
         event(1, DirectoryEventBody::UserCreated { user_id: "u-1".into(), email: "a@example.com".into(), display_name: "Alice".into() }, None),
         event(2, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-1")),
@@ -49,7 +49,7 @@ async fn folds_directory_indexed_documents_into_read_only_space_rows() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config_snapshot = SpaceIndexConfig::default();
-    let cfg = ConfigView { snapshot: &config_snapshot };
+    let cfg = ConfigView { snapshot: &config_snapshot, window: None };
     let descriptor = DocumentDescriptor {
         space_id: "space-1".into(),
         document_id: "artifact-0123456789abcdef0123456789abcdef".into(),
@@ -92,7 +92,7 @@ async fn folding_events_for_a_different_space_is_a_no_op() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config_snapshot = SpaceIndexConfig::default();
-    let cfg = ConfigView { snapshot: &config_snapshot };
+    let cfg = ConfigView { snapshot: &config_snapshot, window: None };
     let events =
         vec![event(1, DirectoryEventBody::SpaceCreated { space_id: "space-2".into(), name: "Other".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-2"))];
     let events_json = pack::to_json_string(&events);

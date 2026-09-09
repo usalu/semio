@@ -1,7 +1,7 @@
 //! 📄️ Generation3d play app panel — the document tree: widgets of the current fixture.
 
-use crate::widget_id;
 use crate::editor::generation3d::terminology::Generation3dLabels;
+use crate::widget_id;
 use semio_framework_artifact_flow_flow::FlowFixture;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
 use semio_framework_plugin::{tree_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};

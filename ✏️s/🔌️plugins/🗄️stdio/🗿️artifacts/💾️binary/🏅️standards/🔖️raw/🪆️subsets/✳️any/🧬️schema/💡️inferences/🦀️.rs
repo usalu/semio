@@ -13,7 +13,7 @@ use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::extent::{compute_binary_extent};
+use super::extent::compute_binary_extent;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a binary snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `extent`, backed by the `📏extent/` slug dir).
@@ -70,13 +70,7 @@ impl ArtifactInferrer for crate::standards::v_raw::subsets::any::schema::BinaryB
 pub fn binary_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.binary.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

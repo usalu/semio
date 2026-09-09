@@ -1,6 +1,5 @@
 //! 📗 `change-annex` — sets the En1991 national annex scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

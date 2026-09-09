@@ -1,6 +1,5 @@
 //! 🪛 `change-vl-rd` — sets the En 1994 longitudinal shear resistance V_L,Rd [kN] scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

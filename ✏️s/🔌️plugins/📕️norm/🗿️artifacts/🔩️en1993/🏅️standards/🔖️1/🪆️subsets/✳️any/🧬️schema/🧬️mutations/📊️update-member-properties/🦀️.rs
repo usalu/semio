@@ -1,7 +1,5 @@
 //! 🏗️ `update-member-properties` — atomically updates the member-properties facet (n_ed_kn, m_ed_knm, v_ed_kn, a_mm2, a_v_mm2, w_pl_mm3, f_y_mpa, f_u_mpa, chi, a_net_mm2, tension_n_ed_kn are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

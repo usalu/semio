@@ -1,8 +1,8 @@
 //! 🔀️ Repositions a synapse within the ordered synapse list.
 
-use crate::FlowSnapshot;
 use crate::schema::diff::text::FlowDiff;
 use crate::schema::mutations::FlowMutation;
+use crate::FlowSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔀️ReorderSynapses

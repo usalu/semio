@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::editor::forms::FormsCommand;
 use crate::editor::forms::commands::add_vector_field::AddVectorField;
 use crate::editor::forms::commands::remove_vector_field::RemoveVectorField;
 use crate::editor::forms::testkit::{dispatch, forms_app};
+use crate::editor::forms::FormsCommand;
 use PatchVectorField;
 
 async fn vector_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {

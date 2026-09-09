@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateSetpointManager` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateSetpointManager, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -27,7 +27,13 @@ pub fn diff(payload: &super::CreateSetpointManager, base: &EnergyModelSnapshot) 
     if !payload.schedule_present && payload.schedule_id.0 != 0 {
         return protocol::MutationOutcome::error("mutation.invariant", "An absent setpoint manager schedule carries the id zero.".to_string(), [payload.id.0.to_string()]);
     }
-    if payload.schedule_present && (!(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.schedule_id) || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.schedule_id) || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.schedule_id) || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.schedule_id) || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.schedule_id))) {
+    if payload.schedule_present
+        && (!(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.schedule_id)
+            || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.schedule_id)
+            || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.schedule_id)
+            || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.schedule_id)
+            || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.schedule_id)))
+    {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} is not defined by this model.", payload.schedule_id.0), [payload.schedule_id.0.to_string()]);
     }
     let kind = if payload.kind == "OutdoorAirReset" {

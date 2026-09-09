@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::app::App;
 use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};

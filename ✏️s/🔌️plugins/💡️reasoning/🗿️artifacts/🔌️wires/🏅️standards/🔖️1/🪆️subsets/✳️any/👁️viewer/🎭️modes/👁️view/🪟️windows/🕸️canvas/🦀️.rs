@@ -10,9 +10,9 @@
 
 use crate::schema::{dsl_to_json, fixture_camera, fixture_edges, fixture_nodes, wires_relationships};
 use crate::WiresSnapshot;
-use dsl::DslValue;
 use dsl::os_pack::json::Value;
-use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use dsl::DslValue;
+use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const WIRES_VIEW_WINDOW_CANVAS: &str = "reasoning-wires-view-composite";
@@ -79,7 +79,11 @@ pub fn render(document: &WiresSnapshot) -> UiAssemblyResult<BuiltNode> {
     let mut layers: Vec<Value> = fixture_nodes(&board).iter().map(dsl_to_json).collect();
     layers.extend(fixture_edges(&board).iter().map(dsl_to_json));
     layers.extend(relationship_edge_layers(wires, &board));
-    semio_framework_plugin::scene_surface(WIRES_VIEW_CANVAS_SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None })
+    semio_framework_plugin::scene_surface(
+        WIRES_VIEW_CANVAS_SURFACE_ID,
+        semio_framework_ui_contract::SurfaceKind::Canvas2d,
+        &Canvas2dScene { camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None },
+    )
 }
 //#endregion 🔖️Render
 

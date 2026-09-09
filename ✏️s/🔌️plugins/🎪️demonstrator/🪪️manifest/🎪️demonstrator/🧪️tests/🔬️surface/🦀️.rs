@@ -1,4 +1,3 @@
-
 //! 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5's
 //! `semio_framework_plugin::testkit::{assert_viewer_never_mutates, assert_editor_and_viewer_share_dialect}`
 //! (W0-F gap 2) are used directly here — no local stand-ins, exercised against demonstrator's own

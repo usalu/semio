@@ -56,7 +56,7 @@ pub fn apply_board_step(
 
 //#region 🔖️Apply
 impl WiresDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document entries onto the artifact.
     pub fn apply_to_artifact(&self, artifact: &WiresArtifact) -> protocol::MutationApplyResult<WiresArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -74,15 +74,6 @@ impl WiresDiff {
             }
             if let Some(meta) = &self.meta {
                 next.meta = meta.clone();
-            }
-            if let Some(value) = &self.drag_node_id {
-                next.drag_node_id = value.clone();
-            }
-            if let Some(value) = self.drag_last_x {
-                next.drag_last_x = value;
-            }
-            if let Some(value) = self.drag_last_y {
-                next.drag_last_y = value;
             }
             next
         })
@@ -127,15 +118,12 @@ impl MutationDiff<WiresSnapshot> for WiresDiff {
         take!(content);
         take!(camera);
         take!(meta);
-        take!(drag_node_id);
-        take!(drag_last_x);
-        take!(drag_last_y);
     }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️Builders
-/// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
+/// 🖼️ Whole-artifact replacement from a document snapshot.
 pub fn diff_set_snapshot(snapshot: &WiresSnapshot) -> WiresDiff {
     WiresDiff { artifact: Some(Box::new(WiresArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }

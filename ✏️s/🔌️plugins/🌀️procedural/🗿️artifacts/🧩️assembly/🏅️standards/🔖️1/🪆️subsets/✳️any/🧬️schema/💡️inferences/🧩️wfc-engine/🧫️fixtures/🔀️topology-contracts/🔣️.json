@@ -1,0 +1,103 @@
+{
+  "dimensions2d": [
+    4,
+    3
+  ],
+  "dimensions3d": [
+    3,
+    4,
+    5
+  ],
+  "customStencils3d": [
+    {
+      "offsets": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          -1,
+          0,
+          0
+        ]
+      ],
+      "valid": true
+    },
+    {
+      "offsets": [
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "valid": false
+    },
+    {
+      "offsets": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "valid": false
+    },
+    {
+      "offsets": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          -1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "valid": false
+    }
+  ],
+  "halfTurn2d": {
+    "input": [
+      2,
+      1
+    ],
+    "outputs": [
+      [
+        2,
+        1
+      ],
+      [
+        -2,
+        -1
+      ]
+    ]
+  },
+  "halfTurn3d": {
+    "input": [
+      2,
+      1,
+      3
+    ],
+    "outputs": [
+      [
+        2,
+        1,
+        3
+      ],
+      [
+        -2,
+        -1,
+        3
+      ]
+    ]
+  }
+}

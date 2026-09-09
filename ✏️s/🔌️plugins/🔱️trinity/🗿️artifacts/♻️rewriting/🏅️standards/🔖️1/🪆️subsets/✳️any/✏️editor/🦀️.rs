@@ -2,24 +2,26 @@
 //!
 //! 📌️ Pure-trait `ArtifactEditor`: `TrinityRewritingPlayApp` is a unit struct; every former
 //! `RewritingPlayRuntime` field (selection, hover/select var, camera, LOD, …) lives in
-//! `config::RewritingConfig`, written via `config::RewritingConfigMutation`s. Every rule/parameter/
+//! concrete-window configuration; the app itself has no config record. Every rule/parameter/
 //! before-fixture edit flows through the semantic `RewriteRuleMutation` vocabulary (`edit-*` body
 //! replaces, `change-*`/`remove-*` map upserts) — see
 //! `crate::rewriting_snapshot_mutations`, the seam commands that still
 //! compute a whole `next: RewritingSnapshot` use to emit granular mutations. The
 //! `TrinityRewritingCommand` enum stays hand-rolled (TEMPLATE §5.1 fallback, same rationale as `jack`).
 
-use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, Node, PropertyValue};
+use crate::editor::rewriting::window_config;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
-use crate::standards::v1::subsets::any::schema::{ParameterKind, Rhs};
+use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
 use crate::{LayoutPoint, RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
-use crate::editor::rewriting::config::{RewritingConfig, RewritingConfigMutation};
+use semio_framework_graph::manifest::PropertyValue;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider,
     HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, NodeGraphViewport, PanelGroup, SelectionMethod,
     SelectionMode, SelectionSpec, TopologyNode, WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use semio_framework_plugin::{EditorApp, NoConfig, NoConfigMutation};
+use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, Node};
 // 🩹️ `InteractionView` is not re-exported at `semio_framework_plugin`'s crate root (unlike
 // `ConfigView`/`ArtifactView`/`DraftView`) — only reachable through its owning `app` submodule
 // (itself `pub mod`). Flagged as a likely framework oversight, not fixed here (framework file).
@@ -36,7 +38,7 @@ pub(crate) const TRINITY_REWRITING_PLAY_SURFACE_AFTER: &str = "trinity.rewriting
 pub(crate) const TRINITY_REWRITING_PLAY_SURFACE_LHS: &str = "trinity.rewriting.lhs";
 pub(crate) const TRINITY_REWRITING_PLAY_SURFACE_RHS: &str = "trinity.rewriting.rhs";
 pub(crate) const TRINITY_REWRITING_PLAY_SURFACE_JACK: &str = "trinity.rewriting.jack";
-const TRINITY_REWRITING_PLAY_BODY_BEFORE: &str = "trinity.rewriting.play.before";
+pub(crate) const TRINITY_REWRITING_PLAY_BODY_BEFORE: &str = "trinity.rewriting.play.before";
 const TRINITY_REWRITING_PLAY_BODY_AFTER: &str = "trinity.rewriting.play.after";
 const TRINITY_REWRITING_PLAY_BODY_LHS: &str = "trinity.rewriting.play.lhs";
 const TRINITY_REWRITING_PLAY_BODY_RHS: &str = "trinity.rewriting.play.rhs";
@@ -96,12 +98,6 @@ pub(crate) fn default_rule_state() -> RewritingSnapshot {
     let mut state = RewritingSnapshot { before_fixture_json: nakagin_fixture_json(), lhs_json: DEFAULT_LHS_JSON.into(), rhs_json: DEFAULT_RHS_JSON.into(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() };
     state.parameter_bindings = default_parameter_bindings(&state.rhs_json);
     state
-}
-
-/// 🌱️ Reads `RewritingSnapshot.before_fixture_json`'s seed-only `camera` field once — the one place a
-/// before-fixture's initial framing is consumed into the app's live config camera.
-pub(crate) fn seed_before_pane_camera(state: &RewritingSnapshot) -> Camera {
-    parse_fixture_json(&state.before_fixture_json).map(|fixture| fixture.camera).unwrap_or_default()
 }
 
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetState` — see
@@ -333,8 +329,8 @@ pub(crate) fn rewriting_io() -> semio_framework_plugin::AppIo {
 //#endregion 🔖️Io
 
 //#region 🔖️Render
-fn rewriting_lod_json_for_window(cfg: &RewritingConfig, window_id: &str) -> String {
-    let mode = cfg.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
+fn rewriting_lod_json_for_window(cfg: &window_config::RewritingWindowConfig) -> String {
+    let mode = cfg.lod_mode.as_str();
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
         pack::json!({ "automatic": true }).to_string()
     } else {
@@ -359,14 +355,14 @@ fn trinity_rewriting_lod_measure(window_id: &str, current_mode: &str) -> WindowM
 /// wrapper's `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host
 /// reads domain "graph"'s `DomainSelection`/`DomainHover` directly, so the interactive surface stays
 /// correct even though this snapshot doesn't carry it.
-pub(crate) fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_json: &str, cfg: &RewritingConfig, editable: bool, camera_override: Option<&Camera>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render_fixture_graph(surface_id: &str, fixture_json: &str, cfg: &window_config::RewritingWindowConfig, editable: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
     let (nodes, edges, fixture_viewport) = semio_s_artifact_trinity_jack::fixture_to_workflow(&fixture);
-    let viewport = camera_override.map_or(fixture_viewport, |camera| NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom });
+    let viewport = cfg.camera.as_ref().map_or(fixture_viewport, |camera| NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom });
     semio_framework_plugin::scene_surface(
         surface_id,
         SemanticSurfaceKind::NodeGraph,
-        &semio_framework_plugin::NodeGraphScene { lod_json: Some(rewriting_lod_json_for_window(cfg, window_id)), editable: editable.then_some(true), ..semio_framework_plugin::NodeGraphScene::base(nodes, edges, viewport) },
+        &semio_framework_plugin::NodeGraphScene { lod_json: Some(rewriting_lod_json_for_window(cfg)), editable: editable.then_some(true), ..semio_framework_plugin::NodeGraphScene::base(nodes, edges, viewport) },
     )
 }
 //#endregion 🔖️Render
@@ -401,7 +397,7 @@ pub enum TrinityRewritingCommand {
     #[dsl(key = "reorganize")]
     Reorganize,
     #[dsl(key = "set-lod-mode")]
-    SetLodMode { window_id: String, value: String },
+    SetLodMode { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -427,6 +423,8 @@ impl protocol::OpText for TrinityRewritingCommand {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for TrinityRewritingCommand {
+    const TOOL_JOB_IDS: &'static [&'static str] = window_config::job::TOOL_IDS;
+
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -469,8 +467,8 @@ pub struct TrinityRewritingPlayApp;
 impl ArtifactEditor for TrinityRewritingPlayApp {
     type Snapshot = RewritingSnapshot;
     type Mutation = RewriteRuleMutation;
-    type Config = RewritingConfig;
-    type ConfigMutation = RewritingConfigMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
     type Presence = semio_framework_plugin::NoPresence;
@@ -483,17 +481,73 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     const DIALECT: Dialect = TRINITY_REWRITING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
-    fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
-        Some(crate::editor::rewriting::config::schema::app_schema_descriptor())
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(schema::retirement::document_store_owners())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
+    }
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        window_config::job::TOOL_IDS
+            .iter()
+            .map(|tool| {
+                semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(
+                    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧵️job/🦀️.rs",
+                    "s.trinity.rewriting@1/*#editor",
+                    "RewritingWindowConfigJobFactory",
+                    tool,
+                    REWRITE_RULE_SCHEMA,
+                    window_config::job::contract(),
+                )
+                .with_factory_type::<EditorApp<Self>, window_config::job::RewritingWindowConfigJobFactory>()
+            })
+            .collect()
+    }
+
+    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        registry.register(window_config::job::RewritingWindowConfigJobFactory::new(registry.controller_id()))
+    }
+
+    fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        window_config::job::build_job(request)
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        window_config::register(registry)
     }
 
     fn initial_snapshot() -> RewritingSnapshot {
         default_rule_state()
-    }
-
-    fn initial_config() -> RewritingConfig {
-        let projection = Self::initial_snapshot();
-        RewritingConfig { before_pane_camera: seed_before_pane_camera(&projection), ..RewritingConfig::default() }
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -508,7 +562,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
 
     /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `before_fixture_json`
     /// working graph — a single targeted field edit, not a whole-document replace.
-    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RewritingSnapshot>) -> Result<Emit<RewriteRuleMutation, RewritingConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RewritingSnapshot>) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "graph:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -518,7 +572,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
                 let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let fixture_json = fixture.to_json().map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let _ = doc;
-                Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::edit_before_fixture(fixture_json)]))
+                Ok(Emit::mutations(vec![schema::mutations::edit_before_fixture(fixture_json)]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -565,13 +619,13 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     fn handle(
         command: &TrinityRewritingCommand,
         doc: &ArtifactView<'_, RewritingSnapshot>,
-        cfg: &ConfigView<'_, RewritingConfig>,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _cfg: &ConfigView<'_, NoConfig>,
+        interaction: &InteractionView<'_>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<RewriteRuleMutation, RewritingConfigMutation, Self::DraftMutation>, Fault> {
+    ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         let state = doc.snapshot;
-        let config = cfg.snapshot;
         Ok(match command {
             TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => crate::editor::rewriting::commands::node_graph_edit(state, &interaction.selection("graph").ids, surface_id, operations_json),
             TrinityRewritingCommand::SetLhsJson { value } => crate::editor::rewriting::commands::set_lhs_json(state, value),
@@ -580,21 +634,22 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::AddRuleClause { kind } => crate::editor::rewriting::commands::add_rule_clause_command(state, kind),
             TrinityRewritingCommand::ResetRule => crate::editor::rewriting::commands::reset_rule(state),
             TrinityRewritingCommand::PatchNodes { node_ids, field, value } => crate::editor::rewriting::commands::patch_nodes(state, node_ids, field, value),
-            TrinityRewritingCommand::SetViewport { surface_id, viewport_json } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport_json),
+            TrinityRewritingCommand::SetViewport { surface_id, viewport_json } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport_json, view_state)?,
             TrinityRewritingCommand::Reorganize => crate::editor::rewriting::commands::reorganize(state),
-            TrinityRewritingCommand::SetLodMode { window_id, value } => crate::editor::rewriting::commands::set_lod_mode(window_id, value),
+            TrinityRewritingCommand::SetLodMode { value } => crate::editor::rewriting::commands::set_lod_mode(value, view_state)?,
         })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, RewritingConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let state = doc.snapshot;
         let config = cfg.snapshot;
+        let window_config = window_config::current(cfg).cloned().unwrap_or_default();
         let labels = semio_framework_plugin::resolve_labels::<crate::editor::rewriting::terminology::TrinityRewritingLabels>(view_state);
         let root = match body_key {
-            TRINITY_REWRITING_PLAY_BODY_BEFORE => edit::windows::before::render(state, config),
-            TRINITY_REWRITING_PLAY_BODY_AFTER => edit::windows::after::render(state, config),
-            TRINITY_REWRITING_PLAY_BODY_LHS => edit::windows::lhs::render(state, config),
-            TRINITY_REWRITING_PLAY_BODY_RHS => edit::windows::rhs::render(state, config),
+            TRINITY_REWRITING_PLAY_BODY_BEFORE => edit::windows::before::render(state, &window_config),
+            TRINITY_REWRITING_PLAY_BODY_AFTER => edit::windows::after::render(state, &window_config),
+            TRINITY_REWRITING_PLAY_BODY_LHS => edit::windows::lhs::render(state, &window_config),
+            TRINITY_REWRITING_PLAY_BODY_RHS => edit::windows::rhs::render(state, &window_config),
             TRINITY_REWRITING_PLAY_BODY_JACK => edit::windows::jack::render(state, config),
             TRINITY_REWRITING_PLAY_BODY_PARAMETERS => edit::windows::parameters::render(state, labels),
             TRINITY_REWRITING_PLAY_BODY_DOCUMENT => crate::editor::rewriting::panels::document::render(state, config, labels),
@@ -605,18 +660,13 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         Ok(semio_framework_plugin::built_to_component_tree(root))
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, RewritingConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.snapshot;
-        let mode_for = |window_id: &str| config.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
-        HashMap::from([
-            (TRINITY_REWRITING_PLAY_WINDOW_BEFORE.to_string(), vec![trinity_rewriting_lod_measure(TRINITY_REWRITING_PLAY_WINDOW_BEFORE, mode_for(TRINITY_REWRITING_PLAY_WINDOW_BEFORE))]),
-            (TRINITY_REWRITING_PLAY_WINDOW_AFTER.to_string(), vec![trinity_rewriting_lod_measure(TRINITY_REWRITING_PLAY_WINDOW_AFTER, mode_for(TRINITY_REWRITING_PLAY_WINDOW_AFTER))]),
-            (TRINITY_REWRITING_PLAY_WINDOW_LHS.to_string(), vec![trinity_rewriting_lod_measure(TRINITY_REWRITING_PLAY_WINDOW_LHS, mode_for(TRINITY_REWRITING_PLAY_WINDOW_LHS))]),
-            (TRINITY_REWRITING_PLAY_WINDOW_RHS.to_string(), vec![trinity_rewriting_lod_measure(TRINITY_REWRITING_PLAY_WINDOW_RHS, mode_for(TRINITY_REWRITING_PLAY_WINDOW_RHS))]),
-        ])
+    fn window_measures(_doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
+        let Some(config) = window_config::current(cfg) else { return HashMap::new() };
+        HashMap::from([(window_id.to_string(), vec![trinity_rewriting_lod_measure(window_id, &config.lod_mode)])])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, RewritingConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = view_state.locale == semio_framework_plugin::Locale::De;
@@ -649,7 +699,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     /// `lhs-match` via their one edge); (3) the RHS semantic graph (its clause nodes have no inherent
     /// parent order, so they're roots). `MergeMode::Range` is not declared for this domain, so
     /// `ordered`'s sequence need not be a strict pre-order.
-    fn interaction_topology(doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, RewritingConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
         let state = doc.snapshot;
         let mut ordered = Vec::new();
 
@@ -752,8 +802,18 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             // 👁️ Ephemeral view state — viewport, recompute/layout, LOD. Selection/hover/text-cursor
             // cross-highlighting is framework-owned now (domain "graph") — no app-declared verbs.
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"), ActionKind::View).with_category("view"))
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View).with_category("mode"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "rotate-cw").with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers").with_category("mode"))
+            .action_interactive_job("setViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodMode", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addRuleClause", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("resetRule", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setParameter", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchNodes", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setLhsJson", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setRhsJson", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             // 🕹️ Domain "graph": before/after/lhs/rhs graph nodes plus rule-clause nodes plus variable
             // references, transitive over each node's first incoming connection / variable binding
             // (see `interaction_topology`). Selection/hover, modes and merges are ALL

@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️Apply
 impl RemodelingDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &RemodelingArtifact) -> protocol::MutationApplyResult<RemodelingArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -49,21 +49,6 @@ impl RemodelingDiff {
             }
             if let Some(results) = &self.results {
                 next.results = results.clone();
-            }
-            if let Some(value) = &self.selection {
-                next.selection = value.clone();
-            }
-            if let Some(value) = &self.report_table {
-                next.report_table = value.clone();
-            }
-            if let Some(value) = &self.frame_cursor {
-                next.frame_cursor = value.clone();
-            }
-            if let Some(value) = &self.camera {
-                next.camera = value.clone();
-            }
-            if let Some(value) = &self.layers {
-                next.layers = value.clone();
             }
             next
         })
@@ -132,11 +117,6 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
         take!(gcps);
         take!(job);
         take!(results);
-        take!(selection);
-        take!(report_table);
-        take!(frame_cursor);
-        take!(camera);
-        take!(layers);
     }
 }
 //#endregion 🔖️Apply

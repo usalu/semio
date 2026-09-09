@@ -303,13 +303,15 @@
         "profile": "dev",
         "target": "materialize-dev",
         "component": "component-dev",
-        "support": "support-dev"
+        "support": "support-dev",
+        "tooling": []
       },
       {
         "profile": "release",
         "target": "materialize-release",
         "component": "component-release",
-        "support": "support-release"
+        "support": "support-release",
+        "tooling": ["workspace:deps-wasm-opt"]
       }
     ],
     "cancellation": {

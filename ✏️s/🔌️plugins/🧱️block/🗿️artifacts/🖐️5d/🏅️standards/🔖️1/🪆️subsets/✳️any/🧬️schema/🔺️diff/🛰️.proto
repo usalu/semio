@@ -32,8 +32,6 @@ message Block5dDiff {
   optional BlockCamera3d camera3d = 13;
   // @state artifact
   optional BlockMeta meta = 14;
-  // @state presence
-  optional Block5dStringList selected_ids = 15;
   // @state config
 }
 

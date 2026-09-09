@@ -1,7 +1,7 @@
 //! 🧬️ Writer snapshot schema — artifact-lane fields only.
 
 use crate::{document_child_handle_with_text, WriterDocumentChild, WRITER_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted writer document snapshot. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`

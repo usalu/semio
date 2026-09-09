@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::standards::v5::subsets::any::schema::diff::{HtmlChildAdded as HtmlChildAddedT, HtmlNodeDiff as HtmlNodeDiffT};
-use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, STDIO_HTML_DOCUMENT_SCHEMA, write_html_document};
-use protocol::MutationDiff;
+use crate::standards::v5::subsets::any::schema::snapshot::{write_html_document, HtmlAttr, STDIO_HTML_DOCUMENT_SCHEMA};
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {

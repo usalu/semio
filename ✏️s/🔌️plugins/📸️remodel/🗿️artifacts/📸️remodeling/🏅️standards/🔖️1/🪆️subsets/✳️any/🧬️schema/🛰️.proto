@@ -25,16 +25,6 @@ message RemodelingArtifact {
   // @state artifact
   ReconstructionResults results = 10;
   // @state presence
-  RemodelingUiSelection selection = 11;
-  // @state presence
-  // @state presence
-  string report_table = 13;
-  // @state presence
-  RemodelingUiFrameCursor frame_cursor = 14;
-  // @state config
-  RemodelingUiCamera camera = 15;
-  // @state config
-  RemodelingUiLayers layers = 16;
   // @state config
 }
 
@@ -305,30 +295,6 @@ message RemodelingMesh {
 message RemodelingMeshChild {
   string child_id = 1;
   ArtifactRef target = 2;
-}
-
-message RemodelingUiCamera {
-  repeated double position = 1;
-  repeated double target = 2;
-  double fov = 3;
-}
-
-message RemodelingUiFrameCursor {
-  optional string stream_id = 1;
-  uint32 frame_index = 2;
-}
-
-message RemodelingUiLayers {
-  bool mesh = 1;
-  bool dense = 2;
-  bool sparse = 3;
-  bool cameras = 4;
-  bool gcps = 5;
-}
-
-message RemodelingUiSelection {
-  string mode = 1;
-  repeated string ids = 2;
 }
 
 message RigExtrinsic {

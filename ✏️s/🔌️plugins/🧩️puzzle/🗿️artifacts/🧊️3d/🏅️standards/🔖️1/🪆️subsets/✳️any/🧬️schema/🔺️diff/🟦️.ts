@@ -17,69 +17,6 @@ export interface Puzzle3dDiff {
   targetVolumes?: Puzzle3dTargetVolumesDelta;
   /** @state artifact */
   references?: Puzzle3dReferencesDelta;
-  /** @state presence */
-  selectedObjectIds?: Puzzle3dStringList;
-  /** @state presence */
-  selectedVortexIds?: Puzzle3dStringList;
-  /** @state presence */
-  selectedAttractionIds?: Puzzle3dStringList;
-  /** @state presence */
-  selectedTargetVolumeIds?: Puzzle3dStringList;
-  /** @state presence */
-  selectedReferenceIds?: Puzzle3dStringList;
-  /** @state presence */
-  activeUtilityId?: string;
-  /** @state config */
-  cameraPositionX?: number;
-  /** @state config */
-  cameraPositionY?: number;
-  /** @state config */
-  cameraPositionZ?: number;
-  /** @state config */
-  cameraTargetX?: number;
-  /** @state config */
-  cameraTargetY?: number;
-  /** @state config */
-  cameraTargetZ?: number;
-  /** @state config */
-  cameraZoom?: number;
-  /** @state config */
-  selectionMethod?: string;
-  /** @state config */
-  selectionModeDefault?: string;
-  /** @state config */
-  engagementInput?: string;
-  /** @state config */
-  gridVisible?: boolean;
-  /** @state config */
-  gridSnapEnabled?: boolean;
-  /** @state config */
-  gridSpacing?: number;
-  /** @state config */
-  overlapBudget?: number;
-  /** @state config */
-  fillCount?: number;
-  /** @state config */
-  brushCandidateIndex?: number;
-  /** @state config */
-  lodAutomatic?: boolean;
-  /** @state config */
-  lodDepthVariable?: boolean;
-  /** @state config */
-  lodManual?: number;
-  /** @state config */
-  proximityRadius?: number;
-  /** @state config */
-  /** @state config */
-  runtimeExtrasJson?: string;
-  /** @state artifact */
-  hoveredObjectId?: string | null;
-  /** @state artifact */
-  hoveredVortexFullId?: string | null;
-  /** @state artifact */
-  hoveredKindId?: string | null;
-  /** @state artifact */
-  previewSeq?: number;
 }
 
 export interface Puzzle3dStringList { values: string[]; }

@@ -1,3 +1,865 @@
+var __create = Object.create;
+var __getProtoOf = Object.getPrototypeOf;
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+function __accessProp(key) {
+  return this[key];
+}
+var __toESMCache_node;
+var __toESMCache_esm;
+var __toESM = (mod, isNodeMode, target) => {
+  var canCache = mod != null && typeof mod === "object";
+  if (canCache) {
+    var cache = isNodeMode ? __toESMCache_node ??= new WeakMap : __toESMCache_esm ??= new WeakMap;
+    var cached = cache.get(mod);
+    if (cached)
+      return cached;
+  }
+  target = mod != null ? __create(__getProtoOf(mod)) : {};
+  const to = isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target;
+  for (let key of __getOwnPropNames(mod))
+    if (!__hasOwnProp.call(to, key))
+      __defProp(to, key, {
+        get: __accessProp.bind(mod, key),
+        enumerable: true
+      });
+  if (canCache)
+    cache.set(mod, to);
+  return to;
+};
+var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
+
+// ../../../../../../../../../../node_modules/react/cjs/react.development.js
+var require_react_development = __commonJS((exports, module) => {
+  (function() {
+    function defineDeprecationWarning(methodName, info) {
+      Object.defineProperty(Component.prototype, methodName, {
+        get: function() {
+          console.warn("%s(...) is deprecated in plain JavaScript React classes. %s", info[0], info[1]);
+        }
+      });
+    }
+    function getIteratorFn(maybeIterable) {
+      if (maybeIterable === null || typeof maybeIterable !== "object")
+        return null;
+      maybeIterable = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable["@@iterator"];
+      return typeof maybeIterable === "function" ? maybeIterable : null;
+    }
+    function warnNoop(publicInstance, callerName) {
+      publicInstance = (publicInstance = publicInstance.constructor) && (publicInstance.displayName || publicInstance.name) || "ReactClass";
+      var warningKey = publicInstance + "." + callerName;
+      didWarnStateUpdateForUnmountedComponent[warningKey] || (console.error("Can't call %s on a component that is not yet mounted. This is a no-op, but it might indicate a bug in your application. Instead, assign to `this.state` directly or define a `state = {};` class property with the desired state in the %s component.", callerName, publicInstance), didWarnStateUpdateForUnmountedComponent[warningKey] = true);
+    }
+    function Component(props, context, updater) {
+      this.props = props;
+      this.context = context;
+      this.refs = emptyObject;
+      this.updater = updater || ReactNoopUpdateQueue;
+    }
+    function ComponentDummy() {}
+    function PureComponent(props, context, updater) {
+      this.props = props;
+      this.context = context;
+      this.refs = emptyObject;
+      this.updater = updater || ReactNoopUpdateQueue;
+    }
+    function noop() {}
+    function testStringCoercion(value) {
+      return "" + value;
+    }
+    function checkKeyStringCoercion(value) {
+      try {
+        testStringCoercion(value);
+        var JSCompiler_inline_result = false;
+      } catch (e) {
+        JSCompiler_inline_result = true;
+      }
+      if (JSCompiler_inline_result) {
+        JSCompiler_inline_result = console;
+        var JSCompiler_temp_const = JSCompiler_inline_result.error;
+        var JSCompiler_inline_result$jscomp$0 = typeof Symbol === "function" && Symbol.toStringTag && value[Symbol.toStringTag] || value.constructor.name || "Object";
+        JSCompiler_temp_const.call(JSCompiler_inline_result, "The provided key is an unsupported type %s. This value must be coerced to a string before using it here.", JSCompiler_inline_result$jscomp$0);
+        return testStringCoercion(value);
+      }
+    }
+    function getComponentNameFromType(type) {
+      if (type == null)
+        return null;
+      if (typeof type === "function")
+        return type.$$typeof === REACT_CLIENT_REFERENCE ? null : type.displayName || type.name || null;
+      if (typeof type === "string")
+        return type;
+      switch (type) {
+        case REACT_FRAGMENT_TYPE:
+          return "Fragment";
+        case REACT_PROFILER_TYPE:
+          return "Profiler";
+        case REACT_STRICT_MODE_TYPE:
+          return "StrictMode";
+        case REACT_SUSPENSE_TYPE:
+          return "Suspense";
+        case REACT_SUSPENSE_LIST_TYPE:
+          return "SuspenseList";
+        case REACT_ACTIVITY_TYPE:
+          return "Activity";
+      }
+      if (typeof type === "object")
+        switch (typeof type.tag === "number" && console.error("Received an unexpected object in getComponentNameFromType(). This is likely a bug in React. Please file an issue."), type.$$typeof) {
+          case REACT_PORTAL_TYPE:
+            return "Portal";
+          case REACT_CONTEXT_TYPE:
+            return type.displayName || "Context";
+          case REACT_CONSUMER_TYPE:
+            return (type._context.displayName || "Context") + ".Consumer";
+          case REACT_FORWARD_REF_TYPE:
+            var innerType = type.render;
+            type = type.displayName;
+            type || (type = innerType.displayName || innerType.name || "", type = type !== "" ? "ForwardRef(" + type + ")" : "ForwardRef");
+            return type;
+          case REACT_MEMO_TYPE:
+            return innerType = type.displayName || null, innerType !== null ? innerType : getComponentNameFromType(type.type) || "Memo";
+          case REACT_LAZY_TYPE:
+            innerType = type._payload;
+            type = type._init;
+            try {
+              return getComponentNameFromType(type(innerType));
+            } catch (x) {}
+        }
+      return null;
+    }
+    function getTaskName(type) {
+      if (type === REACT_FRAGMENT_TYPE)
+        return "<>";
+      if (typeof type === "object" && type !== null && type.$$typeof === REACT_LAZY_TYPE)
+        return "<...>";
+      try {
+        var name = getComponentNameFromType(type);
+        return name ? "<" + name + ">" : "<...>";
+      } catch (x) {
+        return "<...>";
+      }
+    }
+    function getOwner() {
+      var dispatcher = ReactSharedInternals.A;
+      return dispatcher === null ? null : dispatcher.getOwner();
+    }
+    function UnknownOwner() {
+      return Error("react-stack-top-frame");
+    }
+    function hasValidKey(config) {
+      if (hasOwnProperty.call(config, "key")) {
+        var getter2 = Object.getOwnPropertyDescriptor(config, "key").get;
+        if (getter2 && getter2.isReactWarning)
+          return false;
+      }
+      return config.key !== undefined;
+    }
+    function defineKeyPropWarningGetter(props, displayName) {
+      function warnAboutAccessingKey() {
+        specialPropKeyWarningShown || (specialPropKeyWarningShown = true, console.error("%s: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://react.dev/link/special-props)", displayName));
+      }
+      warnAboutAccessingKey.isReactWarning = true;
+      Object.defineProperty(props, "key", {
+        get: warnAboutAccessingKey,
+        configurable: true
+      });
+    }
+    function elementRefGetterWithDeprecationWarning() {
+      var componentName = getComponentNameFromType(this.type);
+      didWarnAboutElementRef[componentName] || (didWarnAboutElementRef[componentName] = true, console.error("Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release."));
+      componentName = this.props.ref;
+      return componentName !== undefined ? componentName : null;
+    }
+    function ReactElement(type, key, props, owner, debugStack, debugTask) {
+      var refProp = props.ref;
+      type = {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type,
+        key,
+        props,
+        _owner: owner
+      };
+      (refProp !== undefined ? refProp : null) !== null ? Object.defineProperty(type, "ref", {
+        enumerable: false,
+        get: elementRefGetterWithDeprecationWarning
+      }) : Object.defineProperty(type, "ref", { enumerable: false, value: null });
+      type._store = {};
+      Object.defineProperty(type._store, "validated", {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: 0
+      });
+      Object.defineProperty(type, "_debugInfo", {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: null
+      });
+      Object.defineProperty(type, "_debugStack", {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: debugStack
+      });
+      Object.defineProperty(type, "_debugTask", {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: debugTask
+      });
+      Object.freeze && (Object.freeze(type.props), Object.freeze(type));
+      return type;
+    }
+    function cloneAndReplaceKey(oldElement, newKey) {
+      newKey = ReactElement(oldElement.type, newKey, oldElement.props, oldElement._owner, oldElement._debugStack, oldElement._debugTask);
+      oldElement._store && (newKey._store.validated = oldElement._store.validated);
+      return newKey;
+    }
+    function validateChildKeys(node) {
+      isValidElement(node) ? node._store && (node._store.validated = 1) : typeof node === "object" && node !== null && node.$$typeof === REACT_LAZY_TYPE && (node._payload.status === "fulfilled" ? isValidElement(node._payload.value) && node._payload.value._store && (node._payload.value._store.validated = 1) : node._store && (node._store.validated = 1));
+    }
+    function isValidElement(object) {
+      return typeof object === "object" && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
+    }
+    function escape(key) {
+      var escaperLookup = { "=": "=0", ":": "=2" };
+      return "$" + key.replace(/[=:]/g, function(match) {
+        return escaperLookup[match];
+      });
+    }
+    function getElementKey(element, index) {
+      return typeof element === "object" && element !== null && element.key != null ? (checkKeyStringCoercion(element.key), escape("" + element.key)) : index.toString(36);
+    }
+    function resolveThenable(thenable) {
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw thenable.reason;
+        default:
+          switch (typeof thenable.status === "string" ? thenable.then(noop, noop) : (thenable.status = "pending", thenable.then(function(fulfilledValue) {
+            thenable.status === "pending" && (thenable.status = "fulfilled", thenable.value = fulfilledValue);
+          }, function(error) {
+            thenable.status === "pending" && (thenable.status = "rejected", thenable.reason = error);
+          })), thenable.status) {
+            case "fulfilled":
+              return thenable.value;
+            case "rejected":
+              throw thenable.reason;
+          }
+      }
+      throw thenable;
+    }
+    function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
+      var type = typeof children;
+      if (type === "undefined" || type === "boolean")
+        children = null;
+      var invokeCallback = false;
+      if (children === null)
+        invokeCallback = true;
+      else
+        switch (type) {
+          case "bigint":
+          case "string":
+          case "number":
+            invokeCallback = true;
+            break;
+          case "object":
+            switch (children.$$typeof) {
+              case REACT_ELEMENT_TYPE:
+              case REACT_PORTAL_TYPE:
+                invokeCallback = true;
+                break;
+              case REACT_LAZY_TYPE:
+                return invokeCallback = children._init, mapIntoArray(invokeCallback(children._payload), array, escapedPrefix, nameSoFar, callback);
+            }
+        }
+      if (invokeCallback) {
+        invokeCallback = children;
+        callback = callback(invokeCallback);
+        var childKey = nameSoFar === "" ? "." + getElementKey(invokeCallback, 0) : nameSoFar;
+        isArrayImpl(callback) ? (escapedPrefix = "", childKey != null && (escapedPrefix = childKey.replace(userProvidedKeyEscapeRegex, "$&/") + "/"), mapIntoArray(callback, array, escapedPrefix, "", function(c) {
+          return c;
+        })) : callback != null && (isValidElement(callback) && (callback.key != null && (invokeCallback && invokeCallback.key === callback.key || checkKeyStringCoercion(callback.key)), escapedPrefix = cloneAndReplaceKey(callback, escapedPrefix + (callback.key == null || invokeCallback && invokeCallback.key === callback.key ? "" : ("" + callback.key).replace(userProvidedKeyEscapeRegex, "$&/") + "/") + childKey), nameSoFar !== "" && invokeCallback != null && isValidElement(invokeCallback) && invokeCallback.key == null && invokeCallback._store && !invokeCallback._store.validated && (escapedPrefix._store.validated = 2), callback = escapedPrefix), array.push(callback));
+        return 1;
+      }
+      invokeCallback = 0;
+      childKey = nameSoFar === "" ? "." : nameSoFar + ":";
+      if (isArrayImpl(children))
+        for (var i = 0;i < children.length; i++)
+          nameSoFar = children[i], type = childKey + getElementKey(nameSoFar, i), invokeCallback += mapIntoArray(nameSoFar, array, escapedPrefix, type, callback);
+      else if (i = getIteratorFn(children), typeof i === "function")
+        for (i === children.entries && (didWarnAboutMaps || console.warn("Using Maps as children is not supported. Use an array of keyed ReactElements instead."), didWarnAboutMaps = true), children = i.call(children), i = 0;!(nameSoFar = children.next()).done; )
+          nameSoFar = nameSoFar.value, type = childKey + getElementKey(nameSoFar, i++), invokeCallback += mapIntoArray(nameSoFar, array, escapedPrefix, type, callback);
+      else if (type === "object") {
+        if (typeof children.then === "function")
+          return mapIntoArray(resolveThenable(children), array, escapedPrefix, nameSoFar, callback);
+        array = String(children);
+        throw Error("Objects are not valid as a React child (found: " + (array === "[object Object]" ? "object with keys {" + Object.keys(children).join(", ") + "}" : array) + "). If you meant to render a collection of children, use an array instead.");
+      }
+      return invokeCallback;
+    }
+    function mapChildren(children, func, context) {
+      if (children == null)
+        return children;
+      var result3 = [], count = 0;
+      mapIntoArray(children, result3, "", "", function(child) {
+        return func.call(context, child, count++);
+      });
+      return result3;
+    }
+    function lazyInitializer(payload) {
+      if (payload._status === -1) {
+        var ioInfo = payload._ioInfo;
+        ioInfo != null && (ioInfo.start = ioInfo.end = performance.now());
+        ioInfo = payload._result;
+        var thenable = ioInfo();
+        thenable.then(function(moduleObject) {
+          if (payload._status === 0 || payload._status === -1) {
+            payload._status = 1;
+            payload._result = moduleObject;
+            var _ioInfo = payload._ioInfo;
+            _ioInfo != null && (_ioInfo.end = performance.now());
+            thenable.status === undefined && (thenable.status = "fulfilled", thenable.value = moduleObject);
+          }
+        }, function(error) {
+          if (payload._status === 0 || payload._status === -1) {
+            payload._status = 2;
+            payload._result = error;
+            var _ioInfo2 = payload._ioInfo;
+            _ioInfo2 != null && (_ioInfo2.end = performance.now());
+            thenable.status === undefined && (thenable.status = "rejected", thenable.reason = error);
+          }
+        });
+        ioInfo = payload._ioInfo;
+        if (ioInfo != null) {
+          ioInfo.value = thenable;
+          var displayName = thenable.displayName;
+          typeof displayName === "string" && (ioInfo.name = displayName);
+        }
+        payload._status === -1 && (payload._status = 0, payload._result = thenable);
+      }
+      if (payload._status === 1)
+        return ioInfo = payload._result, ioInfo === undefined && console.error(`lazy: Expected the result of a dynamic import() call. Instead received: %s
+
+Your code should look like: 
+  const MyComponent = lazy(() => import('./MyComponent'))
+
+Did you accidentally put curly braces around the import?`, ioInfo), "default" in ioInfo || console.error(`lazy: Expected the result of a dynamic import() call. Instead received: %s
+
+Your code should look like: 
+  const MyComponent = lazy(() => import('./MyComponent'))`, ioInfo), ioInfo.default;
+      throw payload._result;
+    }
+    function resolveDispatcher() {
+      var dispatcher = ReactSharedInternals.H;
+      dispatcher === null && console.error(`Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.`);
+      return dispatcher;
+    }
+    function releaseAsyncTransition() {
+      ReactSharedInternals.asyncTransitions--;
+    }
+    function enqueueTask(task) {
+      if (enqueueTaskImpl === null)
+        try {
+          var requireString = ("require" + Math.random()).slice(0, 7);
+          enqueueTaskImpl = (module && module[requireString]).call(module, "timers").setImmediate;
+        } catch (_err) {
+          enqueueTaskImpl = function(callback) {
+            didWarnAboutMessageChannel === false && (didWarnAboutMessageChannel = true, typeof MessageChannel === "undefined" && console.error("This browser does not have a MessageChannel implementation, so enqueuing tasks via await act(async () => ...) will fail. Please file an issue at https://github.com/facebook/react/issues if you encounter this warning."));
+            var channel = new MessageChannel;
+            channel.port1.onmessage = callback;
+            channel.port2.postMessage(undefined);
+          };
+        }
+      return enqueueTaskImpl(task);
+    }
+    function aggregateErrors(errors) {
+      return 1 < errors.length && typeof AggregateError === "function" ? new AggregateError(errors) : errors[0];
+    }
+    function popActScope(prevActQueue, prevActScopeDepth) {
+      prevActScopeDepth !== actScopeDepth - 1 && console.error("You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one. ");
+      actScopeDepth = prevActScopeDepth;
+    }
+    function recursivelyFlushAsyncActWork(returnValue, resolve, reject) {
+      var queue = ReactSharedInternals.actQueue;
+      if (queue !== null)
+        if (queue.length !== 0)
+          try {
+            flushActQueue(queue);
+            enqueueTask(function() {
+              return recursivelyFlushAsyncActWork(returnValue, resolve, reject);
+            });
+            return;
+          } catch (error) {
+            ReactSharedInternals.thrownErrors.push(error);
+          }
+        else
+          ReactSharedInternals.actQueue = null;
+      0 < ReactSharedInternals.thrownErrors.length ? (queue = aggregateErrors(ReactSharedInternals.thrownErrors), ReactSharedInternals.thrownErrors.length = 0, reject(queue)) : resolve(returnValue);
+    }
+    function flushActQueue(queue) {
+      if (!isFlushing) {
+        isFlushing = true;
+        var i = 0;
+        try {
+          for (;i < queue.length; i++) {
+            var callback = queue[i];
+            do {
+              ReactSharedInternals.didUsePromise = false;
+              var continuation = callback(false);
+              if (continuation !== null) {
+                if (ReactSharedInternals.didUsePromise) {
+                  queue[i] = callback;
+                  queue.splice(0, i);
+                  return;
+                }
+                callback = continuation;
+              } else
+                break;
+            } while (1);
+          }
+          queue.length = 0;
+        } catch (error) {
+          queue.splice(0, i + 1), ReactSharedInternals.thrownErrors.push(error);
+        } finally {
+          isFlushing = false;
+        }
+      }
+    }
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined" && typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart === "function" && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
+    var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), MAYBE_ITERATOR_SYMBOL = Symbol.iterator, didWarnStateUpdateForUnmountedComponent = {}, ReactNoopUpdateQueue = {
+      isMounted: function() {
+        return false;
+      },
+      enqueueForceUpdate: function(publicInstance) {
+        warnNoop(publicInstance, "forceUpdate");
+      },
+      enqueueReplaceState: function(publicInstance) {
+        warnNoop(publicInstance, "replaceState");
+      },
+      enqueueSetState: function(publicInstance) {
+        warnNoop(publicInstance, "setState");
+      }
+    }, assign = Object.assign, emptyObject = {};
+    Object.freeze(emptyObject);
+    Component.prototype.isReactComponent = {};
+    Component.prototype.setState = function(partialState, callback) {
+      if (typeof partialState !== "object" && typeof partialState !== "function" && partialState != null)
+        throw Error("takes an object of state variables to update or a function which returns an object of state variables.");
+      this.updater.enqueueSetState(this, partialState, callback, "setState");
+    };
+    Component.prototype.forceUpdate = function(callback) {
+      this.updater.enqueueForceUpdate(this, callback, "forceUpdate");
+    };
+    var deprecatedAPIs = {
+      isMounted: [
+        "isMounted",
+        "Instead, make sure to clean up subscriptions and pending requests in componentWillUnmount to prevent memory leaks."
+      ],
+      replaceState: [
+        "replaceState",
+        "Refactor your code to use setState instead (see https://github.com/facebook/react/issues/3236)."
+      ]
+    };
+    for (fnName in deprecatedAPIs)
+      deprecatedAPIs.hasOwnProperty(fnName) && defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
+    ComponentDummy.prototype = Component.prototype;
+    deprecatedAPIs = PureComponent.prototype = new ComponentDummy;
+    deprecatedAPIs.constructor = PureComponent;
+    assign(deprecatedAPIs, Component.prototype);
+    deprecatedAPIs.isPureReactComponent = true;
+    var isArrayImpl = Array.isArray, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = {
+      H: null,
+      A: null,
+      T: null,
+      S: null,
+      actQueue: null,
+      asyncTransitions: 0,
+      isBatchingLegacy: false,
+      didScheduleLegacyUpdate: false,
+      didUsePromise: false,
+      thrownErrors: [],
+      getCurrentStack: null,
+      recentlyCreatedOwnerStacks: 0
+    }, hasOwnProperty = Object.prototype.hasOwnProperty, createTask = console.createTask ? console.createTask : function() {
+      return null;
+    };
+    deprecatedAPIs = {
+      react_stack_bottom_frame: function(callStackForError) {
+        return callStackForError();
+      }
+    };
+    var specialPropKeyWarningShown, didWarnAboutOldJSXRuntime;
+    var didWarnAboutElementRef = {};
+    var unknownOwnerDebugStack = deprecatedAPIs.react_stack_bottom_frame.bind(deprecatedAPIs, UnknownOwner)();
+    var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
+    var didWarnAboutMaps = false, userProvidedKeyEscapeRegex = /\/+/g, reportGlobalError = typeof reportError === "function" ? reportError : function(error) {
+      if (typeof window === "object" && typeof window.ErrorEvent === "function") {
+        var event = new window.ErrorEvent("error", {
+          bubbles: true,
+          cancelable: true,
+          message: typeof error === "object" && error !== null && typeof error.message === "string" ? String(error.message) : String(error),
+          error
+        });
+        if (!window.dispatchEvent(event))
+          return;
+      } else if (typeof process === "object" && typeof process.emit === "function") {
+        process.emit("uncaughtException", error);
+        return;
+      }
+      console.error(error);
+    }, didWarnAboutMessageChannel = false, enqueueTaskImpl = null, actScopeDepth = 0, didWarnNoAwaitAct = false, isFlushing = false, queueSeveralMicrotasks = typeof queueMicrotask === "function" ? function(callback) {
+      queueMicrotask(function() {
+        return queueMicrotask(callback);
+      });
+    } : enqueueTask;
+    deprecatedAPIs = Object.freeze({
+      __proto__: null,
+      c: function(size) {
+        return resolveDispatcher().useMemoCache(size);
+      }
+    });
+    var fnName = {
+      map: mapChildren,
+      forEach: function(children, forEachFunc, forEachContext) {
+        mapChildren(children, function() {
+          forEachFunc.apply(this, arguments);
+        }, forEachContext);
+      },
+      count: function(children) {
+        var n = 0;
+        mapChildren(children, function() {
+          n++;
+        });
+        return n;
+      },
+      toArray: function(children) {
+        return mapChildren(children, function(child) {
+          return child;
+        }) || [];
+      },
+      only: function(children) {
+        if (!isValidElement(children))
+          throw Error("React.Children.only expected to receive a single React element child.");
+        return children;
+      }
+    };
+    exports.Activity = REACT_ACTIVITY_TYPE;
+    exports.Children = fnName;
+    exports.Component = Component;
+    exports.Fragment = REACT_FRAGMENT_TYPE;
+    exports.Profiler = REACT_PROFILER_TYPE;
+    exports.PureComponent = PureComponent;
+    exports.StrictMode = REACT_STRICT_MODE_TYPE;
+    exports.Suspense = REACT_SUSPENSE_TYPE;
+    exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = ReactSharedInternals;
+    exports.__COMPILER_RUNTIME = deprecatedAPIs;
+    exports.act = function(callback) {
+      var prevActQueue = ReactSharedInternals.actQueue, prevActScopeDepth = actScopeDepth;
+      actScopeDepth++;
+      var queue = ReactSharedInternals.actQueue = prevActQueue !== null ? prevActQueue : [], didAwaitActCall = false;
+      try {
+        var result3 = callback();
+      } catch (error) {
+        ReactSharedInternals.thrownErrors.push(error);
+      }
+      if (0 < ReactSharedInternals.thrownErrors.length)
+        throw popActScope(prevActQueue, prevActScopeDepth), callback = aggregateErrors(ReactSharedInternals.thrownErrors), ReactSharedInternals.thrownErrors.length = 0, callback;
+      if (result3 !== null && typeof result3 === "object" && typeof result3.then === "function") {
+        var thenable = result3;
+        queueSeveralMicrotasks(function() {
+          didAwaitActCall || didWarnNoAwaitAct || (didWarnNoAwaitAct = true, console.error("You called act(async () => ...) without await. This could lead to unexpected testing behaviour, interleaving multiple act calls and mixing their scopes. You should - await act(async () => ...);"));
+        });
+        return {
+          then: function(resolve, reject) {
+            didAwaitActCall = true;
+            thenable.then(function(returnValue) {
+              popActScope(prevActQueue, prevActScopeDepth);
+              if (prevActScopeDepth === 0) {
+                try {
+                  flushActQueue(queue), enqueueTask(function() {
+                    return recursivelyFlushAsyncActWork(returnValue, resolve, reject);
+                  });
+                } catch (error$0) {
+                  ReactSharedInternals.thrownErrors.push(error$0);
+                }
+                if (0 < ReactSharedInternals.thrownErrors.length) {
+                  var _thrownError = aggregateErrors(ReactSharedInternals.thrownErrors);
+                  ReactSharedInternals.thrownErrors.length = 0;
+                  reject(_thrownError);
+                }
+              } else
+                resolve(returnValue);
+            }, function(error) {
+              popActScope(prevActQueue, prevActScopeDepth);
+              0 < ReactSharedInternals.thrownErrors.length ? (error = aggregateErrors(ReactSharedInternals.thrownErrors), ReactSharedInternals.thrownErrors.length = 0, reject(error)) : reject(error);
+            });
+          }
+        };
+      }
+      var returnValue$jscomp$0 = result3;
+      popActScope(prevActQueue, prevActScopeDepth);
+      prevActScopeDepth === 0 && (flushActQueue(queue), queue.length !== 0 && queueSeveralMicrotasks(function() {
+        didAwaitActCall || didWarnNoAwaitAct || (didWarnNoAwaitAct = true, console.error("A component suspended inside an `act` scope, but the `act` call was not awaited. When testing React components that depend on asynchronous data, you must await the result:\n\nawait act(() => ...)"));
+      }), ReactSharedInternals.actQueue = null);
+      if (0 < ReactSharedInternals.thrownErrors.length)
+        throw callback = aggregateErrors(ReactSharedInternals.thrownErrors), ReactSharedInternals.thrownErrors.length = 0, callback;
+      return {
+        then: function(resolve, reject) {
+          didAwaitActCall = true;
+          prevActScopeDepth === 0 ? (ReactSharedInternals.actQueue = queue, enqueueTask(function() {
+            return recursivelyFlushAsyncActWork(returnValue$jscomp$0, resolve, reject);
+          })) : resolve(returnValue$jscomp$0);
+        }
+      };
+    };
+    exports.cache = function(fn) {
+      return function() {
+        return fn.apply(null, arguments);
+      };
+    };
+    exports.cacheSignal = function() {
+      return null;
+    };
+    exports.captureOwnerStack = function() {
+      var getCurrentStack = ReactSharedInternals.getCurrentStack;
+      return getCurrentStack === null ? null : getCurrentStack();
+    };
+    exports.cloneElement = function(element, config, children) {
+      if (element === null || element === undefined)
+        throw Error("The argument must be a React element, but you passed " + element + ".");
+      var props = assign({}, element.props), key = element.key, owner = element._owner;
+      if (config != null) {
+        var JSCompiler_inline_result;
+        a: {
+          if (hasOwnProperty.call(config, "ref") && (JSCompiler_inline_result = Object.getOwnPropertyDescriptor(config, "ref").get) && JSCompiler_inline_result.isReactWarning) {
+            JSCompiler_inline_result = false;
+            break a;
+          }
+          JSCompiler_inline_result = config.ref !== undefined;
+        }
+        JSCompiler_inline_result && (owner = getOwner());
+        hasValidKey(config) && (checkKeyStringCoercion(config.key), key = "" + config.key);
+        for (propName in config)
+          !hasOwnProperty.call(config, propName) || propName === "key" || propName === "__self" || propName === "__source" || propName === "ref" && config.ref === undefined || (props[propName] = config[propName]);
+      }
+      var propName = arguments.length - 2;
+      if (propName === 1)
+        props.children = children;
+      else if (1 < propName) {
+        JSCompiler_inline_result = Array(propName);
+        for (var i = 0;i < propName; i++)
+          JSCompiler_inline_result[i] = arguments[i + 2];
+        props.children = JSCompiler_inline_result;
+      }
+      props = ReactElement(element.type, key, props, owner, element._debugStack, element._debugTask);
+      for (key = 2;key < arguments.length; key++)
+        validateChildKeys(arguments[key]);
+      return props;
+    };
+    exports.createContext = function(defaultValue) {
+      defaultValue = {
+        $$typeof: REACT_CONTEXT_TYPE,
+        _currentValue: defaultValue,
+        _currentValue2: defaultValue,
+        _threadCount: 0,
+        Provider: null,
+        Consumer: null
+      };
+      defaultValue.Provider = defaultValue;
+      defaultValue.Consumer = {
+        $$typeof: REACT_CONSUMER_TYPE,
+        _context: defaultValue
+      };
+      defaultValue._currentRenderer = null;
+      defaultValue._currentRenderer2 = null;
+      return defaultValue;
+    };
+    exports.createElement = function(type, config, children) {
+      for (var i = 2;i < arguments.length; i++)
+        validateChildKeys(arguments[i]);
+      i = {};
+      var key = null;
+      if (config != null)
+        for (propName in didWarnAboutOldJSXRuntime || !("__self" in config) || "key" in config || (didWarnAboutOldJSXRuntime = true, console.warn("Your app (or one of its dependencies) is using an outdated JSX transform. Update to the modern JSX transform for faster performance: https://react.dev/link/new-jsx-transform")), hasValidKey(config) && (checkKeyStringCoercion(config.key), key = "" + config.key), config)
+          hasOwnProperty.call(config, propName) && propName !== "key" && propName !== "__self" && propName !== "__source" && (i[propName] = config[propName]);
+      var childrenLength = arguments.length - 2;
+      if (childrenLength === 1)
+        i.children = children;
+      else if (1 < childrenLength) {
+        for (var childArray = Array(childrenLength), _i = 0;_i < childrenLength; _i++)
+          childArray[_i] = arguments[_i + 2];
+        Object.freeze && Object.freeze(childArray);
+        i.children = childArray;
+      }
+      if (type && type.defaultProps)
+        for (propName in childrenLength = type.defaultProps, childrenLength)
+          i[propName] === undefined && (i[propName] = childrenLength[propName]);
+      key && defineKeyPropWarningGetter(i, typeof type === "function" ? type.displayName || type.name || "Unknown" : type);
+      var propName = 1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
+      return ReactElement(type, key, i, getOwner(), propName ? Error("react-stack-top-frame") : unknownOwnerDebugStack, propName ? createTask(getTaskName(type)) : unknownOwnerDebugTask);
+    };
+    exports.createRef = function() {
+      var refObject = { current: null };
+      Object.seal(refObject);
+      return refObject;
+    };
+    exports.forwardRef = function(render) {
+      render != null && render.$$typeof === REACT_MEMO_TYPE ? console.error("forwardRef requires a render function but received a `memo` component. Instead of forwardRef(memo(...)), use memo(forwardRef(...)).") : typeof render !== "function" ? console.error("forwardRef requires a render function but was given %s.", render === null ? "null" : typeof render) : render.length !== 0 && render.length !== 2 && console.error("forwardRef render functions accept exactly two parameters: props and ref. %s", render.length === 1 ? "Did you forget to use the ref parameter?" : "Any additional parameter will be undefined.");
+      render != null && render.defaultProps != null && console.error("forwardRef render functions do not support defaultProps. Did you accidentally pass a React component?");
+      var elementType = { $$typeof: REACT_FORWARD_REF_TYPE, render }, ownName;
+      Object.defineProperty(elementType, "displayName", {
+        enumerable: false,
+        configurable: true,
+        get: function() {
+          return ownName;
+        },
+        set: function(name) {
+          ownName = name;
+          render.name || render.displayName || (Object.defineProperty(render, "name", { value: name }), render.displayName = name);
+        }
+      });
+      return elementType;
+    };
+    exports.isValidElement = isValidElement;
+    exports.lazy = function(ctor) {
+      ctor = { _status: -1, _result: ctor };
+      var lazyType = {
+        $$typeof: REACT_LAZY_TYPE,
+        _payload: ctor,
+        _init: lazyInitializer
+      }, ioInfo = {
+        name: "lazy",
+        start: -1,
+        end: -1,
+        value: null,
+        owner: null,
+        debugStack: Error("react-stack-top-frame"),
+        debugTask: console.createTask ? console.createTask("lazy()") : null
+      };
+      ctor._ioInfo = ioInfo;
+      lazyType._debugInfo = [{ awaited: ioInfo }];
+      return lazyType;
+    };
+    exports.memo = function(type, compare2) {
+      type == null && console.error("memo: The first argument must be a component. Instead received: %s", type === null ? "null" : typeof type);
+      compare2 = {
+        $$typeof: REACT_MEMO_TYPE,
+        type,
+        compare: compare2 === undefined ? null : compare2
+      };
+      var ownName;
+      Object.defineProperty(compare2, "displayName", {
+        enumerable: false,
+        configurable: true,
+        get: function() {
+          return ownName;
+        },
+        set: function(name) {
+          ownName = name;
+          type.name || type.displayName || (Object.defineProperty(type, "name", { value: name }), type.displayName = name);
+        }
+      });
+      return compare2;
+    };
+    exports.startTransition = function(scope) {
+      var prevTransition = ReactSharedInternals.T, currentTransition = {};
+      currentTransition._updatedFibers = new Set;
+      ReactSharedInternals.T = currentTransition;
+      try {
+        var returnValue = scope(), onStartTransitionFinish = ReactSharedInternals.S;
+        onStartTransitionFinish !== null && onStartTransitionFinish(currentTransition, returnValue);
+        typeof returnValue === "object" && returnValue !== null && typeof returnValue.then === "function" && (ReactSharedInternals.asyncTransitions++, returnValue.then(releaseAsyncTransition, releaseAsyncTransition), returnValue.then(noop, reportGlobalError));
+      } catch (error) {
+        reportGlobalError(error);
+      } finally {
+        prevTransition === null && currentTransition._updatedFibers && (scope = currentTransition._updatedFibers.size, currentTransition._updatedFibers.clear(), 10 < scope && console.warn("Detected a large number of updates inside startTransition. If this is due to a subscription please re-write it to use React provided hooks. Otherwise concurrent mode guarantees are off the table.")), prevTransition !== null && currentTransition.types !== null && (prevTransition.types !== null && prevTransition.types !== currentTransition.types && console.error("We expected inner Transitions to have transferred the outer types set and that you cannot add to the outer Transition while inside the inner.This is a bug in React."), prevTransition.types = currentTransition.types), ReactSharedInternals.T = prevTransition;
+      }
+    };
+    exports.unstable_useCacheRefresh = function() {
+      return resolveDispatcher().useCacheRefresh();
+    };
+    exports.use = function(usable) {
+      return resolveDispatcher().use(usable);
+    };
+    exports.useActionState = function(action, initialState, permalink) {
+      return resolveDispatcher().useActionState(action, initialState, permalink);
+    };
+    exports.useCallback = function(callback, deps) {
+      return resolveDispatcher().useCallback(callback, deps);
+    };
+    exports.useContext = function(Context) {
+      var dispatcher = resolveDispatcher();
+      Context.$$typeof === REACT_CONSUMER_TYPE && console.error("Calling useContext(Context.Consumer) is not supported and will cause bugs. Did you mean to call useContext(Context) instead?");
+      return dispatcher.useContext(Context);
+    };
+    exports.useDebugValue = function(value, formatterFn) {
+      return resolveDispatcher().useDebugValue(value, formatterFn);
+    };
+    exports.useDeferredValue = function(value, initialValue) {
+      return resolveDispatcher().useDeferredValue(value, initialValue);
+    };
+    exports.useEffect = function(create, deps) {
+      create == null && console.warn("React Hook useEffect requires an effect callback. Did you forget to pass a callback to the hook?");
+      return resolveDispatcher().useEffect(create, deps);
+    };
+    exports.useEffectEvent = function(callback) {
+      return resolveDispatcher().useEffectEvent(callback);
+    };
+    exports.useId = function() {
+      return resolveDispatcher().useId();
+    };
+    exports.useImperativeHandle = function(ref, create, deps) {
+      return resolveDispatcher().useImperativeHandle(ref, create, deps);
+    };
+    exports.useInsertionEffect = function(create, deps) {
+      create == null && console.warn("React Hook useInsertionEffect requires an effect callback. Did you forget to pass a callback to the hook?");
+      return resolveDispatcher().useInsertionEffect(create, deps);
+    };
+    exports.useLayoutEffect = function(create, deps) {
+      create == null && console.warn("React Hook useLayoutEffect requires an effect callback. Did you forget to pass a callback to the hook?");
+      return resolveDispatcher().useLayoutEffect(create, deps);
+    };
+    exports.useMemo = function(create, deps) {
+      return resolveDispatcher().useMemo(create, deps);
+    };
+    exports.useOptimistic = function(passthrough, reducer) {
+      return resolveDispatcher().useOptimistic(passthrough, reducer);
+    };
+    exports.useReducer = function(reducer, initialArg, init3) {
+      return resolveDispatcher().useReducer(reducer, initialArg, init3);
+    };
+    exports.useRef = function(initialValue) {
+      return resolveDispatcher().useRef(initialValue);
+    };
+    exports.useState = function(initialState) {
+      return resolveDispatcher().useState(initialState);
+    };
+    exports.useSyncExternalStore = function(subscribe, getSnapshot, getServerSnapshot) {
+      return resolveDispatcher().useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+    };
+    exports.useTransition = function() {
+      return resolveDispatcher().useTransition();
+    };
+    exports.version = "19.2.8";
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined" && typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop === "function" && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(Error());
+  })();
+});
+
+// ../../../../../../../../../../node_modules/react/index.js
+var require_react = __commonJS((exports, module) => {
+  var react_development = __toESM(require_react_development());
+  if (false) {} else {
+    module.exports = react_development;
+  }
+});
 /* ../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts */
 if (undefined) {}
 /* ../../../../../../../../../🔨️modules/🔏️hash/🟦️.ts */
@@ -15346,17 +16208,17 @@ var DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR = 64;
 function freshHeartbeatState(nowMs) {
   return { lastHeartbeatAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatTurnSeq: 0, lastLivenessAtMs: Number.NEGATIVE_INFINITY, oldestPendingStartedAtMs: null, missedCount: 0, lastMissCountedAtMs: nowMs };
 }
-function evaluateShardLiveness(window) {
-  const unchanged = { missedCount: window.missedCount, lastMissCountedAtMs: window.lastMissCountedAtMs, terminate: false };
-  if (window.oldestPendingStartedAtMs === null)
+function evaluateShardLiveness(window2) {
+  const unchanged = { missedCount: window2.missedCount, lastMissCountedAtMs: window2.lastMissCountedAtMs, terminate: false };
+  if (window2.oldestPendingStartedAtMs === null)
     return unchanged;
-  const provenAliveAtMs = Math.max(window.lastLivenessAtMs, window.oldestPendingStartedAtMs);
-  if (window.nowMs - provenAliveAtMs <= window.heartbeatTimeoutMs)
+  const provenAliveAtMs = Math.max(window2.lastLivenessAtMs, window2.oldestPendingStartedAtMs);
+  if (window2.nowMs - provenAliveAtMs <= window2.heartbeatTimeoutMs)
     return unchanged;
-  if (window.nowMs - window.lastMissCountedAtMs < window.heartbeatTimeoutMs)
+  if (window2.nowMs - window2.lastMissCountedAtMs < window2.heartbeatTimeoutMs)
     return unchanged;
-  const missedCount = window.missedCount + 1;
-  return { missedCount, lastMissCountedAtMs: window.nowMs, terminate: missedCount >= SHARD_LIVENESS_POLICY.missedLimit };
+  const missedCount = window2.missedCount + 1;
+  return { missedCount, lastMissCountedAtMs: window2.nowMs, terminate: missedCount >= SHARD_LIVENESS_POLICY.missedLimit };
 }
 function describeShardWorkerError(event) {
   const record = event ?? {};
@@ -15443,7 +16305,7 @@ class OwnedShardReturn {
     if (source === null || typeof source !== "object" || !(#state in source))
       return false;
     const instance = source.#state.instance;
-    return instance.host === owner && instance.operation === activation && instance.lifetime !== null && actorInstanceLifetimeEquals(instance.lifetime, lifetime);
+    return instance !== null && instance.host === owner && instance.operation === activation && instance.lifetime !== null && actorInstanceLifetimeEquals(instance.lifetime, lifetime);
   }
   get origin() {
     return this.#state.origin;
@@ -15457,7 +16319,7 @@ class OwnedShardReturn {
   bindContent(content) {
     const state7 = this.#state;
     const instance = state7.instance;
-    if (state7.content !== null || !instance.host || !instance.lifetime || !OwnedKernelReturnContent.matches(content, this, instance.host, instance.operation, instance.lifetime))
+    if (!instance || instance.returnPhase !== "published" || state7.content !== null || !instance.host || !instance.lifetime || !OwnedKernelReturnContent.matches(content, this, instance.host, instance.operation, instance.lifetime))
       return false;
     state7.content = content;
     return true;
@@ -15466,19 +16328,22 @@ class OwnedShardReturn {
     return this.#state.outputs?.pending ?? 0;
   }
   reserveResponse(grant) {
-    return reserveCapturedResponse(this.#state.client, this.#state, grant);
+    return this.#state.client ? reserveCapturedResponse(this.#state.client, this.#state, grant) : residentStep("rejected", "actor-return.closed");
   }
   execute(events, budget) {
-    return submitCapturedReturn(this.#state.client, this.#state, { kind: "execute", events }, budget);
+    return this.#submit({ kind: "execute", events }, budget);
   }
   retry(budget) {
-    return submitCapturedReturn(this.#state.client, this.#state, { kind: "retry" }, budget);
+    return this.#submit({ kind: "retry" }, budget);
   }
   poll(budget) {
-    return submitCapturedReturn(this.#state.client, this.#state, { kind: "poll" }, budget);
+    return this.#submit({ kind: "poll" }, budget);
   }
   cancel(budget) {
-    return submitCapturedReturn(this.#state.client, this.#state, { kind: "cancel" }, budget);
+    return this.#submit({ kind: "cancel" }, budget);
+  }
+  #submit(work, budget) {
+    return this.#state.client ? submitCapturedReturn(this.#state.client, this.#state, work, budget) : Promise.reject(new Error("actor-return.closed"));
   }
 }
 
@@ -15503,7 +16368,7 @@ class OwnedShardReturnPage {
     if (page === null || typeof page !== "object" || !(#state in page))
       return false;
     const instance = page.#state.instance;
-    return instance.host === owner && instance.operation === activation && instance.lifetime !== null && actorInstanceLifetimeEquals(instance.lifetime, lifetime) && page.#receipt.identity.origin.activationGeneration === lifetime.activationGeneration && page.#output.responseEnvelope !== null;
+    return instance !== null && instance.host === owner && instance.operation === activation && instance.lifetime !== null && actorInstanceLifetimeEquals(instance.lifetime, lifetime) && page.#receipt.identity.origin.activationGeneration === lifetime.activationGeneration && page.#output.responseEnvelope !== null;
   }
   get receipt() {
     return this.#receipt;
@@ -16536,6 +17401,7 @@ class ShardClient {
         return owner.activation.returned?.instance === owner ? owner.activation.returned.facade : null;
       },
       reserveReturn: (maximumResponses, grant) => this.reserveInstanceReturn(owner, maximumResponses, grant),
+      retireUnusedReturn: (grant) => this.retireUnusedInstanceReturn(owner, grant),
       open: async (input, budget) => {
         if (owner.phase !== "opening")
           throw new Error("actor-lifecycle.open-already-captured");
@@ -16573,6 +17439,8 @@ class ShardClient {
     });
   }
   reserveInstanceReturn(instance, maximumResponses, grant) {
+    if (instance.returnPhase === "closing")
+      return returnAdmission("rejected", "actor-return.closing");
     if (!Number.isSafeInteger(maximumResponses) || maximumResponses < 1 || maximumResponses > 4294967295)
       return returnAdmission("rejected", "actor-return.capacity");
     if (!residentGrant(grant, 64))
@@ -16711,8 +17579,79 @@ class ShardClient {
       return returnAdmission("rejected", "actor-return.construction-fault", spent);
     }
   }
+  retireUnusedInstanceReturn(instance, grant) {
+    if (!residentGrant(grant, 64))
+      return residentStep("blocked", "actor-return.close-grant");
+    const state7 = instance.activation.returned;
+    if (state7 && state7.instance !== instance && !(state7.instance === null && instance.returnPhase === "closing"))
+      return residentStep("rejected", "actor-return.foreign-owner");
+    if (instance.inFlight || state7?.inFlight)
+      return residentStep("blocked", "actor-return.request-pending");
+    if (instance.returnFault !== NO_RETURN_FAULT || state7 && (state7.origin !== null || state7.identity !== null || state7.events !== null || state7.page !== null || state7.content !== null || state7.retry || state7.failed || state7.fault !== NO_RETURN_FAULT))
+      return residentStep("blocked", "actor-return.domain-discharge-required");
+    if (instance.returnPhase === "empty" && state7 === null && instance.returnCell === null && instance.returnRecord === null && instance.returnCapacity === 0)
+      return residentStep("complete", "actor-return.unused-retired");
+    if (!instance.returnCell) {
+      const cell2 = this.#residentLedger.preparedAdmission(instance);
+      if (!cell2)
+        return residentStep("blocked", "actor-return.cell-handoff");
+      instance.returnCell = cell2;
+      instance.returnPhase = "closing";
+      return residentStep("pending", "actor-return.cell-observation", 64);
+    }
+    instance.returnPhase = "closing";
+    const cell = instance.returnCell;
+    if (cell.hasFailure)
+      return residentStep("blocked", "actor-return.admission-fault");
+    if (state7?.outputs) {
+      if (!state7.outputs.terminalIsEmpty()) {
+        state7.outputs.beginClose();
+        return residentChild(state7.outputs.closeStep(grant), grant);
+      }
+      state7.outputs = null;
+      state7.latest = null;
+      return residentStep("pending", "actor-return.roster-detachment", 64);
+    }
+    if (state7?.latest)
+      return residentStep("blocked", "actor-return.response-held");
+    if (state7 && (state7.instance !== null || state7.client !== null || state7.facade !== null)) {
+      if (!residentGrant(grant, 128))
+        return residentStep("blocked", "actor-return.state-detachment");
+      state7.instance = null;
+      state7.client = null;
+      state7.facade = null;
+      return residentStep("pending", "actor-return.state-detachment", 128);
+    }
+    const record = instance.returnRecord ?? cell.result?.record ?? null;
+    if (record && instance.returnRecord !== record) {
+      instance.returnRecord = record;
+      return residentStep("pending", "actor-return.record-observation", 64);
+    }
+    if (record?.matchesShell(instance)) {
+      record.beginClose();
+      return record.detach(instance, grant);
+    }
+    if (!cell.terminalIsEmpty()) {
+      cell.beginClose();
+      return residentChild(cell.closeStep(grant), grant);
+    }
+    if (!OwnedResidentRetirement.matches(cell.retirement, cell) || record && (!record.terminalIsEmpty() || !OwnedResidentRetirement.matches(record.retirement, record) || record.detachment !== null && !OwnedResidentRecordDetachment.matches(record.detachment, record, instance)))
+      return residentStep("blocked", "actor-return.retirement-proof");
+    if (!residentGrant(grant, 128))
+      return residentStep("blocked", "actor-return.parent-detachment");
+    if (instance.activation.returned !== state7)
+      return residentStep("rejected", "actor-return.replaced-owner");
+    instance.activation.returned = null;
+    instance.returnCell = null;
+    instance.returnRecord = null;
+    instance.returnCapacity = 0;
+    instance.returnPhase = "empty";
+    return residentStep("complete", "actor-return.unused-retired", 128);
+  }
   reserveReturnResponse(state7, grant) {
     const instance = state7.instance;
+    if (!instance)
+      return residentStep("rejected", "actor-return.closed");
     const activation = instance.activation;
     const slot = activation.slot;
     if (!residentGrant(grant, 64))
@@ -16741,6 +17680,8 @@ class ShardClient {
   }
   async sendCapturedReturn(state7, work, budget) {
     const instance = state7.instance;
+    if (!instance)
+      throw new Error("actor-return.closed");
     const activation = instance.activation;
     const slot = activation.slot;
     if (!activation.available || !slot.available || this.shards[slot.index] !== slot)
@@ -16801,6 +17742,8 @@ class ShardClient {
     }
   }
   acceptCapturedReturn(state7, drive, result3, output) {
+    if (!state7.instance)
+      throw new Error("actor-return.closed");
     if (result3.kind === "protocolFault") {
       state7.failed = true;
       return;
@@ -21234,6 +22177,7 @@ var GIS_MAP_INFERENCE_PORT_TEXT_V1 = Object.freeze({
   running: Object.freeze({ en: "Computing the bounds proposal…", de: "Begrenzungsvorschlag wird berechnet…" }),
   offered: Object.freeze({ en: "A bounds proposal is ready for review.", de: "Ein Begrenzungsvorschlag liegt zur Prüfung bereit." }),
   approving: Object.freeze({ en: "Waiting for the server to commit the approved proposal…", de: "Warten auf die Freigabe des Vorschlags durch den Server…" }),
+  indeterminate: Object.freeze({ en: "The outcome is unknown. The original request is retained while its server state is checked.", de: "Das Ergebnis ist unbekannt. Die ursprüngliche Anfrage bleibt erhalten, während ihr Serverstatus geprüft wird." }),
   applied: Object.freeze({ en: "The approved proposal was committed to the document.", de: "Der freigegebene Vorschlag wurde im Dokument übernommen." }),
   cancelled: Object.freeze({ en: "The proposal was cancelled.", de: "Der Vorschlag wurde abgebrochen." }),
   stale: Object.freeze({ en: "The document changed while the proposal ran. Request a new one.", de: "Das Dokument hat sich während des Vorschlags geändert. Fordern Sie einen neuen an." }),
@@ -21251,7 +22195,7 @@ var GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1 = Object.freeze({
   "inference.cancelled": Object.freeze({ en: "The proposal was cancelled.", de: "Der Vorschlag wurde abgebrochen." }),
   "approval.commit-unavailable": Object.freeze({ en: "The approved proposal could not be committed and was not applied.", de: "Der freigegebene Vorschlag konnte nicht übernommen werden und wurde nicht angewendet." }),
   "inference.storage": Object.freeze({ en: "The proposal service is temporarily unavailable.", de: "Der Vorschlagsdienst ist vorübergehend nicht verfügbar." }),
-  "inference.transport": Object.freeze({ en: "The outcome is unknown. Reopen the document before retrying.", de: "Das Ergebnis ist unbekannt. Öffnen Sie das Dokument erneut, bevor Sie es wiederholen." }),
+  "inference.transport": Object.freeze({ en: "The outcome is unknown. Close retries checking the original request without submitting another.", de: "Das Ergebnis ist unbekannt. Schließen prüft die ursprüngliche Anfrage erneut, ohne eine weitere zu senden." }),
   "inference.lease-unverified": Object.freeze({ en: "This document has no verified execution target, so no proposal can start.", de: "Dieses Dokument hat kein verifiziertes Ausführungsziel, daher kann kein Vorschlag starten." })
 });
 var GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1 = Object.freeze({
@@ -21850,6 +22794,10 @@ class ArtifactBootstrapAssembler {
 if (undefined) {}
 /* ../../../../../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts */
 if (undefined) {}
+
+/* ../../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts */
+var BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES = 256 * 1024;
+if (undefined) {}
 /* ../../../../../../../🟦️.ts */
 var replicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
 if (undefined) {}
@@ -22150,28 +23098,6 @@ function packValueToExactJson(value, path = "$") {
     throw new Error(`packValueToExactJson: ${path} carries an unsupported ${typeof value}`);
   return value;
 }
-function packUIntSafeOrNull(value) {
-  if (isPackInteger(value))
-    return value.kind === "uint" && value.value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value.value) : null;
-  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
-}
-function describePackWireValue(raw) {
-  if (typeof raw === "bigint")
-    return `${raw}n`;
-  try {
-    return JSON.stringify(raw, (_key, value) => typeof value === "bigint" ? `${value}n` : value)?.slice(0, 400) ?? String(raw);
-  } catch {
-    return String(raw);
-  }
-}
-function packWireNatural(raw, field = "natural") {
-  if (raw === undefined || raw === null)
-    return 0;
-  const value = typeof raw === "bigint" ? raw >= 0n && raw <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(raw) : Number.NaN : typeof raw === "number" ? raw : packUIntSafeOrNull(raw) ?? Number.NaN;
-  if (!Number.isSafeInteger(value) || value < 0)
-    throw new Error(`actor WIT natural "${field}" is not a safe non-negative integer: ${describePackWireValue(raw)}`);
-  return value;
-}
 function decodePackWire(bytes, path = "$") {
   return packValueToExactJson(decodePackValue(bytes), path);
 }
@@ -22305,6 +23231,18 @@ function readVecChildPackEntry(bytes, pos) {
   const count = readVarintU64(bytes, pos);
   return Array.from({ length: count }, () => readChildPackEntry(bytes, pos));
 }
+function writeWindowConfigPackEntry(out, entry) {
+  writeStr(out, entry.window_id);
+  writeStr(out, entry.window_kind_id);
+  writeBytes(out, entry.envelope_pack);
+}
+function readWindowConfigPackEntry(bytes, pos) {
+  return { window_id: readStr(bytes, pos), window_kind_id: readStr(bytes, pos), envelope_pack: readBytes(bytes, pos) };
+}
+function readVecWindowConfigPackEntry(bytes, pos) {
+  const count = readVarintU64(bytes, pos);
+  return Array.from({ length: count }, () => readWindowConfigPackEntry(bytes, pos));
+}
 var APP_COMMAND_TAGS = {
   ConfigCommand: 0,
   Command: 1,
@@ -22335,7 +23273,9 @@ var APP_COMMAND_TAGS = {
   resolveConflict: 26,
   readConflicts: 27,
   presence: 28,
-  LocalInteractionQuery: 29
+  LocalInteractionQuery: 29,
+  LoadWindowConfig: 30,
+  ReadWindowConfigs: 31
 };
 var APP_FRAME_TAGS = {
   Done: 0,
@@ -22361,7 +23301,8 @@ var APP_FRAME_TAGS = {
   Conflicts: 20,
   UiPatch: 21,
   UiSnapshotEnd: 22,
-  LocalInteractionQuery: 23
+  LocalInteractionQuery: 23,
+  WindowConfigs: 24
 };
 function encodeAppCommand(cmd) {
   const out = [];
@@ -22406,6 +23347,13 @@ function encodeAppCommand(cmd) {
   } else if ("ReadConfig" in cmd) {
     out.push(APP_COMMAND_TAGS.ReadConfig);
     writeVarintU64(out, cmd.ReadConfig.seq);
+  } else if ("LoadWindowConfig" in cmd) {
+    out.push(APP_COMMAND_TAGS.LoadWindowConfig);
+    writeVarintU64(out, cmd.LoadWindowConfig.seq);
+    writeWindowConfigPackEntry(out, cmd.LoadWindowConfig.entry);
+  } else if ("ReadWindowConfigs" in cmd) {
+    out.push(APP_COMMAND_TAGS.ReadWindowConfigs);
+    writeVarintU64(out, cmd.ReadWindowConfigs.seq);
   } else if ("MediaIn" in cmd) {
     out.push(APP_COMMAND_TAGS.MediaIn);
     writeVarintU64(out, cmd.MediaIn.seq);
@@ -22563,6 +23511,8 @@ function decodeAppFrame(bytes) {
       const ops = readStr(bytes, pos);
       return { Config: { in_reply_to, pack, spr, ops } };
     }
+    case APP_FRAME_TAGS.WindowConfigs:
+      return { WindowConfigs: { in_reply_to: readVarintU64(bytes, pos), entries: readVecWindowConfigPackEntry(bytes, pos) } };
     case APP_FRAME_TAGS.ConfigChanged: {
       const envelopes = readVecBytes(bytes, pos);
       const origin = readStr(bytes, pos);
@@ -22744,6 +23694,8 @@ class AppChannelClient {
     for (;; ) {
       const step13 = await this.outcomeIterator.next();
       if (step13.done) {
+        this.cachedPack = null;
+        this.cachedSpr = null;
         this.finishLocalInteractionQuery(new Error("local-interaction.channel-closed"));
         for (const waiter of this.pending.splice(0))
           waiter.reject(new Error("app-channel.closed"));
@@ -22788,7 +23740,7 @@ class AppChannelClient {
         }
         this.pending.splice(index, 1);
         const reply = ordinary.filter((frame) => appChannelFrameBelongsTo(frame, waiter.seq, waiter.transaction));
-        this.captureDocumentFrames(reply);
+        this.captureDocumentFrames(reply, waiter.document);
         waiter.resolve(reply);
       }
       this.finishDisposal();
@@ -22796,6 +23748,8 @@ class AppChannelClient {
   }
   dispose() {
     this.disposed = true;
+    this.cachedPack = null;
+    this.cachedSpr = null;
     for (let index = this.pending.length - 1;index >= 0; index -= 1) {
       if (!this.pending[index].queryReceipt)
         this.pending.splice(index, 1)[0].reject(new Error("app-channel.disposed"));
@@ -22811,7 +23765,13 @@ class AppChannelClient {
   nextSeq() {
     return this.sequenceOwner.nextSequence();
   }
-  captureDocumentFrames(frames) {
+  captureDocumentFrames(frames, candidate) {
+    if (this.disposed || frames.some((frame) => ("Error" in frame)))
+      return;
+    if (candidate && frames.some((frame) => ("Done" in frame))) {
+      this.cachedPack = candidate.pack;
+      this.cachedSpr = candidate.spr;
+    }
     for (const frame of frames) {
       if ("Document" in frame) {
         this.cachedPack = new Uint8Array(frame.Document.pack);
@@ -22820,15 +23780,24 @@ class AppChannelClient {
     }
   }
   documentPack() {
-    return this.cachedPack && this.cachedSpr ? { pack: this.cachedPack, spr: this.cachedSpr } : null;
+    return this.cachedPack && this.cachedSpr ? { pack: this.cachedPack.slice(), spr: this.cachedSpr.slice() } : null;
   }
   sendCommand(command) {
     if (this.disposed)
       return Promise.reject(new Error("app-channel.disposed"));
     return new Promise((resolve, reject) => {
       const seq = Object.values(command)[0].seq;
-      this.pending.push({ seq, queryReceipt: false, transaction: appChannelTransactionReply(command), resolve, reject });
-      this.handle.enqueue(this.instanceId, [encodeAppCommand(command)]);
+      const document = "LoadDocument" in command ? { pack: Uint8Array.from(command.LoadDocument.pack), spr: Uint8Array.from(command.LoadDocument.spr) } : null;
+      const waiter = { seq, queryReceipt: false, transaction: appChannelTransactionReply(command), document, resolve, reject };
+      this.pending.push(waiter);
+      try {
+        this.handle.enqueue(this.instanceId, [encodeAppCommand(command)]);
+      } catch (error) {
+        const index = this.pending.indexOf(waiter);
+        if (index !== -1)
+          this.pending.splice(index, 1);
+        reject(error);
+      }
     });
   }
   readLocalInteractionPages(consume, signal) {
@@ -22853,7 +23822,7 @@ class AppChannelClient {
     });
   }
   sendLocalInteractionQuery(seq, command) {
-    this.pending.push({ seq, queryReceipt: true, transaction: null, resolve: () => {}, reject: (error) => this.finishLocalInteractionQuery(error) });
+    this.pending.push({ seq, queryReceipt: true, transaction: null, document: null, resolve: () => {}, reject: (error) => this.finishLocalInteractionQuery(error) });
     try {
       this.handle.enqueue(this.instanceId, [encodeAppCommand({ LocalInteractionQuery: { seq, command } })]);
     } catch (error) {
@@ -22956,9 +23925,37 @@ class AppChannelClient {
     return this.sendCommand({ ReadDocument: { seq: this.nextSeq() } });
   }
   async loadDocument(pack, spr) {
-    this.cachedPack = pack;
-    this.cachedSpr = spr;
     return this.sendCommand({ LoadDocument: { seq: this.nextSeq(), pack: Array.from(pack), spr: Array.from(spr) } });
+  }
+  async loadWindowConfig(entry) {
+    const seq = this.nextSeq();
+    const frames = await this.sendCommand({
+      LoadWindowConfig: {
+        seq,
+        entry: { window_id: entry.window_id, window_kind_id: entry.window_kind_id, envelope_pack: Array.from(entry.envelope_pack) }
+      }
+    });
+    const error = frames.find((frame) => ("Error" in frame));
+    if (error)
+      throw new Error(`AppChannelClient.loadWindowConfig(${this.appId}): ${faultDisplayMessage(error.Error.fault, decodePackValue)}`);
+    if (!frames.some((frame) => ("Done" in frame) && frame.Done.in_reply_to === seq)) {
+      throw new Error(`AppChannelClient.loadWindowConfig(${this.appId}): missing Done frame for seq ${seq}`);
+    }
+  }
+  async readWindowConfigs() {
+    const seq = this.nextSeq();
+    const frames = await this.sendCommand({ ReadWindowConfigs: { seq } });
+    const error = frames.find((frame) => ("Error" in frame));
+    if (error)
+      throw new Error(`AppChannelClient.readWindowConfigs(${this.appId}): ${faultDisplayMessage(error.Error.fault, decodePackValue)}`);
+    const configs = frames.find((frame) => ("WindowConfigs" in frame) && frame.WindowConfigs.in_reply_to === seq);
+    if (!configs)
+      throw new Error(`AppChannelClient.readWindowConfigs(${this.appId}): missing WindowConfigs frame for seq ${seq}`);
+    return configs.WindowConfigs.entries.map((entry) => ({
+      window_id: entry.window_id,
+      window_kind_id: entry.window_kind_id,
+      envelope_pack: Array.from(entry.envelope_pack)
+    }));
   }
   async readHistory() {
     return this.sendCommand({ ReadHistory: { seq: this.nextSeq() } });
@@ -23060,6 +24057,594 @@ function createPooledActorRuntime(options) {
 var ledger = new OwnedResidentLedger({ bytes: 33554432, slots: 262144, owners: 262144, control: { bytes: 65536, slots: 1024, owners: 1024 } });
 function rendererResidentLedger() {
   return ledger;
+}
+
+/* ../../../../🧱️elements/📃️UiDocumentStore/🟦️.tsx */
+var import_react = __toESM(require_react(), 1);
+var DEFAULT_UI_DOCUMENT_LIMITS = {
+  maxNodes: 20000,
+  maxDepth: 128,
+  maxChildren: 4096,
+  maxTextBytes: 65536,
+  maxPatchOps: 4096,
+  maxPatchBytes: 1048576
+};
+function utf8ByteLength(value) {
+  return new TextEncoder().encode(value).length;
+}
+function labelBytes(label) {
+  return label ? utf8ByteLength(label) : 0;
+}
+function componentTextBytes(component) {
+  switch (component.type) {
+    case "container":
+      return labelBytes(component.label) + (component.description?.length ? utf8ByteLength(component.description) : 0) + (component.error?.length ? utf8ByteLength(component.error) : 0);
+    case "text":
+      return utf8ByteLength(component.value);
+    case "button":
+      return utf8ByteLength(component.label);
+    case "input":
+      return utf8ByteLength(component.value) + labelBytes(component.placeholder);
+    case "select":
+      return component.items.reduce((sum, item) => sum + utf8ByteLength(item.label), 0) + labelBytes(component.placeholder);
+    case "toggle":
+      return labelBytes(component.text);
+    case "keyValueList":
+      return component.entries.reduce((sum, entry) => sum + utf8ByteLength(entry.label) + utf8ByteLength(entry.value), 0);
+    case "treeSection":
+      return labelBytes(component.label);
+    case "treeItem":
+      return utf8ByteLength(component.label) + (component.description?.length ? utf8ByteLength(component.description) : 0);
+    case "image":
+      return labelBytes(component.alt);
+    case "extension":
+      return utf8ByteLength(component.extension);
+    case "separator":
+    case "slider":
+    case "numberStepper":
+    case "ring":
+    case "iconSelect":
+    case "tree":
+    case "surface":
+      return 0;
+  }
+}
+function accessibilityTextBytes(spec) {
+  return labelBytes(spec.label) + labelBytes(spec.description) + (spec.shortcut ? utf8ByteLength(spec.shortcut) : 0);
+}
+function bindingsTextBytes(bindings) {
+  return bindings.reduce((sum, binding) => sum + utf8ByteLength(binding.action.scope) + utf8ByteLength(binding.action.name) + (binding.capability ? utf8ByteLength(binding.capability) : 0), 0);
+}
+function menuTextBytes(menu) {
+  return menu ? utf8ByteLength(menu.id) : 0;
+}
+function patchByteEstimate(patch) {
+  const OP_OVERHEAD_BYTES = 16;
+  return patch.ops.reduce((sum, op) => sum + OP_OVERHEAD_BYTES + opTextBytes(op), 0);
+}
+function opTextBytes(op) {
+  switch (op.type) {
+    case "upsert":
+      return utf8ByteLength(op.key) + componentTextBytes(op.component) + accessibilityTextBytes(op.accessibility) + bindingsTextBytes(op.bindings ?? []) + menuTextBytes(op.menu);
+    case "setComponent":
+      return componentTextBytes(op.component);
+    case "setChildren":
+      return op.children.length * 8;
+    case "setAccessibility":
+      return accessibilityTextBytes(op.accessibility);
+    case "setBindings":
+      return bindingsTextBytes(op.bindings);
+    case "setMenu":
+      return menuTextBytes(op.menu);
+    case "setLayout":
+    case "setActivity":
+    case "setStyle":
+    case "remove":
+    case "setRoot":
+      return 0;
+  }
+}
+function isFiniteOrUndefined(value) {
+  return value === null || value === undefined || Number.isFinite(value);
+}
+function componentIsFinite(component) {
+  switch (component.type) {
+    case "slider":
+      return [component.value, component.min, component.max, component.step].every(Number.isFinite);
+    case "numberStepper":
+      return [component.value, component.step].every(Number.isFinite);
+    case "ring":
+      return Number.isFinite(component.t);
+    case "input":
+      return isFiniteOrUndefined(component.min) && isFiniteOrUndefined(component.max) && isFiniteOrUndefined(component.step);
+    default:
+      return true;
+  }
+}
+function isSection(component) {
+  return component.type === "container" && component.role === "section";
+}
+function validateUiDocumentCore(root, nodes, limits) {
+  const violations = [];
+  if (nodes.size > limits.maxNodes) {
+    violations.push({ type: "nodeQuota", count: nodes.size, max: limits.maxNodes });
+    return violations;
+  }
+  const visited = new Set;
+  const onPath = new Set;
+  if (root !== null && nodes.has(root)) {
+    const stack = [{ kind: "enter", id: root, depth: 0, parentInSection: false }];
+    while (stack.length > 0) {
+      const frame = stack.pop();
+      if (frame.kind === "exit") {
+        onPath.delete(frame.id);
+        continue;
+      }
+      const { id: id2, depth, parentInSection } = frame;
+      if (onPath.has(id2)) {
+        violations.push({ type: "cycle", node: id2 });
+        continue;
+      }
+      if (visited.has(id2))
+        continue;
+      visited.add(id2);
+      const record = nodes.get(id2);
+      if (!record)
+        continue;
+      const inSection = parentInSection || isSection(record.component);
+      if (parentInSection && isSection(record.component))
+        violations.push({ type: "sectionNested", node: id2 });
+      if (!componentIsFinite(record.component))
+        violations.push({ type: "nonFiniteNumber", node: id2 });
+      if (depth > limits.maxDepth) {
+        violations.push({ type: "depthQuota", node: id2, depth, max: limits.maxDepth });
+        continue;
+      }
+      onPath.add(id2);
+      stack.push({ kind: "exit", id: id2 });
+      const seenKeys = new Set;
+      for (const childId of record.children ?? []) {
+        const child = nodes.get(childId);
+        if (!child) {
+          violations.push({ type: "orphanChild", parent: id2, child: childId });
+          continue;
+        }
+        if (seenKeys.has(child.key))
+          violations.push({ type: "duplicateSiblingKey", parent: id2, key: child.key });
+        else
+          seenKeys.add(child.key);
+        stack.push({ kind: "enter", id: childId, depth: depth + 1, parentInSection: inSection });
+      }
+    }
+  }
+  for (const id2 of nodes.keys()) {
+    if (!visited.has(id2))
+      violations.push({ type: "danglingRoot", node: id2 });
+  }
+  return violations;
+}
+function emptyUiDocumentState(surface) {
+  return { surface, revision: 0, root: null, nodes: new Map };
+}
+function uiDocumentStateFromSnapshot(snapshot) {
+  const nodes = new Map;
+  for (const record of snapshot.nodes)
+    nodes.set(record.id, record);
+  return { surface: snapshot.surface, revision: snapshot.revision, root: snapshot.root, nodes };
+}
+function rejectQuota(quota2, actual, max) {
+  return { type: "quotaExceeded", quota: quota2, actual, max };
+}
+function applyOp(draft, op, limits) {
+  const mutate = (id2) => {
+    const record = draft.nodes.get(id2);
+    return record ?? { type: "unknownNode", id: id2 };
+  };
+  switch (op.type) {
+    case "upsert": {
+      if ((op.children?.length ?? 0) > limits.maxChildren)
+        return rejectQuota("children", op.children.length, limits.maxChildren);
+      const bytes = componentTextBytes(op.component);
+      if (bytes > limits.maxTextBytes)
+        return rejectQuota("textBytes", bytes, limits.maxTextBytes);
+      const { type: _discardTag, ...record } = op;
+      draft.nodes.set(op.id, record);
+      return null;
+    }
+    case "setComponent": {
+      const bytes = componentTextBytes(op.component);
+      if (bytes > limits.maxTextBytes)
+        return rejectQuota("textBytes", bytes, limits.maxTextBytes);
+      const record = mutate(op.id);
+      if ("type" in record && record.type === "unknownNode")
+        return record;
+      draft.nodes.set(op.id, { ...record, component: op.component });
+      return null;
+    }
+    case "setLayout": {
+      const record = mutate(op.id);
+      if ("type" in record && record.type === "unknownNode")
+        return record;
+      draft.nodes.set(op.id, { ...record, layout: op.layout });
+      return null;
+    }
+    case "setActivity": {
+      const record = mutate(op.id);
+      if ("type" in record && record.type === "unknownNode")
+        return record;
+      draft.nodes.set(op.id, { ...record, activity: op.activity, disabled: op.disabled });
+      return null;
+    }
+    case "setChildren": {
+      if (op.children.length > limits.maxChildren)
+        return rejectQuota("children", op.children.length, limits.maxChildren);
+      const record = mutate(op.id);
+      if ("type" in record && record.type === "unknownNode")
+        return record;
+      draft.nodes.set(op.id, { ...record, children: op.children });
+      return null;
+    }
+    case "setStyle": {
+      const record = mutate(op.id);
+      if ("type" in record && record.type === "unknownNode")
+        return record;
+      draft.nodes.set(op.id, { ...record, style: op.style });
+      return null;
+    }
+    case "setAccessibility": {
+      const record = mutate(op.id);
+      if ("type" in record && record.type === "unknownNode")
+        return record;
+      draft.nodes.set(op.id, { ...record, accessibility: op.accessibility });
+      return null;
+    }
+    case "setBindings": {
+      const record = mutate(op.id);
+      if ("type" in record && record.type === "unknownNode")
+        return record;
+      draft.nodes.set(op.id, { ...record, bindings: op.bindings });
+      return null;
+    }
+    case "setMenu": {
+      const record = mutate(op.id);
+      if ("type" in record && record.type === "unknownNode")
+        return record;
+      draft.nodes.set(op.id, { ...record, menu: op.menu });
+      return null;
+    }
+    case "remove": {
+      const stack = [op.id];
+      while (stack.length > 0) {
+        const current = stack.pop();
+        const record = draft.nodes.get(current);
+        if (record) {
+          draft.nodes.delete(current);
+          stack.push(...record.children ?? []);
+        }
+      }
+      return null;
+    }
+    case "setRoot":
+      draft.root = op.id;
+      return null;
+  }
+}
+function applyUiPatch(state7, patch, limits = DEFAULT_UI_DOCUMENT_LIMITS) {
+  if (patch.baseRevision !== state7.revision)
+    return { ok: false, rejection: { type: "revisionMismatch", expected: state7.revision, actual: patch.baseRevision } };
+  if (patch.ops.length > limits.maxPatchOps)
+    return { ok: false, rejection: rejectQuota("patchOps", patch.ops.length, limits.maxPatchOps) };
+  const estimatedBytes = patchByteEstimate(patch);
+  if (estimatedBytes > limits.maxPatchBytes)
+    return { ok: false, rejection: rejectQuota("patchBytes", estimatedBytes, limits.maxPatchBytes) };
+  const draft = { root: state7.root, nodes: new Map(state7.nodes) };
+  for (const op of patch.ops) {
+    const rejection = applyOp(draft, op, limits);
+    if (rejection)
+      return { ok: false, rejection };
+  }
+  const violations = validateUiDocumentCore(draft.root, draft.nodes, limits);
+  if (violations.length > 0)
+    return { ok: false, rejection: { type: "invariantViolated", violations } };
+  return { ok: true, state: { surface: state7.surface, revision: patch.revision, root: draft.root, nodes: draft.nodes } };
+}
+class UiDocumentStore {
+  state;
+  limits;
+  nodeListeners = new Map;
+  rootListeners = new Set;
+  revisionListeners = new Set;
+  seq = 0n;
+  constructor(surface, limits = DEFAULT_UI_DOCUMENT_LIMITS) {
+    this.state = emptyUiDocumentState(surface);
+    this.limits = limits;
+  }
+  getState() {
+    return this.state;
+  }
+  loadSnapshot(snapshot) {
+    const previous = this.state;
+    this.state = uiDocumentStateFromSnapshot(snapshot);
+    this.notifyDiff(previous, this.state);
+  }
+  applyPatch(patch) {
+    const result3 = applyUiPatch(this.state, patch, this.limits);
+    if (!result3.ok)
+      return result3;
+    const previous = this.state;
+    this.state = result3.state;
+    this.notifyDiff(previous, this.state);
+    return { ok: true };
+  }
+  notifyDiff(previous, next) {
+    if (previous.revision !== next.revision)
+      for (const listener of this.revisionListeners)
+        listener();
+    if (previous.root !== next.root)
+      for (const listener of this.rootListeners)
+        listener();
+    const touched = new Set;
+    for (const [id2, record] of next.nodes)
+      if (previous.nodes.get(id2) !== record)
+        touched.add(id2);
+    for (const id2 of previous.nodes.keys())
+      if (!next.nodes.has(id2))
+        touched.add(id2);
+    for (const id2 of touched) {
+      const listeners = this.nodeListeners.get(id2);
+      if (listeners)
+        for (const listener of listeners)
+          listener();
+    }
+  }
+  subscribeNode(id2) {
+    return (onStoreChange) => {
+      let listeners = this.nodeListeners.get(id2);
+      if (!listeners) {
+        listeners = new Set;
+        this.nodeListeners.set(id2, listeners);
+      }
+      listeners.add(onStoreChange);
+      return () => {
+        listeners.delete(onStoreChange);
+        if (listeners.size === 0)
+          this.nodeListeners.delete(id2);
+      };
+    };
+  }
+  getNodeSnapshot = (id2) => this.state.nodes.get(id2);
+  subscribeRoot = (onStoreChange) => {
+    this.rootListeners.add(onStoreChange);
+    return () => this.rootListeners.delete(onStoreChange);
+  };
+  getRootSnapshot = () => this.state.root;
+  subscribeRevision = (onStoreChange) => {
+    this.revisionListeners.add(onStoreChange);
+    return () => this.revisionListeners.delete(onStoreChange);
+  };
+  getRevisionSnapshot = () => this.state.revision;
+  buildIntent(record, binding, input) {
+    this.seq += 1n;
+    return {
+      surface: this.state.surface,
+      revision: this.state.revision,
+      node: record.id,
+      nodeKey: record.key,
+      trigger: binding.trigger,
+      action: binding.action,
+      args: binding.args,
+      input: input ?? null,
+      seq: this.seq
+    };
+  }
+}
+if (undefined) {}
+
+/* ../../../../🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts */
+var admitted20 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
+var step13 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
+
+class OwnedUiPatchIntake {
+  #owner;
+  #source;
+  #lookup = null;
+  #surface = null;
+  #patch = null;
+  #phase = "lookup";
+  #ordinal = 0;
+  #closing = false;
+  #closed = false;
+  #failure = null;
+  constructor(owner, source) {
+    if (!OwnedNativeUiPatchAuthority.matchesOwner(source, owner))
+      throw new Error("Foreign native UI intake owner");
+    this.#owner = owner;
+    this.#source = source;
+    Object.freeze(this);
+  }
+  get failure() {
+    return this.#failure;
+  }
+  peekAcknowledgement() {
+    return this.#patch && !this.#patch.terminalIsEmpty() ? this.#patch.peekAcknowledgement() : null;
+  }
+  acceptAcknowledgement(receipt) {
+    if (!this.#patch || this.#patch.terminalIsEmpty() || !this.#patch.acceptAcknowledgement(receipt))
+      return false;
+    this.#phase = "patch-close";
+    this.#patch.beginClose();
+    return true;
+  }
+  takeSurface() {
+    if (this.#closing || this.#failure || this.#phase !== "ready")
+      return null;
+    const result3 = this.#surface;
+    this.#surface = null;
+    return result3;
+  }
+  advance(grant) {
+    if (!admitted20(grant))
+      return step13("blocked", "intake");
+    if (this.#closing || this.#failure)
+      return step13("rejected", "intake");
+    try {
+      switch (this.#phase) {
+        case "lookup": {
+          const source = this.#source.value;
+          this.#lookup = this.#owner.beginSurfaceLookup(source.activation, source.lifetime, source.surface);
+          if (!this.#lookup)
+            return step13("blocked", "intake-lookup-capacity");
+          this.#phase = "lookup-read";
+          return step13("pending", "intake-lookup", 256 + source.surface.length * 5);
+        }
+        case "lookup-read": {
+          const current = this.#lookup.advance(grant);
+          if (current.kind === "rejected") {
+            this.#failure = this.#lookup.failure ?? "Native surface lookup rejected";
+            return current;
+          }
+          if (current.kind === "ready")
+            this.#phase = "lookup-take";
+          return { ...current, kind: "pending" };
+        }
+        case "lookup-take": {
+          this.#surface = this.#lookup.takeResult();
+          if (!this.#surface)
+            throw new Error("Native surface lookup result is missing");
+          this.#lookup.beginClose();
+          this.#phase = "lookup-close";
+          return step13("pending", "intake-surface", 64);
+        }
+        case "lookup-close": {
+          const current = this.#lookup.closeStep(grant);
+          const result3 = this.#closeResult(current, this.#lookup.failure);
+          if (current.kind === "complete") {
+            this.#lookup = null;
+            this.#phase = "patch";
+          }
+          return result3;
+        }
+        case "patch":
+          this.#patch = this.#owner.beginPatch(this.#source, this.#surface);
+          this.#phase = "offer";
+          return step13("pending", "intake-patch", 2048);
+        case "offer": {
+          if (this.#ordinal === this.#source.value.operationCount) {
+            this.#phase = "seal";
+            return step13("pending", "intake-input-finished", 32);
+          }
+          if (!this.#patch.offer(this.#ordinal))
+            return step13("blocked", "intake-input-capacity");
+          this.#phase = "input";
+          return step13("pending", "intake-offer", 2048);
+        }
+        case "input": {
+          const current = this.#patch.advance(grant);
+          if (current.kind === "rejected") {
+            this.#failure = this.#patch.failure ?? "Native input rejected";
+            return current;
+          }
+          if (current.kind === "ready")
+            this.#phase = "input-release";
+          return { ...current, kind: "pending" };
+        }
+        case "input-release": {
+          const token2 = this.#patch.peekInputReceipt();
+          if (!token2 || !this.#patch.releaseInputReceipt(token2))
+            return step13("blocked", "intake-input-retirement");
+          this.#ordinal++;
+          this.#phase = "offer";
+          return step13("pending", "intake-input-retirement", 256);
+        }
+        case "seal":
+          this.#patch.finishInput();
+          this.#phase = "publication";
+          return step13("pending", "intake-seal", 64);
+        case "publication": {
+          const current = this.#patch.advance(grant);
+          if (current.kind === "rejected") {
+            this.#failure = this.#patch.failure ?? "Native publication rejected";
+            return current;
+          }
+          if (current.kind === "ready")
+            this.#phase = "ack";
+          return { ...current, kind: "pending" };
+        }
+        case "ack":
+          return step13("blocked", "intake-publication-receipt");
+        case "patch-close": {
+          const current = this.#patch.closeStep(grant);
+          const result3 = this.#closeResult(current, this.#patch.failure);
+          if (current.kind === "complete") {
+            this.#patch = null;
+            this.#phase = "ready";
+          }
+          return result3;
+        }
+        case "ready":
+          return step13("ready", "intake-ready");
+      }
+    } catch (error) {
+      this.#failure = error instanceof Error ? error.message : "Native intake failed";
+      return step13("rejected", "intake", 4096);
+    }
+  }
+  #closeResult(current, failure) {
+    if (current.kind === "rejected") {
+      this.#failure ??= failure ?? `Native intake close rejected: ${current.phase}`;
+      return current;
+    }
+    return current.kind === "complete" ? { ...current, kind: "pending" } : current;
+  }
+  beginClose() {
+    if (this.#closing)
+      return;
+    this.#closing = true;
+    this.#lookup?.beginClose();
+    if (this.#patch && !this.#patch.terminalIsEmpty())
+      this.#patch.beginClose();
+  }
+  closeStep(grant) {
+    if (!admitted20(grant))
+      return step13("blocked", "intake-close");
+    if (!this.#closing)
+      throw new Error("Native intake close has not begun");
+    if (this.#closed)
+      return step13("complete", "intake-close");
+    if (this.#lookup) {
+      if (this.#lookup.terminalIsEmpty()) {
+        this.#lookup = null;
+        return step13("pending", "intake-lookup-release", 32);
+      }
+      return this.#closeResult(this.#lookup.closeStep(grant), this.#lookup.failure);
+    }
+    if (this.#patch) {
+      if (this.#patch.terminalIsEmpty()) {
+        this.#patch = null;
+        return step13("pending", "intake-patch-release", 32);
+      }
+      const input = this.#patch.peekInputReceipt();
+      if (input)
+        return this.#patch.releaseInputReceipt(input) ? step13("pending", "intake-input-retirement", 256) : step13("blocked", "intake-input-retirement");
+      if (this.#patch.peekAcknowledgement())
+        return step13("blocked", "intake-publication-receipt");
+      return this.#closeResult(this.#patch.closeStep(grant), this.#patch.failure);
+    }
+    if (this.#surface) {
+      this.#surface = null;
+      return step13("pending", "intake-surface-release", 32);
+    }
+    if (this.#source) {
+      this.#source = null;
+      return step13("pending", "intake-source-release", 32);
+    }
+    this.#owner = null;
+    this.#closed = true;
+    return step13("complete", "intake-close", 32);
+  }
+  terminalIsEmpty() {
+    return this.#closed && !this.#owner && !this.#source && !this.#lookup && !this.#surface && !this.#patch;
+  }
 }
 
 /* ../../../../../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts */
@@ -23192,9 +24777,25 @@ function coerceTurnResult(raw) {
   const uiPatches = Array.isArray(record.uiPatches) ? record.uiPatches : [];
   const effects = Array.isArray(record.effects) ? record.effects : [];
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
+  const lifecycleReceipt = record.lifecycleReceipt;
+  if (lifecycleReceipt !== undefined && lifecycleReceipt !== null && !(lifecycleReceipt instanceof Uint8Array))
+    throw new Error("actor-lifecycle.receipt-bytes");
+  const uiPatchReceipt = record.uiPatchReceipt;
+  if (uiPatchReceipt !== undefined && uiPatchReceipt !== null && !(uiPatchReceipt instanceof Uint8Array))
+    throw new Error("actor-ui-patch.receipt-bytes");
   const commandIngress = record.commandIngress && typeof record.commandIngress === "object" ? record.commandIngress : undefined;
   const coldPairIngress = parseWitColdPairIngressStatus(record.coldPairIngress);
-  return { uiPatches, effects, nextWake, commandIngress, coldPairIngress };
+  return {
+    original: raw !== null && typeof raw === "object" ? raw : undefined,
+    lifecycleReceipt: lifecycleReceipt ?? undefined,
+    uiPatchReceipt: uiPatchReceipt ?? undefined,
+    uiPatches,
+    effects,
+    nextWake,
+    status: record.status,
+    commandIngress,
+    coldPairIngress
+  };
 }
 function shellFrameBytes(effect, instanceId) {
   if (effect.tag !== "send-message")
@@ -23207,45 +24808,6 @@ function shellFrameBytes(effect, instanceId) {
   if (val.payload === undefined)
     return null;
   return coerceWireBytes(val.payload);
-}
-function decodeWirePatchOps(ops, decodePackValue2) {
-  const decoded = [];
-  for (const op of ops) {
-    const val = op.val ?? {};
-    const path = Array.isArray(val.path) ? val.path : [];
-    switch (op.tag) {
-      case "replace":
-        decoded.push({ kind: "Replace", path, node: decodePackValue2(coerceWireBytes(val.node)) });
-        break;
-      case "insert-child":
-        decoded.push({ kind: "InsertChild", path, index: Number(val.index ?? 0), node: decodePackValue2(coerceWireBytes(val.node)) });
-        break;
-      case "remove-child":
-        decoded.push({ kind: "RemoveChild", path, index: Number(val.index ?? 0) });
-        break;
-      case "set-props":
-        decoded.push({ kind: "SetProps", path, props: val.props !== undefined ? decodePackValue2(coerceWireBytes(val.props)) : undefined });
-        break;
-      default:
-        break;
-    }
-  }
-  return decoded;
-}
-function applyUiPatchToRetained(previous, patch) {
-  let node = previous?.node ?? null;
-  let sawFullReplace = false;
-  for (const op of patch.ops) {
-    if (op.kind === "Replace" && op.path.length === 0) {
-      node = op.node;
-      sawFullReplace = true;
-    } else {
-      return { surface: previous, desynced: true };
-    }
-  }
-  if (!sawFullReplace && previous && patch.baseRevision !== previous.revision)
-    return { surface: previous, desynced: true };
-  return { surface: node !== null ? { revision: patch.revision, node } : previous, desynced: false };
 }
 function wireExtensionInvocation(effect) {
   const value = effect.val;
@@ -23372,111 +24934,261 @@ function getActivationRegistry() {
   return sharedActivationRegistry;
 }
 var actorTurnChains = new Map;
-function submitTurn(actorId, events, commandPage) {
+function submitActorWork(actorId, work) {
   getActivationRegistry().touch(actorId);
   const previousSettled = (actorTurnChains.get(actorId) ?? Promise.resolve()).catch(() => {
     return;
   });
-  const next = previousSettled.then(() => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET, commandPage));
+  const next = previousSettled.then(work);
   actorTurnChains.set(actorId, next);
-  return next.then(coerceTurnResult);
+  return next;
 }
-async function settleInstanceLifecycle(lifecycle) {
+function submitTurn(actorId, events, commandPage) {
+  return submitActorWork(actorId, () => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET, commandPage)).then(coerceTurnResult);
+}
+var RETAINED_DOCUMENT_OPPORTUNITIES = 256;
+var WGPU_UI_CONTINUATION_LIMIT = 4096;
+var WGPU_UI_CONTINUATION_BATCH_SIZE = 8;
+var WGPU_UI_GRANT = Object.freeze({ maxItems: 1, maxBytes: 4096 });
+async function yieldWgpuUi(step14) {
+  if (step14 % WGPU_UI_CONTINUATION_BATCH_SIZE === 0)
+    await new Promise((resolve) => setTimeout(resolve, 0));
+}
+function ownedUiComponentToBuilt(component) {
+  if (component.type !== "surface")
+    return component;
+  return { ...component, doc: { bytes: Array.from({ length: component.doc.bytes.length }, (_, index) => component.doc.bytes.byteAt(index)) } };
+}
+
+class WgpuOwnedUiInstanceRoute {
+  lifecycle;
+  owner;
+  #surfaces = new Map;
+  #intakes = new Set;
+  #reads = new Set;
+  #retirement = null;
+  #closing = false;
+  constructor(lifecycle) {
+    const lifetime = lifecycle.lifetime;
+    if (!lifetime)
+      throw new Error("wgpu-ui.native-lifetime-required");
+    this.lifecycle = lifecycle;
+    this.owner = new OwnedUiInstance(lifecycle.activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 32 });
+    lifecycle.bindHostRetirement(this.owner);
+  }
+  get hasPendingReads() {
+    return this.#reads.size > 0;
+  }
+  get terminalIsEmpty() {
+    return this.owner.terminalIsEmpty() && this.#surfaces.size === 0 && this.#intakes.size === 0 && this.#reads.size === 0;
+  }
+  hasSurface(name) {
+    return this.#surfaces.has(name);
+  }
+  async#advanceMaintenance(phase, budget) {
+    while (this.owner.maintenancePending) {
+      if (++budget.steps > DEFAULT_UI_DOCUMENT_LIMITS.maxNodes * 64)
+        throw new Error(`wgpu-ui.${phase}-budget-exhausted`);
+      const current = this.owner.advanceMaintenance(WGPU_UI_GRANT);
+      if (current.kind === "blocked" || current.kind === "rejected")
+        throw new Error(`wgpu-ui.${phase}-${current.kind}:${current.phase}`);
+      await yieldWgpuUi(budget.steps);
+    }
+  }
+  async#closeIntake(intake) {
+    intake.beginClose();
+    for (let step14 = 1;!intake.terminalIsEmpty(); step14 += 1) {
+      if (step14 > WGPU_UI_CONTINUATION_LIMIT)
+        throw new Error("wgpu-ui.intake-close-budget-exhausted");
+      const current = intake.closeStep(WGPU_UI_GRANT);
+      if (current.kind === "blocked" || current.kind === "rejected")
+        throw new Error(`wgpu-ui.intake-close-${current.kind}:${current.phase}`);
+      await yieldWgpuUi(step14);
+    }
+    this.#intakes.delete(intake);
+  }
+  async accept(turn, execute) {
+    if (this.#closing)
+      throw new Error("wgpu-ui.owner-closing");
+    if (turn.uiPatches.length === 0) {
+      if (turn.uiPatchReceipt !== undefined)
+        throw new Error("wgpu-ui.receipt-without-patch");
+      return [];
+    }
+    if (!turn.original || !turn.uiPatchReceipt)
+      throw new Error("wgpu-ui.native-owner-required");
+    const supplemental = [];
+    for (const [index, patch] of turn.uiPatches.entries()) {
+      const surfaceId = patch.surface?.surface;
+      if (!surfaceId)
+        throw new Error("wgpu-ui.projection-surface-required");
+      const source = this.lifecycle.captureUiPatchAuthority(turn.original, index);
+      const intake = new OwnedUiPatchIntake(this.owner, source);
+      this.#intakes.add(intake);
+      let token2 = null;
+      for (let step14 = 1;token2 === null; step14 += 1) {
+        if (step14 > WGPU_UI_CONTINUATION_LIMIT)
+          throw new Error("wgpu-ui.intake-budget-exhausted");
+        const current = intake.advance(WGPU_UI_GRANT);
+        token2 = intake.peekAcknowledgement();
+        if (current.kind === "rejected")
+          throw new Error(`wgpu-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
+        if (current.kind === "blocked" && token2 === null)
+          throw new Error(`wgpu-ui.intake-blocked:${current.phase}`);
+        await yieldWgpuUi(step14);
+      }
+      const acknowledged = await execute(() => this.lifecycle.submitUiAcknowledgement(source, token2, DEFAULT_SHARD_BUDGET));
+      if (!intake.acceptAcknowledgement(acknowledged.receipt))
+        throw new Error("wgpu-ui.acknowledgement-refused");
+      for (let step14 = 1;; step14 += 1) {
+        if (step14 > WGPU_UI_CONTINUATION_LIMIT)
+          throw new Error("wgpu-ui.publication-close-budget-exhausted");
+        const current = intake.advance(WGPU_UI_GRANT);
+        if (current.kind === "ready")
+          break;
+        if (current.kind === "blocked" || current.kind === "rejected")
+          throw new Error(`wgpu-ui.intake-${current.kind}:${current.phase}`);
+        await yieldWgpuUi(step14);
+      }
+      const surface = intake.takeSurface();
+      if (!surface)
+        throw new Error("wgpu-ui.surface-missing");
+      this.#surfaces.set(surfaceId, surface);
+      await this.#closeIntake(intake);
+      const next = coerceTurnResult(acknowledged.result);
+      supplemental.push(next, ...await this.accept(next, execute));
+    }
+    return supplemental;
+  }
+  async project(surfaceId) {
+    if (this.#closing)
+      throw new Error("wgpu-ui.owner-closing");
+    const surface = this.#surfaces.get(surfaceId);
+    if (!surface)
+      return null;
+    const read2 = this.#project(surfaceId, surface);
+    this.#reads.add(read2);
+    try {
+      return await read2;
+    } finally {
+      this.#reads.delete(read2);
+    }
+  }
+  async#project(surfaceId, surface) {
+    const view = surface.view;
+    if (view.root === null)
+      return null;
+    if (!view.hash)
+      throw new Error("wgpu-ui.surface-hash-required");
+    const visited = new Set;
+    const records = [];
+    const budget = { steps: 0 };
+    const build = async (id2, depth) => {
+      if (this.#closing || this.#surfaces.get(surfaceId) !== surface)
+        throw new Error("wgpu-ui.read-stale");
+      if (depth > DEFAULT_UI_DOCUMENT_LIMITS.maxDepth || visited.size >= DEFAULT_UI_DOCUMENT_LIMITS.maxNodes || visited.has(id2))
+        throw new Error("wgpu-ui.read-graph-invalid");
+      visited.add(id2);
+      const subscription = surface.subscribeNode(id2, () => {});
+      let record = null;
+      try {
+        await this.#advanceMaintenance("read", budget);
+        const snapshot = subscription.snapshot;
+        if (!snapshot || snapshot.version !== view.revision || !snapshot.record)
+          throw new Error("wgpu-ui.read-snapshot-missing");
+        record = snapshot.record;
+        surface.acknowledgeRead(subscription, snapshot);
+      } finally {
+        surface.unsubscribeNode(subscription);
+        await this.#advanceMaintenance("read-retirement", budget);
+      }
+      if (!record)
+        throw new Error("wgpu-ui.read-snapshot-missing");
+      const component = ownedUiComponentToBuilt(record.component);
+      records.push({ ...record, component });
+      const children = [];
+      for (const child of record.children)
+        children.push(await build(child, depth + 1));
+      return { key: record.key, component, layout: record.layout, style: record.style, activity: record.activity, disabled: record.disabled, accessibility: record.accessibility, bindings: record.bindings, menu: record.menu, children };
+    };
+    const node = await build(view.root, 1);
+    if (this.#closing || this.#surfaces.get(surfaceId) !== surface || surface.view !== view)
+      throw new Error("wgpu-ui.read-stale");
+    return { node, document: { surface: surfaceId, revision: view.revision, root: view.root, nodes: records, layoutEpoch: 0 } };
+  }
+  async retire() {
+    if (this.#retirement)
+      return this.#retirement;
+    this.#closing = true;
+    await Promise.allSettled([...this.#reads]);
+    for (const intake of [...this.#intakes])
+      await this.#closeIntake(intake);
+    this.#surfaces.clear();
+    this.owner.beginClose();
+    for (let step14 = 1;!this.owner.terminalIsEmpty(); step14 += 1) {
+      if (step14 > WGPU_UI_CONTINUATION_LIMIT)
+        throw new Error("wgpu-ui.owner-close-budget-exhausted");
+      const current = this.owner.closeStep(WGPU_UI_GRANT);
+      if (current.kind === "blocked" || current.kind === "rejected")
+        throw new Error(`wgpu-ui.owner-close-${current.kind}:${current.phase}`);
+      await yieldWgpuUi(step14);
+    }
+    const witness = this.owner.takeRetirementWitness();
+    if (!witness)
+      throw new Error("wgpu-ui.retirement-witness-missing");
+    this.#retirement = witness;
+    return witness;
+  }
+}
+async function settleInstanceLifecycle(lifecycle, route, initial, execute) {
+  let current = initial;
   for (let opportunity = 0;opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
+    await route.accept(current, execute);
     const receipt = lifecycle.pendingReceipt;
     if (receipt !== null) {
-      await lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET);
+      if (receipt.kind !== "captured")
+        throw new Error("wgpu-ui.open-receipt-kind");
+      current = coerceTurnResult(await execute(() => lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET)));
       continue;
     }
     const phase = lifecycle.progress().kind;
-    if (phase !== "opening" && phase !== "captured")
+    if (phase === "open")
       return;
-    await lifecycle.poll(DEFAULT_SHARD_BUDGET);
+    if (phase !== "opening" && phase !== "captured")
+      throw new Error(`wgpu-ui.open-${phase}`);
+    current = coerceTurnResult(await execute(() => lifecycle.poll(DEFAULT_SHARD_BUDGET)));
   }
-  console.warn(`[DEBUG] plugin-bridge: instance lifecycle never reached open within ${RETAINED_DOCUMENT_OPPORTUNITIES} opportunities`);
+  throw new Error(`wgpu-ui.open-budget-exhausted:${RETAINED_DOCUMENT_OPPORTUNITIES}`);
 }
-var lifecycleByInstance = new Map;
-var retainedWindowByActor = new Map;
-function reconcileRetainedWindowPatch(previous, patch) {
-  const ops = decodeWirePatchOps(patch.ops ?? [], decodePackWire);
-  return applyUiPatchToRetained(previous, { revision: packWireNatural(patch.revision, "uiPatch.revision"), baseRevision: packWireNatural(patch.baseRevision, "uiPatch.baseRevision"), ops });
-}
-function applyRetainedWindowPatches(actorId, uiPatches) {
-  const retained = retainedWindowByActor.get(actorId) ?? new Map;
-  retainedWindowByActor.set(actorId, retained);
-  for (const patch of uiPatches) {
-    const surfaceId = patch.surface?.surface;
-    if (!surfaceId)
-      continue;
-    const previous = retained.get(surfaceId) ?? null;
-    const { surface, desynced } = reconcileRetainedWindowPatch(previous, patch);
-    if (desynced) {
-      console.warn(`[DEBUG] plugin-bridge: actor ${actorId} desynced (unrecognized op shape or stale baseRevision) — keeping the previously retained body`);
-      continue;
-    }
-    if (surface)
-      retained.set(surfaceId, surface);
+async function retireWgpuOwnedUiInstanceLifecycle(lifecycle, route, execute) {
+  const captured = lifecycle.pendingReceipt;
+  if (captured?.kind === "captured") {
+    const acknowledged = coerceTurnResult(await execute(() => lifecycle.acknowledge(captured, DEFAULT_SHARD_BUDGET)));
+    if (acknowledged.uiPatches.length > 0 || acknowledged.uiPatchReceipt !== undefined)
+      throw new Error("wgpu-ui.patch-during-cancelled-open");
   }
-}
-async function performRender(actorId, instanceId, surfaceId, bodyKey, viewState) {
-  const result3 = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
-  if (result3.uiPatches.length > 0)
-    applyRetainedWindowPatches(actorId, result3.uiPatches);
-  return retainedWindowByActor.get(actorId)?.get(surfaceId)?.node ?? null;
-}
-var RETAINED_DOCUMENT_OPPORTUNITIES = 256;
-async function publishRetainedDocument(actorId, instanceId, surfaceId, bodyKey, viewState) {
-  const collected = [];
-  const seenSurfaces = [];
-  const seenTags = [];
-  let anyPatches = 0;
-  let anyEffects = 0;
-  const seenEffects = [];
-  let turns = 1;
-  let result3 = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
-  for (let opportunity = 0;opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
-    anyPatches += result3.uiPatches.length;
-    anyEffects += result3.effects.length;
-    for (const effect of result3.effects)
-      if (typeof effect.tag === "string" && !seenEffects.includes(effect.tag))
-        seenEffects.push(effect.tag);
-    for (const patch of result3.uiPatches) {
-      const name = patch.surface?.surface ?? "(none)";
-      if (!seenSurfaces.includes(name))
-        seenSurfaces.push(name);
-      for (const op of patch.ops ?? [])
-        if (typeof op.tag === "string" && !seenTags.includes(op.tag))
-          seenTags.push(op.tag);
+  lifecycle.beginClose();
+  for (let step14 = 1;lifecycle.progress().kind !== "complete"; step14 += 1) {
+    if (step14 > WGPU_UI_CONTINUATION_LIMIT)
+      throw new Error("wgpu-ui.lifecycle-close-budget-exhausted");
+    const receipt = lifecycle.pendingReceipt;
+    let current;
+    if (receipt?.kind === "accepted")
+      current = coerceTurnResult(await execute(() => lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET)));
+    else if (receipt?.kind === "retired") {
+      const retirement = await route.retire();
+      current = coerceTurnResult(await execute(() => lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET, retirement)));
+    } else {
+      const progress = lifecycle.progress();
+      if (progress.kind === "blocked")
+        throw new Error(`wgpu-ui.lifecycle-close-blocked:${progress.failure ?? "unknown"}`);
+      current = coerceTurnResult(await execute(() => progress.kind === "closing" ? lifecycle.close(DEFAULT_SHARD_BUDGET) : lifecycle.poll(DEFAULT_SHARD_BUDGET)));
     }
-    if (result3.uiPatches.length > 0) {
-      applyRetainedWindowPatches(actorId, result3.uiPatches);
-      collected.push(...result3.uiPatches.filter((patch) => (patch.surface?.surface ?? surfaceId) === surfaceId));
-    }
-    if (collected.length > 0)
-      break;
-    result3 = await submitTurn(actorId, []);
-    turns += 1;
+    if (current.uiPatches.length > 0 || current.uiPatchReceipt !== undefined)
+      throw new Error("wgpu-ui.patch-after-lifecycle-close");
+    await yieldWgpuUi(step14);
   }
-  console.log(`[DEBUG] publishRetainedDocument ${surfaceId}/${bodyKey}: turns=${turns} collected=${collected.length} anyPatches=${anyPatches} surfaces=${JSON.stringify(seenSurfaces)} tags=${JSON.stringify(seenTags.slice(0, 12))} effects=${anyEffects} effectTags=${JSON.stringify(seenEffects.slice(0, 12))}`);
-  const nodes = [];
-  let revision = 0;
-  let root = null;
-  for (const patch of collected) {
-    if (typeof patch.revision === "number")
-      revision = patch.revision;
-    for (const op of patch.ops ?? []) {
-      const value = op.val ?? {};
-      if (op.tag === "upsert") {
-        nodes.push(packValueToExactJson(decodePackValue(coerceWireBytes(value.node))));
-        continue;
-      }
-      if (op.tag === "set-root")
-        root = Number(typeof op.val === "object" && op.val !== null ? value.id ?? 0 : op.val);
-    }
-  }
-  if (root === null && nodes.length > 0)
-    root = Number(nodes[0].id ?? 0);
-  return JSON.stringify({ surface: surfaceId, revision, root, nodes, layoutEpoch: 0 });
+  lifecycle.dispose();
 }
 var pendingTurnEffects = new Map;
 var nextGlobalInstanceId = 1;
@@ -23521,11 +25233,20 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
   const shardClient = getShardClient();
   const actorIdByInstance = new Map;
   const channelByInstance = new Map;
+  const lifecycleByInstance = new Map;
+  const uiRouteByInstance = new Map;
+  const openingInstances = new Map;
+  const retiringInstances = new Map;
+  const closingInstances = new Set;
   const channelRequests = new AppChannelRequestSequence;
+  let disposing = false;
+  let disposal = null;
   let eventSeq = 0;
   const requireActorId = (instanceId) => {
     const actorId = actorIdByInstance.get(instanceId);
-    if (!actorId)
+    if (disposing)
+      throw new Error("wgpu-plugin-handle.closed");
+    if (!actorId || closingInstances.has(instanceId))
       throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
     return actorId;
   };
@@ -23535,11 +25256,52 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
       throw new Error(`[DEBUG] program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
     return client;
   };
+  const requireUiRoute = (instanceId) => {
+    const route = uiRouteByInstance.get(instanceId);
+    if (!route)
+      throw new Error("wgpu-ui.native-owner-required");
+    return route;
+  };
+  const executeFor = (actorId) => (work) => submitActorWork(actorId, work);
+  const releaseInstance = (instanceId, actorId) => {
+    actorIdByInstance.delete(instanceId);
+    channelByInstance.delete(instanceId);
+    lifecycleByInstance.delete(instanceId);
+    uiRouteByInstance.delete(instanceId);
+    pendingTurnEffects.delete(instanceId);
+    actorTurnChains.delete(actorId);
+    closingInstances.delete(instanceId);
+  };
+  const renderSurface = async (instanceId, surfaceId, bodyKey, viewState) => {
+    const actorId = requireActorId(instanceId);
+    const route = requireUiRoute(instanceId);
+    const execute = executeFor(actorId);
+    let current = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
+    for (let opportunity = 0;opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
+      await route.accept(current, execute);
+      requireActorId(instanceId);
+      if (uiRouteByInstance.get(instanceId) !== route)
+        throw new Error("wgpu-ui.owner-replaced");
+      const projected = await route.project(surfaceId);
+      if (projected)
+        return projected;
+      const status = typeof current.status === "string" ? current.status : current.status && typeof current.status === "object" && ("tag" in current.status) ? String(current.status.tag ?? "") : "";
+      if (status.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() !== "more-work")
+        throw new Error(`wgpu-ui.surface-not-published:${surfaceId}`);
+      current = await submitTurn(actorId, []);
+    }
+    throw new Error(`wgpu-ui.render-budget-exhausted:${surfaceId}`);
+  };
   const turnOutcomes = createTurnOutcomeBroadcast();
   const runQueuedTurn = async (instanceId, events) => {
     try {
       const actorId = requireActorId(instanceId);
+      const route = requireUiRoute(instanceId);
+      const execute = executeFor(actorId);
       const results = [];
+      const accept = async (turn) => {
+        results.push(turn, ...await route.accept(turn, execute));
+      };
       for (let commandIndex = 0;commandIndex < events.length; commandIndex += 1) {
         eventSeq += 1;
         const pages = createShardCommandIngressPages({
@@ -23551,30 +25313,27 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
           seq: BigInt(eventSeq),
           command: events[commandIndex]
         });
-        for (const commandPage of pages)
-          results.push(await submitTurn(actorId, [], commandPage));
-        let terminal = results.at(-1)?.commandIngress?.tag;
+        let terminal;
+        for (const commandPage of pages) {
+          const submitted = await submitTurn(actorId, [], commandPage);
+          terminal = submitted.commandIngress?.tag;
+          await accept(submitted);
+        }
         for (let continuation = 0;terminal !== "command-complete" && continuation < 1024; continuation += 1) {
           if (terminal === "fault")
             throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault`);
           if (terminal === "backpressure")
             throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
           const continued = await submitTurn(actorId, []);
-          results.push(continued);
+          await accept(continued);
           terminal = continued.commandIngress?.tag;
         }
         if (terminal !== "command-complete")
           throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations`);
       }
-      const result3 = {
-        uiPatches: results.flatMap((turn) => turn.uiPatches),
-        effects: results.flatMap((turn) => turn.effects),
-        nextWake: [...results].reverse().find((turn) => turn.nextWake !== null)?.nextWake ?? null,
-        commandIngress: results.at(-1)?.commandIngress
-      };
       const outFrames = [];
       const leftover = [];
-      for (const effect of result3.effects) {
+      for (const effect of results.flatMap((turn) => turn.effects)) {
         const frame = shellFrameBytes(effect, instanceId);
         if (frame)
           outFrames.push(frame);
@@ -23582,8 +25341,6 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
           leftover.push(effect);
       }
       pendingTurnEffects.set(instanceId, leftover);
-      if (result3.uiPatches.length > 0)
-        applyRetainedWindowPatches(actorId, result3.uiPatches);
       turnOutcomes.push({ instanceId, frames: outFrames });
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
@@ -23595,51 +25352,112 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
     },
     outcomes: turnOutcomes.stream
   };
-  return {
+  const handle = {
     pluginId,
     manifest,
-    createApp: async (appId) => {
+    createApp: (appId) => {
+      if (disposing)
+        return Promise.reject(new Error("wgpu-plugin-handle.closed"));
       const instanceId = nextGlobalInstanceId;
       nextGlobalInstanceId += 1;
       const actorId = `${pluginId}#${instanceId}`;
       actorIdByInstance.set(instanceId, actorId);
-      await registry.activate(pluginId, actorId, "manual");
-      eventSeq += 1;
-      const lifecycle = getShardClient().captureInstanceLifecycle(actorId, instanceId);
-      await lifecycle.open({ appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) }, DEFAULT_SHARD_BUDGET);
-      await settleInstanceLifecycle(lifecycle);
-      lifecycleByInstance.set(instanceId, lifecycle);
-      channelByInstance.set(instanceId, new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local"));
-      return instanceId;
+      const requireOpening = () => {
+        if (disposing || closingInstances.has(instanceId) || actorIdByInstance.get(instanceId) !== actorId)
+          throw new Error("wgpu-plugin-handle.closed");
+      };
+      const opening = Promise.resolve().then(async () => {
+        requireOpening();
+        await registry.activate(pluginId, actorId, "manual");
+        requireOpening();
+        eventSeq += 1;
+        const lifecycle = shardClient.captureInstanceLifecycle(actorId, instanceId);
+        lifecycleByInstance.set(instanceId, lifecycle);
+        const execute = executeFor(actorId);
+        const opened = coerceTurnResult(await execute(() => lifecycle.open({ appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) }, DEFAULT_SHARD_BUDGET)));
+        const captured = lifecycle.pendingReceipt;
+        if (!captured || captured.kind !== "captured" || !lifecycle.lifetime)
+          throw new Error("wgpu-ui.native-lifetime-required");
+        const route = new WgpuOwnedUiInstanceRoute(lifecycle);
+        uiRouteByInstance.set(instanceId, route);
+        requireOpening();
+        await settleInstanceLifecycle(lifecycle, route, opened, execute);
+        requireOpening();
+        channelByInstance.set(instanceId, new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local"));
+        return instanceId;
+      });
+      openingInstances.set(instanceId, opening);
+      const forget = () => {
+        if (openingInstances.get(instanceId) === opening)
+          openingInstances.delete(instanceId);
+      };
+      return opening.then((value) => {
+        forget();
+        return value;
+      }, async (error) => {
+        forget();
+        if (!retiringInstances.has(instanceId))
+          await handle.destroyApp(instanceId);
+        throw error;
+      });
     },
-    destroyApp: async (instanceId) => {
+    destroyApp: (instanceId) => {
+      const previous = retiringInstances.get(instanceId);
+      if (previous)
+        return previous;
       const actorId = actorIdByInstance.get(instanceId);
       if (!actorId)
-        return;
-      channelByInstance.get(instanceId)?.dispose();
-      actorIdByInstance.delete(instanceId);
-      channelByInstance.delete(instanceId);
-      retainedWindowByActor.delete(actorId);
-      pendingTurnEffects.delete(instanceId);
-      shardClient.dispose(actorId);
+        return Promise.resolve();
+      closingInstances.add(instanceId);
+      const opening = openingInstances.get(instanceId);
+      const retirement = Promise.resolve().then(async () => {
+        await opening?.then(() => {}, () => {});
+        if (actorIdByInstance.get(instanceId) !== actorId)
+          return;
+        channelByInstance.get(instanceId)?.dispose();
+        const lifecycle = lifecycleByInstance.get(instanceId);
+        const route = uiRouteByInstance.get(instanceId);
+        if (!lifecycle) {
+          registry.cancel(actorId);
+          releaseInstance(instanceId, actorId);
+          return;
+        }
+        if (!route)
+          throw new Error("wgpu-ui.native-owner-required");
+        await retireWgpuOwnedUiInstanceLifecycle(lifecycle, route, executeFor(actorId));
+        registry.cancel(actorId);
+        releaseInstance(instanceId, actorId);
+      });
+      retiringInstances.set(instanceId, retirement);
+      const forget = () => {
+        if (retiringInstances.get(instanceId) === retirement)
+          retiringInstances.delete(instanceId);
+      };
+      retirement.then(forget, forget);
+      return retirement;
     },
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), viewState),
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), viewState),
-    render: (instanceId, surfaceId, bodyKey, viewState) => performRender(requireActorId(instanceId), instanceId, surfaceId, bodyKey, viewState),
-    renderDocument: (instanceId, surfaceId, bodyKey, viewState) => publishRetainedDocument(requireActorId(instanceId), instanceId, surfaceId, bodyKey, viewState),
+    render: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result3) => result3.node),
+    renderDocument: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result3) => JSON.stringify(result3.document)),
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
+    readWindowConfigPacks: (instanceId) => requireChannel(instanceId).readWindowConfigs(),
+    loadWindowConfigPack: (instanceId, entry) => requireChannel(instanceId).loadWindowConfig(entry),
     dispose: () => {
-      for (const instanceId of channelByInstance.keys())
-        channelByInstance.get(instanceId)?.dispose();
-      for (const actorId of actorIdByInstance.values()) {
-        retainedWindowByActor.delete(actorId);
-        shardClient.dispose(actorId);
-      }
-      actorIdByInstance.clear();
-      channelByInstance.clear();
-      turnOutcomes.complete();
+      if (disposal)
+        return disposal;
+      disposing = true;
+      const retirements = [...actorIdByInstance.keys()].map((instanceId) => handle.destroyApp(instanceId));
+      disposal = Promise.allSettled(retirements).then((results) => {
+        const failures = results.filter((result3) => result3.status === "rejected");
+        if (failures.length)
+          throw new AggregateError(failures.map((result3) => result3.reason), "wgpu-plugin-handle.retirement-failed");
+        turnOutcomes.complete();
+      });
+      return disposal;
     }
   };
+  return handle;
 }
 function viewStateFromContextJson(contextJson) {
   try {
@@ -24128,14 +25946,14 @@ async function boot(message) {
     while (true) {
       await macrotask();
       const bootstrapStartedAt = performance.now();
-      const step13 = ownedStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
-      console.log(`[DEBUG] renderer-bootstrap stage=${step13.stage} took ${(performance.now() - bootstrapStartedAt).toFixed(1)}ms`);
-      progress(step13.stage, 0.65 + step13.progress * 0.3);
-      if (step13.shellBoot) {
+      const step14 = ownedStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+      console.log(`[DEBUG] renderer-bootstrap stage=${step14.stage} took ${(performance.now() - bootstrapStartedAt).toFixed(1)}ms`);
+      progress(step14.stage, 0.65 + step14.progress * 0.3);
+      if (step14.shellBoot) {
         bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell(), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
         continue;
       }
-      if (step13.complete)
+      if (step14.complete)
         break;
     }
     runtime = ownedStep("renderer-finish", () => bootstrap.finish(), BROWSER_OWNED_SUSPENSION_BUDGET_MS);

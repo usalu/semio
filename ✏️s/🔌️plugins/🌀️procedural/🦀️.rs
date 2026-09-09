@@ -21,8 +21,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the plugin surface for host registration.
 pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
-    semio_s_artifact_procedural_assembly::standards::v1::subsets::any::schema::inferences::register_assembly_inference_factory(&ActionBus::production())
-        .map_err(|error| PluginAssemblyError::new("assembly-inference-factory", error.to_string()))?;
+    semio_s_artifact_procedural_assembly::standards::v1::subsets::any::schema::inferences::register_assembly_inference_factory(&ActionBus::production()).map_err(|error| PluginAssemblyError::new("assembly-inference-factory", error.to_string()))?;
     Plugin::<ProceduralApps>::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
@@ -81,7 +80,7 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
             FlowExtensionManifest::new("bim", "Bim", "0.1.0")?,
             FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.bim", "semio.s.plugin.flow.extension.bim", "register")?,
         )?)
-        .editor_with_examples::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>(semio_s_artifact_procedural_generation2d::editor::generation2d::create_generation2d_app(), vec![semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::examples::demo::source()])
+        .editor_with_examples::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>(semio_s_artifact_procedural_generation2d::editor::generation2d::create_generation2d_app(), vec![semio_s_artifact_procedural_generation2d::examples::demo::source()])
         .editor_mutation_roster::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>()
         .viewer::<semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer>(semio_s_artifact_procedural_generation2d::viewer::generation2d::create_generation2d_viewer())
         .viewer_mutation_roster::<semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer>()

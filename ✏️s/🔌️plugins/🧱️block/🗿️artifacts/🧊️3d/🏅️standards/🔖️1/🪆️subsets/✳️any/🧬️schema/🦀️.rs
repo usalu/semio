@@ -5,8 +5,11 @@ use crate::{Block3dSnapshot, Block3dVortexKindExtra};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
+#[path = "♻️retirement/🦀️.rs"]
+pub mod retirement;
+
 //#region 🔖️Artifact
-/// 🧬️ Full block3d artifact state across the artifact, presence and config lanes.
+/// 🧬️ block3d document artifact state.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.block3d")]
@@ -34,26 +37,6 @@ pub struct Block3dArtifact {
     pub camera3d: BlockCamera3d,
     #[state(artifact)]
     pub meta: BlockMeta,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
-    #[state(presence)]
-    pub active_representation_id: Option<String>,
-    #[state(presence)]
-    pub wanted_tags: Vec<String>,
-    #[state(config)]
-    pub windows: Vec<Block3dWindowView>,
-    #[state(config)]
-    pub brush_vortex_kind_id: Option<String>,
-    #[state(config)]
-    pub brush_radius: f64,
-    #[state(config)]
-    pub brush_flip: bool,
-    #[state(artifact)]
-    pub brush_preview: Option<Block3dBrushPreview>,
-    #[state(config)]
-    pub camera: Option<BlockCamera3d>,
-    #[state(artifact)]
-    pub hovered_vortex_full_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -82,7 +65,7 @@ impl Block3dArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Block3dSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -96,16 +79,6 @@ impl Block3dArtifact {
             authors: snapshot.authors,
             camera3d: snapshot.camera3d,
             meta: snapshot.meta,
-            selected_ids: Vec::new(),
-            active_representation_id: None,
-            wanted_tags: Vec::new(),
-            windows: Vec::new(),
-            brush_vortex_kind_id: None,
-            brush_radius: 0.25,
-            brush_flip: false,
-            brush_preview: None,
-            camera: None,
-            hovered_vortex_full_id: None,
         }
     }
 
@@ -313,5 +286,4 @@ pub use crate::BlockAuthor;
 pub use crate::BlockCamera3d;
 pub use crate::BlockMeta;
 pub use crate::Block3dWindowView;
-pub use crate::Block3dBrushPreview;
 //#endregion 🔁️Re-exports

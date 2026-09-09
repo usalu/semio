@@ -1,8 +1,8 @@
 //! 🧬️ Dependency-free Sequence editor protocol over the owned framework ABI.
 
 use semio_framework::abi::{
-    ABI_MAX_BODY_BYTES, ABI_MAX_IN_FLIGHT_HANDLES, ABI_MAX_IN_FLIGHT_REQUESTS, ABI_MAX_MESSAGE_BYTES, ABI_MAX_TRANSFER_BYTES, AbiBytes, AbiControl, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessage,
-    AbiMessageBytes, AbiPageReader, AbiPort, AbiPortPoll, AbiPortRejection, AbiReply, AbiReplyLedger, AbiRequest, AbiRequestId, AbiStatus, AbiStatusCode, AbiWorkBudget,
+    AbiBytes, AbiControl, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessage, AbiMessageBytes, AbiPageReader, AbiPort, AbiPortPoll, AbiPortRejection, AbiReply, AbiReplyLedger, AbiRequest, AbiRequestId, AbiStatus,
+    AbiStatusCode, AbiWorkBudget, ABI_MAX_BODY_BYTES, ABI_MAX_IN_FLIGHT_HANDLES, ABI_MAX_IN_FLIGHT_REQUESTS, ABI_MAX_MESSAGE_BYTES, ABI_MAX_TRANSFER_BYTES,
 };
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -370,8 +370,7 @@ impl<D: SequenceDomain> SequenceBridge<D> {
         self.next_event_sequence.checked_add(1).ok_or_else(|| AbiPortRejection { code: AbiErrorCode::GenerationExhausted, message: message() })?;
         self.request_ledger.admit(request.request_id, request.generation).map_err(|code| AbiPortRejection { code, message: message() })?;
         let index = request_slot(request.request_id);
-        let operation =
-            SequenceOperation { session, request_id: request.request_id, generation: request.generation, operation: request.operation.get(), payload, cursor: 0, reader: None, phase: OperationPhase::Inspect, cancelled: false };
+        let operation = SequenceOperation { session, request_id: request.request_id, generation: request.generation, operation: request.operation.get(), payload, cursor: 0, reader: None, phase: OperationPhase::Inspect, cancelled: false };
         let handle = self.resources.open(SequenceResource::Operation(operation)).map_err(|(code, _)| AbiPortRejection { code, message: message() })?;
         self.active_resources += 1;
         self.requests[index] = Some(RequestEntry { request_id: request.request_id, generation: request.generation, operation: handle });

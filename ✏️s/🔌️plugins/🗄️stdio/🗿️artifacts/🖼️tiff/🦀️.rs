@@ -49,14 +49,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution {
-        identity: "tiff",
-        schema: ARTIFACT_DEFINITION_SCHEMA,
-        definition,
-        assembly,
-        formats,
-        native_codecs,
-    }
+    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "tiff", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Dialect
@@ -298,28 +291,28 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod top_level;
                         pub use top_level::*;
+                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧭️change-byte-order/🦀️.rs"]
                         pub mod change_byte_order;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-ifd/🦀️.rs"]
                         pub mod insert_ifd;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📤️remove-ifd/🦀️.rs"]
                         pub mod remove_ifd;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🏷️replace-tag/🦀️.rs"]
-                        pub mod replace_tag;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-tag/🦀️.rs"]
                         pub mod remove_tag;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔲️replace-pixels/🦀️.rs"]
                         pub mod replace_pixels;
+                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🏷️replace-tag/🦀️.rs"]
+                        pub mod replace_tag;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
-                    #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/⚙️operations/🦀️.rs"]
-                    pub mod operations;
                     #[cfg(test)]
                     #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🛡️mutation-regressions/🦀️.rs"]
                     mod mutation_regressions;
+                    #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/⚙️operations/🦀️.rs"]
+                    pub mod operations;
                 }
                 #[path = "."]
                 pub mod io {

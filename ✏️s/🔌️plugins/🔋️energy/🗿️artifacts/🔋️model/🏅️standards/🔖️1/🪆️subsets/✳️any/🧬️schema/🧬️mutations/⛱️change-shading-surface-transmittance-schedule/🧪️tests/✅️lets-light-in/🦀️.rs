@@ -25,7 +25,9 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 }
 
 fn case() -> Case {
-    Case { kind: "change-shading-surface-transmittance-schedule", directory: "⛱️change-shading-surface-transmittance-schedule/🧪️tests/✅️lets-light-in", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case {
+        kind: "change-shading-surface-transmittance-schedule", directory: "⛱️change-shading-surface-transmittance-schedule/🧪️tests/✅️lets-light-in", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
+    }
 }
 
 #[semio_framework_async_macros::async_test]

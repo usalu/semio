@@ -19,8 +19,8 @@ use crate::site::{GroundTemperatureModel, WeatherRecord};
 use crate::solar::{surface_solar_absorption, window_shading, WindowProjections};
 use crate::zone_air::{advance_zone_air, commit_zone_air, required_system_sensible_w, HumiditySolutionMethod, ZoneAirBalance, ZoneAirState};
 use crate::zone_hvac::{ZoneEquipment, ZoneEquipmentRequest};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️Config
 /// ⚙️ Simulation environment type.
@@ -719,14 +719,7 @@ impl TimestepWork {
         // `zone_envelope_w` diagnostic, which the balance must not add a second time.
         self.zone_surface_conv_w[zone_index] += fp.u_value_w_m2k * fp.area_m2 * (self.weather.dry_bulb_c - zone_t);
         if self.sun_alt > 0.0 {
-            let projections = WindowProjections {
-                width_m: fp.width_m,
-                height_m: fp.height_m,
-                overhang_depth_m: fp.overhang_depth_m,
-                overhang_offset_m: fp.overhang_offset_m,
-                fin_depth_m: fp.fin_depth_m,
-                fin_offset_m: fp.fin_offset_m,
-            };
+            let projections = WindowProjections { width_m: fp.width_m, height_m: fp.height_m, overhang_depth_m: fp.overhang_depth_m, overhang_offset_m: fp.overhang_offset_m, fin_depth_m: fp.fin_depth_m, fin_offset_m: fp.fin_offset_m };
             let shading = window_shading(&projections, fp.azimuth_deg, self.sun_alt, self.sun_az);
             let incidence = crate::solar::beam_incidence_cosine(fp.normal, self.sun_alt, self.sun_az);
             let sky_view_factor = (1.0 + crate::units::deg_to_rad(fp.tilt_deg).cos()) * 0.5;

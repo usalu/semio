@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::GENERATION_2D_SCHEMA;
 use semio_framework_os_kernel::os_store::test_support;
@@ -59,7 +58,7 @@ fn dsl_round_trip_covers_every_widget_kind() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, ArtifactStore, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<Generation2dSnapshot, Generation2dMutation> = ArtifactStore::new(create_document_envelope(GENERATION_2D_SCHEMA, "generation2d", Generation2dSnapshot::default(), None)).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).await.expect("apply");

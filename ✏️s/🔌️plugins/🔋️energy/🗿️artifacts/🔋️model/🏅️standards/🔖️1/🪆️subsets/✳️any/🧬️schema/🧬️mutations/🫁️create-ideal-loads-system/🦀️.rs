@@ -25,8 +25,30 @@ pub struct CreateIdealLoadsSystem {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_ideal_loads_system(id: crate::model::EntityId, zone_id: crate::model::EntityId, max_heating_supply_air_temp_c: f64, min_cooling_supply_air_temp_c: f64, max_heating_capacity_present: bool, max_heating_capacity_w: f64, max_cooling_capacity_present: bool, max_cooling_capacity_w: f64, outdoor_air_per_person_m3_s: f64, outdoor_air_per_area_m3_s_m2: f64) -> EnergyModelMutation {
-    EnergyModelMutation::CreateIdealLoadsSystem(CreateIdealLoadsSystem { id, zone_id, max_heating_supply_air_temp_c, min_cooling_supply_air_temp_c, max_heating_capacity_present, max_heating_capacity_w, max_cooling_capacity_present, max_cooling_capacity_w, outdoor_air_per_person_m3_s, outdoor_air_per_area_m3_s_m2 })
+pub fn create_ideal_loads_system(
+    id: crate::model::EntityId,
+    zone_id: crate::model::EntityId,
+    max_heating_supply_air_temp_c: f64,
+    min_cooling_supply_air_temp_c: f64,
+    max_heating_capacity_present: bool,
+    max_heating_capacity_w: f64,
+    max_cooling_capacity_present: bool,
+    max_cooling_capacity_w: f64,
+    outdoor_air_per_person_m3_s: f64,
+    outdoor_air_per_area_m3_s_m2: f64,
+) -> EnergyModelMutation {
+    EnergyModelMutation::CreateIdealLoadsSystem(CreateIdealLoadsSystem {
+        id,
+        zone_id,
+        max_heating_supply_air_temp_c,
+        min_cooling_supply_air_temp_c,
+        max_heating_capacity_present,
+        max_heating_capacity_w,
+        max_cooling_capacity_present,
+        max_cooling_capacity_w,
+        outdoor_air_per_person_m3_s,
+        outdoor_air_per_area_m3_s_m2,
+    })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateIdealLoadsSystem {

@@ -13,8 +13,7 @@
     "camera2dZoom",
     "camera3dPosition",
     "camera3dTarget",
-    "camera3dZoom",
-    "activeUtilityId"
+    "camera3dZoom"
   ],
   "properties": {
     "selectedPartIds": {
@@ -74,10 +73,6 @@
     },
     "camera3dZoom": {
       "type": "number",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     }
   }

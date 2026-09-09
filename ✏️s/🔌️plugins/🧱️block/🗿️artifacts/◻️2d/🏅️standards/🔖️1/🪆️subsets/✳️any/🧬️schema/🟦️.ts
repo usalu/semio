@@ -24,9 +24,6 @@ export interface Block2dArtifact {
   camera2d: BlockCamera2d;
   /** @state artifact */
   meta: BlockMeta;
-  /** @state presence */
-  selectedIds: string[];
-  /** @state config */
 }
 
 //#region 🚪️Parsers
@@ -89,7 +86,6 @@ export function parseBlock2dArtifact(value: unknown, at = "$"): Block2dArtifact 
     authors: blockBlock2dArtifactGuardArray(row["authors"], `${at}.authors`).map((item, index) => parseBlockAuthor(item, `${at}.authors[${index}]`)),
     camera2d: parseBlockCamera2d(row["camera2d"], `${at}.camera2d`),
     meta: parseBlockMeta(row["meta"], `${at}.meta`),
-    selectedIds: blockBlock2dArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => blockBlock2dArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
   };
 }
 

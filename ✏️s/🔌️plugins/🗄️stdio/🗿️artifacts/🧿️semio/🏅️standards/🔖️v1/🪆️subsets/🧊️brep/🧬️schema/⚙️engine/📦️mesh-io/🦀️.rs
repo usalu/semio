@@ -26,6 +26,7 @@
 
 use crate::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
 use crate::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points;
+use crate::standards::v1::subsets::brep::schema::engine::MeshTransfer;
 use crate::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId;
 use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
@@ -33,7 +34,6 @@ use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
-use crate::standards::v1::subsets::brep::schema::engine::MeshTransfer;
 use semio_framework_mesh_engine::{mesh_from_obj, mesh_from_stl, mesh_to_obj, mesh_to_stl, GlbExporter, GlbImporter, MeshData, MeshExporter, MeshImporter};
 
 // #region 🔖️Types

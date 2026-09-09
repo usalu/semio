@@ -9,7 +9,7 @@ use dsl::DslValue;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_wires_topology};
+use super::topology::compute_wires_topology;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a wires snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir, read off the
@@ -63,23 +63,11 @@ impl protocol::InferenceSpec<WiresSnapshot> for WiresInference {
 /// lives inside `WiresSnapshot` itself, it's read through [`crate::wires_working_board`]
 /// (the working-scene accessor), which materializes a fresh `DslValue` every call.
 pub fn find_board_node(document: &WiresSnapshot, node_id: &str) -> Option<DslValue> {
-    crate::wires_working_board(document)
-        .get("nodes")
-        .and_then(|value| value.as_array())
-        .into_iter()
-        .flatten()
-        .find(|node| crate::standards::v1::subsets::any::schema::entity_id(node, "id") == Some(node_id))
-        .cloned()
+    crate::wires_working_board(document).get("nodes").and_then(|value| value.as_array()).into_iter().flatten().find(|node| crate::standards::v1::subsets::any::schema::entity_id(node, "id") == Some(node_id)).cloned()
 }
 
 pub fn find_board_edge(document: &WiresSnapshot, edge_id: &str) -> Option<DslValue> {
-    crate::wires_working_board(document)
-        .get("edges")
-        .and_then(|value| value.as_array())
-        .into_iter()
-        .flatten()
-        .find(|edge| crate::standards::v1::subsets::any::schema::entity_id(edge, "id") == Some(edge_id))
-        .cloned()
+    crate::wires_working_board(document).get("edges").and_then(|value| value.as_array()).into_iter().flatten().find(|edge| crate::standards::v1::subsets::any::schema::entity_id(edge, "id") == Some(edge_id)).cloned()
 }
 
 pub fn find_relationship<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Option<&'a DslValue> {
@@ -110,13 +98,7 @@ impl ArtifactInferrer for WiresInferrer {
 pub fn wires_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.reasoning.wires.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

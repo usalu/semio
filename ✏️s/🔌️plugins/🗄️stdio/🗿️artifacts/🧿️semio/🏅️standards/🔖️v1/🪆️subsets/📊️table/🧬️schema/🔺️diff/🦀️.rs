@@ -9,8 +9,8 @@
 
 use crate::standards::v1::subsets::base::schema::triples::split_top_level;
 use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
-use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
+use protocol::MutationDiff;
 
 //#region 🔖️ColumnList
 /// 📋 Whole-list wrapper for the `columns` field diff — every mutation triad rebuilds the full

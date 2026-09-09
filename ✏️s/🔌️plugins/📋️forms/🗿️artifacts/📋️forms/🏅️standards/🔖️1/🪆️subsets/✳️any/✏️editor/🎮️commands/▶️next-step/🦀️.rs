@@ -1,9 +1,9 @@
 //! 🧪️ 🧪️ Forms play app commands command — `next-step`.
 
-use crate::schema::can_advance;
-use crate::{forms_steps, op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::effective_try_values;
+use crate::schema::can_advance;
+use crate::{forms_steps, op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

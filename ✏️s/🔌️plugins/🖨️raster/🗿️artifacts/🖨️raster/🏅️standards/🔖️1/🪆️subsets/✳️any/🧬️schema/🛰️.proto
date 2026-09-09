@@ -1,25 +1,75 @@
 // 🧬️ Raster artifact schema — every field with its state class.
 syntax = "proto3";
 package semio.s.raster.raster.artifact;
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
 message RasterArtifact {
   string schema = 1;
   string id = 2;
   optional string title = 3;
   repeated RasterLayerNode layers = 4;
-  map<string, RasterImageAsset> assets = 5;
-  repeated string selected_ids = 6;
-  double brush_size = 8;
-  double brush_opacity = 9;
-  optional RasterViewportSize composite_viewport = 10;
-  double camera_x = 11;
-  double camera_y = 12;
-  double camera_zoom = 13;
-  optional string hovered_id = 15;
+  map<string, semio.os.store.ArtifactChild> assets = 5;
 }
 
 message RasterLayerNode {
-  string kind = 1;
+  oneof node {
+    RasterLayerPixel pixel = 1;
+    RasterLayerGroup group = 2;
+    RasterLayerAdjustment adjustment = 3;
+  }
+}
+
+message RasterTransform {
+  double x = 1;
+  double y = 2;
+  double scale_x = 3;
+  double scale_y = 4;
+  double rotation = 5;
+}
+
+message RasterLayerMask {
+  bool enabled = 1;
+  bool linked = 2;
+  bool invert = 3;
+  optional uint32 width = 4;
+  optional uint32 height = 5;
+}
+
+message RasterLayerPixel {
+  string id = 1;
+  string name = 2;
+  bool visible = 3;
+  float opacity = 4;
+  string blend_mode = 5;
+  RasterTransform transform = 6;
+  optional RasterLayerMask mask = 7;
+  optional uint32 width = 8;
+  optional uint32 height = 9;
+  optional string image_key = 10;
+}
+
+message RasterLayerGroup {
+  string id = 1;
+  string name = 2;
+  bool visible = 3;
+  float opacity = 4;
+  string blend_mode = 5;
+  RasterTransform transform = 6;
+  optional RasterLayerMask mask = 7;
+  repeated RasterLayerNode children = 8;
+}
+
+message RasterParamEntry { string key = 1; semio.framework.value.DslValue value = 2; }
+message RasterLayerAdjustment {
+  string id = 1;
+  string name = 2;
+  bool visible = 3;
+  float opacity = 4;
+  string blend_mode = 5;
+  RasterTransform transform = 6;
+  string adjustment_kind = 7;
+  repeated RasterParamEntry params = 8;
 }
 
 message RasterImageAsset {

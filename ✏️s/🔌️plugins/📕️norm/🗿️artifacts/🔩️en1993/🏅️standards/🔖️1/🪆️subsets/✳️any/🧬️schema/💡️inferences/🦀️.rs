@@ -8,7 +8,6 @@ use crate::En1993Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1993 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
@@ -55,13 +54,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1993Buil
 pub fn en1993_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1993.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor
@@ -73,12 +66,12 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::standards::v1::subsets::any::schema::{check_steel_member, part_1_1, part_1_10, part_1_11, part_1_12, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_8, part_1_9, part_2, part_3, part_4, part_5, part_6, AnnexParams};
 /// 📋️ Full EN 1993 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1993Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::CheckReport;
+use crate::standards::v1::subsets::any::schema::{check_steel_member, part_1_1, part_1_10, part_1_11, part_1_12, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_8, part_1_9, part_2, part_3, part_4, part_5, part_6, AnnexParams};
 
 fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
     match value.to_ascii_lowercase().as_str() {

@@ -1,6 +1,5 @@
 //! ⛓️ `change-hoist-class` — sets the En1991 hoist class scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

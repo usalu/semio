@@ -5,11 +5,10 @@
 //! migration report's `sharedFileRequests` for the rename once a later pass can touch
 //! `🦀️.rs`.
 
-
-use crate::Din16798Snapshot;
 use crate::diff::Din16798Diff;
-use crate::mutations::Din16798Mutation;
 use crate::document::AnnexChoice;
+use crate::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
 
 //#region 🔖️ChangeAnnex
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

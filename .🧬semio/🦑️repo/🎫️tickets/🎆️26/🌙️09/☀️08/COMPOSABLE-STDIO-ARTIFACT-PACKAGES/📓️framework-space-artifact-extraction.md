@@ -105,3 +105,7 @@ Removed the two corresponding fixtures from the former host-owned `📚️exampl
 ## Nx handoff
 
 Nx project declarations are owned by the Nx execution packet. Their native inputs must include the full artifact taxonomy source, local schema, example, and tests because the Cargo manifests mount source outside the package directories. The final project identities are `@semio-tech/framework-space-space-rs` and `@semio-tech/framework-space-collection-rs`; the `framework-` prefix prevents collision with the existing space plugin artifact project.
+
+## Artifact body casing audit
+
+The post-extraction value-derive casing audit considered adding `rename_all_fields = "camelCase"` to `ArtifactBody`. No pre-existing language-neutral JSON schema, fixture, or direct JSON consumer declares a `documentId` field for this type. The artifact schema describes package identity only, and `📚️examples/🎬️demo.collection` declares the separate DSL spelling `document-id`. The candidate casing change and its circular inline assertion were therefore reverted. The retained serde and first-party value contracts both use the existing `document_id` field name; the `Document` and `Blob` variant tags remain camel case through their existing `rename_all = "camelCase"` declarations.

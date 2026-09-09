@@ -11,7 +11,7 @@
     }
   ],
   "drawing": {
-    "childId": "gismap-drawing-derived",
+    "childId": "gismap-drawing",
     "target": {
       "artifactId": "gismap-drawing",
       "dialect": {
@@ -22,7 +22,7 @@
     }
   },
   "value": {
-    "childId": "gismap-value-derived",
+    "childId": "gismap-value",
     "target": {
       "artifactId": "gismap-value",
       "dialect": {

@@ -454,11 +454,11 @@ fn neural_value_to_dsl_value(value: &NeuralValue) -> crate::os_dsl::DslValue {
     crate::os_dsl::to_dsl_value(value).unwrap_or(crate::os_dsl::DslValue::Null)
 }
 
-fn channel_spec_value_type(spec: &ChannelSpec) -> Option<String> {
+fn channel_spec_value_type(spec: &ChannelSpec) -> String {
     if spec.operators.is_empty() {
-        Some("value".into())
+        "value".into()
     } else {
-        Some(spec.operators.join(","))
+        spec.operators.join(",")
     }
 }
 
@@ -469,7 +469,7 @@ fn is_port_connected(synapses: &[SynapseSpec], neuron_id: &str, port_id: &str) -
 fn channel_spec_to_output_port(spec: &ChannelSpec) -> IoPortSpec {
     let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
     port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
-    port.value_type = channel_spec_value_type(spec);
+    port.value_type = Some(channel_spec_value_type(spec));
     port.default = spec.default.as_ref().map(neural_value_to_dsl_value);
     port.cardinality = spec.cardinality.symbol();
     port
@@ -479,7 +479,7 @@ fn input_spec_to_port(spec: &ChannelSpec, params: &Dictionary, connected: bool) 
     let value = params.get(&spec.name).or(spec.default.as_ref()).map(neural_value_to_dsl_value);
     let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
     port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
-    port.value_type = channel_spec_value_type(spec);
+    port.value_type = Some(channel_spec_value_type(spec));
     port.default = spec.default.as_ref().map(neural_value_to_dsl_value);
     port.value = value;
     port.connected = Some(connected);

@@ -1,4 +1,3 @@
-
 use super::*;
 use geometry::Mat4;
 

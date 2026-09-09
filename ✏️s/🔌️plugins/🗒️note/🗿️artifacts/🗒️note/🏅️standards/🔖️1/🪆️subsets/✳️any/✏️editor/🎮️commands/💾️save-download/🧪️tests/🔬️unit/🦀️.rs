@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::note::NoteCommand;
 use crate::editor::note::commands::load_request;
 use crate::editor::note::testkit::{dispatch, note_app};
+use crate::editor::note::NoteCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn save_download_and_load_request_effects() {

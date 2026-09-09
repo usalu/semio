@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧬️ `Wave C` (SEMANTIC-MUTATIONS-OVERHAUL) removed this facet's `🔖️Constructors` region — a

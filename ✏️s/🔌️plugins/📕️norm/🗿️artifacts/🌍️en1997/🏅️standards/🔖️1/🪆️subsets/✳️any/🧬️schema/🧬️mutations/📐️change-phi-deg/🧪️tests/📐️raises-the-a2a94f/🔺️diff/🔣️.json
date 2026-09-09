@@ -3,7 +3,7 @@
   "vEdKn": null,
   "hEdKn": null,
   "footingAreaM2": null,
-  "phiDeg": 35.0,
+  "phiDeg": 35,
   "cKpa": null,
   "gammaKnM3": null,
   "bM": null,
@@ -21,6 +21,5 @@
   "qBKpa": null,
   "pileBaseAreaM2": null,
   "pileNProfiles": null,
-  "zInvestigatedM": null,
-  "selectedCheckIndex": null
+  "zInvestigatedM": null
 }

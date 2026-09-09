@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::wfc_engine::model::ModelBuilder;
 use crate::wfc_engine::outcome::SolveOutcome;
@@ -192,8 +191,8 @@ fn cardinality_constraint_beyond_both_colorings_is_unsatisfiable() {
 #[test]
 fn flow_constraint_end_to_end_forces_a_connected_path_through_a_real_solve() {
     use crate::wfc_engine::constraint::PatternSelector;
-    use crate::wfc_engine::model::ModelBuilder;
     use crate::wfc_engine::flow::FlowConstraint;
+    use crate::wfc_engine::model::ModelBuilder;
     use crate::wfc_engine::topology::GraphTopologyBuilder;
 
     // Two floor/wall patterns on a 4-node path; requiring flow 1 from node0 to node3 forces

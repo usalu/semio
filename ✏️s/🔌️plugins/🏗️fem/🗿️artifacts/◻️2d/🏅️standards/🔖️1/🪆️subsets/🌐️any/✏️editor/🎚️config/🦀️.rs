@@ -2,7 +2,7 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.fem2d` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`), so result-display/camera/locale edits are VCS'd exactly
+//! `ArtifactStore` (with a real `backwards`), so result-display and camera edits are VCS'd exactly
 //! like document content.
 
 use crate::FemCamera;
@@ -11,8 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 // #region 🔖️Config
 /// 🧮️ B1: fem2d's real `ArtifactEditor::Config` — the pure-trait pilot's config artifact. Absorbs both
-/// former `Fem2dPlayApp` `RefCell` fields (`result_display`, `camera`) plus the locale the deleted
-/// `ViewModel` used to carry into label resolution — session-only view state now round-trips through
+/// former `Fem2dPlayApp` `RefCell` fields (`result_display`, `camera`) — app-local view state now round-trips through
 /// the config `ArtifactStore` exactly like document content, with a real `backwards` per
 /// [`Fem2dConfigMutation`] instead of never being VCS'd at all.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
@@ -81,7 +80,7 @@ impl store::ArtifactPack for Fem2dConfig {
 
 impl Default for Fem2dConfig {
     fn default() -> Self {
-        Self { result_source_id: None, result_mode: "static".into(), result_mode_index: 0, camera: FemCamera::default(), }
+        Self { result_source_id: None, result_mode: "static".into(), result_mode_index: 0, camera: FemCamera::default() }
     }
 }
 
@@ -179,9 +178,54 @@ impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
     /// registry metadata and carry no `🧬️mutations` leaf directory. One entry per variant, in
     /// declaration order, matching `descriptor()`'s arms below.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🟤️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/👁️set-result-display", semantic_kind: "set-result-display", display_name: "Set Result Display", emoji: "👁️", aggregate_variant: "SetResultDisplay", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🎥️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🟤️set-snapshot",
+            semantic_kind: "set-snapshot",
+            display_name: "Set Snapshot",
+            emoji: "📄",
+            aggregate_variant: "Snapshot",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/👁️set-result-display",
+            semantic_kind: "set-result-display",
+            display_name: "Set Result Display",
+            emoji: "👁️",
+            aggregate_variant: "SetResultDisplay",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🎥️set-camera",
+            semantic_kind: "set-camera",
+            display_name: "Set Camera",
+            emoji: "🎥️",
+            aggregate_variant: "SetCamera",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {

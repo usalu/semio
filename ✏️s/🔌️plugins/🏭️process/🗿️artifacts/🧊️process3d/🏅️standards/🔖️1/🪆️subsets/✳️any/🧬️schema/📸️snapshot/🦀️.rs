@@ -9,9 +9,9 @@
 
 use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
 use framework_schema::ArtifactSchema;
+use semio_framework_os_kernel::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use semio_framework_os_kernel::{FromValue, ToValue};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted process3d document snapshot (persistent fields of the artifact). `stock_solid`/

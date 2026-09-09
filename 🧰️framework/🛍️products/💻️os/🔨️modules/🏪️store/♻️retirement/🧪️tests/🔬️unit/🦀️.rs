@@ -22,7 +22,7 @@ fn drain(mut retirement: Box<dyn ErasedSnapshotRetirement>, items: usize, bytes:
 #[test]
 fn owned_retirement_matches_neutral_exact_byte_grants() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixture/🔣️.json")).unwrap();
-    assert_eq!(fixture["cases"].as_array().unwrap().len(), 7);
+    assert_eq!(fixture["cases"].as_array().unwrap().len(), 9);
     for row in fixture["cases"].as_array().unwrap() {
         for budget in fixture["budgets"].as_array().unwrap() {
             let retirement = match row["kind"].as_str().unwrap() {
@@ -30,6 +30,8 @@ fn owned_retirement_matches_neutral_exact_byte_grants() {
                 "strings" => owned_retirement(serde_json::from_value::<Vec<String>>(row["value"].clone()).unwrap()),
                 "optionalString" => owned_retirement(serde_json::from_value::<Option<String>>(row["value"].clone()).unwrap()),
                 "pair" => owned_retirement(serde_json::from_value::<(String, String)>(row["value"].clone()).unwrap()),
+                "stringMap" => owned_retirement(serde_json::from_value::<std::collections::BTreeMap<String, String>>(row["value"].clone()).unwrap()),
+                "value" => owned_retirement(crate::os_pack::json::from_json_str::<crate::DslValue>(&row["value"].to_string()).unwrap()),
                 _ => panic!("unknown neutral case"),
             };
             assert_eq!(drain(retirement, budget["items"].as_u64().unwrap() as usize, budget["bytes"].as_u64().unwrap() as usize), row["bytes"].as_u64().unwrap() as usize, "{}", row["id"]);

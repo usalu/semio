@@ -1,10 +1,9 @@
-
 use super::*;
-use crate::editor::shooting::testkit::{ShootingApp, dispatch, shooting_app, shooting_app_with_registry};
+use crate::editor::shooting::testkit::{dispatch, shooting_app, shooting_app_with_registry, ShootingApp};
 use semio_framework_plugin::app::EditorApp;
 use semio_framework_plugin::testkit;
 use semio_framework_plugin::{Effect, PluginApp};
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 fn default_camera(position: [f64; 3]) -> crate::ShootingCamera {
     crate::ShootingCamera { position, target: [0.0, 0.0, 0.0], zoom: 1.0, fov: 50.0, up: None, projection: None }
@@ -180,7 +179,7 @@ async fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
         assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
     }
     let mut app = shooting_app().await;
-    let engagements = app.window_engagements().await;
+    let engagements = app.window_engagements(&semio_framework_plugin::ViewModel::default()).await;
     assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].options.is_none(), "the gumball selector moved to the host-derived utility bar");
     assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].status.as_ref().unwrap()[0].text.contains("assets"));
     assert!(engagements[SHOOTING_PLAY_WINDOW_ICON].status.as_ref().unwrap()[0].text.contains("256×256"));
@@ -220,20 +219,19 @@ async fn shooting_labels_resolve_native_english_by_default() {
     let catalogue_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_CATALOGUE).await;
     assert!(catalogue_json.contains("Add Shot"));
     assert!(catalogue_json.contains("SVG Rectangle"));
-    let engagements = app.window_engagements().await;
+    let engagements = app.window_engagements(&semio_framework_plugin::ViewModel::default()).await;
     assert_eq!(engagements[SHOOTING_PLAY_WINDOW_SCENE].input.as_ref().unwrap().placeholder.as_deref(), Some("Camera label"));
     assert_eq!(engagements[SHOOTING_PLAY_WINDOW_ICON].input.as_ref().unwrap().placeholder.as_deref(), Some("Shot label"));
 }
 
-/// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command.
 #[semio_framework_async_macros::async_test]
 async fn shooting_labels_resolve_native_german() {
     let mut app = shooting_app().await;
-    dispatch(&mut app, ShootingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })).await;
-    let document_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT).await;
+    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let document_json = testkit::project_and_retire_fixture_tree(app.render(SHOOTING_PLAY_BODY_DOCUMENT, None, &view_state).await.expect("render document")).expect("retire document tree");
     assert!(document_json.contains("Aufnahmen"));
     assert!(document_json.contains("Objekte"));
-    let engagements = app.window_engagements().await;
+    let engagements = app.window_engagements(&view_state).await;
     assert_eq!(engagements[SHOOTING_PLAY_WINDOW_SCENE].input.as_ref().unwrap().placeholder.as_deref(), Some("Kamera-Bezeichnung"));
     assert_eq!(engagements[SHOOTING_PLAY_WINDOW_ICON].input.as_ref().unwrap().placeholder.as_deref(), Some("Aufnahme-Bezeichnung"));
 }

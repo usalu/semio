@@ -1,0 +1,74 @@
+{
+  "schema": "semio.directory.session-authority-fixtures.v1",
+  "maximumBytes": 2048,
+  "bindingGoldens": [
+    { "id": "external-a", "sessionId": "session-alpha", "userId": "user-alpha", "authorizationGeneration": 7, "expiresAt": 2000000000000, "sessionBindingSha256": "089141fdcd85b3e9a2f51c61e226735da7735dc6634a37f825b4ee4b538f7760" },
+    { "id": "development-b", "sessionId": "session-beta", "userId": "user-alpha", "authorizationGeneration": 1, "expiresAt": 2000000001000, "sessionBindingSha256": "78afe793f86e520c371c72854df7ad43c0a4040ba56e2816ea999ad8e84d993e" }
+  ],
+  "authorityLifecycle": [
+    { "id": "initial", "currentBinding": null, "responseBinding": "external-a", "brokerAdmissionCurrent": true, "outcome": "installed", "epochDelta": 0, "retireMountedAuthorities": false, "retainIndeterminateJobs": false },
+    { "id": "same-authority-refresh", "currentBinding": "external-a", "responseBinding": "external-a", "brokerAdmissionCurrent": true, "outcome": "retained", "epochDelta": 0, "retireMountedAuthorities": false, "retainIndeterminateJobs": false },
+    { "id": "authority-replacement", "currentBinding": "external-a", "responseBinding": "development-b", "brokerAdmissionCurrent": true, "outcome": "replaced", "epochDelta": 1, "retireMountedAuthorities": true, "retainIndeterminateJobs": true },
+    { "id": "stale-old-response", "currentBinding": "development-b", "responseBinding": "external-a", "brokerAdmissionCurrent": false, "outcome": "ignored", "epochDelta": 0, "retireMountedAuthorities": false, "retainIndeterminateJobs": true },
+    { "id": "authenticated-refusal", "currentBinding": "development-b", "responseBinding": null, "brokerAdmissionCurrent": true, "outcome": "retired", "epochDelta": 1, "retireMountedAuthorities": true, "retainIndeterminateJobs": true }
+  ],
+  "rows": [
+    {
+      "id": "external",
+      "value": { "schema": "semio.directory.session-authority.v1", "sessionBindingSha256": "089141fdcd85b3e9a2f51c61e226735da7735dc6634a37f825b4ee4b538f7760", "authorizationGeneration": 7, "userId": "user-alpha", "email": "alpha@example.test", "displayName": "Alpha", "expiresAt": 2000000000000, "sessionKind": "external" },
+      "accepted": true
+    },
+    {
+      "id": "development-unicode",
+      "value": { "schema": "semio.directory.session-authority.v1", "sessionBindingSha256": "78afe793f86e520c371c72854df7ad43c0a4040ba56e2816ea999ad8e84d993e", "authorizationGeneration": 1, "userId": "user-alpha", "email": "alpha@localhost", "displayName": "Alpha 雪", "expiresAt": 2000000001000, "sessionKind": "development-local" },
+      "accepted": true
+    },
+    {
+      "id": "zero-binding",
+      "value": { "schema": "semio.directory.session-authority.v1", "sessionBindingSha256": "0000000000000000000000000000000000000000000000000000000000000000", "authorizationGeneration": 7, "userId": "user-alpha", "email": "alpha@example.test", "displayName": "Alpha", "expiresAt": 2000000000000, "sessionKind": "external" },
+      "accepted": false
+    },
+    {
+      "id": "unsafe-generation",
+      "value": { "schema": "semio.directory.session-authority.v1", "sessionBindingSha256": "089141fdcd85b3e9a2f51c61e226735da7735dc6634a37f825b4ee4b538f7760", "authorizationGeneration": 9007199254740992, "userId": "user-alpha", "email": "alpha@example.test", "displayName": "Alpha", "expiresAt": 2000000000000, "sessionKind": "external" },
+      "accepted": false
+    },
+    {
+      "id": "invalid-user",
+      "value": { "schema": "semio.directory.session-authority.v1", "sessionBindingSha256": "089141fdcd85b3e9a2f51c61e226735da7735dc6634a37f825b4ee4b538f7760", "authorizationGeneration": 7, "userId": " user-alpha", "email": "alpha@example.test", "displayName": "Alpha", "expiresAt": 2000000000000, "sessionKind": "external" },
+      "accepted": false
+    },
+    {
+      "id": "control-display-name",
+      "value": { "schema": "semio.directory.session-authority.v1", "sessionBindingSha256": "089141fdcd85b3e9a2f51c61e226735da7735dc6634a37f825b4ee4b538f7760", "authorizationGeneration": 7, "userId": "user-alpha", "email": "alpha@example.test", "displayName": "Alpha\nBeta", "expiresAt": 2000000000000, "sessionKind": "external" },
+      "accepted": false
+    },
+    {
+      "id": "unknown-kind",
+      "value": { "schema": "semio.directory.session-authority.v1", "sessionBindingSha256": "089141fdcd85b3e9a2f51c61e226735da7735dc6634a37f825b4ee4b538f7760", "authorizationGeneration": 7, "userId": "user-alpha", "email": "alpha@example.test", "displayName": "Alpha", "expiresAt": 2000000000000, "sessionKind": "native" },
+      "accepted": false
+    },
+    {
+      "id": "authority-overpost",
+      "value": { "schema": "semio.directory.session-authority.v1", "sessionBindingSha256": "089141fdcd85b3e9a2f51c61e226735da7735dc6634a37f825b4ee4b538f7760", "authorizationGeneration": 7, "userId": "user-alpha", "email": "alpha@example.test", "displayName": "Alpha", "expiresAt": 2000000000000, "sessionKind": "external", "sessionId": "must-not-cross" },
+      "accepted": false
+    }
+  ],
+  "raw": [
+    {
+      "id": "canonical",
+      "source": "{\"schema\":\"semio.directory.session-authority.v1\",\"sessionBindingSha256\":\"089141fdcd85b3e9a2f51c61e226735da7735dc6634a37f825b4ee4b538f7760\",\"authorizationGeneration\":7,\"userId\":\"user-alpha\",\"email\":\"alpha@example.test\",\"displayName\":\"Alpha\",\"expiresAt\":2000000000000,\"sessionKind\":\"external\"}",
+      "accepted": true
+    },
+    {
+      "id": "reordered",
+      "source": "{\"schema\":\"semio.directory.session-authority.v1\",\"authorizationGeneration\":7,\"sessionBindingSha256\":\"089141fdcd85b3e9a2f51c61e226735da7735dc6634a37f825b4ee4b538f7760\",\"userId\":\"user-alpha\",\"email\":\"alpha@example.test\",\"displayName\":\"Alpha\",\"expiresAt\":2000000000000,\"sessionKind\":\"external\"}",
+      "accepted": false
+    },
+    {
+      "id": "padded",
+      "source": " {\"schema\":\"semio.directory.session-authority.v1\",\"sessionBindingSha256\":\"089141fdcd85b3e9a2f51c61e226735da7735dc6634a37f825b4ee4b538f7760\",\"authorizationGeneration\":7,\"userId\":\"user-alpha\",\"email\":\"alpha@example.test\",\"displayName\":\"Alpha\",\"expiresAt\":2000000000000,\"sessionKind\":\"external\"}",
+      "accepted": false
+    }
+  ]
+}

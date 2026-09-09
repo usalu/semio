@@ -623,11 +623,7 @@ fn frame_components_of(snap: &JpgSnapshot) -> Result<Vec<JpgFrameComponent>, Jpg
             return Err(JpgError::Unsupported(format!("component {}'s {}x{} sampling does not divide the frame maximum {hmax}x{vmax}, so its plane has no integral resolution", component.id, component.h_sampling, component.v_sampling)));
         }
     }
-    Ok(declared
-        .into_iter()
-        .enumerate()
-        .map(|(index, component)| JpgFrameComponent { quant_table_id: if index == 0 { 0 } else { 1 }, ..component })
-        .collect())
+    Ok(declared.into_iter().enumerate().map(|(index, component)| JpgFrameComponent { quant_table_id: if index == 0 { 0 } else { 1 }, ..component }).collect())
 }
 
 /// 🖨️ Encodes an RGBA raster as baseline sequential JPEG (Y/Cb/Cr, ids 1/2/3, or a single Y
@@ -753,8 +749,7 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     write_dht(&mut out, 0, 1, &DC_CHROMA_BITS, &dc_chroma_values());
     write_dht(&mut out, 1, 1, &AC_CHROMA_BITS, &ac_chroma_values());
 
-    let scan_comps: Vec<JpgScanComponent> =
-        comps.iter().enumerate().map(|(index, component)| JpgScanComponent { id: component.id, dc_table_id: if index == 0 { 0 } else { 1 }, ac_table_id: if index == 0 { 0 } else { 1 } }).collect();
+    let scan_comps: Vec<JpgScanComponent> = comps.iter().enumerate().map(|(index, component)| JpgScanComponent { id: component.id, dc_table_id: if index == 0 { 0 } else { 1 }, ac_table_id: if index == 0 { 0 } else { 1 } }).collect();
     let mut sos = vec![0xFFu8, 0xDA];
     let sos_len = 6 + 2 * scan_comps.len();
     sos.push((sos_len >> 8) as u8);
@@ -1244,8 +1239,8 @@ mod tests;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgComposer as JpgRawAnyComposer;
     use crate::standards::v_jfif_1_01::subsets::baseline::schema::JpgBaselineComposer;
+    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgComposer as JpgRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

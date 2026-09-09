@@ -48,8 +48,6 @@ pub struct Din4108Diff {
     pub application_type: Option<String>,
     #[state(artifact)]
     pub declared_application_class: Option<String>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

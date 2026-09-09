@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧪️ Per-point `(camera-0 pixel, camera-1 pixel)` accumulator shared by a few two-view tests below.

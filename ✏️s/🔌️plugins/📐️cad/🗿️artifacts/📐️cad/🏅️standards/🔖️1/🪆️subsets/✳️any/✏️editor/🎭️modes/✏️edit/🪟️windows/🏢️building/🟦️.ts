@@ -3,11 +3,7 @@
  * boundary — the world-3d scene payload plus the Dislocate gumball/utility state a mutation-capable
  * surface carries (absent entirely from the viewer's read-only twin, see `👁️viewer/…/🟦️.ts`). */
 
-/** ✏️ Per-window Dislocate gumball handle toggles — mirrors Rust `CadDislocateOptions`. */
-export interface CadDislocateOptions {
-  moveEnabled: boolean;
-  rotateEnabled: boolean;
-}
+import type { CadDislocateOptions } from "../../../../🎚️config/🧬️schema/🟦️";
 
 /** ✏️ The Building window's typed view-model — mirrors the Rust `render()` boundary's inputs. */
 export interface CadBuildingViewModel {

@@ -1,9 +1,8 @@
 //! 🔧 `change-f-c-0-k` payload — changes the En1995 document's `f_c_0_k` (EN 1995 input).
 
-
-use crate::En1995Snapshot;
 use crate::diff::En1995Diff;
 use crate::mutations::En1995Mutation;
+use crate::En1995Snapshot;
 //#region 🔖️ChangeFC0K
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

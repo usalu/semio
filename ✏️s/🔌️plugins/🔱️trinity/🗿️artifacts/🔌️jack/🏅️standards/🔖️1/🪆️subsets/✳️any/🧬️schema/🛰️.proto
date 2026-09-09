@@ -20,28 +20,8 @@ message JackArtifact {
   repeated Edge edges = 7;
   // @state artifact
   optional string root_node_id = 8;
-  // @state config
-  // @state config
-  string jack_query = 11;
-  // @state config
-  map<string, string> lod_mode_by_window = 12;
-  // @state config
-  Camera viewport_camera = 13;
-  // @state config
-  // @state config
-  // @state config
-  // @state config
-  // @state config
-  // @state config
-  optional JackEditorSelection editor_selection = 19;
-  // @state config
-  // @state config
 }
 
-message JackEditorSelection {
-  int64 start = 1;
-  int64 end = 2;
-}
 
 message Camera {
   double x = 1;

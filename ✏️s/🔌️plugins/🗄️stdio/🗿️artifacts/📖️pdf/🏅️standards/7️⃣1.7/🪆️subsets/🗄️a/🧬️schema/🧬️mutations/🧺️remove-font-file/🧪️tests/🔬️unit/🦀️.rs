@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
 use protocol::MutationDiff;

@@ -1125,7 +1125,7 @@ function ExtensionView({ record }: { readonly record: UiNodeRecord }) {
  * failure mode that makes a missing renderer look like a broken document, per the packet brief). */
 function UnknownComponentView({ record }: { readonly record: UiNodeRecord }) {
   const kind = (record.component as { readonly type: string }).type;
-  console.error(`[DEBUG] Interpreter: unknown component type ${JSON.stringify(kind)} on node ${record.id} ("${record.key}")`);
+  console.error(`Interpreter: unknown component type ${JSON.stringify(kind)} on node ${record.id} ("${record.key}")`);
   return (
     <div role="alert" className="border-destructive text-destructive rounded-md border border-dashed p-single text-xs" data-ui-node-id={record.id} data-unknown-component={kind}>
       Unrecognized component: {kind}

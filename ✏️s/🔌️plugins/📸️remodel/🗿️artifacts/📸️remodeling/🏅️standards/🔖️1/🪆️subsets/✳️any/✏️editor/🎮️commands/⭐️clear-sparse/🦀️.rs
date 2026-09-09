@@ -1,9 +1,9 @@
 //! 🧹️ 🧹️ Remodeling play app commands command — `clear-sparse`.
 
+use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::mutations::replace_sparse;
 use crate::op::RemodelingMutation;
 use crate::RemodelingSnapshot;
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::wires::WiresCommand;
 use crate::editor::wires::testkit::{dispatch, new_app};
+use crate::editor::wires::WiresCommand;
 use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 
 #[semio_framework_async_macros::async_test]

@@ -1,4 +1,7 @@
 # 🧬️ Raster diff schema — sparse field delta over the artifact.
+# import RasterArtifact from "../🔗️.graphql"
+# import RasterImageAsset from "../🔗️.graphql"
+# import RasterLayerNode from "../🔗️.graphql"
 
 type RasterDiff {
   artifact: RasterArtifact @state(class: ARTIFACT)
@@ -7,17 +10,7 @@ type RasterDiff {
   title: String @state(class: ARTIFACT)
   layers: RasterLayersDelta @state(class: ARTIFACT)
   assets: RasterAssetsDelta @state(class: ARTIFACT)
-  selectedIds: RasterStringList @state(class: PRESENCE)
-  brushSize: Float @state(class: CONFIG)
-  brushOpacity: Float @state(class: CONFIG)
-  compositeViewport: RasterViewportSize @state(class: CONFIG)
-  cameraX: Float @state(class: CONFIG)
-  cameraY: Float @state(class: CONFIG)
-  cameraZoom: Float @state(class: CONFIG)
-  hoveredId: String @state(class: ARTIFACT)
 }
-
-type RasterArtifact { _placeholder: Boolean }
 
 type RasterAssetsDelta {
   entries: [RasterAssetsDeltaEntry!]!
@@ -26,15 +19,6 @@ type RasterAssetsDelta {
 type RasterAssetsDeltaEntry {
   key: String!
   value: RasterImageAsset
-}
-
-type RasterImageAsset {
-  mime: String!
-  data: String!
-}
-
-type RasterStringList {
-  values: [String!]!
 }
 
 type RasterLayersDelta {
@@ -71,11 +55,4 @@ type RasterLayerPatch {
   width: Int
   height: Int
   adjustmentKind: String
-}
-
-type RasterLayerNode { _placeholder: Boolean }
-
-type RasterViewportSize {
-  width: Float!
-  height: Float!
 }

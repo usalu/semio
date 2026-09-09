@@ -945,6 +945,9 @@ describe("mounted GIS map probe", () => {
       componentSha256: source.componentSha256,
       descriptorSha256: source.descriptorSha256,
       browserActorSha256: source.browserActorSha256,
+      activeCheckpointId: source.activeCheckpointId,
+      descriptorDigestV1: source.descriptorDigestV1,
+      frontier: source.frontier,
       uiRevision: source.uiRevision,
       sessionInstanceId: 9,
       windowKindId: source.surface,
@@ -955,6 +958,8 @@ describe("mounted GIS map probe", () => {
     expect(deepEqual(projected, mountedGisMapProbeFixture.expected)).toBe(true);
     expect(mountedGisMapProbeV1(null)).toBeNull();
     expect(mountedGisMapProbeV1({ ...retained, uiRevision: 2 })).toBeNull();
+    expect(mountedGisMapProbeV1({ ...retained, activeCheckpointId: "foreign" })).toBeNull();
+    expect(mountedGisMapProbeV1({ ...retained, frontier: { ...source.frontier, documentId: "foreign" } })).toBeNull();
     expect(mountedGisMapProbeV1({ ...retained, store: storeFor("canvas-2d", source.regions) })).toBeNull();
     expect(mountedGisMapProbeV1({ ...retained, store: storeFor("tiled-map", [], [0xff]) })).toBeNull();
     expect(mountedGisMapProbeV1({ ...retained, store: storeFor("tiled-map", [source.regions[0], source.regions[0]]) })).toBeNull();
@@ -1347,6 +1352,7 @@ describe("app-owned surface session factories", () => {
   it("joins exact plugin and app ownership while keeping instance scopes distinct", () => {
     const validate = new Ajv({ strict: true, allErrors: true })
       .addKeyword({ keyword: "x-semio-state", schemaType: "string" })
+      .addKeyword({ keyword: "x-semio-formats", schemaType: "array" })
       .addFormat("double", true).addFormat("int64", true).addFormat("uint32", true)
       .addSchema(boardSessionSchema).compile({ $ref: `${boardSessionSchema.$id}#/$defs/Puzzle2dWasmSessionFactory` });
     expect(validate(boardSessionFixture)).toBe(true);
@@ -1464,6 +1470,8 @@ import {
   world3dSelectionActionArgs,
   interactionTargetsForInstances,
   WORLD3D_DEFAULT_INTERACTION_GRANULARITY,
+  WORLD3D_DEFAULT_MARKER_GRANULARITY,
+  world3dMarkerInteractionTarget,
   nodeGraphViewportActionArgs,
   nodeGraphPickChannel,
   parseCatalogueAppDragPayload,
@@ -3693,6 +3701,41 @@ describe("framework renderer hosts", () => {
       targets: JSON.stringify([{ granularity: "handle", id: "extrude@solid" }]),
       merge: "replace",
       method: "pick",
+    });
+  });
+
+  // 🧿️ A marker hit (vortex / target volume / reference) must reach the SAME generic
+  // `interactionSelect`/`interactionHover` verbs an instance hit does, at its own granularity — the
+  // host never learns an app's granularity names: the layer name is the default and the scene record
+  // overrides it.
+  it("resolves world3d marker interaction targets from the scene record, not from host knowledge", () => {
+    expect(WORLD3D_DEFAULT_MARKER_GRANULARITY).toEqual({ vortex: "vortex", attraction: "attraction", targetVolume: "targetVolume", reference: "reference" });
+    expect(world3dMarkerInteractionTarget("vortex", "seed-left-001:v0")).toEqual({ granularity: "vortex", id: "seed-left-001:v0" });
+    expect(world3dMarkerInteractionTarget("vortex", "seed-left-001:v0", {})).toEqual({ granularity: "vortex", id: "seed-left-001:v0" });
+    expect(world3dMarkerInteractionTarget("targetVolume", "volume-1")).toEqual({ granularity: "targetVolume", id: "volume-1" });
+    expect(world3dMarkerInteractionTarget("reference", "ref-1")).toEqual({ granularity: "reference", id: "ref-1" });
+    expect(world3dMarkerInteractionTarget("vortex", "seed-left-001:v0", { interactionGranularityId: "pin", interactionId: "pin-7" })).toEqual({ granularity: "pin", id: "pin-7" });
+  });
+
+  // 🧿️ The exact wire shapes a vortex-marker click and hover now put on the domain path — the same
+  // encoder the instance path uses, so one selection authority sees both.
+  it("encodes a vortex marker pick and hover as generic domain interaction args", () => {
+    const target = world3dMarkerInteractionTarget("vortex", "seed-left-001:v0");
+    expect(world3dSelectionActionArgs("vortex", target.granularity, [target.id], "invertive")).toEqual({
+      domainId: "vortex",
+      targets: JSON.stringify([{ granularity: "vortex", id: "seed-left-001:v0" }]),
+      merge: "invertive",
+      method: "pick",
+    });
+    expect(world3dHoverActionArgs("vortex", target.granularity, target.id)).toEqual({
+      domainId: "vortex",
+      channel: "pointer",
+      targets: JSON.stringify([{ granularity: "vortex", id: "seed-left-001:v0" }]),
+    });
+    expect(world3dHoverActionArgs("vortex", WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex, undefined)).toEqual({
+      domainId: "vortex",
+      channel: "pointer",
+      targets: JSON.stringify([]),
     });
   });
 

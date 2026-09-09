@@ -168,7 +168,7 @@ impl Csr {
         Self { n, indptr, indices, vals }
     }
 
-    pub(crate) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         match close_vec_owner_step(&mut self.vals, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
             Err(()) => return (false, 0, 0),

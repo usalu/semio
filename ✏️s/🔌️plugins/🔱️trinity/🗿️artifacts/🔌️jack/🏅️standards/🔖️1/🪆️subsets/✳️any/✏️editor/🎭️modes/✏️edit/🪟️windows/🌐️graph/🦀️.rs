@@ -1,7 +1,7 @@
 //! 🌐️ Trinity Jack app — Nakagin Graph window (node-graph render + LOD control).
 
+use crate::editor::jack::window_config::JackGraphWindowConfig;
 use crate::JackSnapshot;
-use crate::editor::jack::config::JackConfig;
 use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, NodeGraphScene, NodeGraphViewport, UiAssemblyResult, WindowMeasure};
 use semio_framework_ui_contract::SurfaceKind;
 
@@ -18,11 +18,11 @@ pub(crate) fn trinity_lod_measure(window_id: &str, current_mode: &str, jack_acti
         let name = row.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
         Some(MeasureSelectItem { id: id.clone(), value: id, label: name })
     }));
-    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: jack_action("setLodMode", Some(pack::json!({ "windowId": window_id }))) }
+    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: jack_action("setLodMode", None) }
 }
 
-pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> String {
-    let mode = cfg.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
+pub(crate) fn trinity_lod_json_for_window(config: Option<&JackGraphWindowConfig>) -> String {
+    let mode = config.map_or(TRINITY_LOD_MODE_AUTOMATIC, |config| config.lod_mode.as_str());
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
         pack::json!({ "automatic": true }).to_string()
     } else {
@@ -36,8 +36,9 @@ pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> 
 /// `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host reads
 /// domain "ast"'s `DomainSelection`/`DomainHover` directly (`GraphHost::sync_interaction`), so the
 /// interactive surface stays correct even though this snapshot doesn't carry it.
-pub(crate) fn render(surface_id: &str, _controller_id: &str, window_id: &str, fixture: &JackSnapshot, cfg: &JackConfig) -> UiAssemblyResult<BuiltNode> {
+pub(crate) fn render(surface_id: &str, _controller_id: &str, fixture: &JackSnapshot, config: Option<&JackGraphWindowConfig>) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges, _) = crate::editor::jack::fixture_to_workflow(fixture);
-    let viewport = NodeGraphViewport { x: cfg.camera.x, y: cfg.camera.y, zoom: cfg.camera.zoom };
-    scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene { lod_json: Some(trinity_lod_json_for_window(cfg, window_id)), ..NodeGraphScene::base(nodes, edges, viewport) })
+    let camera = config.and_then(|config| config.camera.as_ref()).unwrap_or(&fixture.camera);
+    let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
+    scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene { lod_json: Some(trinity_lod_json_for_window(config)), ..NodeGraphScene::base(nodes, edges, viewport) })
 }

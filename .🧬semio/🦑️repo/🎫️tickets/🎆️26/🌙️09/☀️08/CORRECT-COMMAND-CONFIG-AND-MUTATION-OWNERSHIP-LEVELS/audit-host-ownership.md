@@ -51,3 +51,36 @@ The WGPU bridge also sends the declared body key and concrete surface id to the 
 ## Validation Status
 
 This is a source trace only. It did not run tests, Bun/Nx tasks, Cargo, or native compilers.
+
+## Resolution Evidence — 2026-09-09
+
+The durable shell ownership finding was valid, while its statement that the current Rust shell independently declared the preference structs was stale. The shell schema now reexports `UiAppearance`, `UiChromeLayout`, `UiDriver`, `UiLocale`, `UiPreferences`, and `UiTheme` from `semio_framework_os_config::opening_config`. The nine durable UI preference fields and their nine `SetUi*` command variants, capability ids, reducers, JSON branches, TypeScript branches, and fixtures were removed from the shell. Its owned schema registry no longer republishes the unused preference aggregate, appearance, layout, or locale definitions; only driver and theme payload projections remain for the two ephemeral drafts. The schema gate distinguishes these owned parsers from its config-owned facade reexports. `bun nx run @semio-tech/framework-os-shell:test-quick` passed 7/7 tests. `bun nx run @semio-tech/framework-os-shell-rs:schema-check` passed its focused Rust test and confirmed that all 29 owned `$defs` agree with the Rust registry, rendered mirror, and TypeScript schema facade.
+
+The native window and menu findings were valid and are fixed in the Dock and WGPU Shell hosts. `DockStackTab` now retains a concrete window id separately from its window-kind id. Layout parsing, active-window resolution, drag/drop, split insertion, and layout persistence carry both values. Native refresh enumerates the live dock instances, resolves each renderer body by kind, projects the shared `ViewModel` by concrete id, and stores its UI document by concrete id. Active utility, action, and document-surface routes use the same exact-instance-to-kind mapping. Native context-menu hit testing resolves the dock body under the pointer and supplies its concrete `windowInstanceId` with the current full `ViewModel`; an invocation outside a window body remains panel-scoped.
+
+The incomplete full-preference consumption finding was valid and is fixed. Native WGPU imports canonical types and mutations directly from `semio-framework-os-config`. Its live chrome preference state and dirty snapshot now retain custom drivers and keybinding overrides in addition to custom themes. Loading derives them from replayed `UiPreferences`; persistence compares them and appends canonical `setCustomDriver`, `setCustomTheme`, and `setKeybindingOverride` mutations. The shared language-neutral fixture covers all scalar selections and the three custom maps with lossless nested driver/theme configuration. The TypeScript oracle run `bun nx run @semio-tech/framework-renderer-react:test -- long '../../../../🎚️UiPreferences/🟦️.ts' --run --silent=false --reporter=verbose` passed 1/1 and printed `[DEBUG] canonical OS UI preference events replayed, cross-shell propagated, isolated, and schema-validated`.
+
+Focused native regressions were added for two concrete instances of one window kind surviving layout parse, drag/drop, and persistence; exact context-menu target selection with panel scope outside dock bodies; and full canonical preference event-log encode/decode/replay into the live native host projection. The first native Nx run reached a concurrent `semio-s-artifact-puzzle-3d` dependency and stopped on two `E0308` errors before compiling the WGPU renderer. After that owner corrected the locale signature, the static rerun reached the same dependency and stopped on four newer interaction changes: two missing `InteractionWrite` type errors, one call-arity error, and one immutable `marks` borrow. These failures occur before the renderer target; its owner is resolving them before the focused native laws can be recorded as passed.
+
+Native OS command declarations now use `CommandDefinition::new` with explicit OS-owned icon ids after the generic command catalog stopped inferring ids from command names. Fullscreen keeps `code`; every preference command keeps `settings`; reset-dock keeps `panel-left`. The focused command-registry law checks the complete ordered icon set and its `os.setLocale` fixture uses the same explicit metadata.
+
+## Handoff — 2026-09-09
+
+The host lane changed these source areas:
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell`: canonical config reexports, removal of durable UI preference fields and setters, scrubbed fixtures and regenerated schema mirror, plus the owned-schema check's distinction between local parsers and facade reexports.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎚️UiPreferences`: canonical mutation-event append, replay, projection, subscription, shared neutral fixture, and Ajv oracle.
+- React `ShellHost` and `PluginRuntime`, the WGPU TypeScript bridge, and native `ProgramBridge`: full projected `ViewModel`, body key, concrete surface identity, context-menu target, and browser-actor view-state delivery.
+- native `Dock` and `Shell`: concrete window-kind/instance separation, exact render/menu/action/utility routing, full canonical preference projection and mutation persistence, and explicit OS command icons.
+- native focused test modules `wgpu-unit`, `wgpu-shell-input`, `wgpu-ui-prefs-themes-i18n`, and `wgpu-command-registry`.
+
+No native test process from this lane remains live. Session `57580` completed with the upstream Puzzle3d failure described above, and shell schema-check session `49893` completed successfully. Once Puzzle3d compiles, rerun these focused host laws through Bun and Nx:
+
+- `bun nx run @semio-tech/framework-renderer-wgpu:test-native -- concrete_window_instances_round_trip_without_kind_collapse -- --nocapture`
+- `bun nx run @semio-tech/framework-renderer-wgpu:test-native -- context_menu_point_resolves_the_exact_concrete_window_instance -- --nocapture`
+- `bun nx run @semio-tech/framework-renderer-wgpu:test-native -- canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript -- --nocapture`
+- `bun nx run @semio-tech/framework-renderer-wgpu:test-native -- build_os_commands_covers_every_wired_setting -- --nocapture`
+
+Successful laws emit `[DEBUG]` evidence for concrete window retention, exact native menu targeting, and full canonical preference replay. The host changes are ready for independent source audit while those dependency-gated executions continue.
+
+Captured logs remain under `🗑️generated/native-concrete-window.log`, `🗑️generated/shell-schema-check.log`, `🗑️generated/shell-ts-test.log`, and `🗑️generated/ui-preferences-neutral.log` for the root ticket owner to consume before the ticket's final generated-output cleanup.

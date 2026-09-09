@@ -18,7 +18,13 @@ impl protocol::MutationKind<LayoutConfig, LayoutConfigMutation> for SetDropPrevi
         next.drop_preview = self.preview.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &LayoutConfig) -> Vec<LayoutConfigMutation> { vec![LayoutConfigMutation::SetDropPreview(Self { preview: base.drop_preview.clone() })] }
-    fn label(&self) -> String { "Set Drop Preview".into() }
-    fn target(&self) -> Vec<String> { vec!["drop_preview".into()] }
+    fn inverse(&self, base: &LayoutConfig) -> Vec<LayoutConfigMutation> {
+        vec![LayoutConfigMutation::SetDropPreview(Self { preview: base.drop_preview.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Drop Preview".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["drop_preview".into()]
+    }
 }

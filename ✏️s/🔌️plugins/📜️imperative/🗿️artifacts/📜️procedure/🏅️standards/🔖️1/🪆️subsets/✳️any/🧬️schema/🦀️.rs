@@ -17,27 +17,14 @@ pub struct ProcedureArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.text")]
     pub text: ProcedureTextChild,
-    #[state(presence)]
-    #[value(default)]
-    pub selected_step_ids: Vec<String>,
-    #[state(config)]
-    #[value(default = "default_contributions_json")]
-    pub contributions_json: String,
-    #[state(transient)]
-    #[value(default)]
-    pub run_output_json: String,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
-fn default_contributions_json() -> String {
-    "[]".into()
-}
-
 impl Default for ProcedureArtifact {
     fn default() -> Self {
         let empty = crate::schema::snapshot::ProcedureSnapshot::default();
-        Self { schema: empty.schema, flow: empty.flow, text: empty.text, selected_step_ids: Vec::new(), contributions_json: default_contributions_json(), run_output_json: String::new() }
+        Self { schema: empty.schema, flow: empty.flow, text: empty.text }
     }
 }
 
@@ -47,7 +34,7 @@ impl ProcedureArtifact {
         crate::ProcedureSnapshot { schema: self.schema.clone(), flow: self.flow.clone(), text: self.text.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::ProcedureSnapshot) -> Self {
         Self { schema: snapshot.schema, flow: snapshot.flow, text: snapshot.text, ..Self::default() }
     }
@@ -66,13 +53,7 @@ impl ProcedureArtifact {
 pub fn procedure_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.imperative.procedure",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

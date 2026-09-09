@@ -21,7 +21,14 @@ pub struct CreateHumidistat {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_humidistat(id: crate::model::EntityId, zone_id: crate::model::EntityId, humidifying_setpoint_schedule_id: crate::model::ScheduleId, dehumidifying_setpoint_schedule_id: crate::model::ScheduleId, humidifying_throttle_range: f64, dehumidifying_throttle_range: f64) -> EnergyModelMutation {
+pub fn create_humidistat(
+    id: crate::model::EntityId,
+    zone_id: crate::model::EntityId,
+    humidifying_setpoint_schedule_id: crate::model::ScheduleId,
+    dehumidifying_setpoint_schedule_id: crate::model::ScheduleId,
+    humidifying_throttle_range: f64,
+    dehumidifying_throttle_range: f64,
+) -> EnergyModelMutation {
     EnergyModelMutation::CreateHumidistat(CreateHumidistat { id, zone_id, humidifying_setpoint_schedule_id, dehumidifying_setpoint_schedule_id, humidifying_throttle_range, dehumidifying_throttle_range })
 }
 

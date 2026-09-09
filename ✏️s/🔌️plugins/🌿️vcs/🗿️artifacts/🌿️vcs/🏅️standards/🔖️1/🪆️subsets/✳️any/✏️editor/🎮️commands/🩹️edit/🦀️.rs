@@ -1,7 +1,7 @@
 //! 🩹️ 🩹️ VCS play app commands command — `edit`.
 
-use crate::{op::VcsDemoMutation, VcsSnapshot};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
+use crate::{op::VcsDemoMutation, VcsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

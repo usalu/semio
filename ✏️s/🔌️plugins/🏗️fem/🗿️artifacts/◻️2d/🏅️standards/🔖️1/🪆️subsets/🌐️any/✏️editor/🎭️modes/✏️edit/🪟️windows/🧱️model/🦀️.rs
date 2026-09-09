@@ -7,8 +7,8 @@
 /// 🔺️ Region mesh element identity, screen coordinates and node identities.
 pub(crate) type Fem2dRegionMeshTriangle = (String, [(f64, f64); 3], [String; 3]);
 
-use crate::{element_id, Fem2dSnapshot, FemCamera, FemDof, FemElement, FemLoad};
 use crate::model::Dof;
+use crate::{element_id, Fem2dSnapshot, FemCamera, FemDof, FemElement, FemLoad};
 use semio_framework_plugin::{BuiltNode, Canvas2dScene};
 #[cfg(test)]
 use semio_framework_ui_scene::canvas2d_snapshot_with_page;

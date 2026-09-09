@@ -1,9 +1,8 @@
 //! 🏛️ `update-page-columns` — atomically sets a page's column count and gutter together.
 
-
-use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -34,7 +33,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdatePageColumns {
 }
 //#endregion 🏛️UpdatePageColumns
 
-
 //#region 🏛️UpdatePageColumns
 pub fn diff_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
@@ -49,7 +47,6 @@ pub fn diff_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapsh
     })
 }
 //#endregion 🏛️UpdatePageColumns
-
 
 //#region 🏛️UpdatePageColumns
 pub fn inverse_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

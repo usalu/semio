@@ -14,13 +14,12 @@
   "fatigueDetail": null,
   "dMm": null,
   "hScMm": null,
-  "fCkMpa": 40.0,
+  "fCkMpa": 40,
   "fUMpa": null,
   "eCmMpa": null,
   "vEdPerStudKn": null,
   "spanM": null,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

@@ -1,10 +1,10 @@
 //! 🧊️ Remodeling play app — the Model window: the World3d scene carrying the reconstructed mesh, the
 //! sparse/dense clouds, the recovered camera positions and the ground control points.
 
-use crate::{PackedF32, RemodelingSnapshot};
 use crate::editor::remodeling::config::RemodelingConfig;
 use crate::editor::remodeling::modes::model::windows::model::options::layers;
 use crate::editor::remodeling::terminology::RemodelingLabels;
+use crate::{PackedF32, RemodelingSnapshot};
 use semio_framework_plugin::{world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,

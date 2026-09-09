@@ -2,8 +2,19 @@
   "name": "repo",
   "projectType": "application",
   "targets": {
+    "ci-baseline": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./🚦️ci/📜️script.ts baseline"
+      }
+    },
     "test": {
       "cache": false,
+      "dependsOn": [
+        "workspace:deps-wasm-opt"
+      ],
       "options": {
         "command": "bun ./📜️script.ts test"
       }
@@ -65,9 +76,11 @@
     "generator-inputs": {
       "executor": "nx:run-commands",
       "cache": false,
-      "outputs": [],
+      "outputs": [
+        "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🔏️generator-inputs/📇️registry/🔣️.json"
+      ],
       "options": {
-        "command": "bun ./📜️script.ts generator-inputs registry-catalog"
+        "command": "bun \"./🔏️inputs/📜️script.ts\" registry-catalog"
       }
     },
     "toolchain": {
@@ -75,7 +88,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts toolchain wasm"
+        "command": "bun ./🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts fingerprint"
       }
     }
   }

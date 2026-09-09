@@ -1,5 +1,7 @@
 /** 🧬️ Shooting artifact schema — every field with its state class. */
 
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+
 export interface ShootingArtifact {
   /** @state artifact */
   schema: string;
@@ -15,25 +17,8 @@ export interface ShootingArtifact {
   activeShotId: string;
   /** @state artifact */
   activeAssetId: string;
-  /** @state presence */
-  selectedShotIds: string[];
-  /** @state presence */
-  activeUtilityId: string;
-  /** @state config */
-  defaultShotFormat: string;
-  /** @state config */
-  defaultShotShape: string;
-  /** @state config */
-  defaultAssetFormat: string;
-  /** @state config */
-  centerModel: boolean;
-  /** @state config */
-  fitRevision: number;
-  /** @state config */
-  cameraDraftLabel: string;
-  /** @state config */
-  camera: ShootingCamera;
-  /** @state config */
+  /** @state artifact @child kind=s.stdio.semio.image */
+  emblem?: ArtifactChild;
 }
 
 export interface ShootingCamera {
@@ -48,7 +33,6 @@ export interface ShootingCamera {
 export interface ShootingSavedCamera {
   id: string;
   label: string;
-  camera: ShootingCamera;
 }
 
 export interface ShootingAsset {
@@ -165,15 +149,7 @@ export function parseShootingArtifact(value: unknown, at = "$"): ShootingArtifac
     shots: shootingShootingArtifactGuardArray(row["shots"], `${at}.shots`).map((item, index) => parseShootingShot(item, `${at}.shots[${index}]`)),
     activeShotId: shootingShootingArtifactGuardString(row["activeShotId"], `${at}.activeShotId`),
     activeAssetId: shootingShootingArtifactGuardString(row["activeAssetId"], `${at}.activeAssetId`),
-    selectedShotIds: shootingShootingArtifactGuardArray(row["selectedShotIds"], `${at}.selectedShotIds`).map((item, index) => shootingShootingArtifactGuardString(item, `${at}.selectedShotIds[${index}]`)),
-    activeUtilityId: shootingShootingArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
-    defaultShotFormat: shootingShootingArtifactGuardString(row["defaultShotFormat"], `${at}.defaultShotFormat`),
-    defaultShotShape: shootingShootingArtifactGuardString(row["defaultShotShape"], `${at}.defaultShotShape`),
-    defaultAssetFormat: shootingShootingArtifactGuardString(row["defaultAssetFormat"], `${at}.defaultAssetFormat`),
-    centerModel: shootingShootingArtifactGuardBoolean(row["centerModel"], `${at}.centerModel`),
-    fitRevision: shootingShootingArtifactGuardInteger(row["fitRevision"], `${at}.fitRevision`, {"minimum": 0}),
-    cameraDraftLabel: shootingShootingArtifactGuardString(row["cameraDraftLabel"], `${at}.cameraDraftLabel`),
-    camera: parseShootingCamera(row["camera"], `${at}.camera`),
+    emblem: row["emblem"] === undefined ? undefined : parseArtifactChild(row["emblem"], `${at}.emblem`),
   };
 }
 
@@ -194,7 +170,6 @@ export function parseShootingSavedCamera(value: unknown, at = "$"): ShootingSave
   return {
     id: shootingShootingArtifactGuardString(row["id"], `${at}.id`),
     label: shootingShootingArtifactGuardString(row["label"], `${at}.label`),
-    camera: parseShootingCamera(row["camera"], `${at}.camera`),
   };
 }
 

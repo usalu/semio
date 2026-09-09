@@ -115,7 +115,7 @@ class MaterializeScript extends BundleScript {
     try {
       writeFileSync(join(temporary, PLUGIN_HOST_SHIM_FILE), hostShimSource());
       console.log(`Materializing ${pluginId} ${profile}: transpile`);
-      await transpilePluginComponentAsync(artifact, temporary, componentBase, { repoRoot: repo, preview2VendorDir: vendor, signal: controller.signal, optimize: profile === "release", wasmOptBin: join(repo, "node_modules/binaryen/bin/wasm-opt") });
+      await transpilePluginComponentAsync(artifact, temporary, componentBase, { repoRoot: repo, preview2VendorDir: vendor, signal: controller.signal, optimize: profile === "release" });
       controller.signal.throwIfAborted();
       console.log(`Materializing ${pluginId} ${profile}: descriptor`);
       const stdoutPath = join(temporary, ".descriptor.stdout"), stderrPath = join(temporary, ".descriptor.stderr");

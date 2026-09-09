@@ -96,14 +96,12 @@ async fn change_en_spectrum_type_produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is canonical and decodes back into `En1998Diff` with `enSpectrumType` set.
-/// `selected_check_index` stays unset on purpose: it is an `Option<Option<u32>>` whose `None` and
-/// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-en-spectrum-type`
-/// never writes it anyway.
+/// 🕹️ Presence selection is absent from the artifact diff encoding.
 #[semio_framework_async_macros::async_test]
 async fn change_en_spectrum_type_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-en-spectrum-type committed diff decodes");
     assert_eq!(decoded.en_spectrum_type.as_deref(), Some("type2"), "change-en-spectrum-type/switches-en-spectrum-type-to-type2: the committed diff must carry en_spectrum_type at type2");
-    assert!(decoded.selected_check_index.is_none(), "change-en-spectrum-type/switches-en-spectrum-type-to-type2: the committed diff must leave the presence-lane selected_check_index unset");
+    assert!(serde_json::to_value(&decoded).expect("diff JSON").get("selectedCheckIndex").is_none(), "change-en-spectrum-type/switches-en-spectrum-type-to-type2: the committed diff must leave the presence-lane selectedCheckIndex absent");
     let reencoded = serde_json::to_value(&decoded).expect("change-en-spectrum-type committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-en-spectrum-type committed diff reparses");
     assert_eq!(reencoded, original, "change-en-spectrum-type/switches-en-spectrum-type-to-type2: committed diff JSON is not canonical");

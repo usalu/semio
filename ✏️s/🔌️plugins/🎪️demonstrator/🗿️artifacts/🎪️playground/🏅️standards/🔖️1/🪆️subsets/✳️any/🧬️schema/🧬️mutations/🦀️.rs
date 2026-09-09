@@ -3,7 +3,7 @@
 use crate::standards::v1::subsets::any::schema::diff::PlaygroundDiff;
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 
-pub use super::change_schema::{ChangeSchema, KINDS, apply_playground_mutation_json, round_trip_playground_dsl, undo_playground_mutation_json};
+pub use super::change_schema::{apply_playground_mutation_json, round_trip_playground_dsl, undo_playground_mutation_json, ChangeSchema, KINDS};
 
 //#region 🔖️Aggregate
 /// 🧬️ Closed semantic mutation vocabulary for a playground document.

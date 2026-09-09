@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::layout::testkit::{layout_app, render as render_body};
 
@@ -32,8 +31,6 @@ async fn layout_labels_resolve_native_english_by_default() {
 
 #[semio_framework_async_macros::async_test]
 async fn layout_labels_translate_document_tree_in_german() {
-    use crate::editor::layout::LayoutCommand;
-    use crate::editor::layout::testkit::dispatch;
     let mut app = layout_app().await;
     let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT).await;
     assert!(json.contains("\"Rahmen\""));

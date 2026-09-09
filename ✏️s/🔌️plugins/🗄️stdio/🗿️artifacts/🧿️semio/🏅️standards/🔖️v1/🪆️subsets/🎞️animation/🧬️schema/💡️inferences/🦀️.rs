@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSn
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::duration::{compute_semio_animation_duration};
+use super::duration::compute_semio_animation_duration;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio animation snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
@@ -66,13 +66,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::animation::schema::Semi
 pub fn semio_animation_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.animation.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

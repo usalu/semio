@@ -21,11 +21,11 @@
 //!   embedded PBR values or texture bytes to map) — `materials`/`textures` stay empty,
 //!   `material_id` stays `None`.
 
-use semio_s_artifact_stdio_obj::schema::snapshot::ObjFace;
-use semio_s_artifact_stdio_obj::ObjSnapshot;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioUv};
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_obj::schema::snapshot::ObjFace;
+use semio_s_artifact_stdio_obj::ObjSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };

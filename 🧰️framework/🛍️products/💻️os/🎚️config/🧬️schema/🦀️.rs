@@ -19,6 +19,7 @@ mod json_value_bridge {
         dsl::DslValue::from(value.clone())
     }
 
+    #[expect(clippy::unnecessary_wraps, reason = "The value derive custom codec interface requires a fallible decoder signature.")]
     pub fn from_value(value: dsl::DslValue) -> Result<super::JsonValue, dsl::ValueError> {
         Ok(super::JsonValue::from(value))
     }

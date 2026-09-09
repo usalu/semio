@@ -12,7 +12,7 @@ pub fn empty_vcs_snapshot() -> crate::VcsSnapshot {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Artifact
-/// 🧬️ Full VCS demo artifact state across the artifact, presence and config lanes.
+/// 🧬️ VCS demo document artifact state.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -32,16 +32,13 @@ pub struct VcsArtifact {
     #[state(artifact)]
     #[value(default)]
     pub tags: Vec<String>,
-    #[state(presence)]
-    #[value(default)]
-    pub selected_checkpoint_ids: Vec<String>,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for VcsArtifact {
     fn default() -> Self {
-        Self { schema: crate::VCS_DOCUMENT_SCHEMA.into(), title: "VCS Demo".into(), counter: 0, notes: String::new(), status: "new".into(), tags: Vec::new(), selected_checkpoint_ids: Vec::new() }
+        Self { schema: crate::VCS_DOCUMENT_SCHEMA.into(), title: "VCS Demo".into(), counter: 0, notes: String::new(), status: "new".into(), tags: Vec::new() }
     }
 }
 
@@ -51,7 +48,7 @@ impl VcsArtifact {
         crate::VcsSnapshot { schema: self.schema.clone(), title: self.title.clone(), counter: self.counter, notes: self.notes.clone(), status: self.status.clone(), tags: self.tags.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::VcsSnapshot) -> Self {
         Self { schema: snapshot.schema, title: snapshot.title, counter: snapshot.counter, notes: snapshot.notes, status: snapshot.status, tags: snapshot.tags, ..Self::default() }
     }
@@ -73,13 +70,7 @@ impl VcsArtifact {
 pub fn vcs_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.vcs.vcs",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

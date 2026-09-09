@@ -15,7 +15,10 @@ async fn flow_empty_transient_close_matches_neutral_trace_and_exact_owner() {
         let items = row["items"].as_u64().unwrap() as usize;
         let bytes = row["bytes"].as_u64().unwrap() as usize;
         let status = match disposer.close_step(&mut owner, items, bytes).unwrap() {
-            PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= items && released_bytes <= bytes); "pending" }
+            PluginCloseStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= items && released_bytes <= bytes);
+                "pending"
+            }
             PluginCloseStep::Complete => "complete",
             PluginCloseStep::Blocked { .. } => panic!("empty transient closure cannot block"),
             PluginCloseStep::AwaitingInput { reason } => panic!("fixture has no active worker input to await: {reason}"),

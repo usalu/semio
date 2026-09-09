@@ -1,7 +1,6 @@
 //! 🗣️ Generation3d play app — the single `app_labels!` block plus the locale resolvers every taxonomy
 //! node reaches for.
 
-
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the 3D flow app; one field per label makes every locale combination compile-checked.
@@ -29,7 +28,7 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
+/// 🗣️ Resolves the active label set from the shared view model.
 pub fn generation3d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Generation3dLabels {
     semio_framework_plugin::resolve_labels::<Generation3dLabels>(view_state)
 }

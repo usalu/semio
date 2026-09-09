@@ -1,0 +1,10 @@
+import { readFileSync } from "node:fs";
+import { interactivityPuzzleFillP4eFailures, policyReadRustPolicySource, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE } from "/Users/ueli/Documents/semio/📜️script.ts";
+const root = "/Users/ueli/Documents/semio";
+const paths = [INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE];
+const evidence = paths.map((p) => policyReadRustPolicySource(root, p));
+console.log("=== with evidence (what the self-test uses) ===");
+for (const f of interactivityPuzzleFillP4eFailures(evidence[0]!, evidence[1]!, evidence[2]!, evidence[3]!, evidence[4]!, evidence[5]!)) console.log(" -", f);
+const rawOnly = paths.map((p) => { try { return readFileSync(`${root}/${p}`, "utf8"); } catch { return ""; } });
+console.log("=== raw files only, no test evidence appended ===");
+for (const f of interactivityPuzzleFillP4eFailures(rawOnly[0]!, rawOnly[1]!, rawOnly[2]!, rawOnly[3]!, rawOnly[4]!, rawOnly[5]!)) console.log(" -", f);

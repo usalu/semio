@@ -64,7 +64,7 @@ pub struct Dialect {
 // once `🖱️ui` gains `ToValue`/`FromValue` for those types.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ArtifactDialect {
     pub artifact_kind: String,
     pub standard: String,
@@ -166,7 +166,7 @@ fn is_kebab_segment(segment: &str) -> bool {
 /// 🔗️ A reference to one artifact: its id plus the dialect it is materialized in. Renders to/from
 /// the wire URI `"<artifact_id>!<kind>@<standard>/<subset>"`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ArtifactRef {
     pub artifact_id: String,
     pub dialect: ArtifactDialect,

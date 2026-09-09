@@ -18,9 +18,8 @@
   "fUMpa": null,
   "eCmMpa": null,
   "vEdPerStudKn": null,
-  "spanM": 12.0,
+  "spanM": 12,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

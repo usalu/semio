@@ -1,4 +1,3 @@
-
 //! 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5 canonical helpers
 //! (`semio_framework_plugin::testkit::{assert_viewer_never_mutates,
 //! assert_editor_and_viewer_share_dialect, new_viewer}`) — closed by lane 0-F (`📓️w0-f-report.md`

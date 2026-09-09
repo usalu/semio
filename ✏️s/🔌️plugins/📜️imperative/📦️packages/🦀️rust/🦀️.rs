@@ -16,10 +16,6 @@
 // evaluates false here — see any extension's own `Cargo.toml` for the full rationale).
 #![allow(unexpected_cfgs)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<ProcedureMutation, ImperativeConfigMutation>, Fault>`, the exact signature
 // `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned
@@ -28,15 +24,21 @@ extern crate semio_framework_schema as schema;
 // artefact of decomposition.
 #[allow(clippy::result_large_err)]
 //#region 🗿️Artifacts
-mod artifacts { pub use semio_s_artifact_imperative_procedure as procedure; }
+mod artifacts {
+    pub use semio_s_artifact_imperative_procedure as procedure;
+}
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_imperative_procedure::editor::*; }
+mod editor {
+    pub use semio_s_artifact_imperative_procedure::editor::*;
+}
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_imperative_procedure::viewer::*; }
+mod viewer {
+    pub use semio_s_artifact_imperative_procedure::viewer::*;
+}
 //#endregion 👁️Viewer
 
 //#region 🕸️Wasm
@@ -48,6 +50,5 @@ mod viewer { pub use semio_s_artifact_imperative_procedure::viewer::*; }
 #[path = "../../🦀️.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ImperativeApps);
-
 
 //#endregion 🔖️Plugin

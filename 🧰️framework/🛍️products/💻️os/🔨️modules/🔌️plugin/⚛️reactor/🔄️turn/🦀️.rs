@@ -46,6 +46,11 @@ crate::component_persistent_local! {
     static COMMAND_INGRESS: RefCell<[Option<RetainedCommandIngress>; 2]> = RefCell::new([None, None]);
 }
 
+thread_local! {
+    /// 🐞️ `[DEBUG]` more-work streak trace: (current streak, total more-work turns) — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+    static MORE_WORK_TRACE: RefCell<(u64, u64)> = const { RefCell::new((0, 0)) };
+}
+
 fn native_close_key<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32) -> Result<instance_lifetime::NativeCloseKey, semio_framework::Fault> {
     let lifetimes = runtime.guest_lifetimes.try_borrow().map_err(|_| reactor_close_fault("lifecycle authority busy"))?;
     lifetimes.get(instance).filter(|slot| slot.cell.is_live()).and_then(|slot| slot.cell.owner()).map(|owner| owner.key()).ok_or_else(|| reactor_close_fault("instance has no acknowledged live lifetime"))
@@ -799,14 +804,24 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
     let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
     effects.extend(crate::plugin_runtime::plugin_drain_document_backbones(runtime)?);
-    let more_work = more_work
-        || close_cleanup_work
-        || typed_operation_work
-        || reconcile_work
-        || resumes_remain
-        || REACTOR_EXECUTOR.with(|executor| executor.has_pending())
-        || COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some))
-        || runtime.guest_lifetimes.borrow().has_work();
+    let executor_pending = REACTOR_EXECUTOR.with(|executor| executor.has_pending());
+    let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
+    let lifecycle_work = runtime.guest_lifetimes.borrow().has_work();
+    let more_work = more_work || close_cleanup_work || typed_operation_work || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work;
+    MORE_WORK_TRACE.with(|trace| {
+        let mut trace = trace.borrow_mut();
+        let (streak, seen) = if more_work { (trace.0 + 1, trace.1 + 1) } else { (0, trace.1) };
+        if more_work && (streak.is_power_of_two() || streak % 4096 == 0) {
+            eprintln!(
+                "[DEBUG] reactor more-work streak={streak} seen={seen} executor_deadline={} close_cleanup={close_cleanup_work} typed_operation={typed_operation_work} reconcile={reconcile_work} resumes={resumes_remain} executor_pending={executor_pending} command_ingress={command_ingress_pending} lifecycle={lifecycle_work} effects={}",
+                more_work && !(close_cleanup_work || typed_operation_work || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work),
+                effects.len()
+            );
+        } else if !more_work && trace.0 >= 64 {
+            eprintln!("[DEBUG] reactor more-work streak ended after {} turns (seen={seen})", trace.0);
+        }
+        *trace = (streak, seen);
+    });
 
     let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance)).transpose().map_err(reactor_close_fault)?.flatten();
     let mut ui_patches = semio_framework::kernel::UiTurnPatches::default();

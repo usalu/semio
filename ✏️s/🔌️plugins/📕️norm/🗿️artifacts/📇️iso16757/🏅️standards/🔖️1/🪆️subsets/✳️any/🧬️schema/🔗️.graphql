@@ -9,7 +9,6 @@ type Iso16757Artifact {
   partNumberInputs: [Iso16757StringMapEntry!]! @state(class: ARTIFACT)
   scriptLimits: String! @state(class: ARTIFACT)
   exchangeProcess: String! @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type Iso16757StringMapEntry { key: String! value: String! }

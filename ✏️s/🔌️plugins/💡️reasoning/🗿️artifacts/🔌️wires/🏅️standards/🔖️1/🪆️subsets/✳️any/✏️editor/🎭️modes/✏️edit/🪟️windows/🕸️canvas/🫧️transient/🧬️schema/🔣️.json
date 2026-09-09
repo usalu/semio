@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/reasoning/wires/canvas-window-transient/schema.json",
+  "title": "WiresCanvasTransient",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dragLastX",
+    "dragLastY"
+  ],
+  "properties": {
+    "dragNodeId": {
+      "type": "string",
+      "x-semio-state": "transient"
+    },
+    "dragLastX": {
+      "type": "number",
+      "x-semio-state": "transient"
+    },
+    "dragLastY": {
+      "type": "number",
+      "x-semio-state": "transient"
+    }
+  }
+}

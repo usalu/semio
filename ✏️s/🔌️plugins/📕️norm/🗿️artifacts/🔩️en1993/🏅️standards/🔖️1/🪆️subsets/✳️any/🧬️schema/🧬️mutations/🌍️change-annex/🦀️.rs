@@ -1,8 +1,7 @@
 //! 🌍️ `change-annex` — sets the annex scalar.
 
-
-use crate::{En1993Mutation, En1993Snapshot};
 use crate::document::AnnexChoice;
+use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

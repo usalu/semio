@@ -1,6 +1,5 @@
 //! 🚒 `change-fire-rating` — sets the En 1994 fire resistance rating, e.g. r60 scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

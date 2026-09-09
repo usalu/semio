@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::snapshot::{DocxDocument, DocxTable, DocxTableCell, DocxTableRow};
 

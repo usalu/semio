@@ -3,10 +3,10 @@
 //! `📚️examples` children — `crate::editor::vcs`/`crate::viewer::vcs` stay mounted at the plugin's
 //! top-level `editor`/`viewer` modules (recipe §5 gotcha 1), not here.
 
-use crate::standards::v1::subsets::any::{io, schema};
-use crate::VCS_DIALECT;
 use crate::editor::vcs as editor;
+use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::vcs as viewer;
+use crate::VCS_DIALECT;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;

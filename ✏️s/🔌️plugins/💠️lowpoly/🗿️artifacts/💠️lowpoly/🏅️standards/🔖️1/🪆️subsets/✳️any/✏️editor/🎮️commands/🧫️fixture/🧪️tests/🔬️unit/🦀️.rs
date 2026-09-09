@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::lowpoly::LowpolyCommand;
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::testkit::{app, dispatch};
+use crate::editor::lowpoly::LowpolyCommand;
 use crate::schema::default_snapshot;
 
 /// 🧬️ `importSnapshotJson`/`setFixtureJson` emit a `Effect::LoadDocument` (outside undo
@@ -18,7 +17,7 @@ async fn import_snapshot_json_replaces_the_whole_document() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = LowpolyConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let mut scratch = LowpolyScratch::default();
     let emit = set_snapshot_json::handle(&set_snapshot_json::ImportSnapshotJson { json }, &doc, &cfg, &mut scratch).expect("handle");
     let semio_framework_plugin::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("importSnapshotJson must emit a LoadDocument effect") else {

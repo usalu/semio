@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{SHOOTING_DOCUMENT_SCHEMA, ShootingAmbient, ShootingAsset, ShootingCamera, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun};
+use crate::{ShootingAmbient, ShootingAsset, ShootingCamera, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun, SHOOTING_DOCUMENT_SCHEMA};
 
 /// 🎞️ A fixture exercising every field/variant, shared verbatim by the DSL and OpText law tests.
 #[allow(clippy::approx_constant, reason = "0.7071 is deliberately an approximate quaternion component in this snapshot, not the FRAC_1_SQRT_2 constant")]

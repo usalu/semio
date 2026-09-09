@@ -1,10 +1,10 @@
 //! 🎬️ 🖼️ Raster play app commands command — `set-active-example`.
 
+use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::mutations::{add_layer_asset, create_layer, delete_layer, remove_layer_asset};
 use crate::op::RasterMutation;
 use crate::standards::v1::subsets::any::schema::{layer_node_id, raster_example_document};
 use crate::{raster_asset, RasterSnapshot};
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -32,7 +32,7 @@ fn replace_document_operations(current: &RasterSnapshot, next: &RasterSnapshot) 
     }
     for (asset_id, _) in next.assets.iter() {
         if let Some(asset) = raster_asset(&next.assets, asset_id) {
-            operations.push(RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: asset_id.clone(), asset }));
+            operations.push(RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: asset_id.to_owned(), asset }));
         }
     }
     for (index, layer) in next.layers.iter().enumerate() {

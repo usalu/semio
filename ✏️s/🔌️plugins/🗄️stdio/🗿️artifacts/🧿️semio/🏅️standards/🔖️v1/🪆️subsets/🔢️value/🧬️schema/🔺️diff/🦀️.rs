@@ -9,14 +9,12 @@
 //! like every other mutation. Structural template (Replace-on-kind-change fallback, recursive
 //! between/apply/absorb) copied from `json`'s own `JsonDiff` (this subset's informing source).
 
-use crate::standards::v1::subsets::base::schema::triples::{
-    dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff,
-};
+use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
 use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, ValueId};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️NamedAdded
 /// 🧷 Position-carrying "added" wrapper for name/id-keyed collections — the recipe's own

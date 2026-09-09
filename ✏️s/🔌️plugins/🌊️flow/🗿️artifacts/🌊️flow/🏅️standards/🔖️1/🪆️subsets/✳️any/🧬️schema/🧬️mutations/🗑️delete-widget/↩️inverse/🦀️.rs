@@ -7,8 +7,8 @@ use crate::schema::mutations::create_widget::CreateWidget;
 use crate::schema::mutations::move_widgets::MoveWidgets;
 use crate::schema::mutations::FlowMutation;
 use crate::{flow_working_scene, FlowSnapshot};
-use semio_framework_artifact_flow_flow::FlowLayoutEntry;
 use protocol::Identified;
+use semio_framework_artifact_flow_flow::FlowLayoutEntry;
 
 use super::DeleteWidget;
 

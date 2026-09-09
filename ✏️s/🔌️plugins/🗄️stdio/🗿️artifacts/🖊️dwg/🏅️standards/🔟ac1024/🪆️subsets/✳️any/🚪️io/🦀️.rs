@@ -28,7 +28,6 @@ pub type DwgObjectRelations = (Option<u64>, Vec<u64>, Option<u64>);
 /// 📦 Serialized objects with handle and byte-offset entries.
 pub type DwgObjectFrame = (Vec<u8>, Vec<(u64, usize)>);
 
-
 //#region 🔖️R2004FileHeaderDecrypt
 /// 🔓 R2004+ file header "decryption" -- not real security, a fixed LCG-generated one-time pad
 /// (the classic Borland/MSVC `rand()` constants: `seed = seed*0x343fd + 0x269ec3`, upper 16 bits
@@ -8746,9 +8745,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::DwgClass]) -> Res
         let mut strings = string_stream.map(|(reader, _)| reader);
 
         if type_code == 82 || object.class_name == "LAYOUT" {
-            use crate::schema::snapshot::{
-                DwgLayout, DwgLayoutOptions, DwgLogicalObjectBody, DwgOrthographicView, DwgPlotArea, DwgPlotOptions, DwgPlotPaperUnit, DwgPlotRotation, DwgShadePlot, DwgShadePlotResolution, DwgStandardScale,
-            };
+            use crate::schema::snapshot::{DwgLayout, DwgLayoutOptions, DwgLogicalObjectBody, DwgOrthographicView, DwgPlotArea, DwgPlotOptions, DwgPlotPaperUnit, DwgPlotRotation, DwgShadePlot, DwgShadePlotResolution, DwgStandardScale};
             let strings = strings.as_mut().ok_or_else(|| format!("LAYOUT {handle:#x} string stream missing"))?;
             let page_setup_name = strings.read_tu()?;
             let printer_configuration = strings.read_tu()?;
@@ -8886,9 +8883,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::DwgClass]) -> Res
                 viewport_handles,
             }));
         } else if type_code == 527 || object.class_name == "BLOCKLINEARPARAMETER" {
-            use crate::schema::snapshot::{
-                DwgBlockLinearParameter, DwgBlockParameterBaseLocation, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgBlockTwoPointParameter, DwgLogicalObjectBody, DwgPropertyExpressionReference,
-            };
+            use crate::schema::snapshot::{DwgBlockLinearParameter, DwgBlockParameterBaseLocation, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgBlockTwoPointParameter, DwgLogicalObjectBody, DwgPropertyExpressionReference};
             let strings = strings.as_mut().ok_or_else(|| format!("BLOCKLINEARPARAMETER {handle:#x} string stream missing"))?;
             let element = decode_r2010_block_element(&mut data, strings, "BLOCKLINEARPARAMETER")?;
             let show_properties = data.read_b()?;
@@ -9088,9 +9083,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::DwgClass]) -> Res
             }
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, &object.class_name)?;
         } else if matches!(type_code, 538 | 546 | 548) || matches!(object.class_name.as_str(), "BLOCKBASEPOINTPARAMETER" | "BLOCKVERTICALCONSTRAINTPARAMETER" | "BLOCKHORIZONTALCONSTRAINTPARAMETER") {
-            use crate::schema::snapshot::{
-                DwgBlockBasePointParameter, DwgBlockLinearConstraintParameter, DwgBlockOnePointParameter, DwgBlockParameterAllowedValues, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgLogicalObjectBody,
-            };
+            use crate::schema::snapshot::{DwgBlockBasePointParameter, DwgBlockLinearConstraintParameter, DwgBlockOnePointParameter, DwgBlockParameterAllowedValues, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgLogicalObjectBody};
             let strings = strings.as_mut().ok_or_else(|| format!("{} {handle:#x} string stream missing", object.class_name))?;
             object.body = Some(if type_code == 538 {
                 let element = decode_r2010_block_element(&mut data, strings, "BLOCKBASEPOINTPARAMETER")?;
@@ -9290,9 +9283,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::DwgClass]) -> Res
                 enabled_channels: DwgMaterialChannels { diffuse: channels & 1 != 0, specular: channels & 2 != 0, reflection: channels & 4 != 0, opacity: channels & 8 != 0, bump: channels & 16 != 0, refraction: channels & 32 != 0 },
             }));
         } else if type_code == 521 || object.class_name == "BLOCKMOVEACTION" {
-            use crate::schema::snapshot::{
-                DwgBlockAction, DwgBlockActionConnection, DwgBlockActionDependency, DwgBlockMoveAction, DwgBlockMoveCoordinateMode, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody,
-            };
+            use crate::schema::snapshot::{DwgBlockAction, DwgBlockActionConnection, DwgBlockActionDependency, DwgBlockMoveAction, DwgBlockMoveCoordinateMode, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
             let parent_id = data.read_bl()? as i32;
             let major_version = data.read_bl()?;
             let minor_version = data.read_bl()?;
@@ -10769,18 +10760,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::DwgClass]) -> Res
             } else if let Some((is_shape, is_vertical, text_size, width_factor, oblique_angle, generation, last_height)) = text_style {
                 let font_file = strings.read_tu().map_err(|error| format!("text style {handle:#x} font file: {error}"))?;
                 let big_font_file = strings.read_tu().map_err(|error| format!("text style {handle:#x} big-font file: {error}"))?;
-                crate::schema::snapshot::DwgTableRecordBody::TextStyle(crate::schema::snapshot::DwgTextStyleTableRecord {
-                    common,
-                    is_shape,
-                    is_vertical,
-                    text_size,
-                    width_factor,
-                    oblique_angle,
-                    generation,
-                    last_height,
-                    font_file,
-                    big_font_file,
-                })
+                crate::schema::snapshot::DwgTableRecordBody::TextStyle(crate::schema::snapshot::DwgTextStyleTableRecord { common, is_shape, is_vertical, text_size, width_factor, oblique_angle, generation, last_height, font_file, big_font_file })
             } else {
                 crate::schema::snapshot::DwgTableRecordBody::RegisteredApplication(crate::schema::snapshot::DwgRegisteredApplicationTableRecord { common, group_71: group_71.unwrap() })
             };
@@ -10838,9 +10818,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::DwgClass]) -> Res
         let marker_owner = objects.iter().find(|object| object.handle == block_handle).and_then(|object| object.owner_handle);
         let header_handle = objects[header_index].handle;
         let ordinary_index = objects.iter().find_map(|object| match object.body.as_ref() {
-            Some(crate::schema::snapshot::DwgLogicalObjectBody::TableControl(crate::schema::snapshot::DwgTableControlBody::Block(control))) => {
-                control.entry_handles.iter().position(|entry| entry.handle == Some(header_handle))
-            }
+            Some(crate::schema::snapshot::DwgLogicalObjectBody::TableControl(crate::schema::snapshot::DwgTableControlBody::Block(control))) => control.entry_handles.iter().position(|entry| entry.handle == Some(header_handle)),
             _ => None,
         });
         let Some(crate::schema::snapshot::DwgLogicalObjectBody::TableRecord(crate::schema::snapshot::DwgTableRecordBody::BlockHeader(header))) = objects[header_index].body.as_mut() else { unreachable!() };
@@ -11428,7 +11406,6 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
-
 
 /// 📐️ Renders a DWG drawing back to flat SVG markup (lines and closed polygons), for the raster import path.
 pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {

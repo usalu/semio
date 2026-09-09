@@ -46,6 +46,7 @@ export function toolJobLatestWinsSelfTests(): number {
   ];
   for (const hostile of integrationHostiles) if (validateIntegration(hostile)) throw new Error("latest-wins integration schema accepted stale authority, collision, starvation, or a missing accepted target");
   const source = readFileSync(join(base, "🦀️.rs"), "utf8");
+  const runtimeContractTests = readFileSync(join(base, "🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
   const body = (text: string, name: string): string => {
     const start = text.lastIndexOf(`fn ${name}(`);
     return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? "";
@@ -83,7 +84,7 @@ export function toolJobLatestWinsSelfTests(): number {
     && text.includes("self.token.child_now()")
     && text.includes("compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel")
     && text.includes("scope.operation")
-    && text.includes("retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close");
+    && runtimeContractTests.includes("async fn retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close()");
   if (!exact(source)) throw new Error("latest-wins production admission/publication authority is incomplete");
   for (const [, token] of obligations) if (exact(source.replaceAll(token, "unqualified_authority"))) throw new Error(`latest-wins accepts missing authority: ${token}`);
   const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/🚪️raw-allocation-close.json"), "utf8"));

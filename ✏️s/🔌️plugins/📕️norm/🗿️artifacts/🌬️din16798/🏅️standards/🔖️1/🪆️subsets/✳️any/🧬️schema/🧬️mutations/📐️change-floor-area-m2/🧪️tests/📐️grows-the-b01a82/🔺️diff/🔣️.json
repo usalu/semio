@@ -13,7 +13,7 @@
   "persons": null,
   "idaClass": null,
   "ventilationM3H": null,
-  "floorAreaM2": 120.0,
+  "floorAreaM2": 120,
   "bedrooms": null,
   "dwellingVentilationM3H": null,
   "occupants": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

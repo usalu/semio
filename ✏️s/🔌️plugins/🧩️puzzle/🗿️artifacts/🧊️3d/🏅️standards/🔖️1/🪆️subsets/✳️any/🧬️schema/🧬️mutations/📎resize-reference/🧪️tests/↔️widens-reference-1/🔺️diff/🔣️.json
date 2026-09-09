@@ -20,11 +20,11 @@
               "mediaKind": "image"
             },
             "origin": [
-              0,
-              0,
-              0
+              0.0,
+              0.0,
+              0.0
             ],
-            "widthWorld": 20,
+            "widthWorld": 20.0,
             "locked": false,
             "hidden": false
           }
@@ -32,36 +32,5 @@
       }
     ],
     "reordered": null
-  },
-  "selectedObjectIds": null,
-  "selectedVortexIds": null,
-  "selectedAttractionIds": null,
-  "selectedTargetVolumeIds": null,
-  "selectedReferenceIds": null,
-  "activeUtilityId": null,
-  "cameraPositionX": null,
-  "cameraPositionY": null,
-  "cameraPositionZ": null,
-  "cameraTargetX": null,
-  "cameraTargetY": null,
-  "cameraTargetZ": null,
-  "cameraZoom": null,
-  "selectionMethod": null,
-  "selectionModeDefault": null,
-  "engagementInput": null,
-  "gridVisible": null,
-  "gridSnapEnabled": null,
-  "gridSpacing": null,
-  "overlapBudget": null,
-  "fillCount": null,
-  "brushCandidateIndex": null,
-  "lodAutomatic": null,
-  "lodDepthVariable": null,
-  "lodManual": null,
-  "proximityRadius": null,
-  "runtimeExtrasJson": null,
-  "hoveredObjectId": null,
-  "hoveredVortexFullId": null,
-  "hoveredKindId": null,
-  "previewSeq": null
+  }
 }

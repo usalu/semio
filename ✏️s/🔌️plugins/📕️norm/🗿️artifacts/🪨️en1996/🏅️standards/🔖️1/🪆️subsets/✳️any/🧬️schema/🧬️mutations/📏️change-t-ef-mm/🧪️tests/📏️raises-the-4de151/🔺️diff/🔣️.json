@@ -21,6 +21,5 @@
   "bedJointThicknessMm": null,
   "storeys": null,
   "hEfMm": null,
-  "tEfMm": 300.0,
-  "selectedCheckIndex": null
+  "tEfMm": 300
 }

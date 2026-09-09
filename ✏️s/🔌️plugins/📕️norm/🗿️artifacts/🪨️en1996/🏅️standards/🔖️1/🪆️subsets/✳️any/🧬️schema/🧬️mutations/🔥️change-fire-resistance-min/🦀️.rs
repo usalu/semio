@@ -1,9 +1,8 @@
 //! 🧊 `change-fire-resistance-min` payload — changes the En1996 document's `fire_resistance_min` (fire resistance requirement [min]).
 
-
-use crate::En1996Snapshot;
 use crate::diff::En1996Diff;
 use crate::mutations::En1996Mutation;
+use crate::En1996Snapshot;
 //#region 🔖️ChangeFireResistanceMin
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

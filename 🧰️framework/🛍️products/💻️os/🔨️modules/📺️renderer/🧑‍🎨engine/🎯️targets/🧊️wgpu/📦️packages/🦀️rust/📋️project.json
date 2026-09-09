@@ -91,6 +91,49 @@
       "options": {
         "command": "bun ./📜️script.ts check-browser-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      },
+      "cache": false,
+      "outputs": []
+    },
+    "generate-browser-boot": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "browserBootSources",
+        "{workspaceRoot}/bunfig.toml",
+        "{workspaceRoot}/tsconfig.json",
+        {
+          "json": "{workspaceRoot}/package.json",
+          "fields": [
+            "packageManager"
+          ]
+        },
+        {
+          "runtime": "bun --version"
+        },
+        {
+          "runtime": "node -p \"process.platform.concat(process.arch)\""
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "BUN_ENV"
+        },
+        {
+          "dependentTasksOutputFiles": "**/🎮️playgrounds.ts"
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/🟦️typescript/🚀️boot.js"
+      ],
+      "dependsOn": [
+        "@semio-tech/plugin-registry:generate"
+      ],
+      "options": {
+        "command": "bun \"../../⚙️browser-build/📜️script.ts\" generate-browser-boot",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+        "forwardAllArgs": false
       }
     },
     "generate-frame-worker": {
@@ -105,6 +148,16 @@
       "options": {
         "command": "bun ./📜️script.ts preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "lockfile-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun \"./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo metadata --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml\"",
+        "cwd": ".",
+        "forwardAllArgs": false
       }
     },
     "check-frame-worker": {
@@ -131,6 +184,7 @@
     "wasm": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "generate-browser-boot",
         "generate-frame-worker"
       ],
       "options": {
@@ -141,6 +195,7 @@
     "serve": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "generate-browser-boot",
         "generate-frame-worker"
       ],
       "options": {
@@ -152,6 +207,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "generate-browser-boot",
         "generate-frame-worker"
       ],
       "options": {
@@ -239,5 +295,10 @@
   "tags": [
     "scope:framework",
     "type:renderer"
-  ]
+  ],
+  "metadata": {
+    "sourceInputs": {
+      "browserBootSources": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json"
+    }
+  }
 }

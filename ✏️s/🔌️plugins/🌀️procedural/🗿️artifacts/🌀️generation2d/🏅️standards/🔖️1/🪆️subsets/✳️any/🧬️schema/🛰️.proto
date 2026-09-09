@@ -8,16 +8,6 @@ message Generation2dArtifact {
   FlowFixture fixture = 1;
   // @state artifact
   GenerationPlayState generation = 2;
-  // @state presence
-  repeated string selected_ids = 3;
-  // @state config
-  CameraJson graph_camera = 4;
-  // @state config
-  string show_mode = 5;
-  // @state presence
-  optional string selected_generation_id = 6;
-  // @state artifact
-  optional string generation_preview_text = 7;
   // @state config
 }
 

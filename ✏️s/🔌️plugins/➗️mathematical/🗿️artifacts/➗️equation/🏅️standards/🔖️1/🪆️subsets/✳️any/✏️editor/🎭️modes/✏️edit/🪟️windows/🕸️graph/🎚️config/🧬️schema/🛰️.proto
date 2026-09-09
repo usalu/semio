@@ -1,0 +1,12 @@
+syntax = "proto3";
+package semio.app.mathematical.equation.graph_window.config;
+
+message EquationCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message EquationGraphWindowConfig {
+  EquationCamera camera = 1;
+}

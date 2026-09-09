@@ -8,13 +8,12 @@
 //! registration, for LSP/verification tooling — a grammar can be registered and validated without a
 //! literal parser impl backing it at runtime) stayed at `🚪️io/🔺️diff/📝️text/`.
 
-
 use crate::schema::{block_id, find_block, flatten_blocks, insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
-use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
+use protocol::MutationDiff;
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
@@ -56,20 +55,6 @@ pub struct NoteDiff {
     /// snapshot field's own doc comment).
     #[state(artifact)]
     pub linked_artifact: Option<Option<store::ArtifactLink>>,
-    #[state(presence)]
-    pub selected_block_ids: Option<NoteStringList>,
-    #[state(presence)]
-    pub active_utility_id: Option<String>,
-    #[state(config)]
-    pub engagement_input: Option<String>,
-    #[state(config)]
-    pub camera_x: Option<f64>,
-    #[state(config)]
-    pub camera_y: Option<f64>,
-    #[state(config)]
-    pub camera_zoom: Option<f64>,
-    #[state(artifact)]
-    pub hovered_block_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 
@@ -132,7 +117,7 @@ pub struct NoteBlockPatch {
 
 //#region 🔖️Apply
 impl NoteDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &NoteArtifact) -> protocol::MutationApplyResult<NoteArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -177,27 +162,6 @@ impl NoteDiff {
             }
             if let Some(assets) = &self.assets {
                 apply_assets_delta(&mut next.assets, assets).map_err(|error| error.under(["assets"]))?;
-            }
-            if let Some(list) = &self.selected_block_ids {
-                next.selected_block_ids = list.values.clone();
-            }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
-            if let Some(value) = &self.engagement_input {
-                next.engagement_input = value.clone();
-            }
-            if let Some(value) = self.camera_x {
-                next.camera_x = value;
-            }
-            if let Some(value) = self.camera_y {
-                next.camera_y = value;
-            }
-            if let Some(value) = self.camera_zoom {
-                next.camera_zoom = value;
-            }
-            if let Some(value) = &self.hovered_block_id {
-                next.hovered_block_id = value.clone();
             }
             if let Some(value) = &self.linked_artifact {
                 next.linked_artifact = value.clone();
@@ -399,13 +363,6 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
         take!(snap_grid_spacing);
         take!(pencil_width);
         take!(eraser_radius);
-        take!(selected_block_ids);
-        take!(active_utility_id);
-        take!(engagement_input);
-        take!(camera_x);
-        take!(camera_y);
-        take!(camera_zoom);
-        take!(hovered_block_id);
         take!(linked_artifact);
         match (&mut self.blocks, other.blocks) {
             (Some(dst), Some(src)) => {
@@ -435,10 +392,7 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
 /// `move-block`/`resize-block`/`edit-block-*`/table-row-column mutation leaf: each computes the
 /// updated `NoteBlockNode` value from `(payload, base)` and hands it here.
 pub fn note_block_patch_diff(id: &str, block: NoteBlockNode) -> NoteDiff {
-    NoteDiff {
-        blocks: Some(NoteBlocksDelta { patched: vec![NoteBlockPatchEntry { id: id.to_string(), patch: NoteBlockPatch { block_json: Some(dsl::os_pack::to_json_string(&block)) } }], ..Default::default() }),
-        ..Default::default()
-    }
+    NoteDiff { blocks: Some(NoteBlocksDelta { patched: vec![NoteBlockPatchEntry { id: id.to_string(), patch: NoteBlockPatch { block_json: Some(dsl::os_pack::to_json_string(&block)) } }], ..Default::default() }), ..Default::default() }
 }
 
 /// ➕ Sparse single-block insertion at `(parent_id, index)` — shared by `create-block`,

@@ -8,7 +8,10 @@
     "nativeTargets",
     "arguments",
     "artifactArguments",
-    "artifactProgress"
+    "artifactProgress",
+    "artifactCapture",
+    "generatedWrites",
+    "artifactTestRunner"
   ],
   "additionalProperties": false,
   "properties": {
@@ -174,6 +177,136 @@
         },
         "pattern": {
           "type": "string"
+        }
+      }
+    },
+    "artifactCapture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dependency",
+        "primary",
+        "replacement",
+        "delayMs"
+      ],
+      "properties": {
+        "dependency": {
+          "type": "string",
+          "minLength": 1
+        },
+        "primary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "replacement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "delayMs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "generatedWrites": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "initial",
+          "next",
+          "rewritten"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "initial": {
+            "type": "string"
+          },
+          "next": {
+            "type": "string"
+          },
+          "rewritten": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "artifactTestRunner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "segments",
+        "level",
+        "includedSkips",
+        "excludedSkips",
+        "runtimeFilters",
+        "required",
+        "forbidden"
+      ],
+      "properties": {
+        "segments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "level": {
+          "enum": [
+            "fundamental",
+            "quick",
+            "long",
+            "exhaustive"
+          ]
+        },
+        "includedSkips": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludedSkips": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "runtimeFilters": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbidden": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }

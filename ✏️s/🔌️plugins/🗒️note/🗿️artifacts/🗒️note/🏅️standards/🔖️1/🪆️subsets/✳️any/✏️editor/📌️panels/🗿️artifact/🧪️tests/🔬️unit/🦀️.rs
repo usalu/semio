@@ -1,6 +1,5 @@
-
-use crate::editor::note::NOTE_PLAY_BODY_DOCUMENT as BODY_DOCUMENT;
 use crate::editor::note::testkit::{note_app, render as render_body};
+use crate::editor::note::NOTE_PLAY_BODY_DOCUMENT as BODY_DOCUMENT;
 use semio_framework_plugin::PluginApp;
 
 /// 🩹️ Pre-existing bug fixed here (confirmed via `git log --date=iso`: `SetActiveExample`'s

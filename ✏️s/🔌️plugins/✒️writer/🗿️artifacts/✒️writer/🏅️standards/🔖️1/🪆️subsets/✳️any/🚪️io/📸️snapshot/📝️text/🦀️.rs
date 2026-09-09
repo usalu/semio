@@ -2,7 +2,7 @@
 //! REAL `store::ArtifactDsl` impl for `WriterSnapshot` (design.md §1 CORRECTION: the native codec
 //! is one bidirectional thing, unsplit, so it lives here rather than mirrored under import/export).
 
-use crate::{WriterDocumentChild, WriterSnapshot};
+use crate::{schema, WriterDocumentChild, WriterSnapshot};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -155,7 +155,7 @@ pub fn print_writer_dsl(snapshot: &WriterSnapshot) -> String {
 /// call site below (`setActiveExample`, `.example("jack", ...)`, tests, "file-text"); never re-embed the
 /// raw text.
 pub fn jack_example_document() -> WriterSnapshot {
-    let mut document = parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::schema::empty_writer_snapshot());
+    let mut document = parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| schema::empty_writer_snapshot());
     crate::attach_writer_document_text(&mut document.document, JACK_QUERY_TEXT);
     document
 }
@@ -168,7 +168,7 @@ pub fn jack_example_json() -> String {
 
 /// 📄️ The `dag.jack` example, parsed once from {@link DAG_JACK_EXAMPLE_TEXT} — see {@link jack_example_document}.
 pub fn dag_jack_example_document() -> WriterSnapshot {
-    let mut document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::schema::empty_writer_snapshot());
+    let mut document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| schema::empty_writer_snapshot());
     crate::attach_writer_document_text(&mut document.document, DAG_JACK_QUERY_TEXT);
     document
 }

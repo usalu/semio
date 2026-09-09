@@ -1,0 +1,31 @@
+{
+  "epoch": "315532800",
+  "timezone": "UTC",
+  "time": 0,
+  "date": 33,
+  "files": {
+    "package.json": "{\n  \"name\": \"fixture-extension\",\n  \"publisher\": \"fixture\",\n  \"version\": \"1.0.0\",\n  \"engines\": {\n    \"vscode\": \"^1.104.0\"\n  },\n  \"main\": \"./out/extension.js\",\n  \"license\": \"MIT\",\n  \"repository\": \"https://github.com/semio-tech/semio\",\n  \"activationEvents\": [\n    \"onStartupFinished\"\n  ]\n}\n",
+    "LICENSE.md": "MIT\n",
+    "out/extension.js": "exports.activate = () => undefined;\n",
+    "out/test/extension.test.js": "throw new Error(\"test-only\");\n",
+    "🖼️icon/🔣️.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>\n",
+    "⚙️build/🟦️.ts": "throw new Error(\"build-only\");\n",
+    "⚙️build/🧪️tests/🔣️.json": "{}\n",
+    "node_modules/unused/index.js": "throw new Error(\"dependency store\");\n",
+    "reports/build.log": "unshipped diagnostic\n"
+  },
+  "expectedFiles": [
+    "LICENSE.md",
+    "out/extension.js",
+    "package.json",
+    "🖼️icon/🔣️.svg"
+  ],
+  "expectedZip": [
+    "[Content_Types].xml",
+    "extension.vsixmanifest",
+    "extension/LICENSE.md",
+    "extension/out/extension.js",
+    "extension/package.json",
+    "extension/🖼️icon/🔣️.svg"
+  ]
+}

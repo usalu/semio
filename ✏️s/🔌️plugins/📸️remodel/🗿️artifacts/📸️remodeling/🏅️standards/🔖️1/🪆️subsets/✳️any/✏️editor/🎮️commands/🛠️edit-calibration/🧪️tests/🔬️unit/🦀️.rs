@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::remodeling::RemodelingCommand;
 use crate::editor::remodeling::commands::{add_gcp, calibrate_cameras, place_gcp_observation, remove_gcp};
 use crate::editor::remodeling::testkit::{app, dispatch};
+use crate::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn edit_calibration_inserts_then_updates_the_same_camera_entry() {

@@ -33,7 +33,7 @@
   "hrMDotKgS": null,
   "hrCpJKgk": null,
   "hrDeltaTC": null,
-  "hrTH": 14.0,
+  "hrTH": 14,
   "hrSavingsReferenceKwh": null,
   "n50HInv": null,
   "volumeM3": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::schema::diff::IfcEntitiesDiff;
 use crate::schema::snapshot::{IfcComplexType, IfcHeader};
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 
 #[test]
 fn missing_entity_target_is_rejected_before_mutation() {

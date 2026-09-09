@@ -1,0 +1,121 @@
+{
+  "maximumInlineBytes": 112,
+  "cases": [
+    {
+      "id": "minimal",
+      "input": {
+        "origin": "app",
+        "code": "app.message",
+        "severity": "error",
+        "message": "",
+        "scope": {},
+        "retryable": false
+      },
+      "expected": {
+        "origin": "app",
+        "code": "app.message",
+        "severity": "error",
+        "message": "",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "id": "complete",
+      "input": {
+        "origin": "plugin",
+        "code": "plugin.boundary.refused",
+        "severity": "warning",
+        "message": "Übertragungsfehler 🧩",
+        "scope": {
+          "pluginId": "puzzle",
+          "appId": "editor",
+          "instanceId": "17",
+          "module": "wire",
+          "bodyKey": "world"
+        },
+        "span": {
+          "line": 3,
+          "column": 7,
+          "length": 11
+        },
+        "causes": [
+          {
+            "message": "source remained owned",
+            "code": "wire.retained"
+          },
+          {
+            "message": "cancelled"
+          }
+        ],
+        "retryable": true
+      },
+      "expected": {
+        "origin": "plugin",
+        "code": "plugin.boundary.refused",
+        "severity": "warning",
+        "message": "Übertragungsfehler 🧩",
+        "scope": {
+          "pluginId": "puzzle",
+          "appId": "editor",
+          "instanceId": "17",
+          "module": "wire",
+          "bodyKey": "world"
+        },
+        "span": {
+          "line": 3,
+          "column": 7,
+          "length": 11
+        },
+        "causes": [
+          {
+            "message": "source remained owned",
+            "code": "wire.retained"
+          },
+          {
+            "message": "cancelled"
+          }
+        ],
+        "retryable": true
+      }
+    },
+    {
+      "id": "absent-optionals",
+      "input": {
+        "origin": "framework",
+        "code": "framework.refused",
+        "severity": "info",
+        "message": "no scope"
+      },
+      "expected": {
+        "origin": "framework",
+        "code": "framework.refused",
+        "severity": "info",
+        "message": "no scope",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "id": "null-optionals",
+      "input": {
+        "origin": "os",
+        "code": "os.refused",
+        "severity": "error",
+        "message": "null scope",
+        "scope": null,
+        "span": null,
+        "causes": null,
+        "retryable": null
+      },
+      "expected": {
+        "origin": "os",
+        "code": "os.refused",
+        "severity": "error",
+        "message": "null scope",
+        "scope": {},
+        "retryable": false
+      }
+    }
+  ]
+}

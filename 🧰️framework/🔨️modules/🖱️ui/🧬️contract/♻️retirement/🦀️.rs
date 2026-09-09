@@ -13,7 +13,7 @@ pub(crate) use handback::{UiArenaHandback, UiArenaHandbacks};
 mod built;
 pub use built::BuiltTreeRetirement;
 
-static UI_VALUE_HANDBACKS: UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, 4> = UiArenaHandbacks::new();
+static UI_VALUE_HANDBACKS: UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS> = UiArenaHandbacks::new();
 
 pub(super) fn hand_back_value(handle: UiCollectionHandle) {
     UI_VALUE_HANDBACKS.record(handle.slot, UiArenaHandback::ReleaseAlias);
@@ -215,7 +215,7 @@ impl UiValueArena {
         self.retirement_len -= 1;
     }
 
-    fn advance_exact_root(&mut self, root: UiCollectionHandle, maximum_bytes: usize, handbacks: &UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, 4>) -> Result<UiValueRetirementStep, &'static str> {
+    fn advance_exact_root(&mut self, root: UiCollectionHandle, maximum_bytes: usize, handbacks: &UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS>) -> Result<UiValueRetirementStep, &'static str> {
         let Some(collection) = self.collection(root) else { return Ok(UiValueRetirementStep { complete: true, ..UiValueRetirementStep::default() }) };
         if !collection.retiring || !(collection.retirement_queued || collection.retirement_claimed) {
             return Err("UI value root has no final-owner authority");
@@ -301,7 +301,7 @@ impl UiValueArena {
         Ok(UiValueRetirementStep::progress(1, 0))
     }
 
-    fn consume_handback(&mut self, slot: usize, handbacks: &UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, 4>) -> Result<UiValueRetirementStep, &'static str> {
+    fn consume_handback(&mut self, slot: usize, handbacks: &UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS>) -> Result<UiValueRetirementStep, &'static str> {
         let Some(obligation) = handbacks.take_one(slot) else { return Ok(UiValueRetirementStep::progress(0, 0)) };
         let result = match obligation {
             UiArenaHandback::ReleaseAlias => {

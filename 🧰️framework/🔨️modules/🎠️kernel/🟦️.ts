@@ -1,3 +1,5 @@
+import { dialectCoordinate, parseDialectCoordinate, type ArtifactDialect } from "../🚪️io/🧬️schema/🟦️.ts";
+import { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "../🛂️manifest/🧬️schema/🟦️.ts";
 // #region 🎠️Kernel
 /// <reference types="vitest/importMeta" />
 /** @emoji 🎠️ `@semio-tech/framework` — plugin runtime, leases, invocation responses, and playground boot. */
@@ -211,7 +213,7 @@ export function createTurnOutcomeBroadcast<T>(): { readonly push: (value: T) => 
  * `PluginRuntime/🟦️.tsx`'s own header doc on that pre-existing limitation). */
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests1(import.meta.vitest, { createTurnOutcomeBroadcast }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { createTurnOutcomeBroadcast }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️TurnOutcomeBroadcastTests
 
@@ -417,78 +419,15 @@ export type ArtifactContributionDescriptor = {
 //#endregion 🔖️ArtifactContribution
 
 //#region 🔖️AppRouter
-/** 🎯️ Fully-qualified dialect coordinate — mirrors Rust `ArtifactDialect`
- * (`🔨️modules/🚪️io/🦀️.rs:50`, re-exported off `🛂️manifest/🦀️.rs`). Duplicated
- * locally rather than imported from `🛂️manifest/🟦️.ts`'s generated `AppDefinition` twin:
- * that twin's `apps` field is still `Record<string, unknown>[]` pending the owned schema regeneration for
- * contract freeze §1 C1, so this file reads the wire shape structurally instead of depending on a
- * codegen timing this lease doesn't control — same idiom as the 🔖️PluginDependency/
- * 🔖️ArtifactContribution regions above. */
-export type ArtifactDialect = {
-  readonly artifactKind: string;
-  readonly standard: string;
-  readonly subset: string;
-};
-
 function dialectEquals(a: ArtifactDialect, b: ArtifactDialect): boolean {
   return a.artifactKind === b.artifactKind && a.standard === b.standard && a.subset === b.subset;
 }
-
-/** 🪪️ `<artifact_kind>@<standard>/<subset>` — mirrors Rust `ArtifactDialect::to_coordinate`
- * (`🔨️modules/🚪️io/🦀️.rs:67`). */
-export function dialectCoordinate(dialect: ArtifactDialect): string {
-  return `${dialect.artifactKind}@${dialect.standard}/${dialect.subset}`;
-}
-
-/** 🪪️ Inverse of {@link dialectCoordinate} — mirrors Rust `ArtifactDialect::parse_coordinate`
- * (`🔨️modules/🚪️io/🦀️.rs:74`): `@` splits at its FIRST occurrence, the LAST `/🧰️framework/🔨️modules/🎠️kernel` splits
- * standard from subset. */
-export function parseDialectCoordinate(coordinate: string): ArtifactDialect {
-  const atIndex = coordinate.indexOf("@");
-  if (atIndex < 0) throw new Error(`dialect coordinate ${JSON.stringify(coordinate)} missing '@'`);
-  const kind = coordinate.slice(0, atIndex);
-  const rest = coordinate.slice(atIndex + 1);
-  const slashIndex = rest.lastIndexOf("/");
-  if (slashIndex < 0) throw new Error(`dialect coordinate ${JSON.stringify(coordinate)} missing '/'`);
-  const standard = rest.slice(0, slashIndex);
-  const subset = rest.slice(slashIndex + 1);
-  if (kind === "" || standard === "" || subset === "") throw new Error(`dialect coordinate ${JSON.stringify(coordinate)} has an empty component`);
-  return { artifactKind: kind, standard, subset };
-}
-
-/** 👁️✏️ Mirrors Rust `AppRole` (`🛂️manifest/🦀️.rs:2641`) — exactly `"viewer"`/`"editor"`,
- * contract freeze §1 C1. Wire-identical to the `SEMIO_APP_ROLE`/`VITE_SEMIO_APP_ROLE` env values. */
-export type AppRole = "viewer" | "editor";
-
-/** 🎯️ Mirrors Rust `AppRef` (`🛂️manifest/🦀️.rs:2672`). */
-export type AppRef = {
-  readonly pluginId: string;
-  readonly appId: string;
-};
 
 function appRefEquals(a: AppRef, b: AppRef): boolean {
   return a.pluginId === b.pluginId && a.appId === b.appId;
 }
 
-/** 🪪️ `<artifact_kind>@<standard>/<subset>#<role>` — mirrors Rust `surface_app_id`
- * (`🛂️manifest/🦀️.rs:2678`). */
-export function surfaceAppId(dialect: ArtifactDialect, role: AppRole): string {
-  return `${dialectCoordinate(dialect)}#${role}`;
-}
 
-/** 🪪️ Inverse of {@link surfaceAppId} — mirrors Rust `parse_surface_app_id`
- * (`🛂️manifest/🦀️.rs:2683`): the LAST `#` splits off the role suffix. */
-export function parseSurfaceAppId(id: string): { readonly dialect: ArtifactDialect; readonly role: AppRole } {
-  const hashIndex = id.lastIndexOf("#");
-  if (hashIndex < 0) throw new Error(`surface id ${JSON.stringify(id)} missing '#'`);
-  const coordinate = id.slice(0, hashIndex);
-  const roleStr = id.slice(hashIndex + 1);
-  const dialect = parseDialectCoordinate(coordinate);
-  if (roleStr !== "viewer" && roleStr !== "editor") {
-    throw new Error(`surface id ${JSON.stringify(id)}: unknown app role ${JSON.stringify(roleStr)}, expected "viewer" or "editor"`);
-  }
-  return { dialect, role: roleStr };
-}
 
 /** 🧯️ The five frozen fault codes contract freeze §2.3 pins for the surface/viewer vocabulary —
  * `origin` is `FaultOrigin::Framework` on every one of them (Rust `dsl::diagnostic::FaultOrigin`,
@@ -700,7 +639,7 @@ export class AppRouter {
 //#region 🧪️AppRouterTests
 if (import.meta.vitest) {
   const { registerTests2 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests2(import.meta.vitest, { AppRouter, dialectCoordinate }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { AppRouter, dialectCoordinate }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️AppRouterTests
 //#endregion 🔖️AppRouter
@@ -2263,7 +2202,7 @@ export function runtimeMetricsDue(lastPublishedMs: number | null, nowMs: number)
  * `path_scope` is this region only, and a peer holds `🔖️IoRouter` (must stay byte-identical). */
 if (import.meta.vitest) {
   const { registerTests3 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests3(import.meta.vitest, { ActivationRegistry, DEFAULT_MAX_RESIDENT_ACTORS, OwnedResidentLedger, RUNTIME_METRICS_PUBLISH_INTERVAL_MS, ShardClient, intersectCapabilityGrants, residentActorCapFromMemory, runtimeMetricsDue }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests3(import.meta.vitest, { ActivationRegistry, DEFAULT_MAX_RESIDENT_ACTORS, OwnedResidentLedger, RUNTIME_METRICS_PUBLISH_INTERVAL_MS, ShardClient, intersectCapabilityGrants, residentActorCapFromMemory, runtimeMetricsDue }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️RuntimeMetricsTests
 //#endregion 🐚️ActivationRegistry
@@ -2982,13 +2921,13 @@ export class ArtifactInferenceRouter {
 //#region 🧪️ExpandPluginRegistryTests
 if (import.meta.vitest) {
   const { registerTests4 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests4(import.meta.vitest, { expandPluginRegistry }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests4(import.meta.vitest, { expandPluginRegistry }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️ExpandPluginRegistryTests
 
 //#region 🧪️IoRouterTests
 if (import.meta.vitest) {
   const { registerTests5 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests5(import.meta.vitest, { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests5(import.meta.vitest, { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️IoRouterTests

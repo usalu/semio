@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::editor::forms::FormsCommand;
 use crate::editor::forms::testkit::forms_app_with_registry;
-use semio_framework_plugin::PluginApp;
+use crate::editor::forms::FormsCommand;
 use semio_framework_plugin::testkit::meta;
+use semio_framework_plugin::PluginApp;
 
 fn rope(parts: &[&str]) -> ChunkedSource {
     let mut source = ChunkedSource::default();

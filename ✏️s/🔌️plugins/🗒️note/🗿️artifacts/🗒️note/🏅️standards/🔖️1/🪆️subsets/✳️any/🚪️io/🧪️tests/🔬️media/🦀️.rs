@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{NoteImageAsset, NoteTableCell};
 use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity, DwgLayer};

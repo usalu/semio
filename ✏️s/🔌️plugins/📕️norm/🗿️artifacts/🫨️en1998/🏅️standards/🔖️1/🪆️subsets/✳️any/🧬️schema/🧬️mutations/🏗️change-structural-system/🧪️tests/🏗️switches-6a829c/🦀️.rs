@@ -96,14 +96,12 @@ async fn change_structural_system_produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is canonical and decodes back into `En1998Diff` with `structuralSystem` set.
-/// `selected_check_index` stays unset on purpose: it is an `Option<Option<u32>>` whose `None` and
-/// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-structural-system`
-/// never writes it anyway.
+/// 🕹️ Presence selection is absent from the artifact diff encoding.
 #[semio_framework_async_macros::async_test]
 async fn change_structural_system_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-structural-system committed diff decodes");
     assert_eq!(decoded.structural_system.as_deref(), Some("wall_dcm"), "change-structural-system/switches-structural-system-to-wall-dcm: the committed diff must carry structural_system at wall_dcm");
-    assert!(decoded.selected_check_index.is_none(), "change-structural-system/switches-structural-system-to-wall-dcm: the committed diff must leave the presence-lane selected_check_index unset");
+    assert!(serde_json::to_value(&decoded).expect("diff JSON").get("selectedCheckIndex").is_none(), "change-structural-system/switches-structural-system-to-wall-dcm: the committed diff must leave the presence-lane selectedCheckIndex absent");
     let reencoded = serde_json::to_value(&decoded).expect("change-structural-system committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-structural-system committed diff reparses");
     assert_eq!(reencoded, original, "change-structural-system/switches-structural-system-to-wall-dcm: committed diff JSON is not canonical");

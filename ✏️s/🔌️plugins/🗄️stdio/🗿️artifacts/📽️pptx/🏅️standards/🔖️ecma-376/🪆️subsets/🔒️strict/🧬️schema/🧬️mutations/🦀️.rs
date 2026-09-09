@@ -19,10 +19,10 @@
 
 use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, PptxDiff, PptxOpcContentTypesDiff, PptxOpcCtEntriesDiff, PptxOpcDiff, PptxOpcRelDiff, PptxOpcRelListDiff, PptxOpcRelationshipsDiff};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxSnapshot, PptxXmlPart};
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional PresentationML main namespace.
@@ -60,29 +60,29 @@ pub const ALTERNATE_CONTENT_ELEMENT: &str = "mc:AlternateContent";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Mutations
+#[path = "🔀️insert-alternate-content/🦀️.rs"]
+pub mod insert_alternate_content;
+#[path = "🖼️insert-vml-part/🦀️.rs"]
+pub mod insert_vml_part;
+#[path = "🚫️remove-alternate-content/🦀️.rs"]
+pub mod remove_alternate_content;
+#[path = "🏷️remove-conformance-attribute/🦀️.rs"]
+pub mod remove_conformance_attribute;
+#[path = "🗑️remove-vml-part/🦀️.rs"]
+pub mod remove_vml_part;
+#[path = "🔖️set-conformance-attribute/🦀️.rs"]
+pub mod set_conformance_attribute;
+#[path = "🎨️set-drawing-namespace/🦀️.rs"]
+pub mod set_drawing_namespace;
+#[path = "🏛️set-main-namespace/🦀️.rs"]
+pub mod set_main_namespace;
+#[path = "🔗️set-relationship-base/🦀️.rs"]
+pub mod set_relationship_base;
 /// 📐️ Typed conformance-class mutation for `stdio.pptx` under ISO/IEC 29500-1
 /// Strict. Every variant addresses ONE axis of the class; none addresses document content.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🏛️set-main-namespace/🦀️.rs"]
-pub mod set_main_namespace;
-#[path = "🎨️set-drawing-namespace/🦀️.rs"]
-pub mod set_drawing_namespace;
-#[path = "🔗️set-relationship-base/🦀️.rs"]
-pub mod set_relationship_base;
-#[path = "🔖️set-conformance-attribute/🦀️.rs"]
-pub mod set_conformance_attribute;
-#[path = "🏷️remove-conformance-attribute/🦀️.rs"]
-pub mod remove_conformance_attribute;
-#[path = "🖼️insert-vml-part/🦀️.rs"]
-pub mod insert_vml_part;
-#[path = "🗑️remove-vml-part/🦀️.rs"]
-pub mod remove_vml_part;
-#[path = "🔀️insert-alternate-content/🦀️.rs"]
-pub mod insert_alternate_content;
-#[path = "🚫️remove-alternate-content/🦀️.rs"]
-pub mod remove_alternate_content;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -105,7 +105,19 @@ pub enum PptxStrictMutation {
 /// 🧾️ Kebab-case spelling of every `PptxStrictMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `pptx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-main-namespace", "set-drawing-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "insert-alternate-content", "remove-alternate-content"];
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "set-main-namespace",
+    "set-drawing-namespace",
+    "set-relationship-base",
+    "set-conformance-attribute",
+    "remove-conformance-attribute",
+    "insert-vml-part",
+    "remove-vml-part",
+    "insert-alternate-content",
+    "remove-alternate-content",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -363,60 +375,60 @@ fn diff_root_children(base: &PptxSnapshot, path: &str, edit: impl FnOnce(&mut Ve
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &PptxStrictMutation, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
-        protocol::MutationOutcome::new(match this {
-            PptxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <PptxDiff as DiffAlgebra<PptxSnapshot>>::between(base, snapshot),
-            PptxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
-            PptxStrictMutation::SetDrawingNamespace(set_drawing_namespace::SetDrawingNamespace { namespace }) => diff_retarget_namespace(base, DRAWING_NAMESPACES, namespace),
-            PptxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }) => diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, target),
-            PptxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
-            PptxStrictMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
-            PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, markup }) => diff_insert_vml_part(base, path, markup),
-            PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => diff_remove_vml_part(base, path),
-            PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => diff_root_children(base, path, |children| {
-                children.push(alternate_content_node());
-                true
-            }),
-            PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => diff_root_children(base, path, |children| {
-                let before = children.len();
-                children.retain(|child| !matches!(child, XmlNode::Element { name, .. } if name == ALTERNATE_CONTENT_ELEMENT));
-                children.len() != before
-            }),
-        })
-    }
+    protocol::MutationOutcome::new(match this {
+        PptxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <PptxDiff as DiffAlgebra<PptxSnapshot>>::between(base, snapshot),
+        PptxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
+        PptxStrictMutation::SetDrawingNamespace(set_drawing_namespace::SetDrawingNamespace { namespace }) => diff_retarget_namespace(base, DRAWING_NAMESPACES, namespace),
+        PptxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }) => diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, target),
+        PptxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
+        PptxStrictMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
+        PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, markup }) => diff_insert_vml_part(base, path, markup),
+        PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => diff_remove_vml_part(base, path),
+        PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => diff_root_children(base, path, |children| {
+            children.push(alternate_content_node());
+            true
+        }),
+        PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => diff_root_children(base, path, |children| {
+            let before = children.len();
+            children.retain(|child| !matches!(child, XmlNode::Element { name, .. } if name == ALTERNATE_CONTENT_ELEMENT));
+            children.len() != before
+        }),
+    })
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &PptxStrictMutation, base: &PptxSnapshot) -> Vec<PptxStrictMutation> {
-        vec![match this {
-            PptxStrictMutation::SetSnapshot(_) => PptxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            PptxStrictMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
-                Some(namespace) => PptxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
-                None => return Vec::new(),
-            },
-            PptxStrictMutation::SetDrawingNamespace(_) => match declared_pair_member(base, DRAWING_NAMESPACES) {
-                Some(namespace) => PptxStrictMutation::SetDrawingNamespace(set_drawing_namespace::SetDrawingNamespace { namespace }),
-                None => return Vec::new(),
-            },
-            PptxStrictMutation::SetRelationshipBase(_) => match declared_relationship_base(base, RELATIONSHIP_NAMESPACES) {
-                Some(target) => PptxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }),
-                None => return Vec::new(),
-            },
-            PptxStrictMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
-                Some(value) => PptxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-                None => PptxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-            },
-            PptxStrictMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
-                Some(value) => PptxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-                None => return Vec::new(),
-            },
-            PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, .. }) => PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() }),
-            PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match xml_part(base, path) {
-                Some(part) => PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), markup: xml_document_to_text(&part.document) }),
-                None => return Vec::new(),
-            },
-            PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.clone() }),
-            PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: path.clone() }),
-        }]
-    }
+    vec![match this {
+        PptxStrictMutation::SetSnapshot(_) => PptxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        PptxStrictMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
+            Some(namespace) => PptxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
+            None => return Vec::new(),
+        },
+        PptxStrictMutation::SetDrawingNamespace(_) => match declared_pair_member(base, DRAWING_NAMESPACES) {
+            Some(namespace) => PptxStrictMutation::SetDrawingNamespace(set_drawing_namespace::SetDrawingNamespace { namespace }),
+            None => return Vec::new(),
+        },
+        PptxStrictMutation::SetRelationshipBase(_) => match declared_relationship_base(base, RELATIONSHIP_NAMESPACES) {
+            Some(target) => PptxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }),
+            None => return Vec::new(),
+        },
+        PptxStrictMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
+            Some(value) => PptxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
+            None => PptxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
+        },
+        PptxStrictMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
+            Some(value) => PptxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
+            None => return Vec::new(),
+        },
+        PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, .. }) => PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() }),
+        PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match xml_part(base, path) {
+            Some(part) => PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), markup: xml_document_to_text(&part.document) }),
+            None => return Vec::new(),
+        },
+        PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.clone() }),
+        PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: path.clone() }),
+    }]
+}
 //#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests

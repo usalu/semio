@@ -1,6 +1,5 @@
 //! 🧬️ Remodeling diff schema — sparse field delta over the artifact.
 
-use crate::schema::{RemodelingUiCamera, RemodelingUiFrameCursor, RemodelingUiLayers, RemodelingUiSelection};
 use crate::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -35,16 +34,6 @@ pub struct RemodelingDiff {
     pub job: Option<ReconstructionJob>,
     #[state(artifact)]
     pub results: Option<ReconstructionResults>,
-    #[state(presence)]
-    pub selection: Option<RemodelingUiSelection>,
-    #[state(presence)]
-    pub report_table: Option<String>,
-    #[state(presence)]
-    pub frame_cursor: Option<RemodelingUiFrameCursor>,
-    #[state(config)]
-    pub camera: Option<RemodelingUiCamera>,
-    #[state(config)]
-    pub layers: Option<RemodelingUiLayers>,
 }
 //#endregion 🔖️Diff
 

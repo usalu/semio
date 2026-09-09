@@ -44,9 +44,9 @@
 //! @see ../🔣️oracle.json — the `step-ap214-cc6` catalog `KINDS` is checked against.
 
 use crate::schema::diff::StepDiff;
-use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};
 #[cfg(test)]
 use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;
+use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};
 use crate::standards::v_ap214::subsets::cc6::schema::MAX_RUNG;
 use crate::StepSnapshot;
 use protocol::command::DiffAlgebra;
@@ -59,14 +59,14 @@ pub use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step
 const CLASS: &str = "ISO 10303-214 CC6 (advanced B-Rep, top of the ladder)";
 
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🏷️set-file-schema/🦀️.rs"]
 pub mod set_file_schema;
 #[path = "🪪set-product-identity/🦀️.rs"]
 pub mod set_product_identity;
 #[path = "🪜set-shape-representation/🦀️.rs"]
 pub mod set_shape_representation;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed conformance-class mutation for `stdio.step` at `ap214/6️⃣cc6`.
@@ -100,8 +100,6 @@ impl StepCc6Mutation {
             StepCc6Mutation::SetShapeRepresentation(_) => "set-shape-representation",
         }
     }
-
-
 }
 //#endregion 🔖️Vocabulary
 
@@ -157,7 +155,6 @@ pub(crate) fn class_inverse(base: &StepSnapshot, edit: &ClassEdit) -> Vec<StepCc
     }
 }
 //#endregion 🔖️ClassEdit
-
 
 //#region 🚪️Reachability
 /// ▶️ [`apply_step_cc6_mutation`] in a signature that names only this subset's own public types, so

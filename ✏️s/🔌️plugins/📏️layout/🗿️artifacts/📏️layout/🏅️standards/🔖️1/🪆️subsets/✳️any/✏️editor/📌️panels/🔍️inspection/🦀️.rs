@@ -1,12 +1,12 @@
 //! 🔍️ Layout play app panel — the inspector: a document summary (was field editors for the current
 //! selection; see `render`'s doc comment for why that's gone).
 
-use crate::{LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::terminology::LayoutLabels;
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, BuiltNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
 use crate::editor::layout::ui_label;
+use crate::{LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_BODY_INSPECTION: &str = "layout.play.inspection";
@@ -34,14 +34,22 @@ pub fn definition() -> PanelTabDefinition {
 /// puzzle3d's inspection panels flag (see this ticket's w3b-summary.md). Not fixed here (framework
 /// file, out of this crate's remit).
 pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut section = semio_framework_ui_contract::section(ui_label(labels.inspection.as_str())?).default_open(true).try_id("layout-play-inspector.empty").map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout inspector id admission failed"))?;
+    let mut section =
+        semio_framework_ui_contract::section(ui_label(labels.inspection.as_str())?).default_open(true).try_id("layout-play-inspector.empty").map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout inspector id admission failed"))?;
     for (index, value) in [
         format!("{}: {}", labels.schema.as_str(), LAYOUT_DOCUMENT_SCHEMA),
         format!("{}: {}", labels.name.as_str(), doc.name),
         format!("{}: {}", labels.pages.as_str(), doc.pages.len()),
         format!("{}: {}", labels.active_page.as_str(), config.active_page_id),
-    ].into_iter().enumerate() {
-        let child = semio_framework_ui_contract::text(ui_label(value)?).try_id(format!("layout-inspector.summary.{index}")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout summary key admission failed"))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout summary text admission failed"))?;
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let child = semio_framework_ui_contract::text(ui_label(value)?)
+            .try_id(format!("layout-inspector.summary.{index}"))
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout summary key admission failed"))?
+            .try_build()
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout summary text admission failed"))?;
         section = section.try_child(child).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout inspector child admission failed"))?;
     }
     section.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout inspector node admission failed"))

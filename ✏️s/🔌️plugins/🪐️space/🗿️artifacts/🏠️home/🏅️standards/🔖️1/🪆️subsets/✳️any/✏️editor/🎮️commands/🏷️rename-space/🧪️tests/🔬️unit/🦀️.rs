@@ -5,7 +5,7 @@ async fn dispatch(payload: RenameSpace, config: &HomeConfig) -> Emit<SHomeMutati
     let history = semio_framework_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     handle(&payload, &doc, &cfg).expect("handle")
 }
 

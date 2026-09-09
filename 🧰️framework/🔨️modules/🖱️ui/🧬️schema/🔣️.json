@@ -12,7 +12,8 @@
         "draft",
         "presence",
         "transient",
-        "child"
+        "child",
+        "interaction"
       ]
     },
     "retainedCommandDisposition": {

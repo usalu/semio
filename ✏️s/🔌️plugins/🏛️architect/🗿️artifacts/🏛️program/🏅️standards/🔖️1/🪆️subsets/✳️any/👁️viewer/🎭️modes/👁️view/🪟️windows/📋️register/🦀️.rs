@@ -48,8 +48,7 @@ fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<
 pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let summary = status_summary(program);
     if summary.total_entities == 0 {
-        return semio_framework_plugin::built_text_node(Label::data("No entities in this program yet."))
-            .map_err(|_| PluginAssemblyError::new("architect.viewer.label.capacity", "register placeholder admission failed"));
+        return semio_framework_plugin::built_text_node(Label::data("No entities in this program yet.")).map_err(|_| PluginAssemblyError::new("architect.viewer.label.capacity", "register placeholder admission failed"));
     }
     let mut tree = PanelTreeBuilder::new("architect-view-register")?;
     for register in summary.by_register.iter().filter(|register| register.count > 0) {

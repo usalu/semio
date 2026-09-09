@@ -3,10 +3,10 @@ use crate::schema::diff::XmlDiff;
 use crate::schema::snapshot::XmlDoctype;
 use crate::XmlSnapshot;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -18,7 +18,10 @@ pub struct SetDoctypePayload {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum SetDoctypeMutation { Apply(SetDoctypePayload), Restore(XmlDiff) }
+pub enum SetDoctypeMutation {
+    Apply(SetDoctypePayload),
+    Restore(XmlDiff),
+}
 
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "doctype", kind: "set-doctype", record: "SetDoctype" };
@@ -32,13 +35,19 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutat
 
     fn inverse(&self, base: &XmlSnapshot) -> Vec<super::XmlMutation> {
         let outcome = <Self as protocol::MutationKind<XmlSnapshot, super::XmlMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::is_empty(outcome.diff()) { return Vec::new(); }
+        if !outcome.messages().is_empty() || <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::is_empty(outcome.diff()) {
+            return Vec::new();
+        }
         let inverse = <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::inverse(outcome.diff(), base);
         vec![super::XmlMutation::SetDoctype(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String { "Set Doctype".to_string() }
-    fn target(&self) -> Vec<String> { vec!["set-doctype".to_string()] }
+    fn label(&self) -> String {
+        "Set Doctype".to_string()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-doctype".to_string()]
+    }
 }
 
 #[cfg(test)]

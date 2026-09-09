@@ -1,9 +1,8 @@
 //! 🦏 `change-use-class` payload — changes the Din18599 document's `use_class` (building use class).
 
-
-use crate::Din18599Snapshot;
 use crate::diff::Din18599Diff;
 use crate::mutations::Din18599Mutation;
+use crate::Din18599Snapshot;
 //#region 🔖️ChangeUseClass
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

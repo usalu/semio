@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn rect_frame(id: &str, visible: Option<bool>) -> crate::Frame {

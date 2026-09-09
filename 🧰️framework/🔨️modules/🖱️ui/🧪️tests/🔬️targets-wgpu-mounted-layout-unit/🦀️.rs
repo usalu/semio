@@ -56,7 +56,7 @@ fn deep_tree(depth: usize) -> (UiTree, NodeId) {
 }
 
 fn text_job(tree: &UiTree, root: NodeId) -> MountedLayoutJob {
-    MountedLayoutJob::try_new(tree, root, UiSurfaceToken::new(3, 7), 11, 13, 17, 19, Theme::default(), 640.0, 480.0).unwrap_or_else(|fault| panic!("mounted text job: {fault:?}"))
+    MountedLayoutJob::try_new(tree, root, MountedLayoutIdentity { surface: UiSurfaceToken::new(3, 7), generation: 11, revision: 13, theme_revision: 17, viewport_revision: 19 }, Theme::default(), 640.0, 480.0).unwrap_or_else(|fault| panic!("mounted text job: {fault:?}"))
 }
 
 fn admit(job: &mut MountedLayoutJob, tree: &UiTree, cancel: &semio_framework_job::CancelToken) -> LayoutJobStep {

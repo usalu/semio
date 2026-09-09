@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::wires::testkit::{metabolism_app, new_app, render};
 use semio_framework_plugin::EditorApp;
@@ -14,12 +13,11 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
     let migrated = routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("migrated")).map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<Vec<_>>();
     assert_eq!(migrated, WIRES_RETAINED_TOOL_IDS);
-    assert_eq!(routes.len(), 10);
+    assert_eq!(routes.len(), 9);
     assert_eq!(<WiresRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, WIRES_RETAINED_PUBLICATION_CONTRACTS);
     assert!(WIRES_RETAINED_PUBLICATION_CONTRACTS.iter().all(|row| row.lanes == [ArtifactToolPublicationLane::Config]));
     assert!(routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("batch-only-pending-rewrite")).all(|route| route.get("lanes").and_then(Value::as_array).is_some_and(Vec::is_empty)));
 }
-
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
@@ -32,7 +30,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 10, "every WiresCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 9, "every WiresCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -77,9 +75,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// (ordinal 0, before the deleted rows).
 #[semio_framework_async_macros::async_test]
 async fn commands_keep_their_pre_migration_wire_bytes() {
-    let node = dsl::to_dsl_value(&dsl::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
-    let _ = node;
-    let cases: [(WiresCommand, &str, &str); 3] = [
+    let cases: [(WiresCommand, &str, &str); 2] = [
         (WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }), "active-example active-example example-id=metabolism", "0100010a6d657461626f6c69736d01000600"),
         (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), "pointer-up pointer-up", "01080000"),
     ];
@@ -197,8 +193,8 @@ async fn ingest_operations_is_idempotent() {
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
-    use semio_framework_plugin::PluginApp;
     use semio_framework_plugin::testkit::meta;
+    use semio_framework_plugin::PluginApp;
     use store::MemoryBackbone;
 
     let mut instance_a = new_app().await;
@@ -237,3 +233,19 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     assert_eq!(x_of(&projection_b), 50.0, "B keeps its own move");
 }
 //#endregion 🔖️CrossCutting
+
+#[semio_framework_async_macros::async_test]
+async fn reset_document_ownership_wires_preserves_pack_with_an_edit_free_history() {
+    use store::ArtifactPack;
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
+    let source = crate::empty_wires_snapshot();
+    let before = serde_json::to_value(&source).unwrap();
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = reset_wires_document_effect(&source) else { panic!("reset must load a document"); };
+    let decoded = <crate::WiresSnapshot as ArtifactPack>::decode_pack(&pack).unwrap();
+    assert_eq!(serde_json::to_value(decoded).unwrap(), before);
+    assert_eq!(serde_json::to_value(&source).unwrap(), before);
+    let history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.unwrap();
+    let actual = serde_json::json!({ "documentId": history.doc_id, "schema": history.schema, "edits": history.edits.len(), "changes": history.changes.len(), "checkpoints": history.checkpoints.len(), "alternatives": history.alternatives.len(), "conflicts": history.conflicts.len() });
+    assert_eq!(actual, expected);
+    println!("[DEBUG] wires reset preserves its source and pack and emits neutral edit-free history without an envelope owner");
+}

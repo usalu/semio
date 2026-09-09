@@ -21,8 +21,7 @@ async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str],
 async fn catalogue_tree_nests_apps_by_canonical_document() {
     seed_app("puzzle", "s.puzzle2d@1/*#editor", "Puzzle 2D", &["semio", "puzzle", "2d"], "puzzle2d.document").await;
     seed_app("puzzle", "s.puzzle3d@1/*#editor", "Puzzle 3D", &["semio", "puzzle", "3d"], "puzzle3d.document").await;
-    let config = crate::engine::space::config::SpaceConfig::default();
-    let tree = build_catalogue_tree(semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::default()), semio_framework_plugin::Locale::En).await.expect("catalogue tree");
+    let tree = build_catalogue_tree(semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::default()), Locale::En).await.expect("catalogue tree");
     let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("catalogue projection");
     assert!(json.contains("s-play-catalogue.document.semio.puzzle.2d"));
     assert!(json.contains("s-play-catalogue.document.semio.puzzle.3d"));

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::model::{Model, NodalLoad, Node, Support, solve_linear_static};
+use crate::model::{solve_linear_static, Model, NodalLoad, Node, Support};
 
 /// 📐️ Builds a node-major `[u_i,v_i]` displacement vector by sampling the linear field
 /// `u = a.0 + a.1*x + a.2*y`, `v = b.0 + b.1*x + b.2*y` at every node coordinate — the standard

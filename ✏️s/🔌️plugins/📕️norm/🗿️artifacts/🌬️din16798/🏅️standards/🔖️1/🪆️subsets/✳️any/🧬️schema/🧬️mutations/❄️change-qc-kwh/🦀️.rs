@@ -1,9 +1,8 @@
 //! 🔧 `change-qc-kwh` payload — changes the Din16798 document's `q_c_kwh` (cooling energy demand).
 
-
-use crate::Din16798Snapshot;
 use crate::diff::Din16798Diff;
 use crate::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
 //#region 🔖️ChangeQCKwh
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

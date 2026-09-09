@@ -34,6 +34,78 @@
       }
     },
 
+    "InferenceJobReconcileRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "version", "requestId"],
+      "properties": {
+        "schema": { "const": "semio.hub.inference-job-reconcile/v1" },
+        "version": { "const": 1 },
+        "requestId": { "$ref": "#/$defs/id" }
+      }
+    },
+
+    "InferenceJobReconcileApprovalStateV1": { "enum": ["available", "undo-prepared", "undone"] },
+
+    "InferenceJobReconcileApprovalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "receipt"],
+      "properties": {
+        "state": { "$ref": "#/$defs/InferenceJobReconcileApprovalStateV1" },
+        "receipt": { "anyOf": [{ "$ref": "#/$defs/InferenceApprovalReceiptV1" }, { "type": "null" }] }
+      },
+      "oneOf": [
+        { "properties": { "state": { "const": "available" }, "receipt": { "$ref": "#/$defs/InferenceApprovalReceiptV1" } } },
+        { "properties": { "state": { "enum": ["undo-prepared", "undone"] }, "receipt": { "type": "null" } } }
+      ]
+    },
+
+    "InferenceJobReconcilePageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["jobId", "state", "proposalState", "cancelRequested", "expired", "proposalHash", "events", "progress", "nextCursor"],
+      "properties": {
+        "jobId": { "$ref": "#/$defs/id" },
+        "state": { "$ref": "#/$defs/InferenceJobStateV1" },
+        "proposalState": { "$ref": "#/$defs/InferenceProposalStateV1" },
+        "cancelRequested": { "type": "boolean" },
+        "expired": { "type": "boolean" },
+        "proposalHash": { "anyOf": [{ "$ref": "#/$defs/hash" }, { "type": "null" }] },
+        "events": { "type": "array", "maxItems": 8, "items": { "$ref": "#/$defs/InferenceEventV1" } },
+        "progress": { "type": "array", "maxItems": 16, "items": { "$ref": "#/$defs/InferenceProgressV1" } },
+        "nextCursor": { "$ref": "#/$defs/safeInteger" }
+      }
+    },
+
+    "InferenceJobReconcileJobV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["receipt", "page", "approval"],
+      "properties": {
+        "receipt": { "$ref": "#/$defs/InferenceJobReceiptV1" },
+        "page": { "$ref": "#/$defs/InferenceJobReconcilePageV1" },
+        "approval": { "anyOf": [{ "$ref": "#/$defs/InferenceJobReconcileApprovalV1" }, { "type": "null" }] }
+      }
+    },
+
+    "InferenceJobReconcileResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "version", "requestId", "found", "job"],
+      "properties": {
+        "schema": { "const": "semio.hub.inference-job-reconcile-result/v1" },
+        "version": { "const": 1 },
+        "requestId": { "$ref": "#/$defs/id" },
+        "found": { "type": "boolean" },
+        "job": { "anyOf": [{ "$ref": "#/$defs/InferenceJobReconcileJobV1" }, { "type": "null" }] }
+      },
+      "oneOf": [
+        { "properties": { "found": { "const": false }, "job": { "type": "null" } } },
+        { "properties": { "found": { "const": true }, "job": { "$ref": "#/$defs/InferenceJobReconcileJobV1" } } }
+      ]
+    },
+
     "InferenceParentDialectV1": {
       "type": "object",
       "additionalProperties": false,
@@ -236,13 +308,16 @@
     "GisInferenceCheckpointControlFrameV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "version", "sequence", "kind", "jobId"],
+      "required": ["schema", "version", "sequence", "kind", "jobId", "progressCursor", "completed", "total"],
       "properties": {
         "schema": { "const": "semio.hub.gis-inference-checkpoint-control/v1" },
         "version": { "const": 1 },
         "sequence": { "type": "integer", "minimum": 1, "maximum": 2 },
-        "kind": { "enum": ["entered", "release"] },
-        "jobId": { "$ref": "#/$defs/id" }
+        "kind": { "enum": ["progress-persisted", "release"] },
+        "jobId": { "$ref": "#/$defs/id" },
+        "progressCursor": { "type": "integer", "minimum": 1, "maximum": 16 },
+        "completed": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "total": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
       }
     },
 
@@ -504,7 +579,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["appChannelVersion"],
-      "properties": { "appChannelVersion": { "const": 14 } }
+      "properties": { "appChannelVersion": { "const": 15 } }
     },
 
     "GisMapFrozenPackageV1": {

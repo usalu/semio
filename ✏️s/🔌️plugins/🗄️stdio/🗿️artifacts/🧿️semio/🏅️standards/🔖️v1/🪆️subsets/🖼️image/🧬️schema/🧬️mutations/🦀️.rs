@@ -22,30 +22,30 @@ use protocol::OpText;
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "📐️set-dimensions/🦀️.rs"]
-pub mod set_dimensions;
-#[path = "🌈️set-colorspace/🦀️.rs"]
-pub mod set_colorspace;
-#[path = "🔢️set-bit-depth/🦀️.rs"]
-pub mod set_bit_depth;
-#[path = "🎨️set-icc/🦀️.rs"]
-pub mod set_icc;
 #[path = "➕️insert-frame/🦀️.rs"]
 pub mod insert_frame;
-#[path = "🚫️remove-frame/🦀️.rs"]
-pub mod remove_frame;
 #[path = "🔀️move-frame/🦀️.rs"]
 pub mod move_frame;
+#[path = "🚫️remove-frame/🦀️.rs"]
+pub mod remove_frame;
+#[path = "🗑️remove-metadata-entry/🦀️.rs"]
+pub mod remove_metadata_entry;
+#[path = "🔢️set-bit-depth/🦀️.rs"]
+pub mod set_bit_depth;
+#[path = "🌈️set-colorspace/🦀️.rs"]
+pub mod set_colorspace;
+#[path = "📐️set-dimensions/🦀️.rs"]
+pub mod set_dimensions;
 #[path = "⏱️set-frame-delay/🦀️.rs"]
 pub mod set_frame_delay;
 #[path = "🖌️set-frame-pixels/🦀️.rs"]
 pub mod set_frame_pixels;
+#[path = "🎨️set-icc/🦀️.rs"]
+pub mod set_icc;
 #[path = "🏷️set-metadata-entry/🦀️.rs"]
 pub mod set_metadata_entry;
-#[path = "🗑️remove-metadata-entry/🦀️.rs"]
-pub mod remove_metadata_entry;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
@@ -105,7 +105,9 @@ pub(crate) fn agg_diff(this: &SemioImageMutation, base: &SemioImageSnapshot) -> 
         SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace }) => SemioImageDiff { colorspace: (base.colorspace != *colorspace).then_some(*colorspace), ..Default::default() },
         SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth }) => SemioImageDiff { bit_depth: (base.bit_depth != *bit_depth).then_some(*bit_depth), ..Default::default() },
         SemioImageMutation::SetIcc(set_icc::SetIcc { icc }) => SemioImageDiff { icc: (base.icc != *icc).then_some(icc.clone()), ..Default::default() },
-        SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index, frame }) => SemioImageDiff { frames: Some(SemioImageFramesDiff { added: vec![IndexAdded { index: *index, item: frame.clone() }], ..Default::default() }), ..Default::default() },
+        SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index, frame }) => {
+            SemioImageDiff { frames: Some(SemioImageFramesDiff { added: vec![IndexAdded { index: *index, item: frame.clone() }], ..Default::default() }), ..Default::default() }
+        }
         SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index }) => SemioImageDiff { frames: Some(SemioImageFramesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
         SemioImageMutation::MoveFrame(move_frame::MoveFrame { from, to }) => {
             let frames = base.frames.get(*from).map(|item| SemioImageFramesDiff { removed: vec![*from], added: vec![IndexAdded { index: *to, item: item.clone() }], ..Default::default() });

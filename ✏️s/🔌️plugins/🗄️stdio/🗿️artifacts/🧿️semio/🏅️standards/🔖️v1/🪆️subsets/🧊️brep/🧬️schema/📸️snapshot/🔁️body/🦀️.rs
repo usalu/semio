@@ -393,14 +393,7 @@ impl Body {
             let same_vertex = e.start_vertex == e.end_vertex;
             let curve = brep_curve_to_native(&e.curve);
             let range = edge_range(&curve, start_pos, end_pos, same_vertex);
-            seed_edges.push(SeedEdge {
-                label: resolver.resolve(&e.id),
-                v0: resolver.resolve(&e.start_vertex),
-                v1: resolver.resolve(&e.end_vertex),
-                curve,
-                range,
-                tol: Tol::new(if e.tol > 0.0 { e.tol } else { Tol::DEFAULT.0 }),
-            });
+            seed_edges.push(SeedEdge { label: resolver.resolve(&e.id), v0: resolver.resolve(&e.start_vertex), v1: resolver.resolve(&e.end_vertex), curve, range, tol: Tol::new(if e.tol > 0.0 { e.tol } else { Tol::DEFAULT.0 }) });
         }
 
         let mut seed_loops: Vec<Vec<(PersistentLabel, bool)>> = Vec::new();

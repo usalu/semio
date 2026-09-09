@@ -1,11 +1,11 @@
 //! 🪵️ EN 1995 artifact schema — every field with its state class.
 
-use crate::En1995Snapshot;
 use crate::document::AnnexChoice;
+use crate::En1995Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full EN 1995 artifact state (persisted document + shared UI).
+/// 🧬️ EN 1995 document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -52,8 +52,6 @@ pub struct En1995Artifact {
     pub a_vert_m_s2: f64,
     #[state(artifact)]
     pub n_cycles_bridge: f64,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -118,7 +116,6 @@ impl En1995Artifact {
             section_depth_mm: snapshot.section_depth_mm,
             a_vert_m_s2: snapshot.a_vert_m_s2,
             n_cycles_bridge: snapshot.n_cycles_bridge,
-            selected_check_index: None,
         }
     }
 
@@ -151,13 +148,7 @@ impl En1995Artifact {
 pub fn en1995_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1995",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

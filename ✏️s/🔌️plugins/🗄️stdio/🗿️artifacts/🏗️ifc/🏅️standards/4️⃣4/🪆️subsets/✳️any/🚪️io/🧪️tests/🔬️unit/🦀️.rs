@@ -1,7 +1,6 @@
-
+use crate::standards::v4::engine::{demo_ifc_snapshot, empty_ifc_snapshot};
 use crate::IfcSnapshot;
 use crate::STDIO_IFC_DOCUMENT_SCHEMA;
-use crate::standards::v4::engine::{demo_ifc_snapshot, empty_ifc_snapshot};
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {

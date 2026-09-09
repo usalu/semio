@@ -14,9 +14,9 @@
 //! - `media_box` is fixed at US Letter (612x792pt) — `SemioDocumentSnapshot` has no page-size
 //!   concept to draw a real value from.
 
-use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -71,7 +71,14 @@ impl ArtifactSerializer for SemioDocumentToPdf {
             }
             pages.push(make_page(&current));
         }
-        Ok(PdfSnapshot { schema: semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages, info: PdfInfo::default(), objects: Vec::new(), trailer: Vec::new() })
+        Ok(PdfSnapshot {
+            schema: semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(),
+            declared_version: "1.7".into(),
+            pages,
+            info: PdfInfo::default(),
+            objects: Vec::new(),
+            trailer: Vec::new(),
+        })
     }
 }
 //#endregion 🔖️Serializer

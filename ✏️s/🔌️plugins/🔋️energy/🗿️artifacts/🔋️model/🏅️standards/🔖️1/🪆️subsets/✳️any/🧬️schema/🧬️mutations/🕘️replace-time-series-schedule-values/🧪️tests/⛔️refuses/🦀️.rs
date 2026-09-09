@@ -22,10 +22,24 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 1.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 0.5 });
     model.schedules.daily.push(crate::schedule::DailySchedule { id: crate::model::ScheduleId(10), hourly_values: [20.0; 24], interpolation: crate::schedule::ScheduleInterpolation::Continuous, limits: None });
-    model.schedules.daily.push(crate::schedule::DailySchedule { id: crate::model::ScheduleId(11), hourly_values: [27.0; 24], interpolation: crate::schedule::ScheduleInterpolation::Discrete, limits: Some(crate::schedule::ScheduleLimits { min: 0.0, max: 100.0 }) });
+    model.schedules.daily.push(crate::schedule::DailySchedule {
+        id: crate::model::ScheduleId(11),
+        hourly_values: [27.0; 24],
+        interpolation: crate::schedule::ScheduleInterpolation::Discrete,
+        limits: Some(crate::schedule::ScheduleLimits { min: 0.0, max: 100.0 }),
+    });
     model.schedules.daily.push(crate::schedule::DailySchedule { id: crate::model::ScheduleId(12), hourly_values: [1.0; 24], interpolation: crate::schedule::ScheduleInterpolation::Continuous, limits: None });
     model.schedules.weekly.push(crate::schedule::WeeklySchedule { id: crate::model::ScheduleId(20), daily_schedule_ids: [crate::model::ScheduleId(10); 7] });
-    model.schedules.annual.push(crate::schedule::AnnualSchedule { id: crate::model::ScheduleId(30), rules: vec![crate::schedule::CompactScheduleRule { start_month: 1, start_day: 1, end_month: 6, end_day: 30, daily_schedule_id: crate::model::ScheduleId(10) }, crate::schedule::CompactScheduleRule { start_month: 7, start_day: 1, end_month: 12, end_day: 31, daily_schedule_id: crate::model::ScheduleId(11) }], default_daily_schedule_id: crate::model::ScheduleId(11), holiday_daily_schedule_id: None, holiday_dates: vec![(2026, 12, 25)] });
+    model.schedules.annual.push(crate::schedule::AnnualSchedule {
+        id: crate::model::ScheduleId(30),
+        rules: vec![
+            crate::schedule::CompactScheduleRule { start_month: 1, start_day: 1, end_month: 6, end_day: 30, daily_schedule_id: crate::model::ScheduleId(10) },
+            crate::schedule::CompactScheduleRule { start_month: 7, start_day: 1, end_month: 12, end_day: 31, daily_schedule_id: crate::model::ScheduleId(11) },
+        ],
+        default_daily_schedule_id: crate::model::ScheduleId(11),
+        holiday_daily_schedule_id: None,
+        holiday_dates: vec![(2026, 12, 25)],
+    });
     model.schedules.time_series.push(crate::schedule::TimeSeriesSchedule { id: crate::model::ScheduleId(40), values: vec![1.0, 0.5, 0.25], timestep_seconds: 3600 });
     (snapshot(model), super::replace_time_series_schedule_values(crate::model::ScheduleId(40), Vec::new()))
 }

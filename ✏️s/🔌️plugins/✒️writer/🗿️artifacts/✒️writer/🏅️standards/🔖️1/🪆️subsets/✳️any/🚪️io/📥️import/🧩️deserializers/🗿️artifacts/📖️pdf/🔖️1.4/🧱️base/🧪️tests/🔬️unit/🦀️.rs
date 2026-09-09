@@ -1,4 +1,3 @@
-
 use super::*;
 #[semio_framework_async_macros::async_test]
 async fn pdf_page_text_vectors_match_the_json_oracle() {

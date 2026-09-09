@@ -1,17 +1,16 @@
 //! 🧮️ Generation2d play app — view state (`Generation2dConfig`) and its operation enum
 //! (`Generation2dConfigMutation`).
 //!
-//! This is APP state, not document state: selection, camera, show-mode and the derived generation
-//! preview live here rather than under `🗿️artifacts/`, since none of it survives into the `.generation2d`
+//! This is APP state, not document state: selection, camera, and show-mode live here rather than under `🗿️artifacts/`, since none of it survives into the `.generation2d`
 //! document. It still round-trips through a real `ArtifactStore` (with a real `backwards`), so every
 //! edit is VCS'd exactly like document content.
 
-use semio_framework_artifact_flow_flow::CameraJson;
 use protocol::Mutation;
+use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Config
 /// 🧮️ `Generation2dPlayApp::Config` — the pure-trait config artifact. The graph camera, the show-mode
-/// display toggle, the derived generation selection/preview, and locale all round-trip through the
+/// display toggle and generation selection all round-trip through the
 /// config `ArtifactStore` exactly like document content, with a real `backwards` per
 /// [`Generation2dConfigMutation`]. Selection/hover moved to the framework's own `graph` interaction
 /// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see
@@ -29,8 +28,6 @@ pub struct Generation2dConfig {
     pub show_mode: String,
     /// 👁️ Active generation selection.
     pub selected_generation_id: Option<String>,
-    /// 👁️ Derived generation preview text.
-    pub generation_preview_text: Option<String>,
 }
 
 //#region 🔖️ArtifactCodec
@@ -79,7 +76,7 @@ impl store::ArtifactPack for Generation2dConfig {
 
 impl Default for Generation2dConfig {
     fn default() -> Self {
-        Self { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), selected_generation_id: None, generation_preview_text: None, }
+        Self { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), selected_generation_id: None }
     }
 }
 
@@ -108,8 +105,8 @@ pub enum Generation2dConfigMutation {
     },
     #[dsl(key = "show-mode")]
     SetShowMode { value: String },
-    #[dsl(key = "generation")]
-    SetGeneration { selected_generation_id: Option<String>, generation_preview_text: Option<String> },
+    #[dsl(key = "selected-generation")]
+    SetSelectedGeneration { selected_generation_id: Option<String> },
 }
 
 //#region 🔖️OpCodec
@@ -174,10 +171,70 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
     /// authored leaf directory on disk yet, so every `owner` names a path that does not exist —
     /// the same precedent puzzle3d's own config/presence aggregates set.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "⚙️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-mode", semantic_kind: "set-show-mode", display_name: "Set Show Mode", emoji: "⚙️", aggregate_variant: "SetShowMode", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-generation", semantic_kind: "set-generation", display_name: "Set Generation", emoji: "⚙️", aggregate_variant: "SetGeneration", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot",
+            semantic_kind: "set-snapshot",
+            display_name: "Set Snapshot",
+            emoji: "⚙️",
+            aggregate_variant: "Snapshot",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-camera",
+            semantic_kind: "set-camera",
+            display_name: "Set Camera",
+            emoji: "⚙️",
+            aggregate_variant: "SetCamera",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-mode",
+            semantic_kind: "set-show-mode",
+            display_name: "Set Show Mode",
+            emoji: "⚙️",
+            aggregate_variant: "SetShowMode",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎯️set-selected-generation",
+            semantic_kind: "set-selected-generation",
+            display_name: "Set Selected Generation",
+            emoji: "🎯️",
+            aggregate_variant: "SetSelectedGeneration",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -185,7 +242,7 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
             Generation2dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
             Generation2dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[1],
             Generation2dConfigMutation::SetShowMode { .. } => &Self::DESCRIPTORS[2],
-            Generation2dConfigMutation::SetGeneration { .. } => &Self::DESCRIPTORS[3],
+            Generation2dConfigMutation::SetSelectedGeneration { .. } => &Self::DESCRIPTORS[3],
         }
     }
 
@@ -197,10 +254,7 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
             Generation2dConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             Generation2dConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             Generation2dConfigMutation::SetShowMode { value } => next.show_mode = value.clone(),
-            Generation2dConfigMutation::SetGeneration { selected_generation_id, generation_preview_text } => {
-                next.selected_generation_id = selected_generation_id.clone();
-                next.generation_preview_text = generation_preview_text.clone();
-            }
+            Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id } => next.selected_generation_id = selected_generation_id.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

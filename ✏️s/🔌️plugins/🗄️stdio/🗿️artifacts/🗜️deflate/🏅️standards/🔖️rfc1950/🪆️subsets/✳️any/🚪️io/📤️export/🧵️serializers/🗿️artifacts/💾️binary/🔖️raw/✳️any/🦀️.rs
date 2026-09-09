@@ -1,7 +1,7 @@
 //! Serialize stdio.deflate to stdio.binary (zlib-inflate payload).
 
-use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use crate::DeflateSnapshot;
+use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 
 //#region Codec
 /// Register serializer hooks.

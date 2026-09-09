@@ -5,28 +5,6 @@ export interface Generation3dArtifact {
   fixture: FlowFixture;
   /** @state artifact */
   generation: GenerationPlayState;
-  /** @state presence */
-  selectedNodeIds: string[];
-  /** @state config */
-  lodMode: string;
-  /** @state config */
-  showMode: string;
-  /** @state config */
-  selectionMethod: string;
-  /** @state artifact */
-  hoveredNodeId?: string;
-  /** @state config */
-  graphCamera: CameraJson;
-  /** @state config */
-  previewCamera: Generation3dPreviewCamera;
-  /** @state config */
-  sunJson: string;
-  /** @state presence */
-  selectedGenerationId?: string;
-  /** @state artifact */
-  generationPreviewText?: string;
-  /** @state presence */
-  /** @state config */
 }
 
 export type CameraJson = { x: number; y: number; zoom: number };
@@ -109,16 +87,6 @@ export function parseGeneration3dArtifact(value: unknown, at = "$"): Generation3
   return {
     fixture: parseFlowFixture(row["fixture"], `${at}.fixture`),
     generation: parseGenerationPlayState(row["generation"], `${at}.generation`),
-    selectedNodeIds: proceduralGeneration3dArtifactGuardArray(row["selectedNodeIds"], `${at}.selectedNodeIds`).map((item, index) => proceduralGeneration3dArtifactGuardString(item, `${at}.selectedNodeIds[${index}]`)),
-    lodMode: proceduralGeneration3dArtifactGuardString(row["lodMode"], `${at}.lodMode`),
-    showMode: proceduralGeneration3dArtifactGuardString(row["showMode"], `${at}.showMode`),
-    selectionMethod: proceduralGeneration3dArtifactGuardString(row["selectionMethod"], `${at}.selectionMethod`),
-    hoveredNodeId: row["hoveredNodeId"] === undefined ? undefined : proceduralGeneration3dArtifactGuardString(row["hoveredNodeId"], `${at}.hoveredNodeId`),
-    graphCamera: parseCameraJson(row["graphCamera"], `${at}.graphCamera`),
-    previewCamera: parseGeneration3dPreviewCamera(row["previewCamera"], `${at}.previewCamera`),
-    sunJson: proceduralGeneration3dArtifactGuardString(row["sunJson"], `${at}.sunJson`),
-    selectedGenerationId: row["selectedGenerationId"] === undefined ? undefined : proceduralGeneration3dArtifactGuardString(row["selectedGenerationId"], `${at}.selectedGenerationId`),
-    generationPreviewText: row["generationPreviewText"] === undefined ? undefined : proceduralGeneration3dArtifactGuardString(row["generationPreviewText"], `${at}.generationPreviewText`),
   };
 }
 
@@ -178,7 +146,6 @@ export function parseGenerationPlayState(value: unknown, at = "$"): GenerationPl
   const row = proceduralGeneration3dArtifactGuardObject(value, at);
   return {
     generations: proceduralGeneration3dArtifactGuardArray(row["generations"], `${at}.generations`).map((item, index) => parseFormGeneration(item, `${at}.generations[${index}]`)),
-    selectedGenerationId: row["selectedGenerationId"] === undefined ? undefined : proceduralGeneration3dArtifactGuardString(row["selectedGenerationId"], `${at}.selectedGenerationId`),
     previewText: row["previewText"] === undefined ? undefined : proceduralGeneration3dArtifactGuardString(row["previewText"], `${at}.previewText`),
   };
 }

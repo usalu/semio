@@ -17,7 +17,7 @@
   "bedrooms": null,
   "dwellingVentilationM3H": null,
   "occupants": null,
-  "residentialVentilationM3H": 110.0,
+  "residentialVentilationM3H": 110,
   "sfpWM3S": null,
   "sfpRequiredClass": null,
   "heatRecoveryEta": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

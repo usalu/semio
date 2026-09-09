@@ -1,8 +1,8 @@
 //! ⏱️ Hidden dispatch surface for one bounded duplicate-widget continuation step.
 
-use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::commands::duplicate_widget;
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
+use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 

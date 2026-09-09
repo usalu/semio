@@ -7,9 +7,8 @@ pub use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 
 use crate::standards::v1::subsets::base::schema::triples::split_top_level;
 use crate::standards::v1::subsets::kit::schema::mutations::{
-    add_design::AddDesign, add_type::AddType, bind_representation::BindRepresentation, change_representation_pin::ChangeRepresentationPin, create_model::CreateModel,
-    create_object::CreateObject, create_properties::CreateProperties, delete_model::DeleteModel, delete_object::DeleteObject, delete_properties::DeleteProperties, edit_design::EditDesign,
-    remove_design::RemoveDesign, remove_type::RemoveType, rename_type::RenameType, unbind_representation::UnbindRepresentation,
+    add_design::AddDesign, add_type::AddType, bind_representation::BindRepresentation, change_representation_pin::ChangeRepresentationPin, create_model::CreateModel, create_object::CreateObject, create_properties::CreateProperties,
+    delete_model::DeleteModel, delete_object::DeleteObject, delete_properties::DeleteProperties, edit_design::EditDesign, remove_design::RemoveDesign, remove_type::RemoveType, rename_type::RenameType, unbind_representation::UnbindRepresentation,
 };
 use crate::standards::v1::subsets::kit::schema::snapshot::{dec_connection, dec_piece, dec_pin, dec_ref, dec_str, enc_connection, enc_piece, enc_pin, enc_ref, enc_str};
 

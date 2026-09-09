@@ -1,5 +1,5 @@
 //! 🗣️ CAD app — the single `app_labels!` block for the whole app plus the resolvers that pick a cell
-//! from `CadConfig`'s locale/terminology pair. Every taxonomy node that renders text reads its
+//! from the shared OS-owned view context. Every taxonomy node that renders text reads its
 //! strings from here; there is deliberately no second label set anywhere in the plugin.
 
 use crate::editor::cad::TYPOLOGY_CATALOG;

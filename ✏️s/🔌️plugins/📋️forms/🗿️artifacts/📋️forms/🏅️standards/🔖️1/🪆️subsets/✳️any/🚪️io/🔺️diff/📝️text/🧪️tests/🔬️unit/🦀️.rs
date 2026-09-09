@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::mutations::create_step;
-use crate::{FORMS_DOCUMENT_SCHEMA, FormStep, mutations::FormMutation};
+use crate::{mutations::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
 use protocol::Mutation;
 
 #[semio_framework_async_macros::async_test]

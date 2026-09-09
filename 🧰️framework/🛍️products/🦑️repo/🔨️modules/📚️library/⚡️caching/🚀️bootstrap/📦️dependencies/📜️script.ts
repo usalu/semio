@@ -19,7 +19,7 @@ export async function runTool(command: string, args: string[], cwd: string, sign
       force = setTimeout(() => kill("SIGKILL"), 5000);
     };
     child.stdout?.on("data", (chunk: Buffer) => { if (output.length + chunk.length > 1024 * 1024) { overflow = true; kill("SIGKILL"); } else output += chunk.toString(); });
-    const progress = setInterval(() => console.log(`${command} ${args[0]} is still running…`), 10000);
+    const progress = setInterval(() => (capture ? console.error : console.log)(`${command} ${args[0]} is still running…`), 10000);
     signal.addEventListener("abort", stop, { once: true });
     if (signal.aborted) stop();
     try {

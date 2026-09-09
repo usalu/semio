@@ -3,11 +3,11 @@
 //! `FlowNode`/`FlowEdge` field has a 1:1 JSON member. Malformed/missing members are real
 //! errors (`store::PackError::Schema`), never silently defaulted away.
 
-use semio_s_artifact_stdio_json::schema::snapshot::{JsonMember, JsonValue};
-use semio_s_artifact_stdio_json::JsonSnapshot;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_json::schema::snapshot::{JsonMember, JsonValue};
+use semio_s_artifact_stdio_json::JsonSnapshot;
 
 //#region 🔖️JsonAccessors
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

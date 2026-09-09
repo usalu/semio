@@ -16,12 +16,13 @@
 pub type NormRetainedCommandResult<M> = Result<Emit<M, crate::config::NormConfigMutation, semio_framework_plugin::NoDraftMutation>, Fault>;
 
 use crate::document::{CheckReport, NormFamily, NormHost};
-use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasChildren};
 use semio_framework::ToolExecutionContract;
+use semio_framework_plugin::plugin_app_close_prelude as ui;
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::{
-    AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Emit, Fault, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, OsMediaCapability,
-    PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, PortMultiplicity, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions,
+    AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Emit, Fault, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
+    MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, PortMultiplicity, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowLayout,
+    WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions,
 };
 
 //#region 🔖️Ids
@@ -71,23 +72,38 @@ fn render_text(value: impl Into<String>) -> UiAssemblyResult<BuiltNode> {
     ui::text(label).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm UI text build failed"))
 }
 
+fn render_text_chunks(value: &str) -> UiAssemblyResult<BuiltNode> {
+    if value.len() <= ui::UI_TEXT_MAX_BYTES {
+        return render_text(value);
+    }
+    let mut rest = value;
+    let mut children = Vec::new();
+    while !rest.is_empty() {
+        let mut end = rest.len().min(ui::UI_TEXT_MAX_BYTES);
+        while !rest.is_char_boundary(end) {
+            end -= 1;
+        }
+        let label = ui::Label::try_from(&rest[..end]).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm UI text chunk admission failed"))?;
+        let builder = ui::text(label).try_id(format!("norm-text-chunk-{}", children.len())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm UI text chunk id admission failed"))?;
+        children.push(builder.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm UI text chunk build failed"))?);
+        rest = &rest[end..];
+    }
+    ui::column().try_children(children).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm text chunk admission failed"))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm text chunk build failed"))
+}
+
 /// 📑️ Renders a whole `CheckReport` as one line per computed check.
 pub fn render_report(report: &CheckReport) -> UiAssemblyResult<BuiltNode> {
     if report.checks.is_empty() {
         return render_text("No checks computed.");
     }
     let children = report.checks.iter().enumerate().map(|(index, check)| render_text(format!("{}. {} — {:?} u={:.2} — {}", index + 1, check.clause, check.status, check.utilization, check.message))).collect::<UiAssemblyResult<Vec<_>>>()?;
-    ui::column()
-        .try_children(children)
-        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report children admission failed"))?
-        .try_build()
-        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report build failed"))
+    ui::column().try_children(children).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report children admission failed"))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report build failed"))
 }
 
 /// 📄️ Renders a document as pretty-printed JSON — the inputs window's surface.
 pub fn render_document_json<D: dsl::ToValue>(document: &D) -> UiAssemblyResult<BuiltNode> {
     let json = pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(document)));
-    render_text(json)
+    render_text_chunks(&json)
 }
 
 /// 🧾️ Renders a one-line headline for a family's current session — the document panel's surface.
@@ -338,6 +354,22 @@ pub const NORM_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setSelectedCheckIndex", lanes: &[ArtifactToolPublicationLane::Config] },
 ];
 
+/// 🛣️ Stable language-neutral identifier for one live publication lane.
+pub const fn publication_lane_id(lane: ArtifactToolPublicationLane) -> &'static str {
+    match lane {
+        ArtifactToolPublicationLane::HostOnly => "host-only",
+        ArtifactToolPublicationLane::Artifact => "artifact",
+        ArtifactToolPublicationLane::Config => "config",
+        ArtifactToolPublicationLane::Draft => "draft",
+        ArtifactToolPublicationLane::Presence => "presence",
+        ArtifactToolPublicationLane::Transient => "transient",
+        ArtifactToolPublicationLane::WindowConfig => "window-config",
+        ArtifactToolPublicationLane::WindowTransient => "window-transient",
+        ArtifactToolPublicationLane::Child => "child",
+        ArtifactToolPublicationLane::Interaction => "interaction",
+    }
+}
+
 /// ⏱️ The one bounded-first-step contract all forty-five norm tool identities share.
 pub fn norm_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(NORM_RETAINED_RAW_BYTES, 32, 32, 16_384, 7_500)
@@ -373,7 +405,7 @@ pub fn norm_retained_reduce<A: NormRetainedEditor>(
         return Err(Fault::from("norm-command-retained-route-rejected"));
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let mut emit = A::dispatch_retained(command, &doc, &ConfigView { snapshot: config })?;
+    let mut emit = A::dispatch_retained(command, &doc, &ConfigView { snapshot: config, window: None })?;
     emit.artifact_mutations.reverse();
     Ok(emit)
 }
@@ -730,7 +762,17 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugi
         canonical_base_revision: request.canonical_base_revision,
     };
     let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
+        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            history: request.history,
+            interaction_state: request.interaction_state,
+            interaction_hover: request.interaction_hover,
+            context: Some(request.context),
+            operation,
+            completion: request.completion,
+        },
         A::command_id,
         NORM_RETAINED_RAW_BYTES,
         1,

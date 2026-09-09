@@ -3065,7 +3065,7 @@
               ],
               "properties": {
                 "appChannelVersion": {
-                  "const": 14
+                  "const": 15
                 }
               }
             }
@@ -5458,7 +5458,7 @@
               ],
               "properties": {
                 "appChannelVersion": {
-                  "const": 14
+                  "const": 15
                 }
               }
             }
@@ -5686,7 +5686,7 @@
               ],
               "properties": {
                 "appChannelVersion": {
-                  "const": 14
+                  "const": 15
                 }
               }
             }

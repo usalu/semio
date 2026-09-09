@@ -4,9 +4,6 @@ type ProcedureArtifact {
   schema: String! @state(class: ARTIFACT)
   path: ProcedurePath! @state(class: ARTIFACT)
   seed: [ProcedureSeedEntry!]! @state(class: ARTIFACT)
-  selectedStepIds: [String!]! @state(class: PRESENCE)
-  contributionsJson: String! @state(class: CONFIG)
-  runOutputJson: String! @state(class: TRANSIENT)
 }
 
 type ProcedurePath {

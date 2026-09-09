@@ -1,4 +1,3 @@
-
 use super::*;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::{DiffCodec, MutationDiff, OpBinary, OpText};

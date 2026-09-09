@@ -1146,6 +1146,27 @@ describe("🧩️ open/closed", () => {
     expect(dependencyTable.split(/\r?\n/).filter((line) => /^[a-z0-9_-]+\s*=/.test(line.trim()))).toEqual([]);
   });
 
+  test("a Rust host build resolves Cargo's executable before the finite scenario budget starts", async () => {
+    const ts = await import("typescript");
+    const script = readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"), "utf8");
+    const source = ts.createSourceFile("script.ts", script, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const parser = source.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "rustHostExecutableFromCargo");
+    const execute = source.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "executeOne");
+    expect(parser).toBeDefined();
+    expect(execute).toBeDefined();
+    const compiled = ts.transpileModule(parser!.getText(source), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
+    const resolveExecutable = new Function(`${compiled}\nreturn rustHostExecutableFromCargo;`)() as (stdout: string) => string | null;
+    const cargoOutput = [
+      JSON.stringify({ reason: "compiler-artifact", target: { name: "dependency", kind: ["lib"] }, executable: null }),
+      JSON.stringify({ reason: "compiler-artifact", target: { name: "host", kind: ["bin"] }, executable: "/tmp/target/aarch64/debug/host" }),
+    ].join("\n");
+    expect(resolveExecutable(cargoOutput)).toBe("/tmp/target/aarch64/debug/host");
+    const executeText = execute!.getText(source);
+    expect(executeText).toContain("budgetMs: buildBudgetMs()");
+    expect(executeText).toContain("budgetMs: testLevelBudgetMs(level)");
+    expect(executeText.indexOf("budgetMs: buildBudgetMs()")).toBeLessThan(executeText.indexOf("budgetMs: testLevelBudgetMs(level)"));
+  });
+
   test("the framework test domain's sources name no implementation area", () => {
     const domain = join(repoRoot, testTaxonomy(repoRoot).testDomainPath);
     for (const file of ["📜️script.ts", "📦️packages/🟦️typescript/🟦️.ts", "📡️protocol/🦀️.rs", "🏃️runner/🦀️.rs"]) {

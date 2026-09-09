@@ -5,9 +5,6 @@ export interface SHomeDiff {
   schema?: string;
   /** @state artifact */
   catalogGeneration?: number;
-  /** @state config */
-  activePanelTab?: string;
-  /** @state config */
 }
 
 //#region 🚪️Parsers
@@ -62,6 +59,5 @@ export function parseSHomeDiff(value: unknown, at = "$"): SHomeDiff {
   return {
     schema: row["schema"] === undefined ? undefined : spaceHomeDiffGuardString(row["schema"], `${at}.schema`),
     catalogGeneration: row["catalogGeneration"] === undefined ? undefined : spaceHomeDiffGuardInteger(row["catalogGeneration"], `${at}.catalogGeneration`, {"minimum": 0}),
-    activePanelTab: row["activePanelTab"] === undefined ? undefined : spaceHomeDiffGuardString(row["activePanelTab"], `${at}.activePanelTab`),
   };
 }

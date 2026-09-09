@@ -6,9 +6,9 @@
 
 use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation;
 use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot;
-use crate::{JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use crate::viewer::jpg_any::modes::view;
 use crate::viewer::jpg_any::modes::view::windows::main;
+use crate::{JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

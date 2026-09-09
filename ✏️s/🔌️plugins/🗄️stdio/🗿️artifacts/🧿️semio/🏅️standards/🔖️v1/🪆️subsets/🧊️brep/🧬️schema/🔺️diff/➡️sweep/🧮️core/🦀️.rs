@@ -161,7 +161,12 @@ pub(super) fn translate_lateral(curve: &Curve3, range: (f64, f64), offset: Vec3)
         Curve3::Nurbs { .. } => {
             let nc = curve.to_nurbs(range);
             let top: Vec<Pnt3> = nc.controls.iter().map(|&p| p + offset).collect();
-            let surface = Surface::Nurbs { u_knots: nc.knots.clone(), v_knots: crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(), controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(), weights: nc.weights.iter().map(|&w| vec![w, w]).collect() };
+            let surface = Surface::Nurbs {
+                u_knots: nc.knots.clone(),
+                v_knots: crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(),
+                controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(),
+                weights: nc.weights.iter().map(|&w| vec![w, w]).collect(),
+            };
             Ok(LateralSurface { surface, u_domain: range, v_bottom: 0.0, v_top: 1.0 })
         }
     }
@@ -190,7 +195,14 @@ pub(super) fn build_prism(body: &mut Body, bottom: FaceId, placement: &Placement
     let travel = match placement {
         Placement::Translate { offset } => *offset,
         Placement::General { .. } => {
-            let bfd = body.faces.get(bottom).and_then(|f| match body.surfaces.get(f.surface) { Some(Surface::Plane { frame }) => Some(*frame), _ => None }).ok_or_else(|| KernelError::InvalidInput("sweep profile face must be planar".into()))?;
+            let bfd = body
+                .faces
+                .get(bottom)
+                .and_then(|f| match body.surfaces.get(f.surface) {
+                    Some(Surface::Plane { frame }) => Some(*frame),
+                    _ => None,
+                })
+                .ok_or_else(|| KernelError::InvalidInput("sweep profile face must be planar".into()))?;
             map.apply_point(bfd.origin) - bfd.origin
         }
     };
@@ -235,7 +247,10 @@ pub(super) fn build_prism(body: &mut Body, bottom: FaceId, placement: &Placement
         let tce = body.loop_coedges(tl);
         let n = bce.len();
         for k in 0..n {
-            let (b_edge, f_i) = { let c = body.coedges.get(bce[k]).unwrap(); (c.edge, c.forward) };
+            let (b_edge, f_i) = {
+                let c = body.coedges.get(bce[k]).unwrap();
+                (c.edge, c.forward)
+            };
             let t_edge = body.coedges.get(tce[k]).unwrap().edge;
             let (s_bot, e_bot) = body.coedge_endpoints(bce[k]).unwrap();
             let (s_top, e_top) = body.coedge_endpoints(tce[k]).unwrap();
@@ -312,7 +327,12 @@ pub(super) fn general_lateral(curve: &Curve3, range: (f64, f64), map: &Affine3) 
         Curve3::Line { .. } | Curve3::Nurbs { .. } => {
             let nc = curve.to_nurbs(range);
             let top: Vec<Pnt3> = nc.controls.iter().map(|&p| map.apply_point(p)).collect();
-            let surface = Surface::Nurbs { u_knots: nc.knots.clone(), v_knots: crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(), controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(), weights: nc.weights.iter().map(|&w| vec![w, w]).collect() };
+            let surface = Surface::Nurbs {
+                u_knots: nc.knots.clone(),
+                v_knots: crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(),
+                controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(),
+                weights: nc.weights.iter().map(|&w| vec![w, w]).collect(),
+            };
             Ok(LateralSurface { surface, u_domain: range, v_bottom: 0.0, v_top: 1.0 })
         }
         _ => Err(KernelError::Operation("sweep: only line and free-form (already-NURBS) profile edges have a certified pcurve along a general path station (circle/ellipse profile edges are refused, not mis-parametrized)".into())),

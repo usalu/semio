@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::fem2d::Fem2dCommand;
 use crate::editor::fem2d::testkit::{dispatch, fem2d_app};
+use crate::editor::fem2d::Fem2dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn set_result_display_is_config_only() {

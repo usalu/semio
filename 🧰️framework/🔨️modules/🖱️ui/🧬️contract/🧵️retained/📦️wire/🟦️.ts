@@ -166,11 +166,21 @@ export class RetainedUiWireValueCursor {
         const tag = this.#byte();
         if (tag === 0x12 || tag === 0x01 || tag === 0x02) { this.#pending = tag === 0x12 ? null : tag === 0x02; this.#phase = "attach"; }
         else if (tag === 0x05) this.#phase = "float";
+        else if (tag === 0x04) this.#phase = "uint";
+        else if (tag === 0x03) this.#phase = "int";
         else if (tag === 0x06) this.#phase = "symbol-reference";
         else if (tag === 0x07) { this.#textKind = "value"; this.#phase = "text-length"; }
         else if (tag === 0x0c || tag === 0x10) { this.#array = tag === 0x0c; this.#phase = "collection-count"; }
         else throw new Error("Unknown UI value tag");
         return 1;
+      }
+      case "uint": return this.#nat("uint-done");
+      case "uint-done": { this.#pending = this.#number; this.#phase = "attach"; return 8; }
+      case "int": return this.#nat("int-done");
+      case "int-done": {
+        const zigzag = this.#number;
+        this.#pending = zigzag % 2 === 0 ? zigzag / 2 : -(zigzag + 1) / 2;
+        this.#phase = "attach"; return 8;
       }
       case "float": {
         this.#stepBytes = 16;

@@ -7,7 +7,7 @@
 use crate::BmpSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::dimensions::{compute_bmp_dimensions};
+use super::dimensions::compute_bmp_dimensions;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a bmp snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
@@ -65,13 +65,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v_v3::subset
 pub fn bmp_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.bmp.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

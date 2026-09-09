@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.writer.main_window.config.mutations.v1;
+
+message WriterMainWindowConfigMutation {
+  oneof mutation {
+    SetCamera set_camera = 1;
+    SetEditorSettings set_editor_settings = 2;
+  }
+}
+message SetCamera { bytes camera = 1; }
+message SetEditorSettings { bytes settings = 1; }

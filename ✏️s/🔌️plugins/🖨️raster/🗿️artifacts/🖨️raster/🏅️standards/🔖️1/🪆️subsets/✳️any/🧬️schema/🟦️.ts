@@ -1,24 +1,69 @@
 /** 🧬️ Raster artifact schema — every field with its state class. */
+import { parseDslValue, type DslValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
 export interface RasterArtifact {
   schema: string;
   id: string;
   title?: string;
   layers: RasterLayerNode[];
-  assets: Record<string, RasterImageAsset>;
-  selectedIds: string[];
-  brushSize: number;
-  brushOpacity: number;
-  compositeViewport?: RasterViewportSize;
-  cameraX: number;
-  cameraY: number;
-  cameraZoom: number;
-  hoveredId?: string;
+  assets: Record<string, ArtifactChild>;
 }
 
-export interface RasterLayerNode {
-  kind: string;
-  [key: string]: unknown;
+export type RasterLayerNode = RasterLayerPixel | RasterLayerGroup | RasterLayerAdjustment;
+
+export interface RasterLayerPixel {
+  kind: "pixel";
+  id: string;
+  name: string;
+  visible: boolean;
+  opacity: number;
+  blendMode: string;
+  transform: RasterTransform;
+  mask?: RasterLayerMask;
+  width?: number;
+  height?: number;
+  imageKey?: string;
+}
+
+export interface RasterLayerGroup {
+  kind: "group";
+  id: string;
+  name: string;
+  visible: boolean;
+  opacity: number;
+  blendMode: string;
+  transform: RasterTransform;
+  mask?: RasterLayerMask;
+  children: RasterLayerNode[];
+}
+
+export interface RasterLayerAdjustment {
+  kind: "adjustment";
+  id: string;
+  name: string;
+  visible: boolean;
+  opacity: number;
+  blendMode: string;
+  transform: RasterTransform;
+  adjustmentKind: string;
+  params: Record<string, DslValue>;
+}
+
+export interface RasterTransform {
+  x: number;
+  y: number;
+  scaleX: number;
+  scaleY: number;
+  rotation: number;
+}
+
+export interface RasterLayerMask {
+  enabled: boolean;
+  linked: boolean;
+  invert: boolean;
+  width?: number;
+  height?: number;
 }
 
 export interface RasterImageAsset {
@@ -85,15 +130,10 @@ export function parseRasterArtifact(value: unknown, at = "$"): RasterArtifact {
     id: rasterRasterArtifactGuardString(row["id"], `${at}.id`),
     title: row["title"] === undefined ? undefined : rasterRasterArtifactGuardString(row["title"], `${at}.title`),
     layers: rasterRasterArtifactGuardArray(row["layers"], `${at}.layers`).map((item, index) => parseRasterLayerNode(item, `${at}.layers[${index}]`)),
-    assets: rasterRasterArtifactGuardObject(row["assets"], `${at}.assets`),
-    selectedIds: rasterRasterArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => rasterRasterArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    brushSize: rasterRasterArtifactGuardNumber(row["brushSize"], `${at}.brushSize`),
-    brushOpacity: rasterRasterArtifactGuardNumber(row["brushOpacity"], `${at}.brushOpacity`),
-    compositeViewport: row["compositeViewport"] === undefined ? undefined : parseRasterViewportSize(row["compositeViewport"], `${at}.compositeViewport`),
-    cameraX: rasterRasterArtifactGuardNumber(row["cameraX"], `${at}.cameraX`),
-    cameraY: rasterRasterArtifactGuardNumber(row["cameraY"], `${at}.cameraY`),
-    cameraZoom: rasterRasterArtifactGuardNumber(row["cameraZoom"], `${at}.cameraZoom`),
-    hoveredId: row["hoveredId"] === undefined ? undefined : rasterRasterArtifactGuardString(row["hoveredId"], `${at}.hoveredId`),
+    assets: Object.fromEntries(
+      Object.entries(rasterRasterArtifactGuardObject(row["assets"], `${at}.assets`))
+        .map(([key, item]) => [key, parseArtifactChild(item)]),
+    ),
   };
 }
 
@@ -107,8 +147,63 @@ export function parseRasterImageAsset(value: unknown, at = "$"): RasterImageAsse
 
 export function parseRasterLayerNode(value: unknown, at = "$"): RasterLayerNode {
   const row = rasterRasterArtifactGuardObject(value, at);
+  const kind = rasterRasterArtifactGuardMember(row["kind"], `${at}.kind`, ["pixel", "group", "adjustment"] as const);
+  const common = {
+    id: rasterRasterArtifactGuardString(row["id"], `${at}.id`),
+    name: rasterRasterArtifactGuardString(row["name"], `${at}.name`),
+    visible: rasterRasterArtifactGuardBoolean(row["visible"], `${at}.visible`),
+    opacity: rasterRasterArtifactGuardNumber(row["opacity"], `${at}.opacity`),
+    blendMode: rasterRasterArtifactGuardString(row["blendMode"], `${at}.blendMode`),
+    transform: parseRasterTransform(row["transform"], `${at}.transform`),
+  };
+  if (kind === "pixel") {
+    return {
+      kind,
+      ...common,
+      mask: row["mask"] == null ? undefined : parseRasterLayerMask(row["mask"], `${at}.mask`),
+      width: row["width"] == null ? undefined : rasterRasterArtifactGuardInteger(row["width"], `${at}.width`, { minimum: 0 }),
+      height: row["height"] == null ? undefined : rasterRasterArtifactGuardInteger(row["height"], `${at}.height`, { minimum: 0 }),
+      imageKey: row["imageKey"] == null ? undefined : rasterRasterArtifactGuardString(row["imageKey"], `${at}.imageKey`),
+    };
+  }
+  if (kind === "group") {
+    return {
+      kind,
+      ...common,
+      mask: row["mask"] == null ? undefined : parseRasterLayerMask(row["mask"], `${at}.mask`),
+      children: rasterRasterArtifactGuardArray(row["children"], `${at}.children`).map((item, index) => parseRasterLayerNode(item, `${at}.children[${index}]`)),
+    };
+  }
   return {
-    kind: rasterRasterArtifactGuardString(row["kind"], `${at}.kind`),
+    kind,
+    ...common,
+    adjustmentKind: rasterRasterArtifactGuardString(row["adjustmentKind"], `${at}.adjustmentKind`),
+    params: Object.fromEntries(
+      Object.entries(rasterRasterArtifactGuardObject(row["params"], `${at}.params`))
+        .map(([key, item]) => [key, parseDslValue(item)]),
+    ),
+  };
+}
+
+export function parseRasterTransform(value: unknown, at = "$"): RasterTransform {
+  const row = rasterRasterArtifactGuardObject(value, at);
+  return {
+    x: rasterRasterArtifactGuardNumber(row["x"], `${at}.x`),
+    y: rasterRasterArtifactGuardNumber(row["y"], `${at}.y`),
+    scaleX: rasterRasterArtifactGuardNumber(row["scaleX"], `${at}.scaleX`),
+    scaleY: rasterRasterArtifactGuardNumber(row["scaleY"], `${at}.scaleY`),
+    rotation: rasterRasterArtifactGuardNumber(row["rotation"], `${at}.rotation`),
+  };
+}
+
+export function parseRasterLayerMask(value: unknown, at = "$"): RasterLayerMask {
+  const row = rasterRasterArtifactGuardObject(value, at);
+  return {
+    enabled: rasterRasterArtifactGuardBoolean(row["enabled"], `${at}.enabled`),
+    linked: rasterRasterArtifactGuardBoolean(row["linked"], `${at}.linked`),
+    invert: rasterRasterArtifactGuardBoolean(row["invert"], `${at}.invert`),
+    width: row["width"] == null ? undefined : rasterRasterArtifactGuardInteger(row["width"], `${at}.width`, { minimum: 0 }),
+    height: row["height"] == null ? undefined : rasterRasterArtifactGuardInteger(row["height"], `${at}.height`, { minimum: 0 }),
   };
 }
 

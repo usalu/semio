@@ -22,12 +22,28 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
-    model.humidistats.push(crate::model::Humidistat { id: crate::model::EntityId(11), zone_id: crate::model::EntityId(1), humidifying_setpoint_schedule_id: crate::model::ScheduleId(1), dehumidifying_setpoint_schedule_id: crate::model::ScheduleId(2), humidifying_throttle_range: 5.0, dehumidifying_throttle_range: 5.0 });
+    model.humidistats.push(crate::model::Humidistat {
+        id: crate::model::EntityId(11),
+        zone_id: crate::model::EntityId(1),
+        humidifying_setpoint_schedule_id: crate::model::ScheduleId(1),
+        dehumidifying_setpoint_schedule_id: crate::model::ScheduleId(2),
+        humidifying_throttle_range: 5.0,
+        dehumidifying_throttle_range: 5.0,
+    });
     (snapshot(model), super::change_humidistat_humidifying_setpoint_schedule(crate::model::EntityId(11), crate::model::ScheduleId(99)))
 }
 
 fn case() -> Case {
-    Case { kind: "change-humidistat-humidifying-setpoint-schedule", directory: "☔️change-humidistat-humidifying-setpoint-schedule/🧪️tests/⛔️refuses-an-absent-one", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case {
+        kind: "change-humidistat-humidifying-setpoint-schedule",
+        directory: "☔️change-humidistat-humidifying-setpoint-schedule/🧪️tests/⛔️refuses-an-absent-one",
+        before: BEFORE,
+        after: AFTER,
+        mutation: MUTATION,
+        diff: DIFF,
+        outcome: OUTCOME,
+        scenario,
+    }
 }
 
 #[semio_framework_async_macros::async_test]

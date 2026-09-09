@@ -1,5 +1,7 @@
 /** 🧬️ Shooting snapshot schema — artifact-lane fields only. */
 
+import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+
 export interface ShootingSnapshot {
   /** @state artifact */
   schema: string;
@@ -15,6 +17,8 @@ export interface ShootingSnapshot {
   activeShotId: string;
   /** @state artifact */
   activeAssetId: string;
+  /** @state artifact @child kind=s.stdio.semio.image */
+  emblem?: ArtifactChild;
 }
 
 export interface ShootingCamera {

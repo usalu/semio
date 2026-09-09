@@ -1,4 +1,3 @@
-
 use super::*;
 #[semio_framework_async_macros::async_test]
 async fn writer_into_pdf_preserves_text_and_page_size() {

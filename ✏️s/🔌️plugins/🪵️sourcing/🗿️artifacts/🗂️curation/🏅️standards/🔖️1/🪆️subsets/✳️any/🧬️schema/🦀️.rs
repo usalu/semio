@@ -7,7 +7,7 @@ use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Artifact
-/// 🧬️ Full curation artifact state across the artifact, presence and config lanes. `catalog`/
+/// 🧬️ curation document artifact state. `catalog`/
 /// `stock_extra` mirror `CurationSnapshot`'s own composed-child split (see that struct's doc comment).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -20,21 +20,13 @@ pub struct CurationArtifact {
     pub stock_extra: Vec<ObjectKindExtra>,
     #[state(artifact)]
     pub curated: Vec<CuratedItem>,
-    #[state(config)]
-    pub filters: Filters,
-    #[state(config)]
-    pub contributions_json: String,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
-fn default_contributions_json() -> String {
-    "[]".into()
-}
-
 impl Default for CurationArtifact {
     fn default() -> Self {
-        Self { catalog: crate::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new(), filters: Filters::default(), contributions_json: default_contributions_json() }
+        Self { catalog: crate::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new() }
     }
 }
 
@@ -44,7 +36,7 @@ impl CurationArtifact {
         CurationSnapshot { catalog: self.catalog.clone(), stock_extra: self.stock_extra.clone(), curated: self.curated.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: CurationSnapshot) -> Self {
         Self { catalog: snapshot.catalog, stock_extra: snapshot.stock_extra, curated: snapshot.curated, ..Self::default() }
     }

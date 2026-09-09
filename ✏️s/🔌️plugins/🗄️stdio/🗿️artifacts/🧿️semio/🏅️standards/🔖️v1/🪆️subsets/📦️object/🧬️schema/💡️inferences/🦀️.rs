@@ -15,7 +15,7 @@ use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::composition::{compute_semio_object_composition};
+use super::composition::compute_semio_object_composition;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio object snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `composition`, backed by the `🧩composition/` slug dir).
@@ -72,13 +72,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::object::schema::SemioOb
 pub fn semio_object_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.object.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

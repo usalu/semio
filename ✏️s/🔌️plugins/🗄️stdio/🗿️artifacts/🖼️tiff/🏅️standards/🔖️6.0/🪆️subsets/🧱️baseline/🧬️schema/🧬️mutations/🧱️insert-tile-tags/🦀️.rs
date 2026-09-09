@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertTileTags {
-        pub(crate) tile_width: u32,
-        pub(crate) tile_length: u32,
-    }
+    pub(crate) tile_width: u32,
+    pub(crate) tile_length: u32,
+}
 
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for InsertTileTags {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "tile-tags", kind: "insert-tile-tags", record: "InsertTileTags" };

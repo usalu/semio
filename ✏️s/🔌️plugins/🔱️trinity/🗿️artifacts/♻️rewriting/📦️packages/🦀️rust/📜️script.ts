@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ trinity-rewriting Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/📜️script.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-trinity-rewriting");

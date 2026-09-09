@@ -17,10 +17,10 @@
 //!   guessed `Heading` (guessing heading level from a style NAME string would be fabrication, not
 //!   honest extraction).
 
-use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxTable};
-use semio_s_artifact_stdio_docx::DocxSnapshot;
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxTable};
+use semio_s_artifact_stdio_docx::DocxSnapshot;
 
 //#region 🔖️FieldMapping
 /// ✍️ `DocxRun` -> `DocRun`: text + the 3 boolean flags both models share. `size`/`font`/`color`/

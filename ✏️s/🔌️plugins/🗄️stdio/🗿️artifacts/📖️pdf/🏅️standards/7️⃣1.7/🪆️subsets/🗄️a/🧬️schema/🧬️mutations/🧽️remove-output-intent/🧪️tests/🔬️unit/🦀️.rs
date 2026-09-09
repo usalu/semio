@@ -1,4 +1,3 @@
-
 use super::super::set_output_intent::{OUTPUT_INTENT_DEST_PROFILE, OUTPUT_INTENT_SUBTYPE};
 use super::*;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;

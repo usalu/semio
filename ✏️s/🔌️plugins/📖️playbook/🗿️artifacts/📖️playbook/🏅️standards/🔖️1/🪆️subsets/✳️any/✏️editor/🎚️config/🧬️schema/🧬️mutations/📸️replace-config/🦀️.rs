@@ -15,7 +15,13 @@ impl protocol::MutationKind<PlaybookConfig, PlaybookConfigMutation> for ReplaceC
     fn diff(&self, _base: &PlaybookConfig) -> protocol::MutationOutcome<PlaybookConfig> {
         protocol::MutationOutcome::new(self.config.clone())
     }
-    fn inverse(&self, base: &PlaybookConfig) -> Vec<PlaybookConfigMutation> { vec![PlaybookConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Replace Config".into() }
-    fn target(&self) -> Vec<String> { vec!["config".into()] }
+    fn inverse(&self, base: &PlaybookConfig) -> Vec<PlaybookConfigMutation> {
+        vec![PlaybookConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Config".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["config".into()]
+    }
 }

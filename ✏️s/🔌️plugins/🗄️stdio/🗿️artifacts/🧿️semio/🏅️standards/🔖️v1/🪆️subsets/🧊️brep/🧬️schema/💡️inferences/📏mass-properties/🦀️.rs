@@ -202,13 +202,7 @@ pub fn solid_mass_properties(body: &Body, solid: SolidId, tol: f64) -> Result<Ma
     let ixz = jxz - volume * cx * cz;
     let iyz = jyz - volume * cy * cz;
     let error_estimate = if volume > 1e-12 { err / volume } else { err };
-    Ok(MassProperties {
-        volume,
-        area: totals[IDX_AREA],
-        centroid: Pnt3::new(cx, cy, cz),
-        inertia: [[ixx, -ixy, -ixz], [-ixy, iyy, -iyz], [-ixz, -iyz, izz]],
-        error_estimate,
-    })
+    Ok(MassProperties { volume, area: totals[IDX_AREA], centroid: Pnt3::new(cx, cy, cz), inertia: [[ixx, -ixy, -ixz], [-ixy, iyy, -iyz], [-ixz, -iyz, izz]], error_estimate })
 }
 
 /// 📏 A face's trimmed surface-integral moments (outer loop minus each inner/hole loop), used
@@ -807,13 +801,7 @@ fn loop_area(body: &Body, face: FaceId, loop_id: crate::standards::v1::subsets::
 /// too, so this loses nothing but the fast path's cheapness).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn loop_has_only_straight_edges(body: &Body, loop_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> bool {
-    body.loop_coedges(loop_id).into_iter().all(|coedge| {
-        body.coedges
-            .get(coedge)
-            .and_then(|co| body.edges.get(co.edge))
-            .and_then(|edge| body.curves3.get(edge.curve))
-            .is_some_and(|curve| matches!(curve, Curve3::Line { .. }))
-    })
+    body.loop_coedges(loop_id).into_iter().all(|coedge| body.coedges.get(coedge).and_then(|co| body.edges.get(co.edge)).and_then(|edge| body.curves3.get(edge.curve)).is_some_and(|curve| matches!(curve, Curve3::Line { .. })))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

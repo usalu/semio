@@ -1,9 +1,8 @@
 //! 🔥 `change-bed-joint-thickness-mm` payload — changes the En1996 document's `bed_joint_thickness_mm` (bed joint thickness [mm]).
 
-
-use crate::En1996Snapshot;
 use crate::diff::En1996Diff;
 use crate::mutations::En1996Mutation;
+use crate::En1996Snapshot;
 //#region 🔖️ChangeBedJointThicknessMm
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

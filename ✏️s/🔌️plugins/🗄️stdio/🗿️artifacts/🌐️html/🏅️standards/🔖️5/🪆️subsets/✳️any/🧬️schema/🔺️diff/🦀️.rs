@@ -12,9 +12,9 @@
 //! is hand-rolled below, grammar template copied from `SvgDiff`'s.
 
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.html`. No `snapshot: Option<HtmlSnapshot>` full-replace slot — even

@@ -4,12 +4,14 @@ package semio.s.imperative.procedure.diff;
 // 🧬️ Imperative diff schema — sparse field delta over the artifact.
 
 message ProcedureDiff {
-  optional ProcedureArtifact artifact = 1; // @state artifact
-  optional string schema = 2; // @state artifact
-  optional ProcedurePathDelta path = 3; // @state artifact
-  optional map<string, string> seed = 4; // @state artifact
-  optional ProcedureStringList selected_step_ids = 5; // @state presence
-  optional string contributions_json = 7; // @state config
+  // @state artifact
+  optional ProcedureArtifact artifact = 1;
+  // @state artifact
+  optional string schema = 2;
+  // @state artifact
+  optional ProcedurePathDelta path = 3;
+  // @state artifact
+  optional map<string, string> seed = 4;
 }
 
 message ProcedureStringList {
@@ -58,7 +60,4 @@ message ProcedureArtifact {
   string schema = 1;
   ProcedurePath path = 2;
   map<string, string> seed = 3;
-  repeated string selected_step_ids = 4;
-  string contributions_json = 6;
-  string run_output_json = 7;
 }

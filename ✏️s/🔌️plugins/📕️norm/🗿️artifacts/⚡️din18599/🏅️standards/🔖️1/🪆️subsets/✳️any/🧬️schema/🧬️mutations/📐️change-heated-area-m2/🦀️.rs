@@ -1,9 +1,8 @@
 //! 🦛 `change-heated-area-m2` payload — changes the Din18599 document's `heated_area_m2` (heated floor area [m2]).
 
-
-use crate::Din18599Snapshot;
 use crate::diff::Din18599Diff;
 use crate::mutations::Din18599Mutation;
+use crate::Din18599Snapshot;
 //#region 🔖️ChangeHeatedAreaM2
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

@@ -8,18 +8,14 @@
     "schema",
     "objectKind",
     "representations",
-    "vortexKinds",
+    "catalog",
+    "vortexKindExtra",
     "vortices",
     "compatibility",
     "attributes",
     "authors",
     "camera3d",
-    "meta",
-    "selectedIds",
-    "wantedTags",
-    "windows",
-    "brushRadius",
-    "brushFlip"
+    "meta"
   ],
   "properties": {
     "schema": {
@@ -37,10 +33,14 @@
       },
       "x-semio-state": "artifact"
     },
-    "vortexKinds": {
+    "catalog": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact"
+    },
+    "vortexKindExtra": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/Block3dVortexKind"
+        "$ref": "#/$defs/Block3dVortexKindExtra"
       },
       "x-semio-state": "artifact"
     },
@@ -79,56 +79,6 @@
     "meta": {
       "$ref": "#/$defs/BlockMeta",
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "activeRepresentationId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "wantedTags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "windows": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Block3dWindowView"
-      },
-      "x-semio-state": "config"
-    },
-    "brushVortexKindId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "brushRadius": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "brushFlip": {
-      "type": "boolean",
-      "x-semio-state": "config"
-    },
-    "brushPreview": {
-      "$ref": "#/$defs/Block3dBrushPreview",
-      "x-semio-state": "artifact"
-    },
-    "camera": {
-      "$ref": "#/$defs/BlockCamera3d",
-      "x-semio-state": "config"
-    },
-    "hoveredVortexFullId": {
-      "type": "string",
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {
@@ -144,6 +94,11 @@
     },
     "Block3dVortexKind": {
       "title": "Block3dVortexKind",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block3dVortexKindExtra": {
+      "title": "Block3dVortexKindExtra",
       "type": "object",
       "additionalProperties": true
     },
@@ -179,11 +134,6 @@
     },
     "Block3dWindowView": {
       "title": "Block3dWindowView",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block3dBrushPreview": {
-      "title": "Block3dBrushPreview",
       "type": "object",
       "additionalProperties": true
     }

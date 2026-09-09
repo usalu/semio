@@ -1,5 +1,6 @@
 
 use super::*;
+use semio_framework_plugin::Effect;
 
 #[semio_framework_async_macros::async_test]
 async fn create_space_index_editor_builds_a_definition_for_this_dialect() {
@@ -54,8 +55,8 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = SpaceIndexConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
-    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render("nope", &doc, &cfg).expect("unknown body diagnostic tree"), &semio_framework_plugin::ViewModel::default()).expect("unknown body projection");
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
+    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render("nope", &doc, &cfg, &semio_framework_plugin::ViewModel::default()).expect("unknown body diagnostic tree")).expect("unknown body projection");
     assert!(json.contains("Unknown body"));
 }
 
@@ -66,8 +67,8 @@ async fn the_members_panel_body_renders_through_the_editor_dispatch() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = SpaceIndexConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
-    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render(members_panel::SPACE_INDEX_BODY_MEMBERS, &doc, &cfg).expect("members panel tree"), &semio_framework_plugin::ViewModel::default()).expect("members panel projection");
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
+    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render(members_panel::SPACE_INDEX_BODY_MEMBERS, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).expect("members panel tree")).expect("members panel projection");
     assert!(json.contains("s-space-invite"));
 }
 

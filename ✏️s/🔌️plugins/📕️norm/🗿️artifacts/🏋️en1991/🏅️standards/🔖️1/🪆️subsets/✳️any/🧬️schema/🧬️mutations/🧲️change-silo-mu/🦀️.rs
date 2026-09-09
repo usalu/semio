@@ -1,6 +1,5 @@
 //! 📉 `change-silo-mu` — sets the En1991 silo friction coefficient scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

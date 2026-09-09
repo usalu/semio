@@ -32,10 +32,7 @@ pub mod derived_composition {
             IoPayload::Binary(bytes) => {
                 if let Ok((_, inner)) = store::semio_format::unwrap_binary(bytes) {
                     Some(inner.to_vec())
-                } else if matches!(
-                    crate::standards::v2_0::subsets::base::io::sniff_zip_bytes(bytes),
-                    crate::standards::v2_0::subsets::base::io::SniffConfidence::High | crate::standards::v2_0::subsets::base::io::SniffConfidence::Medium
-                ) {
+                } else if matches!(crate::standards::v2_0::subsets::base::io::sniff_zip_bytes(bytes), crate::standards::v2_0::subsets::base::io::SniffConfidence::High | crate::standards::v2_0::subsets::base::io::SniffConfidence::Medium) {
                     Some(bytes.to_vec())
                 } else {
                     None

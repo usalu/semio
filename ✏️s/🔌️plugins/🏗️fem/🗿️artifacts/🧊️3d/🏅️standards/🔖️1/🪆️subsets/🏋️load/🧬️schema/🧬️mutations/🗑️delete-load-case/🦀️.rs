@@ -1,7 +1,7 @@
 //! 🗑️ Fem3d mutation — `DeleteLoadCase` payload + `MutationKind` impl.
 
-use crate::Fem3dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use crate::Fem3dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

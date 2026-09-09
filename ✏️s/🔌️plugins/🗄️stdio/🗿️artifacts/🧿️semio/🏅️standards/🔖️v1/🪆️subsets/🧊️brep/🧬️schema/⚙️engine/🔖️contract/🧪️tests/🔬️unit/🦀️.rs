@@ -1,5 +1,4 @@
-
-use super::{BREP_KERNEL_OPERATIONS, OPERATION_QUALITY, OpQuality, operation_quality};
+use super::{operation_quality, OpQuality, BREP_KERNEL_OPERATIONS, OPERATION_QUALITY};
 use std::collections::HashSet;
 
 #[test]

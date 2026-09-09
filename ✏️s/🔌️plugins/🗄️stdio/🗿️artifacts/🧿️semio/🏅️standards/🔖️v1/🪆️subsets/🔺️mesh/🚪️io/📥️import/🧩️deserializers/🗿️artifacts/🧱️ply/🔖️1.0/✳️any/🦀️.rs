@@ -20,11 +20,11 @@
 //! - No color/PBR/texture-byte concept beyond flat per-vertex RGBA -> `materials`/`textures` stay
 //!   empty, `material_id` stays `None`.
 
-use semio_s_artifact_stdio_ply::schema::snapshot::{PlyProperty, PlyScalarType, PlyValue};
-use semio_s_artifact_stdio_ply::PlySnapshot;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_ply::schema::snapshot::{PlyProperty, PlyScalarType, PlyValue};
+use semio_s_artifact_stdio_ply::PlySnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };

@@ -57,6 +57,4 @@ export interface En1999Diff {
   sigmaEdShellMpa?: number;
   /** @state artifact */
   annex?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

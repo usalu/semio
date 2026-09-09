@@ -252,7 +252,7 @@ async fn space_labels_resolve_native_english_by_default() {
     let history = empty_history();
     let doc = ArtifactView::new(&projection, &history);
     let config = SpaceConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let _app = SpaceApp::default();
     let catalogue_tree = SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).await.expect("catalogue tree");
     let catalogue_json = plugin_testkit::project_and_retire_fixture_tree(catalogue_tree).expect("catalogue projection");
@@ -279,6 +279,22 @@ async fn space_workflow_context_menu_stays_within_budget_with_destructive_tail()
     let last = items.last().expect("non-empty menu");
     assert_eq!(last.id, "remove-instance");
     assert_eq!(last.destructive, Some(true), "removeAppInstance must be the last, destructive top-level row");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn graph_hit_context_menu_owns_the_remove_target_argument() {
+    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
+    let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::default());
+    let surface = semio_framework_plugin::ContextMenuSurfaceTarget {
+        surface_id: crate::engine::space::modes::main::windows::workflow::S_PLAY_SURFACE_WORKFLOW.into(),
+        kind: "nodeGraph".into(),
+        hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "instance-7".into(), label: None }],
+        selection: Vec::new(),
+        text: None,
+    };
+    let items = space_workflow_context_menu_items(&registry, labels, false, Some(&surface), &[]).await;
+    let remove = items.iter().find(|item| item.action.as_deref() == Some("removeAppInstance")).expect("remove item");
+    assert_eq!(remove.args.as_ref().and_then(|args| args.get("nodeId")).and_then(DslValue::as_str), Some("instance-7"));
 }
 
 // 🌉️ Keeps `studio_emit`/`empty_history` imports exercised at this module's own level too (every

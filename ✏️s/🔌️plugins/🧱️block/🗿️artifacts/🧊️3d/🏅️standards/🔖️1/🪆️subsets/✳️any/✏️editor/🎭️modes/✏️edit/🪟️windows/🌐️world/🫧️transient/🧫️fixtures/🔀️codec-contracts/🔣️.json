@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "before": {
+        "brushPreview": null
+      },
+      "after": {
+        "brushPreview": {
+          "position": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "direction": [
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "before": {
+        "brushPreview": {
+          "position": [
+            -1.0,
+            0.0,
+            2.0
+          ],
+          "direction": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      "after": {
+        "brushPreview": null
+      }
+    }
+  ]
+}

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::document::{AnnexChoice, ImposedCategory};
 use crate::part_1_2::FireCurve;

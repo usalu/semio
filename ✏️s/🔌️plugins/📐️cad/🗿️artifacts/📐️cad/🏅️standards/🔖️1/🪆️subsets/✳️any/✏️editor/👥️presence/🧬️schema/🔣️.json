@@ -17,7 +17,6 @@
     "cameraTarget",
     "cameraZoom",
     "cameraFov",
-    "activeUtilityId",
     "engagementStep"
   ],
   "properties": {
@@ -110,10 +109,6 @@
       "type": "number",
       "x-semio-state": "presence"
     },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "engagementStep": {
       "type": "string",
       "x-semio-state": "presence"
@@ -177,7 +172,6 @@
             "additionalProperties": false,
             "required": [
               "name",
-              "activeUtility",
               "engagementStep",
               "engagementPane",
               "expectedBytes"
@@ -185,9 +179,6 @@
             "properties": {
               "name": {
                 "type": "string"
-              },
-              "activeUtility": {
-                "$ref": "#/definitions/cadPresenceRetirementLawsText"
               },
               "engagementStep": {
                 "$ref": "#/definitions/cadPresenceRetirementLawsText"

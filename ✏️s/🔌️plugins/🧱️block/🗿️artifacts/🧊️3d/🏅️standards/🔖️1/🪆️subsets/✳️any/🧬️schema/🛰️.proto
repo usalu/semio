@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.block.block3d.artifact;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Block3d artifact schema — every field with its state class.
 
@@ -11,40 +12,22 @@ message Block3dArtifact {
   // @state artifact
   repeated BlockRepresentation representations = 3;
   // @state artifact
-  repeated Block3dVortexKind vortex_kinds = 4;
+  semio.os.store.ArtifactChild catalog = 4;
   // @state artifact
-  repeated Block3dVortexTemplate vortices = 5;
+  repeated Block3dVortexKindExtra vortex_kind_extra = 5;
   // @state artifact
-  repeated BlockCompatibilityRule compatibility = 6;
+  repeated Block3dVortexTemplate vortices = 6;
   // @state artifact
-  repeated BlockAttribute attributes = 7;
+  repeated BlockCompatibilityRule compatibility = 7;
   // @state artifact
-  repeated BlockAuthor authors = 8;
+  repeated BlockAttribute attributes = 8;
   // @state artifact
-  BlockCamera3d camera3d = 9;
+  repeated BlockAuthor authors = 9;
   // @state artifact
-  BlockMeta meta = 10;
-  // @state presence
-  repeated string selected_ids = 11;
-  // @state presence
-  optional string active_representation_id = 12;
-  // @state presence
-  repeated string wanted_tags = 13;
+  BlockCamera3d camera3d = 10;
+  // @state artifact
+  BlockMeta meta = 11;
   // @state config
-  // @state config
-  repeated Block3dWindowView windows = 15;
-  // @state config
-  optional string brush_vortex_kind_id = 16;
-  // @state config
-  double brush_radius = 17;
-  // @state config
-  bool brush_flip = 18;
-  // @state artifact
-  optional Block3dBrushPreview brush_preview = 19;
-  // @state config
-  optional BlockCamera3d camera = 20;
-  // @state artifact
-  optional string hovered_vortex_full_id = 21;
 }
 
 message BlockKindIdentity {
@@ -56,6 +39,10 @@ message BlockRepresentation {
 }
 
 message Block3dVortexKind {
+  bool _placeholder = 1;
+}
+
+message Block3dVortexKindExtra {
   bool _placeholder = 1;
 }
 
@@ -84,9 +71,5 @@ message BlockMeta {
 }
 
 message Block3dWindowView {
-  bool _placeholder = 1;
-}
-
-message Block3dBrushPreview {
   bool _placeholder = 1;
 }

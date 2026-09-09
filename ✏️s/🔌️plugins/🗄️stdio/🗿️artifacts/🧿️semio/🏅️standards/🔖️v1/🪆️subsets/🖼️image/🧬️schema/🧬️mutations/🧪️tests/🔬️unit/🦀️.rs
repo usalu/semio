@@ -1,4 +1,3 @@
-
 use super::*;
 /// 🔧️ `DiffAlgebra` lives at `protocol::command::DiffAlgebra`, not `protocol::DiffAlgebra`
 /// (W2b closer fix — was an unresolved-import compile error).

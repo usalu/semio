@@ -41,11 +41,4 @@ export interface Block3dWindowView {
   representationIds: string[];
   arrangement: string;
   spacing: number;
-  activeUtility: string;
-}
-
-/** 🖌️ Transient brush hover pose in world space (config/preview). */
-export interface Block3dBrushPreview {
-  position: [number, number, number];
-  direction: [number, number, number];
 }

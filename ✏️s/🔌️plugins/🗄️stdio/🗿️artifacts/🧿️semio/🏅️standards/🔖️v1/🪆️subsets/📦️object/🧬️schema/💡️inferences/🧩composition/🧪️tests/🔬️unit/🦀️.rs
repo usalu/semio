@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioQuaternion;
 use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;

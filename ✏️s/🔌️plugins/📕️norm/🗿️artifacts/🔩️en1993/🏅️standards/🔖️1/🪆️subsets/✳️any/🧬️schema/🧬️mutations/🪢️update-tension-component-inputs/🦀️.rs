@@ -1,7 +1,5 @@
 //! 🔗 `update-tension-component-inputs` — atomically updates the tension-component-inputs facet (tension_component_f_uk_kn, tension_component_f_k_kn, tension_component_n_ed_kn are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

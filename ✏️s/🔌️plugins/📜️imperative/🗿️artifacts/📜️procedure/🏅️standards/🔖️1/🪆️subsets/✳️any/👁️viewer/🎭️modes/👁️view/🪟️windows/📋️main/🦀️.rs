@@ -1,7 +1,7 @@
 //! 📋️ Imperative viewer — the main window: a read-only table of the document's top-level steps, built
 //! from the framework's `TableWindowKit` (contract §2.6) rather than hand-rolling a scene the way the
-//! sibling editor window's `build_table_scene` call does — a viewer table has no run-output row and no
-//! localized column labels (no `Config`, so no locale to read them from).
+//! sibling editor window's `build_table_scene` call does. A viewer table has no run-output row; its
+//! localized column labels resolve from the shared OS-owned view context.
 
 use crate::ProcedureSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
@@ -24,12 +24,13 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 👁️ Pure `ProcedureSnapshot -> UiNode` read: one row per top-level step (`index`, `id`, `kind`),
-/// English-only headers (a viewer has no persisted locale — `Config = NoConfig`), no run-output row
-/// (the editor's own `run` view-action is a `Command`, and the viewer declares none).
-pub fn render(document: &ProcedureSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+/// localized headers from the shared view context, and no run-output row (the editor's own `run`
+/// view-action is a `Command`, and the viewer declares none).
+pub fn render(document: &ProcedureSnapshot, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let path = crate::procedure_working_scene(document).path;
     let rows = path.steps.iter().enumerate().map(|(index, step)| vec![(index + 1).to_string(), step.id.clone(), step.kind.clone()]).collect();
-    TableWindowKit::render(&TableView { columns: vec!["#".into(), "Id".into(), "Kind".into()], rows })
+    let columns = if view_state.locale == semio_framework_plugin::Locale::De { vec!["#".into(), "ID".into(), "Art".into()] } else { vec!["#".into(), "Id".into(), "Kind".into()] };
+    TableWindowKit::render(&TableView { columns, rows })
 }
 //#endregion 🔖️Render
 

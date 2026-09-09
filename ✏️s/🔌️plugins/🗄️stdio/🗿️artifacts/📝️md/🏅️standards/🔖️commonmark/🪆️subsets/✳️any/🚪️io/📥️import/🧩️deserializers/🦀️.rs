@@ -6,7 +6,6 @@
 /// 🔗 Label range, destination, optional title, and next parse offset.
 pub type InlineLinkDestination = ((usize, usize), String, Option<String>, usize);
 
-
 use crate::schema::snapshot::{MdBlock, MdInline};
 
 //#region 🔖️BlockLineClassifiers

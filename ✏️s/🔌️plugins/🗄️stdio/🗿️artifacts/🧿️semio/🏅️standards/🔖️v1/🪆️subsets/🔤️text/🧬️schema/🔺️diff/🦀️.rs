@@ -9,8 +9,8 @@
 //! document replace is `ArtifactStore::reset`, outside history.
 
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
-use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
+use protocol::MutationDiff;
 
 //#region 🔖️RunList
 /// 📋 Whole-list wrapper for the `runs` field diff — every mutation triad rebuilds the full

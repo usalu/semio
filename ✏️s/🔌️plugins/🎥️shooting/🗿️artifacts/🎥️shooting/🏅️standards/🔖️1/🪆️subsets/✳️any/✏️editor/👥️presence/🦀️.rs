@@ -4,7 +4,7 @@ use crate::ShootingCamera;
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of shooting view state (selection, hover, viewport camera, active utility).
+/// 👥️ Shareable live subset of shooting selection and viewport camera state.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "shooting.presence")]
@@ -17,12 +17,11 @@ pub struct ShootingPresence {
     pub selected_shot_ids: Vec<String>,
     #[dsl(block)]
     pub camera: ShootingCamera,
-    pub active_utility_id: String,
 }
 
 impl Default for ShootingPresence {
     fn default() -> Self {
-        Self { selected_shot_ids: Vec::new(), camera: ShootingCamera::default(), active_utility_id: "move".into() }
+        Self { selected_shot_ids: Vec::new(), camera: ShootingCamera::default() }
     }
 }
 

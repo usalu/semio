@@ -1,10 +1,15 @@
-
 use super::*;
 
-const EXPORTS: [&str; 45] = [
+const EXPORTS: [&str; 51] = [
     "InferenceServerIdV1",
     "InferenceDocumentScopeV1",
     "InferenceRequestV1",
+    "InferenceJobReconcileRequestV1",
+    "InferenceJobReconcileApprovalStateV1",
+    "InferenceJobReconcileApprovalV1",
+    "InferenceJobReconcilePageV1",
+    "InferenceJobReconcileJobV1",
+    "InferenceJobReconcileResultV1",
     "InferenceParentDialectV1",
     "InferenceBindingIdentityV1",
     "InferenceIdentityV1",
@@ -112,9 +117,13 @@ fn hub_inference_fixtures_validate_through_the_owned_draft_07_validator() {
     let frozen: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).expect("frozen binding fixture");
     let proposal: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture");
     let proof: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).expect("wal proof fixture");
-    let accepted: [(&str, &serde_json::Value); 12] = [
+    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).expect("reconcile fixture");
+    let checkpoint: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/⏸️gis-inference-checkpoint-control-v1/🔣️.json")).expect("checkpoint fixture");
+    let accepted: [(&str, &serde_json::Value); 15] = [
         ("InferenceIdentityV1", &ledger["identity"]),
         ("InferenceRequestV1", &ledger["identity"]["request"]),
+        ("InferenceJobReconcileRequestV1", &reconcile["request"]),
+        ("InferenceJobReconcileResultV1", &reconcile["results"][0]["value"]),
         ("InferenceBindingIdentityV1", &ledger["identity"]["binding"]),
         ("InferenceApprovalOutboxV1", &ledger["outbox"]),
         ("InferenceMapSummaryV1", &ledger["expectedInference"]),
@@ -125,6 +134,7 @@ fn hub_inference_fixtures_validate_through_the_owned_draft_07_validator() {
         ("GisMapInferencePreviewV1", &proposal["preview"]),
         ("InferenceLimitsV1", &proposal["limits"]),
         ("InferenceCommandV1", &proof["command"]),
+        ("GisInferenceCheckpointControlFrameV1", &checkpoint["frames"][0]["frame"]),
     ];
     for (export, value) in accepted {
         let validator = structural(&module, export);
@@ -153,6 +163,17 @@ fn hub_inference_exports_agree_with_the_rust_decoders_field_for_field() {
     let approval: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/✅️inference-approval-v1/🔣️.json")).expect("approval fixture");
     let request = InferenceApprovalRequestV1::decode(&serde_json::to_vec(&approval["request"]).expect("bytes")).expect("approval decodes");
     assert_eq!(encoded(&request), declared(&module, "InferenceApprovalRequestV1", "required"));
+
+    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).expect("reconcile fixture");
+    let request = InferenceJobReconcileRequestV1::decode(&serde_json::to_vec(&reconcile["request"]).expect("bytes")).expect("reconcile request decodes");
+    assert_eq!(encoded(&request), declared(&module, "InferenceJobReconcileRequestV1", "required"));
+
+    #[cfg(feature = "test-support")]
+    {
+        let checkpoint: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/⏸️gis-inference-checkpoint-control-v1/🔣️.json")).expect("checkpoint fixture");
+        let frame: GisInferenceCheckpointControlFrameV1 = serde_json::from_value(checkpoint["frames"][0]["frame"].clone()).expect("checkpoint frame decodes");
+        assert_eq!(encoded(&frame), declared(&module, "GisInferenceCheckpointControlFrameV1", "required"));
+    }
 
     let undo: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
     let undo_request: GisMapApprovalUndoRequestV1 = serde_json::from_value(undo["request"].clone()).expect("undo request decodes");

@@ -47,3 +47,11 @@ No runtime, Nx, source, manifest, or Git-state operation was performed.
 ## Coordinator Resolution
 
 Removed the two stale Rust authored-part references from the root array; the Rust index remains the authority for its ten actual arrays. The temporary merge presentation case already exists one directory above the intermediate `js/🧪️tests` path, and its guarded caller already imports that final location; corrected the report and added the final path to its array. The two Python stage modules already exist under the data/model semantic owners and were previously compiled/imported by the coordinator; corrected the native destination rows and included final paths while retaining intermediate removed paths. Corrected the legacy scope sentence to exclude six un-attributed historical scratch paths. The initial-inline report was concurrently being extended during this audit and now reports 179 canonical mappings and a validated 536-path array; the extra follow-up tables include separately classified noncanonical/support evidence. These were metadata corrections; no production or test source was changed.
+
+## Final Consolidated Manifest
+
+At 2026-09-08T23:12:58.333193+00:00, the 21 explicit source manifests combined into 9682 unique authored paths (1646511 compact UTF-8 bytes; SHA-256 `034ad1827f8c5fbb4bd2640148d2a322dc5ac7410ad1f7617e4b3c1fa4555521`). Every entry is relative, traversal-free, and excludes generated outputs and AGENTS files. The requested space-administration case exists at its semantic engine owner and is attributed. The final report, closure record, Rustdoc audit, and CI baseline report are included. Removed inputs remain in the exact authored array.
+
+After the final plugin optimization case, the 22-source union contains 9688 unique authored paths (1647391 compact UTF-8 bytes; SHA-256 `c2a1163d0a2b34f9e328af94228de7f8454f62efd7e6ebd4c3003eeb195a22b6`). The public Bun/Nx manifest verifier passed. The current shared cache dispatcher has 18 resolving relative imports, and all 24 final report links resolve.
+
+The final lifecycle-marker restoration adds one created/removed path: the successful closure submitted all 9,689 unique entries, 1,647,516 compact UTF-8 bytes, SHA-256 `37dbbccabc6044fcfdb9ea80d5e42cd325f6f96a0a83df23b9ad88ddc7e1d38d`. The retained manifest exactly matches this request array.

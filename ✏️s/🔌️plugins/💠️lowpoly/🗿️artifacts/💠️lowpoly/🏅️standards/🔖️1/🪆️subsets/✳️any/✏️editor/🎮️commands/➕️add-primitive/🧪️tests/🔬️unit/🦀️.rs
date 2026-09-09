@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::lowpoly::LowpolyCommand;
 use crate::editor::lowpoly::testkit::{app, dispatch};
+use crate::editor::lowpoly::LowpolyCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn add_primitive_emits_objects_add_operation() {

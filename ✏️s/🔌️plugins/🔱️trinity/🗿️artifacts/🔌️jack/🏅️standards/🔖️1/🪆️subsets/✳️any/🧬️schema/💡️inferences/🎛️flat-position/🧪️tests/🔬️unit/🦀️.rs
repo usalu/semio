@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{Camera, Manifest, Port, PortDirection, PropertyBag};
 

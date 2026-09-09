@@ -2,10 +2,9 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.wires` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`), so selection/drag/locale edits are VCS'd exactly like
-//! document content. Absorbs everything that used to live in the pre-B1 `ReasoningWiresPlayApp`'s
-//! ephemeral `WiresPlayRuntime` (selection + in-flight pointer drag of one board node) plus the `locale`
-//! the deleted `ViewModel` used to carry.
+//! `ArtifactStore` (with a real `backwards`), so drag edits are VCS'd exactly like document content.
+//! It absorbs the in-flight pointer drag from the pre-B1 `ReasoningWiresPlayApp`; locale and
+//! terminology come from the shared host `ViewModel`.
 
 #[cfg(test)]
 use protocol::Mutation;
@@ -25,6 +24,15 @@ pub struct WiresConfig {
     pub drag_last_x: f64,
     /// 🖱️ Last observed drag pointer Y (screen space) — was `WiresDragState::last_y`.
     pub drag_last_y: f64,
+}
+
+store::artifact_retire_struct!(WiresConfig { drag_node_id, drag_last_x, drag_last_y });
+impl store::retirement::RetireOwned for WiresConfigMutation {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        match self {
+            Self::SetDrag(value) => store::artifact_retirement_sequence![value.node_id, value.last_x, value.last_y],
+        }
+    }
 }
 
 //#region 🔖️ArtifactCodec
@@ -73,7 +81,7 @@ impl store::ArtifactPack for WiresConfig {
 
 impl Default for WiresConfig {
     fn default() -> Self {
-        Self { drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0, }
+        Self { drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0 }
     }
 }
 

@@ -43,6 +43,4 @@ message En1995Artifact {
   double a_vert_m_s2 = 19;
   // @state artifact
   double n_cycles_bridge = 20;
-  // @state presence
-  optional uint32 selected_check_index = 21;
 }

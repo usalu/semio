@@ -1,9 +1,9 @@
 //! 🧩️ 🧩️ Generation2d play app commands command — `add-widget`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::{generation2d_fixture_operations, Generation2dMutation};
-use crate::standards::v1::subsets::any::schema::host_from_fixture;
-use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
+use crate::standards::v1::subsets::any::schema::host_from_fixture;
+use crate::standards::v1::subsets::any::schema::mutations::text::{generation2d_fixture_operations, Generation2dMutation};
+use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -22,10 +22,9 @@ pub struct AddWidget {
 pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let descriptor = match payload.kind.as_str() {
-        "neuron" => dsl::json::to_json_string(&dsl::DslValue::object([
-            ("kind".to_string(), dsl::DslValue::String("neuron".to_string())),
-            ("neuronKind".to_string(), dsl::DslValue::String(payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into()))),
-        ])),
+        "neuron" => {
+            dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String("neuron".to_string())), ("neuronKind".to_string(), dsl::DslValue::String(payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into())))]))
+        }
         "inputSlider" => dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String("inputSlider".to_string())), ("label".to_string(), dsl::DslValue::String(String::new()))])),
         other => dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String(other.to_string()))])),
     };

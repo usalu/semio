@@ -38,8 +38,8 @@
 //! @see https://energyplus.readthedocs.io/en/latest/schema.html
 //! @see ../../../../../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/📓️w6-epjson-io.md
 use crate::air_exchange::InfiltrationMethod;
-use crate::EnergyModelSnapshot;
 use crate::model::{EntityId, Fenestration, Material, Model, OutsideBoundary, ScheduleId, Surface, SurfaceClass};
+use crate::EnergyModelSnapshot;
 use pack::json::{Object, Value};
 
 //#region 🔖️Constants
@@ -283,7 +283,13 @@ pub fn encode_model_with_diagnostics(model: &Model) -> (Value, Vec<EpJsonDiagnos
         "SimulationControl",
         Value::Object(Object::from_iter([entry(
             "SimulationControl 1",
-            [field("do_zone_sizing_calculation", yes_no(zone_sizing)), field("do_system_sizing_calculation", yes_no(false)), field("do_plant_sizing_calculation", yes_no(false)), field("run_simulation_for_sizing_periods", yes_no(false)), field("run_simulation_for_weather_file_run_periods", yes_no(true))],
+            [
+                field("do_zone_sizing_calculation", yes_no(zone_sizing)),
+                field("do_system_sizing_calculation", yes_no(false)),
+                field("do_plant_sizing_calculation", yes_no(false)),
+                field("run_simulation_for_sizing_periods", yes_no(false)),
+                field("run_simulation_for_weather_file_run_periods", yes_no(true)),
+            ],
         )])),
     );
 
@@ -291,7 +297,10 @@ pub fn encode_model_with_diagnostics(model: &Model) -> (Value, Vec<EpJsonDiagnos
     document.insert("Building", Value::Object(Object::from_iter([entry(building.clone(), [field("north_axis", model.site.north_axis_deg), field("terrain", EPJSON_TERRAIN), field("solar_distribution", EPJSON_SOLAR_DISTRIBUTION)])])));
     document.insert(
         "Site:Location",
-        Value::Object(Object::from_iter([entry(format!("{building} Site"), [field("latitude", model.site.latitude_deg), field("longitude", model.site.longitude_deg), field("time_zone", model.site.time_zone_hours), field("elevation", model.site.elevation_m)])])),
+        Value::Object(Object::from_iter([entry(
+            format!("{building} Site"),
+            [field("latitude", model.site.latitude_deg), field("longitude", model.site.longitude_deg), field("time_zone", model.site.time_zone_hours), field("elevation", model.site.elevation_m)],
+        )])),
     );
 
     if model.surfaces.iter().any(|surface| matches!(surface.outside_boundary_condition, OutsideBoundary::Ground)) {
@@ -300,7 +309,10 @@ pub fn encode_model_with_diagnostics(model: &Model) -> (Value, Vec<EpJsonDiagnos
         document.insert("Site:GroundTemperature:BuildingSurface", Value::Object(Object::from_iter([entry("Site:GroundTemperature:BuildingSurface 1", temperatures)])));
     }
 
-    document.insert("GlobalGeometryRules", Value::Object(Object::from_iter([entry("GlobalGeometryRules 1", [field("starting_vertex_position", "UpperLeftCorner"), field("vertex_entry_direction", "Counterclockwise"), field("coordinate_system", "World")])])));
+    document.insert(
+        "GlobalGeometryRules",
+        Value::Object(Object::from_iter([entry("GlobalGeometryRules 1", [field("starting_vertex_position", "UpperLeftCorner"), field("vertex_entry_direction", "Counterclockwise"), field("coordinate_system", "World")])])),
+    );
     document.insert("Timestep", Value::Object(Object::from_iter([entry("Timestep 1", [field("number_of_timesteps_per_hour", TIMESTEPS_PER_HOUR)])])));
 
     let period = &model.run_period;
@@ -378,7 +390,11 @@ fn encode_schedules(model: &Model, document: &mut Object, diagnostics: &mut Vec<
         diagnostics.push(EpJsonDiagnostic::new("epjson.schedule.weekly-unsupported", schedule_name(weekly.id), "a weekly schedule is not written to epJSON: ScheduleSet::weekly_value indexes its 7 daily ids with a 1-based day of week clamped to 6, so Sunday collapses onto Saturday and the mapping onto Schedule:Compact day types is not yet decidable"));
     }
     for annual in &schedules.annual {
-        diagnostics.push(EpJsonDiagnostic::new("epjson.schedule.annual-unsupported", schedule_name(annual.id), "an annual rule schedule is not written to epJSON: its holiday-date overrides have no Schedule:Compact equivalent without a RunPeriodControl:SpecialDays projection"));
+        diagnostics.push(EpJsonDiagnostic::new(
+            "epjson.schedule.annual-unsupported",
+            schedule_name(annual.id),
+            "an annual rule schedule is not written to epJSON: its holiday-date overrides have no Schedule:Compact equivalent without a RunPeriodControl:SpecialDays projection",
+        ));
     }
     for series in &schedules.time_series {
         diagnostics.push(EpJsonDiagnostic::new("epjson.schedule.time-series-unsupported", schedule_name(series.id), "a time-series schedule is not written to epJSON: Schedule:File needs an out-of-band CSV this synchronous codec cannot publish"));
@@ -397,7 +413,9 @@ fn encode_materials(model: &Model, document: &mut Object) {
         } else {
             massive.push(entry(
                 name,
-                [field("roughness", "Rough"), field("thickness", material.thickness_m), field("conductivity", material.conductivity_w_m_k), field("density", material.density_kg_m3), field("specific_heat", material.specific_heat_j_kg_k)].into_iter().chain(optical),
+                [field("roughness", "Rough"), field("thickness", material.thickness_m), field("conductivity", material.conductivity_w_m_k), field("density", material.density_kg_m3), field("specific_heat", material.specific_heat_j_kg_k)]
+                    .into_iter()
+                    .chain(optical),
             ));
         }
     }
@@ -416,7 +434,11 @@ fn encode_constructions(model: &Model, document: &mut Object, material_name_of: 
     for construction in &model.constructions {
         let name = entity_name("Construction", construction.id, &construction.name);
         if construction.layer_material_ids.len() > LAYER_KEYS.len() {
-            diagnostics.push(EpJsonDiagnostic::new("epjson.construction.too-many-layers", name.clone(), format!("EnergyPlus Construction carries at most {} layers, this one has {}; the surplus is dropped", LAYER_KEYS.len(), construction.layer_material_ids.len())));
+            diagnostics.push(EpJsonDiagnostic::new(
+                "epjson.construction.too-many-layers",
+                name.clone(),
+                format!("EnergyPlus Construction carries at most {} layers, this one has {}; the surplus is dropped", LAYER_KEYS.len(), construction.layer_material_ids.len()),
+            ));
         }
         let layers: Vec<(String, Value)> = construction
             .layer_material_ids
@@ -439,7 +461,11 @@ fn encode_constructions(model: &Model, document: &mut Object, material_name_of: 
         glazing.push(entry(material.clone(), [field("u_factor", window.u_value_w_m2k), field("solar_heat_gain_coefficient", window.shgc), field("visible_transmittance", window.vlt)]));
         constructions.push(entry(glazing_construction_name(&name), [field("outside_layer", material)]));
         if window.frame_conductance_w_k > 0.0 || window.divider_conductance_w_k > 0.0 {
-            diagnostics.push(EpJsonDiagnostic::new("epjson.fenestration.frame-dropped", name, "frame/divider conductance has no WindowMaterial:SimpleGlazingSystem equivalent and is not written; use WindowProperty:FrameAndDivider once the schema carries frame geometry"));
+            diagnostics.push(EpJsonDiagnostic::new(
+                "epjson.fenestration.frame-dropped",
+                name,
+                "frame/divider conductance has no WindowMaterial:SimpleGlazingSystem equivalent and is not written; use WindowProperty:FrameAndDivider once the schema carries frame geometry",
+            ));
         }
     }
     if !glazing.is_empty() {
@@ -457,7 +483,15 @@ fn encode_zones(model: &Model, document: &mut Object) {
         .map(|zone| {
             entry(
                 entity_name("Zone", zone.id, &zone.name),
-                [field("direction_of_relative_north", 0.0), field("x_origin", 0.0), field("y_origin", 0.0), field("z_origin", 0.0), field("multiplier", zone.multiplier.max(1) as i64), field("volume", zone.volume_m3), field("part_of_total_floor_area", yes_no(zone.part_of_total_floor_area))],
+                [
+                    field("direction_of_relative_north", 0.0),
+                    field("x_origin", 0.0),
+                    field("y_origin", 0.0),
+                    field("z_origin", 0.0),
+                    field("multiplier", zone.multiplier.max(1) as i64),
+                    field("volume", zone.volume_m3),
+                    field("part_of_total_floor_area", yes_no(zone.part_of_total_floor_area)),
+                ],
             )
         })
         .collect();
@@ -477,7 +511,14 @@ fn encode_surfaces(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(E
         if surface.multiplier > 1 {
             diagnostics.push(EpJsonDiagnostic::new("epjson.surface.multiplier-dropped", name.clone(), "BuildingSurface:Detailed has no multiplier field; repeat the surface geometry instead"));
         }
-        let mut fields = vec![field("surface_type", surface_type(surface.class)), field("construction_name", construction), field("zone_name", zone), field("outside_boundary_condition", boundary(&surface.outside_boundary_condition)), field("sun_exposure", if surface.sun_exposed { "SunExposed" } else { "NoSun" }), field("wind_exposure", if surface.wind_exposed { "WindExposed" } else { "NoWind" })];
+        let mut fields = vec![
+            field("surface_type", surface_type(surface.class)),
+            field("construction_name", construction),
+            field("zone_name", zone),
+            field("outside_boundary_condition", boundary(&surface.outside_boundary_condition)),
+            field("sun_exposure", if surface.sun_exposed { "SunExposed" } else { "NoSun" }),
+            field("wind_exposure", if surface.wind_exposed { "WindExposed" } else { "NoWind" }),
+        ];
         if let OutsideBoundary::Interzone(other) = surface.outside_boundary_condition {
             match model.surfaces.iter().find(|candidate| candidate.id == other) {
                 Some(peer) => {
@@ -513,7 +554,17 @@ fn encode_surfaces(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(E
             }
             apertures.push(entry(name.clone(), fields));
             if window.overhang_depth_m > 0.0 {
-                overhangs.push(entry(format!("{name} Overhang"), [field("window_or_door_name", name.clone()), field("height_above_window_or_door", window.overhang_offset_m), field("tilt_angle_from_window_door", 90.0), field("left_extension_from_window_door_width", 0.0), field("right_extension_from_window_door_width", 0.0), field("depth_as_fraction_of_window_door_height", window.overhang_depth_m / if window.height_m > 0.0 { window.height_m } else { (window.area_m2 / APERTURE_ASPECT).sqrt() })]));
+                overhangs.push(entry(
+                    format!("{name} Overhang"),
+                    [
+                        field("window_or_door_name", name.clone()),
+                        field("height_above_window_or_door", window.overhang_offset_m),
+                        field("tilt_angle_from_window_door", 90.0),
+                        field("left_extension_from_window_door_width", 0.0),
+                        field("right_extension_from_window_door_width", 0.0),
+                        field("depth_as_fraction_of_window_door_height", window.overhang_depth_m / if window.height_m > 0.0 { window.height_m } else { (window.area_m2 / APERTURE_ASPECT).sqrt() }),
+                    ],
+                ));
             }
             if window.fin_depth_m > 0.0 {
                 let height = if window.height_m > 0.0 { window.height_m } else { (window.area_m2 / APERTURE_ASPECT).sqrt() };
@@ -564,7 +615,11 @@ fn encode_gains(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(Enti
             InfiltrationMethod::ScheduledAch => ("AirChanges/Hour", field("air_changes_per_hour", infiltration.design_flow_ach)),
             InfiltrationMethod::PerExteriorArea => ("Flow/ExteriorArea", field("flow_rate_per_exterior_surface_area", infiltration.flow_per_exterior_area_m3_s_m2)),
             InfiltrationMethod::EffectiveLeakageArea | InfiltrationMethod::WindAndStack => {
-                diagnostics.push(EpJsonDiagnostic::new("epjson.infiltration.method-unsupported", name, "EffectiveLeakageArea and WindAndStack map onto ZoneInfiltration:EffectiveLeakageArea / :FlowCoefficient, which this codec does not write; the object is refused rather than approximated as a design flow rate"));
+                diagnostics.push(EpJsonDiagnostic::new(
+                    "epjson.infiltration.method-unsupported",
+                    name,
+                    "EffectiveLeakageArea and WindAndStack map onto ZoneInfiltration:EffectiveLeakageArea / :FlowCoefficient, which this codec does not write; the object is refused rather than approximated as a design flow rate",
+                ));
                 continue;
             }
         };
@@ -656,10 +711,20 @@ fn encode_hvac(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(Entit
             continue;
         };
         if thermostat.heating_throttle_range_k != 0.0 || thermostat.cooling_throttle_range_k != 0.0 {
-            diagnostics.push(EpJsonDiagnostic::new("epjson.thermostat.throttle-range-dropped", zone.clone(), "ThermostatSetpoint:DualSetpoint has no throttling range; EnergyPlus applies its own deadband, so the model's throttle ranges are not written"));
+            diagnostics.push(EpJsonDiagnostic::new(
+                "epjson.thermostat.throttle-range-dropped",
+                zone.clone(),
+                "ThermostatSetpoint:DualSetpoint has no throttling range; EnergyPlus applies its own deadband, so the model's throttle ranges are not written",
+            ));
         }
-        setpoints.push(entry(dual_setpoint_name(&zone), [field("heating_setpoint_temperature_schedule_name", schedule_name(thermostat.heating_setpoint_schedule_id)), field("cooling_setpoint_temperature_schedule_name", schedule_name(thermostat.cooling_setpoint_schedule_id))]));
-        controls.push(entry(thermostat_name(&zone), [field("zone_or_zonelist_name", zone.clone()), field("control_type_schedule_name", DUAL_SETPOINT_CONTROL_SCHEDULE), field("control_1_object_type", "ThermostatSetpoint:DualSetpoint"), field("control_1_name", dual_setpoint_name(&zone))]));
+        setpoints.push(entry(
+            dual_setpoint_name(&zone),
+            [field("heating_setpoint_temperature_schedule_name", schedule_name(thermostat.heating_setpoint_schedule_id)), field("cooling_setpoint_temperature_schedule_name", schedule_name(thermostat.cooling_setpoint_schedule_id))],
+        ));
+        controls.push(entry(
+            thermostat_name(&zone),
+            [field("zone_or_zonelist_name", zone.clone()), field("control_type_schedule_name", DUAL_SETPOINT_CONTROL_SCHEDULE), field("control_1_object_type", "ThermostatSetpoint:DualSetpoint"), field("control_1_name", dual_setpoint_name(&zone))],
+        ));
     }
     if !setpoints.is_empty() {
         document.insert("ThermostatSetpoint:DualSetpoint", Value::Object(Object::from_iter(setpoints)));
@@ -676,9 +741,14 @@ fn encode_hvac(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(Entit
             continue;
         };
         if ideal.outdoor_air_per_person_m3_s > 0.0 || ideal.outdoor_air_per_area_m3_s_m2 > 0.0 {
-            diagnostics.push(EpJsonDiagnostic::new("epjson.ideal-loads.outdoor-air-dropped", zone.clone(), "outdoor-air rates need a DesignSpecification:OutdoorAir object, which this codec does not write; the system is emitted without mechanical outdoor air"));
+            diagnostics.push(EpJsonDiagnostic::new(
+                "epjson.ideal-loads.outdoor-air-dropped",
+                zone.clone(),
+                "outdoor-air rates need a DesignSpecification:OutdoorAir object, which this codec does not write; the system is emitted without mechanical outdoor air",
+            ));
         }
-        let mut fields = vec![field("zone_supply_air_node_name", supply_node_name(&zone)), field("maximum_heating_supply_air_temperature", ideal.max_heating_supply_air_temp_c), field("minimum_cooling_supply_air_temperature", ideal.min_cooling_supply_air_temp_c)];
+        let mut fields =
+            vec![field("zone_supply_air_node_name", supply_node_name(&zone)), field("maximum_heating_supply_air_temperature", ideal.max_heating_supply_air_temp_c), field("minimum_cooling_supply_air_temperature", ideal.min_cooling_supply_air_temp_c)];
         match ideal.max_heating_capacity_w {
             Some(capacity) => {
                 fields.push(field("heating_limit", "LimitCapacity"));
@@ -701,14 +771,25 @@ fn encode_hvac(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(Entit
                 field("load_distribution_scheme", "SequentialLoad"),
                 (
                     "equipment".to_string(),
-                    Value::Array(vec![Value::Object(Object::from_iter([field("zone_equipment_object_type", "ZoneHVAC:IdealLoadsAirSystem"), field("zone_equipment_name", ideal_loads_name(&zone)), field("zone_equipment_cooling_sequence", 1i64), field("zone_equipment_heating_or_no_load_sequence", 1i64)]))]),
+                    Value::Array(vec![Value::Object(Object::from_iter([
+                        field("zone_equipment_object_type", "ZoneHVAC:IdealLoadsAirSystem"),
+                        field("zone_equipment_name", ideal_loads_name(&zone)),
+                        field("zone_equipment_cooling_sequence", 1i64),
+                        field("zone_equipment_heating_or_no_load_sequence", 1i64),
+                    ]))]),
                 ),
             ],
         ));
         node_lists.push(entry(inlet_node_list_name(&zone), [("nodes".to_string(), Value::Array(vec![Value::Object(Object::from_iter([field("node_name", supply_node_name(&zone))]))]))]));
         connections.push(entry(
             zone.clone(),
-            [field("zone_name", zone.clone()), field("zone_conditioning_equipment_list_name", equipment_list_name(&zone)), field("zone_air_inlet_node_or_nodelist_name", inlet_node_list_name(&zone)), field("zone_air_node_name", zone_air_node_name(&zone)), field("zone_return_air_node_or_nodelist_name", return_node_name(&zone))],
+            [
+                field("zone_name", zone.clone()),
+                field("zone_conditioning_equipment_list_name", equipment_list_name(&zone)),
+                field("zone_air_inlet_node_or_nodelist_name", inlet_node_list_name(&zone)),
+                field("zone_air_node_name", zone_air_node_name(&zone)),
+                field("zone_return_air_node_or_nodelist_name", return_node_name(&zone)),
+            ],
         ));
     }
     if !systems.is_empty() {
@@ -725,7 +806,13 @@ fn encode_hvac(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(Entit
             let zone = zone_name_of(object.zone_id)?;
             Some(entry(
                 format!("{zone} Sizing {}", object.id.0),
-                [field("zone_or_zonelist_name", zone), field("zone_cooling_design_supply_air_temperature", 13.0), field("zone_heating_design_supply_air_temperature", 50.0), field("zone_cooling_design_supply_air_humidity_ratio", 0.0085), field("zone_heating_design_supply_air_humidity_ratio", 0.008)],
+                [
+                    field("zone_or_zonelist_name", zone),
+                    field("zone_cooling_design_supply_air_temperature", 13.0),
+                    field("zone_heating_design_supply_air_temperature", 50.0),
+                    field("zone_cooling_design_supply_air_humidity_ratio", 0.0085),
+                    field("zone_heating_design_supply_air_humidity_ratio", 0.008),
+                ],
             ))
         })
         .collect();

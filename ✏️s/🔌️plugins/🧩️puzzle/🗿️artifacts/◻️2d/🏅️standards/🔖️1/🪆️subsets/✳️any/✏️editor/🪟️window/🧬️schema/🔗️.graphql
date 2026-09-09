@@ -1,0 +1,17 @@
+type Puzzle2dWindowConfig {
+  cameraX: Float!
+  cameraY: Float!
+  cameraZoom: Float!
+  lodMode: String!
+  fillCount: Int!
+  gridSnapEnabled: Boolean!
+  gridFactor: Float!
+  suggestionOffset: Float!
+}
+type Puzzle2dWindowTransient {
+  engagementInput: String!
+  brushCandidateIndex: Int!
+  brushCandidates: [JsonValue!]!
+  brushCandidateSourceHandleId: String!
+}
+scalar JsonValue

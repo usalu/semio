@@ -96,14 +96,12 @@ async fn change_wall_height_m_produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is canonical and decodes back into `En1998Diff` with `wallHeightM` set.
-/// `selected_check_index` stays unset on purpose: it is an `Option<Option<u32>>` whose `None` and
-/// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-wall-height-m`
-/// never writes it anyway.
+/// 🕹️ Presence selection is absent from the artifact diff encoding.
 #[semio_framework_async_macros::async_test]
 async fn change_wall_height_m_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-wall-height-m committed diff decodes");
     assert_eq!(decoded.wall_height_m, Some(5.5), "change-wall-height-m/raises-wall-height-m-to-5-5: the committed diff must carry wall_height_m at 5.5");
-    assert!(decoded.selected_check_index.is_none(), "change-wall-height-m/raises-wall-height-m-to-5-5: the committed diff must leave the presence-lane selected_check_index unset");
+    assert!(serde_json::to_value(&decoded).expect("diff JSON").get("selectedCheckIndex").is_none(), "change-wall-height-m/raises-wall-height-m-to-5-5: the committed diff must leave the presence-lane selectedCheckIndex absent");
     let reencoded = serde_json::to_value(&decoded).expect("change-wall-height-m committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-wall-height-m committed diff reparses");
     assert_eq!(reencoded, original, "change-wall-height-m/raises-wall-height-m-to-5-5: committed diff JSON is not canonical");

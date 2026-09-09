@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertVmlPart {
-        pub(crate) path: String,
-        pub(crate) markup: String,
-    }
+    pub(crate) path: String,
+    pub(crate) markup: String,
+}
 
 impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for InsertVmlPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vml-part", kind: "insert-vml-part", record: "InsertVmlPart" };

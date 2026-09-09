@@ -3,7 +3,11 @@
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, VecDeque};
 
-use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
+use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
+
+#[path = "📤️publication/🦀️.rs"]
+mod publication;
+use publication::{Kind as PublicationKind, Publication};
 
 use crate::wfc_engine::bitset::PatternSet;
 use crate::wfc_engine::ids::{NodeId, PatternId, RelationId};
@@ -44,10 +48,6 @@ fn retained_payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> 
         }
     }
     bytes
-}
-
-fn retained_payload(context: &mut StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
-    context.payload_from_bytes(stream, bytes).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(stream))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -444,6 +444,7 @@ pub(crate) struct WfcJob<T> {
     completed_commit: Option<WfcCommit>,
     preview_units: u64,
     last_preview_ms: Option<u64>,
+    publication: Option<Box<Publication>>,
     closing: bool,
 }
 
@@ -490,7 +491,7 @@ impl<T: Topology + Clone> WfcJob<T> {
             backtracks: 0,
             observed: Vec::new(),
         };
-        Self { operation, model, topology, config, initial_domains, fixed, state, checkpoint_build: None, final_checkpoint: None, commit_build: None, completed_commit: None, preview_units: 0, last_preview_ms: None, closing: false }
+        Self { operation, model, topology, config, initial_domains, fixed, state, checkpoint_build: None, final_checkpoint: None, commit_build: None, completed_commit: None, preview_units: 0, last_preview_ms: None, publication: None, closing: false }
     }
 
     #[cfg(test)]
@@ -1192,7 +1193,8 @@ impl<T: Topology + Clone> WfcJob<T> {
         self.preview_units = 0;
         self.last_preview_ms = Some(now_ms);
         let bytes = protocol::json::to_json_string(&preview).into_bytes();
-        StepOutcome::PreviewReady(retained_payload(context, semio_framework_job::JobPayloadStream::Preview, &bytes))
+        self.publication = Some(Publication::new(PublicationKind::Preview, bytes, Vec::new()));
+        Publication::poll(&mut self.publication, context)
     }
 }
 
@@ -1271,6 +1273,7 @@ pub(crate) struct WfcRestore<T> {
     restored: Option<WfcJob<T>>,
     preview_units: u64,
     last_preview_ms: Option<u64>,
+    publication: Option<Box<Publication>>,
     closing: bool,
 }
 
@@ -1311,6 +1314,7 @@ impl<T: Topology + Clone> WfcRestore<T> {
             restored: None,
             preview_units: 0,
             last_preview_ms: None,
+            publication: None,
             closing: false,
         })
     }
@@ -1561,6 +1565,7 @@ impl<T: Topology + Clone> WfcRestore<T> {
             completed_commit: None,
             preview_units: 0,
             last_preview_ms: None,
+            publication: None,
             closing: false,
         });
         Ok(())
@@ -1593,12 +1598,16 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: retained_payload(context, semio_framework_job::JobPayloadStream::Fault, b"stale-wfc-restore-operation") });
+            return StepOutcome::Fault(empty_job_fault());
+        }
+        if self.publication.is_some() {
+            return Publication::poll(&mut self.publication, context);
         }
         loop {
             context.set_stage("wfc.restore");
             if let Err(error) = self.decode_one() {
-                return StepOutcome::Fault(JobFault { detail: retained_payload(context, semio_framework_job::JobPayloadStream::Fault, error.as_bytes()) });
+                self.publication = Some(Publication::new(PublicationKind::Fault, error.into_bytes(), Vec::new()));
+                return Publication::poll(&mut self.publication, context);
             }
             if self.stage == RestoreStage::Complete && self.restored.is_some() {
                 return StepOutcome::Complete(CommitCandidate {
@@ -1622,7 +1631,8 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
                 self.preview_units = 0;
                 self.last_preview_ms = Some(now_ms);
                 let bytes = protocol::json::to_json_string(&preview).into_bytes();
-                return StepOutcome::PreviewReady(retained_payload(context, semio_framework_job::JobPayloadStream::Preview, &bytes));
+                self.publication = Some(Publication::new(PublicationKind::Preview, bytes, Vec::new()));
+                return Publication::poll(&mut self.publication, context);
             }
             if context.should_yield() {
                 return StepOutcome::Yield;
@@ -1641,6 +1651,13 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
         self.begin_close();
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(publication) = self.publication.as_mut() {
+            let step = publication.close_step(maximum_items, maximum_bytes);
+            if publication.terminal_is_empty() {
+                self.publication = None;
+            }
+            return step;
         }
         if let Some(restored) = self.restored.as_mut() {
             let step = restored.close_step(maximum_items, maximum_bytes);
@@ -1687,6 +1704,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
+            && self.publication.is_none()
             && self.model.is_none()
             && self.topology.is_none()
             && self.initial_domains.is_none()
@@ -1715,7 +1733,10 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: retained_payload(context, semio_framework_job::JobPayloadStream::Fault, b"stale-wfc-operation") });
+            return StepOutcome::Fault(empty_job_fault());
+        }
+        if self.publication.is_some() {
+            return Publication::poll(&mut self.publication, context);
         }
         loop {
             context.set_stage(self.state.stage.label());
@@ -1753,8 +1774,8 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
                             self.state.stage = WfcStage::MaterializeCommit;
                         } else {
                             self.state.stage = WfcStage::FindMinimumEntropySlot;
-                            let state = retained_payload(context, semio_framework_job::JobPayloadStream::CheckpointState, &bytes);
-                            return StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: self.state.observations });
+                            self.publication = Some(Publication::new(PublicationKind::Checkpoint(self.state.observations), bytes, Vec::new()));
+                            return Publication::poll(&mut self.publication, context);
                         }
                     }
                 }
@@ -1765,14 +1786,14 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
                     };
                     if let Some(output) = commit {
                         self.state.stage = WfcStage::Complete;
-                        let state = retained_payload(context, semio_framework_job::JobPayloadStream::CommitState, &self.final_checkpoint.take().expect("final checkpoint"));
-                        let output = retained_payload(context, semio_framework_job::JobPayloadStream::CommitOutput, &output);
-                        return StepOutcome::Complete(CommitCandidate { state, output });
+                        self.publication = Some(Publication::new(PublicationKind::Commit, self.final_checkpoint.take().expect("final checkpoint"), output));
+                        return Publication::poll(&mut self.publication, context);
                     }
                 }
                 WfcStage::Complete => {
                     if self.state.contradiction.is_some() || self.state.empty_count > 0 {
-                        return StepOutcome::Fault(JobFault { detail: retained_payload(context, semio_framework_job::JobPayloadStream::Fault, b"wfc-unsatisfiable") });
+                        self.publication = Some(Publication::new(PublicationKind::Fault, b"wfc-unsatisfiable".to_vec(), Vec::new()));
+                        return Publication::poll(&mut self.publication, context);
                     }
                     if let Err(fault) = self.begin_checkpoint(true) {
                         return StepOutcome::Fault(fault);
@@ -1801,6 +1822,13 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
         self.closing = true;
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(publication) = self.publication.as_mut() {
+            let step = publication.close_step(maximum_items, maximum_bytes);
+            if publication.terminal_is_empty() {
+                self.publication = None;
+            }
+            return step;
         }
         macro_rules! pop_owner {
             ($owners:expr) => {
@@ -1849,6 +1877,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
+            && self.publication.is_none()
             && self.initial_domains.is_none()
             && self.fixed.is_empty()
             && self.state.domains.is_empty()

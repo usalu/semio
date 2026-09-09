@@ -7,8 +7,8 @@ fn primary_asset_is_nonempty() {
 //#region 🧪️InferenceLaws
 #[test]
 fn inference_determinism_law() {
-    use protocol::Inference;
     use crate::standards::v1::subsets::any::schema::inferences::Generation2dInference;
+    use protocol::Inference;
 
     let text = include_str!("../../🖼️assets/🗣️.dsl.semio");
     let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses");
@@ -17,9 +17,9 @@ fn inference_determinism_law() {
 
 #[test]
 fn inference_default_law() {
-    use protocol::Inference;
     use crate::standards::v1::subsets::any::schema::inferences::Generation2dInference;
     use crate::Generation2dSnapshot;
+    use protocol::Inference;
 
     assert_eq!(Generation2dInference::infer(&Generation2dSnapshot::default()), Generation2dInference::default());
 }

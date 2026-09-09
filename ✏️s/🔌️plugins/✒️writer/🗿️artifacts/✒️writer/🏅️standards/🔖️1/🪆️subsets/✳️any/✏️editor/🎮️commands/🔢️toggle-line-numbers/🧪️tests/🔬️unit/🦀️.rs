@@ -1,4 +1,3 @@
-
 use super::ToggleLineNumbers;
 use crate::editor::writer::testkit::new_app;
 use crate::editor::writer::WriterCommand;

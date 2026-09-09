@@ -66,3 +66,37 @@ The fresh full suite ran 6m17s and exited 1. All native command, tooling bootstr
 The unchanged materializer spawn implementation passed twelve isolated real-process cancellations, with valid nonzero PIDs and absent native ps results after each shutdown (about 2.0–2.2 seconds). Its full-suite readiness fixture previously published the PID file nonatomically and accepted Number(emptyString) as zero. The fixture now publishes via rename and asserts a positive integer PID before cancellation; this is a race correction, not proof that it caused the earlier failure. The next full suite exited 1 after 5m59s earlier in generator input coverage: schema-entity-catalog target inputs did not contain the current entity catalog path. Native contracts and the 448-project inventory passed again. The materializer section was not reached in that run. The schema file exists; current graph inputs need inspection before another full retry.
 
 The attempted native schema-generator project inspection failed during graph discovery: a browser-bundle actor-import fixture project.json disappeared between discovery and loading; Nx also reported a missing external source node after that plugin error. This does not establish a schema-generator input defect. No source fixture was recreated and no shared Nx cache/daemon reset was performed. A later fresh graph attempt is pending.
+
+## 2026-09-09 Baseline Selection Contract
+
+A schema-first baseline selector was added under caching/ci/baseline. It accepts an explicit repository, workflow, run, target branch and checkout SHA. It filters completed successful push/manual/scheduled runs from that same workflow, branch and head repository, excludes the current run and PR/PR-target results, and checks candidate ancestry before selecting the latest workflow sequence. Missing successful ancestry selects full validation; it never invents a previous-commit or main-branch fallback. Explicit full validation bypasses history lookup.
+
+RED: the language-neutral fixture could not import the missing selector. GREEN: eleven selection vectors, explicit/no-baseline full fallback, invalid SHA rejection and an actual read-only Git ancestry check passed. Ajv validates fixture/result schemas; lodash independently filters/orders expected candidates. No Git history was modified. This test is registered in the repository suite; the preceding full suite passed before this new registration, and the new focused check passed separately.
+
+This implements the selection contract only. GitHub history retrieval, the Nx CI command, platform lanes and the workflow still need implementation. The [Nx affected guidance](https://nx.dev/docs/features/ci-features/affected) supports selecting the latest successful relevant base. The [GitHub workflow-run API](https://docs.github.com/en/rest/actions/workflow-runs#list-workflow-runs-for-a-workflow) provides workflow/branch/status filtering, 100-item pages and at most 1000 filtered results. If no trustworthy ancestor can be established from available history, full validation remains the required fallback.
+
+## GitHub History Retrieval
+
+The new GitHub provider discovers the workflow ID from the current run after matching both run and repository identities, then reads successful branch history in 100-item pages up to GitHub’s 1000-result search limit. It normalizes head-repository IDs so fork runs cannot become trusted baselines. HTTP/auth/rate-limit/schema failures discard partial history and require full validation. Cancellation is propagated rather than converted to a successful fallback. The HTTP transport bounds response bodies to 8 MiB and requests to 30 seconds, keeps authorization on the configured origin and does not follow redirects.
+
+RED: the fixture could not import the missing provider. GREEN: the focused fixture exited 0 and printed PASS for pagination, schema/lodash projection, current-run identity, malformed responses, authentication/rate-limit failures, history limits, cancellation, and a real local HTTP server exercising response bounds and redirect refusal. No hosted workflow or authenticated GitHub request was executed. Provider registration in the full suite is new and not yet covered by a complete retry. The current full suite began before that registration.
+
+Official API contract: [workflow runs](https://docs.github.com/en/rest/actions/workflow-runs). The current API documentation specifies version 2026-03-10, which the transport sends explicitly. The CI command, graph-selected platform lanes and workflow remain pending.
+
+## Baseline Command and Native Execution
+
+The uncached repo:ci-baseline target now calls the dedicated small CI script. It reads the actual Git checkout, validates GitHub repository/run/event/checkout identity, uses a pull request’s destination branch, and chooses complete validation for local, scheduled, tagged or explicitly full runs. Privileged pull_request_target events are rejected. The composed resolver connects event selection, paginated workflow history and actual Git merge-base ancestry. The command emits JSON and, when invoked by GitHub Actions, scalar mode/base/head step outputs; it accepts no manually invented base override. An editor entry was added and regenerated.
+
+RED: environment and composed-resolution fixtures failed to import their missing implementations. GREEN: both focused suites passed. A native command fixture passed Ajv result validation, matching GitHub output fields via lodash, actual Git checkout identity, argument rejection, bounded esbuild import ownership and one matching seed/generated editor command. Its first ticket probe used an incorrect generated-output parent and failed before creating files; the path was fixed inside the existing ticket and the retry passed.
+
+The first native Nx invocation could not find the newly authored target. A subsequent graph inspection, after waiting for another graph constructor, exposed the correct uncached target; no cache reset or daemon deletion was performed. The retry ran successfully in 1.3 seconds (124 ms target execution) and printed a complete-validation baseline with the current commit. The cause of the first stale target lookup is not proven.
+
+The full repository suite after the materializer dependency-contract correction passed in 4m20s; that run preceded GitHub-provider and command test registration. A new full suite covering all CI tests is active. The workflow, graph-derived platform lanes, native Windows/Linux qualification and shared-cache trust configuration are still unfinished.
+
+## Complete CI Contract Suite
+
+The full repository suite containing the GitHub history, event selection, composed baseline resolver and native command tests exited 0 in 3m42s (3m41s test task). All four new CI contract groups printed PASS. The suite also passed the existing native tooling, restoration, graph, lifecycle and cancellation contracts across 449 projects. This proves local test execution, not hosted CI or non-Darwin platform behavior.
+
+## Consolidated Validation at 23:53 UTC
+
+The complete repo:test suite containing CI, container-context and isolated WASM-fingerprint contracts exited 0 in 2m30s (2m28s test task). Native repo:toolchain exited 0 in 891 ms and emitted valid installed-tool/pinned-Binaryen identity JSON. This remains local macOS arm64 validation.

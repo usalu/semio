@@ -1,11 +1,13 @@
 //! 🛍️ Drawing play app panel — the layer-kind catalogue (constitutional: was `ui`'s `Panels` region,
 //! catalogue half).
 
-use crate::{DrawingSnapshot, DRAWING_BOOLEAN_OPERATIONS};
-use crate::editor::drawing::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::drawing::terminology::DrawingPlayLabels;
+use crate::editor::drawing::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text};
+use crate::{DrawingSnapshot, DRAWING_BOOLEAN_OPERATIONS};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
-use semio_framework_plugin::{tree_item_with_action, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiFixedMap, UiText, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{
+    tree_item_with_action, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiFixedMap, UiText, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+};
 use semio_framework_ui_contract as ui;
 
 pub const DRAWING_PLAY_BODY_CATALOGUE: &str = "drawing.play.catalogue";
@@ -40,7 +42,8 @@ pub fn render(_document: &DrawingSnapshot, labels: &DrawingPlayLabels) -> semio_
     for (kind, label, icon) in catalogue_kinds {
         let mut drag_data = UiFixedMap::default();
         let key = UiText::try_from_str(crate::editor::drawing::panels::layers::DRAWING_LAYER_KIND_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag mime admission failed"))?;
-        let value = UiText::try_from_string(dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String(kind.to_string()))]))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag payload admission failed"))?;
+        let value = UiText::try_from_string(dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String(kind.to_string()))])))
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag payload admission failed"))?;
         drag_data.try_push(key, value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag map admission failed"))?;
         let label = ui::Label::try_from(label.as_str()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "drawing catalogue label admission failed"))?;
         let item = ui::tree_item(label)
@@ -54,16 +57,8 @@ pub fn render(_document: &DrawingSnapshot, labels: &DrawingPlayLabels) -> semio_
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "drawing catalogue list admission failed"))?;
     }
     for operation in DRAWING_BOOLEAN_OPERATIONS {
-        let args = ui_value_map([
-            ("ids", ui_value_list(std::iter::empty::<UiValue>())?),
-            ("operation", ui_value_text(operation)?),
-        ])?;
-        let mut item = tree_item_with_action(
-                format!("drawing-play-catalogue.bool.{operation}"),
-                format!("{} {operation}", labels.kind_boolean.as_str()),
-                None,
-                drawing_play_action("combineBoolean", Some(args))?,
-            )?;
+        let args = ui_value_map([("ids", ui_value_list(std::iter::empty::<UiValue>())?), ("operation", ui_value_text(operation)?)])?;
+        let mut item = tree_item_with_action(format!("drawing-play-catalogue.bool.{operation}"), format!("{} {operation}", labels.kind_boolean.as_str()), None, drawing_play_action("combineBoolean", Some(args))?)?;
         if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
             props.icon = Some(UiText::try_from_str("combine").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "drawing boolean icon admission failed"))?);
         }

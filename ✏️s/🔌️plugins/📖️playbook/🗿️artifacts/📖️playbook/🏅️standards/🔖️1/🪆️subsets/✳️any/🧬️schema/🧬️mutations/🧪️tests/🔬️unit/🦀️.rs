@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::{PlaybookBlock, PlaybookStep};
+use protocol::os_spr::testkit::{assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 use protocol::MutationKind;
 use protocol::SemanticMutation;
-use protocol::os_spr::testkit::{assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
 fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {
     PlaybookBlock {

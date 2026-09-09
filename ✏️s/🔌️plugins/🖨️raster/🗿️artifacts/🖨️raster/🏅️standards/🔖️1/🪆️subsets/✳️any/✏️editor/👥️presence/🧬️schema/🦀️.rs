@@ -11,8 +11,6 @@ pub struct RasterPresence {
     pub brush_opacity: f64,
     #[state(presence)]
     pub camera: RasterPresenceCamera,
-    #[state(presence)]
-    pub active_utility_id: String,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]

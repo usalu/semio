@@ -1,8 +1,6 @@
 //! ⚙️ Rewriting mutation store, application, derivation, and behavior laws.
 
-use crate::standards::v1::subsets::any::schema::mutations::{
-    change_parameter_binding, change_rule_layout_point, edit_before_fixture, edit_lhs, edit_rhs, remove_parameter_binding, remove_rule_layout_point, RewriteRuleMutation,
-};
+use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding, change_rule_layout_point, edit_before_fixture, edit_lhs, edit_rhs, remove_parameter_binding, remove_rule_layout_point, RewriteRuleMutation};
 use crate::{RewritingSnapshot, TrinityRewritingError, REWRITE_RULE_SCHEMA};
 use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
 

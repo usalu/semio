@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🌱 `crate::model::Model` has exactly 40 top-level fields (name/version/site/zones/spaces/

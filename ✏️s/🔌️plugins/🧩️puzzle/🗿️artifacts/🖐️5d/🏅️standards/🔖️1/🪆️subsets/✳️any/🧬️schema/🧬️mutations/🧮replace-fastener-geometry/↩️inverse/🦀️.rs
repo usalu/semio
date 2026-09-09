@@ -7,6 +7,6 @@ pub fn inverse(payload: &super::ReplaceFastenerGeometry, base: &Puzzle5dSnapshot
     let Some(item) = base.fasteners.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::standards::v1::subsets::any::schema::mutations::replace_fastener_semio_framework_geometry::replace_fastener_geometry(crate::standards::v1::subsets::any::schema::mutations::ReplaceFastenerGeometry { id: item.id.clone(), new_gap: item.gap, new_shift: item.shift, new_rise: item.rise, new_rotation: item.rotation, new_turn: item.turn, new_tilt: item.tilt, new_x: item.x, new_y: item.y })]
+    vec![crate::standards::v1::subsets::any::schema::mutations::replace_fastener_geometry::replace_fastener_geometry(crate::standards::v1::subsets::any::schema::mutations::ReplaceFastenerGeometry { id: item.id.clone(), new_gap: item.gap, new_shift: item.shift, new_rise: item.rise, new_rotation: item.rotation, new_turn: item.turn, new_tilt: item.tilt, new_x: item.x, new_y: item.y })]
 }
 //#endregion 🔖️Inverse

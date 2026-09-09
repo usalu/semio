@@ -3,7 +3,5 @@
   "lhsJson": null,
   "rhsJson": "{\"set\":[{\"var\":\"c\",\"prop\":\"label\",\"value\":\"$caption\"},{\"var\":\"c\",\"prop\":\"count\",\"value\":\"$repeat\"}]}",
   "parameterBindings": null,
-  "ruleLayout": null,
-  "lodModeByWindow": null,
-  "beforePaneCamera": null
+  "ruleLayout": null
 }

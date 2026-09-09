@@ -13,28 +13,28 @@ use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 
 //#region 🔖️Mutations
-/// 📐️ Typed content mutation for `stdio.step`.
-//#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
+#[path = "🧩insert-entity/🦀️.rs"]
+pub mod insert_entity;
+#[path = "➕insert-entity-arg/🦀️.rs"]
+pub mod insert_entity_arg;
+#[path = "🗑️remove-entity/🦀️.rs"]
+pub mod remove_entity;
+#[path = "➖remove-entity-arg/🦀️.rs"]
+pub mod remove_entity_arg;
+#[path = "🔧set-entity-arg/🦀️.rs"]
+pub mod set_entity_arg;
+#[path = "✏️set-entity-name/🦀️.rs"]
+pub mod set_entity_name;
 #[path = "📋️set-file-description/🦀️.rs"]
 pub mod set_file_description;
 #[path = "📛set-file-name/🦀️.rs"]
 pub mod set_file_name;
 #[path = "🏷️set-file-schema/🦀️.rs"]
 pub mod set_file_schema;
-#[path = "🧩insert-entity/🦀️.rs"]
-pub mod insert_entity;
-#[path = "🗑️remove-entity/🦀️.rs"]
-pub mod remove_entity;
-#[path = "✏️set-entity-name/🦀️.rs"]
-pub mod set_entity_name;
-#[path = "🔧set-entity-arg/🦀️.rs"]
-pub mod set_entity_arg;
-#[path = "➕insert-entity-arg/🦀️.rs"]
-pub mod insert_entity_arg;
-#[path = "➖remove-entity-arg/🦀️.rs"]
-pub mod remove_entity_arg;
+/// 📐️ Typed content mutation for `stdio.step`.
+//#region 🔖️Leaves
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
@@ -59,18 +59,7 @@ pub enum StepMutation {
 /// mutation catalog `../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &[
-    "set-snapshot",
-    "set-file-description",
-    "set-file-name",
-    "set-file-schema",
-    "insert-entity",
-    "remove-entity",
-    "set-entity-name",
-    "set-entity-arg",
-    "insert-entity-arg",
-    "remove-entity-arg",
-];
+pub const KINDS: &[&str] = &["set-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -143,10 +132,7 @@ pub(crate) fn agg_diff(this: &StepMutation, base: &StepSnapshot) -> protocol::Mu
 
         StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, arg_index }) => match base.entities.iter().find(|e| e.id == *id) {
             Some(e) if *arg_index < e.args.len() => StepDiff {
-                entities: Some(StepEntitiesDiff {
-                    modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { removed: vec![*arg_index], ..Default::default() }), ..Default::default() } }],
-                    ..Default::default()
-                }),
+                entities: Some(StepEntitiesDiff { modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { removed: vec![*arg_index], ..Default::default() }), ..Default::default() } }], ..Default::default() }),
                 ..Default::default()
             },
             _ => StepDiff::default(),

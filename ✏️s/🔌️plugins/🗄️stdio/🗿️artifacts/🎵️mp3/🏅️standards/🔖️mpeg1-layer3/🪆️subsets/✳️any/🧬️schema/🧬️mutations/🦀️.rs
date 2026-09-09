@@ -2,14 +2,14 @@
 //! top-level fields (`id3v2`/`frames`/`id3v1`), plus `SetSnapshot` for full replace.
 
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "🏷️set-id3v2/🦀️.rs"]
-pub mod set_id3v2;
 #[path = "🎼️set-frames/🦀️.rs"]
 pub mod set_frames;
 #[path = "🔖️set-id3v1/🦀️.rs"]
 pub mod set_id3v1;
+#[path = "🏷️set-id3v2/🦀️.rs"]
+pub mod set_id3v2;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 use crate::standards::mpeg1_layer3::subsets::any::schema::diff::{diff_set_frames, diff_set_id3v1, diff_set_id3v2, diff_set_snapshot, Mp3Diff};

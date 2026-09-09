@@ -1,8 +1,8 @@
 //! 📃️ 📃️ Forms play app commands command — `patch-step`.
 
-use crate::{forms_steps, op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
+use crate::{forms_steps, op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -25,10 +25,9 @@ pub fn handle(payload: &PatchStep, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: 
     }
     let mutation = match payload.field.as_str() {
         "title" => FormMutation::RenameStep(crate::mutations::rename_step::mutation::RenameStep { id: payload.step_id.clone(), new_title: payload.value.clone() }),
-        "description" => FormMutation::ChangeStepDescription(crate::mutations::change_step_description::mutation::ChangeStepDescription {
-            id: payload.step_id.clone(),
-            new_description: Some(payload.value.clone()).filter(|description| !description.is_empty()),
-        }),
+        "description" => {
+            FormMutation::ChangeStepDescription(crate::mutations::change_step_description::mutation::ChangeStepDescription { id: payload.step_id.clone(), new_description: Some(payload.value.clone()).filter(|description| !description.is_empty()) })
+        }
         _ => return Ok(Emit::default()),
     };
     Ok(Emit { artifact_mutations: vec![mutation], config_mutations: reset_try_config_mutations(), coalesce_key: Some(format!("patch-step:{}:{}", payload.step_id, payload.field)), ..Default::default() })

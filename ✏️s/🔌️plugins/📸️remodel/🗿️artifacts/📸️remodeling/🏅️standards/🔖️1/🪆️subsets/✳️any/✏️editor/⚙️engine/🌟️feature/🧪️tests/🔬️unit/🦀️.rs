@@ -1,4 +1,3 @@
-
 use super::*;
 use remodeling_image::{build_pyramid, warp_affine};
 
@@ -447,7 +446,11 @@ fn repeatability_fraction(base: &[Keypoint], transformed: &[Keypoint], t: &TestT
             matched += 1;
         }
     }
-    if checked == 0 { 0.0 } else { f64::from(matched) / f64::from(checked) }
+    if checked == 0 {
+        0.0
+    } else {
+        f64::from(matched) / f64::from(checked)
+    }
 }
 
 #[test]

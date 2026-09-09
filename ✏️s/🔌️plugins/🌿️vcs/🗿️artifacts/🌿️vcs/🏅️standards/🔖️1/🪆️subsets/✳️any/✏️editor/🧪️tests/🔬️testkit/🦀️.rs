@@ -1,7 +1,6 @@
-
 use super::*;
-use semio_framework_plugin::ActionMeta;
 use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
+use semio_framework_plugin::ActionMeta;
 use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 use store::ArtifactEnvelope;
 

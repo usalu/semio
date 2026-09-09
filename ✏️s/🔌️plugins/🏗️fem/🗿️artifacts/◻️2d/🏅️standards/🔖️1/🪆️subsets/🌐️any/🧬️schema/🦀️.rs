@@ -1,10 +1,9 @@
 //! 🧬️ Fem2d artifact schema — every field of the artifact with its state class.
 
-
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Artifact
-/// 🧬️ Full fem2d artifact state across the artifact, presence and config lanes.
+/// 🧬️ fem2d document artifact state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem2d")]
@@ -27,18 +26,6 @@ pub struct Fem2dArtifact {
     pub combinations: Vec<FemCombination>,
     #[state(artifact)]
     pub analysis: FemAnalysisSettings,
-    #[state(presence)]
-    pub result_source_id: Option<String>,
-    #[state(presence)]
-    pub result_mode: String,
-    #[state(presence)]
-    pub result_mode_index: u32,
-    #[state(config)]
-    pub camera: FemCamera,
-    #[state(artifact)]
-    pub solver_results_json: String,
-    #[state(artifact)]
-    pub mesh_preview_json: String,
 }
 //#endregion 🔖️Artifact
 
@@ -55,12 +42,6 @@ impl Default for Fem2dArtifact {
             load_cases: Default::default(),
             combinations: Default::default(),
             analysis: Default::default(),
-            result_source_id: None,
-            result_mode: "static".into(),
-            result_mode_index: 0,
-            camera: FemCamera::default(),
-            solver_results_json: String::new(),
-            mesh_preview_json: String::new(),
         }
     }
 }
@@ -81,7 +62,7 @@ impl Fem2dArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI/preview fields at defaults.
+    /// 🧬️ Builds a full artifact from a snapshot, preserving the authored document fields.
     pub fn from_snapshot(snapshot: crate::Fem2dSnapshot) -> Self {
         Self {
             nodes: snapshot.nodes,
@@ -118,11 +99,7 @@ pub fn fem2d_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactS
     ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.fem.fem2d",
         artifact: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
@@ -297,15 +274,15 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports
+pub use crate::FemAnalysisSettings;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::FemCamera;
-pub use crate::FemAnalysisSettings;
-pub use crate::FemNode;
+pub use crate::FemCombination;
 pub use crate::FemElement;
-pub use crate::FemRegion;
+pub use crate::FemLoadCase;
 pub use crate::FemMaterial;
+pub use crate::FemNode;
+pub use crate::FemRegion;
 pub use crate::FemSection;
 pub use crate::FemSupport;
-pub use crate::FemLoadCase;
-pub use crate::FemCombination;
 //#endregion 🔁️Re-exports

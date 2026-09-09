@@ -1,12 +1,12 @@
 //! 🔵️ 🔵️ Wires play app commands command — `add-node`.
 
+use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
+use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
 use crate::op::WiresMutation;
 use crate::schema::fixture_nodes;
 use crate::WiresSnapshot;
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use dsl::DslValue;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]

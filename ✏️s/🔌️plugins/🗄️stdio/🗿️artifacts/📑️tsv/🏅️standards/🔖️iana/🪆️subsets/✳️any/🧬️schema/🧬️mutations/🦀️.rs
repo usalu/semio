@@ -8,6 +8,14 @@ use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 
 //#region 🔖️Mutations
+#[path = "➕insert-row/🦀️.rs"]
+pub mod insert_row;
+#[path = "➖remove-row/🦀️.rs"]
+pub mod remove_row;
+#[path = "🔲set-cell/🦀️.rs"]
+pub mod set_cell;
+#[path = "🔀set-line-ending/🦀️.rs"]
+pub mod set_line_ending;
 /// 📐️ Typed content mutation for `stdio.tsv`.
 /// 🧪️ F6: hand-rolled — `#[derive(dsl::DslOps)]` is not attempted (`InsertRow`'s `row: Vec<String>`
 /// field would hit the derive's own `DslField for Vec<T>` blanket-impl requirements the same way
@@ -18,14 +26,6 @@ use protocol::{Mutation, MutationDiff, OpText};
 pub mod set_snapshot;
 #[path = "🔚set-trailing-newline/🦀️.rs"]
 pub mod set_trailing_newline;
-#[path = "🔀set-line-ending/🦀️.rs"]
-pub mod set_line_ending;
-#[path = "➕insert-row/🦀️.rs"]
-pub mod insert_row;
-#[path = "➖remove-row/🦀️.rs"]
-pub mod remove_row;
-#[path = "🔲set-cell/🦀️.rs"]
-pub mod set_cell;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
@@ -111,13 +111,7 @@ pub(crate) fn agg_inverse(this: &TsvMutation, base: &TsvSnapshot) -> Vec<TsvMuta
 /// gif89a's/svg's own hand-rolled `OpText` impls use.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_tsv_snapshot(s: &TsvSnapshot) -> String {
-    format!(
-        "[{},{},{},[{}]]",
-        enc_str(&s.schema),
-        if s.trailing_newline { 1 } else { 0 },
-        crate::standards::iana::subsets::any::schema::diff::enc_line_ending(s.line_ending),
-        s.records.iter().map(|r| enc_row(r)).collect::<Vec<_>>().join(","),
-    )
+    format!("[{},{},{},[{}]]", enc_str(&s.schema), if s.trailing_newline { 1 } else { 0 }, crate::standards::iana::subsets::any::schema::diff::enc_line_ending(s.line_ending), s.records.iter().map(|r| enc_row(r)).collect::<Vec<_>>().join(","),)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_tsv_snapshot(s: &str) -> Result<TsvSnapshot, String> {

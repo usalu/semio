@@ -9,22 +9,22 @@
 //! relocated from the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES),
 //! since an `AppIo` surface is app behaviour, not artifact data.
 
-use crate::op::GisMapMutation;
-use crate::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
-use crate::{GIS_MAP_SCHEMA, GisMapSnapshot, artifact_kind};
 use crate::editor::gis2d::commands::{example, features, inference, shell, view};
 use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::modes::edit;
 use crate::editor::gis2d::modes::edit::windows::map;
 use crate::editor::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
 use crate::editor::gis2d::terminology::gis2d_labels;
+use crate::op::GisMapMutation;
+use crate::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
+use crate::{artifact_kind, GisMapSnapshot, GIS_MAP_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
-    ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, INTERACTION_SELECT_ACTION_ID, InteractionDefinition, InteractionRef, Label,
-    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, WindowMeasure, tree_item, tree_item_with_action,
+    tree_item, tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
+    ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
+    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -241,22 +241,8 @@ use view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod
 pub struct Gis2dPlayApp;
 
 //#region 🧵️RetainedCommands
-const GIS2D_RETAINED_TOOL_IDS: &[&str] = &[
-    "setActiveExample",
-    "patchPositions",
-    "patchRoutes",
-    "patchRoute",
-    "toggleLayerVisibility",
-    "fitWorld",
-    "setCamera",
-    "setRenderMode",
-    "setVectorStyle",
-    "setLodMode",
-    "focusFeature",
-    "setLayerStrokeScale",
-    "openSource",
-        "proposeBoundsRegion",
-];
+const GIS2D_RETAINED_TOOL_IDS: &[&str] =
+    &["setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource", "proposeBoundsRegion"];
 const GIS2D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.map.tool-command.v1";
 const GIS2D_RETAINED_RAW_BYTES: usize = 8_192;
 const GIS2D_RETAINED_WORK_ITEMS: usize = 64;
@@ -296,7 +282,7 @@ fn gis2d_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gis2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 struct Gis2dRetainedCommandJobFactory {
@@ -382,9 +368,9 @@ pub fn gis_map_parent_one_item_preparation_factory() -> std::sync::Arc<dyn store
 /// 🎨 Creates the exact drawing-child preparation port used by the retained fixed-three assembly.
 pub fn gis_map_drawing_one_item_preparation_factory() -> std::sync::Arc<
     dyn store::ArtifactStoreOneItemPreparationFactory<
-            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
-        >,
+        semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+        semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+    >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
 }
@@ -392,9 +378,9 @@ pub fn gis_map_drawing_one_item_preparation_factory() -> std::sync::Arc<
 /// 🔢 Creates the exact value-child preparation port used by the retained fixed-three assembly.
 pub fn gis_map_value_one_item_preparation_factory() -> std::sync::Arc<
     dyn store::ArtifactStoreOneItemPreparationFactory<
-            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
-        >,
+        semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+        semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+    >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
 }
@@ -409,9 +395,9 @@ pub fn gis_map_drawing_stamped_one_item_preparation_factory(
     stamp: GisMapOneItemStampV1,
 ) -> std::sync::Arc<
     dyn store::ArtifactStoreOneItemPreparationFactory<
-            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
-        >,
+        semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+        semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+    >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: Some(stamp) })
 }
@@ -421,9 +407,9 @@ pub fn gis_map_value_stamped_one_item_preparation_factory(
     stamp: GisMapOneItemStampV1,
 ) -> std::sync::Arc<
     dyn store::ArtifactStoreOneItemPreparationFactory<
-            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
-        >,
+        semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+        semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+    >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: Some(stamp) })
 }
@@ -450,7 +436,7 @@ fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<Strin
         |stamp| (stamp.mutation_id.0.clone(), stamp.mutation_id, stamp.timestamp),
     );
     protocol::Edit {
-        id: id,
+        id,
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
         inverse,
@@ -614,11 +600,8 @@ async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRe
     if let Some(feature) = feature {
         let kind = if feature.domain == "route" { "route" } else { "position" };
         let mut menu = Menu::of(registry)
-            
             .action_args(INTERACTION_SELECT_ACTION_ID, select_feature_action_args(&feature.id))
-            
-            .action_args("focusFeature", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone())), ("featureKind".to_string(), dsl::DslValue::String(kind.to_string()))]))
-            ;
+            .action_args("focusFeature", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone())), ("featureKind".to_string(), dsl::DslValue::String(kind.to_string()))]));
         if kind == "position" {
             menu = menu.action_args("openSource", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone()))]));
         }
@@ -691,7 +674,17 @@ impl ArtifactEditor for Gis2dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             Gis2dCommand::command_id,
             GIS2D_RETAINED_RAW_BYTES,
             GIS2D_RETAINED_WORK_ITEMS,
@@ -712,6 +705,10 @@ impl ArtifactEditor for Gis2dPlayApp {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
@@ -726,6 +723,30 @@ impl ArtifactEditor for Gis2dPlayApp {
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default GIS Map presence is the exact empty terminal")))
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
     fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
@@ -850,7 +871,8 @@ impl ArtifactEditor for Gis2dPlayApp {
         command: &Gis2dCommand,
         doc: &ArtifactView<'_, GisMapSnapshot>,
         cfg: &ConfigView<'_, Gis2dConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -938,7 +960,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             // replaces document content by diffing every collection into batched create/delete/
             // replace-data operations (never a whole-document snapshot swap — that vocabulary is
             // retired by the taxonomy), so it is a Mutation, not a View action.
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .mutation("patchPositions", LocalizedLabel::native("Patch Positions", "Positionen aktualisieren"))
             .mutation("patchRoutes", LocalizedLabel::native("Patch Routes", "Routen aktualisieren"))
             .mutation("patchRoute", LocalizedLabel::native("Patch Route", "Route aktualisieren"))
@@ -946,14 +968,14 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             // visibility, stroke weights), never the document.
             .view_action("toggleLayerVisibility", LocalizedLabel::native("Toggle Layer Visibility", "Ebenensichtbarkeit umschalten"))
             .action_with(ActionDefinition { category: Some("view".into()), ..ActionDefinition::bounded_catalog("fitWorld", LocalizedLabel::native("Fit World", "Welt einpassen"), ActionKind::View) })
-            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
             .view_action("setRenderMode", LocalizedLabel::native("Set Render Mode", "Darstellungsmodus festlegen"))
             .view_action("setVectorStyle", LocalizedLabel::native("Set Vector Style", "Vektorstil festlegen"))
-            .view_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"))
+            .action_with(ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
             .action_with(ActionDefinition { category: Some("view".into()), ..ActionDefinition::bounded_catalog("focusFeature", LocalizedLabel::native("Focus Feature", "Objekt fokussieren"), ActionKind::View) })
             .view_action("setLayerStrokeScale", LocalizedLabel::native("Set Layer Stroke Scale", "Ebenenstrichstärke festlegen"))
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
-            .action_with(ActionDefinition { category: Some("open".into()), ..ActionDefinition::bounded_catalog("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell) })
+            .action_with(ActionDefinition { category: Some("open".into()), ..ActionDefinition::new("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell, "hard-drive") })
             // 💡️ Shell action — asks the host to open its own ephemeral inference port and offer a
             // reviewable bounds region. It never writes the document; only the hub's server-stamped
             // approval command can.

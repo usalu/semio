@@ -7,8 +7,8 @@ fn fixture() -> Value {
 }
 
 /// 🌉️ `T: FromValue` decode of a pack JSON [`Value`] — the in-house `serde_json::from_value` analog.
-fn from_pack_value<T: dsl::FromValue>(value: Value) -> Result<T, dsl::ValueError> {
-    <T as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&value))
+fn from_pack_value<T: dsl::FromValue>(value: &Value) -> Result<T, dsl::ValueError> {
+    <T as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value))
 }
 
 /// 🌉️ `T: ToValue` encode into a pack JSON [`Value`] — the in-house `serde_json::to_value` analog.
@@ -54,7 +54,7 @@ where
 {
     let fixture = fixture();
     let row = &fixture["valid"][index];
-    let payload = from_pack_value::<T>(row["payload"].clone()).expect("neutral direct payload");
+    let payload = from_pack_value::<T>(&row["payload"]).expect("neutral direct payload");
     let mutation = wrap(payload);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&T::DESCRIPTOR)).expect("descriptor JSON"), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor"));
     assert_eq!(mutation.descriptor(), &T::DESCRIPTOR);
@@ -64,22 +64,22 @@ where
     if let Some(object) = unknown_payload.as_object_mut() {
         object.insert("unknown".to_string(), Value::from(true));
     }
-    assert!(from_pack_value::<T>(unknown_payload).is_err());
+    assert!(from_pack_value::<T>(&unknown_payload).is_err());
     let mut unknown_operation = to_pack_value(&mutation);
     if let Some(object) = unknown_operation.as_object_mut() {
         object.insert("unknown".to_string(), Value::from(true));
     }
-    assert!(from_pack_value::<DagMutation>(unknown_operation).is_err());
+    assert!(from_pack_value::<DagMutation>(&unknown_operation).is_err());
     let payload_object = row["payload"].as_object().expect("payload object");
     let payload_keys: Vec<String> = payload_object.iter().map(|(key, _)| key.to_string()).filter(|key| key != "newOperatorKind").collect();
     for key in payload_keys {
         let missing: Value = Value::Object(payload_object.iter().filter(|(k, _)| *k != key).map(|(k, v)| (k.to_string(), v.clone())).collect());
-        assert!(from_pack_value::<T>(missing.clone()).is_err(), "missing {key}");
+        assert!(from_pack_value::<T>(&missing).is_err(), "missing {key}");
         let mut missing_aggregate = missing;
         if let Some(object) = missing_aggregate.as_object_mut() {
             object.insert("operation".to_string(), row["operation"].clone());
         }
-        assert!(from_pack_value::<DagMutation>(missing_aggregate).is_err(), "missing aggregate {key}");
+        assert!(from_pack_value::<DagMutation>(&missing_aggregate).is_err(), "missing aggregate {key}");
     }
     assert_codecs(&mutation);
     let before = base();
@@ -102,7 +102,7 @@ fn direct_leaf_roster_and_codec_contracts() {
         if let Some(object) = json.as_object_mut() {
             object.insert("operation".to_string(), row["operation"].clone());
         }
-        let mutation = from_pack_value::<DagMutation>(json).expect("neutral aggregate");
+        let mutation = from_pack_value::<DagMutation>(&json).expect("neutral aggregate");
         assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small index")));
         assert_eq!(mutation.descriptor().diff_participation, protocol::MutationDiffParticipation::ApplyOnly);
         assert_codecs(&mutation);
@@ -112,14 +112,14 @@ fn direct_leaf_roster_and_codec_contracts() {
         if let Some(object) = json.as_object_mut() {
             object.insert("operation".to_string(), row["operation"].clone());
         }
-        assert!(from_pack_value::<DagMutation>(json).is_err(), "{}", row["name"]);
+        assert!(from_pack_value::<DagMutation>(&json).is_err(), "{}", row["name"]);
     }
     for row in fixture["additionalValid"].as_array().expect("additional input vectors") {
         let mut json = row["payload"].clone();
         if let Some(object) = json.as_object_mut() {
             object.insert("operation".to_string(), row["operation"].clone());
         }
-        assert_codecs(&from_pack_value::<DagMutation>(json).expect("additional pack-value input"));
+        assert_codecs(&from_pack_value::<DagMutation>(&json).expect("additional pack-value input"));
     }
 }
 
@@ -186,7 +186,7 @@ fn direct_structural_absorb_is_associative_and_preserves_rejection() {
         let mut after = before.clone();
         let mut diffs = Vec::new();
         for value in row["mutations"].as_array().expect("mutation sequence") {
-            let mutation = from_pack_value::<DagMutation>(value.clone()).expect("sequence mutation");
+            let mutation = from_pack_value::<DagMutation>(value).expect("sequence mutation");
             let (diff, _) = mutation.diff(&after).into_parts();
             after = diff.apply(&after).expect("sequential diff");
             diffs.push(diff);
@@ -244,9 +244,9 @@ fn direct_intrinsic_serde_and_selection_are_lossless() {
     let fixture = fixture();
     for row in fixture["nodeKinds"].as_array().expect("node kind vectors") {
         let value = row["value"].clone();
-        assert_eq!(from_pack_value::<DagNodeKind>(value.clone()).is_ok(), row["valid"].as_bool().expect("expected validity"), "{}", row["name"]);
+        assert_eq!(from_pack_value::<DagNodeKind>(&value).is_ok(), row["valid"].as_bool().expect("expected validity"), "{}", row["name"]);
         if row["valid"] == true {
-            let kind = from_pack_value::<DagNodeKind>(value).expect("kind");
+            let kind = from_pack_value::<DagNodeKind>(&value).expect("kind");
             assert_codecs(&DagMutation::ReplaceNodeKind(ReplaceNodeKind { id: "a".into(), new_kind: kind }));
         }
     }

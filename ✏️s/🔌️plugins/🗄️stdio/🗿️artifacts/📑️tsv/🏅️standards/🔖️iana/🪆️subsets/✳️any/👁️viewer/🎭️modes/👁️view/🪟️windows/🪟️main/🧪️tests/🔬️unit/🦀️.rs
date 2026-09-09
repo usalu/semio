@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::Component;
 

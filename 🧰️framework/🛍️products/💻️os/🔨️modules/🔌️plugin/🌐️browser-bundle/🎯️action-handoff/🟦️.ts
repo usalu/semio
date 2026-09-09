@@ -3,7 +3,8 @@
 
 export const BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES = 256 * 1024;
 export const BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM = 4_096;
-export const BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION = 14;
+export const BROWSER_ACTOR_ACTION_HOST_EFFECT_MAXIMUM = 1;
+export const BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION = 15;
 
 export type BrowserActorActionScopeV1 = { readonly spaceId: string; readonly documentId: string };
 
@@ -17,29 +18,21 @@ export type BrowserActorActionOwnerV1 = {
   readonly actionSequence: number;
 };
 
+export type BrowserActorActionPayloadV1 =
+  | { readonly kind: "ui-intent"; readonly bytes: readonly number[] }
+  | { readonly kind: "app-command"; readonly bytes: readonly number[] };
+
 export type BrowserActorActionRequestV1 = BrowserActorActionOwnerV1 & {
   readonly kind: "browser-actor-action";
-  readonly command: readonly number[];
-  readonly viewState: readonly number[];
+  readonly payload: BrowserActorActionPayloadV1;
 };
 
 export type BrowserActorActionResultV1 = BrowserActorActionOwnerV1 & {
   readonly kind: "browser-actor-action-result";
-  readonly outcome: "acknowledged" | "rejected";
+  readonly outcome: "guest-applied" | "rejected";
   readonly mutationCount: number;
+  readonly hostEffects: readonly (readonly number[])[];
   readonly reason?: string;
-};
-
-export type BrowserActorActionInvocationV1 = {
-  readonly address: {
-    readonly pluginId: string;
-    readonly appId: string;
-    readonly modeId: string;
-    readonly windowKindId: string;
-    readonly windowInstanceId: string;
-    readonly actionId: string;
-  };
-  readonly arguments: Readonly<Record<string, unknown>>;
 };
 
 function object(value: unknown, path: string, required: readonly string[], optional: readonly string[] = []): Readonly<Record<string, unknown>> {
@@ -80,6 +73,24 @@ function bytes(value: unknown, path: string): readonly number[] {
   return [...value];
 }
 
+function payload(value: unknown): BrowserActorActionPayloadV1 {
+  const record = object(value, "browserActorAction.payload", ["bytes", "kind"]);
+  if (record.kind !== "ui-intent" && record.kind !== "app-command") throw new Error("browserActorAction.payload.kind: invalid");
+  return { kind: record.kind, bytes: bytes(record.bytes, "browserActorAction.payload.bytes") };
+}
+
+/** 📦️ Copies a bounded publication batch before it crosses a lifetime boundary. */
+export function parseBrowserActorHostEffectBytesV1(value: unknown): readonly (readonly number[])[] {
+  if (!Array.isArray(value) || value.length > BROWSER_ACTOR_ACTION_HOST_EFFECT_MAXIMUM) throw new Error("browserActorActionResult.hostEffects: invalid bounded batch");
+  let size = 0;
+  return value.map((item) => {
+    const copy = bytes(item, "browserActorActionResult.hostEffects");
+    size += copy.length;
+    if (size > BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES) throw new Error("browserActorActionResult.hostEffects: invalid bounded bytes");
+    return copy;
+  });
+}
+
 function owner(record: Readonly<Record<string, unknown>>): BrowserActorActionOwnerV1 {
   return {
     scope: scope(record.scope),
@@ -94,40 +105,25 @@ function owner(record: Readonly<Record<string, unknown>>): BrowserActorActionOwn
 
 /** 📥️ Decodes one exact, bounded action request without accepting actor or document authority bytes. */
 export function parseBrowserActorActionRequestV1(value: unknown): BrowserActorActionRequestV1 {
-  const record = object(value, "browserActorAction", ["actionSequence", "activationGeneration", "appChannelVersion", "command", "instanceId", "kind", "scope", "surfaceRevision", "verifiedSurfaceId", "viewState"]);
+  const record = object(value, "browserActorAction", ["actionSequence", "activationGeneration", "appChannelVersion", "instanceId", "kind", "payload", "scope", "surfaceRevision", "verifiedSurfaceId"]);
   if (record.kind !== "browser-actor-action") throw new Error("browserActorAction.kind: invalid");
-  return { kind: "browser-actor-action", ...owner(record), command: bytes(record.command, "browserActorAction.command"), viewState: bytes(record.viewState, "browserActorAction.viewState") };
+  return { kind: "browser-actor-action", ...owner(record), payload: payload(record.payload) };
 }
 
 /** 📤️ Decodes the worker's exact action disposition; mutation bodies remain on the ordinary Commands lane. */
 export function parseBrowserActorActionResultV1(value: unknown): BrowserActorActionResultV1 {
-  const source = object(value, "browserActorActionResult", ["actionSequence", "activationGeneration", "appChannelVersion", "instanceId", "kind", "mutationCount", "outcome", "scope", "surfaceRevision", "verifiedSurfaceId"], ["reason"]);
-  if (source.kind !== "browser-actor-action-result" || (source.outcome !== "acknowledged" && source.outcome !== "rejected")) throw new Error("browserActorActionResult.outcome: invalid");
+  const source = object(value, "browserActorActionResult", ["actionSequence", "activationGeneration", "appChannelVersion", "hostEffects", "instanceId", "kind", "mutationCount", "outcome", "scope", "surfaceRevision", "verifiedSurfaceId"], ["reason"]);
+  if (source.kind !== "browser-actor-action-result" || (source.outcome !== "guest-applied" && source.outcome !== "rejected")) throw new Error("browserActorActionResult.outcome: invalid");
   if ((source.outcome === "rejected") !== (source.reason !== undefined)) throw new Error("browserActorActionResult.reason: invalid pairing");
+  const hostEffects = parseBrowserActorHostEffectBytesV1(source.hostEffects);
+  if (source.outcome === "rejected" && hostEffects.length !== 0) throw new Error("browserActorActionResult.hostEffects: rejected publication");
   return {
     kind: "browser-actor-action-result",
     ...owner(source),
     outcome: source.outcome,
     mutationCount: natural(source.mutationCount, "browserActorActionResult.mutationCount", 0, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM),
+    hostEffects,
     ...(source.reason === undefined ? {} : { reason: text(source.reason, "browserActorActionResult.reason") }),
-  };
-}
-
-/** 🧭 Decodes the Pack-projected action address before any guest turn is admitted. */
-export function parseBrowserActorActionInvocationV1(value: unknown): BrowserActorActionInvocationV1 {
-  const record = object(value, "browserActorAction.invocation", ["address", "arguments"]);
-  const address = object(record.address, "browserActorAction.invocation.address", ["actionId", "appId", "modeId", "pluginId", "windowInstanceId", "windowKindId"]);
-  const argumentsValue = object(record.arguments, "browserActorAction.invocation.arguments", Object.keys(record.arguments as Readonly<Record<string, unknown>>));
-  return {
-    address: {
-      pluginId: text(address.pluginId, "browserActorAction.invocation.address.pluginId"),
-      appId: text(address.appId, "browserActorAction.invocation.address.appId"),
-      modeId: text(address.modeId, "browserActorAction.invocation.address.modeId"),
-      windowKindId: text(address.windowKindId, "browserActorAction.invocation.address.windowKindId"),
-      windowInstanceId: text(address.windowInstanceId, "browserActorAction.invocation.address.windowInstanceId"),
-      actionId: text(address.actionId, "browserActorAction.invocation.address.actionId"),
-    },
-    arguments: argumentsValue,
   };
 }
 
@@ -147,5 +143,8 @@ export function browserActorActionOwnerMatchesV1(left: BrowserActorActionOwnerV1
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️browser-actor-action-handoff-validates-the-neutral-schema-and-exact-owne/🟦️.ts");
-  await registerTests1(import.meta.vitest, { BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, browserActorActionOwnerMatchesV1, parseBrowserActorActionInvocationV1, parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1 }, { directory: import.meta.dir, url: import.meta.url });
+  const { decodeAppCommand, decodePackValue } = await import("../../../../🟦️.ts");
+  const { createBrowserActorAppCommandRequestV1 } = await import("./🎛️command/🟦️.ts");
+  const { createBrowserActorUiIntentRequestV1 } = await import("./🧭️intent/🟦️.ts");
+  await registerTests1(import.meta.vitest, { BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, browserActorActionOwnerMatchesV1, createBrowserActorAppCommandRequestV1, createBrowserActorUiIntentRequestV1, decodeAppCommand, decodePackValue, parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1 }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }

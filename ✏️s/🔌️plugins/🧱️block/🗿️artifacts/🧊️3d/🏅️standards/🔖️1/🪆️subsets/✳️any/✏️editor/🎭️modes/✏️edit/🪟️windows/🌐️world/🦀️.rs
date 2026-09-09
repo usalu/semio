@@ -4,6 +4,7 @@
 use crate::Block3dSnapshot;
 use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::editor::block3d::modes::edit::windows::world::options::{arrangement, brush, quick_representation, representations, spacing};
+use crate::editor::block3d::modes::edit::windows::world::transient::Block3dBrushPreview;
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::world::{visible_representations, world_camera_json, world_instances_json, world_interaction_json, world_meshes_json, world_selection_json, world_vortices_json};
 use crate::editor::block3d::BLOCK3D_PLAY_SURFACE_ID;
@@ -54,12 +55,12 @@ pub fn window_measures(definition: &Block3dSnapshot, config: &Block3dConfig, win
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str) -> UiAssemblyResult<BuiltNode> {
+pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, active_utility: &str, brush_preview: Option<&Block3dBrushPreview>) -> UiAssemblyResult<BuiltNode> {
     let view = block3d_window_view(config, window_id);
     let visible = visible_representations(definition, &view);
     let mut scene = World3dScene::base(world_camera_json(definition, config), world_meshes_json(definition, &visible), world_instances_json(definition, &visible, &view), world_selection_json(config));
-    scene.vortices_json = Some(world_vortices_json(definition, config, &visible, &view));
-    scene.interaction_json = Some(world_interaction_json(config, window_id));
+    scene.vortices_json = Some(world_vortices_json(definition, config, &visible, &view, brush_preview));
+    scene.interaction_json = Some(world_interaction_json(active_utility));
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired to `BLOCK3D_INTERACTION_VORTEX`
     // here — this shared scene builder's granularity vocabulary for a plain whole-object pick vs.
     // this app's own vortex/grip picking is not yet verified; left unbound (OS `world` domain

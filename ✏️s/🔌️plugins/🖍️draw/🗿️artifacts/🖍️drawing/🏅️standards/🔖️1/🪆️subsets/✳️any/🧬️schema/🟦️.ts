@@ -13,20 +13,6 @@ export interface DrawingArtifact {
   assets: Record<string, DrawingImageAsset>;
   /** @state artifact */
   artboard?: DrawingArtboard;
-  /** @state presence */
-  selectedIds: string[];
-  /** @state presence */
-  /** @state config */
-  engagementInput: string;
-  /** @state config */
-  cameraX: number;
-  /** @state config */
-  cameraY: number;
-  /** @state config */
-  cameraZoom: number;
-  /** @state config */
-  /** @state artifact */
-  hoveredId?: string;
 }
 
 export interface DrawingLayerNode {
@@ -100,14 +86,11 @@ export function parseDrawingArtifact(value: unknown, at = "$"): DrawingArtifact 
     id: drawingDrawingArtifactGuardString(row["id"], `${at}.id`),
     title: row["title"] === undefined ? undefined : drawingDrawingArtifactGuardString(row["title"], `${at}.title`),
     layers: drawingDrawingArtifactGuardArray(row["layers"], `${at}.layers`).map((item, index) => parseDrawingLayerNode(item, `${at}.layers[${index}]`)),
-    assets: drawingDrawingArtifactGuardObject(row["assets"], `${at}.assets`),
+    assets: Object.fromEntries(
+      Object.entries(drawingDrawingArtifactGuardObject(row["assets"], `${at}.assets`))
+        .map(([key, item]) => [key, parseDrawingImageAsset(item, `${at}.assets.${key}`)]),
+    ),
     artboard: row["artboard"] === undefined ? undefined : parseDrawingArtboard(row["artboard"], `${at}.artboard`),
-    selectedIds: drawingDrawingArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => drawingDrawingArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    engagementInput: drawingDrawingArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),
-    cameraX: drawingDrawingArtifactGuardNumber(row["cameraX"], `${at}.cameraX`),
-    cameraY: drawingDrawingArtifactGuardNumber(row["cameraY"], `${at}.cameraY`),
-    cameraZoom: drawingDrawingArtifactGuardNumber(row["cameraZoom"], `${at}.cameraZoom`),
-    hoveredId: row["hoveredId"] === undefined ? undefined : drawingDrawingArtifactGuardString(row["hoveredId"], `${at}.hoveredId`),
   };
 }
 

@@ -16,7 +16,13 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for ReplaceC
     fn diff(&self, _base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfig> {
         protocol::MutationOutcome::new(self.config.clone())
     }
-    fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> { vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Replace Config".into() }
-    fn target(&self) -> Vec<String> { vec!["config".into()] }
+    fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> {
+        vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Config".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["config".into()]
+    }
 }

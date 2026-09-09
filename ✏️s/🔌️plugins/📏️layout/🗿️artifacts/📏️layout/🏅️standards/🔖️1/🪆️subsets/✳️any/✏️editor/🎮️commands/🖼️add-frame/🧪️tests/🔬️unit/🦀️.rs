@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::layout::LayoutCommand;
 use crate::editor::layout::commands::{patch_frame, patch_page};
 use crate::editor::layout::testkit::{dispatch, layout_app};
+use crate::editor::layout::LayoutCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn add_frame_action_appends_rect() {

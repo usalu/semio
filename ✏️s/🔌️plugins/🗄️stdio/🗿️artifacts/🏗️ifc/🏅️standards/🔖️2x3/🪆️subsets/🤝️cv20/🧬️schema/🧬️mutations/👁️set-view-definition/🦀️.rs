@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetViewDefinition {
-        pub(crate) view: String,
-    }
+    pub(crate) view: String,
+}
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetViewDefinition {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "view-definition", kind: "set-view-definition", record: "SetViewDefinition" };

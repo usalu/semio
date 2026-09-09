@@ -30,9 +30,6 @@ export interface Block5dArtifact {
   camera3d: BlockCamera3d;
   /** @state artifact */
   meta: BlockMeta;
-  /** @state presence */
-  selectedIds: string[];
-  /** @state config */
 }
 
 //#region 🚪️Parsers
@@ -98,7 +95,6 @@ export function parseBlock5dArtifact(value: unknown, at = "$"): Block5dArtifact 
     camera2d: parseBlockCamera2d(row["camera2d"], `${at}.camera2d`),
     camera3d: parseBlockCamera3d(row["camera3d"], `${at}.camera3d`),
     meta: parseBlockMeta(row["meta"], `${at}.meta`),
-    selectedIds: blockBlock5dArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => blockBlock5dArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
   };
 }
 

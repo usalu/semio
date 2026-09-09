@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreatePeopleGain` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreatePeopleGain, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -15,14 +15,36 @@ pub fn diff(payload: &super::CreatePeopleGain, base: &EnergyModelSnapshot) -> pr
     if !base.model.zones.iter().any(|zone| zone.id == payload.zone_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone {} does not exist.", payload.zone_id.0), [payload.zone_id.0.to_string()]);
     }
-    if !(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.schedule_id) || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.schedule_id) || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.schedule_id) || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.schedule_id) || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.schedule_id)) {
+    if !(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.schedule_id)
+        || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.schedule_id)
+        || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.schedule_id)
+        || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.schedule_id)
+        || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.schedule_id))
+    {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.schedule_id.0), [payload.schedule_id.0.to_string()]);
     }
-    if !(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.activity_schedule_id) || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.activity_schedule_id) || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.activity_schedule_id) || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.activity_schedule_id) || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.activity_schedule_id)) {
+    if !(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.activity_schedule_id)
+        || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.activity_schedule_id)
+        || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.activity_schedule_id)
+        || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.activity_schedule_id)
+        || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.activity_schedule_id))
+    {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.activity_schedule_id.0), [payload.activity_schedule_id.0.to_string()]);
     }
     let mut model = base.model.clone();
-    model.people.insert(payload.index as usize, crate::model::PeopleGain { id: payload.id, zone_id: payload.zone_id, schedule_id: payload.schedule_id, activity_schedule_id: payload.activity_schedule_id, people_per_area: payload.people_per_area, sensible_fraction: payload.sensible_fraction, latent_fraction: payload.latent_fraction, radiant_fraction: payload.radiant_fraction });
+    model.people.insert(
+        payload.index as usize,
+        crate::model::PeopleGain {
+            id: payload.id,
+            zone_id: payload.zone_id,
+            schedule_id: payload.schedule_id,
+            activity_schedule_id: payload.activity_schedule_id,
+            people_per_area: payload.people_per_area,
+            sensible_fraction: payload.sensible_fraction,
+            latent_fraction: payload.latent_fraction,
+            radiant_fraction: payload.radiant_fraction,
+        },
+    );
     protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

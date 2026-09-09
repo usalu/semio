@@ -1,9 +1,9 @@
 //! 🔧️ 🔧️ DAG play app commands command — `patch-dag-nodes`.
 
+use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use crate::mutations::{change_node_name, replace_node_kind, resize_node};
 use crate::op::DagMutation;
 use crate::DagSnapshot;
-use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]

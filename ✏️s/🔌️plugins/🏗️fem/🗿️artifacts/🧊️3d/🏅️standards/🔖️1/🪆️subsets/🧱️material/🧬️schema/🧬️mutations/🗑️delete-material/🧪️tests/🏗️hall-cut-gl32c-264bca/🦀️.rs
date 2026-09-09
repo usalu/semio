@@ -127,5 +127,9 @@ fn committed_json_is_canonical() {
 #[test]
 fn semantics_bind_the_declared_kind() {
     let semantics = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "material", "delete-material", "DeletedMaterial"), "delete-material/hall-cut-gl32c-264bca: the fixture must be bound to delete-material's own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("delete", "material", "delete-material", "DeletedMaterial"),
+        "delete-material/hall-cut-gl32c-264bca: the fixture must be bound to delete-material's own descriptor"
+    );
 }

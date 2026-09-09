@@ -53,7 +53,11 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(messages.len(), 1, "delete-section/purlin-in-use-99eb01: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-referenced", "delete-section/purlin-in-use-99eb01: the refusal is reported as mutation.target-referenced");
     assert_eq!(messages[0].level, protocol::Severity::Error, "delete-section/purlin-in-use-99eb01: a live referrer is an Error, the same level a missed target raises — the request is answerable, just not now");
-    assert_eq!(messages[0].target, vec!["sec_pur".to_string(), "pur_e_l_0".to_string(), "pur_a_0".to_string(), "pur_e_r_0".to_string(), "pur_e_l_1".to_string(), "pur_a_1".to_string(), "pur_e_r_1".to_string()], "delete-section/purlin-in-use-99eb01: the diagnostic addresses exactly \"sec_pur\", \"pur_e_l_0\", \"pur_a_0\", \"pur_e_r_0\", \"pur_e_l_1\", \"pur_a_1\", \"pur_e_r_1\"");
+    assert_eq!(
+        messages[0].target,
+        vec!["sec_pur".to_string(), "pur_e_l_0".to_string(), "pur_a_0".to_string(), "pur_e_r_0".to_string(), "pur_e_l_1".to_string(), "pur_a_1".to_string(), "pur_e_r_1".to_string()],
+        "delete-section/purlin-in-use-99eb01: the diagnostic addresses exactly \"sec_pur\", \"pur_e_l_0\", \"pur_a_0\", \"pur_e_r_0\", \"pur_e_l_1\", \"pur_a_1\", \"pur_e_r_1\""
+    );
 }
 
 /// ↩️ The inverse is computed from `before` and the mutation payload alone, never from the verdict,

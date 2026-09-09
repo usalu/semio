@@ -1,10 +1,10 @@
 //! 🛍️ Sequence play app panel — the step-kind catalogue, plus per-slot "add to" shortcuts for
 //! expanded control-flow steps.
 
-use crate::SequenceFixture;
-use crate::editor::sequence::{sequence_action, ui_label};
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::{control_slots, is_control_kind};
+use crate::editor::sequence::{sequence_action, ui_label};
+use crate::SequenceFixture;
 use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
@@ -34,11 +34,8 @@ pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> semio_frame
     }
     for owner in fixture.steps.iter().filter(|step| is_control_kind(&step.kind)) {
         for slot_name in control_slots(&owner.kind) {
-            let args = crate::editor::sequence::ui_value_map([
-                ("kind", crate::editor::sequence::ui_value_text("log.print")?),
-                ("owner", crate::editor::sequence::ui_value_text(&owner.id)?),
-                ("slotName", crate::editor::sequence::ui_value_text(slot_name)?),
-            ])?;
+            let args =
+                crate::editor::sequence::ui_value_map([("kind", crate::editor::sequence::ui_value_text("log.print")?), ("owner", crate::editor::sequence::ui_value_text(&owner.id)?), ("slotName", crate::editor::sequence::ui_value_text(slot_name)?)])?;
             let item = tree_item_with_action(
                 format!("sequence-play-catalogue.slot.{}.{}", owner.id, slot_name),
                 format!("{} {} → {slot_name}", labels.add_to.as_str(), owner.id),

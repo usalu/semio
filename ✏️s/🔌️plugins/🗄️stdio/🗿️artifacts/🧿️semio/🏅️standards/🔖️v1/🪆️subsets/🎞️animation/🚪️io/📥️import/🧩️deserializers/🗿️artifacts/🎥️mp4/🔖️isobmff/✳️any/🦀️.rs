@@ -11,9 +11,9 @@
 //! `dts + cts_offset` pts derivation `video↔mp4` uses, converted to SECONDS via `timescale`
 //! (`pts_ticks / timescale`) so timelines from different tracks/timescales are directly comparable.
 
-use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };

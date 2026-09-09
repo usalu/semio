@@ -1,6 +1,5 @@
 //! 📋 `change-declared-application-class` — sets the DIN 4108 `declared_application_class` scalar.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

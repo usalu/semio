@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::wires::WIRES_PLAY_BODY_DOCUMENT as APP_BODY_DOCUMENT;
 use crate::editor::wires::testkit::{metabolism_app, render as render_body};
+use crate::editor::wires::WIRES_PLAY_BODY_DOCUMENT as APP_BODY_DOCUMENT;
 
 #[semio_framework_async_macros::async_test]
 async fn document_has_identities_section() {

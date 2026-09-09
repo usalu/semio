@@ -244,6 +244,31 @@ fn missing_option_field_defaults_to_none_like_serde() {
     assert_eq!(ours.note, None);
 }
 
+fn required_nullable<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: serde::Deserialize<'de>,
+{
+    <Option<T> as serde::Deserialize>::deserialize(deserializer)
+}
+
+#[derive(Debug, Clone, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
+struct RequiredNullableField {
+    #[value(required)]
+    #[serde(deserialize_with = "required_nullable")]
+    value: Option<bool>,
+}
+
+#[test]
+fn required_option_rejects_omission_and_accepts_explicit_null_like_serde() {
+    assert!(RequiredNullableField::from_value(DslValue::Object(Vec::new())).is_err());
+    assert!(serde_json::from_str::<RequiredNullableField>("{}").is_err());
+
+    let explicit_null = DslValue::object([("value".to_string(), DslValue::Null)]);
+    assert_eq!(RequiredNullableField::from_value(explicit_null), Ok(RequiredNullableField { value: None }));
+    assert_eq!(serde_json::from_str::<RequiredNullableField>(r#"{"value":null}"#), Ok(RequiredNullableField { value: None }));
+}
+
 #[derive(Debug, Clone, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -260,11 +285,7 @@ enum OptionalVariantField {
 fn missing_option_variant_field_defaults_to_none_like_serde() {
     let source = r#"{"kind":"event","id":"kept"}"#;
     let oracle: OptionalVariantField = serde_json::from_str(source).expect("serde option default");
-    let ours = OptionalVariantField::from_value(DslValue::object([
-        ("kind".to_string(), DslValue::String("event".to_string())),
-        ("id".to_string(), DslValue::String("kept".to_string())),
-    ]))
-    .expect("value option default");
+    let ours = OptionalVariantField::from_value(DslValue::object([("kind".to_string(), DslValue::String("event".to_string())), ("id".to_string(), DslValue::String("kept".to_string()))])).expect("value option default");
     assert_eq!(ours, oracle);
 }
 //#endregion 🔖️OptionMissingDefaults

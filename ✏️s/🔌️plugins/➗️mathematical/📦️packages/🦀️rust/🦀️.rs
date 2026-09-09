@@ -9,11 +9,6 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
-extern crate semio_framework_number as number;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<EquationMutation, EquationConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
@@ -22,15 +17,21 @@ extern crate semio_framework_schema as schema;
 #[allow(clippy::result_large_err)]
 
 //#region 🗿️Artifacts
-mod artifacts { pub use semio_s_artifact_mathematical_equation as equation; }
+mod artifacts {
+    pub use semio_s_artifact_mathematical_equation as equation;
+}
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_mathematical_equation::editor::*; }
+mod editor {
+    pub use semio_s_artifact_mathematical_equation::editor::*;
+}
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_mathematical_equation::viewer::*; }
+mod viewer {
+    pub use semio_s_artifact_mathematical_equation::viewer::*;
+}
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin
@@ -38,6 +39,5 @@ mod viewer { pub use semio_s_artifact_mathematical_equation::viewer::*; }
 mod plugin;
 pub use plugin::MathematicalApps;
 semio_framework_plugin::plugin_exports!(plugin::plugin, MathematicalApps);
-
 
 //#endregion 🔖️Plugin

@@ -1,0 +1,7 @@
+# 🧬️ ConnectNodes mutation payload.
+# import DslValue from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
+
+type ConnectNodes {
+  edge: DslValue
+  relationship: DslValue
+}

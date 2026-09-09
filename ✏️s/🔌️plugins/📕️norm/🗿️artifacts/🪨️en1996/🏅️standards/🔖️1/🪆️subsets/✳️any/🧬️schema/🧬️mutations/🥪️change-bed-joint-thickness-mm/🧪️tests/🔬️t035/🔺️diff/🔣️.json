@@ -18,9 +18,8 @@
   "unit": null,
   "exposure": null,
   "mortar": null,
-  "bedJointThicknessMm": 15.0,
+  "bedJointThicknessMm": 15,
   "storeys": null,
   "hEfMm": null,
-  "tEfMm": null,
-  "selectedCheckIndex": null
+  "tEfMm": null
 }

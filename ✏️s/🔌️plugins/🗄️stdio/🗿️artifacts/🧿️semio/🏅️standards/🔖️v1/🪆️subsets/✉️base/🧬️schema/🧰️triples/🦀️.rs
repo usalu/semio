@@ -12,7 +12,6 @@
 //! already builds on), never an engine. Reached at `standards::v1::subsets::any::schema::triples`
 //! (no shorter shim — every consumer now uses this full path).
 
-
 //#region 🔖️IndexedTriple
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]

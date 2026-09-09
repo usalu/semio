@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSpace {
-        pub(crate) id: u64,
-        pub(crate) space: Option<CobieSpaceRow>,
-    }
+    pub(crate) id: u64,
+    pub(crate) space: Option<CobieSpaceRow>,
+}
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetSpace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "space", kind: "set-space", record: "SetSpace" };

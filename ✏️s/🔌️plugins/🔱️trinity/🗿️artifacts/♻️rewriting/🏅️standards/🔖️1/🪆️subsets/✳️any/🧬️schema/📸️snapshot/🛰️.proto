@@ -1,8 +1,10 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.snapshot;
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
 
-// 🧬️ Rewriting snapshot schema — artifact-lane fields only.
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
+// 🧬️ Rewriting's durable document contract.
 message RewritingSnapshot {
   // @state artifact
   string before_fixture_json = 1;
@@ -11,12 +13,7 @@ message RewritingSnapshot {
   // @state artifact
   string rhs_json = 3;
   // @state artifact
-  map<string, string> parameter_bindings = 4;
+  map<string, semio.framework.value.DslValue> parameter_bindings = 4;
   // @state artifact
-  map<string, LayoutPoint> rule_layout = 5;
-}
-
-message LayoutPoint {
-  double x = 1;
-  double y = 2;
+  map<string, semio.s.trinity.rewriting.artifact.LayoutPoint> rule_layout = 5;
 }

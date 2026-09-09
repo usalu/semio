@@ -1,7 +1,5 @@
 //! 🏭 `update-crane-inputs` — atomically updates the crane-inputs facet (crane_f_z_ed_kn, crane_wheel_contact_length_mm, crane_dispersion_mm, crane_t_w_mm are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

@@ -87,10 +87,6 @@ message CurationArtifact {
   // @state artifact
   repeated CuratedItem curated = 3;
   // @state config
-  Filters filters = 4;
-  // @state config
-  // @state config
-  string contributions_json = 7;
 }
 
 message SortDirection {

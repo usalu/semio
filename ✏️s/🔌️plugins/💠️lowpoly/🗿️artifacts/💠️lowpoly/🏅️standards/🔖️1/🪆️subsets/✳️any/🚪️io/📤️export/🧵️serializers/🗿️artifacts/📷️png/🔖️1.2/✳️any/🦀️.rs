@@ -40,14 +40,7 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<PngSnapshot, store::TextE
     let (width, height, pixels) = primary_paint_raster(snapshot);
     let hex = enc_str(&print_dsl(snapshot));
     let text_chunk = PngTextChunk { keyword: LOWPOLY_DSL_TEXT_KEYWORD.into(), value: hex, compressed: false, kind: PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() };
-    Ok(PngSnapshot {
-        width,
-        height,
-        pixels,
-        text_chunks: vec![text_chunk],
-        chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Text { index: 0 }, PngChunkMarker::Idat, PngChunkMarker::Iend],
-        ..Default::default()
-    })
+    Ok(PngSnapshot { width, height, pixels, text_chunks: vec![text_chunk], chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Text { index: 0 }, PngChunkMarker::Idat, PngChunkMarker::Iend], ..Default::default() })
 }
 
 pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {

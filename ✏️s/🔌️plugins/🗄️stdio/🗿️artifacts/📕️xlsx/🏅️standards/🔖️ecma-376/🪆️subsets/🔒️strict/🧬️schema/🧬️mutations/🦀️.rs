@@ -22,10 +22,10 @@
 
 use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, XlsxDiff, XlsxOpcContentTypesDiff, XlsxOpcCtEntriesDiff, XlsxOpcDiff, XlsxOpcPartDiff, XlsxOpcPartsDiff, XlsxOpcRelationshipsDiff};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPart};
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPart};
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional SpreadsheetML main namespace.
@@ -50,23 +50,23 @@ pub const VML_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocumen
 //#endregion 🔖️Dialect
 
 //#region 🔖️Mutations
+#[path = "✒️insert-vml-part/🦀️.rs"]
+pub mod insert_vml_part;
+#[path = "🚫️remove-conformance-attribute/🦀️.rs"]
+pub mod remove_conformance_attribute;
+#[path = "🧹️remove-vml-part/🦀️.rs"]
+pub mod remove_vml_part;
+#[path = "✅️set-conformance-attribute/🦀️.rs"]
+pub mod set_conformance_attribute;
+#[path = "🌐️set-main-namespace/🦀️.rs"]
+pub mod set_main_namespace;
+#[path = "🔗️set-relationships-namespace/🦀️.rs"]
+pub mod set_relationships_namespace;
 /// 📐️ Typed conformance-class mutation for `stdio.xlsx` under ISO/IEC 29500-1
 /// Strict. Every variant addresses ONE axis of the class; none addresses document content.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🌐️set-main-namespace/🦀️.rs"]
-pub mod set_main_namespace;
-#[path = "🔗️set-relationships-namespace/🦀️.rs"]
-pub mod set_relationships_namespace;
-#[path = "✅️set-conformance-attribute/🦀️.rs"]
-pub mod set_conformance_attribute;
-#[path = "🚫️remove-conformance-attribute/🦀️.rs"]
-pub mod remove_conformance_attribute;
-#[path = "✒️insert-vml-part/🦀️.rs"]
-pub mod insert_vml_part;
-#[path = "🧹️remove-vml-part/🦀️.rs"]
-pub mod remove_vml_part;
 #[path = "🏷️set-worksheet-content-type/🦀️.rs"]
 pub mod set_worksheet_content_type;
 //#endregion 🔖️Leaves
@@ -169,9 +169,7 @@ fn declares_namespace(node: &XmlNode, value: &str) -> bool {
 /// 🔎️ Which member of a `[transitional, strict]` pair the package actually declares.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_pair_member(base: &XlsxSnapshot, pair: [&str; 2]) -> Option<String> {
-    pair.into_iter()
-        .find(|candidate| base.opc.parts.iter().filter(|part| is_xml_part(&part.path)).filter_map(parse_part).any(|document| document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate))))
-        .map(str::to_string)
+    pair.into_iter().find(|candidate| base.opc.parts.iter().filter(|part| is_xml_part(&part.path)).filter_map(parse_part).any(|document| document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate)))).map(str::to_string)
 }
 
 /// 🔎️ The relationship-type base the package's own relationships are built on.
@@ -348,49 +346,49 @@ fn diff_set_content_type(base: &XlsxSnapshot, path: &str, content_type: &str) ->
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &XlsxStrictMutation, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        protocol::MutationOutcome::new(match this {
-            XlsxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(base, snapshot),
-            XlsxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
-            XlsxStrictMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace }) => diff_retarget_namespace(base, RELATIONSHIP_NAMESPACES, namespace),
-            XlsxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
-            XlsxStrictMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
-            XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, markup }) => diff_insert_vml_part(base, path, markup),
-            XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => diff_remove_vml_part(base, path),
-            XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path, content_type }) => diff_set_content_type(base, path, content_type),
-        })
-    }
+    protocol::MutationOutcome::new(match this {
+        XlsxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(base, snapshot),
+        XlsxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
+        XlsxStrictMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace }) => diff_retarget_namespace(base, RELATIONSHIP_NAMESPACES, namespace),
+        XlsxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
+        XlsxStrictMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
+        XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, markup }) => diff_insert_vml_part(base, path, markup),
+        XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => diff_remove_vml_part(base, path),
+        XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path, content_type }) => diff_set_content_type(base, path, content_type),
+    })
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &XlsxStrictMutation, base: &XlsxSnapshot) -> Vec<XlsxStrictMutation> {
-        vec![match this {
-            XlsxStrictMutation::SetSnapshot(_) => XlsxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            XlsxStrictMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
-                Some(namespace) => XlsxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
-                None => return Vec::new(),
-            },
-            XlsxStrictMutation::SetRelationshipsNamespace(_) => match declared_pair_member(base, RELATIONSHIP_NAMESPACES) {
-                Some(namespace) => XlsxStrictMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace }),
-                None => return Vec::new(),
-            },
-            XlsxStrictMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
-                Some(value) => XlsxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-                None => XlsxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-            },
-            XlsxStrictMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
-                Some(value) => XlsxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-                None => return Vec::new(),
-            },
-            XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, .. }) => XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() }),
-            XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match part_text(base, path) {
-                Some(markup) => XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), markup }),
-                None => return Vec::new(),
-            },
-            XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path, .. }) => match resolved_content_type(base, path) {
-                Some(content_type) => XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: path.clone(), content_type }),
-                None => return Vec::new(),
-            },
-        }]
-    }
+    vec![match this {
+        XlsxStrictMutation::SetSnapshot(_) => XlsxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        XlsxStrictMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
+            Some(namespace) => XlsxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
+            None => return Vec::new(),
+        },
+        XlsxStrictMutation::SetRelationshipsNamespace(_) => match declared_pair_member(base, RELATIONSHIP_NAMESPACES) {
+            Some(namespace) => XlsxStrictMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace }),
+            None => return Vec::new(),
+        },
+        XlsxStrictMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
+            Some(value) => XlsxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
+            None => XlsxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
+        },
+        XlsxStrictMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
+            Some(value) => XlsxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
+            None => return Vec::new(),
+        },
+        XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, .. }) => XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() }),
+        XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match part_text(base, path) {
+            Some(markup) => XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), markup }),
+            None => return Vec::new(),
+        },
+        XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path, .. }) => match resolved_content_type(base, path) {
+            Some(content_type) => XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: path.clone(), content_type }),
+            None => return Vec::new(),
+        },
+    }]
+}
 //#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests

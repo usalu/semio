@@ -566,116 +566,15 @@ fn arg_schema_json_schema(schema: &ArgSchema) -> DslValue {
 }
 //#endregion 🔖️ActionArgs
 
-/// @emoji 🎛️ Canonical catalog icon for a declared app mode id.
-pub async fn catalog_mode_icon_id(id: &str) -> IconName {
-    match id {
-        "edit" | "main" => "pencil".into(),
-        "paint" => "paintbrush".into(),
-        "generate" => "sparkles".into(),
-        "explore" => "focus".into(),
-        "builder" => "component".into(),
-        "curation" => "folder-open".into(),
-        "blueprint" => "cad-shape".into(),
-        "review" => "search".into(),
-        "report" => "bar-chart-3".into(),
-        "view" => "eye".into(),
-        "capture" => "camera".into(),
-        "model" => "box".into(),
-        "analyze" => "search".into(),
-        _ => "layers".into(),
-    }
-}
-
-/// @emoji 🧪️ Canonical catalog icon for a playground example id (content-specific ids override at declaration).
-pub async fn catalog_example_icon_id(id: &str) -> IconName {
-    match id {
-        "empty" | "default" => "file".into(),
-        "demo" => "cylinder".into(),
-        "semio" => "sparkles".into(),
-        _ if id.contains("capsule") || id.contains("nakagin") => "building".into(),
-        _ if id.contains("forest") || id.contains("concrete") => "list-tree".into(),
-        _ if id.contains("hex") => "hexagon".into(),
-        _ => "file-text".into(),
-    }
-}
-
-/// @emoji 🎯️ Canonical catalog icon for a declared action id (view/shell/operation/history/clipboard).
-pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
-    match id {
-        "undo" => "undo-2".into(),
-        "redo" => "redo-2".into(),
-        "commitCheckpoint" => "git-commit".into(),
-        "createAlternative" => "git-branch".into(),
-        "switchAlternative" => "git-branch".into(),
-        "checkoutCheckpoint" => "git-branch".into(),
-        "revertToCommand" => "clock".into(),
-        "copy" => "copy".into(),
-        "cut" => "scissors".into(),
-        "paste" => "clipboard".into(),
-        "setHistoryCommandFilter" => "list".into(),
-        "noteShellCommand" => "book-open".into(),
-        "setActiveUtility" => "wrench".into(),
-        "setActiveTool" => "hammer".into(),
-        "startIntroduction" => "graduation-cap".into(),
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the six framework-owned
-        // Interaction actions (`interaction_action_definitions`) replace every per-app
-        // `setSelection`/`documentSelect`/`selectNode`/`nodeGraphSelect`/`setNodeSelection`/
-        // `setFeatureSelection`/`setReferenceSelection`/`setMediaNodeSelection`/
-        // `setAppInstanceSelection`/`selectRegister`/`selectInstance`/`selectSameKind`/
-        // `selectSameKindSelection`/`worldSelect`/`worldVortexSelect`/`deselect`/`worldHover`/
-        // `setHover`/`nodeGraphHover`/`textHover`/`referenceHover` id that used to live here — those
-        // arms are deleted, not merely renamed (per-app selection/hover commands dissolve in wave 4).
-        "interactionSelect" => "mouse-pointer".into(),
-        "interactionHover" => "eye".into(),
-        "clearSelection" => "mouse-pointer-2".into(),
-        "selectAll" => "maximize-2".into(),
-        "setSelectionMode" => "sliders-horizontal".into(),
-        "setInteractionGranularity" => "layers".into(),
-        "setCamera" | "setCamera2d" | "setCamera3d" | "nodeGraphViewport" => "camera".into(),
-        "setProjection" | "setProjectionParam" => "scan".into(),
-        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "graphPointerDown" | "worldPointerDown" => "mouse-pointer".into(),
-        "worldPick" => "crosshair".into(),
-        "engagementInput" | "engagementAbort" | "engagementControlSelect" | "workflowEngagementInput" | "compiledDagEngagementInput" => "hand".into(),
-        "setLodMode" => "layers".into(),
-        "toggleGrid" | "setGridSnapEnabled" | "setGridFactor" => "grid-3x3".into(),
-        "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => "sun".into(),
-        "run" | "stop" => "play".into(),
-        "search" => "search".into(),
-        "exportProgram" | "exportRegistersCsv" | "exportMedia" | "exportStudioPack" | "exportStudioDsl" | "exportVideoFromDeck" => "download".into(),
-        "importMedia" | "importSpacePack" | "importFrames" | "importVideo" | "openSource" => "hard-drive".into(),
-        "goHome" => "home".into(),
-        "openSpace" | "openInstance" => "folder-open".into(),
-        "navigateVirtualFileSystemNode" => "folder".into(),
-        "setActiveExample" | "setActivePanelTab" => "panel-left".into(),
-        "copyPrompt" => "copy".into(),
-        "evaluate" => "hash".into(),
-        "recomputeRewrite" | "reorganize" => "rotate-cw".into(),
-        "textEdit" | "formatDocument" | "requestCompletions" => "typography".into(),
-        "textSelect" => "text-cursor".into(),
-        "paintStrokeBegin" | "paintStroke" | "paintAt" | "paintSample" => "paintbrush".into(),
-        "transformBegin" => "move".into(),
-        "incrementViaCommand" | "setLabelViaCommand" => "plus".into(),
-        _ => match kind {
-            ActionKind::View => "eye".into(),
-            ActionKind::Shell => "code".into(),
-            ActionKind::Mutation => "sparkles".into(),
-            ActionKind::History => "clock".into(),
-            ActionKind::Clipboard => "clipboard".into(),
-            ActionKind::Interaction => "mouse-pointer".into(),
-        },
-    }
-}
-
-/// @emoji 🎛️ Canonical catalog icon for a footer command id.
-pub fn catalog_command_icon_id(id: &str) -> IconName {
-    match id {
-        id if id.starts_with("os.set") => "settings".into(),
-        "os.resetDock" => "panel-left".into(),
-        "os.toggleCompact" => "minimize-2".into(),
-        "app.export" | "incrementViaCommand" | "setLabelViaCommand" => "download".into(),
-        "mode.focus" => "focus".into(),
-        "animate.resetGrid" => "grid-3x3".into(),
-        _ => "code".into(),
+/// @emoji 🎯️ Neutral icon for an action or command whose owner does not declare presentation metadata.
+pub fn default_action_icon_id(kind: ActionKind) -> IconName {
+    match kind {
+        ActionKind::View => "eye".into(),
+        ActionKind::Shell => "code".into(),
+        ActionKind::Mutation => "sparkles".into(),
+        ActionKind::History => "clock".into(),
+        ActionKind::Clipboard => "clipboard".into(),
+        ActionKind::Interaction => "mouse-pointer".into(),
     }
 }
 
@@ -1006,10 +905,9 @@ impl ActionDefinition {
         Self { id: id.into(), label: label.into(), kind, icon_id: icon_id.into(), args: Vec::new(), keys: None, in_palette: true, category: None, semantics: ActionSemantics::for_kind(kind) }
     }
 
-    /// @emoji 🎯️ Declares an action whose icon is resolved from {@link catalog_action_icon_id}.
+    /// @emoji 🎯️ Declares an action with the neutral icon for its kind.
     pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
-        let id = id.into();
-        Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind))
+        Self::new(id, label, kind, default_action_icon_id(kind))
     }
 
     /// ⚡️ Builds a catalog row without granting UI execution authority. A factory registration or
@@ -1020,8 +918,8 @@ impl ActionDefinition {
 
     /// 🧵️ Grants execution classification only to framework routes backed by the explicit
     /// route-specific resumable factories registered by `VcsArtifactApp`.
-    pub fn resumable_framework_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
-        let mut definition = Self::new_catalog(id, label, kind);
+    pub fn resumable_framework(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind, icon_id: impl Into<IconName>) -> Self {
+        let mut definition = Self::new(id, label, kind, icon_id);
         definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
         definition
     }
@@ -1095,13 +993,13 @@ pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
 /// @emoji 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
 pub fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
-        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::resumable_framework_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History) },
-        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::resumable_framework_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History) },
-        ActionDefinition::resumable_framework_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History),
-        ActionDefinition::resumable_framework_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History),
-        ActionDefinition::resumable_framework_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History),
-        ActionDefinition::resumable_framework_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History),
-        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History) }
+        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::resumable_framework("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History, "undo-2") },
+        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::resumable_framework("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History, "redo-2") },
+        ActionDefinition::resumable_framework("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History, "git-commit"),
+        ActionDefinition::resumable_framework("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History, "git-branch"),
+        ActionDefinition::resumable_framework("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History, "git-branch"),
+        ActionDefinition::resumable_framework("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History, "git-branch"),
+        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History, "clock") }
             .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).required()]),
     ]
 }
@@ -1121,7 +1019,7 @@ pub fn set_history_command_filter_action_definition() -> ActionDefinition {
         ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")),
         ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")),
     ];
-    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View) }.with_args([ActionArgDef::select(
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View, "list") }.with_args([ActionArgDef::select(
         "value",
         LocalizedLabel::native("Filter", "Filter"),
         options,
@@ -1139,7 +1037,7 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 /// outside the normal `ActionDescriptor` path. `commandId` and `label` are required; `detail` is an
 /// optional free-text elaboration shown in the history panel.
 pub fn note_shell_command_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell) }.with_args([
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell, "book-open") }.with_args([
         ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).required(),
         ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).required(),
         ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")),
@@ -1161,9 +1059,9 @@ pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
         ActionArgOption::new("topRight", LocalizedLabel::native("Top Right", "Oben rechts")),
     ];
     vec![
-        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::resumable_framework_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard) },
-        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::resumable_framework_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard) },
-        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::resumable_framework_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard) }.with_args([
+        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::resumable_framework("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard, "copy") },
+        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::resumable_framework("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard, "scissors") },
+        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::resumable_framework("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard, "clipboard") }.with_args([
             ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).default_value(&"original"),
             ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")),
         ]),
@@ -1216,22 +1114,22 @@ pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefiniti
         vec![ActionArgOption::new("pick", LocalizedLabel::native("Pick", "Auswahl")), ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")), ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso"))];
     let mode_options = vec![ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")), ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach"))];
     vec![
-        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction) }.with_args([
+        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction, "mouse-pointer") }.with_args([
             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
             ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
             ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).required(),
             ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).required(),
         ]),
-        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction) }.with_args([
+        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction, "eye") }.with_args([
             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
             ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).required(),
             ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
         ]),
-        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::resumable_framework_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction) },
-        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::resumable_framework_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction) },
-        ActionDefinition::resumable_framework_catalog(SET_SELECTION_MODE_ACTION_ID, LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"), ActionKind::Interaction)
+        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::resumable_framework(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction, "mouse-pointer-2") },
+        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::resumable_framework(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction, "maximize-2") },
+        ActionDefinition::resumable_framework(SET_SELECTION_MODE_ACTION_ID, LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"), ActionKind::Interaction, "sliders-horizontal")
             .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(), ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).required()]),
-        ActionDefinition::resumable_framework_catalog(SET_INTERACTION_GRANULARITY_ACTION_ID, LocalizedLabel::native("Set Granularity", "Granularität festlegen"), ActionKind::Interaction)
+        ActionDefinition::resumable_framework(SET_INTERACTION_GRANULARITY_ACTION_ID, LocalizedLabel::native("Set Granularity", "Granularität festlegen"), ActionKind::Interaction, "layers")
             .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(), ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).required()]),
     ]
 }
@@ -1245,7 +1143,7 @@ pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 /// host-owned active utility of a window kind. `utilityId` is required; `windowKindId` is contextual (the
 /// shell fills it from the focused window when absent).
 pub fn set_active_utility_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"), ActionKind::View) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"), ActionKind::View, "wrench") }
         .with_args([ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).required(), ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster"))])
 }
 
@@ -1257,7 +1155,7 @@ pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
 /// host-owned active tool of the active mode. Unlike `setActiveUtility` this takes no `windowKindId` —
 /// tools are windowless, scoped to the whole mode.
 pub fn set_active_tool_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(SET_ACTIVE_TOOL_ACTION_ID, LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"), ActionKind::View) }.with_args([ActionArgDef::text(
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(SET_ACTIVE_TOOL_ACTION_ID, LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"), ActionKind::View, "hammer") }.with_args([ActionArgDef::text(
         "toolId",
         LocalizedLabel::native("Tool", "Werkzeug"),
     )
@@ -1274,7 +1172,7 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 /// Unlike ordinary app actions this stays out of the action palette because the shell exposes the
 /// dedicated `Introduce App` command.
 pub fn start_introduction_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View, "graduation-cap") }
 }
 
 /// 📇️ A relative action id used by declarations nested beneath an owning window kind.
@@ -1442,10 +1340,9 @@ impl CommandDefinition {
         Self { id: id.into(), label: label.into(), category: category.into(), icon_id: icon_id.into(), kind, args: Vec::new(), keybindings: Vec::new(), in_palette: true, semantics: ActionSemantics::for_kind(kind) }
     }
 
-    /// @emoji 🎛️ Declares a command whose icon is resolved from {@link catalog_command_icon_id}.
+    /// @emoji 🎛️ Declares a command with the neutral icon for its action kind.
     pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
-        let id = id.into();
-        Self::new(id.clone(), label, category, catalog_command_icon_id(&id), kind)
+        Self::new(id, label, category, default_action_icon_id(kind), kind)
     }
 
     /// ⚡️ Builds a catalog row without granting UI execution authority. A factory registration or
@@ -2689,7 +2586,7 @@ pub fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> Act
     for t in tutorials {
         options.push(ActionArgOption::new(t.id.clone(), t.title.clone()));
     }
-    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View) }.with_args([ActionArgDef::select(
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View, "eye") }.with_args([ActionArgDef::select(
         "tutorialId",
         LocalizedLabel::native("Tutorial", "Tutorial"),
         options,
@@ -2704,7 +2601,7 @@ pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 /// @emoji ⏺️ The framework-injected `recordTutorial` View action: fully shell-intercepted, arms the
 /// recorder against the live document (never a sandboxed copy — a recording IS the user's work).
 pub fn record_tutorial_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View, "eye") }
 }
 
 /// ⏱️ Real-time (not timeline-time, not rate-scaled) duration of the camera glide the player performs

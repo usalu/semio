@@ -160,8 +160,6 @@ pub struct En1993Diff {
     pub crane_dispersion_mm: Option<f64>,
     #[state(artifact)]
     pub crane_t_w_mm: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

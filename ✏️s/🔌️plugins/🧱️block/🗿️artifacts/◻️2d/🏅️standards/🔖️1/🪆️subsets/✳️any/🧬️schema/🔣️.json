@@ -14,8 +14,7 @@
     "attributes",
     "authors",
     "camera2d",
-    "meta",
-    "selectedIds"
+    "meta"
   ],
   "properties": {
     "schema": {
@@ -72,13 +71,6 @@
     "meta": {
       "$ref": "#/$defs/BlockMeta",
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
     }
   },
   "$defs": {

@@ -1,7 +1,6 @@
 //! 🔀 `reorder-variable-actions` — repositions one variable action within the `q_k` table order
 //! (never spatial — `En1990QkEntry` carries no position of its own, only table sequence).
 
-
 use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload

@@ -8,8 +8,8 @@
 //! verbatim inside `opc`.
 
 use crate::STDIO_XLSX_DOCUMENT_SCHEMA;
-use semio_s_artifact_stdio_zip::opc::OpcPackage;
 use framework_schema::ArtifactSchema;
+use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
 //#region 🔖️XlsxModel
 /// 🔢️ A cell's decoded value — a real typed union over every SpreadsheetML cell-type ECMA-376
@@ -36,7 +36,6 @@ pub enum XlsxCellValue {
     #[default]
     Empty,
 }
-
 
 /// 🧮 One worksheet cell, addressed by `(row, col)` rather than an A1-style string — `row` is
 /// 1-based (the literal SpreadsheetML `<row r="N">` index), `col` is 0-based (matches

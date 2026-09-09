@@ -5,8 +5,8 @@
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no app-mirrored field needed here anymore.
 
 use crate::{LayoutCamera, LayoutDropPreviewState};
-use store::ArtifactPack;
 use semio_framework_value_derive::{FromValue, ToValue};
+use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of layout view state (active page, drop ghost, cameras).

@@ -1,7 +1,6 @@
 //! ➖ `remove-variable-action` — takes a variable action out of the EN 1990 document's `q_k` table
 //! by BASE-state index.
 
-
 use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload

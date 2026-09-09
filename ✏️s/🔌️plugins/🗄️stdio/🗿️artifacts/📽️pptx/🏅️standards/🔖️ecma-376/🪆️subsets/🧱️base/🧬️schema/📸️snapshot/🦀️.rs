@@ -10,9 +10,9 @@
 //! retain their genuine content bytes in `opc`.
 
 use crate::STDIO_PPTX_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️PptxModel
 /// ✍️ One `a:r` run — same shape as `docx::DocxRun` (shared text-model convention), plus

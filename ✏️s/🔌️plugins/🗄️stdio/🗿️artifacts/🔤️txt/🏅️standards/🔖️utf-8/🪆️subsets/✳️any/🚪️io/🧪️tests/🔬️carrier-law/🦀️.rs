@@ -1,4 +1,3 @@
-
 //! 🧬️ THE carrier law this whole pilot exists to prove (design.md §3, mission step 5):
 //! `s.stdio.txt@utf-8/*`'s native `Text` `IoPayload` is the raw external file text, verbatim
 //! — decode→encode must reproduce arbitrary text exactly, and the encoded payload must NOT

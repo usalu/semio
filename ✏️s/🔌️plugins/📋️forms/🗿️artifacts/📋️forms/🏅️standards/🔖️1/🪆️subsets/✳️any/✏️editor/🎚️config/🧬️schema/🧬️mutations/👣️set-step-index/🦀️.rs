@@ -16,7 +16,13 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for SetStepIndex {
         next.current_step_index = self.index;
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> { vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Set Step Index".into() }
-    fn target(&self) -> Vec<String> { vec!["step-index".into()] }
+    fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> {
+        vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Step Index".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["step-index".into()]
+    }
 }

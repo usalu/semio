@@ -32,56 +32,6 @@ pub struct Puzzle5dDiff {
     pub parts: Option<Puzzle5dPartsDelta>,
     #[state(artifact)]
     pub fasteners: Option<Puzzle5dFastenersDelta>,
-    #[state(presence)]
-    pub selected_part_ids: Option<Puzzle5dStringList>,
-    #[state(presence)]
-    pub selected_grip_ids: Option<Puzzle5dStringList>,
-    #[state(presence)]
-    pub selected_fastener_ids: Option<Puzzle5dStringList>,
-    #[state(presence)]
-    pub active_utility_id: Option<String>,
-    #[state(config)]
-    pub camera2d_x: Option<f64>,
-    #[state(config)]
-    pub camera2d_y: Option<f64>,
-    #[state(config)]
-    pub camera2d_zoom: Option<f64>,
-    #[state(config)]
-    pub camera3d_position_x: Option<f64>,
-    #[state(config)]
-    pub camera3d_position_y: Option<f64>,
-    #[state(config)]
-    pub camera3d_position_z: Option<f64>,
-    #[state(config)]
-    pub camera3d_target_x: Option<f64>,
-    #[state(config)]
-    pub camera3d_target_y: Option<f64>,
-    #[state(config)]
-    pub camera3d_target_z: Option<f64>,
-    #[state(config)]
-    pub camera3d_zoom: Option<f64>,
-    #[state(config)]
-    pub selection_method: Option<String>,
-    #[state(config)]
-    pub grid_snap_enabled: Option<bool>,
-    #[state(config)]
-    pub grid_factor: Option<f64>,
-    #[state(config)]
-    pub suggestion_offset: Option<f64>,
-    #[state(config)]
-    pub overlap_budget: Option<f64>,
-    #[state(config)]
-    pub fill_count: Option<u32>,
-    #[state(config)]
-    pub brush_candidate_index: Option<u32>,
-    #[state(config)]
-    pub lod_mode: Option<String>,
-    #[state(config)]
-    pub runtime_extras_json: Option<String>,
-    #[state(artifact)]
-    pub hovered_part_id: Option<Option<String>>,
-    #[state(artifact)]
-    pub preview_seq: Option<i64>,
 }
 //#endregion 🔖️Diff
 

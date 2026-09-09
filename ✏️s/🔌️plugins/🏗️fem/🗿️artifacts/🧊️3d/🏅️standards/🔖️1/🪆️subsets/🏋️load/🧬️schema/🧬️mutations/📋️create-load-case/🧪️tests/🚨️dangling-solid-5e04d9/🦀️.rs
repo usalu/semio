@@ -93,5 +93,9 @@ fn committed_json_is_canonical() {
 #[test]
 fn semantics_bind_the_declared_kind() {
     let semantics = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("create", "load-case", "create-load-case", "CreatedLoadCase"), "create-load-case/dangling-solid-5e04d9: the fixture must be bound to create-load-case's own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("create", "load-case", "create-load-case", "CreatedLoadCase"),
+        "create-load-case/dangling-solid-5e04d9: the fixture must be bound to create-load-case's own descriptor"
+    );
 }

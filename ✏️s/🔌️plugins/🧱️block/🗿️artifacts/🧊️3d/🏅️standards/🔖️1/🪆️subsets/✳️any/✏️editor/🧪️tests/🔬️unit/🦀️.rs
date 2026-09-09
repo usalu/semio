@@ -3,6 +3,53 @@ use super::*;
 use semio_framework_plugin::PluginApp;
 use testkit::{Block3dApp, new_app};
 
+fn block_on_preview_law<F: std::future::Future>(future: F) -> F::Output {
+    let mut future = std::pin::pin!(future);
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    loop {
+        match future.as_mut().poll(&mut context) {
+            std::task::Poll::Ready(output) => return output,
+            std::task::Poll::Pending => std::thread::yield_now(),
+        }
+    }
+}
+
+async fn drive_preview_operation(app: &mut Block3dApp, stage: &str) -> Result<(u64, u64, u64), String> {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    let mut artifact = 0;
+    let mut config = 0;
+    let mut window_transient = 0;
+    while app.has_pending_typed_operations() {
+        if std::time::Instant::now() >= deadline {
+            return Err(format!("block3d preview {stage} operation did not finish"));
+        }
+        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
+        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
+        if let Some(page) = app.take_typed_operation_result_page(1) {
+            let fault = (page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault)
+                .then(|| format!("block3d preview {stage} publication fault: {}", String::from_utf8_lossy(page.bytes())));
+            artifact += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::Artifact);
+            config += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::Config);
+            window_transient += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient);
+            app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
+            if let Some(fault) = fault {
+                while app.has_pending_typed_operations() {
+                    app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
+                    app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
+                    std::thread::yield_now();
+                }
+                return Err(fault);
+            }
+        }
+        app.take_typed_operation_effect();
+        app.take_typed_operation_event();
+        app.take_typed_operation_ui_scope();
+        std::thread::yield_now();
+    }
+    Ok((artifact, config, window_transient))
+}
+
 //#region 🔖️CommandSurface
 fn every_command() -> Vec<Block3dCommand> {
     vec![
@@ -20,7 +67,6 @@ fn every_command() -> Vec<Block3dCommand> {
         Block3dCommand::ToggleWindowRepresentation(toggle_window_representation::ToggleWindowRepresentation { window_id: "w0".into(), representation_id: "r0".into(), visible: true }),
         Block3dCommand::SetWindowArrangement(set_window_arrangement::SetWindowArrangement { window_id: "w0".into(), arrangement: "x".into() }),
         Block3dCommand::SetWindowSpacing(set_window_spacing::SetWindowSpacing { window_id: "w0".into(), spacing: 8.0 }),
-        Block3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { window_id: "w0".into(), utility_id: "select".into() }),
         Block3dCommand::SetBrushVortexKind(set_brush_vortex_kind::SetBrushVortexKind { vortex_kind_id: Some("v0".into()) }),
         Block3dCommand::SetBrushRadius(set_brush_radius::SetBrushRadius { radius: 0.3 }),
         Block3dCommand::SetBrushFlip(set_brush_flip::SetBrushFlip { flip: true }),
@@ -40,7 +86,9 @@ async fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 23, "every Block3dCommand row must be covered by every_command()");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
+    let expected: Vec<&str> = fixture["toolIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
+    assert_eq!(ids, expected, "the artifact command roster matches the language-neutral oracle");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -50,20 +98,16 @@ async fn every_command_round_trips_text_and_binary() {
     }
 }
 
-/// 🧷️ Pins the exact pre-migration bytes for the three divergent-key rows plus a handful of
-/// `Option`/`Vec` rows — copied verbatim from the ticket's `🧪️wire-baseline-3d-before.txt`.
-/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: deleting `setSelection` (which
-/// sat BEFORE `LeaveSurface` in the row order) shifts every later row's binary ordinal down by
-/// one — an intentional, greenfield wire-format break (row order IS the ordinal, per this enum's
-/// own doc comment), not a preserved-bytes regression. `LeaveSurface`'s ordinal moves 0x14 -> 0x13.
+/// 🧷️ Pins the current binary ordinal and text of the divergent leave-surface command.
 #[semio_framework_async_macros::async_test]
-async fn divergent_key_rows_keep_their_pre_migration_bytes() {
+async fn leave_surface_text_and_binary_match_the_command_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
     let hex = |command: &Block3dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
-    assert_eq!(protocol::OpText::print_op(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), "leaveSurface");
-    assert_eq!(hex(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), "01130000");
+    assert_eq!(protocol::OpText::print_op(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), fixture["leaveSurface"]["text"].as_str().unwrap());
+    assert_eq!(hex(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), fixture["leaveSurface"]["binaryHex"].as_str().unwrap());
 }
 
-/// ⚖️ LAW: every one of the 23 declared `Block3dCommand` rows is retained-owned by
+/// ⚖️ LAW: every one of the 22 declared `Block3dCommand` rows is retained-owned by
 /// `Block3dRetainedCommandJobFactory`, classified `Migrated` in the manifest, and carries an exact,
 /// nonempty publication-lane contract. `AppActionRegistry::tool_job_registration` enforces the same
 /// set equality at app construction (`interactive-job.catalog-incomplete`), and
@@ -75,9 +119,9 @@ async fn divergent_key_rows_keep_their_pre_migration_bytes() {
 #[semio_framework_async_macros::async_test]
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::ToolExecutionShape;
-    assert_eq!(BLOCK3D_RETAINED_TOOL_IDS.len(), 23);
-    assert_eq!(<Block3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 23);
-    assert_eq!(BLOCK3D_PUBLICATION_CONTRACTS.len(), 23);
+    assert_eq!(BLOCK3D_RETAINED_TOOL_IDS.len(), 22);
+    assert_eq!(<Block3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 22);
+    assert_eq!(BLOCK3D_PUBLICATION_CONTRACTS.len(), 22);
     assert_eq!(block3d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     let mut sorted_ids = BLOCK3D_RETAINED_TOOL_IDS.to_vec();
     sorted_ids.sort_unstable();
@@ -94,6 +138,8 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     // world window carries the complete classified action set (`AppDefinition` has no app-level
     // `actions` field of its own).
     let definition = create_block3d_app();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
+    assert_eq!(serde_json::to_value(&definition.breadcrumb).unwrap(), fixture["document"]);
     let world_window = definition.window_kinds.iter().find(|window| window.id == world::BLOCK3D_WINDOW_WORLD).expect("world window declared");
     for tool_id in BLOCK3D_RETAINED_TOOL_IDS {
         let action = world_window.actions.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared by the manifest"));
@@ -108,6 +154,95 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
 async fn both_declared_publication_lanes_have_a_preparation_factory() {
     assert!(<Block3dPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some());
     assert!(<Block3dPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
+}
+
+#[test]
+fn brush_preview_publications_are_partitioned_by_trusted_window_context() {
+    std::thread::Builder::new()
+        .name("block3d-window-transient-law".into())
+        .stack_size(8 * 1024 * 1024)
+        .spawn(|| block_on_preview_law(async {
+    let mut app = new_app().await;
+    let outcome: Result<(), String> = async {
+        let document = app.snapshot().map_err(|error| format!("{error:?}"))?;
+        let view_a = testkit::world_view_state("world-a");
+        let view_b = testkit::world_view_state("world-b");
+        testkit::dispatch_in_window(
+            &mut app,
+            Block3dCommand::HoverSurface(hover_surface::HoverSurface {
+                window_id: "spoofed-window".into(),
+                object_id: "object-a".into(),
+                position: [1.0, 2.0, 3.0],
+                normal: [0.0, 1.0, 0.0],
+            }),
+            "world-a",
+        )
+        .await;
+        if drive_preview_operation(&mut app, "world-a hover").await? != (0, 0, 1)
+            || app.window_transient_generation(&view_a).map_err(|error| format!("{error:?}"))? != Some(1)
+            || app.window_transient_generation(&view_b).map_err(|error| format!("{error:?}"))? != Some(0)
+        {
+            return Err("world-a hover leaked into world-b".into());
+        }
+        if app.snapshot().map_err(|error| format!("{error:?}"))? != document {
+            return Err("hover modified document content".into());
+        }
+        testkit::dispatch_in_window(
+            &mut app,
+            Block3dCommand::HoverSurface(hover_surface::HoverSurface {
+                window_id: "world-a".into(),
+                object_id: "object-b".into(),
+                position: [-4.0, 5.0, 6.0],
+                normal: [0.0, 0.0, -1.0],
+            }),
+            "world-b",
+        )
+        .await;
+        if drive_preview_operation(&mut app, "world-b hover").await? != (0, 0, 1)
+            || app.window_transient_generation(&view_a).map_err(|error| format!("{error:?}"))? != Some(1)
+            || app.window_transient_generation(&view_b).map_err(|error| format!("{error:?}"))? != Some(1)
+        {
+            return Err("world-b hover did not remain independent".into());
+        }
+        let before_place = app.snapshot().map_err(|error| format!("{error:?}"))?.vortices.len();
+        testkit::dispatch_in_window(&mut app, Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {}), "world-a").await;
+        if drive_preview_operation(&mut app, "world-a leave").await? != (0, 0, 1)
+            || app.window_transient_generation(&view_a).map_err(|error| format!("{error:?}"))? != Some(2)
+            || app.window_transient_generation(&view_b).map_err(|error| format!("{error:?}"))? != Some(1)
+        {
+            return Err("leave did not clear only world-a".into());
+        }
+        testkit::dispatch_in_window(
+            &mut app,
+            Block3dCommand::PlaceVortex(place_vortex::PlaceVortex {
+                window_id: "world-a".into(),
+                object_id: "object-b".into(),
+                position: [0.5, 0.0, 1.0],
+                normal: [0.0, 1.0, 0.0],
+            }),
+            "world-b",
+        )
+        .await;
+        let place_lanes = drive_preview_operation(&mut app, "world-b place").await?;
+        let place_generation_a = app.window_transient_generation(&view_a).map_err(|error| format!("{error:?}"))?;
+        let place_generation_b = app.window_transient_generation(&view_b).map_err(|error| format!("{error:?}"))?;
+        if place_lanes != (2, 0, 1) || place_generation_a != Some(2) || place_generation_b != Some(2) {
+            return Err(format!(
+                "placement did not mutate the artifact and clear only trusted world-b: lanes={place_lanes:?} world-a={place_generation_a:?} world-b={place_generation_b:?}"
+            ));
+        }
+        if app.snapshot().map_err(|error| format!("{error:?}"))?.vortices.len() != before_place + 1 {
+            return Err("placement did not create one vortex".into());
+        }
+        Ok(())
+    }
+    .await;
+    semio_framework_plugin::testkit::close_registered_fixture_app(&mut app);
+    outcome.expect("window-partitioned brush preview");
+        }))
+        .expect("spawn Block3d window-transient law")
+        .join()
+        .expect("Block3d window-transient law thread");
 }
 
 /// 🌉️ Every surface-declared action must bridge through `command_from_action` and round-trip
@@ -160,7 +295,7 @@ async fn interaction_topology_covers_every_representation_and_vortex() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = Block3dConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let topology = <Block3dPlayApp as ArtifactEditor>::interaction_topology(&doc, &cfg);
     let domain = topology.domains.get(BLOCK3D_INTERACTION_VORTEX).expect("vortex domain topology present");
     assert!(domain.contains(&format!("surface:{representation_id}")).await);
@@ -208,6 +343,29 @@ async fn the_editor_boots_with_a_renderable_world() {
     let visible: Vec<&crate::BlockRepresentation> = snapshot.representations.iter().collect();
     assert!(crate::editor::block3d::world::world_meshes_json(&snapshot, &visible).contains("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb"), "the world scene must reference the boot document's mesh");
     assert!(testkit::render(&mut app, world::BLOCK3D_BODY_WORLD).await.contains("\"type\":\"surface\""), "the world body must render a semantic scene surface");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn world_scene_projects_only_the_supplied_window_preview() {
+    let mut app: Block3dApp = new_app().await;
+    let snapshot = app.snapshot().expect("snapshot");
+    let config = Block3dConfig::default();
+    let view = crate::Block3dWindowView::for_window("world-a");
+    let visible = crate::editor::block3d::world::visible_representations(&snapshot, &view);
+    let preview = Block3dBrushPreview { position: [1.0, 2.0, 3.0], direction: [0.0, 1.0, 0.0] };
+    let with_preview: serde_json::Value = serde_json::from_str(&crate::editor::block3d::world::world_vortices_json(&snapshot, &config, &visible, &view, Some(&preview))).expect("preview scene");
+    let without_preview: serde_json::Value = serde_json::from_str(&crate::editor::block3d::world::world_vortices_json(&snapshot, &config, &visible, &view, None)).expect("plain scene");
+    let find_preview = |value: &serde_json::Value| {
+        value
+            .as_array()
+            .and_then(|records| records.iter().find(|record| record["fullId"] == "__brush_preview__"))
+            .cloned()
+    };
+    let projected = find_preview(&with_preview).expect("supplied preview projected");
+    assert_eq!(projected["position"], serde_json::json!([1.0, 2.0, 3.0]));
+    assert_eq!(projected["direction"], serde_json::json!([0.0, 1.0, 0.0]));
+    assert!(find_preview(&without_preview).is_none(), "a window without transient preview must render none");
+    semio_framework_plugin::testkit::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

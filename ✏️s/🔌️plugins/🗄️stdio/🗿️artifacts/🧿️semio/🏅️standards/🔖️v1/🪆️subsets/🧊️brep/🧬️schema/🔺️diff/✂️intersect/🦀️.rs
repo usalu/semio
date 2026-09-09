@@ -13,12 +13,12 @@
 
 // #region 🔖️Submodules
 
-#[path = "🤝️shared/🦀️.rs"]
-mod shared;
 #[path = "➰️curve-curve/🦀️.rs"]
 pub mod curve_curve;
 #[path = "➿️curve-surface/🦀️.rs"]
 pub mod curve_surface;
+#[path = "🤝️shared/🦀️.rs"]
+mod shared;
 #[path = "🏄️surface-surface/🦀️.rs"]
 pub mod surface_surface;
 

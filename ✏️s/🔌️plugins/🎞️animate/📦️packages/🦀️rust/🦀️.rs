@@ -14,13 +14,6 @@
 // variant types). Never resolved by `+ Send` on the trait method or by making the method sync.
 #![allow(async_fn_in_trait)]
 
-
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as schema;
-extern crate semio_framework_value_derive as value_derive;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault>`, the exact signature
 // `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
@@ -29,21 +22,26 @@ extern crate semio_framework_value_derive as value_derive;
 // so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
 //#region 🗿️Artifacts
-mod artifacts { pub use semio_s_artifact_animate_presentation as presentation; }
+mod artifacts {
+    pub use semio_s_artifact_animate_presentation as presentation;
+}
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_animate_presentation::editor::*; }
+mod editor {
+    pub use semio_s_artifact_animate_presentation::editor::*;
+}
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_animate_presentation::viewer::*; }
+mod viewer {
+    pub use semio_s_artifact_animate_presentation::viewer::*;
+}
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::AnimateApps);
-
 
 //#endregion 🔖️Plugin

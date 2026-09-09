@@ -1,7 +1,5 @@
 //! 💪 `update-hss-inputs` — atomically updates the hss-inputs facet (hss_w_el_mm3, hss_f_y_mpa, hss_section_class, hss_m_ed_knm are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

@@ -12,6 +12,7 @@ fn checkpoint_state(phase: PuzzleCommandPhase) -> PuzzleCommandCheckpointState {
         operation: Operation::new(semio_framework_job::OperationId(7), semio_framework_job::RevisionId(11), semio_framework_job::Generation(3), 13),
         tool_hash: puzzle_checkpoint_hash([b"forceLayout".as_slice()]),
         input_hash: puzzle_checkpoint_hash([b"wire".as_slice()]),
+        context_identity: puzzle_checkpoint_hash([b"context".as_slice()]),
         raw_len: 4,
         raw_page_cursor: 1,
         raw_scan_cursor: 4,
@@ -222,9 +223,8 @@ fn assert_fixture(fixture: &str, expected: PuzzleRetainedOracleOutput) {
 
 #[test]
 fn language_neutral_fixtures_match_production_catalogs_through_the_owned_oracle() {
-    assert_fixture(include_str!("../../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json"), expected("puzzle2d", "puzzle.2d.fixture", crate::editor::puzzle2d::PUZZLE2D_RETAINED_TOOL_IDS));
-    assert_fixture(include_str!("../../../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json"), expected("puzzle3d", "puzzle.3d.fixture", crate::editor::puzzle3d::PUZZLE3D_RETAINED_TOOL_IDS));
-    assert_fixture(include_str!("../../../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json"), expected("puzzle5d", "puzzle.5d", crate::editor::puzzle5d::PUZZLE5D_RETAINED_TOOL_IDS));
+    let (owner, schema, tools, fixture) = crate::retained_command_test_catalog();
+    assert_fixture(fixture, expected(owner, schema, tools));
 }
 
 #[test]

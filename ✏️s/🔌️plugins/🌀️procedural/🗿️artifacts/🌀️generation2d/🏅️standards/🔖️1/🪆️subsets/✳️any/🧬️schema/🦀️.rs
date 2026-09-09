@@ -2,20 +2,19 @@
 
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_infinite_dag::DagFixture;
+use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture;
-use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::render_scene_json;
 
-
+use ::semio_framework_schema::ArtifactSchema;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
-use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
-use store::ArtifactDsl;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_framework_value_derive::{FromValue, ToValue};
+use store::ArtifactDsl;
 //#region 🔖️Generation2dArtifact
 /// 🧬️ Generation2dArtifact facet type.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
@@ -27,30 +26,12 @@ pub struct Generation2dArtifact {
     pub fixture: FlowFixture,
     #[state(artifact)]
     pub generation: GenerationPlayRoot,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
-    #[state(config)]
-    pub graph_camera: CameraJson,
-    #[state(config)]
-    pub show_mode: String,
-    #[state(presence)]
-    pub selected_generation_id: Option<String>,
-    #[state(artifact)]
-    pub generation_preview_text: Option<String>,
 }
 //#endregion 🔖️Generation2dArtifact
 
 impl Default for Generation2dArtifact {
     fn default() -> Self {
-        Self {
-            fixture: FlowFixture::default(),
-            generation: GenerationPlayRoot::default(),
-            selected_ids: Vec::new(),
-            graph_camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
-            show_mode: "preview".into(),
-            selected_generation_id: None,
-            generation_preview_text: None,
-        }
+        Self { fixture: FlowFixture::default(), generation: GenerationPlayRoot::default() }
     }
 }
 
@@ -60,7 +41,7 @@ impl Generation2dArtifact {
         Generation2dSnapshot { fixture: self.fixture.clone(), generation: self.generation.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Generation2dSnapshot) -> Self {
         Self { fixture: snapshot.fixture, generation: snapshot.generation, ..Self::default() }
     }
@@ -78,11 +59,7 @@ pub fn generation2d_artifact_schema_descriptor() -> ::semio_framework_schema::Ar
     ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.procedural.generation2d",
         artifact: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
@@ -369,12 +346,17 @@ pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<dsl::
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
+pub fn generation_preview_host(fixture: &FlowFixture, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> FlowHost {
     let fixture_json = dsl::json::to_json_string(fixture);
     let object: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
     let patched = apply_generation_values_to_fixture(&fixture_json, &object);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
-    let mut host = FlowHost::from_fixture(patched_fixture);
+    FlowHost::from_fixture(patched_fixture)
+}
+
+#[cfg(feature = "component-app-assembly")]
+pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
+    let mut host = generation_preview_host(fixture, values);
     host.evaluate().unwrap_or_default()
 }
 

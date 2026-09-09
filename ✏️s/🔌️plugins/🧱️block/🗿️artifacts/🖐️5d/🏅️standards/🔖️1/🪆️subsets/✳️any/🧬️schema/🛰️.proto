@@ -30,8 +30,6 @@ message Block5dArtifact {
   BlockCamera3d camera3d = 12;
   // @state artifact
   BlockMeta meta = 13;
-  // @state presence
-  repeated string selected_ids = 14;
   // @state config
 }
 

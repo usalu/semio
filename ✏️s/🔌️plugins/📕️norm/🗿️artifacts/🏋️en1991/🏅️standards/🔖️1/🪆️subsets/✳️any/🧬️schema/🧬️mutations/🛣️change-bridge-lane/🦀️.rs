@@ -1,6 +1,5 @@
 //! 🌉 `change-bridge-lane` — sets the En1991 bridge lane count scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

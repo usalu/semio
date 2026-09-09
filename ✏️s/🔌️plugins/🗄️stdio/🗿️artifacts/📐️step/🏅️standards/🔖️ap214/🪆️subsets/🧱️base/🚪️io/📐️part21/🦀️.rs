@@ -92,7 +92,10 @@ pub enum Part21Value {
     Real(Part21Decimal),
     List(Vec<Part21Value>),
     /// 🏷️ A "defined type" wrapper appearing as an argument, e.g. `IFCLENGTHMEASURE(3000.)`.
-    Typed { name: String, items: Vec<Part21Value> },
+    Typed {
+        name: String,
+        items: Vec<Part21Value>,
+    },
     Unset,
     Derived,
 }
@@ -204,15 +207,7 @@ const FILE_DESCRIPTION_ATTRIBUTES: &[HeaderAttribute] = &[HeaderAttribute::NonEm
 /// 📜️ `FILE_NAME(name, time_stamp, author, organization, preprocessor_version,
 /// originating_system, authorization)` — ISO 10303-21 §8.2.3. `author` and `organization` are
 /// `LIST[1:?]`, exactly like `FILE_DESCRIPTION.description`.
-const FILE_NAME_ATTRIBUTES: &[HeaderAttribute] = &[
-    HeaderAttribute::Text,
-    HeaderAttribute::Text,
-    HeaderAttribute::NonEmptyTextList,
-    HeaderAttribute::NonEmptyTextList,
-    HeaderAttribute::Text,
-    HeaderAttribute::Text,
-    HeaderAttribute::Text,
-];
+const FILE_NAME_ATTRIBUTES: &[HeaderAttribute] = &[HeaderAttribute::Text, HeaderAttribute::Text, HeaderAttribute::NonEmptyTextList, HeaderAttribute::NonEmptyTextList, HeaderAttribute::Text, HeaderAttribute::Text, HeaderAttribute::Text];
 /// 📜️ `FILE_SCHEMA(schema_identifiers)` — ISO 10303-21 §8.2.4, also `LIST[1:?]`.
 const FILE_SCHEMA_ATTRIBUTES: &[HeaderAttribute] = &[HeaderAttribute::NonEmptyTextList];
 

@@ -669,7 +669,6 @@ pub fn decode_semio_cad_snapshot_json(text: &str) -> Result<SemioCadSnapshot, St
 }
 //#endregion 🌉️ExternalCodecBridge
 
-
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.cad` document — a small floor-plan-shaped drawing exercising every
 /// collection AND every `CadEntity` variant at least once (a `door` block with a nested `Line`,

@@ -7,7 +7,7 @@ fn fixture() -> serde_json::Value {
 }
 
 fn hex(value: &str) -> Vec<u8> {
-    value.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
+    value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
 }
 
 fn hex_string(bytes: &[u8]) -> String {
@@ -415,7 +415,7 @@ async fn durable_map_three_store_assembly_late_member_rejection_closes_prior_pub
         assert_eq!([owners.parent.generation(), owners.drawing.generation(), owners.value.generation()], [0, 0, 0]);
         assert_eq!(state.lock().unwrap().begins, 0);
         assert!(matches!(owners.failure, DurableOwnedThreeStoreMapAssemblyFailureV1::Admission { role: rejected, .. } if rejected == role));
-        assert_eq!(owners.parent_mutation.is_some(), false);
+        assert!(owners.parent_mutation.is_none());
         assert_eq!(owners.drawing_mutation.is_some(), role == DRAWING_ROLE);
         assert!(owners.value_mutation.is_some());
         close_assembly_owners(owners);
@@ -503,7 +503,7 @@ fn durable_owned_group_decision_matches_neutral_canonical_hash_and_bounds() {
     assert_eq!(bound_derivations.canonical_unsigned_json(), decision.canonical_unsigned_json());
     assert_eq!(semio_framework_hash::sha256_hex(bound_derivations.canonical_unsigned_json().as_bytes()), decision.decision_sha256);
     assert_eq!(DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES * 3 + DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES, 490_096);
-    assert!(490_096 <= DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
+    const { assert!(DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES * 3 + DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES <= DURABLE_OWNED_GROUP_EVENT_MAX_BYTES) };
     let varint = |value: usize| {
         if value < 1 << 7 {
             1
@@ -518,8 +518,9 @@ fn durable_owned_group_decision_matches_neutral_canonical_hash_and_bounds() {
         }
     };
     let frame = |payload: usize| varint(payload + 2) + payload + 10;
-    assert_eq!(129 + frame(8) + frame(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES) + frame(12) + 75, 491_779);
-    assert!(491_779 <= 507_904);
+    let framed_bytes = 129 + frame(8) + frame(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES) + frame(12) + 75;
+    assert_eq!(framed_bytes, 491_779);
+    assert!(framed_bytes <= 507_904);
 }
 
 #[test]
@@ -575,7 +576,7 @@ fn durable_store_prepared_outcome_derives_and_verifies_exact_unbound_bytes() {
     sequence.1 = DslValue::float(sequence.1.as_i64().expect("signed sequence") as f64);
     retagged.edit_without_group_canonical_json = crate::os_pack::json::to_json_string(&retagged_edit).into_bytes();
     let retagged_pack = retagged.encode_pack();
-    let retagged = DurableStorePreparedOutcomeV1 { recovery_schema: outcome.recovery_schema.clone(), sha256: semio_framework_hash::sha256_hex(&retagged_pack), pack: retagged_pack };
+    let retagged = DurableStorePreparedOutcomeV1 { recovery_schema: outcome.recovery_schema, sha256: semio_framework_hash::sha256_hex(&retagged_pack), pack: retagged_pack };
     assert!(retagged.verify_inverse::<DslValue, String>().is_err());
 
     let all = outcomes();
@@ -650,7 +651,7 @@ async fn durable_store_owned_three_member_bind_and_base_recovery_retain_exact_pr
         prepared.seal.authority.validate_prepared(prepared).expect("recovery reconstructs a valid private Store seal");
         assert_eq!(prepared.edit.mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
     }
-    let mut tampered = decision.clone();
+    let mut tampered = decision;
     tampered.value.recovery_pack[0] ^= 1;
     assert!(tampered.recover_store_owned(&parent_store, &drawing_store, &value_store).is_err());
     drop(recovered);

@@ -9,7 +9,7 @@
   ],
   "properties": {
     "node": {
-      "description": "any JSON value"
+      "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/DslValue"
     }
   }
 }

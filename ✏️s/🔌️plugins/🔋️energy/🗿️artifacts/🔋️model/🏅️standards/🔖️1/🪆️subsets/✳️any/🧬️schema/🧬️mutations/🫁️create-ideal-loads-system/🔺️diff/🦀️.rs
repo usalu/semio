@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateIdealLoadsSystem` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateIdealLoadsSystem, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -37,7 +37,16 @@ pub fn diff(payload: &super::CreateIdealLoadsSystem, base: &EnergyModelSnapshot)
         return protocol::MutationOutcome::error("mutation.invariant", format!("A stated cooling capacity must be a positive finite number, got {}.", payload.max_cooling_capacity_w), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
-    model.ideal_loads.push(crate::model::IdealLoadsSystem { id: payload.id, zone_id: payload.zone_id, max_heating_supply_air_temp_c: payload.max_heating_supply_air_temp_c, min_cooling_supply_air_temp_c: payload.min_cooling_supply_air_temp_c, max_heating_capacity_w: payload.max_heating_capacity_present.then_some(payload.max_heating_capacity_w), max_cooling_capacity_w: payload.max_cooling_capacity_present.then_some(payload.max_cooling_capacity_w), outdoor_air_per_person_m3_s: payload.outdoor_air_per_person_m3_s, outdoor_air_per_area_m3_s_m2: payload.outdoor_air_per_area_m3_s_m2 });
+    model.ideal_loads.push(crate::model::IdealLoadsSystem {
+        id: payload.id,
+        zone_id: payload.zone_id,
+        max_heating_supply_air_temp_c: payload.max_heating_supply_air_temp_c,
+        min_cooling_supply_air_temp_c: payload.min_cooling_supply_air_temp_c,
+        max_heating_capacity_w: payload.max_heating_capacity_present.then_some(payload.max_heating_capacity_w),
+        max_cooling_capacity_w: payload.max_cooling_capacity_present.then_some(payload.max_cooling_capacity_w),
+        outdoor_air_per_person_m3_s: payload.outdoor_air_per_person_m3_s,
+        outdoor_air_per_area_m3_s_m2: payload.outdoor_air_per_area_m3_s_m2,
+    });
     protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

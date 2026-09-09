@@ -1,7 +1,6 @@
 //! ✂️ `remove-geometry-connection` — detaches one connection point from a geometry, addressed by
 //! the geometry id plus the connection's own stable `id`.
 
-
 use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

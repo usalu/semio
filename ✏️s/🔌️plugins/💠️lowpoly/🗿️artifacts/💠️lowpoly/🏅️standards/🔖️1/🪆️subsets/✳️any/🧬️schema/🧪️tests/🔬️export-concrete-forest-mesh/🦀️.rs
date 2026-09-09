@@ -1,4 +1,3 @@
-
 use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
 use semio_s_artifact_cad_cad::io::geometry_import::{objects_from_fixture_model, parse_geometry};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};

@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::animate::PresentationCommand;
 use crate::editor::animate::testkit::{presentation_app, render as render_body};
+use crate::editor::animate::PresentationCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_seeded_tiles() {

@@ -1,4 +1,5 @@
 # 🧬️ Shooting snapshot schema — artifact-lane fields only.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 
 type ShootingSnapshot {
   schema: String! @state(class: ARTIFACT)
@@ -8,6 +9,7 @@ type ShootingSnapshot {
   shots: [ShootingShot!]! @state(class: ARTIFACT)
   activeShotId: String! @state(class: ARTIFACT)
   activeAssetId: String! @state(class: ARTIFACT)
+  emblem: ArtifactChild @state(class: ARTIFACT)
 }
 
 type ShootingCamera {

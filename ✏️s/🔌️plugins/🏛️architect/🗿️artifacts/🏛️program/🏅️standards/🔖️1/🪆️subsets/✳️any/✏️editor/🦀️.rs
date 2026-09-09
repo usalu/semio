@@ -7,8 +7,6 @@
 //! pure derived reads over the document live in the artifact's own `🧬️schema` / `🧬️schema/💡️inferences`
 //! (see `//#region 🔧️Behavior` below for the app-scoped, `&mut`-taking counterpart).
 
-use crate::op::ProgramMutation;
-use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 use crate::editor::architect::catalog::{analysis_kind_picker_options, parse_entity_id, parse_entity_id_from_args, parse_register_id, report_kind_picker_options, REGISTER_IDS};
 use crate::editor::architect::commands::adjacency::{set_adjacency_field, set_adjacency_filter, set_adjacency_kind};
 use crate::editor::architect::commands::analysis::{run_analysis, run_report, run_validation};
@@ -24,14 +22,16 @@ use crate::editor::architect::modes::edit::windows::{adjacency as adjacency_wind
 use crate::editor::architect::modes::{report as report_mode, review as review_mode};
 use crate::editor::architect::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::architect::presence::{ArchitectPresence, ArchitectPresenceMutation};
+use crate::op::ProgramMutation;
+use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling viewer surface's root `🦀️.rs`).
+use dsl::DslValue as Value;
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
-    Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
+    LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
 };
-use dsl::DslValue as Value;
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -61,7 +61,6 @@ pub fn ui_children<B: semio_framework_ui_contract::HasChildren>(builder: B, chil
 pub fn ui_capacity_error() -> semio_framework_plugin::PluginAssemblyError {
     semio_framework_plugin::PluginAssemblyError::new("architect.ui.capacity", "architect UI admission failed")
 }
-
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🪟️windows/*`) builds its item/on-change actions with.
@@ -200,7 +199,7 @@ pub mod behavior {
     //#region 📐️Template
     /// 📋️ Result of applying a template to a program.
     #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct TemplateApplyResult {
@@ -587,7 +586,7 @@ pub mod behavior {
     //#region 📤️ExchangeImport
     /// 🔀️ Strategy for merging imported register rows.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub enum MergeStrategy {
@@ -875,7 +874,7 @@ pub mod behavior {
     //#region 🧭️Trace
     /// ⛓️ Ordered chain of trace links from a root entity.
     #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct TraceChain {
@@ -885,7 +884,7 @@ pub mod behavior {
 
     /// 💥️ Reverse impact set from trace links pointing at an entity.
     #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ImpactTrace {
@@ -1121,14 +1120,15 @@ impl ArtifactEditor for ArchitectPlayApp {
         command: &ArchitectCommand,
         doc: &ArtifactView<'_, ProgramSnapshot>,
         cfg: &ConfigView<'_, ArchitectConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let program = doc.snapshot;
         let config = cfg.snapshot;
         match body_key {
@@ -1141,7 +1141,8 @@ impl ArtifactEditor for ArchitectPlayApp {
             catalogue_panel::ARCHITECT_BODY_CATALOGUE => catalogue_panel::render(),
             inspection_panel::ARCHITECT_BODY_INSPECTION => inspection_panel::render(program, config),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
-        }.map(semio_framework_plugin::built_to_component_tree)
+        }
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️ArchitectPlayApp
@@ -1171,7 +1172,7 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .mutation("importRegistersCsv", LocalizedLabel::native("Import Registers CSV", "Register CSV importieren"))
             .mutation("applyTemplate", LocalizedLabel::native("Apply Template", "Vorlage anwenden"))
             .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
-            .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
+            .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View, "camera"))
             .view_action("selectRegister", LocalizedLabel::native("Select Register", "Register wählen"))
             .view_action("addElement", LocalizedLabel::native("Add Element", "Element hinzufügen"))
             .view_action("removeElement", LocalizedLabel::native("Remove Element", "Element entfernen"))
@@ -1179,9 +1180,9 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .view_action("runValidation", LocalizedLabel::native("Run Validation", "Validierung ausführen"))
             .view_action("runAnalysis", LocalizedLabel::native("Run Analysis", "Analyse ausführen"))
             .view_action("runReport", LocalizedLabel::native("Run Report", "Bericht erzeugen"))
-            .view_action("search", LocalizedLabel::native("Search", "Suchen"))
-            .shell_action("exportProgram", LocalizedLabel::native("Export ProgramSnapshot", "Programm exportieren"))
-            .shell_action("exportRegistersCsv", LocalizedLabel::native("Export Registers CSV", "Register CSV exportieren"))
+            .action_with(ActionDefinition::new("search", LocalizedLabel::native("Search", "Suchen"), ActionKind::View, "search"))
+            .action_with(ActionDefinition::new("exportProgram", LocalizedLabel::native("Export ProgramSnapshot", "Programm exportieren"), ActionKind::Shell, "download"))
+            .action_with(ActionDefinition::new("exportRegistersCsv", LocalizedLabel::native("Export Registers CSV", "Register CSV exportieren"), ActionKind::Shell, "download"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setAdjacencyFilter", LocalizedLabel::native("Set Adjacency Filter", "Adjazenzfilter setzen"), ActionKind::View) })
             .action_args("selectRegister", vec![ActionArgDef::select("registerId", LocalizedLabel::native("Register", "Register"), REGISTER_IDS.iter().map(|register| ActionArgOption::new(*register, LocalizedLabel::data(*register))).collect())])
             .action_args(

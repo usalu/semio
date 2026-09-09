@@ -97,6 +97,16 @@ async fn app_command_read_config_round_trips() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn app_command_window_config_round_trips() {
+    assert_command_round_trips(&AppCommand::LoadWindowConfig {
+        seq: 12,
+        entry: WindowConfigPackEntry { window_id: "w1".into(), window_kind_id: "graph".into(), envelope_pack: vec![1, 2] },
+    })
+    .await;
+    assert_command_round_trips(&AppCommand::ReadWindowConfigs { seq: 13 }).await;
+}
+
+#[semio_framework_async_macros::async_test]
 async fn app_command_media_in_round_trips() {
     assert_command_round_trips(&AppCommand::MediaIn { seq: 14, port: "camera".to_string(), descriptor: vec![1], data: vec![2, 3] }).await;
 }
@@ -227,6 +237,45 @@ async fn app_frame_document_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn app_frame_config_round_trips() {
     assert_frame_round_trips(&AppFrame::Config { in_reply_to: 5, pack: vec![1], spr: vec![2], ops: "set cam = 1".to_string() }).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn app_frame_window_configs_round_trips() {
+    assert_frame_round_trips(&AppFrame::WindowConfigs {
+        in_reply_to: 6,
+        entries: vec![
+            WindowConfigPackEntry { window_id: "w1".into(), window_kind_id: "graph".into(), envelope_pack: vec![1, 2] },
+            WindowConfigPackEntry { window_id: "w2".into(), window_kind_id: "graph".into(), envelope_pack: vec![3] },
+        ],
+    })
+    .await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn window_config_transport_matches_shared_cross_language_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📡️channel/🪟️window-config.json")).expect("window config fixture parses");
+    let cases = [
+        (
+            "loadWindowConfig",
+            encode_fixture_command(&AppCommand::LoadWindowConfig {
+                seq: 1,
+                entry: WindowConfigPackEntry { window_id: "w1".into(), window_kind_id: "graph".into(), envelope_pack: vec![1, 2] },
+            })
+            .await,
+        ),
+        ("readWindowConfigs", encode_fixture_command(&AppCommand::ReadWindowConfigs { seq: 1 }).await),
+    ];
+    for (key, bytes) in cases {
+        assert_eq!(hex_encode(&bytes).await, fixture[key].as_str().expect("command fixture hex"));
+    }
+    let frame = AppFrame::WindowConfigs {
+        in_reply_to: 1,
+        entries: vec![
+            WindowConfigPackEntry { window_id: "w1".into(), window_kind_id: "graph".into(), envelope_pack: vec![1, 2] },
+            WindowConfigPackEntry { window_id: "w2".into(), window_kind_id: "graph".into(), envelope_pack: vec![3] },
+        ],
+    };
+    assert_eq!(hex_encode(&encode_app_frame(&frame).await).await, fixture["windowConfigs"].as_str().expect("frame fixture hex"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -439,6 +488,8 @@ async fn paged_generic_decoder_admits_document_config_and_projection_commands_us
         AppCommand::ReadChildren { seq: 5 },
         AppCommand::ReadHistory { seq: 6 },
         AppCommand::ReadConflicts { seq: 7 },
+        AppCommand::LoadWindowConfig { seq: 8, entry: WindowConfigPackEntry { window_id: "w1".into(), window_kind_id: "graph".into(), envelope_pack: vec![7, 8] } },
+        AppCommand::ReadWindowConfigs { seq: 9 },
     ];
     for expected in commands {
         let encoded = encode_app_command(&expected).await.unwrap();
@@ -551,6 +602,8 @@ async fn channel_command_fixture_corpus() -> Vec<(&'static str, AppCommand)> {
         ("ReadDocument", AppCommand::ReadDocument { seq: 1 }),
         ("LoadConfig", AppCommand::LoadConfig { seq: 1, pack: vec![1], spr: vec![2] }),
         ("ReadConfig", AppCommand::ReadConfig { seq: 1 }),
+        ("LoadWindowConfig", AppCommand::LoadWindowConfig { seq: 1, entry: WindowConfigPackEntry { window_id: "w1".into(), window_kind_id: "graph".into(), envelope_pack: vec![1, 2] } }),
+        ("ReadWindowConfigs", AppCommand::ReadWindowConfigs { seq: 1 }),
         ("MediaIn", AppCommand::MediaIn { seq: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
         ("MediaOut", AppCommand::MediaOut { seq: 1, port: "p".to_string(), request: vec![1] }),
         ("MediaFingerprint", AppCommand::MediaFingerprint { seq: 1, port: "p".to_string() }),
@@ -583,6 +636,16 @@ async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         ("DocumentChanged", AppFrame::DocumentChanged { envelopes: vec![], origin: "o".to_string() }),
         ("Document", AppFrame::Document { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "o".to_string() }),
         ("Config", AppFrame::Config { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "c".to_string() }),
+        (
+            "WindowConfigs",
+            AppFrame::WindowConfigs {
+                in_reply_to: 1,
+                entries: vec![
+                    WindowConfigPackEntry { window_id: "w1".into(), window_kind_id: "graph".into(), envelope_pack: vec![1, 2] },
+                    WindowConfigPackEntry { window_id: "w2".into(), window_kind_id: "graph".into(), envelope_pack: vec![3] },
+                ],
+            },
+        ),
         ("ConfigChanged", AppFrame::ConfigChanged { envelopes: vec![], origin: "o".to_string() }),
         ("ContextMenu", AppFrame::ContextMenu { in_reply_to: 1, items: vec![1] }),
         ("Media", AppFrame::Media { in_reply_to: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
@@ -620,6 +683,8 @@ async fn channel_command_fixture_hex(label: &str) -> &'static str {
         "ReadDocument" => "0701",
         "LoadConfig" => "080101010102",
         "ReadConfig" => "0901",
+        "LoadWindowConfig" => "1e01027731056772617068020102",
+        "ReadWindowConfigs" => "1f01",
         "MediaIn" => "0a01017001010102",
         "MediaOut" => "0b0101700101",
         "MediaFingerprint" => "0c010170",
@@ -654,6 +719,7 @@ async fn channel_frame_fixture_hex(label: &str) -> &'static str {
         "DocumentChanged" => "0200016f",
         "Document" => "030101010102016f",
         "Config" => "0401010101020163",
+        "WindowConfigs" => "1801020277310567726170680201020277320567726170680103",
         "ConfigChanged" => "0500016f",
         "ContextMenu" => "06010101",
         "Media" => "0701017001010102",

@@ -1,11 +1,11 @@
 //! 🧩️ 🧩️ Generation3d play app commands command — `patch-flow-widgets`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::{generation3d_fixture_operations, Generation3dMutation};
-use crate::standards::v1::subsets::any::schema::host_from_fixture;
-use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_framework_os_flow::{FlowEvalSession};
-use semio_framework_artifact_flow_flow::{Widget};
+use crate::standards::v1::subsets::any::schema::host_from_fixture;
+use crate::standards::v1::subsets::any::schema::mutations::text::{generation3d_fixture_operations, Generation3dMutation};
+use crate::Generation3dSnapshot;
+use semio_framework_artifact_flow_flow::Widget;
+use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

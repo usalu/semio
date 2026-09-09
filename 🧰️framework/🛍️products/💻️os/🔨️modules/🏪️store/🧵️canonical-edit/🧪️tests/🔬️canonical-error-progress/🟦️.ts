@@ -3,6 +3,11 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { WORKSPACE_ROOT, toolJobRustBlock } from "../../../../../../../../📜️script.ts";
 
+/** 📏️ One Rust statement sequence as a whitespace-tolerant pattern: `rustfmt` freely spreads a
+ * `match` arm or a `;`-separated pair across lines, so anchoring these linkage clauses on one exact
+ * spelling makes them fail on formatting instead of on lost initialized bytes. */
+const looseStatements = (statements: string): RegExp => new RegExp(statements.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(/\s+/g, "\\s+"));
+
 /** 🧪️ Executes canonical error progress policy assertions. */
 export function canonicalErrorProgressSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");
@@ -27,11 +32,12 @@ export function canonicalErrorProgressSelfTests(): number {
   const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️.rs"), "utf8");
   const reader = readFileSync(join(base, "📖️reader/🦀️.rs"), "utf8");
   const method = (text: string, pattern: RegExp) => { const start = text.search(pattern); return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? ""; };
+  const flat = (text: string) => text.replaceAll(/\s+/g, " ");
   const exact = (parent: string, borrowed: string, reader: string) => {
-    const indexed = method(parent, /pub fn encode_chunk\(/);
-    const borrowing = method(borrowed, /fn encode_chunk</);
-    const reading = method(reader, /fn encode_chunk\(/);
-    const sealing = method(parent, /pub fn advance\(/);
+    const indexed = flat(method(parent, /pub fn encode_chunk\(/));
+    const borrowing = flat(method(borrowed, /fn encode_chunk</));
+    const reading = flat(method(reader, /fn encode_chunk\(/));
+    const sealing = flat(method(parent, /pub fn advance\(/));
     return parent.includes("pub struct ArtifactCanonicalJsonEncodeError") && parent.includes("pub written_bytes: usize") && parent.includes("pub reason: String")
       && indexed.includes("ArtifactCanonicalJsonEncodeError { written_bytes: written, reason }") && borrowing.includes("ArtifactCanonicalJsonEncodeError { written_bytes: written, reason }")
       && borrowing.includes("ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason }")
@@ -47,9 +53,9 @@ export function canonicalErrorProgressSelfTests(): number {
   const mutations: [string, string, string][] = [
     [parent.replace("written_bytes: written, reason", "written_bytes: 0, reason"), borrowed, reader],
     [parent, borrowed.replace("written_bytes: written, reason", "written_bytes: 0, reason"), reader],
-    [parent, borrowed, reader.replace("self.failed = true; error.written_bytes", "self.failed = true; 0")],
+    [parent, borrowed, reader.replace(looseStatements("self.failed = true; error.written_bytes"), "self.failed = true; 0")],
     [parent, borrowed, reader.replace("self.completed_bytes = completed;", "return result;")],
-    [parent.replace("self.cancelled = true; encoding_error", "encoding_error"), borrowed, reader],
+    [parent.replace(looseStatements("self.cancelled = true; encoding_error"), "encoding_error"), borrowed, reader],
     [parent.replace("self.transcript.update(&self.last_chunk[..self.last_length]);", "self.transcript.update(&[]);"), borrowed, reader],
     [parent + "\nimpl From<ArtifactCanonicalJsonEncodeError> for String {}", borrowed, reader],
   ];

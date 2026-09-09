@@ -2613,7 +2613,7 @@ fn take_catalog_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOw
     fill.kind_compatibility.retire_backing()
 }
 
-fn take_weight_map_owner(values: &mut FixedOwnerMap<String, f64>, current: &mut Option<FillRetiredOwner>) -> bool {
+fn take_weight_map_owner<const N: usize>(values: &mut FixedOwnerMap<String, f64, N>, current: &mut Option<FillRetiredOwner>) -> bool {
     if let Some((key, _)) = values.pop_first() {
         *current = Some(FillRetiredOwner::String(key));
         return true;

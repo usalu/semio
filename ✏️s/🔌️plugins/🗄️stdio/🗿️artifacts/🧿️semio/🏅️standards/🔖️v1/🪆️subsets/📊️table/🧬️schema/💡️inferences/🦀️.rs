@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::shape::{compute_semio_table_shape};
+use super::shape::compute_semio_table_shape;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio table snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `shape`, backed by the `📐shape/` slug dir).
@@ -69,13 +69,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::table::schema::SemioTab
 pub fn semio_table_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.table.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

@@ -1,6 +1,5 @@
 //! 🔐️ `change-strict-mode` — toggles the document root's strict-mode flag.
 
-
 use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

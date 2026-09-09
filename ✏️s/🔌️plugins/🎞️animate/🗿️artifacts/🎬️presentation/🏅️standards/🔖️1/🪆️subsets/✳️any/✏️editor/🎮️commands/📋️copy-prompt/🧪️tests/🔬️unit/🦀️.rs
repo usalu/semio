@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::editor::animate::PresentationCommand;
 use crate::editor::animate::commands::export_video_from_deck;
 use crate::editor::animate::testkit::{presentation_app, presentation_app_with_registry};
-use semio_framework_plugin::{Effect, testkit::meta};
+use crate::editor::animate::PresentationCommand;
+use semio_framework_plugin::{testkit::meta, Effect};
 
 #[semio_framework_async_macros::async_test]
 async fn copy_prompt_is_shell_effect_not_view_mutation() {

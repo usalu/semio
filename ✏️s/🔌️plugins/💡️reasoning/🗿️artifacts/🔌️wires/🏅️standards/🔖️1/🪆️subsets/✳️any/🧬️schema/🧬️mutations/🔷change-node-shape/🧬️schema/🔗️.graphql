@@ -1,0 +1,6 @@
+# 🧬️ ChangeNodeShape mutation payload.
+
+type ChangeNodeShape {
+  nodeId: String!
+  newShape: String!
+}

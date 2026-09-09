@@ -16,7 +16,13 @@ impl protocol::MutationKind<ShootingPresence, ShootingPresenceMutation> for Repl
     fn diff(&self, _base: &ShootingPresence) -> protocol::MutationOutcome<ShootingPresence> {
         protocol::MutationOutcome::new(self.presence.clone())
     }
-    fn inverse(&self, base: &ShootingPresence) -> Vec<ShootingPresenceMutation> { vec![ShootingPresenceMutation::ReplacePresence(Self { presence: base.clone() })] }
-    fn label(&self) -> String { "Replace Presence".into() }
-    fn target(&self) -> Vec<String> { vec!["presence".into()] }
+    fn inverse(&self, base: &ShootingPresence) -> Vec<ShootingPresenceMutation> {
+        vec![ShootingPresenceMutation::ReplacePresence(Self { presence: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Presence".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["presence".into()]
+    }
 }

@@ -1,0 +1,4 @@
+{
+  "values": [null, true, false, 3, -4, 2.5, "雪", ["a", 1, null], {"empty": {}, "items": [true, {"child": "value"}]}],
+  "rejectedConstructions": ["not-a-number", "infinity", "undefined", "cycle", "sparse-array", "symbol-field", "hidden-field", "accessor-field", "array-extra-field"]
+}

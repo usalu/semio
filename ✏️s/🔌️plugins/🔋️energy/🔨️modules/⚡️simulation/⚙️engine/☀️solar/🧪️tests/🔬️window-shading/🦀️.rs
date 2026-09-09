@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn case_610_window(overhang: f64, offset: f64, fin: f64) -> WindowProjections {

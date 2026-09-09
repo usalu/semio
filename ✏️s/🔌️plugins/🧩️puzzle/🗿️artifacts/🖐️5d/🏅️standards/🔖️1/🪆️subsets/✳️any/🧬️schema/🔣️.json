@@ -10,31 +10,7 @@
     "meta",
     "kindCompatibility",
     "parts",
-    "fasteners",
-    "selectedPartIds",
-    "selectedGripIds",
-    "selectedFastenerIds",
-    "activeUtilityId",
-    "camera2dX",
-    "camera2dY",
-    "camera2dZoom",
-    "camera3dPositionX",
-    "camera3dPositionY",
-    "camera3dPositionZ",
-    "camera3dTargetX",
-    "camera3dTargetY",
-    "camera3dTargetZ",
-    "camera3dZoom",
-    "selectionMethod",
-    "gridSnapEnabled",
-    "gridFactor",
-    "suggestionOffset",
-    "overlapBudget",
-    "fillCount",
-    "brushCandidateIndex",
-    "lodMode",
-    "runtimeExtrasJson",
-    "previewSeq"
+    "fasteners"
   ],
   "properties": {
     "schema": {
@@ -57,6 +33,10 @@
       "$ref": "#/$defs/Puzzle5dKindCatalogs",
       "x-semio-state": "artifact"
     },
+    "kindCatalogsExtra": {
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/snapshot.json#/$defs/Puzzle5dKindCatalogsExtra",
+      "x-semio-state": "artifact"
+    },
     "kindCompatibility": {
       "type": "array",
       "items": {
@@ -76,134 +56,6 @@
       "items": {
         "$ref": "#/$defs/Puzzle5dFastener"
       },
-      "x-semio-state": "artifact"
-    },
-    "selectedPartIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "selectedGripIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "selectedFastenerIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "camera2dX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera2dY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera2dZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dPositionX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dPositionY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dPositionZ": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dTargetX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dTargetY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dTargetZ": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "gridSnapEnabled": {
-      "type": "boolean",
-      "x-semio-state": "config"
-    },
-    "gridFactor": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "suggestionOffset": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "overlapBudget": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "fillCount": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "brushCandidateIndex": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "lodMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "runtimeExtrasJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "hoveredPartId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "previewSeq": {
-      "type": "integer",
-      "format": "int64",
       "x-semio-state": "artifact"
     }
   },

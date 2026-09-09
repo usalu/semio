@@ -1,6 +1,5 @@
 //! 🔥 `change-fire-curve` — sets the En1991 fire curve scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

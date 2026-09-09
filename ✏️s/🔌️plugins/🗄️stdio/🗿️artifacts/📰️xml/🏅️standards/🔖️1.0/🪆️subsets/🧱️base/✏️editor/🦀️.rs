@@ -5,11 +5,11 @@
 //! node is a documented no-op (`SetAttribute`/`InsertElement`/`RemoveElement` stay unreachable
 //! through this first-pass window).
 
+use crate::editor::xml_any::modes::edit;
+use crate::editor::xml_any::modes::edit::windows::main;
 use crate::schema::mutations::{SetTextMutation, SetTextPayload, XmlNodePath};
 use crate::schema::snapshot::XmlNode;
 use crate::{XmlMutation, XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
-use crate::editor::xml_any::modes::edit;
-use crate::editor::xml_any::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };

@@ -88,6 +88,32 @@
           "mutation.apply.conflicting-target"
         ]
       }
+    },
+    {
+      "name": "automation trigger fields preserve canonical casing",
+      "operations": [
+        {
+          "operation": "startRun",
+          "workflowRef": "workflow",
+          "workflowCheckpointId": "checkpoint",
+          "inputCollectionRef": "input",
+          "inputSnapshotId": "snapshot",
+          "parameterValues": [],
+          "outputCollectionRef": "output",
+          "trigger": {
+            "kind": "automation",
+            "automationRef": "automation",
+            "eventFingerprint": "event"
+          }
+        }
+      ],
+      "expected": {
+        "schema": "os.run",
+        "status": "running",
+        "sealed": false,
+        "logs": [],
+        "rejections": []
+      }
     }
   ]
 }

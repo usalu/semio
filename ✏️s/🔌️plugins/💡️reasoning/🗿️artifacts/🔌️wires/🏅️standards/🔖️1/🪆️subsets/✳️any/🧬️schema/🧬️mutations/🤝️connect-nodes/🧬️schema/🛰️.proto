@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.mutation.connect_nodes;
+
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+
+message ConnectNodes {
+  semio.framework.value.DslValue edge = 1;
+  semio.framework.value.DslValue relationship = 2;
+}

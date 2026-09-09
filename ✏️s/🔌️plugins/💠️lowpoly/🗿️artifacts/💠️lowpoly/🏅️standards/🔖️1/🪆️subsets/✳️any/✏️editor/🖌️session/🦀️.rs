@@ -5,12 +5,12 @@
 //! on `LowpolyPlayApp` (mirrors `flow`'s `Mutex<FlowEvalSession>` pattern) so `render(&self, ..)` can
 //! still read texture/transform preview state while `handle(&self, ..)` locks it mutably for dispatch.
 
-use crate::op::{LowpolyMutation, PixelRun};
-use crate::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
-use crate::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::view::build_doc;
+use crate::op::{LowpolyMutation, PixelRun};
+use crate::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
+use crate::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
 use protocol::Mutation;
 use semio_framework_3d::mesh::Vec3;
 use semio_framework_plugin::Emit;
@@ -704,6 +704,7 @@ impl LowpolyTransient {
         }
     }
 
+    #[cfg(test)]
     pub(crate) fn reset_gestures(&self) -> Self {
         Self {
             state: Arc::new(LowpolyTransientState {
@@ -920,9 +921,22 @@ impl Mutation<LowpolyTransient> for LowpolyTransientMutation {
     /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate — one
     /// entry for the sole `Snapshot` variant, mirroring `generation2d`'s identical precedent for its
     /// own hand-written session/transient aggregate.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🖌️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "🖌️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🖌️set-snapshot",
+        semantic_kind: "set-snapshot",
+        display_name: "Set Snapshot",
+        emoji: "🖌️",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {

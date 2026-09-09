@@ -9,22 +9,22 @@
 //! `render` → body-key → node, plus `import_media`'s `"chapters:in"` importer (an editor-level override,
 //! not a command).
 
-use crate::flatten_playbook_blocks;
-use crate::op::{AddStep, PlaybookMutation};
-use crate::schema::default_block;
-use crate::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
 use crate::editor::playbook::commands::{add_block, add_step, move_block, move_step, remove_block, remove_step, set_contributions, update_playbook};
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::editor::playbook::engine::{playbook_io, PlaybookChapterPayload};
 use crate::editor::playbook::modes::builder;
 use crate::editor::playbook::modes::builder::windows::builder as builder_window;
+use crate::flatten_playbook_blocks;
+use crate::op::{AddStep, PlaybookMutation};
+use crate::schema::default_block;
+use crate::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
-    InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation,
-    SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
+    ActionArgDef, ActionArgOption, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
+    CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media,
+    MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 use store::EngineHandles;
 
@@ -98,9 +98,7 @@ const PLAYBOOK_RETAINED_PAYLOAD_SCHEMA: &str = "playbook.program.tool-command.v1
 const PLAYBOOK_RETAINED_RAW_BYTES: usize = 8_192;
 const PLAYBOOK_RETAINED_WORK_ITEMS: usize = 64;
 
-const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
-];
+const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] }];
 
 fn playbook_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(PLAYBOOK_RETAINED_RAW_BYTES, 64, PLAYBOOK_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
@@ -124,7 +122,7 @@ fn playbook_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PlaybookPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 struct PlaybookRetainedCommandJobFactory {
@@ -141,11 +139,21 @@ impl ToolJobFactory for PlaybookRetainedCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<PlaybookPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<PlaybookPlayApp>>;
 
-    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
-    fn payload_schema_id(&self) -> &str { PLAYBOOK_RETAINED_PAYLOAD_SCHEMA }
-    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { playbook_retained_contract() }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        PLAYBOOK_RETAINED_PAYLOAD_SCHEMA
+    }
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        playbook_retained_contract()
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
 
     fn create_job_from_wire_pages_with_payload(
         &mut self,
@@ -175,7 +183,9 @@ const PLAYBOOK_STORE_MAXIMUM_BYTES: usize = 32_768;
 struct PlaybookOneItemPreparationFactory<P, M>(std::marker::PhantomData<fn() -> (P, M)>);
 
 impl<P, M> Default for PlaybookOneItemPreparationFactory<P, M> {
-    fn default() -> Self { Self(std::marker::PhantomData) }
+    fn default() -> Self {
+        Self(std::marker::PhantomData)
+    }
 }
 
 struct PlaybookOneItemPreparation<P, M> {
@@ -245,12 +255,25 @@ where
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
             return Err(request);
         }
         Ok(Box::new(PlaybookOneItemPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), phase: 0, cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            candidate: None,
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            phase: 0,
+            cancelled: false,
+            closing: false,
         }))
     }
 }
@@ -262,8 +285,12 @@ where
     M::Diff: protocol::MutationDiff<P>,
 {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.prepared.is_some() || self.phase >= 2 { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() || self.phase >= 2 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
         match self.phase {
             0 => {
                 let base = self.base.as_ref().ok_or_else(|| "Playbook retained preparation lost its exact base root".to_string())?;
@@ -289,28 +316,48 @@ where
         }
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("Playbook retained preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() {
+                return Err("Playbook retained preparation could not return its exact base root".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.authority = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(store::SnapshotRetirementStep::Complete)
     }
 
-    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none() }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+    }
 }
 //#endregion 📬️OneItemPreparation
 
@@ -368,7 +415,17 @@ impl ArtifactEditor for PlaybookPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation,
+                completion: request.completion,
+            },
             PlaybookCommand::command_id,
             PLAYBOOK_RETAINED_RAW_BYTES,
             PLAYBOOK_RETAINED_WORK_ITEMS,
@@ -399,7 +456,8 @@ impl ArtifactEditor for PlaybookPlayApp {
         command: &PlaybookCommand,
         doc: &ArtifactView<'_, PlaybookSnapshot>,
         cfg: &ConfigView<'_, PlaybookConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
@@ -439,7 +497,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_framework_plugin::built_to_component_tree(builder_window::render(doc.snapshot, cfg.snapshot)?)),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

@@ -21,8 +21,6 @@ export interface Vdi3805Diff {
   curves?: Record<string, string>;
   /** @state artifact */
   limits?: string;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 
 export interface Vdi3805Artifact {
@@ -35,5 +33,4 @@ export interface Vdi3805Artifact {
   geometry: Record<string, string>;
   curves: Record<string, string>;
   limits: string;
-  selectedCheckIndex?: number | null;
 }

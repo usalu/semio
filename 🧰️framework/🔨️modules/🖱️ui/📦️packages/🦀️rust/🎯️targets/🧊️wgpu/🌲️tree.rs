@@ -78,6 +78,7 @@ impl UiDocumentTree {
         self.nodes.values().find(|record| record.children.iter().any(|child| *child == id)).map(|record| record.id)
     }
 
+    #[expect(clippy::result_large_err, reason = "Fixed-capacity node admission returns the exact rejected node or page without allocating on refusal.")]
     pub fn try_upsert_record(&mut self, record: UiNodeRecord) -> Result<Option<UiNodeRecord>, UiNodeRecord> {
         self.nodes.try_insert(record)
     }

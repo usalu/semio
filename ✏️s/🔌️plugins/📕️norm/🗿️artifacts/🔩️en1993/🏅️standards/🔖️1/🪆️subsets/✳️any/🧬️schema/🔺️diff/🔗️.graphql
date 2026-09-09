@@ -76,7 +76,6 @@ type En1993Diff {
   craneWheelContactLengthMm: Float @state(class: ARTIFACT)
   craneDispersionMm: Float @state(class: ARTIFACT)
   craneTWMm: Float @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type En1993Artifact {
@@ -154,5 +153,4 @@ type En1993Artifact {
   craneWheelContactLengthMm: Float
   craneDispersionMm: Float
   craneTWMm: Float
-  selectedCheckIndex: Int
 }

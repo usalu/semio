@@ -1,6 +1,5 @@
 //! 🔤️ Trinity jack lexer.
 
-
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum TokenClass {

@@ -24,7 +24,6 @@ type En1994Diff {
   fYMpa: Float @state(class: ARTIFACT)
   nCyclesStud: Float @state(class: ARTIFACT)
   deltaTauStudMpa: Float @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type En1994Artifact {
@@ -50,5 +49,4 @@ type En1994Artifact {
   fYMpa: Float
   nCyclesStud: Float
   deltaTauStudMpa: Float
-  selectedCheckIndex: Int
 }

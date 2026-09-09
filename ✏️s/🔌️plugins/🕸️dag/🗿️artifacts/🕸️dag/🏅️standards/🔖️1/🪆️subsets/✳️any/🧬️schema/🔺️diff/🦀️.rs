@@ -15,7 +15,7 @@
 //! `DagEdgePatchEntry`/`DagNodeSpecList`/`DagFixtureEdgeList` are all dead with it — confirmed zero
 //! remaining references after this pass.
 
-use crate::{DagCamera, DagContentChild};
+use crate::DagContentChild;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -28,10 +28,6 @@ pub struct DagDiff {
     pub schema: Option<String>,
     #[state(artifact)]
     pub content: Option<DagContentChild>,
-    #[state(presence)]
-    pub selected_node_ids: Option<DagStringList>,
-    #[state(config)]
-    pub camera: Option<DagCamera>,
 }
 //#endregion 🔖️Diff
 

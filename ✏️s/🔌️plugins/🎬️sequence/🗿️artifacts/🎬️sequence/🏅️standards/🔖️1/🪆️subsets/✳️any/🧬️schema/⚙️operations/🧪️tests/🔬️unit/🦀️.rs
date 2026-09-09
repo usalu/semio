@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceStep, StepParams, default_snapshot};
-use protocol::SemanticMutation;
+use crate::{default_snapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use protocol::os_spr::testkit::assert_mutation_inverse_law;
-use store::{ArtifactCommand, create_document_envelope};
+use protocol::SemanticMutation;
+use store::{create_document_envelope, ArtifactCommand};
 
 #[semio_framework_async_macros::async_test]
 async fn leaf_detection_preserves_language_neutral_plan_vectors() {

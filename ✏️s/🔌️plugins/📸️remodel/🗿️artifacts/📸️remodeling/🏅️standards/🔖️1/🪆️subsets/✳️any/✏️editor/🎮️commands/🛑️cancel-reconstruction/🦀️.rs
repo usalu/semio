@@ -1,7 +1,7 @@
 //! 🛑️ User-addressable reconstruction cancellation.
 
-use crate::{op::RemodelingMutation, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use crate::{op::RemodelingMutation, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

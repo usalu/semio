@@ -68,17 +68,6 @@ FONTCONFIG
   echo "✅️ Emoji font fallback configured."
 }
 #endregion 🔖️EmojiFonts
-#region 🔖️Startup
-#region 🔖️StashCleanup
-# Drop all spurious git stash entries. Stashing is forbidden in concurrent editing workflows.
-cd "$WORKSPACE"
-stash_count=$(git stash list 2>/dev/null | wc -l)
-if [ "$stash_count" -gt 0 ]; then
-  git stash clear
-  echo "✅️ Cleared $stash_count spurious git stash entries."
-fi
-#endregion 🔖️StashCleanup
-#endregion 🔖️Startup
 #region 🔖️Ownership
 sudo chown -R vscode:vscode /home/vscode/.cache 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
@@ -132,29 +121,11 @@ BASHRC
 configure_neo4j_compose_env
 #endregion 🔖️Neo4jEnv
 #region 🗄️Neo4jService
-migrate_neo4j_community_graph_compose() {
-  local databases="/var/lib/neo4j/data/databases"
-  if [ ! -d "$databases" ]; then
-    return 0
-  fi
-  if [ -d "${databases}/compose" ]; then
-    return 0
-  fi
-  if [ ! -d "${databases}/neo4j" ]; then
-    return 0
-  fi
-  echo "🧾️ Neo4j Community: clearing /var/lib/neo4j/data so the sole standard database is named compose (replacing legacy neo4j)."
-  sudo neo4j stop >/dev/null 2>&1 || true
-  sudo rm -rf /var/lib/neo4j/data/*
-}
-
 configure_neo4j_server() {
   if ! command -v neo4j >/dev/null 2>&1; then
     echo "⚠️ Neo4j is not installed in this devcontainer image."
     return 1
   fi
-
-  migrate_neo4j_community_graph_compose
 
   local conf="/etc/neo4j/neo4j.conf"
   sudo mkdir -p /var/lib/neo4j/data /var/log/neo4j /var/run/neo4j
@@ -222,88 +193,6 @@ else
   echo "⚠️ Neo4j was not reachable at bolt://localhost:7687 during post-start."
 fi
 #endregion 🗄️Neo4jService
-#region 🧾️Neo4jCypherPersistence
-extra_neo4j_graph_names_from_env() {
-  [ -z "${NEO4J_EXTRA_GRAPH_DATABASES:-}" ] && return 0
-  local _ifs=$IFS
-  IFS=,
-  local s n
-  for s in $NEO4J_EXTRA_GRAPH_DATABASES; do
-    n="$(echo "$s" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-    [ -n "$n" ] && printf '%s\n' "$n"
-  done
-  IFS=$_ifs
-}
-
-ensure_neo4j_schema_files() {
-  local technologies=("compose" "elements" "coda" "reuse")
-  local ex
-  while IFS= read -r ex; do
-    [ -n "$ex" ] && technologies+=("$ex")
-  done < <(extra_neo4j_graph_names_from_env)
-  local schema_dir="$WORKSPACE/.🧬semio/🦑️repo/🛂️manifest"
-  mkdir -p "$schema_dir"
-  for technology in "${technologies[@]}"; do
-    local schema_file="$schema_dir/$technology.cypher"
-    if [ ! -f "$schema_file" ]; then
-      cat >"$schema_file" <<EOF
-// SPDX-License-Identifier: AGPL-3.0-only
-// Neo4j Cypher persistence for $technology.
-// Keep this file replayable with cypher-shell or APOC.
-EOF
-    fi
-  done
-}
-
-neo4j_schema_cypher_uri() {
-  local technology="$1"
-  printf 'file:///workspaces/semio/.🧬semio/🦑️repo/🛂️manifest/%s.cypher' "$technology"
-}
-
-reload_neo4j_from_repo_cypher() {
-  local graph_db="${NEO4J_DATABASE:-compose}"
-  if ! command -v cypher-shell >/dev/null 2>&1; then
-    return 0
-  fi
-  if ! cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "RETURN 1 AS ok;" >/dev/null 2>&1; then
-    echo "⚠️ Neo4j Bolt unreachable for database ${graph_db}; skip cypher reload from repo."
-    return 0
-  fi
-  local apoc_procedure_count
-  apoc_procedure_count="$(cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" 2>/dev/null | tail -n 1 | tr -d '[:space:]')" || return 0
-  if [ "$apoc_procedure_count" != "2" ]; then
-    echo "⚠️ Neo4j APOC Cypher reload skipped because required APOC procedures are unavailable."
-    return 0
-  fi
-  echo "🧾️ Neo4j: clearing graph in database ${graph_db}, then loading generated .🧬semio/🦑️repo/🛂️manifest/*.cypher (from bun run generate) …"
-  cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "MATCH (n) DETACH DELETE n;" >/dev/null || {
-    echo "⚠️ Neo4j wipe failed; skipping cypher file import."
-    return 0
-  }
-  local imported=0
-  local technologies=("compose" "elements" "coda" "reuse")
-  local ex
-  while IFS= read -r ex; do
-    [ -n "$ex" ] && technologies+=("$ex")
-  done < <(extra_neo4j_graph_names_from_env)
-  for technology in "${technologies[@]}"; do
-    local schema_file="$WORKSPACE/.🧬semio/🦑️repo/🛂️manifest/$technology.cypher"
-    local schema_uri
-    schema_uri="$(neo4j_schema_cypher_uri "$technology")"
-    if grep -Ev '^[[:space:]]*(//|:|$)' "$schema_file" >/dev/null 2>&1; then
-      cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" "CALL apoc.cypher.runFile('$schema_uri') YIELD row RETURN count(row) AS rows;" >/dev/null
-      imported=$((imported + 1))
-    fi
-  done
-  echo "✅️ Neo4j reloaded database ${graph_db} from repo ($imported non-empty cypher files applied)."
-  if command -v bun >/dev/null 2>&1 && [ -n "${WORKSPACE:-}" ]; then
-    (cd "$WORKSPACE" && NEO4J_DATABASE="$graph_db" bun ./📜️script.ts purge neo4j) || echo "⚠️ Neo4j legacy-property prune skipped."
-  fi
-}
-
-ensure_neo4j_schema_files
-reload_neo4j_from_repo_cypher || echo "⚠️ Neo4j APOC Cypher reload skipped."
-#endregion 🧾️Neo4jCypherPersistence
 #region 🔖️ClaudeAuth
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"

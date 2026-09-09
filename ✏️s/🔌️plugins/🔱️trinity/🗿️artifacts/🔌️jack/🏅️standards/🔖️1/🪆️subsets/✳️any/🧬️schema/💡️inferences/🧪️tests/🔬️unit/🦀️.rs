@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{Edge, Node, Port, PortDirection, PropertyBag};
 use protocol::Inference;

@@ -7,15 +7,11 @@
     "config": {
       "type": "object",
       "properties": {
-        "locale": {
-          "type": "string"
-        },
         "contributionsJson": {
           "type": "string"
         }
       },
       "required": [
-        "locale",
         "contributionsJson"
       ],
       "additionalProperties": false

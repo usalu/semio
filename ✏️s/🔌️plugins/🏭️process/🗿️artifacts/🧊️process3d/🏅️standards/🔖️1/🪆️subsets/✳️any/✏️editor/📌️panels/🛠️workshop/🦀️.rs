@@ -3,12 +3,12 @@
 //! or a machine already installed from it, renders no duplicate row here (it stays visible above, in
 //! the installed-machines section, where remove lives).
 
-use crate::{MachineCatalog, Process3dSnapshot};
 use crate::editor::process3d::iconed_tree_item_with_action;
 use crate::editor::process3d::installed_catalogs;
 use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::Process3dLabels;
 use crate::editor::process3d::PROCESS3D_INTERACTION_DOMAIN;
+use crate::{MachineCatalog, Process3dSnapshot};
 use semio_framework_plugin::{tree_item, ActionBinding, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger};
 
 //#region 🔖️Constants
@@ -66,10 +66,7 @@ pub fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Pr
         let mut items = semio_framework_plugin::UiFixedList::default();
         for machine in installable {
             let id = format!("process3d-workshop.catalog.{catalog_id}.{}", machine.id);
-            let args = crate::editor::process3d::ui_value_map([
-                ("catalogId", crate::editor::process3d::ui_value_text(catalog_id)?),
-                ("machineId", crate::editor::process3d::ui_value_text(&machine.id)?),
-            ])?;
+            let args = crate::editor::process3d::ui_value_map([("catalogId", crate::editor::process3d::ui_value_text(catalog_id)?), ("machineId", crate::editor::process3d::ui_value_text(&machine.id)?)])?;
             let item = iconed_tree_item_with_action(id, &machine.label, &machine.icon_id, process3d_action("addWorkshopMachine", Some(args)))?;
             items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.catalogue", "fixed workshop catalogue admission failed"))?;
         }

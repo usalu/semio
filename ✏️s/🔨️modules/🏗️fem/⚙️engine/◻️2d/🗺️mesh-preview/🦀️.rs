@@ -1,10 +1,10 @@
 //! 🗺️ FEM 2D module engine — cheap mesh preview + nodal stress bridge (pure FE algorithm, moved out of
 //! the artifact tree).
 
-use crate::Fem2dSnapshot;
 use crate::fem2d_engine::meshing::build_nodes_and_elements;
 use crate::fem2d_engine::Fem2dError;
 use crate::model::Support;
+use crate::Fem2dSnapshot;
 use std::collections::HashMap;
 
 /// 🗺️ One meshed region's cheap preview geometry — mesh points plus triangle vertex indices, WITHOUT

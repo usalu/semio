@@ -1,6 +1,5 @@
 //! 🌬️ `change-wind-zone` — sets the En1991 wind zone scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

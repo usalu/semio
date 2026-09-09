@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 use protocol::DiffCodec;

@@ -1,4 +1,3 @@
-
 use crate::editor::lowpoly::testkit::{app, render};
 
 #[semio_framework_async_macros::async_test]

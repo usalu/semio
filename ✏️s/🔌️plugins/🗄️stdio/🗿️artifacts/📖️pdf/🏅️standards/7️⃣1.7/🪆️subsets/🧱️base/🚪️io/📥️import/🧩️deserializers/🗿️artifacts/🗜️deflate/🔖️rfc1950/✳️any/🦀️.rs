@@ -1,7 +1,7 @@
 //! Deserialize stdio.pdf (1.7) from stdio.deflate (raw file bytes in deflate snapshot).
 
-use semio_s_artifact_stdio_deflate::DeflateSnapshot;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_deflate::DeflateSnapshot;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}

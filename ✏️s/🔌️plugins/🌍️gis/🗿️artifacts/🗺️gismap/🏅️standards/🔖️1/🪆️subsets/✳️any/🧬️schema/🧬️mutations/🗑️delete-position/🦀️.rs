@@ -1,12 +1,12 @@
 //! 🗑️ `delete-position` mutation payload — removes a position feature from `positions` by id.
 
-use crate::GisMapSnapshot;
 use crate::diff::GisMapDiff;
 use crate::mutations::GisMapMutation;
+use crate::GisMapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔹Payload
 /// 🗑️ Removes the `positions` entry addressed by `id` (BASE-state, per the taxonomy's index/id

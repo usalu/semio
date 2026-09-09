@@ -16,8 +16,7 @@ pub fn encode_payload(payload: &RemoveQuantTableMutation) -> Result<Vec<u8>, pro
 pub fn decode(bytes: &[u8]) -> Result<JpgMutation, protocol::ProtocolError> {
     let mut reader = store::ByteReader::new(bytes);
     let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-    let result: Result<JpgMutation, protocol::ProtocolError> =
-        Ok(JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: reader.read_u8().map_err(|e| malformed("op quant-id", reader.position(), e.to_string()))? }));
+    let result: Result<JpgMutation, protocol::ProtocolError> = Ok(JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: reader.read_u8().map_err(|e| malformed("op quant-id", reader.position(), e.to_string()))? }));
     let position = reader.position();
     if position != bytes.len() {
         return Err(protocol::ProtocolError::Malformed { what: "remove-quant-table", offset: position as u64, detail: "trailing payload bytes".into() });

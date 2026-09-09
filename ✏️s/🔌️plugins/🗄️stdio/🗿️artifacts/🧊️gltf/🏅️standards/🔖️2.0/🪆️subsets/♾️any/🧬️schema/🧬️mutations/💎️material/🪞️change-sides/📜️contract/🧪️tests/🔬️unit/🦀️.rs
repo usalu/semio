@@ -1,54 +1,29 @@
-mod tests {
-    use crate::schema::mutations::change_material_double_sided::{diff, inverse, mutation};
-    use crate::GltfSnapshot;
-    use std::collections::BTreeMap;
-    #[derive(value_derive::FromValue)]
-    #[value(rename_all = "camelCase")]
-    struct State {
-        material: usize,
-        double_sided: bool,
-    }
-    #[derive(value_derive::FromValue)]
-    struct Vector {
-        base: State,
-        mutation: mutation::GltfChangeMaterialDoubleSidedPayload,
-        diff: diff::GltfChangeMaterialDoubleSidedDiff,
-        inverse: inverse::GltfChangeMaterialDoubleSidedInverse,
-        after: State,
-        undo: State,
-        rejections: BTreeMap<String, String>,
-    }
-    #[derive(value_derive::FromValue)]
-    struct Contract {
-        vectors: Vec<Vector>,
-    }
-    #[semio_framework_async_macros::async_test]
-    async fn canonical_vector_executes_forward_inverse_stale_and_path_laws() {
-        let contract: Contract = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
-        let vector = &contract.vectors[0];
-        assert_eq!(vector.base.material, 0);
+use crate::schema::mutations::change_material_double_sided as mutation;
+use crate::schema::mutations::contract_tests::{assert_laws, decode};
+use crate::GltfSnapshot;
+
+#[test]
+fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
+    assert_eq!(contract["id"], mutation::ID);
+    let vectors = contract["vectors"].as_array().unwrap();
+    assert!(!vectors.is_empty());
+    for vector in vectors {
+        let payload: mutation::GltfChangeMaterialDoubleSidedPayload = decode(&vector["mutation"]);
+        assert_eq!(vector["base"]["material"], 0);
+        assert_eq!(vector["after"]["material"], 0);
+        assert_eq!(vector["undo"]["material"], 0);
         let mut base = GltfSnapshot::default();
         base.document.materials.push(Default::default());
-        base.document.materials[0].double_sided = vector.base.double_sided;
-        let planned = diff::derive(&vector.mutation, &base).unwrap();
-        let inverted = inverse::reconstruct(&vector.mutation, &base).unwrap();
-        assert_eq!(planned, vector.diff);
-        assert_eq!(inverted, vector.inverse);
-        let mut mutation_state = base.clone();
-        mutation::apply(&mut mutation_state, &vector.mutation).unwrap();
-        assert_eq!(mutation_state.document.materials[0].double_sided, vector.after.double_sided);
-        let mut diff_state = base.clone();
-        planned.apply(&mut diff_state).unwrap();
-        assert_eq!(diff_state.document.materials[0].double_sided, vector.after.double_sided);
-        assert_eq!(planned.apply(&mut diff_state).unwrap_err().code, vector.rejections["staleDiff"]);
-        let mut forged = planned.clone();
-        forged.touched_paths = vec!["document/materials/9/doubleSided".into()];
-        assert_eq!(forged.apply(&mut base.clone()).unwrap_err().code, vector.rejections["forgedPath"]);
-        inverted.apply(&mut diff_state).unwrap();
-        assert_eq!(diff_state.document.materials[0].double_sided, vector.undo.double_sided);
-        assert_eq!(inverted.apply(&mut diff_state).unwrap_err().code, vector.rejections["staleInverse"]);
-        assert_eq!(serde_json::to_value(&planned).unwrap(), serde_json::to_value(&vector.diff).unwrap());
-        assert_eq!(serde_json::to_value(&inverted).unwrap(), serde_json::to_value(&vector.inverse).unwrap());
-        assert_eq!(vector.after.material, vector.undo.material);
+        base.document.materials[0].double_sided = decode(&vector["base"]["doubleSided"]);
+        let mut expected = base.clone();
+        expected.document.materials[0].double_sided = decode(&vector["after"]["doubleSided"]);
+        assert_eq!(base.document.materials[0].double_sided, decode::<bool>(&vector["undo"]["doubleSided"]));
+        let mut direct = base.clone();
+        mutation::apply(&mut direct, &payload).unwrap();
+        assert_eq!(direct, expected);
+        assert_eq!(mutation::validate(&payload, &direct).unwrap_err().code, "gltf.mutation.no-observable-change");
+        assert_laws(&mutation::ChangeMaterialDoubleSidedMutation::Apply(payload.clone()), &base, &expected);
     }
+    println!("[DEBUG] change_material_double_sided: {} canonical vectors verified through direct mutations, inverse restoration and the independent JSON oracle.", vectors.len());
 }

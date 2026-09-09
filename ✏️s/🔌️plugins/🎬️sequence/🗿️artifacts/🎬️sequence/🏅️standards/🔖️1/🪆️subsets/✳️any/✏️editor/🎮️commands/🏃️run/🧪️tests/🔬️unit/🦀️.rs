@@ -1,6 +1,5 @@
-
-use crate::editor::sequence::SequenceCommand;
 use crate::editor::sequence::testkit::{dispatch, new_app, render};
+use crate::editor::sequence::SequenceCommand;
 
 use super::run_command::Run;
 use super::stop_command::Stop;

@@ -3,14 +3,112 @@
   "$id": "https://semio.tech/schema/s/drawing/drawing/diff.json",
   "title": "DrawingDiff",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "schema": {
-      "type": "string",
+      "type": ["string", "null"],
       "x-semio-state": "artifact"
     },
-    "value": {
-      "type": "string",
+    "artifact": {
+      "anyOf": [
+        { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json" },
+        { "type": "null" }
+      ],
       "x-semio-state": "artifact"
+    },
+    "id": {
+      "type": ["string", "null"],
+      "x-semio-state": "artifact"
+    },
+    "title": {
+      "type": ["string", "null"],
+      "x-semio-state": "artifact"
+    },
+    "layers": {
+      "anyOf": [
+        { "$ref": "#/$defs/DrawingLayersDelta" },
+        { "type": "null" }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "assets": {
+      "anyOf": [
+        { "$ref": "#/$defs/DrawingAssetsDelta" },
+        { "type": "null" }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "artboard": {
+      "anyOf": [
+        { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingArtboard" },
+        { "type": "null" }
+      ],
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "DrawingAssetsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries"],
+      "properties": {
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingImageAsset" },
+              { "type": "null" }
+            ]
+          }
+        }
+      }
+    },
+    "DrawingLayersDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["added", "removed", "patched"],
+      "properties": {
+        "added": { "type": "array", "items": { "$ref": "#/$defs/DrawingLayerAddition" } },
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "patched": { "type": "array", "items": { "$ref": "#/$defs/DrawingLayerPatchEntry" } },
+        "reordered": { "type": ["array", "null"], "items": { "type": "string" } }
+      }
+    },
+    "DrawingLayerAddition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "layer"],
+      "properties": {
+        "parentId": { "type": "string" },
+        "index": { "type": "integer", "minimum": 0 },
+        "layer": { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode" }
+      }
+    },
+    "DrawingLayerPatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "patch"],
+      "properties": {
+        "id": { "type": "string" },
+        "patch": { "$ref": "#/$defs/DrawingLayerPatch" }
+      }
+    },
+    "DrawingLayerPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "visible": { "type": ["boolean", "null"] },
+        "locked": { "type": ["boolean", "null"] },
+        "name": { "type": ["string", "null"] },
+        "opacity": { "type": ["number", "null"] },
+        "blendMode": { "type": ["string", "null"] },
+        "transformJson": { "type": ["string", "null"] },
+        "fillJson": { "type": ["string", "null"] },
+        "strokeJson": { "type": ["string", "null"] },
+        "booleanOperation": { "type": ["string", "null"] },
+        "traceParamsJson": { "type": ["string", "null"] },
+        "layerJson": { "type": ["string", "null"] }
+      }
     }
   }
 }

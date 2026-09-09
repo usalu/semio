@@ -9,9 +9,9 @@ export interface Block5dSnapshot {
   /** @state artifact */
   partKind: BlockKindIdentity;
   /** @state artifact */
-  "2d": Block5dPart2d;
+  part2d: Block5dPart2d;
   /** @state artifact */
-  "3d": Block5dPart3d;
+  part3d: Block5dPart3d;
   /** @state artifact */
   representations: BlockRepresentation[];
   /** @state artifact */

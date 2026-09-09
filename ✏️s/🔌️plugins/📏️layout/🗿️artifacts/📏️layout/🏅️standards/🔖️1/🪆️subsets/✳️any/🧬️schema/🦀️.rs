@@ -4,7 +4,7 @@ use crate::{LayoutDrawingChild, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Artifact
-/// 🧬️ Full layout artifact state across the artifact, presence and config lanes.
+/// 🧬️ layout document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.layout.layout")]
@@ -41,28 +41,6 @@ pub struct LayoutArtifact {
     #[link_slot(roles("model"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub referenced_model: Option<store::ArtifactLink>,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
-    #[state(config)]
-    pub active_page_id: String,
-    #[state(config)]
-    pub engagement_input: String,
-    #[state(config)]
-    pub camera_x: f64,
-    #[state(config)]
-    pub camera_y: f64,
-    #[state(config)]
-    pub camera_zoom: f64,
-    #[state(config)]
-    pub preview_camera_x: f64,
-    #[state(config)]
-    pub preview_camera_y: f64,
-    #[state(config)]
-    pub preview_camera_zoom: f64,
-    #[state(config)]
-    pub drop_preview: LayoutDropPreviewState,
-    #[state(artifact)]
-    pub hovered_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -84,17 +62,6 @@ impl Default for LayoutArtifact {
             data_fields_json: None,
             background_drawing: None,
             referenced_model: None,
-            selected_ids: Vec::new(),
-            active_page_id: "page-1".into(),
-            engagement_input: String::new(),
-            camera_x: 0.0,
-            camera_y: 0.0,
-            camera_zoom: 1.0,
-            preview_camera_x: 0.0,
-            preview_camera_y: 0.0,
-            preview_camera_zoom: 1.0,
-            drop_preview: LayoutDropPreviewState::default(),
-            hovered_id: None,
         }
     }
 }
@@ -120,7 +87,7 @@ impl LayoutArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::LayoutSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -166,13 +133,7 @@ impl LayoutArtifact {
 pub fn layout_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.layout.layout",
-        artifact: schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -181,11 +142,7 @@ pub fn layout_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
         diff: schema::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
+            rust: include_str!("🔺️diff/🦀️.rs"), typescript: include_str!("🔺️diff/🟦️.ts"), graphql: include_str!("🔺️diff/🔗️.graphql"), json_schema: include_str!("🔺️diff/🔣️.json"), proto: include_str!("🔺️diff/🛰️.proto")
         },
         mutations: schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
@@ -476,14 +433,14 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports
+pub use crate::CharacterStyle;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::GridSettings;
-pub use crate::LayoutDropPreviewState;
-pub use crate::ParagraphStyle;
-pub use crate::CharacterStyle;
-pub use crate::TextStory;
 pub use crate::ImageLink;
+pub use crate::LayoutDropPreviewState;
+pub use crate::Page;
+pub use crate::ParagraphStyle;
 pub use crate::ParentPage;
 pub use crate::Spread;
-pub use crate::Page;
+pub use crate::TextStory;
 //#endregion 🔁️Re-exports

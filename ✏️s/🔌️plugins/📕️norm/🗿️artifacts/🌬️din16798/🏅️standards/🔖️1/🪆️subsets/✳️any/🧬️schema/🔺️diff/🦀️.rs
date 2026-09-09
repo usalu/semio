@@ -136,8 +136,6 @@ pub struct Din16798Diff {
     pub duct_test_pressure_pa: Option<f64>,
     #[state(artifact)]
     pub duct_leakage_m3_s_m2: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

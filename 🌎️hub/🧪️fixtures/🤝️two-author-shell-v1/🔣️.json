@@ -7,7 +7,7 @@
       "stdio",
       "gis"
     ],
-    "executionProtocol": 14,
+    "executionProtocol": 15,
     "receiptIdentity": [
       "generationId",
       "bundleSha256",
@@ -23,7 +23,13 @@
       "spaceCoreSha256",
       "spaceDescriptorSha256",
       "selectedGisGenerationId",
-      "selectedGisCurrentSha256"
+      "selectedGisCurrentSha256",
+      "selectedGisComponentSha256",
+      "selectedGisDescriptorSha256",
+      "selectedGisStagedDescriptorSha256",
+      "selectedGisBridgeSha256",
+      "selectedGisGeneratedCores",
+      "selectedGisMaterializationReceiptSha256"
     ],
     "sameDataRoot": true
   },
@@ -35,6 +41,7 @@
     "author-a": "en",
     "author-b": "de"
   },
+  "artifactOpen": { "en": "Open", "de": "Öffnen", "exact": true, "scope": "artifact-row" },
   "steps": [
     "materialize-and-validate-current",
     "stage-ticket-owned-space-and-selected-gis-browser-host",

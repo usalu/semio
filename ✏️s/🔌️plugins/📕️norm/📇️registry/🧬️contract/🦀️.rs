@@ -27,12 +27,12 @@ pub mod config {
         #[path = "../../🎚️config/🧬️schema/🧬️mutations/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "../../🎚️config/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+        mod binary;
         #[path = "../../🎚️config/🧬️schema/🧬️mutations/☑️change-selected-check-index/🦀️.rs"]
         pub mod change_selected_check_index;
         #[path = "../../🎚️config/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
         mod text;
-        #[path = "../../🎚️config/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-        mod binary;
     }
 }
 
@@ -107,14 +107,7 @@ pub fn package_from_schema(source: &str) -> Result<NormArtifactPackage, PackageS
             return Err(PackageSchemaError(format!("invalid dependency {dependency}")));
         }
     }
-    Ok(NormArtifactPackage {
-        id: parsed.id,
-        artifact: parsed.artifact,
-        directory: parsed.directory,
-        rust_package: parsed.rust_package,
-        nx_project: parsed.nx_project,
-        dependencies: parsed.dependencies,
-    })
+    Ok(NormArtifactPackage { id: parsed.id, artifact: parsed.artifact, directory: parsed.directory, rust_package: parsed.rust_package, nx_project: parsed.nx_project, dependencies: parsed.dependencies })
 }
 
 #[cfg(test)]

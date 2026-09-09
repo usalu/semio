@@ -1,6 +1,5 @@
 //! 🔥 `change-insulation-thickness-mm` — sets the En 1994 fire protection insulation thickness [mm] scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

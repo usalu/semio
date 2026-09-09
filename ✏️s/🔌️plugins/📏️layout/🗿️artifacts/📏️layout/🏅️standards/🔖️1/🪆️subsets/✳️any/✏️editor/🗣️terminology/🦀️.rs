@@ -1,9 +1,7 @@
 //! 🗣️ Layout play app — the single `app_labels!` block plus the locale resolvers every taxonomy node
 //! reaches for. Deliberately ONE block for the whole app (never split per window/panel): the macro's
-//! value is that every locale×terminology combination is compile-checked in one place. `LayoutConfig`
-//! carries no terminology axis, so `reuse_*` mirrors `native_*` throughout.
+//! value is that every locale×terminology combination is compile-checked in one place.
 
-use crate::editor::layout::config::LayoutConfig;
 use semio_framework_plugin::{Label, LabelText};
 
 //#region 🔖️Labels
@@ -76,7 +74,7 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-/// 🗣️ Resolves the active label set from the config-carried locale; unknown locales fall back to native English.
+/// 🗣️ Resolves the active label set from the shared OS-owned view context.
 pub fn layout_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static LayoutLabels {
     semio_framework_plugin::resolve_labels::<LayoutLabels>(view_state)
 }

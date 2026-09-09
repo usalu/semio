@@ -1,6 +1,5 @@
 //! 🔍 `change-fatigue-detail` — sets the En 1994 bridge fatigue detail category key scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

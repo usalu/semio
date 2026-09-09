@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::editor::sequence::testkit::{new_app, new_app_with_registry_wired};
-use semio_framework_plugin::{Locale, PluginApp, Terminology, testkit::assert_undo_redo_round_trip};
+use semio_framework_plugin::{testkit::assert_undo_redo_round_trip, Locale, PluginApp, Terminology};
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_steps() {

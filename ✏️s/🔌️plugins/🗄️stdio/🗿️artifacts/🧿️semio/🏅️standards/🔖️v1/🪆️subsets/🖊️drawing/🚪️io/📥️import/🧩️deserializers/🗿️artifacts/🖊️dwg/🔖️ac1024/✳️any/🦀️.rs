@@ -11,10 +11,10 @@
 //!   dropped — mesh-shaped content is the `🔺️mesh` bridge's job, not this one's.
 //! - Malformed logical geometry is a hard `Err`, not a fabricated empty drawing.
 
-use semio_s_artifact_stdio_dwg::{dwg_geometry_to_path_segments, DwgDrawing, DwgGeometry, DwgSnapshot};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_dwg::{dwg_geometry_to_path_segments, DwgDrawing, DwgGeometry, DwgSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };

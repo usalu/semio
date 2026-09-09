@@ -23,8 +23,7 @@
   "sheetWElMm3": null,
   "sheetMEdKnm": null,
   "shellTMm": null,
-  "shellRMm": 750.0,
+  "shellRMm": 750,
   "sigmaEdShellMpa": null,
-  "annex": null,
-  "selectedCheckIndex": null
+  "annex": null
 }

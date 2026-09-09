@@ -739,7 +739,6 @@ thread_local! {
     static SCENE_STATE: RefCell<AdmittedSurfaceMap<SceneSurfaceState>> = RefCell::new(AdmittedSurfaceMap::default());
     static PENDING_RASTER_STATE: RefCell<AdmittedSurfaceMap<PendingRasterSurface>> = RefCell::new(AdmittedSurfaceMap::default());
     static PENDING_RASTER_CLOSE_OWNER: RefCell<Option<PendingRasterSurfaceRetirement>> = const { RefCell::new(None) };
-    static GRAPH_NODE_CTX: RefCell<HashMap<String, Option<String>>> = RefCell::new(HashMap::new());
     /// 🕒️ Canvas2d/Paint2d's settle-then-dispatch deadline map — surface id -> the timestamp its
     /// debounced `setCamera` should fire at. Same shape/sweep (`sweep_expired_camera_dispatch_deadlines`)
     /// as `AppRuntime`'s `world3d_camera_dispatch_deadlines_ms`; kept thread-local here rather than on
@@ -756,28 +755,11 @@ static PENDING_RASTER_STATE: WorkerCell<AdmittedSurfaceMap<PendingRasterSurface>
 #[cfg(not(target_arch = "wasm32"))]
 static PENDING_RASTER_CLOSE_OWNER: WorkerCell<Option<PendingRasterSurfaceRetirement>> = WorkerCell::new();
 #[cfg(not(target_arch = "wasm32"))]
-static GRAPH_NODE_CTX: WorkerCell<HashMap<String, Option<String>>> = WorkerCell::new();
 #[cfg(not(target_arch = "wasm32"))]
 static SCENE_CAMERA_DISPATCH_DEADLINES_MS: WorkerCell<HashMap<String, f64>> = WorkerCell::new();
 #[cfg(not(target_arch = "wasm32"))]
 static SCENE_CAMERA_DISPATCH_FAULT: WorkerCell<Option<&'static str>> = WorkerCell::new();
 
-/** @emoji 🕸️ Clears per-frame graph node metadata used by context menus. */
-pub fn clear_graph_node_context() {
-    GRAPH_NODE_CTX.with(|cell| cell.borrow_mut().clear());
-}
-
-/** @emoji 🕸️ Registers a graph node instance mapping for context-menu dispatch. */
-pub fn register_graph_node(node_id: &str, instance_id: Option<&str>) {
-    GRAPH_NODE_CTX.with(|cell| {
-        cell.borrow_mut().insert(node_id.to_string(), instance_id.map(str::to_string));
-    });
-}
-
-/** @emoji 🕸️ Resolves a graph node instance id for context-menu actions. */
-pub fn graph_node_instance(node_id: &str) -> Option<String> {
-    GRAPH_NODE_CTX.with(|cell| cell.borrow().get(node_id).cloned().flatten())
-}
 
 /** @emoji 📁️ Toggles VFS row expand/collapse in scene-local state. */
 pub fn toggle_vfs_row_expanded(surface_id: &str, row_id: &str) {
@@ -3671,34 +3653,6 @@ pub struct NodeGraphSurface {
     pub bounds: Rect,
     pub controller_id: String,
 }
-
-/** @emoji 🕸️ Applies node-hit context to a scene context-menu action. */
-pub fn resolve_graph_context_action(action: &ActionDescriptor, node_id: Option<&str>) -> ActionDescriptor {
-    let Some(node_id) = node_id else {
-        return action.clone();
-    };
-    let mut resolved = action.clone();
-    match action.action.as_str() {
-        "setMediaNodeSelection" => {
-            resolved.args = crate::action_args_json!({ "nodeIds": [node_id] });
-        }
-        "removeAppInstance" => {
-            if let Some(instance_id) = graph_node_instance(node_id) {
-                resolved.args = crate::action_args_json!({ "instanceId": instance_id });
-            }
-        }
-        "selectNode" => {
-            resolved.args = crate::action_args_json!({ "nodeId": node_id });
-        }
-        _ => {}
-    }
-    resolved
-}
-
-
-
-
-
 
 //#endregion NodeGraph
 

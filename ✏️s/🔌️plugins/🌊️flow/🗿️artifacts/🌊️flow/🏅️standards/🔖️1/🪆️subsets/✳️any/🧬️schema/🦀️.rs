@@ -1,7 +1,6 @@
 //! 🧬️ Flow artifact schema — every field of the artifact with its state class.
 
 use crate::{FlowContentChild, FlowSnapshot};
-use flow::{FLOW_LOD_MODE_AUTOMATIC};
 
 use framework_schema::ArtifactSchema;
 
@@ -76,7 +75,7 @@ pub fn widget_tree_label(widget: &Widget) -> String {
 //#endregion 🔖️Widgets
 
 //#region 🔹Artifact
-/// 🧬️ Full flow artifact state across the artifact, presence and config lanes.
+/// 🧬️ flow document artifact state.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow")]
@@ -88,32 +87,6 @@ pub struct FlowArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub content: FlowContentChild,
-    #[state(presence)]
-    pub selected_node_ids: Vec<String>,
-    #[state(presence)]
-    pub selected_edge_ids: Vec<String>,
-    #[state(presence)]
-    pub selected_handle_ids: Vec<String>,
-    #[state(presence)]
-    pub preview_off_node_ids: Vec<String>,
-    #[state(config)]
-    pub lod_mode: String,
-    #[state(config)]
-    pub proximity_distance: f64,
-    #[state(config)]
-    pub grid_visible: bool,
-    #[state(config)]
-    pub grid_snap_enabled: bool,
-    #[state(config)]
-    pub grid_factor: f64,
-    #[state(config)]
-    pub catalogue_sections_json: String,
-    #[state(config)]
-    pub automation_enabled_json: String,
-    #[state(config)]
-    pub contributions_json: String,
-    #[state(config)]
-    pub generation_json: String,
 }
 //#endregion 🔹Artifact
 
@@ -130,26 +103,9 @@ impl FlowArtifact {
         FlowSnapshot { schema: self.schema.clone(), camera: self.camera.clone(), content: self.content.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: FlowSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            camera: snapshot.camera,
-            content: snapshot.content,
-            selected_node_ids: Vec::new(),
-            selected_edge_ids: Vec::new(),
-            selected_handle_ids: Vec::new(),
-            preview_off_node_ids: Vec::new(),
-            lod_mode: FLOW_LOD_MODE_AUTOMATIC.into(),
-            proximity_distance: FLOW_DEFAULT_PROXIMITY_DISTANCE,
-            grid_visible: true,
-            grid_snap_enabled: false,
-            grid_factor: FLOW_DEFAULT_GRID_FACTOR,
-            catalogue_sections_json: "[]".into(),
-            automation_enabled_json: String::new(),
-            contributions_json: "[]".into(),
-            generation_json: String::new(),
-        }
+        Self { schema: snapshot.schema, camera: snapshot.camera, content: snapshot.content }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -166,13 +122,7 @@ impl FlowArtifact {
 pub fn flow_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.flow.flow",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

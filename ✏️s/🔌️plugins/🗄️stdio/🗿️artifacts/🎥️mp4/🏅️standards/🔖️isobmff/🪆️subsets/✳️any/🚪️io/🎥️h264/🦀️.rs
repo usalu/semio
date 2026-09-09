@@ -21,7 +21,6 @@ pub type ExtendedAvcParameterSets = (Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crat
 /// 🎥 Sequence parameters, picture parameters, and NAL length width.
 pub type AvcParameterSets = (Vec<Vec<u8>>, Vec<Vec<u8>>, u8);
 
-
 //#region 🔖️Error
 #[derive(Clone, Debug, PartialEq)]
 pub enum H264Error {

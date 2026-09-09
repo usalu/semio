@@ -79,6 +79,23 @@ pub struct QueryResult {
     pub graph_fixture: Option<JackSnapshot>,
 }
 
+impl dsl::DslField for QueryResult {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Value
+    }
+
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Value(dsl::ToValue::to_value(self))
+    }
+
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Value(value) => dsl::FromValue::from_value(value.clone()).map_err(|error| error.to_string()),
+            other => Err(format!("expected Value, found {other:?}")),
+        }
+    }
+}
+
 impl QueryResult {
     pub fn table(columns: Vec<String>, rows: Vec<Vec<PropertyValue>>) -> Self {
         Self { kind: QueryResultKind::Table, columns, rows, graph_fixture: None }

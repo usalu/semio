@@ -5,9 +5,9 @@
 //! The terrain's one editable property (exaggeration) is document state and lives in
 //! `crate`.
 
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
 /// 🧮️ gis3d's `ArtifactEditor::Config` for the free/live viewport camera.
@@ -76,7 +76,7 @@ fn default_gis3d_camera_json() -> String {
 
 impl Default for Gis3dConfig {
     fn default() -> Self {
-        Self { camera_json: default_gis3d_camera_json(), }
+        Self { camera_json: default_gis3d_camera_json() }
     }
 }
 
@@ -114,8 +114,12 @@ impl protocol::OpText for Gis3dConfigMutation {
 }
 
 impl protocol::OpBinary for Gis3dConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
 }
 
 //#endregion 🔖️OpCodec

@@ -205,9 +205,6 @@ impl Din16798Diff {
             if let Some(value) = &self.duct_leakage_m3_s_m2 {
                 next.duct_leakage_m3_s_m2 = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -483,7 +480,6 @@ impl MutationDiff<Din16798Snapshot> for Din16798Diff {
         take!(duct_class);
         take!(duct_test_pressure_pa);
         take!(duct_leakage_m3_s_m2);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

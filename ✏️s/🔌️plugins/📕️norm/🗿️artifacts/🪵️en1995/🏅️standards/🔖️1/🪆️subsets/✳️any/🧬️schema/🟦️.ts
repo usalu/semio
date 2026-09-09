@@ -41,6 +41,4 @@ export interface En1995Artifact {
   aVertMS2: number;
   /** @state artifact */
   nCyclesBridge: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

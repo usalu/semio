@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::diff::{XmlChildAdded, XmlNodeDiff};
 use crate::schema::mutations::{
@@ -6,7 +5,7 @@ use crate::schema::mutations::{
     SetTextPayload, XmlNodePath,
 };
 use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
-use crate::{STDIO_XML_DOCUMENT_SCHEMA, XmlDiff, XmlMutation};
+use crate::{XmlDiff, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA};
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
 

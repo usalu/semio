@@ -1,9 +1,9 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-geo-params`.
 
+use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::mutations::update_geo_params;
 use crate::op::RemodelingMutation;
 use crate::{GeoParams, RemodelingSnapshot};
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

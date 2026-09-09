@@ -23,11 +23,42 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 1.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 120.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(3), value: 0.5 });
-    model.materials.push(crate::model::Material { id: crate::model::EntityId(1), name: "PLASTERBOARD".into(), thickness_m: 0.012, conductivity_w_m_k: 0.16, density_kg_m3: 950.0, specific_heat_j_kg_k: 840.0, thermal_absorptance: 0.9, solar_absorptance: 0.6, visible_absorptance: 0.6 });
-    model.materials.push(crate::model::Material { id: crate::model::EntityId(2), name: "FIBERGLASS QUILT".into(), thickness_m: 0.066, conductivity_w_m_k: 0.04, density_kg_m3: 12.0, specific_heat_j_kg_k: 840.0, thermal_absorptance: 0.9, solar_absorptance: 0.6, visible_absorptance: 0.6 });
+    model.materials.push(crate::model::Material {
+        id: crate::model::EntityId(1),
+        name: "PLASTERBOARD".into(),
+        thickness_m: 0.012,
+        conductivity_w_m_k: 0.16,
+        density_kg_m3: 950.0,
+        specific_heat_j_kg_k: 840.0,
+        thermal_absorptance: 0.9,
+        solar_absorptance: 0.6,
+        visible_absorptance: 0.6,
+    });
+    model.materials.push(crate::model::Material {
+        id: crate::model::EntityId(2),
+        name: "FIBERGLASS QUILT".into(),
+        thickness_m: 0.066,
+        conductivity_w_m_k: 0.04,
+        density_kg_m3: 12.0,
+        specific_heat_j_kg_k: 840.0,
+        thermal_absorptance: 0.9,
+        solar_absorptance: 0.6,
+        visible_absorptance: 0.6,
+    });
     model.constructions.push(crate::model::Construction { id: crate::model::EntityId(10), name: "LTWALL".into(), layer_material_ids: vec![crate::model::EntityId(1), crate::model::EntityId(2)] });
     model.constructions.push(crate::model::Construction { id: crate::model::EntityId(11), name: "HWWALL".into(), layer_material_ids: vec![crate::model::EntityId(2)] });
-    model.surfaces.push(crate::model::Surface { id: crate::model::EntityId(70), name: "SOUTH WALL".into(), zone_id: crate::model::EntityId(1), class: crate::model::SurfaceClass::ExteriorWall, vertices_m: vec![[0.0, 0.0, 0.0], [8.0, 0.0, 0.0], [8.0, 0.0, 2.7], [0.0, 0.0, 2.7]], construction_id: crate::model::EntityId(10), outside_boundary_condition: crate::model::OutsideBoundary::OutdoorAir, sun_exposed: true, wind_exposed: true, multiplier: 1 });
+    model.surfaces.push(crate::model::Surface {
+        id: crate::model::EntityId(70),
+        name: "SOUTH WALL".into(),
+        zone_id: crate::model::EntityId(1),
+        class: crate::model::SurfaceClass::ExteriorWall,
+        vertices_m: vec![[0.0, 0.0, 0.0], [8.0, 0.0, 0.0], [8.0, 0.0, 2.7], [0.0, 0.0, 2.7]],
+        construction_id: crate::model::EntityId(10),
+        outside_boundary_condition: crate::model::OutsideBoundary::OutdoorAir,
+        sun_exposed: true,
+        wind_exposed: true,
+        multiplier: 1,
+    });
     (snapshot(model), super::delete_construction(crate::model::EntityId(10)))
 }
 

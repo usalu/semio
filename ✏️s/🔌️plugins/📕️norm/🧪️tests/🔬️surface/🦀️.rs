@@ -1,4 +1,3 @@
-
 //! 🧪️ `assert_viewer_never_mutates`/`assert_editor_and_viewer_share_dialect` (contract §2.5) —
 //! local stand-ins per the pilot's `📓️w2-cad-report.md` "SDK gaps" #2: as of this packet's W0-F
 //! handoff, the canonical `semio_framework_plugin::testkit` versions exist

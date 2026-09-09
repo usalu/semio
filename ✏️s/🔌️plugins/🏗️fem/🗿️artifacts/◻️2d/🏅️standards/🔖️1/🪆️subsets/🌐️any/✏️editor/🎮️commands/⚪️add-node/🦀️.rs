@@ -1,8 +1,8 @@
 //! 🧱️ 🧱️ Fem2d play app commands command — `add-node`.
 
+use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::FemNode;
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

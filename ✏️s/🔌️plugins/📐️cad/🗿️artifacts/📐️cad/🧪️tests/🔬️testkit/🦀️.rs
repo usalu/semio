@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧩️ A sample composed `s.stdio.semio.model` CHILD HANDLE — `child_id` + `target` only, per

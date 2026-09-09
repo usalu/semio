@@ -18,20 +18,8 @@ pub struct WiresConfig {
 pub fn app_schema_descriptor() -> ::framework_schema::AppSchemaDescriptor {
     ::framework_schema::AppSchemaDescriptor {
         id: "s.reasoning.wires",
-        config: ::framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
-        presence: ::framework_schema::FacetLeaves {
-            rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
-            typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
-            graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),
-            json_schema: include_str!("../../👥️presence/🧬️schema/🔣️.json"),
-            proto: include_str!("../../👥️presence/🧬️schema/🛰️.proto"),
-        },
+        config: ::framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        presence: ::framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
     }
 }
 //endregion 📎 App-schema descriptor

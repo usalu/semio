@@ -148,9 +148,12 @@ pub enum PdfObject {
     Array(Vec<PdfObject>),
     Dict(Vec<PdfDictEntry>),
     Ref(ObjRef),
-    Stream { dict: Vec<PdfDictEntry>, data: Vec<u8>, filters: Vec<PdfStreamFilter> },
+    Stream {
+        dict: Vec<PdfDictEntry>,
+        data: Vec<u8>,
+        filters: Vec<PdfStreamFilter>,
+    },
 }
-
 
 impl PdfObject {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -1568,13 +1568,13 @@ function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[] {
       if (header) {
         const factoryType = block.body.match(/factory_type:\s*([^,]+),/)?.[1]?.replaceAll(/\s+/g, "");
         const common = { sourceFile, ownerFile: header[2]!, ownerTypeName: header[1]!.replaceAll(/\s+/g, ""), controllerId: header[3]!, documentSchema: header[4]!, factory: header[5]!, factoryType };
-        const mappedRows = [...block.body.matchAll(/"([^"]+)"\s*=>\s*semio_framework::ToolExecutionContract::(bounded_first_step|resumable)\(([^)]*)\)/g)];
+        const mappedRows = [...block.body.matchAll(/"([^"]+)"\s*=>\s*(?:[A-Za-z_][A-Za-z0-9_]*::)*ToolExecutionContract::(bounded_first_step|resumable)\(([^)]*)\)/g)];
         for (const row of mappedRows) {
           const values = valuesOf(row[3]!);
           if (validValues(values)) proofs.push({ ...common, toolId: row[1]!, execution: row[2] === "resumable" ? "resumable" : "bounded", values });
         }
         if (mappedRows.length === 0) {
-          const sharedContract = block.body.match(/contract:\s*semio_framework::ToolExecutionContract::(bounded_first_step|resumable)\(([^)]*)\)/);
+          const sharedContract = block.body.match(/contract:\s*(?:[A-Za-z_][A-Za-z0-9_]*::)*ToolExecutionContract::(bounded_first_step|resumable)\(([^)]*)\)/);
           const sharedTools = block.body.match(/tools:\s*\[([^\]]*)\]/s);
           const values = valuesOf(sharedContract?.[2] ?? "");
           if (sharedTools && validValues(values)) {
@@ -1623,6 +1623,14 @@ function toolJobProofIdentity(proof: ToolJobProof): string {
 }
 
 //#region 🧭️ConcreteFactoryResolution
+/** 🗿️ An artifact crate's own lib root (`🗿️artifacts/<artifact>/🦀️.rs`, declared by that artifact's
+ * `📦️packages/🦀️rust/Cargo.toml` `[lib] path = "../../🦀️.rs"`), which owns the `#[path]` module tree
+ * since the plugin package root became a re-export shell. */
+function toolJobArtifactCrateRoot(file: string): string | undefined {
+  const match = file.match(/^(.*\/🗿️artifacts\/[^/]+)\/🦀️\.rs$/);
+  return match?.[1];
+}
+
 /** 🧭️ Resolves one crate module through its package's explicit taxonomy declarations. */
 function toolJobFactoryModuleFile(files: ReadonlyMap<string, string>, ownerFile: string, modulePath: string): string | undefined {
   const candidates = new Set<string>();
@@ -1646,7 +1654,8 @@ function toolJobFactoryModuleFile(files: ReadonlyMap<string, string>, ownerFile:
   for (const [file, source] of files) {
     if (!file.endsWith("/🦀️.rs")) continue;
     const packageBoundary = file.lastIndexOf("/📦️packages/");
-    if (packageBoundary < 0 || !ownerFile.startsWith(`${file.slice(0, packageBoundary)}/`)) continue;
+    const owningRoot = packageBoundary >= 0 ? file.slice(0, packageBoundary) : toolJobArtifactCrateRoot(file);
+    if (owningRoot === undefined || !ownerFile.startsWith(`${owningRoot}/`)) continue;
     visit(source, posix.dirname(file), "crate");
   }
   return candidates.size === 1 ? [...candidates][0] : undefined;
@@ -6074,9 +6083,10 @@ function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string;
     return `${law.id}:${result}`;
   });
   const shell = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
-  const accepted = shell.indexOf("program.handle_action(session.instance_id, &action_json, &session.view_state).await?");
-  const armed = shell.indexOf("if record_tutorial_after_acceptance", accepted);
-  if (accepted < 0 || armed < accepted || shell.slice(0, accepted).includes("if action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID {\n            self.tutorial_start_recording();"))
+  const arming = shell.indexOf("let record_tutorial_after_acceptance = action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID;");
+  const accepted = shell.indexOf("let result = program.handle_action(session.instance_id, &action_json, &live_view_state).await?;", arming);
+  const armed = shell.indexOf("if record_tutorial_after_acceptance {\n            self.tutorial_start_recording();", accepted);
+  if (arming < 0 || accepted < arming || armed < accepted || shell.slice(0, accepted).includes("if action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID {\n            self.tutorial_start_recording();"))
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] recordTutorial arms before the accepted retained route.");
   return { schema: fixture.schema, routes: fixture.routes.map((route) => `${route.id}:${route.factory}:${route.schemaId}:${route.descriptorDisposition}`), descriptor, hostile };
 }
@@ -7180,11 +7190,135 @@ export class VerifyScript extends Script {
       testResolvedHostContext();
       return;
     }
+    if (segments[0] === "wires-document-contract") {
+      const { testWiresDocumentContractOracle } = await import("./✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testWiresDocumentContractOracle();
+      if (segments[1] === "oracle") return;
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "committed_diff", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"));
+      return;
+    }
+    if (segments[0] === "shared-dynamic-value") {
+      const { testSharedDynamicValueOracle } = await import("./🧰️framework/🔨️modules/🌱️value/🧪️tests/🔣️json-projection/🟦️.ts");
+      testSharedDynamicValueOracle();
+      return;
+    }
+    if (segments[0] === "shared-artifact-addressing") {
+      const { testSharedArtifactAddressingOracle } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🪪️artifact-addressing/🟦️.ts");
+      testSharedArtifactAddressingOracle();
+      if (segments[1] === "oracle") return;
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "shared_artifact_addressing", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "wires-window-transient") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "window_transient", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"));
+      return;
+    }
+    if (segments[0] === "retained-window-input") {
+      const { testRetainedWindowInputOracle } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🟦️.ts");
+      testRetainedWindowInputOracle();
+      if (segments[1] === "oracle") return;
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "retained_window_input", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "playbook-document-contract") {
+      const { testPlaybookDocumentContractOracle } = await import("./✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testPlaybookDocumentContractOracle();
+      return;
+    }
+    if (segments[0] === "forms-document-contract") {
+      const { testFormsDocumentContractOracle } = await import("./✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testFormsDocumentContractOracle();
+      return;
+    }
+    if (segments[0] === "rewriting-document-contract") {
+      const { testRewritingDocumentContractOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testRewritingDocumentContractOracle();
+      return;
+    }
+    if (segments[0] === "reset-document-ownership") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-reasoning-wires", "-p", "semio-s-artifact-trinity-rewriting", "--features", "semio-s-artifact-trinity-rewriting/component-app-assembly", "--lib", "reset_document_ownership", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "wires-pointer-move") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-reasoning-wires", "--lib", "wires_pointer_move_", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "shared-value-canonical-json") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "shared_value_canonical_json", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "shared-value-clone") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "shared_value_clone", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "shared-map-delta") {
+      const { testSharedMapDeltaOracle } = await import("./🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🟦️.ts");
+      testSharedMapDeltaOracle();
+      if (segments[1] === "oracle") return;
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "shared_map_delta", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "rewriting-map-ownership") {
+      const { testRewritingMapOwnershipOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🗂️map-ownership/🟦️.ts");
+      testRewritingMapOwnershipOracle();
+      if (segments[1] === "oracle") return;
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      for (const filter of ["rewriting_map_ownership", "committed_diff"]) await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", filter, "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"));
+      return;
+    }
+    if (segments[0] === "rewriting-window-config") {
+      const { testRewritingDocumentRetirementOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🧪️tests/🟦️.ts");
+      testRewritingDocumentRetirementOracle();
+      const { testRewritingWindowConfigOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts");
+      testRewritingWindowConfigOracle();
+      if (segments[1] === "oracle") return;
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "--features", "component-app-assembly", "--lib", "rewriting_window_config", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"));
+      return;
+    }
+    if (segments[0] === "artifact-contract-ownership") {
+      abstractionOwnershipChecks(this.root);
+      const fixture = JSON.parse(readFileSync(join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
+      const packages = [...new Set(fixture.artifactSchemas.map((path) => {
+        const manifest = Bun.TOML.parse(readFileSync(join(this.root, path.split("/🏅️standards/")[0], "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as { package: { name: string } };
+        return manifest.package.name;
+      }))];
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      const packageArgs = packages.flatMap((name) => ["-p", name]);
+      if (segments[1] === "test") {
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "--no-fail-fast", ...packageArgs, "committed_diff", "--", "--nocapture"], this.root);
+        console.log(`[DEBUG] artifact-contract-ownership: committed diff generation, canonical encoding and application checks completed for ${packages.length} selected artifact crates.`);
+        return;
+      }
+      await runCargo(["check", "--manifest-path", "Cargo.toml", "--tests", ...packageArgs], this.root);
+      console.log(`[verify artifact-contract-ownership] ${packages.length} artifact crates and their tests compile.`);
+      return;
+    }
     if (segments[0] === "jack-query-ownership") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       const { testResumableQueryOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🧪️tests/🪜️resumable-query/🟦️.ts");
       testResumableQueryOracle();
+      if (segments[1] === "oracle") return;
       await runCargo(["test", "--manifest-path", "Cargo.toml", "--features", "component-app-assembly", "--lib", "query_ownership", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"));
+      return;
+    }
+    if (segments[0] === "window-action-context") {
+      const { testWindowActionContextOracle } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️window-action-context/🟦️.ts");
+      testWindowActionContextOracle();
+      if (segments[1] === "oracle") return;
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      for (const filter of ["window_action_context", "apply_drop_committed_queues_the_merged_action_into_input"]) {
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", filter, "--", "--nocapture"], this.root);
+      }
       return;
     }
     if (segments[0] === "surface-view-context") {
@@ -7200,6 +7334,16 @@ export class VerifyScript extends Script {
       }
       const { testWindowViewContext } = await import("./🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🟦️.ts");
       testWindowViewContext();
+      return;
+    }
+    if (segments[0] === "artifact-field-parity") {
+      const { testArtifactFieldParityOracle } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🪪️field-parity/🟦️.ts");
+      testArtifactFieldParityOracle();
+      if (segments[1] === "test") return;
+      const breaches = policyArtifactOwnershipFieldParity(this.root);
+      for (const breach of breaches) console.log(`[verify artifact-field-parity] ${breach.path}: missing=${breach.missing.join(",")} extra=${breach.extra.join(",")}`);
+      console.log(`[verify artifact-field-parity] ${breaches.length} schema representations disagree with the canonical document field sets.`);
+      if (breaches.length && segments[1] !== "report") throw new Error("Artifact schema representations disagree on document fields.");
       return;
     }
     if (segments[0] === "abstraction-ownership") {
@@ -8368,7 +8512,7 @@ const INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE = "✏️s/🔌️plugins/�
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-build-tick/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx";
 const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🦀️.rs";
@@ -8856,7 +9000,7 @@ function interactivityPuzzleFillEnvelopeFailures(precomputeSource: string, fillS
   ]) if (!precompute.includes(cap)) failures.push(`Puzzle fill envelope fixed admission changed or disappeared: ${cap}`);
   if (!precompute.includes("slots: [Option<FillEnvelopeAuthority>; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("generations: [u64; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("requested_items.checked_add(FILL_ENVELOPE_AUTHORITY_ITEMS)") || !precompute.includes("requested_bytes.checked_add(FILL_ENVELOPE_AUTHORITY_BYTES)") || !precompute.includes("self.aggregate_bytes.checked_add(bytes)") || !precompute.includes("self.slots[slot] = Some(FillEnvelopeAuthority")) failures.push("Puzzle fill envelope is not admitted into fixed generation slots before handoff");
   if (!sessionBridge.includes("let fill = self.engine.fill.take()?") || !sessionBridge.includes("registry.begin_measurement(job, operation, fill, worker") || !sessionBridge.includes("Err(owners) =>") || !sessionBridge.includes("self.engine.fill_worker = Some(owners.worker)") || !sessionBridge.includes("self.engine.fill = Some(owners.fill)") || !sessionBridge.includes("registry.finish_measurement(&admission.request, credit.items, credit.bytes)")) failures.push("Puzzle fill UI admission does not move the exact source and mounted worker owners into a registered measurement authority before census and exact credit");
-  if (censusStart < 0 || censusEnd < 0 || fixedOwnerStart < 0 || fixedOwnerEnd < 0 || !fill.includes("FILL_BUILDER_NESTED_ITEMS: usize = 32") || !geometry.includes("FIXED_OWNER_SLOTS: usize = 32") || !geometry.includes("FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024") || !geometry.includes("DOCUMENT_OWNER_PAGE_BYTES: usize = 64 * FIXED_OWNER_PAGE_BYTES") || !geometry.includes("DOCUMENT_OBJECT_SLOTS: usize = 2048") || !geometry.includes("DOCUMENT_VORTEX_SLOTS: usize = 2 * DOCUMENT_OBJECT_SLOTS") || !geometry.includes("DOCUMENT_ATTRACTION_SLOTS: usize = DOCUMENT_OBJECT_SLOTS") || !geometry.includes("DOCUMENT_KIND_SLOTS: usize = 256") || !geometry.includes("DOCUMENT_CANDIDATE_SLOTS: usize = 4 * DOCUMENT_KIND_SLOTS") || !geometry.includes("DOCUMENT_CELL_SLOTS: usize = 4 * DOCUMENT_OBJECT_SLOTS") || !fixedOwners.includes("page: Option<Box<[Option<(K, V)>; N]>>") || !fixedOwners.includes("std::mem::size_of::<[Option<(K, V)>; N]>()") || !fixedOwners.includes("if self.len == N") || !fixedOwners.includes("return Err((key, value));") || !fixedOwners.includes("Occupied { input_key: K, input_value: V }") || !fixedOwners.includes("return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });") || (fixedOwners.match(/pub\(crate\) fn remove_entry/g) ?? []).length !== 2 || geometry.includes("#[derive(Clone, Debug)]\npub(crate) struct FixedOwnerMap") || geometry.includes("CollectionBackings") || !fillFixedFields.every((field) => fill.includes(field)) || !fillFixedCredits.every((credit) => census.includes(credit)) || !geometry.includes("entries: FixedOwnerMap<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>") || !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>") || !geometry.includes("oversized: FixedOwnerSet<String, DOCUMENT_KIND_SLOTS>") || !geometry.includes("candidates: FixedOwnerSet<String, DOCUMENT_OBJECT_SLOTS>") || !geometry.includes("0 => self.entries.backing_credit()") || !geometry.includes("2 => self.cells.backing_credit()") || !geometry.includes("4 => self.oversized.backing_credit()") || !census.includes("path: [usize; 16]") || !census.includes("phase: [u8; 17]") || !census.includes("child: [usize; 17]") || !census.includes("self.credit.items.checked_add") || !census.includes("self.credit.bytes.checked_add") || !census.includes("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())") || !census.includes("match fill.candidate_seen.iter().nth(self.index)") || census.includes("fn measure_") || census.includes(".iter().all(") || !geometry.includes("pub(crate) fn census_one_owner") || !sessionBridge.includes("admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)")) failures.push("Puzzle fill admission does not advance one fixed nested allocation/entry backed by the exact credited slot pages before reservation");
+  if (censusStart < 0 || censusEnd < 0 || fixedOwnerStart < 0 || fixedOwnerEnd < 0 || !fill.includes("FILL_BUILDER_NESTED_ITEMS: usize = 32") || !geometry.includes("FIXED_OWNER_SLOTS: usize = 32") || !geometry.includes("FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024") || !geometry.includes("DOCUMENT_OWNER_PAGE_BYTES: usize = 64 * FIXED_OWNER_PAGE_BYTES") || !geometry.includes("DOCUMENT_OBJECT_SLOTS: usize = 2048") || !geometry.includes("DOCUMENT_VORTEX_SLOTS: usize = 2 * DOCUMENT_OBJECT_SLOTS") || !geometry.includes("DOCUMENT_ATTRACTION_SLOTS: usize = DOCUMENT_OBJECT_SLOTS") || !geometry.includes("DOCUMENT_KIND_SLOTS: usize = 256") || !geometry.includes("DOCUMENT_CANDIDATE_SLOTS: usize = 4 * DOCUMENT_KIND_SLOTS") || !geometry.includes("DOCUMENT_CELL_SLOTS: usize = 4 * DOCUMENT_OBJECT_SLOTS") || !fixedOwners.includes("page: Option<Box<[Option<(K, V)>; N]>>") || !/(?:std::mem::)?size_of::<\[Option<\(K, V\)>; N\]>\(\)/.test(fixedOwners) || !fixedOwners.includes("if self.len == N") || !fixedOwners.includes("return Err((key, value));") || !fixedOwners.includes("Occupied { input_key: K, input_value: V }") || !fixedOwners.includes("return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });") || (fixedOwners.match(/pub\(crate\) fn remove_entry/g) ?? []).length !== 2 || geometry.includes("#[derive(Clone, Debug)]\npub(crate) struct FixedOwnerMap") || geometry.includes("CollectionBackings") || !fillFixedFields.every((field) => fill.includes(field)) || !fillFixedCredits.every((credit) => census.includes(credit)) || !geometry.includes("entries: FixedOwnerMap<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>") || !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>") || !geometry.includes("oversized: FixedOwnerSet<String, DOCUMENT_KIND_SLOTS>") || !geometry.includes("candidates: FixedOwnerSet<String, DOCUMENT_OBJECT_SLOTS>") || !geometry.includes("0 => self.entries.backing_credit()") || !geometry.includes("2 => self.cells.backing_credit()") || !geometry.includes("4 => self.oversized.backing_credit()") || !census.includes("path: [usize; 16]") || !census.includes("phase: [u8; 17]") || !census.includes("child: [usize; 17]") || !census.includes("self.credit.items.checked_add") || !census.includes("self.credit.bytes.checked_add") || !census.includes("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())") || !census.includes("match fill.candidate_seen.iter().nth(self.index)") || census.includes("fn measure_") || census.includes(".iter().all(") || !geometry.includes("pub(crate) fn census_one_owner") || !sessionBridge.includes("admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)")) failures.push("Puzzle fill admission does not advance one fixed nested allocation/entry backed by the exact credited slot pages before reservation");
   if (sessionBridge.includes("serde_json::") || sessionBridge.includes("checkpoint_bytes()") || precompute.includes("FillWorkerState") || precompute.includes("restore_fill_worker_state")) failures.push("Puzzle fill UI/worker route contains whole-state serialization or compatibility restoration");
   if (!precompute.includes("struct FillEnvelopeTokenCursor") || !precompute.includes("match self.field") || !precompute.includes("self.field += 1") || ingressGuardAt < 0 || !precompute.includes("Self { context_job, terminal_guard, token: FillEnvelopeTokenCursor::new(input) }") || !precompute.includes("let context_job = context.id().await") || !precompute.includes("let mut admitted_cursor = FillEnvelopeJobEntryCursor::new(context_job, input)") || !precompute.includes("request.job != self.context_job") || !precompute.includes("self.terminal_guard.request.as_ref() != Some(request)") || !precompute.includes("authority.request == *request") || !precompute.includes('return Err("fill worker envelope owner is stale");') || precompute.includes("request_fill_envelope_terminal_by_job") || ingressBindAt < ingressGuardAt || ingressDriveAt < ingressBindAt || !precompute.includes("context.tick().await;\n            match admitted_cursor.step()")) failures.push("Puzzle fill token ingress does not resolve the exact raw owner and bind context job to the decoded live request before transition");
   if ((drive.match(/\.pump_one\(/g) ?? []).length !== 1 || !drive.includes("take_checked_out_outcome()") || !drive.includes("worker_outcome") || drive.includes("drive_step") || drive.includes("StepBudget") || !drive.includes("is_cancelled_now()") || !drive.includes("base_revision.0 != request.base_revision") || !drive.includes("FillEnvelopeDrive::Blocked") || drive.includes("while ") || drive.includes("for ")) failures.push("Puzzle fill worker grant does not advance exactly one fresh cancellable mounted opportunity");
@@ -8923,16 +9067,16 @@ function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource
     "vortex_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>",
   ];
   const hostilePreparationBranches = [
-    '(HostileRoot::FixtureObjects, "fixture-objects")',
-    '(HostileRoot::FixtureAttractions, "fixture-attractions")',
-    '(HostileRoot::FixtureTargetVolumes, "fixture-target-volumes")',
-    '(HostileRoot::Meshes, "meshes")',
-    '(HostileRoot::CatalogObjects, "catalog-objects")',
-    '(HostileRoot::CatalogVortices, "catalog-vortices")',
-    '(HostileRoot::CatalogCables, "catalog-cables")',
-    '(HostileRoot::KindCompatibility, "kind-compatibility")',
-    '(HostileRoot::ObjectWeights, "object-weights")',
-    '(HostileRoot::VortexWeights, "vortex-weights")',
+    '(HostileRoot::FixtureObjects, "fixture-objects", DOCUMENT_OBJECT_SLOTS)',
+    '(HostileRoot::FixtureAttractions, "fixture-attractions", DOCUMENT_ATTRACTION_SLOTS)',
+    '(HostileRoot::FixtureTargetVolumes, "fixture-target-volumes", DOCUMENT_VOLUME_SLOTS)',
+    '(HostileRoot::Meshes, "meshes", DOCUMENT_KIND_SLOTS)',
+    '(HostileRoot::CatalogObjects, "catalog-objects", DOCUMENT_KIND_SLOTS)',
+    '(HostileRoot::CatalogVortices, "catalog-vortices", DOCUMENT_KIND_SLOTS)',
+    '(HostileRoot::CatalogCables, "catalog-cables", DOCUMENT_KIND_SLOTS)',
+    '(HostileRoot::KindCompatibility, "kind-compatibility", DOCUMENT_KIND_SLOTS)',
+    '(HostileRoot::ObjectWeights, "object-weights", DOCUMENT_KIND_SLOTS)',
+    '(HostileRoot::VortexWeights, "vortex-weights", DOCUMENT_KIND_SLOTS)',
   ];
   if (
     !geometry.includes("pub(crate) struct FixedOwnerVec") ||
@@ -24937,8 +25081,29 @@ export type PolicySchemaLeafExtract = {
   fields: PolicySchemaFieldShape[];
 };
 
-/** 🧭️§2 facet paths relative to an artifact root. */
-const POLICY_SCHEMA_FACET_RELS = ["🧬️schema", "📸️snapshot/🧬️schema", "🔺️diff/🧬️schema"] as const;
+/** 🧭️ Canonical document facets relative to each artifact standard/subset owner. */
+const POLICY_SCHEMA_FACET_RELS = ["🧬️schema", "🧬️schema/📸️snapshot", "🧬️schema/🔺️diff"] as const;
+
+/** 🗿️ Finds standard/subset document owners across products and plugins without descending into artifact internals. */
+export function policyDiscoverArtifactSchemaOwners(repoRoot: string): string[] {
+  const taxonomy = loadTaxonomy(), owners: string[] = [], pending = ["✏️s/🔌️plugins", "🧰️framework"];
+  const directories = (path: string) => policyReaddirSafe(repoRoot, path).filter((entry) => entry.isDirectory && !entry.name.startsWith(".") && entry.name !== "🗑️generated");
+  while (pending.length) {
+    const parent = pending.pop()!;
+    for (const entry of directories(parent)) {
+      const path = `${parent}/${entry.name}`;
+      if (entry.name !== taxonomy.artifactsDirName) { pending.push(path); continue; }
+      for (const artifact of directories(path)) {
+        const standards = `${path}/${artifact.name}/${taxonomy.standardsDirName}`;
+        for (const standard of directories(standards)) {
+          const subsets = `${standards}/${standard.name}/${taxonomy.subsetsDirName}`;
+          for (const subset of directories(subsets)) owners.push(`${subsets}/${subset.name}`);
+        }
+      }
+    }
+  }
+  return owners.sort();
+}
 
 /** 🔤Normalize state-class tokens to kebab (persistent / shared-ui / …). */
 function policyCanonicalState(raw: string): string {
@@ -25052,10 +25217,12 @@ export function policyExtractRustSchemaFields(text: string, expectedTypeName: st
   }
   const body = text.slice(bodyStart, i);
   const fields: PolicySchemaFieldShape[] = [];
-  const fieldStartRe = /(?:#\[state\(([^\)]*)\)\]\s*)?pub\s+([a-z][a-z0-9_]*)\s*:\s*/g;
+  const fieldStartRe = /((?:(?:#\[[^\]]*\]|\/\/\/[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)\s*)*)pub\s+([a-z][a-z0-9_]*)\s*:\s*/g;
   let m: RegExpExecArray | null;
   while ((m = fieldStartRe.exec(body))) {
-    const stateRaw = (m[1] ?? "").trim();
+    const attributes = m[1] ?? "";
+    const stateRaw = /#\[state\(([^)]*)\)\]/.exec(attributes)?.[1]?.trim() ?? "";
+    const renamed = /#\[value\([^\]]*?\brename\s*=\s*"([^"\\]*)"/.exec(attributes)?.[1];
     const snake = m[2]!;
     let typeStart = fieldStartRe.lastIndex;
     let depthAngle = 0;
@@ -25074,7 +25241,7 @@ export function policyExtractRustSchemaFields(text: string, expectedTypeName: st
     fieldStartRe.lastIndex = j;
     const parsed = policyParseRustFieldType(typeText);
     fields.push({
-      name: policySnakeToCamel(snake),
+      name: renamed ?? policySnakeToCamel(snake),
       optional: parsed.optional,
       cardinality: parsed.cardinality,
       scalar: parsed.scalar,
@@ -25124,12 +25291,12 @@ export function policyExtractTypescriptSchemaFields(text: string, expectedTypeNa
   }
   const body = text.slice(bodyStart, i);
   const fields: PolicySchemaFieldShape[] = [];
-  const fieldRe = /(?:\/\*\*\s*@state\s+([a-z0-9_-]+)\s*\*\/\s*)?([A-Za-z_][A-Za-z0-9_]*)(\?)?\s*:\s*([^;]+);/g;
+  const fieldRe = /(?:\/\*\*\s*@state\s+([a-z0-9_-]+)\s*\*\/\s*)?([A-Za-z_][A-Za-z0-9_]*|"[^"\n]+"|'[^'\n]+')(\?)?\s*:\s*([^;]+);/g;
   let m: RegExpExecArray | null;
   while ((m = fieldRe.exec(body))) {
     const parsed = policyParseTsFieldType(m[4]!.trim(), Boolean(m[3]));
     fields.push({
-      name: m[2]!,
+      name: m[2]!.replace(/^["']|["']$/g, ""),
       optional: parsed.optional,
       cardinality: parsed.cardinality,
       scalar: parsed.scalar,
@@ -25365,11 +25532,11 @@ function policyLoadSchemaFacetLeaves(
  * 📏️Facet completeness + normative leaf: all three facet dirs, each with every schemaFormats leaf
  * and the `artifactSchemaSpecFilenames` normative JSON Schema leaf.
  */
-function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecord[] {
+function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string, owners: readonly string[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const normativeByFacet = taxonomy.artifactSchemaSpecFileKinds ?? {};
   const breaches: BreachRecord[] = [];
-  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+  for (const artRel of owners) {
     for (const facetRel of POLICY_SCHEMA_FACET_RELS) {
       const facetAbs = `${artRel}/${facetRel}`;
       if (!existsSync(join(repoRoot, facetAbs))) {
@@ -25379,7 +25546,7 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
           kind: "artifact-schema/facet-completeness",
           scope: artRel,
           priority: "high",
-          reason: "Every artifact must expose 🧬️schema, 📸️snapshot/🧬️schema, and 🔺️diff/🧬️schema facets.",
+          reason: "Every artifact standard/subset must expose 🧬️schema, 🧬️schema/📸️snapshot, and 🧬️schema/🔺️diff facets.",
           solution: `Create ${facetAbs}/ with all five schemaFormats leaves (and the normative ${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}).`,
         });
         continue;
@@ -25426,9 +25593,9 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
  * and therefore cannot express presence for it at all.
  * @see https://protobuf.dev/programming-guides/proto3/#maps
  */
-function policyArtifactSchemaFieldParityBreaches(repoRoot: string): BreachRecord[] {
+function policyArtifactSchemaFieldParityBreaches(repoRoot: string, owners: readonly string[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+  for (const artRel of owners) {
     for (const facetRel of POLICY_SCHEMA_FACET_RELS) {
       const facetAbs = `${artRel}/${facetRel}`;
       if (!existsSync(join(repoRoot, facetAbs))) continue;
@@ -25493,11 +25660,11 @@ function policyArtifactSchemaFieldParityBreaches(repoRoot: string): BreachRecord
 /**
  * 📏️State-class parity: snapshot facet fields equal exactly the `artifact`-lane fields of the artifact facet.
  */
-function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord[] {
+function policyArtifactSchemaStateParityBreaches(repoRoot: string, owners: readonly string[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+  for (const artRel of owners) {
     const artifactFacet = `${artRel}/🧬️schema`;
-    const snapshotFacet = `${artRel}/📸️snapshot/🧬️schema`;
+    const snapshotFacet = `${artRel}/🧬️schema/📸️snapshot`;
     if (!existsSync(join(repoRoot, artifactFacet)) || !existsSync(join(repoRoot, snapshotFacet))) continue;
     const artLeaves = policyLoadSchemaFacetLeaves(repoRoot, artifactFacet);
     const snapLeaves = policyLoadSchemaFacetLeaves(repoRoot, snapshotFacet);
@@ -25550,29 +25717,18 @@ function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord
 }
 
 /**
- * 📏️Diff coverage: every non-transient artifact field has a diff entry; no transient field does; `artifact` exists.
+ * 📏️Diff coverage: every non-transient artifact field has a diff entry; no transient field does.
  */
-function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string): BreachRecord[] {
+function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string, owners: readonly string[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+  for (const artRel of owners) {
     const artifactFacet = `${artRel}/🧬️schema`;
-    const diffFacet = `${artRel}/🔺️diff/🧬️schema`;
+    const diffFacet = `${artRel}/🧬️schema/🔺️diff`;
     if (!existsSync(join(repoRoot, artifactFacet)) || !existsSync(join(repoRoot, diffFacet))) continue;
     const artJson = policyLoadSchemaFacetLeaves(repoRoot, artifactFacet).find((l) => l.formatId === "🔣️jsonschema")?.extract;
     const diffJson = policyLoadSchemaFacetLeaves(repoRoot, diffFacet).find((l) => l.formatId === "🔣️jsonschema")?.extract;
     if (!artJson || !diffJson) continue;
     const diffNames = new Set(diffJson.fields.map((f) => f.name));
-    if (!diffNames.has("artifact")) {
-      breaches.push({
-        id: `artifact-schema-diff-artifact-entry-${artRel}`,
-        summary: `Diff facet is missing whole-replacement field "artifact"`,
-        kind: "artifact-schema/diff-coverage",
-        scope: artRel,
-        priority: "high",
-        reason: "XDiff must include `artifact: Option<Box<XArtifact>>` for whole-artifact replacement.",
-        solution: `Add field "artifact" to ${diffFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)} (and the other four leaves).`,
-      });
-    }
     for (const f of artJson.fields) {
       if (f.state === "transient") {
         if (diffNames.has(f.name)) {
@@ -25608,9 +25764,9 @@ function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string): BreachRecor
  * 📏️Type-name parity: the export id the facet's normative JSON Schema declares (`title`, the same root
  * export `🔣️schema-catalog.json` catalogues) is spelled identically in all five leaves of that facet.
  */
-function policyArtifactSchemaTypeNameParityBreaches(repoRoot: string): BreachRecord[] {
+function policyArtifactSchemaTypeNameParityBreaches(repoRoot: string, owners: readonly string[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+  for (const artRel of owners) {
     for (const facetRel of POLICY_SCHEMA_FACET_RELS) {
       const facetAbs = `${artRel}/${facetRel}`;
       if (!existsSync(join(repoRoot, facetAbs))) continue;
@@ -25648,12 +25804,13 @@ function policyArtifactSchemaTypeNameParityBreaches(repoRoot: string): BreachRec
 
 /** ⚖️Aggregates artifact-schema facet scanners (completeness, parity, coverage). */
 export function policyArtifactSchemaBreaches(repoRoot: string): BreachRecord[] {
+  const owners = policyDiscoverArtifactSchemaOwners(repoRoot);
   return [
-    ...policyArtifactSchemaFacetCompletenessBreaches(repoRoot),
-    ...policyArtifactSchemaFieldParityBreaches(repoRoot),
-    ...policyArtifactSchemaStateParityBreaches(repoRoot),
-    ...policyArtifactSchemaDiffCoverageBreaches(repoRoot),
-    ...policyArtifactSchemaTypeNameParityBreaches(repoRoot),
+    ...policyArtifactSchemaFacetCompletenessBreaches(repoRoot, owners),
+    ...policyArtifactSchemaFieldParityBreaches(repoRoot, owners),
+    ...policyArtifactSchemaStateParityBreaches(repoRoot, owners),
+    ...policyArtifactSchemaDiffCoverageBreaches(repoRoot, owners),
+    ...policyArtifactSchemaTypeNameParityBreaches(repoRoot, owners),
   ];
 }
 //#endregion 🔧️PolicyRuleArtifactSchemas
@@ -26118,7 +26275,7 @@ function policyAppSchemaConfigRelocationBreaches(repoRoot: string): BreachRecord
 /** 🏛️ A language-independent declaration of configuration and command ownership. */
 export type AbstractionOwnership = { owner: "os" | "surface" | "artifact"; fields: readonly string[]; commands: readonly string[] };
 
-type AbstractionOwnershipSchema = { $defs: { OsField: { enum: string[] }; OsCommand: { enum: string[] } } };
+type AbstractionOwnershipSchema = { $defs: { OsField: { enum: string[] }; OsCommand: { enum: string[] }; ArtifactExcludedField: { enum: string[] } } };
 
 /** 📜️ Loads the normative OS versus surface ownership contract. */
 function abstractionOwnershipSchema(root: string): AbstractionOwnershipSchema {
@@ -26127,15 +26284,70 @@ function abstractionOwnershipSchema(root: string): AbstractionOwnershipSchema {
 
 /** ⚖️ Reports OS-owned declarations incorrectly stored or executed by a surface. */
 export function abstractionOwnershipViolations(declaration: AbstractionOwnership, schema: AbstractionOwnershipSchema): string[] {
+  if (declaration.owner === "artifact") return declaration.fields.filter((field) => schema.$defs.ArtifactExcludedField.enum.includes(field)).map((field) => `field:${field}`);
   if (declaration.owner !== "surface") return [];
   const fields = new Set(schema.$defs.OsField.enum), commands = new Set(schema.$defs.OsCommand.enum);
   return [...declaration.fields.filter((field) => fields.has(field)).map((field) => `field:${field}`), ...declaration.commands.filter((command) => commands.has(command)).map((command) => `command:${command}`)];
 }
 
+/** 🧬️ Finds surface-owned declarations in authored schemas. */
+function abstractionOwnershipSchemaFields(schema: Record<string, unknown>): string[] {
+  const fields = new Set<string>();
+  const visit = (value: unknown): void => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return;
+    const record = value as Record<string, unknown>;
+    if (record["x-semio-state"] === "artifact") return;
+    for (const [name, field] of Object.entries((record.properties ?? {}) as Record<string, unknown>)) {
+      if (field === false || (field && typeof field === "object" && (field as Record<string, unknown>)["x-semio-state"] === "artifact")) continue;
+      fields.add(name);
+      visit(field);
+    }
+    for (const key of ["$defs", "definitions", "patternProperties", "dependentSchemas"]) {
+      for (const field of Object.values((record[key] ?? {}) as Record<string, unknown>)) visit(field);
+    }
+    for (const key of ["allOf", "anyOf", "oneOf", "prefixItems"]) {
+      if (Array.isArray(record[key])) for (const field of record[key] as unknown[]) visit(field);
+    }
+    for (const key of ["items", "contains", "additionalProperties", "then", "else"]) visit(record[key]);
+  };
+  visit(schema);
+  return [...fields];
+}
+
+/** 🎮️ Discovers authored command and mutation variants independently of their leaf folders. */
+function abstractionOwnershipRustCommands(source: string): string[] {
+  return inspectRustStructure(source).enums.filter((item) => /(?:Command|Mutation)$/.test(item.name)).flatMap((item) => item.variants.map((variant) => variant.name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()));
+}
+
+/** 🪪️ Compares canonical field sets without treating declaration order as identity. */
+export function policySchemaFieldDifferences(reference: readonly string[], candidate: readonly string[]): { missing: string[]; extra: string[] } {
+  const expected = new Set(reference), actual = new Set(candidate);
+  return { missing: [...expected].filter((name) => !actual.has(name)).sort(), extra: [...actual].filter((name) => !expected.has(name)).sort() };
+}
+
+/** 🗿️ Audits exact document, snapshot and diff field names across all authored representations. */
+export function policyArtifactOwnershipFieldParity(root: string): { path: string; missing: string[]; extra: string[] }[] {
+  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
+  const paths = new Set(fixture.artifactSchemas);
+  for (const path of fixture.artifactSchemas) if (!path.includes("/🔺️diff/")) paths.add(join(dirname(path), "📸️snapshot/🔣️.json"));
+  const representations = [["🦀️.rs", policyExtractRustSchemaFields], ["🟦️.ts", policyExtractTypescriptSchemaFields], ["🔗️.graphql", policyExtractGraphqlSchemaFields], ["🛰️.proto", policyExtractProtobufSchemaFields]] as const;
+  const breaches: { path: string; missing: string[]; extra: string[] }[] = [];
+  for (const path of paths) {
+    const schema = JSON.parse(readFileSync(join(root, path), "utf8")) as { title: string; properties: Record<string, unknown> };
+    for (const [filename, extract] of representations) {
+      const source = join(dirname(path), filename), text = policyReadFileSafe(root, source), declaration = extract(text, schema.title);
+      const difference = policySchemaFieldDifferences(Object.keys(schema.properties ?? {}), declaration.fields.map((field) => field.name));
+      if (!declaration.typeName) difference.missing.unshift(`declaration:${schema.title}`);
+      if (difference.missing.length || difference.extra.length) breaches.push({ path: source, ...difference });
+    }
+  }
+  return breaches.sort((left, right) => left.path.localeCompare(right.path));
+}
+
 /** 🧪️ Compares language-independent ownership vectors with the independent Ajv schema evaluator. */
 export function abstractionOwnershipChecks(root: string): number {
   const schema = abstractionOwnershipSchema(root);
-  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { cases: (AbstractionOwnership & { name: string; expected: string[] })[] };
+  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { cases: (AbstractionOwnership & { name: string; expected: string[] })[]; artifactSchemas: string[]; schemaCases: { name: string; schema: Record<string, unknown>; expected: string[] }[]; sourceCases: { name: string; source: string; expected: string[] }[] };
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   for (const row of fixture.cases) {
@@ -26145,6 +26357,36 @@ export function abstractionOwnershipChecks(root: string): number {
     if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: implementation disagrees with Ajv.`);
   }
   console.log(`[verify abstraction-ownership] ${fixture.cases.length} ownership vectors agree with Ajv.`);
+  for (const row of fixture.schemaCases) {
+    const declaration: AbstractionOwnership = { owner: "surface", fields: abstractionOwnershipSchemaFields(row.schema), commands: [] };
+    const actual = abstractionOwnershipViolations(declaration, schema);
+    if (JSON.stringify(actual) !== JSON.stringify(row.expected)) throw new Error(`[verify abstraction-ownership] ${row.name}: expected ${JSON.stringify(row.expected)}, got ${JSON.stringify(actual)}.`);
+    if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: schema discovery disagrees with Ajv.`);
+  }
+  console.log(`[verify abstraction-ownership] ${fixture.schemaCases.length} nested schema ownership vectors agree with Ajv.`);
+  for (const row of fixture.sourceCases) {
+    const declaration: AbstractionOwnership = { owner: "surface", fields: [], commands: abstractionOwnershipRustCommands(row.source) }, actual = abstractionOwnershipViolations(declaration, schema);
+    if (JSON.stringify(actual) !== JSON.stringify(row.expected)) throw new Error(`[verify abstraction-ownership] ${row.name}: expected ${JSON.stringify(row.expected)}, got ${JSON.stringify(actual)}.`);
+    if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: source declaration disagrees with Ajv.`);
+  }
+  console.log(`[verify abstraction-ownership] ${fixture.sourceCases.length} command source ownership vectors agree with Ajv.`);
+  const validateArtifactFields = new Ajv({ strict: true, allErrors: true }).compile({ type: "object", propertyNames: { not: { enum: schema.$defs.ArtifactExcludedField.enum } }, additionalProperties: { type: "object", required: ["x-semio-state"], properties: { "x-semio-state": { const: "artifact" } } } });
+  const artifactRepresentations = [["🦀️.rs", policyExtractRustSchemaFields], ["🟦️.ts", policyExtractTypescriptSchemaFields], ["🔗️.graphql", policyExtractGraphqlSchemaFields], ["🛰️.proto", policyExtractProtobufSchemaFields]] as const;
+  const typescript = new Bun.Transpiler({ loader: "ts" });
+  for (const path of fixture.artifactSchemas) {
+    const artifact = JSON.parse(readFileSync(join(root, path), "utf8"));
+    if (!validateArtifactFields(artifact.properties)) throw new Error(`[verify abstraction-ownership] ${path}: app/window state leaks into the artifact contract: ${JSON.stringify(validateArtifactFields.errors)}.`);
+    for (const [filename, extract] of artifactRepresentations) {
+      const source = join(dirname(path), filename), contents = readFileSync(join(root, source), "utf8"), declaration = extract(contents, artifact.title);
+      if (filename === "🟦️.ts") typescript.scan(contents);
+      if (!declaration.typeName) throw new Error(`[verify abstraction-ownership] ${source}: missing document declaration ${artifact.title}.`);
+      const misplaced = declaration.fields.filter((field) => field.state && field.state !== "artifact");
+      if (misplaced.length) throw new Error(`[verify abstraction-ownership] ${source}: non-document field ownership ${JSON.stringify(misplaced)}.`);
+      const excluded = abstractionOwnershipViolations({ owner: "artifact", fields: declaration.fields.map((field) => field.name), commands: [] }, schema);
+      if (excluded.length) throw new Error(`[verify abstraction-ownership] ${source}: live UI/computed state ${JSON.stringify(excluded)}.`);
+    }
+  }
+  console.log(`[verify abstraction-ownership] ${fixture.artifactSchemas.length} artifact contracts expose document state only across five schema formats.`);
   return fixture.cases.length;
 }
 
@@ -26160,6 +26402,20 @@ export function policyAbstractionOwnershipBreaches(repoRoot: string): BreachReco
   const scanCommands = (root: string): void => {
     for (const entry of policyReaddirSafe(repoRoot, root).filter((entry) => entry.isDirectory)) report(`${root}/${entry.name}`, { owner: "surface", fields: [], commands: [policyStripEmoji(entry.name)] });
   };
+  const scanSurfaceSchemas = (root: string): void => {
+    for (const entry of policyReaddirSafe(repoRoot, root)) {
+      const path = `${root}/${entry.name}`;
+      if (entry.isDirectory) {
+        if (!POLICY_SKIP_DIRS.has(entry.name) && !["🧪️tests", "🧫️fixtures", "📚️examples", "📦️packages"].includes(entry.name)) scanSurfaceSchemas(path);
+      } else if (entry.name === "🔣️.json") {
+        const authored = JSON.parse(policyReadFileSafe(repoRoot, path)) as Record<string, unknown>;
+        if (authored.$schema) report(path, { owner: "surface", fields: abstractionOwnershipSchemaFields(authored), commands: [] });
+      } else if (entry.name === "🦀️.rs") {
+        const source = policyReadFileSafe(repoRoot, path);
+        if (/\benum\s+\w*(?:Command|Mutation)\b/.test(source)) report(path, { owner: "surface", fields: [], commands: abstractionOwnershipRustCommands(source) });
+      }
+    }
+  };
   for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
     for (const leaf of policyLoadAppSchemaFacetLeaves(repoRoot, `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`, owner.configType)) {
       if (leaf.extract) report(leaf.relPath, { owner: "surface", fields: leaf.extract.fields.map((field) => field.name), commands: [] });
@@ -26169,7 +26425,25 @@ export function policyAbstractionOwnershipBreaches(repoRoot: string): BreachReco
     scanCommands(`${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}/🧬️mutations`);
   }
   for (const plugin of policyReaddirSafe(repoRoot, "✏️s/🔌️plugins").filter((entry) => entry.isDirectory)) {
-    for (const surface of policySurfaceRoots(repoRoot, `✏️s/🔌️plugins/${plugin.name}`, taxonomy)) scanCommands(`${surface}/🎮️commands`);
+    for (const surface of policySurfaceRoots(repoRoot, `✏️s/🔌️plugins/${plugin.name}`, taxonomy)) {
+      scanCommands(`${surface}/🎮️commands`);
+      scanSurfaceSchemas(surface);
+    }
+  }
+  const artifactRoots = new Set([...policyListPluginArtifactDirs(repoRoot), ...policyListArtifactDialectDirs(repoRoot).map((dialect) => dialect.subsetRel)]);
+  for (const root of artifactRoots) {
+    for (const facet of ["🧬️schema", "🧬️schema/🔺️diff"]) {
+      const path = `${root}/${facet}/🔣️.json`, text = policyReadFileSafe(repoRoot, path);
+      if (!text) continue;
+      const artifact = JSON.parse(text) as { properties?: Record<string, { "x-semio-state"?: string }> };
+      report(path, { owner: "artifact", fields: Object.keys(artifact.properties ?? {}), commands: [] });
+      for (const [field, definition] of Object.entries(artifact.properties ?? {})) {
+        const state = definition["x-semio-state"];
+        if (!state || state === "artifact") continue;
+        const key = `${path}:state:${field}`;
+        breaches.set(key, { id: `abstraction-ownership-${key}`, summary: `${field} belongs to ${state} state`, kind: "artifact-schema/abstraction-ownership", scope: path, priority: "high", reason: "An artifact contract and its document diffs must not duplicate app or window state.", solution: `Keep ${field} in its ${state} owner and remove the duplicate artifact declaration and diff member.` });
+      }
+    }
   }
   return [...breaches.values()].sort((left, right) => left.scope.localeCompare(right.scope) || left.id.localeCompare(right.id));
 }

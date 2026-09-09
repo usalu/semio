@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::editor::shooting::testkit::{icon_window_measures, shooting_app};
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_icon_render_scene_with_real_request() {

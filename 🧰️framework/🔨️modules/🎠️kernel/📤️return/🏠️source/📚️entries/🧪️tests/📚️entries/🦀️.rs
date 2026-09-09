@@ -134,8 +134,8 @@ fn return_source_entries_over_admission_reports_and_retains_exact_empty_backing(
     assert!(entries.take_close_entry_into(&mut entry, 4096).unwrap());
     assert_eq!(entries.allocated_bytes(), 0);
     assert_eq!(entry.as_ref().unwrap().allocated_bytes(), error.allocated_bytes);
-    assert!(entry.as_mut().unwrap().close_empty_step(0, usize::MAX).unwrap().complete == false);
-    assert!(entry.as_mut().unwrap().close_empty_step(1, error.allocated_bytes - 1).unwrap().complete == false);
+    assert!(!entry.as_mut().unwrap().close_empty_step(0, usize::MAX).unwrap().complete);
+    assert!(!entry.as_mut().unwrap().close_empty_step(1, error.allocated_bytes - 1).unwrap().complete);
     let step = entry.as_mut().unwrap().close_empty_step(1, error.allocated_bytes).unwrap();
     assert!(step.complete);
     assert_eq!(step.released_bytes, error.allocated_bytes);

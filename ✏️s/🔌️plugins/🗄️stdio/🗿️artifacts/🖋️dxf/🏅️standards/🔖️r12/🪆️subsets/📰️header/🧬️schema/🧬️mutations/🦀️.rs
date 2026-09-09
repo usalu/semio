@@ -84,42 +84,42 @@ use protocol::{Mutation, MutationDiff, OpText};
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "🏷️set-header-var/🦀️.rs"]
-pub mod set_header_var;
-#[path = "🧹remove-header-var/🦀️.rs"]
-pub mod remove_header_var;
-#[path = "🧱insert-layer/🦀️.rs"]
-pub mod insert_layer;
-#[path = "🪨remove-layer/🦀️.rs"]
-pub mod remove_layer;
-#[path = "🎚️set-layer/🦀️.rs"]
-pub mod set_layer;
-#[path = "🎨insert-style/🦀️.rs"]
-pub mod insert_style;
-#[path = "🧽remove-style/🦀️.rs"]
-pub mod remove_style;
-#[path = "🖌️set-style/🦀️.rs"]
-pub mod set_style;
-#[path = "🧵insert-linetype/🦀️.rs"]
-pub mod insert_linetype;
-#[path = "🪚remove-linetype/🦀️.rs"]
-pub mod remove_linetype;
-#[path = "🪡set-linetype/🦀️.rs"]
-pub mod set_linetype;
-#[path = "🧩insert-entity/🦀️.rs"]
-pub mod insert_entity;
-#[path = "🗑️remove-entity/🦀️.rs"]
-pub mod remove_entity;
-#[path = "🔧set-entity/🦀️.rs"]
-pub mod set_entity;
 #[path = "📦insert-block/🦀️.rs"]
 pub mod insert_block;
+#[path = "🧩insert-entity/🦀️.rs"]
+pub mod insert_entity;
+#[path = "🧱insert-layer/🦀️.rs"]
+pub mod insert_layer;
+#[path = "🧵insert-linetype/🦀️.rs"]
+pub mod insert_linetype;
+#[path = "🎨insert-style/🦀️.rs"]
+pub mod insert_style;
 #[path = "🪓remove-block/🦀️.rs"]
 pub mod remove_block;
+#[path = "🗑️remove-entity/🦀️.rs"]
+pub mod remove_entity;
+#[path = "🧹remove-header-var/🦀️.rs"]
+pub mod remove_header_var;
+#[path = "🪨remove-layer/🦀️.rs"]
+pub mod remove_layer;
+#[path = "🪚remove-linetype/🦀️.rs"]
+pub mod remove_linetype;
+#[path = "🧽remove-style/🦀️.rs"]
+pub mod remove_style;
 #[path = "🔲set-block/🦀️.rs"]
 pub mod set_block;
+#[path = "🔧set-entity/🦀️.rs"]
+pub mod set_entity;
+#[path = "🏷️set-header-var/🦀️.rs"]
+pub mod set_header_var;
+#[path = "🎚️set-layer/🦀️.rs"]
+pub mod set_layer;
+#[path = "🪡set-linetype/🦀️.rs"]
+pub mod set_linetype;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
+#[path = "🖌️set-style/🦀️.rs"]
+pub mod set_style;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed content mutation for `stdio.dxf`. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
@@ -604,7 +604,10 @@ pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
     vec![
         DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: demo_snapshot_for_set() }),
         DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: "$ACADVER".into(), header_var: DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1015".into() }, extra_group_codes: vec![] } }),
-        DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: "$NEWVAR".into(), header_var: DxfHeaderVar { name: "$NEWVAR".into(), group_code: 70, value: DxfValue::Int { value: 3 }, extra_group_codes: vec![(999, DxfValue::Str { value: "note".into() })] } }),
+        DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar {
+            name: "$NEWVAR".into(),
+            header_var: DxfHeaderVar { name: "$NEWVAR".into(), group_code: 70, value: DxfValue::Int { value: 3 }, extra_group_codes: vec![(999, DxfValue::Str { value: "note".into() })] },
+        }),
         DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: "$ACADVER".into() }),
         DxfMutation::InsertLayer(insert_layer::InsertLayer { index: 1, layer: DxfLayer { name: "L2".into(), color: 1, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] } }),
         DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: "0".into() }),

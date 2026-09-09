@@ -1,9 +1,8 @@
 //! 🗑️ `delete-link` — removes an {@link ImageLink} by id; inverse recreates it via `create-link`.
 
-
-use crate::{LayoutDiff, LayoutSnapshot};
-use crate::mutations::{LayoutMutation, create_link};
+use crate::mutations::{create_link, LayoutMutation};
 use crate::standards::v1::subsets::any::schema::diff::LayoutLinksDelta;
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -32,7 +31,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteLink {
 }
 //#endregion 🗑️DeleteLink
 
-
 //#region 🗑️DeleteLink
 pub fn diff_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if !base.links.iter().any(|link| link.id == payload.id) {
@@ -41,7 +39,6 @@ pub fn diff_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> protocol
     protocol::MutationOutcome::new(LayoutDiff { links: Some(LayoutLinksDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🗑️DeleteLink
-
 
 //#region 🗑️DeleteLink
 pub fn inverse_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

@@ -1,5 +1,5 @@
 //! 🔖️ Typed integer newtype identifiers used throughout the crate. Kept as plain `u32` newtypes
-//! (never raw `usize`) so pattern/tile/node/relation/decision/region/port indices can
+//! (never raw `usize`) so pattern/tile/node/relation/decision/region indices can
 //! never be silently swapped at a call site.
 
 // #region 🔖️Macro
@@ -73,11 +73,6 @@ id_newtype!(
 id_newtype!(
     /// 🗺️ One named region/zone used for scoped constraints and priorities.
     RegionId; get: test
-);
-#[cfg(test)]
-id_newtype!(
-    /// 🔌️ One connector/socket slot on a tile or graph node.
-    PortId;
 );
 // #endregion 🔖️Ids
 

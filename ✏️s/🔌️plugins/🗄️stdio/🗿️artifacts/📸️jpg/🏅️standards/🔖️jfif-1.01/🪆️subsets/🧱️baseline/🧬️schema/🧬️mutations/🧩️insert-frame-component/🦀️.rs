@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertFrameComponent {
-        pub(crate) index: usize,
-        pub(crate) component: JpgFrameComponent,
-    }
+    pub(crate) index: usize,
+    pub(crate) component: JpgFrameComponent,
+}
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for InsertFrameComponent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "frame-component", kind: "insert-frame-component", record: "InsertFrameComponent" };

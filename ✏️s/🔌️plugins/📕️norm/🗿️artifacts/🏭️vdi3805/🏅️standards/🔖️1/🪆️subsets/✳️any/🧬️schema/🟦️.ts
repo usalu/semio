@@ -19,6 +19,4 @@ export interface Vdi3805Artifact {
   curves: Record<string, string>;
   /** @state artifact */
   limits: string;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

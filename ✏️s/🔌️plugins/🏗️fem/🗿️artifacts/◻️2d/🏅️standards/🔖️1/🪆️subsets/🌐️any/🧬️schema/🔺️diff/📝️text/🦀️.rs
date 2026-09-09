@@ -195,24 +195,6 @@ impl Fem2dDiff {
             if let Some(value) = &self.analysis {
                 next.analysis = value.clone();
             }
-            if let Some(value) = &self.result_source_id {
-                next.result_source_id = value.clone();
-            }
-            if let Some(value) = &self.result_mode {
-                next.result_mode = value.clone();
-            }
-            if let Some(value) = self.result_mode_index {
-                next.result_mode_index = value;
-            }
-            if let Some(value) = &self.camera {
-                next.camera = value.clone();
-            }
-            if let Some(value) = &self.solver_results_json {
-                next.solver_results_json = value.clone();
-            }
-            if let Some(value) = &self.mesh_preview_json {
-                next.mesh_preview_json = value.clone();
-            }
             next
         })
     }
@@ -268,12 +250,6 @@ impl MutationDiff<Fem2dSnapshot> for Fem2dDiff {
             };
         }
         take!(analysis);
-        take!(result_source_id);
-        take!(result_mode);
-        take!(result_mode_index);
-        take!(camera);
-        take!(solver_results_json);
-        take!(mesh_preview_json);
         merge_delta(&mut self.nodes, other.nodes);
         merge_delta(&mut self.elements, other.elements);
         merge_delta(&mut self.regions, other.regions);

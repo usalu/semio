@@ -1,9 +1,8 @@
 //! 🛋️ `change-design-approach` payload — changes the En1997 document's `design_approach` (design approach).
 
-
-use crate::En1997Snapshot;
 use crate::diff::En1997Diff;
 use crate::mutations::En1997Mutation;
+use crate::En1997Snapshot;
 //#region 🔖️ChangeDesignApproach
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

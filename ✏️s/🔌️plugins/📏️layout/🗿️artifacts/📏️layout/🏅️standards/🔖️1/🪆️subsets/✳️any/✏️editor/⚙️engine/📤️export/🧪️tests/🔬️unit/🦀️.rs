@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn drive_test_job<J: InteractiveJob + 'static>(job: J, params: BatchJobParams) -> StepOutcome {

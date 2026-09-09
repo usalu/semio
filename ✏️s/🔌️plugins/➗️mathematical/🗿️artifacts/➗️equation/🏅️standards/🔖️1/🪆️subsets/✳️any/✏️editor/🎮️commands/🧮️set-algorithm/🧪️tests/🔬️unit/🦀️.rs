@@ -1,9 +1,8 @@
-
 use super::*;
-use crate::editor::equation::EquationCommand;
 use crate::editor::equation::commands::{node_graph_edit, node_graph_viewport, set_directed};
-use crate::editor::equation::testkit::{MathApp, dispatch, math_app};
-use crate::{EquationCamera, equation_graph};
+use crate::editor::equation::testkit::{dispatch, math_app, MathApp};
+use crate::editor::equation::EquationCommand;
+use crate::{equation_graph, EquationCamera};
 use pack::json::{self, Value};
 
 fn node_graph_edit(operation: Value) -> EquationCommand {
@@ -30,7 +29,21 @@ async fn set_directed_toggles_the_graph() {
 async fn node_graph_viewport_writes_config_not_mutations() {
     let mut app: MathApp = math_app().await;
     let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-    let result = app.dispatch_typed(EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera }), &semio_framework_plugin::testkit::meta("local")).await.expect("viewport");
+    let view = semio_framework_plugin::ViewModel {
+        window_id: Some("equation-graph-test".into()),
+        window_instances: vec![semio_framework_plugin::ViewWindowInstance {
+            id: "equation-graph-test".into(),
+            window_kind_id: crate::editor::equation::modes::edit::windows::graph::MATH_PLAY_WINDOW_GRAPH.into(),
+        }],
+        ..Default::default()
+    };
+    let result = app
+        .dispatch_typed(
+            EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera }),
+            &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::testkit::meta("local") },
+        )
+        .await
+        .expect("viewport");
     assert!(result.mutations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
 }
 

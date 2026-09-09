@@ -1,0 +1,10 @@
+{
+  "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "cases": [
+    { "name": "successful ancestor", "status": 200, "ancestor": true, "full": false, "mode": "affected", "requests": 2 },
+    { "name": "failed history", "status": 403, "ancestor": true, "full": false, "mode": "all", "requests": 1 },
+    { "name": "nonancestor", "status": 200, "ancestor": false, "full": false, "mode": "all", "requests": 2 },
+    { "name": "explicit full bypasses network", "status": 200, "ancestor": true, "full": true, "mode": "all", "requests": 0 }
+  ]
+}

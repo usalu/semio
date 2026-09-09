@@ -10,39 +10,39 @@
 //! "Attach a set-like member … inverse: remove").
 
 pub mod mutation {
-use crate::diff::RasterDiff;
-use crate::mutations::RasterMutation;
-use crate::{RasterImageAsset, RasterSnapshot};
+    use crate::diff::RasterDiff;
+    use crate::mutations::RasterMutation;
+    use crate::{RasterImageAsset, RasterSnapshot};
 
-//#region 🔖️AddLayerAsset
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
-#[value(rename_all = "camelCase")]
-pub struct AddLayerAsset {
-    pub asset_id: String,
-    pub asset: RasterImageAsset,
-}
-
-impl protocol::MutationKind<RasterSnapshot, RasterMutation> for AddLayerAsset {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "asset", kind: "add-layer-asset", record: "AddedLayerAsset" };
-
-    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-        super::super::diff::diff(self, base)
+    //#region 🔖️AddLayerAsset
+    #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+    #[mutation_leaf(contract = ::protocol)]
+    #[value(rename_all = "camelCase")]
+    pub struct AddLayerAsset {
+        pub asset_id: String,
+        pub asset: RasterImageAsset,
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
-        super::super::inverse::inverse(self, base)
-    }
+    impl protocol::MutationKind<RasterSnapshot, RasterMutation> for AddLayerAsset {
+        const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "asset", kind: "add-layer-asset", record: "AddedLayerAsset" };
 
-    fn label(&self) -> String {
-        format!("Add asset {}", self.asset_id)
-    }
+        fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+            super::super::diff::diff(self, base)
+        }
 
-    fn target(&self) -> Vec<String> {
-        vec![self.asset_id.clone()]
+        fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+            super::super::inverse::inverse(self, base)
+        }
+
+        fn label(&self) -> String {
+            format!("Add asset {}", self.asset_id)
+        }
+
+        fn target(&self) -> Vec<String> {
+            vec![self.asset_id.clone()]
+        }
     }
-}
-//#endregion 🔖️AddLayerAsset
+    //#endregion 🔖️AddLayerAsset
 }
 
 pub use mutation::AddLayerAsset;

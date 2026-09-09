@@ -22,7 +22,14 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
-    model.humidistats.push(crate::model::Humidistat { id: crate::model::EntityId(11), zone_id: crate::model::EntityId(1), humidifying_setpoint_schedule_id: crate::model::ScheduleId(1), dehumidifying_setpoint_schedule_id: crate::model::ScheduleId(2), humidifying_throttle_range: 5.0, dehumidifying_throttle_range: 5.0 });
+    model.humidistats.push(crate::model::Humidistat {
+        id: crate::model::EntityId(11),
+        zone_id: crate::model::EntityId(1),
+        humidifying_setpoint_schedule_id: crate::model::ScheduleId(1),
+        dehumidifying_setpoint_schedule_id: crate::model::ScheduleId(2),
+        humidifying_throttle_range: 5.0,
+        dehumidifying_throttle_range: 5.0,
+    });
     (snapshot(model), super::delete_humidistat(crate::model::EntityId(99)))
 }
 

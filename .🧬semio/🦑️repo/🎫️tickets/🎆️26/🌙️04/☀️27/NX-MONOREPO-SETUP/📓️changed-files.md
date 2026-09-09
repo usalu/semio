@@ -581,3 +581,264 @@ The old default BuildScript and WGPU orchestration have not been removed yet. Na
 2026-09-08 production entrypoints: root package.json and OS Dev TypeScript package.json now route seven plain/default build scripts to explicit cached release targets; corresponding plain launch-seed commands changed and editor regeneration is running.
 
 Native optimizer qualification: added ticket `🔬️wasm-optimizer/🌐️native/📜️script.ts`; added wasmPackEnvironment to the existing library TypeScript module and updated its build caller; extended the wasm optimizer fixture/test with explicit-tool lookup and shadow rejection. Shared dependencies were not modified.
+
+2026-09-09 native optimizer prerequisite: added `⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/{📜️script.ts,🔣️.json,🧬️schema/🔣️.json}`, `⚡️caching/🧪️tests/🕸️wasm/{🧫️toolchain.json,🛠️toolchain/🟦️.ts}` and ticket `🔬️wasm-optimizer/{🕸️cache,📦️archives}/📜️script.ts`. Changed dependency bootstrap process runner, root 📋️project.json, library graph plugin, wasm-pack environment and toolchain fingerprint, cache-contract test registration and launch seed. Actor/Puzzle Cargo.toml custom profiles now preserve their existing optimizer disable policy; the wasm fixture tests cover both.
+
+2026-09-09 browser prerequisite compilation: changed root Cargo.toml/Cargo.lock; Puzzle 3D Cargo.toml; its editor precompute/fill Rust capacity helper; its editor wasm bridge Promise/Uint8Array reexports. Existing native compilation supplied the failing regression; the Nx wasm retry is active.
+
+2026-09-09 CI baseline contract: added `⚡️caching/🚦️ci/🧭️baseline/{🟦️.ts,🧬️schema/🔣️.json,🧪️tests/🔣️.json,🧪️tests/🟦️.ts}` and ticket `🔬️ci-baseline/📜️script.ts`; registered its test in cache-contracts. Another worker relocated the new Binaryen test to `⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/{🟦️.ts,🔣️.json}`; that relocation is preserved.
+
+2026-09-09 component native optimization: changed plugin-web TypeScript module and script, graph materialize-release prerequisites, caching repo:test prerequisites, Binaryen JSON import, and native-contract registration. Added plugin-web `🧪️tests/🕸️native-optimization/{🟦️.ts,🔣️.json}` and ticket `🔬️wasm-optimizer/🧩️components/📜️script.ts`.
+
+## GitHub History and Materializer Contract
+
+- Added caching/ci/github provider, schema, language-neutral workflow-history fixture and TypeScript tests. Registered the provider test in cache-contracts.
+- Added ticket ci-baseline/history script and corrected the existing baseline probe import after concurrent test relocation.
+- Added explicit tooling arrays to both materialization-profile fixture rows and schema; release requires workspace:deps-wasm-opt, development requires none. The contract now checks that complete dependency list.
+
+## CI Executor and Actor Macro Hygiene
+
+- Added CI event/environment and composed baseline-resolution modules, schema/fixtures and tests; added the dedicated CI script plus repo:ci-baseline project target.
+- Added native baseline-command fixture/test, registered all CI tests in cache-contracts, and added/regenerated the CI baseline editor command.
+- Added ticket environment, resolution and command probes. All probe output paths are under the current ticket generated directory.
+- Hardened GitHub repository path validation against dot/dot-dot segments in provider, environment and schema.
+- Updated the plugin Rust package’s explicit encode_fault_bytes reexport and three actor-export macro references in its shared implementation.
+
+## Development Image Context
+
+- Narrowed .devcontainer/docker-compose.yml build context to its own directory and Dockerfile. Replaced the existing .devcontainer/.dockerignore denylist with an exclusion of all ordinary context contents.
+- Added the language-neutral devcontainer-context fixture/test under caching/artifacts/containers and registered it in cache-contracts.
+- Added the ticket container-context probe and retained its research/qualification report.
+
+## Note Descriptor Qualification
+
+- Removed Note editor’s duplicate setActiveUtility declaration and unused import so the existing framework injection owns the action.
+- Added the ticket-only optimized/unoptimized descriptor comparison probe. Its logs/transpiled modules remain under the ticket generated directory while qualification runs.
+
+## Fingerprint Boundary and Transient Imports
+
+- Added the WASM tool fingerprint command to the existing native-tool script, updated policy and repo:toolchain, and removed the old aggregate caching-script command.
+- Added a language-neutral fingerprint fixture/test and ticket probe; registered the test in cache-contracts.
+- Routed captured-tool progress to stderr in the shared process helper.
+- Corrected three sibling window-transient module references in the plugin implementation and imported its fault types from their public framework owner.
+
+## Pinned Runtime and Nx Creation Hook
+
+The image now provisions Bun 1.3.14 and Node 24.15.0 directly from official Linux x64/arm64 archives. Each archive has a literal SHA-256 pin verified before extraction; downloads are bounded, only the runtime binaries are installed, and their versions are checked during image build. The global Nx feature was removed. Container creation is the argument-array invocation `bun nx run workspace:deps-javascript`; its existing uncached leaf synchronizes the frozen lockfile through the independently acquired repository Nx toolset. The former post-create shell script was deleted, removing its direct install, Go client build and broad workspace setup. Other dependency environments remain selectable Nx targets. No shared application install was executed during this change.
+
+RED: the focused runtime test rejected the global Nx feature, and the creation-hook extension subsequently rejected the shell hook. GREEN: JSONC/lodash contract checks and actual POSIX shell selection passed for both supported architectures and rejected four invalid selectors. All four official archives were downloaded in ticket-generated storage, matched both Node crypto and native shasum digests, and contained the expected executable members according to native unzip/tar. The byte counts were Bun x64 35,595,658; Bun arm64 35,700,603; Node x64 31,164,460; Node arm64 30,108,656. Native Compose config exited 0 after the changes. No Linux runtime or Docker image was executed because the Docker daemon is unavailable.
+
+Changed: `.devcontainer/Dockerfile`, `.devcontainer/devcontainer.json`, `.devcontainer/README.md`; removed `.devcontainer/post-create.sh`; added container `🧪️tests/🚀️runtime-bootstrap/{🔣️.json,🟦️.ts}` and registered it in the caching contract suite; added ticket probes under `🔬️container-context/🚀️runtime`. The complete suite is active. Post-start/post-attach service ownership and installation behavior still require refactoring.
+
+Sources: [Bun 1.3.14 runtime image source](https://raw.githubusercontent.com/oven-sh/bun/bun-v1.3.14/dockerhub/debian/Dockerfile), [Bun official checksums](https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/SHASUMS256.txt), [Node official checksums](https://nodejs.org/dist/v24.15.0/SHASUMS256.txt).
+
+## Artifact Router Entry Point Separation
+
+Native Cargo compilation no longer imports the aggregate artifact-test library. The Rust and TypeScript artifact routers moved to caching/📦️artifacts/{🦀️rust,🟦️typescript}/📜️script.ts. Existing artifact package commands now import their corresponding owner directly. The first edit pass stopped on a Stdio assertion that mentioned a helper without importing it; the remaining imports were then validated and updated. Changed package routers:
+
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/📜️script.ts`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/📜️script.ts`
+
+Additional compiler-input changes: library/🟨️.mjs now filters erased TypeScript references through the AST and caches parsing by source bytes; caching/🧫️fixtures/command-imports/🔣️.json and caching/🧪️tests/🔗️command-imports/🟦️.ts were added, registered in cache-contracts, and exercised with esbuild plus native Node. Ticket probes are under 🔬️command-imports. The Cargo core exports the existing owned tool runner for the separate artifact entry points and removes their former definitions/imports. Full suite: PASS, 3m49s. Actual PDF TypeScript build: PASS, 6.4s; repeat local-cache hit: PASS, 360ms.
+
+Trunk lockfile contract: updated WGPU package Trunk.toml; added caching/🧪️tests/🔒️trunk-lockfile/{🔣️.json,🟦️.ts}; registered its parser check in cache-contracts; added ticket 🔬️trunk-lockfile/📜️script.ts. Focused parser/native Trunk configuration proof PASS.
+
+Trunk metadata follow-up: caching/🦀️cargo/📜️script.ts adds bounded locked metadata validation and output suppression to its owned command runner; WGPU Trunk.toml adds the pre_build hook; WGPU 📋️project.json adds uncached check-lockfile; .vscode/🧩️launch.seed.jsonc registers its editor command. The Trunk fixture/test and ticket native probe now verify build/watch rejection and previous output retention. Native fixture PASS on macOS arm64.
+
+Container state follow-up: removed destructive restart blocks from .devcontainer/post-start.sh; added the neo4j-data mount in .devcontainer/devcontainer.json; corrected .devcontainer/README.md; added containers/🧪️tests/🔒️persistent-state/{🔣️.json,🟦️.ts} and ticket 🔬️container-context/🔒️state/📜️script.ts; registered the contract in cache-contracts. The WGPU metadata target and seed editor command are now named lockfile-check, with a graph assertion excluding source generators.
+
+Extension attach: .devcontainer/post-attach.sh now delegates once to build-vsix and conditions installation on success; README corrected; added containers/🧪️tests/🧩️extension-attach/{🔣️.json,🟦️.ts} and ticket 🔬️container-context/🧩️extension/📜️script.ts. Host build: extracted repo-vscode package ⚙️build/🟦️.ts from 📜️script.ts, removed framework Vitest registration from emitted host code through the compile-time define, preserved node: modules as host externals, and added ⚙️build/🧪️tests/🧩️host-build/{🔣️.json,🟦️.ts} plus the ticket 🏗️build/📜️script.ts probe. Host fixture and actual packaging remain active.
+
+VSIX packaging: repo-vscode package .vscodeignore now allowlists runtime files; ⚙️build/🟦️.ts supplies deterministic VSCE timestamp environment consumed by 📜️script.ts. Added ⚙️build/🧪️tests/📦️package/{🔣️.json,🟦️.ts} and ticket 🔬️container-context/🧩️extension/📦️package/📜️script.ts. Host-build and package fixture tests are registered in cache-contracts alongside extension-attach. Native fixture qualification is active.
+
+Added ticket 🔬️container-context/🧩️extension/♻️restore/📜️script.ts for native Nx restoration of the actual build/VSIX cache entries into a private consumer directory. Full suite PASS 3m31s; real VSIX PASS 9.0s; repeat 3/3 cache hits in 1.1s; private native restore and ZIP/bundle consumer checks PASS.
+
+WGPU boot ownership: updated 🚀️browser-boot/🟦️.ts to use the deterministic catalog fallback; added 🚀️browser-boot/🧪️tests/⚡️cache-inputs/{🔣️.json,🟦️.ts}; added renderBrowserBoot/checkBrowserBoot and a dedicated generator in the WGPU package 📜️script.ts; updated package 📋️project.json with its output/prerequisites and consumer edges; registered its test in cache-contracts; added generator/check editor entries to .vscode/🧩️launch.seed.jsonc. Ticket probes: 🔬️wgpu-boot-inputs/📜️script.ts and 🔬️fixture-lab/📜️script.ts. Native full generation, cache reuse and final suite are pending.
+
+Generated WGPU package 🟦️typescript/🚀️boot.js and .vscode/launch.json through Nx. Added ticket 🔬️wgpu-boot-inputs/♻️restore/📜️script.ts and 🔬️wgpu-boot-inputs/🔍️hash/📜️script.ts. The private fixture harness now closes its input stream and was exited successfully (no active child remained).
+
+### Browser Source Input Isolation (2026-09-09)
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/{🟨️.mjs,🔣️schema.json,🧪️tests/⚡️inputs/🔣️.json,🧪️tests/⚡️inputs/🟦️.ts}`: restricted relative source closure and native compiler fixtures.
+- Library `🟨️.mjs`: declared named source inputs and daemon implementation revision.
+- Caching contract runner: register source input fixture.
+- WGPU `⚙️browser-build/{📜️script.ts,🟦️.ts,🔣️.json}`: thin boot producer and shared in-memory browser bundler.
+- WGPU Rust package script/project metadata: import shared browser helpers, route boot generator through thin producer, derive source inputs and narrow generated prerequisite outputs.
+- WGPU browser boot input fixture and engine package-integration tests: updated imports and compiler input coverage.
+- WGPU generated frame worker: refreshed through its native Nx producer.
+- Ticket source-input probe and fixture lab: retained input scripts.
+
+- Ticket `🔬️runtime-hash-exit/📜️script.ts`: native Nx 23.2 runtime failure/cache-hit investigation; no shared state mutation.
+
+- Caching dependency-bootstrap JSON fixture: include the new source-input module and schema in the minimal native graph checkout.
+
+- Ticket `🔬️registry-fingerprint-cost/📜️script.ts`: read-only stage timing of actual catalog fingerprint inputs.
+
+### Registry Digest Prerequisite (2026-09-09)
+
+- Caching `🔏️inputs/{📜️script.ts,🟦️.ts,🧬️schema/🔣️.json,🧪️tests/🔏️receipt/🔣️.json,🧪️tests/🔏️receipt/🟦️.ts}`: thin fingerprint producer, canonical atomic receipt publisher and fixtures.
+- Caching `🔣️policy.json`, `🧬️schema/🔣️.json`, `📋️project.json`, `📜️script.ts`: explicit fingerprint ownership and removal of the old broad command.
+- Library `🟨️.mjs`: generator input discovery consumes the declared prerequisite output.
+- Caching contract runner: receipt fixture and resolved prerequisite/output assertions.
+- Ticket `🔬️generator-input-receipt/📜️script.ts` and fixture lab: focused test inputs.
+- Ticket runtime-hash probe: exact production receipt path under native Nx/Git ignores.
+- Native registry outputs and `.vscode/launch.json`: refreshed by the registry generator.
+
+### Private Nx Fixture Storage
+
+- Dependency-bootstrap fixture JSON/schema: private storage paths and foreign-storage sentinel.
+- Caching bootstrap, dependency and service tests: explicit private workspace/data/cache paths.
+- Ticket `🔬️nx-fixture-storage/📜️script.ts`: native red/green empty-checkout isolation probe.
+
+### Native Graph Inventory Coverage
+
+- Caching `📇️inventory/{🟦️.ts,🧬️schema/🔣️.json,🧪️tests/🕸️coverage/🔣️.json,🧪️tests/🕸️coverage/🟦️.ts}`: owned native graph/provenance interface and full-provider regression.
+- Caching `📜️script.ts`: audit all resolved projects, preserve executor/configuration fields, report inferred executor bypasses; keep independent core-plugin precedence checks.
+- Caching contract runner: register full native coverage.
+- Artifact registry fixture/schema/test: collision oracle and scaling regression in progress.
+- Ticket `🔬️native-inventory` input probes and `📓️native-graph-coverage.md`: retained research and native evidence.
+
+- Artifact registry `📦️artifacts/📇️registry/🟦️.ts`: replace pairwise comparisons with normalized prefix indexing while preserving every collision and its deterministic order. Focused Python/scaling test and full native audit passed.
+
+- Caching `🌐️vite/🧫️cases.json`, `🌐️vite/🧬️schema/🔣️.json`, and `🧪️tests/🌐️browser/🟦️.ts`: private package/module directories and native config/optimizer cache assertions; focused red/green validation passed.
+- Native inventory fixture: native task-graph cacheability checks for inferred publishing executors; removed the overbroad executor-bypass classification.
+- Ticket native-inventory Vite-storage and Rust-input probes: retained input scripts.

@@ -14,10 +14,18 @@ pub struct ReplacePresence {
 impl protocol::MutationKind<ArchitectPresence, ArchitectPresenceMutation> for ReplacePresence {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "presence", kind: "replace-presence", record: "ReplacePresence" };
     fn diff(&self, base: &ArchitectPresence) -> protocol::MutationOutcome<ArchitectPresence> {
-        if &self.presence == base { return protocol::MutationOutcome::empty().warn("mutation.no-op", "Requested presence already matches."); }
+        if &self.presence == base {
+            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Requested presence already matches.");
+        }
         protocol::MutationOutcome::new(self.presence.clone())
     }
-    fn inverse(&self, base: &ArchitectPresence) -> Vec<ArchitectPresenceMutation> { vec![ArchitectPresenceMutation::ReplacePresence(Self { presence: base.clone() })] }
-    fn label(&self) -> String { "Replace Presence".into() }
-    fn target(&self) -> Vec<String> { vec!["presence".into()] }
+    fn inverse(&self, base: &ArchitectPresence) -> Vec<ArchitectPresenceMutation> {
+        vec![ArchitectPresenceMutation::ReplacePresence(Self { presence: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Presence".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["presence".into()]
+    }
 }

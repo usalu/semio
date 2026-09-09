@@ -1,6 +1,7 @@
 use super::testkit::*;
 use super::*;
 use crate::Puzzle2dSnapshot;
+use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
 use semio_framework_plugin::PluginApp;
 use store::{Backbone, BackboneMessage, MemoryBackbone};
 
@@ -435,18 +436,6 @@ async fn ingest_operations_is_idempotent() {
 //#endregion 🔖️Convergence
 
 //#region 🔖️Registry
-/// 🧰️ B1: `setActiveUtility` is a real typed `Puzzle2dCommand` now (was a host-applied `ViewModel`
-/// notification): switching utilities must still emit no DOCUMENT operations — the new value lands
-/// in `Puzzle2dConfig::active_utility_by_window_id` as a config operation instead.
-#[semio_framework_async_macros::async_test]
-async fn utility_switch_emits_no_ops_and_no_history() {
-    let mut app = app_with_registry();
-    let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": brush_utility::UTILITY_ID })), Some(overview::WINDOW_KIND_ID)).expect("switch utility");
-    assert!(result.mutations.is_empty(), "a utility switch must not produce document operations");
-    let can_undo = dispatch(&mut app, "undo", None, None);
-    assert!(can_undo.map_or(true, |r| r.mutations.is_empty()), "a utility switch must not have created a document undo step");
-}
-
 /// 🧭️ Kind discipline: every View-declared runtime/host action must run through the registry
 /// without tripping the "must not emit operations" guard (proving each is correctly classified).
 #[semio_framework_async_macros::async_test]
@@ -496,7 +485,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
         window_instance_id: None,
         point: None,
     };
-    let menu = semio_framework::io::resolve_ready(app.context_menu(&request));
+    let menu = semio_framework::io::resolve_ready(app.context_menu(&request, &Default::default()));
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     assert_eq!(last.id, "deleteSelection", "the destructive row must stay last as a top-level leaf");

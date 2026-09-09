@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧪️ kinds_match_the_enum_and_the_catalog — the honesty check the test platform cannot make

@@ -1,4 +1,5 @@
-# 🧬️ Rewriting snapshot schema — artifact-lane fields only.
+# 📸️ Rewriting's durable document snapshot.
+# import PropertyValueEntry, LayoutPointEntry from "../🔗️.graphql"
 
 type RewritingSnapshot {
   beforeFixtureJson: String! @state(class: ARTIFACT)
@@ -6,19 +7,4 @@ type RewritingSnapshot {
   rhsJson: String! @state(class: ARTIFACT)
   parameterBindings: [PropertyValueEntry!]! @state(class: ARTIFACT)
   ruleLayout: [LayoutPointEntry!]! @state(class: ARTIFACT)
-}
-
-type PropertyValueEntry {
-  key: String!
-  value: String!
-}
-
-type LayoutPointEntry {
-  key: String!
-  value: LayoutPoint!
-}
-
-type LayoutPoint {
-  x: Float!
-  y: Float!
 }

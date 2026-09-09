@@ -1,9 +1,9 @@
 //! 📄️ Flow play app panel — the document tree: widgets and synapses of the current fixture.
 
-use crate::schema::{widget_id, widget_kind_label, widget_tree_label};
-use crate::FlowSnapshot;
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::{flow_graph_edge_target_id, flow_graph_node_target_id, FLOW_INTERACTION_GRAPH};
+use crate::schema::{widget_id, widget_kind_label, widget_tree_label};
+use crate::FlowSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
@@ -37,9 +37,8 @@ pub fn definition() -> PanelTabDefinition {
 pub fn render(fixture: &FlowSnapshot, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let live = fixture.to_fixture();
     let widget_items = crate::editor::flow::ui_node_list(live.widgets.iter().map(|widget| tree_item_desc(flow_graph_node_target_id(widget_id(widget)), widget_tree_label(widget), Some(widget_kind_label(widget).into()))))?;
-    let synapse_items = crate::editor::flow::ui_node_list(
-        live.synapses.iter().map(|synapse| tree_item_desc(flow_graph_edge_target_id(&synapse.id), format!("{} → {}", synapse.from, synapse.to), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))),
-    )?;
+    let synapse_items =
+        crate::editor::flow::ui_node_list(live.synapses.iter().map(|synapse| tree_item_desc(flow_graph_edge_target_id(&synapse.id), format!("{} → {}", synapse.from, synapse.to), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))))?;
     PanelTreeBuilder::new("flow-play-document")?
         .section_or_placeholder("flow-play-document.widgets", Some(ui_label(labels.widgets.as_str())?), true, widget_items, labels.none_placeholder.as_str())?
         .section_or_placeholder("flow-play-document.synapses", Some(ui_label(labels.synapses.as_str())?), false, synapse_items, labels.none_placeholder.as_str())?

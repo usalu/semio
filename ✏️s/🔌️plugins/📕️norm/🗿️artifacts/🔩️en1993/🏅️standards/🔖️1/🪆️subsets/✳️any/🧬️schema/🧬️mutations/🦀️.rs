@@ -108,11 +108,7 @@ impl En1993Mutation {
     pub fn from_snapshot(snapshot: &En1993Snapshot) -> Vec<En1993Mutation> {
         let mut mutations = Vec::with_capacity(17);
         mutations.push(En1993Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex }));
-        mutations.push(En1993Mutation::UpdatePileInputs(update_pile_inputs::UpdatePileInputs {
-            new_pile_sigma_mpa: snapshot.pile_sigma_mpa,
-            new_pile_k_red: snapshot.pile_k_red,
-            new_pile_n_ed_kn: snapshot.pile_n_ed_kn,
-        }));
+        mutations.push(En1993Mutation::UpdatePileInputs(update_pile_inputs::UpdatePileInputs { new_pile_sigma_mpa: snapshot.pile_sigma_mpa, new_pile_k_red: snapshot.pile_k_red, new_pile_n_ed_kn: snapshot.pile_n_ed_kn }));
         mutations.push(En1993Mutation::UpdateWeldInputs(update_weld_inputs::UpdateWeldInputs {
             new_weld_a_mm: snapshot.weld_a_mm,
             new_weld_l_mm: snapshot.weld_l_mm,
@@ -229,7 +225,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
-
 
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON

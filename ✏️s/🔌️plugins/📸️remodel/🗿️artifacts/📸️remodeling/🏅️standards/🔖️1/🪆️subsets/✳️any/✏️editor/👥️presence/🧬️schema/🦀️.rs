@@ -19,7 +19,5 @@ pub struct RemodelingPresence {
     #[state(presence)]
     pub frame_index: u32,
     #[state(presence)]
-    pub active_utility_id: String,
-    #[state(presence)]
     pub report_table: String,
 }

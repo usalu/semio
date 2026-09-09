@@ -88,7 +88,11 @@ pub fn concrete_forest_app() -> Puzzle2dApp {
 
 /// 🖼️ The rendered body, serialized — every panel/window assertion greps this string.
 pub fn render_body(app: &mut Puzzle2dApp, body_key: &str) -> String {
-    let tree = semio_framework::io::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render");
+    render_body_with_view(app, body_key, &ViewModel::default())
+}
+
+pub fn render_body_with_view(app: &mut Puzzle2dApp, body_key: &str, view_state: &ViewModel) -> String {
+    let tree = semio_framework::io::resolve_ready(app.render(body_key, None, view_state)).expect("render");
     let mut stack = vec![&tree.root];
     while let Some(node) = stack.pop() {
         if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {

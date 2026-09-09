@@ -1,10 +1,8 @@
 //! ✍️ ✍️ Writer play app commands command — `commit-rename`.
 
-use crate::op::{EditText, WriterMutation};
-use crate::schema::{apply_jack_rename, jack_symbol_at_offset, JackSymbolKind};
-use crate::{writer_text, WriterSnapshot};
-use crate::editor::writer::config::{WriterConfig, WriterConfigMutation, WriterEditorSelection};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use crate::op::WriterMutation;
+use crate::WriterSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -13,23 +11,6 @@ pub struct CommitRename {
     pub text: String,
 }
 
-pub fn handle(payload: &CommitRename, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-    let document = doc.snapshot;
-    let config = cfg.snapshot;
-    let text = writer_text(document);
-    let selection = config.editor_selection.clone().unwrap_or(WriterEditorSelection { start: 0, end: 0 });
-    if selection.start == selection.end {
-        if let Some(symbol) = jack_symbol_at_offset(&text, selection.start) {
-            if symbol.kind == JackSymbolKind::Variable {
-                let renamed = apply_jack_rename(&text, &symbol.occurrences, &payload.text);
-                return Ok(Emit::mutations(vec![WriterMutation::EditText(EditText { text: renamed })]));
-            }
-        }
-    }
-    if selection.start <= selection.end && selection.end <= text.len() {
-        let mut updated = text.clone();
-        updated.replace_range(selection.start..selection.end, &payload.text);
-        return Ok(Emit::mutations(vec![WriterMutation::EditText(EditText { text: updated })]));
-    }
-    Ok(Emit::default())
+pub fn handle(_payload: &CommitRename, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WriterMutation, NoConfigMutation>, Fault> {
+    Err(Fault::from("writer rename requires the retained exact-window selection"))
 }

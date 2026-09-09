@@ -22,7 +22,8 @@ pub fn change_mechanical_ventilation_fan_total_efficiency(id: crate::model::Enti
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeMechanicalVentilationFanTotalEfficiency {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "mechanical-ventilation", kind: "change-mechanical-ventilation-fan-total-efficiency", record: "ChangedMechanicalVentilationFanTotalEfficiency" };
+    const SEMANTICS: protocol::SemanticDescriptor =
+        protocol::SemanticDescriptor { verb: "change", entity: "mechanical-ventilation", kind: "change-mechanical-ventilation-fan-total-efficiency", record: "ChangedMechanicalVentilationFanTotalEfficiency" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)

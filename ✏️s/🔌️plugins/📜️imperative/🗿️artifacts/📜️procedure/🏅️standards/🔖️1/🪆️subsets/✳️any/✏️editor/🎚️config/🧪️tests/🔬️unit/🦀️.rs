@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -22,4 +21,3 @@ async fn config_operation_snapshot_diff_ignores_base() {
     let operation = ImperativeConfigMutation::ReplaceConfig(ReplaceConfig { config: snapshot.clone() });
     assert_eq!(protocol::Mutation::diff(&operation, &base).diff(), &snapshot);
 }
-

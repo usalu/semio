@@ -20,11 +20,10 @@
   "sheetBMm": null,
   "sheetTMm": null,
   "sheetKSigma": null,
-  "sheetWElMm3": 12800.0,
+  "sheetWElMm3": 12800,
   "sheetMEdKnm": null,
   "shellTMm": null,
   "shellRMm": null,
   "sigmaEdShellMpa": null,
-  "annex": null,
-  "selectedCheckIndex": null
+  "annex": null
 }

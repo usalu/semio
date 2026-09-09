@@ -37,8 +37,6 @@ export interface Din4108Artifact {
   applicationType: string;
   /** @state artifact */
   declaredApplicationClass: string;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 export interface Din4108LayerDocument { thicknessM: number; lambdaWMk: number; }
 

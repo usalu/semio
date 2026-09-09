@@ -4,9 +4,9 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::{Process3dMutation, Process3dSnapshot, PROCESS3D_DIALECT, PROCESS_3D_SCHEMA};
 use crate::viewer::process3d::modes::view;
 use crate::viewer::process3d::modes::view::windows::workpiece;
+use crate::{Process3dMutation, Process3dSnapshot, PROCESS3D_DIALECT, PROCESS_3D_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
@@ -56,16 +56,18 @@ impl ArtifactViewer for Process3dViewer {
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect,
     /// no dirty scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only
     /// action (camera orbit, "jump to step") is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(
+        _command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(
-        body_key: &str,
-        doc: &ArtifactView<'_, Self::Snapshot>,
-        _cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &semio_framework_plugin::ViewModel,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             workpiece::PROCESS3D_VIEW_BODY_MAIN => workpiece::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

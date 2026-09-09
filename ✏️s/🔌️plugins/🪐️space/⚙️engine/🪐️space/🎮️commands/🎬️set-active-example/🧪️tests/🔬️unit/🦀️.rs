@@ -73,7 +73,7 @@ async fn open_studio_loads_ephemeral_created_studio() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&home_projection, &history);
     let home_config = semio_s_artifact_space_home::editor::home::config::HomeConfig::default();
-    let home_cfg = ConfigView { snapshot: &home_config };
+    let home_cfg = ConfigView { snapshot: &home_config, window: None };
     let create = create_studio::handle(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
     let space_id = create
         .effects
@@ -101,7 +101,7 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&home_projection, &history);
     let home_config = semio_s_artifact_space_home::editor::home::config::HomeConfig::default();
-    let home_cfg = ConfigView { snapshot: &home_config };
+    let home_cfg = ConfigView { snapshot: &home_config, window: None };
     let emit = create_studio::handle(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "create must not download a file");
     let uri = emit
@@ -123,7 +123,7 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     let empty = empty_workflow_snapshot().await;
     let studio_doc = ArtifactView::new(&empty, &history);
     let studio_config = SpaceConfig::default();
-    let studio_cfg = ConfigView { snapshot: &studio_config };
+    let studio_cfg = ConfigView { snapshot: &studio_config, window: None };
     // 🕹️ `OpenSpace` isn't one of `SpaceApp::handle`'s interaction-aware bypass rows, so it's safe
     // to exercise via `SpaceCommand::dispatch` directly (the `app_commands!`-generated 3-arg path
     // — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) rather than through

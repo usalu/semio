@@ -56,8 +56,6 @@ pub struct En1994Diff {
     pub n_cycles_stud: Option<f64>,
     #[state(artifact)]
     pub delta_tau_stud_mpa: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

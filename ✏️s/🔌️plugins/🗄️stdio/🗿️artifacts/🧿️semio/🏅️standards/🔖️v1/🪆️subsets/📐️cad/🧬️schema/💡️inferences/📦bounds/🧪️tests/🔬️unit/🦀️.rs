@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntityRecord, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 

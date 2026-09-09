@@ -6,9 +6,7 @@
   "additionalProperties": false,
   "required": [
     "exaggeration",
-    "importedFeaturesJson",
-    "selectedIds",
-    "cameraJson"
+    "importedFeaturesJson"
   ],
   "properties": {
     "exaggeration": {
@@ -20,18 +18,6 @@
       "type": "string",
       "contentMediaType": "application/json",
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "cameraJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
     }
   }
 }

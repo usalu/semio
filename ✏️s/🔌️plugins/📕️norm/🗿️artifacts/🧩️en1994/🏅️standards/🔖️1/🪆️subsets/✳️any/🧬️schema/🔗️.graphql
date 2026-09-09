@@ -23,5 +23,4 @@ type En1994Artifact {
   fYMpa: Float! @state(class: ARTIFACT)
   nCyclesStud: Float! @state(class: ARTIFACT)
   deltaTauStudMpa: Float! @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }

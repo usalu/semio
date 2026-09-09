@@ -10,13 +10,14 @@
  * change that lifts that ceiling. */
 import { spawn } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
 import { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "./🕸️imports/🟦️.ts";
 export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "./🕸️imports/🟦️.ts";
 import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
 export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
@@ -623,23 +624,16 @@ const WASM_OPT_ARGS: readonly string[] = [
   "--enable-sign-ext",
 ];
 
-/** @emoji 🪶️ Runs binaryen's `wasm-opt` in place on every jco-extracted core wasm module in `outDir`
- * (`${componentBase}.core*.wasm`) — component binaries themselves aren't parseable by binaryen; this
- * is exactly what upstream `jco opt` does under the hood. `binaryen` ships an Emscripten JS+wasm build
- * of `wasm-opt` (already a transitive dep of `@bytecodealliance/jco`; pinned as an explicit
- * devDependency here so a future jco upgrade can't silently drop it), so this runs under `bun` with no
- * native binary and no per-platform setup. Skipped entirely in dev (`semioBuildMode() !== "ship"`).
- * `SEMIO_WASM_OPT=0` skips the pass in ship mode; `SEMIO_WASM_OPT_BIN` points at a native `wasm-opt`
- * binary instead, for iteration speed. */
+/** 🪶️ Optimizes extracted component cores with the native tool prepared by Nx. */
 function optimizePluginCoreModules(outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
-  if (semioBuildMode() !== "ship") return;
-  if (process.env.SEMIO_WASM_OPT === "0") return;
-  const wasmOptBin = process.env.SEMIO_WASM_OPT_BIN ?? join(ctx.repoRoot, "node_modules/binaryen/bin/wasm-opt");
+  if (!(ctx.optimize ?? (semioBuildMode() === "ship" && process.env.SEMIO_WASM_OPT !== "0"))) return;
+  const selected = ctx.wasmOptBin ?? process.env.SEMIO_WASM_OPT_BIN;
+  const wasmOptBin = selected ? resolve(ctx.repoRoot, selected) : preparedBinaryen(ctx.repoRoot);
   for (const file of readdirSync(outDir)) {
     if (!file.startsWith(`${componentBase}.core`) || !file.endsWith(".wasm")) continue;
     const coreWasm = join(outDir, file);
     const optimized = `${coreWasm}.opt`;
-    if (runCmdStatus("bun", [wasmOptBin, coreWasm, ...WASM_OPT_ARGS, "-o", optimized], { cwd: ctx.repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+    if (runCmdStatus(wasmOptBin, [coreWasm, ...WASM_OPT_ARGS, "-o", optimized], { cwd: ctx.repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
       throw new Error(`wasm-opt failed for ${coreWasm}`);
     }
     renameSync(optimized, coreWasm);
@@ -804,6 +798,7 @@ function spawnAsync(cmd: string, args: readonly string[], cwd: string, signal?: 
   signal?.throwIfAborted();
   return new Promise((resolveSpawn, rejectSpawn) => {
     const child = spawn(cmd, args as string[], { cwd, shell: false, detached: signal !== undefined && process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
+    const progress = setInterval(() => console.log(`Running ${cmd.split(/[\\/]/).pop()}…`), 10000);
     let output = "", forced: ReturnType<typeof setTimeout> | undefined;
     const terminate = (force = false): void => {
       if (!child.pid) return;
@@ -816,6 +811,7 @@ function spawnAsync(cmd: string, args: readonly string[], cwd: string, signal?: 
     child.stdout?.on("data", capture); child.stderr?.on("data", capture);
     child.on("error", rejectSpawn);
     child.on("close", (code) => {
+      clearInterval(progress);
       if (forced) clearTimeout(forced);
       signal?.removeEventListener("abort", cancel);
       if (signal?.aborted) rejectSpawn(signal.reason);
@@ -835,17 +831,19 @@ function spawnNodeBinAsync(args: readonly string[], cwd: string, signal?: AbortS
  * same `WASM_OPT_ARGS`, just spawned via {@link spawnAsync} instead of `runCmdStatus`'s `spawnSync` so
  * it can run concurrently with sibling plugins' own optimize pass under
  * `📜️script.ts`'s bounded-parallel materialize stage (T-P8). */
-async function optimizePluginCoreModulesAsync(outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
+export async function optimizePluginCoreModulesAsync(outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
   if (!(ctx.optimize ?? (semioBuildMode() === "ship" && process.env.SEMIO_WASM_OPT !== "0"))) return;
-  const wasmOptBin = ctx.wasmOptBin ?? process.env.SEMIO_WASM_OPT_BIN ?? join(ctx.repoRoot, "node_modules/binaryen/bin/wasm-opt");
+  const selected = ctx.wasmOptBin ?? process.env.SEMIO_WASM_OPT_BIN;
+  const wasmOptBin = selected ? resolve(ctx.repoRoot, selected) : preparedBinaryen(ctx.repoRoot);
   for (const file of readdirSync(outDir)) {
     if (!file.startsWith(`${componentBase}.core`) || !file.endsWith(".wasm")) continue;
     const coreWasm = join(outDir, file);
     const optimized = `${coreWasm}.opt`;
     try {
-      await spawnAsync("bun", [wasmOptBin, coreWasm, ...WASM_OPT_ARGS, "-o", optimized], ctx.repoRoot, ctx.signal);
-    } catch {
-      throw new Error(`wasm-opt failed for ${coreWasm}`);
+      await spawnAsync(wasmOptBin, [coreWasm, ...WASM_OPT_ARGS, "-o", optimized], ctx.repoRoot, ctx.signal);
+    } catch (cause) {
+      ctx.signal?.throwIfAborted();
+      throw new Error(`wasm-opt failed for ${coreWasm}`, { cause });
     }
     renameSync(optimized, coreWasm);
   }

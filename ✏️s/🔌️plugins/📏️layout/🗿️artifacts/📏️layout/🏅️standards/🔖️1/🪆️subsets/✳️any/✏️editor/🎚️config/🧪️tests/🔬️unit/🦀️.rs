@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -18,7 +17,7 @@ async fn layout_config_dsl_and_pack_round_trip() {
         engagement_input: "export svg".into(),
         camera: LayoutCamera { x: 5.0, y: 6.0, zoom: 1.25 },
         preview_camera: LayoutCamera { x: 7.0, y: 8.0, zoom: 0.75 },
-        };
+    };
     store::os_store::test_support::assert_dsl_round_trip(&config);
     store::os_store::test_support::assert_dsl_pack_equivalence(&config);
 }
@@ -30,7 +29,7 @@ fn sample_config() -> LayoutConfig {
         engagement_input: "export png".into(),
         camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 },
         preview_camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 },
-        }
+    }
 }
 
 fn config_round_trip(base: &LayoutConfig, operation: &LayoutConfigMutation) -> LayoutConfig {

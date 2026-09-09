@@ -13,7 +13,7 @@
   "deltaSigmaMpa": null,
   "fatigueDetail": null,
   "dMm": null,
-  "hScMm": 125.0,
+  "hScMm": 125,
   "fCkMpa": null,
   "fUMpa": null,
   "eCmMpa": null,
@@ -21,6 +21,5 @@
   "spanM": null,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

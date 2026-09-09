@@ -1,15 +1,75 @@
 
 use super::*;
-use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, testkit};
+use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, PluginCloseStep, VcsArtifactApp, ViewModel, testkit};
 
-pub type Puzzle3dApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
+pub type Puzzle3dRawApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
+
+/// 🧪️ The one puzzle3d fixture app. Wraps the raw wrapper so every fixture drains its stores on the
+/// way out: a registry-backed `VcsArtifactApp` installs framework-owned `ArtifactStoreCursorDisposer`
+/// members whose own `Drop` asserts terminal-empty ownership (`🏪️store/🦀️.rs`), so a bare drop panics
+/// inside a destructor. `Drop` here therefore NEVER panics and never asserts: a second panic while a
+/// failing assertion is already unwinding is a non-unwinding abort that kills the whole test binary
+/// and hides the assertion that actually failed. A drain that cannot reach the witness leaks the raw
+/// app instead ([`std::mem::forget`]) — leaking a fixture inside a test process costs nothing, and the
+/// close contract itself is stated exactly once, explicitly, by [`close_witness`].
+pub struct Puzzle3dApp(Option<Puzzle3dRawApp>);
+
+impl std::ops::Deref for Puzzle3dApp {
+    type Target = Puzzle3dRawApp;
+    fn deref(&self) -> &Self::Target {
+        self.0.as_ref().expect("fixture app was already consumed by close_witness")
+    }
+}
+
+impl std::ops::DerefMut for Puzzle3dApp {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.0.as_mut().expect("fixture app was already consumed by close_witness")
+    }
+}
+
+/// 🧹️ Drives `app` through the real `PluginApp` close state machine, one item and one envelope page
+/// per turn exactly as a host actor tick does, and returns the terminal-empty witness or the fault
+/// that stopped it. Bounded only as a runaway guard: this app carries five stores plus its retained
+/// tool operations, which outgrows `testkit::close_registered_fixture_app`'s own 64-turn cap.
+fn drain_close(app: &mut Puzzle3dRawApp) -> Result<bool, Fault> {
+    for _ in 0..1_048_576 {
+        if app.close_terminal_is_empty() {
+            return Ok(true);
+        }
+        if PluginApp::close_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)? == PluginCloseStep::Complete {
+            break;
+        }
+    }
+    Ok(app.close_terminal_is_empty())
+}
+
+/// 🧹️ Consumes one fixture app through its real close state machine and reports the outcome, so the
+/// close contract is asserted by a test rather than by a destructor. `Err` carries the framework's own
+/// fault; `Ok(false)` means the machine reported `Complete` without reaching terminal-empty ownership.
+pub fn close_witness(mut app: Puzzle3dApp) -> Result<bool, Fault> {
+    let mut raw = app.0.take().expect("fixture app was already consumed by close_witness");
+    match drain_close(&mut raw) {
+        Ok(true) => Ok(true),
+        other => {
+            std::mem::forget(raw);
+            other
+        }
+    }
+}
+
+impl Drop for Puzzle3dApp {
+    fn drop(&mut self) {
+        let Some(mut raw) = self.0.take() else {
+            return;
+        };
+        if !matches!(drain_close(&mut raw), Ok(true)) {
+            std::mem::forget(raw);
+        }
+    }
+}
 
 pub fn meta(actor: &str) -> ActionMeta {
     testkit::meta(actor)
-}
-
-pub fn app() -> Puzzle3dApp {
-    semio_framework::io::resolve_ready(testkit::new_app::<EditorApp<Puzzle3dPlayApp>>())
 }
 
 /// 🌉️ `new_app_with_registry`'s `manifest: fn() -> App` shape predates the `AppDefinition`-returning
@@ -19,37 +79,111 @@ pub fn puzzle3d_manifest_for_testkit() -> App {
     App { definition: create_puzzle3d_app(), examples: Vec::new() }
 }
 
-/// 🧰️ A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the
-/// utility contract are enforced exactly as in production.
-pub fn app_with_registry() -> Puzzle3dApp {
-    semio_framework::io::resolve_ready(testkit::new_app_with_registry::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit))
+/// 🧰️ The registry-backed, instance-bound fixture app — the ONLY constructor this plugin can use.
+/// puzzle3d declares `bounded_first_step_tool_proofs!`, so `VcsArtifactApp::with_registry_on_bus`'s
+/// `registry.tool_job_registration::<A>(…)` join needs the manifest's migrated generated
+/// declarations; the registry-less `testkit::new_app` carries an `AppActionRegistry::default()` and
+/// fails closed with `interactive-job.catalog-authority` before any dispatch is attempted. The bound
+/// instance id is what `advance_typed_operation_publication`/`maintenance_step` and the local
+/// interaction query authority key their live-runtime bookkeeping on, exactly as the host binds it.
+pub async fn app() -> Puzzle3dApp {
+    let mut app = testkit::new_app_with_registry::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit).await;
+    app.bind_instance_id(1).await;
+    Puzzle3dApp(Some(app))
+}
+
+/// 🪪️ The instance identity every fixture binds, and therefore the receiver `take_typed_operation_result_page`
+/// answers for.
+pub const FIXTURE_INSTANCE_ID: u32 = 1;
+
+/// 🔁️ Runs the host's continuation loop to quiescence and hands back the effects/events/UI scope the
+/// host would have forwarded to the shell. A registry-backed `VcsArtifactApp` does NOT apply a retained
+/// tool job inline — `dispatch_typed` mints a `ToolOperationSpec` whose worker, store publication,
+/// result page and outboxes are advanced only by later continuation turns, which is why the
+/// registry-less fixture used to see mutations land synchronously and this one does not. One turn is
+/// exactly the host's own: `maintenance_step` (worker + retirement stages), one
+/// `advance_typed_operation_publication` unit, the result page for the bound receiver plus its
+/// mandatory ACK, then one effect, one event and one UI scope. The ACK is what actually retires the
+/// operation — without it the app stays pending forever. Bounded only as a runaway guard.
+pub async fn settle(app: &mut Puzzle3dApp) -> (Vec<Effect>, Vec<semio_framework_plugin::AppEvent>, Option<UiDirtyScope>) {
+    let (mut effects, mut events, mut scope) = (Vec::new(), Vec::new(), None);
+    for _ in 0..1_048_576 {
+        if !app.has_pending_typed_operations() {
+            return (effects, events, scope);
+        }
+        app.maintenance_step(1, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
+        app.advance_typed_operation_publication().await.expect("advance one typed operation publication unit");
+        if let Some(page) = app.take_typed_operation_result_page(FIXTURE_INSTANCE_ID) {
+            assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
+            assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");
+        }
+        effects.extend(app.take_typed_operation_effect());
+        events.extend(app.take_typed_operation_event());
+        scope = app.take_typed_operation_ui_scope().or(scope);
+        acknowledge_local_interaction_pages(app);
+    }
+    panic!("puzzle3d app never quiesced: pending typed operations outlived the settle budget");
+}
+
+/// 📏️ One continuation turn's byte grant. Deliberately one fixed envelope page, not a huge number: the
+/// point of the loop is that every unit is bounded exactly as a host actor tick bounds it.
+const SETTLE_TURN_BYTES: usize = 16_384;
+
+/// 🕹️ Plays the CLIENT half of the local interaction query protocol: drains the replies the app
+/// published this turn and acknowledges every page, which is what returns the document snapshot-read
+/// leases the query captured — the same Started → Page → acknowledge → Closed round trip
+/// `local_interaction_query_return_does_not_fault_the_next_maintenance_step` drives by hand.
+fn acknowledge_local_interaction_pages(app: &mut Puzzle3dApp) {
+    while let Some(reply) = app.take_local_interaction_query_reply() {
+        if let protocol::LocalInteractionQueryReply::Page { page } = reply {
+            let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
+            assert!(app.acknowledge_local_interaction_query(&token), "the app's own local-interaction page must accept its exact token");
+        }
+    }
+}
+
+/// 🔁️ Folds one settled turn's forwarded output into the invocation the shell observes, so a test reads
+/// the same `(requested_effects, events, ui_scope)` triple a client would after the continuation turns.
+async fn settle_into(app: &mut Puzzle3dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
+    let (effects, events, scope) = settle(app).await;
+    result.map(|mut result| {
+        result.requested_effects.extend(effects);
+        result.events.extend(events);
+        if let Some(scope) = scope {
+            result.ui_scope = scope;
+        }
+        result
+    })
 }
 
 /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
 /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
 /// `Self::Command` channel). Reconstructs the `Puzzle3dCommand` from the same
 /// `(action, args, window_id)` triple every pre-B1 test already passed.
-pub fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
-    // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
-    // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
-    // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
-    // setInteractionGranularity to this reserved set.
+pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+    // 🕰️ Framework-reserved verbs stay on `handle_action`: this is exactly the `skip` set
+    // `PluginBuilder`'s own declared-action bridge check uses (`🧰️framework/…/🔌️plugin/🦀️.rs`), i.e. every
+    // verb the framework injects and handles itself. A reserved verb sent down the typed channel faults
+    // `interactive-job.missing-factory` — the app owns no tool proof for a verb it never declared.
     if matches!(
         action,
         "undo"
             | "redo"
-            | "checkpoint"
             | "commitCheckpoint"
             | "createAlternative"
             | "switchAlternative"
             | "checkoutCheckpoint"
-            | "alternative"
             | "revertToCommand"
-            | "historyFilter"
+            | "setHistoryCommandFilter"
             | "noteShellCommand"
+            | "recordTutorial"
+            | "startIntroduction"
+            | "startTutorial"
             | "copy"
             | "cut"
             | "paste"
+            | "setActiveUtility"
+            | "setActiveTool"
             | "interactionSelect"
             | "interactionHover"
             | "clearSelection"
@@ -58,32 +192,34 @@ pub fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, windo
             | "setInteractionGranularity"
     ) {
         let dsl_args = args.map(json::to_dsl_value);
-        return semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &meta("local")));
+        let reserved = app.handle_action(action, dsl_args.as_ref(), &meta("local")).await;
+        return settle_into(app, reserved).await;
     }
-    semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &meta("local")))
+    let typed = app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &meta("local")).await;
+    settle_into(app, typed).await
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
 /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
 /// deleted `worldPick`/`worldSelect`/`worldVortexSelect`/`setSelection` actions.
-pub fn select_id(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
+pub async fn select_id(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
     let targets = to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]);
-    dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
+    dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None).await
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionHover`
 /// for one `(granularity, id)` pair on the `pointer` channel in the `vortex` domain — the
 /// test-side replacement for the deleted `worldHover`/`setHover`/`worldVortexHover`/`setKindHover`
 /// actions. `id: None` clears the hover (mirrors the old "hover nothing" call shape).
-pub fn hover_id(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
+pub async fn hover_id(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
     let targets: Vec<InteractionTarget> = id.map(|id| InteractionTarget { granularity: granularity.into(), id: id.into() }).into_iter().collect();
     let targets_json = to_json_string(&targets);
-    dispatch(app, "interactionHover", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "channel": "pointer", "targets": targets_json })), None)
+    dispatch(app, "interactionHover", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "channel": "pointer", "targets": targets_json })), None).await
 }
 
 /// 🖼️ The rendered body, as JSON — every panel/window assertion navigates this value.
-pub fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
-    let tree = semio_framework::io::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render");
+pub async fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
+    let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
     let mut stack = vec![&tree.root];
     let mut rendered_scene = None;
     while let Some(node) = stack.pop() {
@@ -105,12 +241,12 @@ pub fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
 
 /// 🪟️ The world composite body for one window INSTANCE — the `<body>:<windowInstanceId>` form is
 /// how a split pane asks for its own materialized options (see `ArtifactApp::render`).
-pub fn render_window(app: &mut Puzzle3dApp, window_id: &str) -> Value {
-    render_body(app, &format!("{}:{window_id}", main::BODY_KEY))
+pub async fn render_window(app: &mut Puzzle3dApp, window_id: &str) -> Value {
+    render_body(app, &format!("{}:{window_id}", main::BODY_KEY)).await
 }
 
-pub fn render_composite(app: &mut Puzzle3dApp) -> Value {
-    render_body(app, main::BODY_KEY)
+pub async fn render_composite(app: &mut Puzzle3dApp) -> Value {
+    render_body(app, main::BODY_KEY).await
 }
 
 pub fn projection_of(app: &Puzzle3dApp) -> Value {
@@ -233,45 +369,30 @@ pub fn measure_group_tag(measures: &[WindowMeasure], group_id: &str) -> Option<O
 }
 
 /// 🪣️ How far background fill planning has preloaded, read off the fill tool's own count slider.
-pub fn fill_ready(app: &mut Puzzle3dApp) -> f64 {
-    semio_framework::io::resolve_ready(app.tool_measures(&semio_framework_plugin::ViewModel::default())).get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
+pub async fn fill_ready(app: &mut Puzzle3dApp) -> f64 {
+    app.tool_measures(&ViewModel::default()).await.get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
 }
 
 /// 🪣️ Drives `fillBuildTick` until planning has reached `target` placements (or the budget runs out).
-pub fn drive_fill_until_ready(app: &mut Puzzle3dApp, target: f64) -> f64 {
+pub async fn drive_fill_until_ready(app: &mut Puzzle3dApp, target: f64) -> f64 {
     for _ in 0..256 {
-        dispatch(app, "fillBuildTick", None, None).expect("fillBuildTick");
-        if fill_ready(app) >= target {
+        dispatch(app, "fillBuildTick", None, None).await.expect("fillBuildTick");
+        if fill_ready(app).await >= target {
             break;
         }
         with_puzzle3d_app_mut(|inner| inner.precompute.borrow_mut().drive_enqueued_fill_job_for_test(64));
     }
-    fill_ready(app)
+    fill_ready(app).await
 }
 
-/// 🧵️ Drives the same generation-tagged fill continuation the host executes in production.
-pub fn finish_fill_count(app: &mut Puzzle3dApp, mut result: InvocationResult) -> (usize, std::time::Duration) {
-    let mut max_step = std::time::Duration::ZERO;
-    for step in 0..1_024 {
-        let next = result.requested_effects.into_iter().find_map(|effect| match effect {
-            Effect::DispatchAction { action, args, .. } if action == set_fill_count::STEP_ACTION_ID => Some(args.map(|value| semio_framework::from_dsl_value::<Value>(value).expect("fill-count step args decode"))),
-            _ => None,
-        });
-        let Some(args) = next else {
-            return (step, max_step);
-        };
-        let started = std::time::Instant::now();
-        result = dispatch(app, set_fill_count::STEP_ACTION_ID, args.as_ref(), None).expect("advance fill-count materialization");
-        let elapsed = started.elapsed();
-        max_step = max_step.max(elapsed);
-        assert!(result.mutations.len() <= set_fill_count::MAX_PLACEMENTS_PER_STEP * 2, "one fill-count continuation exceeded its fixed semantic mutation bound");
-    }
-    panic!("fill-count materialization did not finish within its deterministic step bound");
+/// 🧵️ The retained command completes the bounded fill delta before publishing one atomic result.
+pub async fn finish_fill_count(_app: &mut Puzzle3dApp, _result: InvocationResult) -> (usize, std::time::Duration) {
+    (0, std::time::Duration::ZERO)
 }
 
-pub fn set_fill_count_and_finish(app: &mut Puzzle3dApp, value: u32, window_id: Option<&str>) -> (usize, std::time::Duration) {
-    let result = dispatch(app, "setFillCount", Some(&json!({ "value": value })), window_id).expect("begin setFillCount");
-    finish_fill_count(app, result)
+pub async fn set_fill_count_and_finish(app: &mut Puzzle3dApp, value: u32, window_id: Option<&str>) -> (usize, std::time::Duration) {
+    let result = dispatch(app, "setFillCount", Some(&json!({ "value": value })), window_id).await.expect("begin setFillCount");
+    finish_fill_count(app, result).await
 }
 //#endregion 🔖️MeasureProbes
 
@@ -279,7 +400,7 @@ pub fn set_fill_count_and_finish(app: &mut Puzzle3dApp, value: u32, window_id: O
 /// CLIENT-supplied `request.surface.selection` now (selection is framework-owned, no live config
 /// field to derive it from) — the test-side replacement for the deleted `contextMenuAt` command's
 /// "select then open the menu" round trip.
-pub fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "world3d".into(), args: None },
@@ -287,5 +408,5 @@ pub fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str, id: 
         window_instance_id: None,
         point: None,
     };
-    semio_framework::io::resolve_ready(app.context_menu(&request, &semio_framework_plugin::ViewModel::default()))
+    app.context_menu(&request, &ViewModel::default()).await
 }

@@ -2,7 +2,7 @@
 //!
 //! Wire codecs live in `📡️spr` (DSL mirror); this facet keeps grammar + re-exports.
 
-pub use crate::standards::v1::subsets::any::schema::mutations::{apply_generation2d_mutation, generation_mutation_to_generation2d, inverse_generation2d_mutation, generation2d_fixture_operations, replace_widget, Generation2dMutation};
+pub use crate::standards::v1::subsets::any::schema::mutations::{apply_generation2d_mutation, generation2d_fixture_operations, generation_mutation_to_generation2d, inverse_generation2d_mutation, replace_widget, Generation2dMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

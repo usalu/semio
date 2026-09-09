@@ -41,7 +41,7 @@
   "cellarAreaM2": null,
   "cellarVentilationM3H": null,
   "hTrWK": null,
-  "hVeWK": 125.0,
+  "hVeWK": 125,
   "thetaEC": null,
   "thetaSetC": null,
   "coolingDeltaTH": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

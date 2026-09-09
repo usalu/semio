@@ -4,7 +4,10 @@ use crate::schema::snapshot::JsonValue;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
-pub enum JsonPathSegment { Key(String), Index(usize) }
+pub enum JsonPathSegment {
+    Key(String),
+    Index(usize),
+}
 pub type JsonPath = Vec<JsonPathSegment>;
 
 pub fn resolve<'a>(root: &'a JsonValue, path: &[JsonPathSegment]) -> Option<&'a JsonValue> {
@@ -19,7 +22,9 @@ pub fn resolve<'a>(root: &'a JsonValue, path: &[JsonPathSegment]) -> Option<&'a 
     Some(node)
 }
 
-pub fn diff_at_path(path: &[JsonPathSegment], leaf: Option<JsonValueDiff>) -> JsonDiff { JsonDiff { value: leaf.map(|value| wrap_at_path(path, value)) } }
+pub fn diff_at_path(path: &[JsonPathSegment], leaf: Option<JsonValueDiff>) -> JsonDiff {
+    JsonDiff { value: leaf.map(|value| wrap_at_path(path, value)) }
+}
 fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValueDiff {
     match path.split_first() {
         None => leaf,

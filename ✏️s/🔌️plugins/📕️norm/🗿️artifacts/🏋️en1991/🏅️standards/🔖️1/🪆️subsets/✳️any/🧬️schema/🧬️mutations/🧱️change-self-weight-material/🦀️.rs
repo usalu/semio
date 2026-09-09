@@ -1,6 +1,5 @@
 //! 🧱 `change-self-weight-material` — sets the En1991 self-weight material scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

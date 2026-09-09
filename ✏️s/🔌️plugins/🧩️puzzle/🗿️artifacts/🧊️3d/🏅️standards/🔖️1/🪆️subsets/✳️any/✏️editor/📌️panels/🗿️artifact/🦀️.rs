@@ -2,11 +2,20 @@
 //! planes, target volumes and attractions, each row selecting its entity and carrying inline
 //! hide/lock actions. The rendered sections are memoized by `Puzzle3dPlayApp` against the fixture's
 //! geometry fingerprint, so this builder only reruns when the document actually changes.
+//!
+//! 🧾️ The tree is **virtualised**, not a row per entity. A document scales to
+//! `DOCUMENT_OBJECT_SLOTS`/`DOCUMENT_VORTEX_SLOTS` entries (2048 objects, 4096 vortices) while a built
+//! node admits `UI_BUILT_CHILDREN_MAX` children and every interactive row costs
+//! `UI_VALUE_ROW_COLLECTIONS`/`UI_VALUE_ROW_ITEMS` of the process-wide argument arena, so this builder
+//! materialises one bounded page — [`SECTION_ROWS`] rows per section, [`page_rows`] rows in total across
+//! them — and closes each section it truncates with a continuation row naming the omitted count. Nakagin
+//! (180 objects, 358 vortices) rendered a fault before this: the arena refused a row's argument map at
+//! roughly the eleventh object.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{
-    puzzle3d_vortex_full_id, ui_label, Puzzle3dFixture, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN,
-    PUZZLE3D_PLAY_CONTROLLER_ID,
+    puzzle3d_vortex_full_id, ui_label, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE,
+    PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, HasChildren, RowAction, RowActionPlacement, Trigger};
 use semio_framework_plugin::{
@@ -17,6 +26,13 @@ use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.3d.play.document";
+const ROOT: &str = "puzzle3d-play-document";
+/// 🗂️ Rows one section of this page materialises before it truncates: a built node admits
+/// `UI_BUILT_CHILDREN_MAX` children and the last of them carries the section's continuation row.
+pub const SECTION_ROWS: usize = ui::UI_BUILT_CHILDREN_MAX - 1;
+/// 🗄️ Sections this outliner presents — objects, references, target volumes, attractions. Each is assembled
+/// with the sections after it reserved out of the shared page, so the first one cannot consume it whole.
+pub const SECTIONS: usize = 4;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -123,65 +139,175 @@ fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity
         },
     ])
 }
+fn object_row(object: &Puzzle3dObject, labels: &Puzzle3dLabels, budget: &mut RowBudget) -> UiAssemblyResult<BuiltNode> {
+    let vortices = paged_section(&format!("{ROOT}.object.{}", object.id), &object.vortices, budget, |vortex, _| vortex_row(&object.id, vortex))?;
+    let mut item = selectable_item(&object.id, object.object_kind.clone().unwrap_or_else(|| object.id.clone()), "box", select_action(PUZZLE3D_GRANULARITY_OBJECT, &object.id))?
+        .default_open(false)
+        .dimmed(object.hidden)
+        .try_children(vortices)
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object children admission failed"))?;
+    for row_action in hide_lock_actions(object.hidden, object.locked, labels, "object", &object.id)? {
+        item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object row action admission failed"))?;
+    }
+    item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object row admission failed"))
+}
+
+fn vortex_row(object_id: &str, vortex: &Puzzle3dVortex) -> UiAssemblyResult<BuiltNode> {
+    let full_id = puzzle3d_vortex_full_id(object_id, &vortex.id);
+    selectable_item(&full_id, vortex.vortex_kind.clone().unwrap_or_else(|| vortex.id.clone()), "circle-dot", select_action(PUZZLE3D_GRANULARITY_VORTEX, &full_id))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d vortex row admission failed"))
+}
+
+fn reference_row(reference: &Puzzle3dReference, labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
+    let mut item = selectable_item(&reference.id, reference.id.clone(), "globe", select_action(PUZZLE3D_GRANULARITY_REFERENCE, &reference.id))?
+        .description(UiText::try_from_str(&reference.source.url).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference description admission failed"))?)
+        .dimmed(reference.hidden);
+    for row_action in hide_lock_actions(reference.hidden, reference.locked, labels, "reference", &reference.id)? {
+        item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference row action admission failed"))?;
+    }
+    item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference row admission failed"))
+}
+
+fn target_volume_row(volume: &Puzzle3dTargetVolume, labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
+    let mut item = selectable_item(&volume.id, volume.id.clone(), "cylinder", select_action(PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume.id))?.dimmed(volume.hidden);
+    for row_action in hide_lock_actions(volume.hidden, volume.locked, labels, "targetVolume", &volume.id)? {
+        item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume row action admission failed"))?;
+    }
+    item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume row admission failed"))
+}
+
+fn attraction_row(attraction: &Puzzle3dAttraction) -> UiAssemblyResult<BuiltNode> {
+    selectable_item(&attraction.id, format!("{} → {}", attraction.attracting, attraction.attracted), "link", select_action(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d attraction row admission failed"))
+}
 //#endregion 🔖️Rows
 
+//#region 🔖️Paging
+/// 🧮️ Interactive rows this render may materialise across every section together: the panel-page ceiling
+/// the UI contract declares, clamped by what the process-wide argument arena still admits. The clamp is
+/// what makes the builder total — a document an order of magnitude past the page, or a process whose other
+/// panels already hold their own pages, yields a shorter page with continuation rows instead of a
+/// `ui.fixed-capacity` refusal in the middle of one row's argument map.
+pub fn page_rows() -> usize {
+    ui::UI_VALUE_PAGE_ROWS.min(ui::ui_value_headroom().rows())
+}
+
+/// 🔒️ One page at a time under test. Every law that materialises a whole panel page draws on the
+/// process-global `UiValue` arena, so two of them running in parallel each observe a partly spent arena and
+/// page shorter than their own law expects. This guard is the unit-test stand-in for the reactor's
+/// one-turn-at-a-time discipline — production needs none, because a short page is still a correct page.
+#[cfg(test)]
+pub(crate) static PANEL_PAGE_GUARD: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+/// 🧮️ The row allowance one render spends, in the order its sections and their nested rows are assembled.
+pub struct RowBudget(usize);
+
+impl RowBudget {
+    /// 🧮️ Opens a budget of `rows` interactive rows.
+    pub fn new(rows: usize) -> Self {
+        Self(rows)
+    }
+
+    /// 🪙️ Claims one row, or refuses when the page is spent.
+    pub fn spend(&mut self) -> bool {
+        match self.0.checked_sub(1) {
+            Some(remaining) => {
+                self.0 = remaining;
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// 🧮️ Runs a nested build against an allowance that cannot reach the `reserved` rows its siblings still
+    /// need, then settles what the nesting actually spent. Used at both levels — a section reserves the
+    /// sections after it, a row reserves its section's remaining rows. Without it one wide parent (an object
+    /// kind declaring dozens of vortex templates) consumes the whole page and its own section shows four rows.
+    pub fn nested<R>(&mut self, reserved: usize, build: impl FnOnce(&mut Self) -> R) -> R {
+        let allowance = self.0.saturating_sub(reserved);
+        let mut lent = Self(allowance);
+        let built = build(&mut lent);
+        self.0 -= allowance - lent.0;
+        built
+    }
+}
+
+/// ➕️ The row standing in for what a truncated section left out. Its label is the omitted count alone:
+/// a digit string carries the same meaning on every locale×terminology axis this app authors, so paging
+/// stays visible in the tree without inventing an eleventh label the terminology gate would have to pin.
+pub fn continuation_row(section_id: &str, omitted: usize) -> UiAssemblyResult<BuiltNode> {
+    ui::tree_item(ui_label(format!("+{omitted}"))?)
+        .try_id(format!("{section_id}.more"))
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document continuation id admission failed"))?
+        .icon(UiText::try_from_str("ellipsis").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document continuation icon admission failed"))?)
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document continuation row admission failed"))
+}
+
+/// 🗂️ One section's page: rows materialised while both [`SECTION_ROWS`] and the shared [`RowBudget`]
+/// last, followed by a continuation row whenever entries were left out. `row` spends further budget on its
+/// own nested rows — an object's vortices, an object kind's vortex templates — through
+/// [`RowBudget::nested`], so the slots this section's later rows still need are never consumed by an
+/// earlier row's children.
+///
+/// 🛟️ A refused admission ends the section instead of the render. [`page_rows`] reads the arena once, but
+/// the arena is process-global and another panel, plugin or worker may take credit mid-build, so the
+/// clamp alone cannot make this total — the section stops where the credit stopped and says so with its
+/// continuation row. Only a non-capacity fault (a malformed action argument) still propagates.
+pub fn paged_section<T>(section_id: &str, entries: &[T], budget: &mut RowBudget, mut row: impl FnMut(&T, &mut RowBudget) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let mut items = UiFixedList::<BuiltNode>::default();
+    let quota = entries.len().min(SECTION_ROWS);
+    let mut placed = 0;
+    for entry in entries {
+        if placed == SECTION_ROWS || !budget.spend() {
+            break;
+        }
+        placed += 1;
+        let node = match budget.nested(quota - placed, |nested| row(entry, nested)) {
+            Ok(node) => node,
+            Err(error) if error.code == "ui.fixed-capacity" => {
+                placed -= 1;
+                break;
+            }
+            Err(error) => return Err(error),
+        };
+        if items.try_push(node).is_err() {
+            placed -= 1;
+            break;
+        }
+    }
+    if placed < entries.len() {
+        if let Ok(more) = continuation_row(section_id, entries.len() - placed) {
+            let _ = items.try_push(more);
+        }
+    }
+    Ok(items)
+}
+//#endregion 🔖️Paging
+
 //#region 🔖️Render
-/// 🌳️ The four document sections, memoized by the app against the fixture's geometry fingerprint.
+/// 🌳️ The four document sections as one bounded page, memoized by the app against the fixture's geometry
+/// fingerprint and the resolved label set.
 pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut object_items = UiFixedList::<BuiltNode>::default();
-    for object in &fixture.objects {
-        let mut vortex_items = UiFixedList::<BuiltNode>::default();
-        for vortex in &object.vortices {
-            let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
-            let item = selectable_item(&full_id, vortex.vortex_kind.clone().unwrap_or_else(|| vortex.id.clone()), "circle-dot", select_action(PUZZLE3D_GRANULARITY_VORTEX, &full_id))?
-                .try_build()
-                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d vortex row admission failed"))?;
-            vortex_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d vortex list admission failed"))?;
-        }
-        let mut item = selectable_item(&object.id, object.object_kind.clone().unwrap_or_else(|| object.id.clone()), "box", select_action(PUZZLE3D_GRANULARITY_OBJECT, &object.id))?
-            .default_open(false)
-            .dimmed(object.hidden)
-            .try_children(vortex_items)
-            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object children admission failed"))?;
-        for row_action in hide_lock_actions(object.hidden, object.locked, labels, "object", &object.id)? {
-            item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object row action admission failed"))?;
-        }
-        let item = item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object row admission failed"))?;
-        object_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object list admission failed"))?;
-    }
-    let mut reference_items = UiFixedList::<BuiltNode>::default();
-    for reference in &fixture.references {
-        let mut item = selectable_item(&reference.id, reference.id.clone(), "globe", select_action(PUZZLE3D_GRANULARITY_REFERENCE, &reference.id))?
-            .description(UiText::try_from_str(&reference.source.url).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference description admission failed"))?)
-            .dimmed(reference.hidden);
-        for row_action in hide_lock_actions(reference.hidden, reference.locked, labels, "reference", &reference.id)? {
-            item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference row action admission failed"))?;
-        }
-        let item = item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference row admission failed"))?;
-        reference_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference list admission failed"))?;
-    }
-    let mut target_volume_items = UiFixedList::<BuiltNode>::default();
-    for volume in &fixture.target_volumes {
-        let mut item = selectable_item(&volume.id, volume.id.clone(), "cylinder", select_action(PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume.id))?.dimmed(volume.hidden);
-        for row_action in hide_lock_actions(volume.hidden, volume.locked, labels, "targetVolume", &volume.id)? {
-            item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume row action admission failed"))?;
-        }
-        let item = item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume row admission failed"))?;
-        target_volume_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume list admission failed"))?;
-    }
-    let mut attraction_items = UiFixedList::<BuiltNode>::default();
-    for attraction in &fixture.attractions {
-        let item = selectable_item(&attraction.id, format!("{} → {}", attraction.attracting, attraction.attracted), "link", select_action(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id))?
-            .try_build()
-            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d attraction row admission failed"))?;
-        attraction_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d attraction list admission failed"))?;
-    }
-    PanelTreeBuilder::new("puzzle3d-play-document")?
-        .section("puzzle3d-play-document.objects", Some(ui_label(labels.objects.as_str())?), true, object_items)?
-        .section("puzzle3d-play-document.references", Some(ui_label(labels.references.as_str())?), false, reference_items)?
-        .section("puzzle3d-play-document.target-volumes", Some(ui_label(labels.target_volumes.as_str())?), false, target_volume_items)?
-        .section("puzzle3d-play-document.attractions", Some(ui_label(labels.attractions.as_str())?), false, attraction_items)?
+    let budget = &mut RowBudget::new(page_rows());
+    let objects = budget.nested(SECTIONS - 1, |share| paged_section(&format!("{ROOT}.objects"), &fixture.objects, share, |object, share| object_row(object, labels, share)))?;
+    let references = budget.nested(SECTIONS - 2, |share| paged_section(&format!("{ROOT}.references"), &fixture.references, share, |reference, _| reference_row(reference, labels)))?;
+    let target_volumes = budget.nested(SECTIONS - 3, |share| paged_section(&format!("{ROOT}.target-volumes"), &fixture.target_volumes, share, |volume, _| target_volume_row(volume, labels)))?;
+    let attractions = budget.nested(SECTIONS - 4, |share| paged_section(&format!("{ROOT}.attractions"), &fixture.attractions, share, |attraction, _| attraction_row(attraction)))?;
+    PanelTreeBuilder::new(ROOT)?
+        .section(format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), true, objects)?
+        .section(format!("{ROOT}.references"), Some(ui_label(labels.references.as_str())?), false, references)?
+        .section(format!("{ROOT}.target-volumes"), Some(ui_label(labels.target_volumes.as_str())?), false, target_volumes)?
+        .section(format!("{ROOT}.attractions"), Some(ui_label(labels.attractions.as_str())?), false, attractions)?
         .interaction_domain(PUZZLE3D_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

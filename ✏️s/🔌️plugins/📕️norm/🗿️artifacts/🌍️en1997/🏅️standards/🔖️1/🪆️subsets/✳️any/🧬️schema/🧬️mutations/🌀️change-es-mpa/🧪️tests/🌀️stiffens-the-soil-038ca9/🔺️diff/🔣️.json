@@ -8,7 +8,7 @@
   "gammaKnM3": null,
   "bM": null,
   "dFM": null,
-  "eSMpa": 45.0,
+  "eSMpa": 45,
   "nu": null,
   "designApproach": null,
   "annex": null,
@@ -21,6 +21,5 @@
   "qBKpa": null,
   "pileBaseAreaM2": null,
   "pileNProfiles": null,
-  "zInvestigatedM": null,
-  "selectedCheckIndex": null
+  "zInvestigatedM": null
 }

@@ -92,9 +92,9 @@ pub mod derived_analysis {
     use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
     use crate::standards::v1_1::subsets::base::schema::SvgAnalyzer as SvgAnyAnalyzer;
     pub use crate::standards::v1_1::subsets::base::schema::SvgParts;
-    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("tiny") };

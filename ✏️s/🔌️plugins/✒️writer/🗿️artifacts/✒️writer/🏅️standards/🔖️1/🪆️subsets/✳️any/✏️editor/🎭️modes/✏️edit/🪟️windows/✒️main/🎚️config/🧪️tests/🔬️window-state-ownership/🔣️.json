@@ -1,0 +1,37 @@
+{
+  "windowKindId": "writer-main",
+  "leftWindowId": "writer-left",
+  "rightWindowId": "writer-right",
+  "baseConfig": {
+    "camera": { "x": 0, "y": 0, "zoom": 1 },
+    "editorSettings": { "showLineNumbers": true, "fontPx": 14, "lineHeight": 22, "tabSize": 2 }
+  },
+  "baseTransient": {
+    "editorSelection": null,
+    "lintGeneration": 0,
+    "engagementInput": ""
+  },
+  "steps": [
+    { "lane": "config", "windowId": "writer-left", "mutation": { "kind": "set-camera", "camera": { "x": 12, "y": -4, "zoom": 1.5 } } },
+    { "lane": "transient", "windowId": "writer-right", "mutation": { "kind": "set-editor-selection", "selection": { "start": 3, "end": 8 } } },
+    { "lane": "config", "windowId": "writer-right", "mutation": { "kind": "set-editor-settings", "settings": { "showLineNumbers": false, "fontPx": 16, "lineHeight": 24, "tabSize": 4 } } },
+    { "lane": "transient", "windowId": "writer-left", "mutation": { "kind": "set-engagement-input", "value": "format" } },
+    { "lane": "transient", "windowId": "writer-left", "mutation": { "kind": "set-lint-generation", "value": 1 } }
+  ],
+  "expectedConfigs": {
+    "writer-left": {
+      "camera": { "x": 12, "y": -4, "zoom": 1.5 },
+      "editorSettings": { "showLineNumbers": true, "fontPx": 14, "lineHeight": 22, "tabSize": 2 }
+    },
+    "writer-right": {
+      "camera": { "x": 0, "y": 0, "zoom": 1 },
+      "editorSettings": { "showLineNumbers": false, "fontPx": 16, "lineHeight": 24, "tabSize": 4 }
+    }
+  },
+  "expectedTransients": {
+    "writer-left": { "editorSelection": null, "lintGeneration": 1, "engagementInput": "format" },
+    "writer-right": { "editorSelection": { "start": 3, "end": 8 }, "lintGeneration": 0, "engagementInput": "" }
+  },
+  "expectedConfigGenerations": { "writer-left": 1, "writer-right": 1 },
+  "expectedTransientGenerations": { "writer-left": 2, "writer-right": 1 }
+}

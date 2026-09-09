@@ -2,9 +2,9 @@
 
 use super::set_dpart_metadata::SetDpartMetadata;
 use super::PdfVtMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
 #[cfg(test)]
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
@@ -24,10 +24,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveDpartMetadata {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfVtMutation> {
-        support::dpart_job(base)
-            .map(|job| PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job }))
-            .into_iter()
-            .collect()
+        support::dpart_job(base).map(|job| PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job })).into_iter().collect()
     }
 
     fn label(&self) -> String {

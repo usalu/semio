@@ -30,8 +30,6 @@ pub struct Iso16757Diff {
     pub script_limits: Option<crate::part_5::ScriptLimits>,
     #[state(artifact)]
     pub exchange_process: Option<crate::part_5::ExchangeProcess>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

@@ -11,33 +11,6 @@ export interface FlowArtifact {
   synapses: SynapseSpec[];
   /** @state artifact */
   layout: Record<string, WidgetLayout>;
-  /** @state presence */
-  selectedNodeIds: string[];
-  /** @state presence */
-  selectedEdgeIds: string[];
-  /** @state presence */
-  selectedHandleIds: string[];
-  /** @state presence */
-  previewOffNodeIds: string[];
-  /** @state config */
-  lodMode: string;
-  /** @state config */
-  proximityDistance: number;
-  /** @state config */
-  gridVisible: boolean;
-  /** @state config */
-  gridSnapEnabled: boolean;
-  /** @state config */
-  gridFactor: number;
-  /** @state config */
-  catalogueSectionsJson: string;
-  /** @state config */
-  automationEnabledJson: string;
-  /** @state config */
-  contributionsJson: string;
-  /** @state config */
-  generationJson: string;
-  /** @state config */
 }
 
 export interface CameraJson {
@@ -117,19 +90,6 @@ export function parseFlowArtifact(value: unknown, at = "$"): FlowArtifact {
     widgets: flowFlowArtifactGuardArray(row["widgets"], `${at}.widgets`).map((item, index) => parseWidget(item, `${at}.widgets[${index}]`)),
     synapses: flowFlowArtifactGuardArray(row["synapses"], `${at}.synapses`).map((item, index) => parseSynapseSpec(item, `${at}.synapses[${index}]`)),
     layout: flowFlowArtifactGuardObject(row["layout"], `${at}.layout`),
-    selectedNodeIds: flowFlowArtifactGuardArray(row["selectedNodeIds"], `${at}.selectedNodeIds`).map((item, index) => flowFlowArtifactGuardString(item, `${at}.selectedNodeIds[${index}]`)),
-    selectedEdgeIds: flowFlowArtifactGuardArray(row["selectedEdgeIds"], `${at}.selectedEdgeIds`).map((item, index) => flowFlowArtifactGuardString(item, `${at}.selectedEdgeIds[${index}]`)),
-    selectedHandleIds: flowFlowArtifactGuardArray(row["selectedHandleIds"], `${at}.selectedHandleIds`).map((item, index) => flowFlowArtifactGuardString(item, `${at}.selectedHandleIds[${index}]`)),
-    previewOffNodeIds: flowFlowArtifactGuardArray(row["previewOffNodeIds"], `${at}.previewOffNodeIds`).map((item, index) => flowFlowArtifactGuardString(item, `${at}.previewOffNodeIds[${index}]`)),
-    lodMode: flowFlowArtifactGuardString(row["lodMode"], `${at}.lodMode`),
-    proximityDistance: flowFlowArtifactGuardNumber(row["proximityDistance"], `${at}.proximityDistance`),
-    gridVisible: flowFlowArtifactGuardBoolean(row["gridVisible"], `${at}.gridVisible`),
-    gridSnapEnabled: flowFlowArtifactGuardBoolean(row["gridSnapEnabled"], `${at}.gridSnapEnabled`),
-    gridFactor: flowFlowArtifactGuardNumber(row["gridFactor"], `${at}.gridFactor`),
-    catalogueSectionsJson: flowFlowArtifactGuardString(row["catalogueSectionsJson"], `${at}.catalogueSectionsJson`),
-    automationEnabledJson: flowFlowArtifactGuardString(row["automationEnabledJson"], `${at}.automationEnabledJson`),
-    contributionsJson: flowFlowArtifactGuardString(row["contributionsJson"], `${at}.contributionsJson`),
-    generationJson: flowFlowArtifactGuardString(row["generationJson"], `${at}.generationJson`),
   };
 }
 

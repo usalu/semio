@@ -12,62 +12,13 @@ export interface Puzzle5dArtifact {
   /** @state artifact */
   kindCatalogs?: Puzzle5dKindCatalogs;
   /** @state artifact */
+  kindCatalogsExtra?: Puzzle5dKindCatalogsExtra;
+  /** @state artifact */
   kindCompatibility: Puzzle5dKindCompatibility[];
   /** @state artifact */
   parts: Puzzle5dPart[];
   /** @state artifact */
   fasteners: Puzzle5dFastener[];
-  /** @state presence */
-  selectedPartIds: string[];
-  /** @state presence */
-  selectedGripIds: string[];
-  /** @state presence */
-  selectedFastenerIds: string[];
-  /** @state presence */
-  activeUtilityId: string;
-  /** @state config */
-  camera2dX: number;
-  /** @state config */
-  camera2dY: number;
-  /** @state config */
-  camera2dZoom: number;
-  /** @state config */
-  camera3dPositionX: number;
-  /** @state config */
-  camera3dPositionY: number;
-  /** @state config */
-  camera3dPositionZ: number;
-  /** @state config */
-  camera3dTargetX: number;
-  /** @state config */
-  camera3dTargetY: number;
-  /** @state config */
-  camera3dTargetZ: number;
-  /** @state config */
-  camera3dZoom: number;
-  /** @state config */
-  selectionMethod: string;
-  /** @state config */
-  gridSnapEnabled: boolean;
-  /** @state config */
-  gridFactor: number;
-  /** @state config */
-  suggestionOffset: number;
-  /** @state config */
-  overlapBudget: number;
-  /** @state config */
-  fillCount: number;
-  /** @state config */
-  brushCandidateIndex: number;
-  /** @state config */
-  lodMode: string;
-  /** @state config */
-  /** @state config */
-  runtimeExtrasJson: string;
-  /** @state artifact */
-  hoveredPartId?: string;
-  /** @state artifact */
-  previewSeq: number;
 }
 
 
@@ -174,6 +125,13 @@ export interface Puzzle5dKindCatalogs {
   ropes?: Puzzle5dCatalogRopeKind[];
 }
 
+export interface Puzzle5dKindCatalogsExtra {
+  parts?: Puzzle5dCatalogPartKind[];
+  grips?: Puzzle5dCatalogGripKind[];
+  fasteners?: Puzzle5dCatalogFastenerKind[];
+  ropes?: Puzzle5dCatalogRopeKind[];
+}
+
 /** 🔗️ Kind compatibility row. */
 export interface Puzzle5dKindCompatibility {
   source: string;
@@ -269,34 +227,10 @@ export function parsePuzzle5dArtifact(value: unknown, at = "$"): Puzzle5dArtifac
     label: row["label"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardString(row["label"], `${at}.label`),
     meta: parsePuzzle5dMeta(row["meta"], `${at}.meta`),
     kindCatalogs: row["kindCatalogs"] === undefined ? undefined : parsePuzzle5dKindCatalogs(row["kindCatalogs"], `${at}.kindCatalogs`),
+    kindCatalogsExtra: row["kindCatalogsExtra"] === undefined ? undefined : parsePuzzle5dKindCatalogs(row["kindCatalogsExtra"], `${at}.kindCatalogsExtra`),
     kindCompatibility: puzzlePuzzle5dArtifactGuardArray(row["kindCompatibility"], `${at}.kindCompatibility`).map((item, index) => parsePuzzle5dKindCompatibility(item, `${at}.kindCompatibility[${index}]`)),
     parts: puzzlePuzzle5dArtifactGuardArray(row["parts"], `${at}.parts`).map((item, index) => parsePuzzle5dPart(item, `${at}.parts[${index}]`)),
     fasteners: puzzlePuzzle5dArtifactGuardArray(row["fasteners"], `${at}.fasteners`).map((item, index) => parsePuzzle5dFastener(item, `${at}.fasteners[${index}]`)),
-    selectedPartIds: puzzlePuzzle5dArtifactGuardArray(row["selectedPartIds"], `${at}.selectedPartIds`).map((item, index) => puzzlePuzzle5dArtifactGuardString(item, `${at}.selectedPartIds[${index}]`)),
-    selectedGripIds: puzzlePuzzle5dArtifactGuardArray(row["selectedGripIds"], `${at}.selectedGripIds`).map((item, index) => puzzlePuzzle5dArtifactGuardString(item, `${at}.selectedGripIds[${index}]`)),
-    selectedFastenerIds: puzzlePuzzle5dArtifactGuardArray(row["selectedFastenerIds"], `${at}.selectedFastenerIds`).map((item, index) => puzzlePuzzle5dArtifactGuardString(item, `${at}.selectedFastenerIds[${index}]`)),
-    activeUtilityId: puzzlePuzzle5dArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
-    camera2dX: puzzlePuzzle5dArtifactGuardNumber(row["camera2dX"], `${at}.camera2dX`),
-    camera2dY: puzzlePuzzle5dArtifactGuardNumber(row["camera2dY"], `${at}.camera2dY`),
-    camera2dZoom: puzzlePuzzle5dArtifactGuardNumber(row["camera2dZoom"], `${at}.camera2dZoom`),
-    camera3dPositionX: puzzlePuzzle5dArtifactGuardNumber(row["camera3dPositionX"], `${at}.camera3dPositionX`),
-    camera3dPositionY: puzzlePuzzle5dArtifactGuardNumber(row["camera3dPositionY"], `${at}.camera3dPositionY`),
-    camera3dPositionZ: puzzlePuzzle5dArtifactGuardNumber(row["camera3dPositionZ"], `${at}.camera3dPositionZ`),
-    camera3dTargetX: puzzlePuzzle5dArtifactGuardNumber(row["camera3dTargetX"], `${at}.camera3dTargetX`),
-    camera3dTargetY: puzzlePuzzle5dArtifactGuardNumber(row["camera3dTargetY"], `${at}.camera3dTargetY`),
-    camera3dTargetZ: puzzlePuzzle5dArtifactGuardNumber(row["camera3dTargetZ"], `${at}.camera3dTargetZ`),
-    camera3dZoom: puzzlePuzzle5dArtifactGuardNumber(row["camera3dZoom"], `${at}.camera3dZoom`),
-    selectionMethod: puzzlePuzzle5dArtifactGuardString(row["selectionMethod"], `${at}.selectionMethod`),
-    gridSnapEnabled: puzzlePuzzle5dArtifactGuardBoolean(row["gridSnapEnabled"], `${at}.gridSnapEnabled`),
-    gridFactor: puzzlePuzzle5dArtifactGuardNumber(row["gridFactor"], `${at}.gridFactor`),
-    suggestionOffset: puzzlePuzzle5dArtifactGuardNumber(row["suggestionOffset"], `${at}.suggestionOffset`),
-    overlapBudget: puzzlePuzzle5dArtifactGuardNumber(row["overlapBudget"], `${at}.overlapBudget`),
-    fillCount: puzzlePuzzle5dArtifactGuardInteger(row["fillCount"], `${at}.fillCount`, {"minimum": 0}),
-    brushCandidateIndex: puzzlePuzzle5dArtifactGuardInteger(row["brushCandidateIndex"], `${at}.brushCandidateIndex`, {"minimum": 0}),
-    lodMode: puzzlePuzzle5dArtifactGuardString(row["lodMode"], `${at}.lodMode`),
-    runtimeExtrasJson: puzzlePuzzle5dArtifactGuardString(row["runtimeExtrasJson"], `${at}.runtimeExtrasJson`),
-    hoveredPartId: row["hoveredPartId"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardString(row["hoveredPartId"], `${at}.hoveredPartId`),
-    previewSeq: puzzlePuzzle5dArtifactGuardInteger(row["previewSeq"], `${at}.previewSeq`),
   };
 }
 
@@ -334,8 +268,8 @@ export function parsePuzzle5dPart(value: unknown, at = "$"): Puzzle5dPart {
     id: puzzlePuzzle5dArtifactGuardString(row["id"], `${at}.id`),
     partKind: row["partKind"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardString(row["partKind"], `${at}.partKind`),
     anchor: row["anchor"] === undefined ? undefined : parsePuzzle5dPartAnchor(row["anchor"], `${at}.anchor`),
-    2d: row["2d"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardObject(row["2d"], `${at}.2d`),
-    3d: row["3d"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardObject(row["3d"], `${at}.3d`),
+    "2d": row["2d"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardObject(row["2d"], `${at}.2d`),
+    "3d": row["3d"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardObject(row["3d"], `${at}.3d`),
     grips: row["grips"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardArray(row["grips"], `${at}.grips`).map((item, index) => puzzlePuzzle5dArtifactGuardObject(item, `${at}.grips[${index}]`)),
   };
 }

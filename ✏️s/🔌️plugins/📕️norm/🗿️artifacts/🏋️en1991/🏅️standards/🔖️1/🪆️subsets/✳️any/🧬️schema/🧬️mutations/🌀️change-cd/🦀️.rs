@@ -1,6 +1,5 @@
 //! 🌪️ `change-cd` — sets the En1991 dynamic factor c_d scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

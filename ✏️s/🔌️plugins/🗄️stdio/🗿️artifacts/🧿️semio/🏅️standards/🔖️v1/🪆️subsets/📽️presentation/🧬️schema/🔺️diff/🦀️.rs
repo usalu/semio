@@ -27,9 +27,9 @@ pub(crate) use crate::standards::v1::subsets::document::schema::diff::{dec_block
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
 use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️CollectionDiffAliases
 pub type SlideShapesDiff = IndexedTripleDiff<SlideShapeDiff, SlideShape>;

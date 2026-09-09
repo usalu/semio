@@ -8,7 +8,6 @@ use crate::Din18599Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a din18599 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
@@ -55,13 +54,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Din18599Bu
 pub fn din18599_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.din18599.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor
@@ -73,13 +66,13 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::standards::v1::subsets::any::schema::{part_1, part_10, part_11, part_12, part_2, part_3, part_4, part_5, part_6, part_7, part_8, part_9};
-use crate::BalancingInputs;
 /// 📋️ Full DIN V 18599 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `Din18599Snapshot -> CheckReport` projection; `balance_annual`
 /// composes every `part_N::check` (pure helpers living in the parent `🧬️schema`).
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity};
+use crate::standards::v1::subsets::any::schema::{part_1, part_10, part_11, part_12, part_2, part_3, part_4, part_5, part_6, part_7, part_8, part_9};
+use crate::BalancingInputs;
 /// 📋️ Full annual balancing per DIN V 18599.
 pub fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError> {
     let mut report = CheckReport::default();

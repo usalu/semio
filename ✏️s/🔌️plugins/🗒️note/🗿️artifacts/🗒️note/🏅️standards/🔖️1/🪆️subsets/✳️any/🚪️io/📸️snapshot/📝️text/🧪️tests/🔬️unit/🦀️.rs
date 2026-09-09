@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{NOTE_DOCUMENT_SCHEMA, NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun};
+use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
 
 #[semio_framework_async_macros::async_test]

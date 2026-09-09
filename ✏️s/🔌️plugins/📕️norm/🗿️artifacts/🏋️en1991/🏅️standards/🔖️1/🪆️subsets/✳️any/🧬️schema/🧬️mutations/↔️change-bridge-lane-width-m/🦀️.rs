@@ -1,6 +1,5 @@
 //! ↔️ `change-bridge-lane-width-m` — sets the En1991 bridge lane width scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

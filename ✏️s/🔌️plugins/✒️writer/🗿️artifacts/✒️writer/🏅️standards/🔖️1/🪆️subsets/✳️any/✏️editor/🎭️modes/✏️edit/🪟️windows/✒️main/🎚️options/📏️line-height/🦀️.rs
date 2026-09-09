@@ -1,13 +1,13 @@
 //! 📏️ Main-window option — the line-height slider. Its command handler lives in
 //! `🎮️commands/📏️set-line-height::set_line_height`.
 
-use crate::editor::writer::config::WriterConfig;
+use crate::editor::writer::modes::edit::windows::main::config::WriterMainWindowConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::editor::writer::writer_action;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
+pub fn measure(config: &WriterMainWindowConfig, labels: &WriterPlayLabels) -> WindowMeasure {
     let settings = &config.editor_settings;
     WindowMeasure::Slider {
         id: "writer-line-height-measure".into(),

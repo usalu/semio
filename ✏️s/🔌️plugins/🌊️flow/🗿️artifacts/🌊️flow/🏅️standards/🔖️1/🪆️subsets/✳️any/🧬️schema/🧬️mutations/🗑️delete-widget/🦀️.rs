@@ -1,8 +1,8 @@
 //! 🗑️ Removes a widget by id, capturing the cascade (severed synapses + layout entry) for undo.
 
-use crate::FlowSnapshot;
 use crate::schema::diff::text::FlowDiff;
 use crate::schema::mutations::FlowMutation;
+use crate::FlowSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🗑️DeleteWidget

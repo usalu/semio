@@ -8,11 +8,11 @@
 //! `XlsxTransitionalEditorCommand::SetCell`, into `XlsxMutation::SetCell` — the cleanest possible
 //! fit `TableWindowKit`'s `set-cell` action has in this artifact's whole mutation surface.
 
+use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit;
+use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::set_cell;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
-use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit;
-use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };

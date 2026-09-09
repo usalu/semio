@@ -8,19 +8,12 @@
 //! `patched`, no `reordered`, and neither `routes` nor `regions` is even present in the delta. Its inverse is
 //! PAYLOAD-derived (a `delete-position` of the id it was asked to create), never read back out of `base`.
 //!
-//! 🕸️ `GisMapSnapshot` carries two DERIVED composed children, `drawing` and `value`, whose
-//! `child_id` is a `std::collections::hash_map::DefaultHasher` digest of the current
-//! `(positions, routes, regions)` (`gis_map_drawing_child_handle`/`gis_map_value_child_handle`).
-//! `std` leaves that digest deliberately unspecified, so it is never frozen into a fixture file:
-//! both committed snapshots carry the readable placeholder `gismap-drawing-derived`/
-//! `gismap-value-derived` in those two slots, and `before()`/`expected_after()` re-mint them
-//! through gis's own `gis_map_snapshot_with_derived_children` — the identical call
-//! `apply_gis_map_mutation` and `GisMapDiff::apply` each make after every edit. Only the
-//! artifact-lane feature collections are hand-authored, and those are asserted verbatim.
+//! 🧩️ Committed snapshots preserve the stable drawing and value child identities across edits.
+//! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
 use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
-use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot};
+use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -28,35 +21,31 @@ const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
 const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
-/// 🗺️ The committed `⬅️before`, with its two DERIVED child handles minted by the artifact's own
-/// composition funnel (see this file's module doc) rather than read from the placeholder JSON.
+/// 🗺️ Decodes the committed snapshot with its stable child identities.
 fn before() -> GisMapSnapshot {
-    gis_map_snapshot_with_derived_children(dsl::json::from_json_str(BEFORE).expect("before snapshot decodes"))
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
-/// 🗺️ The committed `➡️after`, funnelled through the identical derivation.
+/// 🎯️ Decodes the expected snapshot without normalizing its child identities.
 fn expected_after() -> GisMapSnapshot {
-    gis_map_snapshot_with_derived_children(dsl::json::from_json_str(AFTER).expect("after snapshot decodes"))
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> GisMapMutation {
     dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
-/// ▶️ `create-position` carries `before` to exactly the committed `after`, and — because the edited
-/// `positions` collection is one third of the composed children's content key — re-mints both
-/// `drawing` and `value` while leaving the honestly-absent `image` slot alone.
+/// ▶️ Applies the mutation while preserving child identities and matching the committed snapshot.
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let base = before();
     let mut snapshot = base.clone();
     apply_gis_map_mutation(&mut snapshot, &mutation()).expect("create-position applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "create-position/adds-lighthouse-position-after-harbor: applied state differs from committed after-snapshot");
-    assert_ne!(snapshot.drawing.child_id, base.drawing.child_id, "create-position/adds-lighthouse-position-after-harbor: editing positions must re-mint the derived drawing handle");
-    assert_ne!(snapshot.value.child_id, base.value.child_id, "create-position/adds-lighthouse-position-after-harbor: editing positions must re-mint the derived value handle");
+    assert_eq!(snapshot.drawing.child_id, base.drawing.child_id, "create-position/adds-lighthouse-position-after-harbor: editing positions must preserve the stable drawing identity");
+    assert_eq!(snapshot.value.child_id, base.value.child_id, "create-position/adds-lighthouse-position-after-harbor: editing positions must preserve the stable value identity");
     assert!(snapshot.image.is_none(), "create-position/adds-lighthouse-position-after-harbor: gis carries no raster basemap, so the image child stays absent");
 }
 
-/// ↩️ Applying `create-position` then its inverse restores `before` exactly — including both derived
-/// child handles, which converge again only because the feature collections did.
+/// ↩️ Restores the complete committed snapshot through the inverse mutations.
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();

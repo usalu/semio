@@ -1,6 +1,5 @@
 //! 🌡️ `change-delta-tk` — sets the En1991 thermal delta scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

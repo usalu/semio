@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::fem3d::Fem3dCommand;
 use crate::editor::fem3d::testkit::{dispatch, fem3d_app, render};
+use crate::editor::fem3d::Fem3dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn set_camera_action_writes_config_not_artifact_mutations() {

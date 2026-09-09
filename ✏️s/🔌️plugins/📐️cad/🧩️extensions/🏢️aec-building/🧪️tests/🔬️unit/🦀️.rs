@@ -1,10 +1,9 @@
-
 use super::*;
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
-use semio_s_artifact_cad_cad::CadNode;
 use semio_s_artifact_cad_cad::mutations::change_active_model_definition::ChangeActiveModelDefinition;
 use semio_s_artifact_cad_cad::mutations::create_node::CreateNode;
+use semio_s_artifact_cad_cad::CadNode;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_building_import_profile() {

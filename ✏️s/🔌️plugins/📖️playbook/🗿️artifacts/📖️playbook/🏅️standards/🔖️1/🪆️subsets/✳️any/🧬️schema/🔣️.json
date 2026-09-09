@@ -8,9 +8,9 @@
     "schema",
     "id",
     "version",
-    "steps",
-    "selectedIds",
-    "contributionsJson"
+    "title",
+    "document",
+    "flow"
   ],
   "properties": {
     "schema": {
@@ -26,135 +26,21 @@
       "x-semio-state": "artifact"
     },
     "title": {
-      "type": "string",
+      "type": [
+        "string",
+        "null"
+      ],
       "x-semio-state": "artifact"
     },
-    "steps": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/PlaybookStep"
-      },
-      "x-semio-state": "artifact"
+    "document": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio.document"
     },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "contributionsJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "PlaybookStep": {
-      "title": "PlaybookStep",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "title",
-        "blocks"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "blocks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PlaybookBlock"
-          }
-        }
-      }
-    },
-    "PlaybookBlock": {
-      "title": "PlaybookBlock",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "label",
-        "kind"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "label": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        }
-      }
-    },
-    "PlaybookSceneOwnerLaw": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schemaVersion",
-        "ownedSlots",
-        "maximumCases",
-        "cases"
-      ],
-      "properties": {
-        "schemaVersion": {
-          "const": 1
-        },
-        "ownedSlots": {
-          "const": 1
-        },
-        "maximumCases": {
-          "type": "integer",
-          "minimum": 5,
-          "maximum": 8
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 5,
-          "maxItems": 8,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "law",
-              "first",
-              "second"
-            ],
-            "properties": {
-              "law": {
-                "enum": [
-                  "cloneIdentity",
-                  "instanceIsolation",
-                  "abaIsolation",
-                  "wireOmission",
-                  "boundedClose"
-                ]
-              },
-              "first": {
-                "type": "string",
-                "maxLength": 64
-              },
-              "second": {
-                "type": "string",
-                "maxLength": 64
-              }
-            }
-          }
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
+    "flow": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio.flow"
     }
   }
 }

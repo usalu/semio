@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::editor::animate::testkit::{dispatch, presentation_app_with_registry};
-use crate::editor::animate::{PresentationCommand, commands::add_tile};
+use crate::editor::animate::{commands::add_tile, PresentationCommand};
 use semio_framework_plugin::Effect;
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,61 @@
+{
+  "windowKindId": "trinity-jack-graph",
+  "leftWindowId": "graph-left",
+  "rightWindowId": "graph-right",
+  "base": {
+    "camera": null,
+    "lodMode": "automatic"
+  },
+  "cases": [
+    {
+      "windowId": "graph-left",
+      "mutation": {
+        "kind": "set-camera",
+        "camera": {
+          "x": 10,
+          "y": 20,
+          "zoom": 2
+        }
+      },
+      "expected": {
+        "graph-left": {
+          "camera": {
+            "x": 10,
+            "y": 20,
+            "zoom": 2
+          },
+          "lodMode": "automatic"
+        },
+        "graph-right": {
+          "camera": null,
+          "lodMode": "automatic"
+        }
+      }
+    },
+    {
+      "windowId": "graph-right",
+      "mutation": {
+        "kind": "set-lod-mode",
+        "value": "compact"
+      },
+      "expected": {
+        "graph-left": {
+          "camera": {
+            "x": 10,
+            "y": 20,
+            "zoom": 2
+          },
+          "lodMode": "automatic"
+        },
+        "graph-right": {
+          "camera": null,
+          "lodMode": "compact"
+        }
+      }
+    }
+  ],
+  "expectedWindowGenerations": {
+    "graph-left": 1,
+    "graph-right": 1
+  }
+}

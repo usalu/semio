@@ -19,11 +19,15 @@ The stdio parent retains explicit compositions:
 | `component-app-assembly` | Full catalog plus each format's app assembly |
 | Default `plugin-root` | Component app assembly and component guest entry |
 
+Trinity Rewriting is a concrete cross-plugin consumer: its domain import/export code depends directly on DOCX, JSON, MD, PDF and TXT artifact packages. Those are its five declared conversion formats; it does not route these calls through the stdio plugin registry. Transitive XML or compression dependencies remain owned by the format packages that use them.
+
 Semio has explicit conversion features. Its default **normal runtime dependency** tree contains the shared stdio contract and no other stdio format. Its test dependencies include codec packages needed for existing conversion tests; this distinction is intentional.
 
 ## Nx And TypeScript
 
 Package routers use the common Bun implementation, and the repository's Nx integration derives native targets and prerequisites from the package declarations. Native input discovery follows domain sources outside `📦️packages`; build, check and test route through the package's `📜️script.ts`. Launch configurations are regenerated from the launch seed.
+
+Use the persisted Run and Debug configuration `📦️artifact package target`, enter the Nx project name (for example `@semio-tech/stdio-pdf-rs`), then select `build`, `check` or `test`. The separate `📦️artifact package contract` configuration runs the cross-package ownership and dependency contract. Both names and their project/target inputs are defined in `.vscode/🧩️launch.seed.jsonc` and generated into `.vscode/launch.json`.
 
 The TypeScript PDF package is `@semio-tech/stdio-pdf`. Its export points to emitted domain entrypoint JavaScript and declarations. The shared builder includes referenced JSON and handwritten declaration sidecars in package outputs; downstream package checks resolve those outputs.
 

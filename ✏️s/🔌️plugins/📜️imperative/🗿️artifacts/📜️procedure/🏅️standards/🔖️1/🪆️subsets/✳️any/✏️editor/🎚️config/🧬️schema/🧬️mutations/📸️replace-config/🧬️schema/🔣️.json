@@ -10,16 +10,12 @@
         "runOutputJson": {
           "type": "string"
         },
-        "locale": {
-          "type": "string"
-        },
         "contributionsJson": {
           "type": "string"
         }
       },
       "required": [
         "runOutputJson",
-        "locale",
         "contributionsJson"
       ],
       "additionalProperties": false

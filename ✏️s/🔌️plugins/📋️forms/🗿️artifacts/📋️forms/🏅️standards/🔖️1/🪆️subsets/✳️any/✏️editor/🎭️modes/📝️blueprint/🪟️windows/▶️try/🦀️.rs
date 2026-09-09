@@ -1,17 +1,17 @@
 //! ▶️ Forms play app — the Try window: a wizard preview of the form as an end user would fill it out.
 
-use crate::schema::{can_advance, default_value_for_question, is_extension_question_kind, json_f64_value, json_string_value, step_errors, visible_questions};
-use crate::FormQuestion;
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::{effective_try_values, forms_action, parse_contributions, render_extension_question, ProgramContributionEntry};
+use crate::editor::forms::{ui_admit, ui_label, ui_text_value, ui_value_map, ui_value_number, ui_value_text};
+use crate::schema::{can_advance, default_value_for_question, is_extension_question_kind, json_f64_value, json_string_value, step_errors, visible_questions};
+use crate::FormQuestion;
+use dsl::os_pack::json::{Object, Value};
 use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract as ui;
-use ui::{Buildable, HasBase, HasChildren};
-use crate::editor::forms::{ui_admit, ui_label, ui_text_value, ui_value_map, ui_value_text, ui_value_number};
-use dsl::os_pack::json::{Object, Value};
 use std::collections::HashMap;
 use std::collections::HashSet;
+use ui::{Buildable, HasBase, HasChildren};
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_WINDOW_TRY: &str = "forms-try";
@@ -100,16 +100,28 @@ fn render_try_question(question: &FormQuestion, values: &Object, contributions: 
                 _ => ui::InputKind::Text,
             };
             let mut input = ui::input(kind).value(ui_text_value(json_string_value(&value))?);
-            if let Some(placeholder) = &question.placeholder { input = input.placeholder(ui_label(placeholder)?); }
-            if let Some(min) = question.min { input = input.min(min); }
-            if let Some(max) = question.max { input = input.max(max); }
-            if let Some(step) = question.step { input = input.step(step); }
-            if let Some(accept) = &question.accept { input = input.accept(ui_text_value(accept)?); }
+            if let Some(placeholder) = &question.placeholder {
+                input = input.placeholder(ui_label(placeholder)?);
+            }
+            if let Some(min) = question.min {
+                input = input.min(min);
+            }
+            if let Some(max) = question.max {
+                input = input.max(max);
+            }
+            if let Some(step) = question.step {
+                input = input.step(step);
+            }
+            if let Some(accept) = &question.accept {
+                input = input.accept(ui_text_value(accept)?);
+            }
             control(input, &format!("forms-try.{key}.input"), label, answer_args(key)?)?
         }
         "slider" => {
             let mut slider = ui::slider(json_f64_value(&value)).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0));
-            if let Some(unit) = &question.unit { slider = slider.unit(ui_text_value(unit)?); }
+            if let Some(unit) = &question.unit {
+                slider = slider.unit(ui_text_value(unit)?);
+            }
             control(slider, &format!("forms-try.{key}.slider"), label, answer_args(key)?)?
         }
         "boolean" => {
@@ -138,7 +150,8 @@ fn render_try_question(question: &FormQuestion, values: &Object, contributions: 
                 let value = value.as_array().and_then(|array| array.get(index)).and_then(Value::as_f64).unwrap_or(field.value.unwrap_or(0.0));
                 let args = || ui_value_map([("key", ui_value_text(key)?), ("vectorIndex", ui_value_number(index as f64))]);
                 let id = format!("forms-try.{key}.{}.stepper", field.key);
-                let mut node = control(ui_admit(ui::BuiltNode::try_new(&id, ui::Component::NumberStepper(ui::NumberStepperProps { value, step: question.step.unwrap_or(0.1), uniform: true })))?, &id, field.label.as_deref().unwrap_or(&field.key), args()?)?;
+                let mut node =
+                    control(ui_admit(ui::BuiltNode::try_new(&id, ui::Component::NumberStepper(ui::NumberStepperProps { value, step: question.step.unwrap_or(0.1), uniform: true })))?, &id, field.label.as_deref().unwrap_or(&field.key), args()?)?;
                 let (action, args) = forms_action("setTryValue", Some(args()?))?;
                 ui_admit(node.bindings.try_push(ui::ActionBinding { trigger: ui::Trigger::Delta, action, args, capability: None }))?;
                 let field = ui_admit(ui::field(ui_label(field.label.as_deref().unwrap_or(&field.key))?).try_id(format!("forms-try.{key}.{}", field.key)))?;
@@ -168,7 +181,9 @@ fn navigation(id: &str, label: &str, icon: &str, command: &str, disabled: bool) 
 
 pub fn render(spec: &crate::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiAssemblyResult<ui::BuiltNode> {
     let steps = crate::forms_steps(spec);
-    if steps.is_empty() { return display(labels.no_steps_in_form.as_str(), false); }
+    if steps.is_empty() {
+        return display(labels.no_steps_in_form.as_str(), false);
+    }
     let contributions = parse_contributions(config);
     let step_index = (config.current_step_index as usize).min(steps.len().saturating_sub(1));
     let step = &steps[step_index];
@@ -178,20 +193,14 @@ pub fn render(spec: &crate::FormsSnapshot, config: &FormsConfig, labels: &FormsL
     let errors = step_errors(step, &validation_values);
     let advance = can_advance(step, &validation_values);
     let errors_by_question: HashMap<&str, &str> = errors.iter().map(|error| (error.block_id.as_str(), error.message.as_str())).collect();
-    let mut children = vec![
-        display(spec.title.as_deref().unwrap_or(labels.form_fallback_title.as_str()), true)?,
-        display(&format!("{} {} / {}", labels.step_progress.as_str(), step_index + 1, steps.len()), false)?,
-        display(&step.title, true)?,
-    ];
-    if let Some(description) = &step.description { children.push(display(description, false)?); }
+    let mut children = vec![display(spec.title.as_deref().unwrap_or(labels.form_fallback_title.as_str()), true)?, display(&format!("{} {} / {}", labels.step_progress.as_str(), step_index + 1, steps.len()), false)?, display(&step.title, true)?];
+    if let Some(description) = &step.description {
+        children.push(display(description, false)?);
+    }
     for question in visible {
         children.push(render_try_question(question, &values, &contributions, errors_by_question.get(question.id.as_str()).copied(), labels)?);
     }
-    let next = if step_index + 1 < steps.len() {
-        navigation("forms-try.next", labels.next.as_str(), "chevron-right", "nextStep", !advance)?
-    } else {
-        navigation("forms-try.submit", labels.submit.as_str(), "check", "submit", !advance)?
-    };
+    let next = if step_index + 1 < steps.len() { navigation("forms-try.next", labels.next.as_str(), "chevron-right", "nextStep", !advance)? } else { navigation("forms-try.submit", labels.submit.as_str(), "check", "submit", !advance)? };
     children.push(stack(ui::Axis::Horizontal, vec![navigation("forms-try.back", labels.back.as_str(), "chevron-left", "previousStep", step_index == 0)?, next])?);
     stack(ui::Axis::Vertical, children)
 }

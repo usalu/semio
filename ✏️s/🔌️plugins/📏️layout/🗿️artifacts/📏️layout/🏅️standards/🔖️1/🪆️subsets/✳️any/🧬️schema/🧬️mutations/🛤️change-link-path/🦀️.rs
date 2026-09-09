@@ -1,9 +1,8 @@
 //! 🔗 `change-link-path` — sets an {@link ImageLink}'s file `path`.
 
-
-use crate::{ImageLinkPatch, LayoutDiff, LayoutSnapshot};
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::diff::{LayoutLinkPatchEntry, LayoutLinksDelta};
+use crate::{ImageLinkPatch, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -33,7 +32,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeLinkPath {
 }
 //#endregion 🔗ChangeLinkPath
 
-
 //#region 🔗ChangeLinkPath
 pub fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(link) = base.links.iter().find(|link| link.id == payload.id) else {
@@ -48,7 +46,6 @@ pub fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) ->
     })
 }
 //#endregion 🔗ChangeLinkPath
-
 
 //#region 🔗ChangeLinkPath
 pub fn inverse_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

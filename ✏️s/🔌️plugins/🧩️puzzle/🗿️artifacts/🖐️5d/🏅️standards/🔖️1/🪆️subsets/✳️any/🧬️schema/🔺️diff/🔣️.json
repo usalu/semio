@@ -45,6 +45,17 @@
       ],
       "x-semio-state": "artifact"
     },
+    "kindCatalogsExtra": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/snapshot.json#/$defs/Puzzle5dKindCatalogsExtra"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
     "kindCompatibility": {
       "$ref": "#/$defs/Puzzle5dKindCompatibilityList",
       "x-semio-state": "artifact"
@@ -55,132 +66,6 @@
     },
     "fasteners": {
       "$ref": "#/$defs/Puzzle5dFastenersDelta",
-      "x-semio-state": "artifact"
-    },
-    "selectedPartIds": {
-      "$ref": "#/$defs/Puzzle5dStringList",
-      "x-semio-state": "presence"
-    },
-    "selectedGripIds": {
-      "$ref": "#/$defs/Puzzle5dStringList",
-      "x-semio-state": "presence"
-    },
-    "selectedFastenerIds": {
-      "$ref": "#/$defs/Puzzle5dStringList",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "camera2dX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera2dY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera2dZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dPositionX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dPositionY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dPositionZ": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dTargetX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dTargetY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dTargetZ": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "camera3dZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "gridSnapEnabled": {
-      "type": "boolean",
-      "x-semio-state": "config"
-    },
-    "gridFactor": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "suggestionOffset": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "overlapBudget": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "fillCount": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "brushCandidateIndex": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "lodMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "runtimeExtrasJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "hoveredPartId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "previewSeq": {
-      "type": "integer",
-      "format": "int64",
       "x-semio-state": "artifact"
     }
   },

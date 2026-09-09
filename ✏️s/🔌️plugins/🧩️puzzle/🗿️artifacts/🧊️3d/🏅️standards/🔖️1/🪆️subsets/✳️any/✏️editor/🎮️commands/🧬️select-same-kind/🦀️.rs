@@ -1,15 +1,15 @@
 //! 🗂️ `select-same-kind` command.
 
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
+use crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT;
 
-/// 🎯️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection is
-/// framework-owned now and `handle` has no channel to write it back (the six reserved
-/// `interactionSelect`-family verbs are the ONLY writer — see `dispatch_interaction_action`, private
-/// to `semio-framework-plugin`), so this can no longer replace the selection with same-kind objects
-/// itself. Still validates the "nothing to widen from" precondition (aborts exactly as the
-/// pre-migration early `return` did) so a client pairing this dispatch with its own follow-up
-/// `interactionSelect` still gets a correct abort signal; flagged to the coordinator as a case the W3
-/// SDK wave did not provide a mechanism for, not fixed here (framework file, out of this crate's remit).
+/// 🎯️ Widens the selection to every object sharing the clicked object's kind. Selection is
+/// framework-owned (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so this emits one
+/// `InteractionWrite` (`ctx.replace_selection`) instead of touching any app-owned selection state —
+/// `VcsArtifactApp` applies it through the same `next_selection` machine the reserved
+/// `interactionSelect` verb uses, right after this action's own mutations land. Aborts when there is
+/// nothing to widen from (no selected object, or one with no kind), exactly as the pre-migration early
+/// `return` did.
 pub fn select_same_kind(ctx: &mut Puzzle3dActionCtx<'_>) {
     let Some(first_id) = ctx.selected_object_ids().first().cloned() else {
         ctx.abort = true;
@@ -19,6 +19,6 @@ pub fn select_same_kind(ctx: &mut Puzzle3dActionCtx<'_>) {
         ctx.abort = true;
         return;
     };
-    let _ = kind;
-    ctx.abort = true;
+    let ids: Vec<String> = ctx.scene.fixture.objects.iter().filter(|object| object.object_kind.as_deref() == Some(kind.as_str())).map(|object| object.id.clone()).collect();
+    ctx.replace_selection(PUZZLE3D_GRANULARITY_OBJECT, ids);
 }

@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::duration::{compute_semio_video_duration};
+use super::duration::compute_semio_video_duration;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio video snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
@@ -69,13 +69,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::video::schema::SemioVid
 pub fn semio_video_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.video.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

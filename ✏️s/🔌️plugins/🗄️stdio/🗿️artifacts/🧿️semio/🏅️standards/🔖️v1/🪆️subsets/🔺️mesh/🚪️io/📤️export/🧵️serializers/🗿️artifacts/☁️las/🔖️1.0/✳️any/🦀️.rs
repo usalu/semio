@@ -22,9 +22,9 @@
 //!   `f64` positions realistically carry, but SOME quantization is an inherent, real LAS property,
 //!   not an artifact of this codec — never claimed to be bit-exact.
 
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_las::schema::snapshot::{LasHeader, LasPoint};
 use semio_s_artifact_stdio_las::LasSnapshot;
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId::ANY };

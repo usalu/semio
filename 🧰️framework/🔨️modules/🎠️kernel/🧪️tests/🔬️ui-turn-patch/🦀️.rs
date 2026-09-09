@@ -66,7 +66,7 @@ fn ui_turn_patch_owner_typed_descendants_preserve_exact_one_byte_grants() {
             }
             assert!(turn < 65_535);
         }
-        assert_eq!(bytes, surface.as_bytes().len() + text.as_bytes().len());
+        assert_eq!(bytes, surface.len() + text.len());
         assert!(owner.contents.terminal_is_empty() && owner.retirement.is_none());
     }
 }
@@ -74,7 +74,7 @@ fn ui_turn_patch_owner_typed_descendants_preserve_exact_one_byte_grants() {
 fn patch(revision: u64) -> UiPatch {
     UiPatch {
         surface: semio_framework_ui_contract::SurfaceId::try_from("turn.surface").expect("bounded surface"),
-        base_revision: semio_framework_ui_contract::UiRevision(revision.checked_sub(1).unwrap_or(0)),
+        base_revision: semio_framework_ui_contract::UiRevision(revision.saturating_sub(1)),
         revision: semio_framework_ui_contract::UiRevision(revision),
         ops: semio_framework_ui_contract::UiPatchOps::default(),
     }
@@ -326,7 +326,7 @@ fn ui_turn_patch_transport_handback_reports_exact_typed_descendant_bytes() {
         }
         assert!(turn < 65_535);
     }
-    assert_eq!(bytes, surface.as_bytes().len() + text.as_bytes().len());
+    assert_eq!(bytes, surface.len() + text.len());
     assert!(with_ui_turn_patch_transport_arena(|arena| arena.slot_mut(key).is_none()));
     assert!(UiTurnPatchTransportLease::try_from_token(&token, 700_016).is_err());
 }

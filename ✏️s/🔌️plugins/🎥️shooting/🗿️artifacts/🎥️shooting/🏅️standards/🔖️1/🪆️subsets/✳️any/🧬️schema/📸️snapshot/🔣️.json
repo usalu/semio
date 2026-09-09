@@ -50,6 +50,11 @@
     "activeAssetId": {
       "type": "string",
       "x-semio-state": "artifact"
+    },
+    "emblem": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio.image"
     }
   }
 }

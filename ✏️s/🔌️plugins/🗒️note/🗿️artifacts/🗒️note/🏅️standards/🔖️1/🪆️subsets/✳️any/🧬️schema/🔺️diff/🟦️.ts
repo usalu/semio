@@ -29,21 +29,6 @@ export interface NoteDiff {
   eraserRadius?: number | null;
   /** @state artifact */
   assets?: NoteAssetsDelta;
-  /** @state presence */
-  selectedBlockIds?: NoteStringList;
-  /** @state presence */
-  activeUtilityId?: string;
-  /** @state config */
-  engagementInput?: string;
-  /** @state config */
-  cameraX?: number;
-  /** @state config */
-  cameraY?: number;
-  /** @state config */
-  cameraZoom?: number;
-  /** @state config */
-  /** @state artifact */
-  hoveredBlockId?: string | null;
 }
 
 export interface NoteArtifact {
@@ -60,13 +45,6 @@ export interface NoteArtifact {
   pencilWidth?: number;
   eraserRadius?: number;
   assets: Record<string, NoteImageAsset>;
-  selectedBlockIds: string[];
-  activeUtilityId: string;
-  engagementInput: string;
-  cameraX: number;
-  cameraY: number;
-  cameraZoom: number;
-  hoveredBlockId?: string;
 }
 
 export interface NoteAssetsDelta {

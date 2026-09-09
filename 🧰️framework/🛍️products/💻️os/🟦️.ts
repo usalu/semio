@@ -18,8 +18,12 @@ import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, 
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
 import type { DirectoryCommand, DirectoryEvent, DirectoryStreamMessage } from "./🔨️modules/📇️directory/🟦️.ts";
-import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, GisMapInferencePortCodeV1, GisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryEventPageV1, parseGisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
+export { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
+import { parseInferencePortClosedV1, parseInferencePortOpeningRequestV1, parseInferencePortOpeningResultV1, type InferencePortClosedV1, type InferencePortOpeningResultV1 } from "./🔨️modules/💡️inference/🚪️opening/🟦️.ts";
+import type { ArtifactFrontier, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, GisMapInferencePortCodeV1, GisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryEventPageV1, parseGisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
 import type { ArtifactPresencePeer, ClientFrame, ExactWireMutationEnvelope, LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryCommand, LocalInteractionQueryReply, LocalInteractionQueryToken, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
@@ -28,6 +32,7 @@ import { decodeClientFrame, decodeLocalInteractionQueryCommand, decodeLocalInter
  * for its backbone-envelope and app-channel codecs rather than keeping a second copy. */
 import { decodeCausalEnvelopeBatch, decodeDocumentBackboneEnvelopeBatchExact, encodeCausalEnvelopeBatch, readBool, readBytes, readF64, readHash32, readStr, readU8, readVarintU64, readVecBytes, readVecEnvelope, readVecStr, writeBool, writeBytes, writeF64, writeHash32, writeStr, writeVarintU64, writeVecBytes, writeVecEnvelope, writeVecStr } from "@semio-tech/framework-replication";
 import { parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
+import { parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import { parseBrowserActorViewStateRequest, type BrowserActorViewStateRequest } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
 export type { BrowserActorUiPatchOfferV1, BrowserActorUiPatchResultV1 };
 
@@ -731,6 +736,13 @@ export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uin
 /** @emoji 🧵️ Decodes a {@link BackboneWorkerRequest} from the wasm actor or structured-clone twin. */
 export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerRequest {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
+  if (parsed.kind === "inference-open") return parseInferencePortOpeningRequestV1(parsed);
+  if (parsed.kind === "browser-actor-action") {
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (clientInstanceId === null) throw new Error("backbone worker request: invalid client instance id");
+    const { clientInstanceId: _client, ...request } = parsed;
+    return { ...parseBrowserActorActionRequestV1(request), clientInstanceId };
+  }
   if (parsed.kind === "browser-actor-view-state") return parseBrowserActorViewStateRequest(parsed);
   if (parsed.kind === "space-artifact-create" || parsed.kind === "space-artifact-create-cancel") {
     return parseSpaceArtifactCreationWorkerRequestV1(parsed);
@@ -794,6 +806,12 @@ export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): 
 /** @emoji 🧵️ Decodes a worker response/event wire payload from the wasm actor. */
 export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerResponse {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
+  if (parsed.kind === "browser-actor-action-result") {
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (clientInstanceId === null) throw new Error("backbone worker response: invalid client instance id");
+    const { clientInstanceId: _client, ...response } = parsed;
+    return { ...parseBrowserActorActionResultV1(response), clientInstanceId };
+  }
   if (parsed.kind === "space-artifact-creation-status") return parseSpaceArtifactCreationStatusV1(parsed);
   if (parsed.kind === "space-artifact-creation-catalog") return parseSpaceArtifactCreationCatalogV1(parsed);
   if (parsed.kind === "space-artifact-creation-catalog-status") return parseSpaceArtifactCreationCatalogStatusV1(parsed);
@@ -804,7 +822,7 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     return { ...parseBrowserActorUiPatchOfferV1(offer), clientInstanceId };
   }
   if (parsed.kind === "browser-actor-ui-mounted") {
-    const fields = ["activationGeneration", "browserActorSha256", "catalogGenerationId", "clientInstanceId", "componentSha256", "descriptorSha256", "instanceId", "kind", "scope", "uiRevision", "verifiedSurfaceId"];
+    const fields = ["activationGeneration", "activeCheckpointId", "browserActorSha256", "catalogGenerationId", "clientInstanceId", "componentSha256", "descriptorDigestV1", "descriptorSha256", "frontier", "instanceId", "kind", "scope", "uiRevision", "verifiedSurfaceId"];
     if (Object.keys(parsed).sort().join(",") !== fields.sort().join(",")) throw new Error("backbone worker response: invalid mounted UI fields");
     const scopeRow = parsed.scope as Record<string, unknown> | undefined;
     const documentId = scopeRow === undefined ? null : workerWireIdV1(scopeRow.documentId);
@@ -816,9 +834,12 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     const catalogGenerationId = workerWireSha256V1(parsed.catalogGenerationId),
       componentSha256 = workerWireSha256V1(parsed.componentSha256),
       descriptorSha256 = workerWireSha256V1(parsed.descriptorSha256),
-      browserActorSha256 = workerWireSha256V1(parsed.browserActorSha256);
-    if (catalogGenerationId === null || componentSha256 === null || descriptorSha256 === null || browserActorSha256 === null) throw new Error("backbone worker response: invalid mounted UI identity");
-    return { kind: "browser-actor-ui-mounted", scope, clientInstanceId, activationGeneration, instanceId: parsed.instanceId as number, verifiedSurfaceId, catalogGenerationId, componentSha256, descriptorSha256, browserActorSha256, uiRevision: parsed.uiRevision as number };
+      browserActorSha256 = workerWireSha256V1(parsed.browserActorSha256),
+      activeCheckpointId = workerWireSha256V1(parsed.activeCheckpointId),
+      descriptorDigestV1 = workerWireSha256V1(parsed.descriptorDigestV1),
+      frontier = workerWireArtifactFrontierV1(parsed.frontier, scope);
+    if (catalogGenerationId === null || componentSha256 === null || descriptorSha256 === null || browserActorSha256 === null || activeCheckpointId === null || descriptorDigestV1 === null || frontier === null) throw new Error("backbone worker response: invalid mounted UI identity");
+    return { kind: "browser-actor-ui-mounted", scope, clientInstanceId, activationGeneration, instanceId: parsed.instanceId as number, verifiedSurfaceId, catalogGenerationId, componentSha256, descriptorSha256, browserActorSha256, activeCheckpointId, descriptorDigestV1, frontier, uiRevision: parsed.uiRevision as number };
   }
   if (parsed.kind === "event" && typeof parsed.event === "object" && parsed.event !== null) {
     const documentId = workerWireIdV1(parsed.documentId);
@@ -863,6 +884,8 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     if (scope === null) throw new Error("backbone worker response: invalid inference scope");
     return { kind: "inference-port-status", operationEpoch: parsed.operationEpoch as number, scope, status: parseGisMapInferencePortStatusV1(parsed.status) };
   }
+  if (parsed.kind === "inference-port-opened") return parseInferencePortOpeningResultV1(parsed);
+  if (parsed.kind === "inference-port-closed") return parseInferencePortClosedV1(parsed);
   if (parsed.kind === "inference-history-status") {
     const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
     if (clientInstanceId === null || !Number.isSafeInteger(parsed.historyEpoch) || (parsed.historyEpoch as number) < 1) throw new Error("backbone worker response: invalid inference history owner");
@@ -986,6 +1009,17 @@ function workerWireSha256V1(value: unknown): string | null {
   return typeof value === "string" && /^[0-9a-f]{64}$/u.test(value) ? value : null;
 }
 
+function workerWireArtifactFrontierV1(value: unknown, scope: DocumentScope): ArtifactFrontier | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const row = value as Record<string, unknown>;
+  if (Object.keys(row).sort().join(",") !== "chainHash,documentId,headEditId,headEditOrdinal,lastCommitSeq") return null;
+  const chainHash = row.chainHash;
+  if (!Array.isArray(chainHash) || chainHash.length !== 32 || chainHash.some(byte => !Number.isInteger(byte) || (byte as number) < 0 || (byte as number) > 255)) return null;
+  if (typeof row.documentId !== "string" || typeof row.headEditId !== "string" || !Number.isSafeInteger(row.headEditOrdinal) || !Number.isSafeInteger(row.lastCommitSeq)) return null;
+  const frontier: ArtifactFrontier = { documentId: row.documentId, headEditOrdinal: row.headEditOrdinal as number, headEditId: row.headEditId, lastCommitSeq: row.lastCommitSeq as number, chainHash: chainHash as number[] };
+  return (artifactFrontierIsGenesisForV1(scope, frontier) || artifactFrontierIsEditedForV1(scope, frontier)) && frontier.lastCommitSeq <= frontier.headEditOrdinal ? frontier : null;
+}
+
 function workerWireScopeV1(value: unknown, documentId: string): DocumentScope | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
   const row = value as Record<string, unknown>;
@@ -1069,6 +1103,7 @@ export type SpaceArtifactCreationCatalogStatusV1 = Readonly<{
  * — plugin surfaces never talk to the network, and the shell never opens a directory socket on the
  * UI thread; see `🧵️backbone-worker.ts`'s `🔖️Directory` region. */
 export type BackboneWorkerRequest =
+  | (BrowserActorActionRequestV1 & { readonly clientInstanceId: string })
   | BrowserActorViewStateRequest
   | ({ readonly kind: "open"; readonly clientInstanceId?: string } & ArtifactActorConfig)
   | { readonly kind: "close"; readonly documentId: string; readonly spaceId?: string; readonly clientInstanceId?: string }
@@ -1142,6 +1177,7 @@ export type ArtifactBootstrapWorkerEvent =
  * bounded, in-memory offline queue's length (contract-freeze §C6 "commands queue... and flush on
  * reconnect"). */
 export type BackboneWorkerResponse =
+  | (BrowserActorActionResultV1 & { readonly clientInstanceId: string })
   | { readonly kind: "event"; readonly documentId: string; readonly clientInstanceId: string; readonly event: ArtifactEvent; readonly scope?: DocumentScope; readonly verifiedSurfaceId?: string }
   | ArtifactBootstrapWorkerEvent
   | { readonly kind: "ready" }
@@ -1184,9 +1220,12 @@ export type BackboneWorkerResponse =
    * phase, the server's own job id, the bounded progress cursor and the hash the server published —
    * never a receipt, bearer, origin, path, base pack, proposal body or user identity. */
   | { readonly kind: "inference-port-status"; readonly operationEpoch: number; readonly scope: DocumentScope; readonly status: GisMapInferencePortStatusV1 }
+  | InferencePortOpeningResultV1
+  | InferencePortClosedV1
   | { readonly kind: "inference-history-status"; readonly historyEpoch: number; readonly clientInstanceId: string; readonly scope: DocumentScope; readonly status: GisMapApprovalHistoryStatusV1 }
-  /** 🔬️ Public-digest identity for one exact actor UI revision, emitted only after the Shell's
-   * transactional patch acknowledgement. It carries no plan, grant, credential, receipt or action. */
+  /** 🔬️ Public checkpoint/frontier identity for one exact actor UI revision, emitted only after
+   * the guest accepts the Shell's transactional patch acknowledgement. It carries no plan, grant,
+   * credential, receipt or action. */
   | BrowserActorUiMountedV1
   | (BrowserActorUiPatchOfferV1 & { readonly clientInstanceId: string })
   | { readonly kind: "directory-status"; readonly pendingCommands: number };
@@ -1202,6 +1241,9 @@ export type BrowserActorUiMountedV1 = Readonly<{
   componentSha256: string;
   descriptorSha256: string;
   browserActorSha256: string;
+  activeCheckpointId: string;
+  descriptorDigestV1: string;
+  frontier: ArtifactFrontier;
   uiRevision: number;
 }>;
 
@@ -2139,6 +2181,7 @@ export function decodeScenePackValue(bytes: Uint8Array): unknown {
 
 //#region 🔖️Types
 export type ChildPackEntry = { readonly slot: string; readonly child_id: string; readonly dialect: string; readonly envelope_pack: readonly number[] };
+export type WindowConfigPackEntry = { readonly window_id: string; readonly window_kind_id: string; readonly envelope_pack: readonly number[] };
 
 export type AppCommandValue =
   | { readonly LocalInteractionQuery: { readonly seq: number; readonly command: LocalInteractionQueryCommand } }
@@ -2152,6 +2195,8 @@ export type AppCommandValue =
   | { readonly ReadDocument: { readonly seq: number } }
   | { readonly LoadConfig: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
   | { readonly ReadConfig: { readonly seq: number } }
+  | { readonly LoadWindowConfig: { readonly seq: number; readonly entry: WindowConfigPackEntry } }
+  | { readonly ReadWindowConfigs: { readonly seq: number } }
   | { readonly MediaIn: { readonly seq: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
   | { readonly MediaOut: { readonly seq: number; readonly port: string; readonly request: readonly number[] } }
   | { readonly MediaFingerprint: { readonly seq: number; readonly port: string } }
@@ -2214,6 +2259,7 @@ export type AppFrameValue =
   | { readonly DocumentChanged: { readonly envelopes: readonly (readonly number[])[]; readonly origin: string } }
   | { readonly Document: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
   | { readonly Config: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
+  | { readonly WindowConfigs: { readonly in_reply_to: number; readonly entries: readonly WindowConfigPackEntry[] } }
   | { readonly ConfigChanged: { readonly envelopes: readonly (readonly number[])[]; readonly origin: string } }
   | { readonly ContextMenu: { readonly in_reply_to: number; readonly items: readonly number[] } }
   | { readonly Media: { readonly in_reply_to: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
@@ -2288,6 +2334,22 @@ function readVecChildPackEntry(bytes: Uint8Array, pos: [number]): ChildPackEntry
   const count = readVarintU64(bytes, pos);
   return Array.from({ length: count }, () => readChildPackEntry(bytes, pos));
 }
+function writeWindowConfigPackEntry(out: number[], entry: WindowConfigPackEntry): void {
+  writeStr(out, entry.window_id);
+  writeStr(out, entry.window_kind_id);
+  writeBytes(out, entry.envelope_pack);
+}
+function readWindowConfigPackEntry(bytes: Uint8Array, pos: [number]): WindowConfigPackEntry {
+  return { window_id: readStr(bytes, pos), window_kind_id: readStr(bytes, pos), envelope_pack: readBytes(bytes, pos) };
+}
+function writeVecWindowConfigPackEntry(out: number[], entries: readonly WindowConfigPackEntry[]): void {
+  writeVarintU64(out, entries.length);
+  for (const entry of entries) writeWindowConfigPackEntry(out, entry);
+}
+function readVecWindowConfigPackEntry(bytes: Uint8Array, pos: [number]): WindowConfigPackEntry[] {
+  const count = readVarintU64(bytes, pos);
+  return Array.from({ length: count }, () => readWindowConfigPackEntry(bytes, pos));
+}
 //#endregion 🔖️Combinators
 
 //#region 🔖️Codec
@@ -2298,13 +2360,13 @@ const APP_COMMAND_TAGS = {
   transactionPrepare: 17, transactionCommit: 18, transactionRollback: 19, transactionUndo: 20, transactionRedo: 21,
   openArtifact: 22, setDefaultApp: 23, clearDefaultApp: 24,
   setMergePolicy: 25, resolveConflict: 26, readConflicts: 27,
-  presence: 28, LocalInteractionQuery: 29,
+  presence: 28, LocalInteractionQuery: 29, LoadWindowConfig: 30, ReadWindowConfigs: 31,
 } as const;
 const APP_FRAME_TAGS = {
   Done: 0, Invocation: 1, DocumentChanged: 2, Document: 3,
   Config: 4, ConfigChanged: 5, ContextMenu: 6, Media: 7, MediaFingerprint: 8, Error: 9, Emit: 10, Draft: 11, Children: 12, Ephemeral: 13, HistorySnapshot: 14,
   transactionProposal: 15, transactionPrepared: 16, transactionCommitted: 17, transactionRolledBack: 18,
-  MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22, LocalInteractionQuery: 23,
+  MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22, LocalInteractionQuery: 23, WindowConfigs: 24,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
@@ -2354,6 +2416,13 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   } else if ("ReadConfig" in cmd) {
     out.push(APP_COMMAND_TAGS.ReadConfig);
     writeVarintU64(out, cmd.ReadConfig.seq);
+  } else if ("LoadWindowConfig" in cmd) {
+    out.push(APP_COMMAND_TAGS.LoadWindowConfig);
+    writeVarintU64(out, cmd.LoadWindowConfig.seq);
+    writeWindowConfigPackEntry(out, cmd.LoadWindowConfig.entry);
+  } else if ("ReadWindowConfigs" in cmd) {
+    out.push(APP_COMMAND_TAGS.ReadWindowConfigs);
+    writeVarintU64(out, cmd.ReadWindowConfigs.seq);
   } else if ("MediaIn" in cmd) {
     out.push(APP_COMMAND_TAGS.MediaIn);
     writeVarintU64(out, cmd.MediaIn.seq);
@@ -2504,6 +2573,10 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
     }
     case APP_COMMAND_TAGS.ReadConfig:
       return { ReadConfig: { seq: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.LoadWindowConfig:
+      return { LoadWindowConfig: { seq: readVarintU64(bytes, pos), entry: readWindowConfigPackEntry(bytes, pos) } };
+    case APP_COMMAND_TAGS.ReadWindowConfigs:
+      return { ReadWindowConfigs: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.MediaIn: {
       const seq = readVarintU64(bytes, pos);
       const port = readStr(bytes, pos);
@@ -2640,6 +2713,10 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeBytes(out, frame.Config.pack);
     writeBytes(out, frame.Config.spr);
     writeStr(out, frame.Config.ops);
+  } else if ("WindowConfigs" in frame) {
+    out.push(APP_FRAME_TAGS.WindowConfigs);
+    writeVarintU64(out, frame.WindowConfigs.in_reply_to);
+    writeVecWindowConfigPackEntry(out, frame.WindowConfigs.entries);
   } else if ("ConfigChanged" in frame) {
     out.push(APP_FRAME_TAGS.ConfigChanged);
     writeVecBytes(out, frame.ConfigChanged.envelopes);
@@ -2786,6 +2863,8 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       const ops = readStr(bytes, pos);
       return { Config: { in_reply_to, pack, spr, ops } };
     }
+    case APP_FRAME_TAGS.WindowConfigs:
+      return { WindowConfigs: { in_reply_to: readVarintU64(bytes, pos), entries: readVecWindowConfigPackEntry(bytes, pos) } };
     case APP_FRAME_TAGS.ConfigChanged: {
       const envelopes = readVecBytes(bytes, pos);
       const origin = readStr(bytes, pos);
@@ -2942,7 +3021,7 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
  * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on — it now
  * exists purely for the drift-guard test below. */
-export const APP_CHANNEL_VERSION = 14;
+export const APP_CHANNEL_VERSION = 15;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any object shaped like it (a real handle, a test
@@ -3048,11 +3127,11 @@ export class AppChannelClient {
   private readonly appId: string;
   private readonly actor: string;
   private readonly outcomeIterator: AsyncIterator<TurnOutcome>;
-  private readonly pending: { readonly seq: number; readonly queryReceipt: boolean; readonly transaction: AppChannelTransactionReply | null; readonly resolve: (frames: AppFrameValue[]) => void; readonly reject: (error: unknown) => void }[] = [];
+  private readonly pending: { readonly seq: number; readonly queryReceipt: boolean; readonly transaction: AppChannelTransactionReply | null; readonly document: { readonly pack: Uint8Array; readonly spr: Uint8Array } | null; readonly resolve: (frames: AppFrameValue[]) => void; readonly reject: (error: unknown) => void }[] = [];
   /** 📦️ Per-instance document-pack cache (ticket
    * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS, scout-1 §4: "the
    * browser host keeps NO document pack per instance today"). Populated from BOTH directions —
-   * {@link loadDocument}'s own arguments (no round trip needed to know what we just sent) and every
+   * {@link loadDocument}'s accepted arguments and every
    * `AppFrame::Document` reply any sent command's outcome carries (`ReadDocument`, `LoadDocument`'s
    * own echo, or any future command that happens to include one) — so a transaction coordinator can
    * ask "what does this instance's document look like right now" without a dedicated round trip. */
@@ -3078,6 +3157,8 @@ export class AppChannelClient {
     for (;;) {
       const step = await this.outcomeIterator.next();
       if (step.done) {
+        this.cachedPack = null;
+        this.cachedSpr = null;
         this.finishLocalInteractionQuery(new Error("local-interaction.channel-closed"));
         for (const waiter of this.pending.splice(0)) waiter.reject(new Error("app-channel.closed"));
         return;
@@ -3110,7 +3191,7 @@ export class AppChannelClient {
         if (!correlated.has(waiter.seq)) { index += 1; continue; }
         this.pending.splice(index, 1);
         const reply = ordinary.filter((frame) => appChannelFrameBelongsTo(frame, waiter.seq, waiter.transaction));
-        this.captureDocumentFrames(reply);
+        this.captureDocumentFrames(reply, waiter.document);
         waiter.resolve(reply);
       }
       this.finishDisposal();
@@ -3122,6 +3203,8 @@ export class AppChannelClient {
    * subscriber against the handle-wide outcome stream for the rest of the handle's lifetime. */
   dispose(): void {
     this.disposed = true;
+    this.cachedPack = null;
+    this.cachedSpr = null;
     for (let index = this.pending.length - 1; index >= 0; index -= 1) {
       if (!this.pending[index]!.queryReceipt) this.pending.splice(index, 1)[0]!.reject(new Error("app-channel.disposed"));
     }
@@ -3139,7 +3222,12 @@ export class AppChannelClient {
 
   /** 📦️ Scans every frame one sent command's outcome carried for `AppFrame::Document` and refreshes
    * the pack cache — the "every `AppFrame::Document` reply" half of the cache-population contract. */
-  private captureDocumentFrames(frames: readonly AppFrameValue[]): void {
+  private captureDocumentFrames(frames: readonly AppFrameValue[], candidate: { readonly pack: Uint8Array; readonly spr: Uint8Array } | null): void {
+    if (this.disposed || frames.some(frame => "Error" in frame)) return;
+    if (candidate && frames.some(frame => "Done" in frame)) {
+      this.cachedPack = candidate.pack;
+      this.cachedSpr = candidate.spr;
+    }
     for (const frame of frames) {
       if ("Document" in frame) {
         this.cachedPack = new Uint8Array(frame.Document.pack);
@@ -3149,12 +3237,12 @@ export class AppChannelClient {
   }
 
   /** 📦️ The cached `{pack, spr}` for this instance's document, or `null` before any
-   * {@link loadDocument} call or `AppFrame::Document` reply has been observed. Surfaced to the
+   * accepted {@link loadDocument} call or `AppFrame::Document` reply has been observed. Surfaced to the
    * transaction coordinator through the `PluginWasmHandle` adapter's own `documentPack` accessor
    * (`PluginRuntime/🟦️.tsx`) — a contributor plan call needs the target's current snapshot
    * pack, and this is the only place that snapshot is retained host-side. */
   documentPack(): { readonly pack: Uint8Array; readonly spr: Uint8Array } | null {
-    return this.cachedPack && this.cachedSpr ? { pack: this.cachedPack, spr: this.cachedSpr } : null;
+    return this.cachedPack && this.cachedSpr ? { pack: this.cachedPack.slice(), spr: this.cachedSpr.slice() } : null;
   }
 
   /** 🔀️ Queues one encoded command and resolves with every frame its matching {@link TurnOutcome}
@@ -3163,8 +3251,15 @@ export class AppChannelClient {
     if (this.disposed) return Promise.reject(new Error("app-channel.disposed"));
     return new Promise<AppFrameValue[]>((resolve, reject) => {
       const seq = Object.values(command)[0]!.seq;
-      this.pending.push({ seq, queryReceipt: false, transaction: appChannelTransactionReply(command), resolve, reject });
-      this.handle.enqueue(this.instanceId, [encodeAppCommand(command)]);
+      const document = "LoadDocument" in command ? { pack: Uint8Array.from(command.LoadDocument.pack), spr: Uint8Array.from(command.LoadDocument.spr) } : null;
+      const waiter = { seq, queryReceipt: false, transaction: appChannelTransactionReply(command), document, resolve, reject };
+      this.pending.push(waiter);
+      try { this.handle.enqueue(this.instanceId, [encodeAppCommand(command)]); }
+      catch (error) {
+        const index = this.pending.indexOf(waiter);
+        if (index !== -1) this.pending.splice(index, 1);
+        reject(error);
+      }
     });
   }
 
@@ -3187,7 +3282,7 @@ export class AppChannelClient {
   }
 
   private sendLocalInteractionQuery(seq: number, command: LocalInteractionQueryCommand): void {
-    this.pending.push({ seq, queryReceipt: true, transaction: null, resolve: () => {}, reject: (error: unknown) => this.finishLocalInteractionQuery(error) });
+    this.pending.push({ seq, queryReceipt: true, transaction: null, document: null, resolve: () => {}, reject: (error: unknown) => this.finishLocalInteractionQuery(error) });
     try { this.handle.enqueue(this.instanceId, [encodeAppCommand({ LocalInteractionQuery: { seq, command } })]); }
     catch (error) {
       const index = this.pending.findIndex((waiter) => waiter.seq === seq);
@@ -3278,12 +3373,41 @@ export class AppChannelClient {
   }
 
   async loadDocument(pack: Uint8Array, spr: Uint8Array): Promise<AppFrameValue[]> {
-    // 📦️ Cache from the call's own arguments too — the "both directions" half of the cache-population
-    // contract, so a caller doesn't have to wait for an echoed `AppFrame::Document` to know what it
-    // just loaded (and `plugin_exchange`'s `LoadDocument` handling is not guaranteed to echo one).
-    this.cachedPack = pack;
-    this.cachedSpr = spr;
     return this.sendCommand({ LoadDocument: { seq: this.nextSeq(), pack: Array.from(pack), spr: Array.from(spr) } });
+  }
+
+  /** 🪟️ Restores one exact concrete window's persisted-local config envelope. */
+  async loadWindowConfig(entry: WindowConfigPackEntry): Promise<void> {
+    const seq = this.nextSeq();
+    const frames = await this.sendCommand({
+      LoadWindowConfig: {
+        seq,
+        entry: { window_id: entry.window_id, window_kind_id: entry.window_kind_id, envelope_pack: Array.from(entry.envelope_pack) },
+      },
+    });
+    const error = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+    if (error) throw new Error(`AppChannelClient.loadWindowConfig(${this.appId}): ${faultDisplayMessage(error.Error.fault, decodePackValue)}`);
+    if (!frames.some((frame) => "Done" in frame && frame.Done.in_reply_to === seq)) {
+      throw new Error(`AppChannelClient.loadWindowConfig(${this.appId}): missing Done frame for seq ${seq}`);
+    }
+  }
+
+  /** 🪟️ Reads every exact concrete window config envelope for persisted-local replay. */
+  async readWindowConfigs(): Promise<readonly WindowConfigPackEntry[]> {
+    const seq = this.nextSeq();
+    const frames = await this.sendCommand({ ReadWindowConfigs: { seq } });
+    const error = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+    if (error) throw new Error(`AppChannelClient.readWindowConfigs(${this.appId}): ${faultDisplayMessage(error.Error.fault, decodePackValue)}`);
+    const configs = frames.find(
+      (frame): frame is Extract<AppFrameValue, { readonly WindowConfigs: unknown }> =>
+        "WindowConfigs" in frame && frame.WindowConfigs.in_reply_to === seq,
+    );
+    if (!configs) throw new Error(`AppChannelClient.readWindowConfigs(${this.appId}): missing WindowConfigs frame for seq ${seq}`);
+    return configs.WindowConfigs.entries.map((entry) => ({
+      window_id: entry.window_id,
+      window_kind_id: entry.window_kind_id,
+      envelope_pack: Array.from(entry.envelope_pack),
+    }));
   }
 
   /** 🧾️ Retrieves the complete history projection for initial load or cursor-gap recovery. */
@@ -3568,7 +3692,6 @@ export type DirectoryStream = { readonly close: () => void };
 /** 📌️ A global stream whose reconnect cursor advances only after a Home page acknowledgement. */
 export type DirectoryAcknowledgedStream = DirectoryStream & { readonly acknowledge: (through: number) => void };
 
-export type DirectorySessionSummary = { readonly userId: string; readonly email: string; readonly displayName: string; readonly expiresAt: number };
 /** 🚨️ One closed command-transport denial. It never carries a raw response body or server text. */
 export class DirectoryCommandError extends Error {
   readonly code: DirectoryCommandErrorCodeV1;
@@ -3874,9 +3997,11 @@ export class DirectoryClient {
    * timeout/abort surfaces as a plain `Error` (no `.status`) — same "hub unreachable" shape the
    * caller's `directoryRejectionStatus`/identity-bootstrap catch already treats as offline, not a
    * boot-blocking failure (finding 1: this is what stops a hung server from hanging the boot path). */
-  async me(options?: DirectoryRequestOptions): Promise<DirectorySessionSummary | null> {
+  async me(options?: DirectoryRequestOptions): Promise<DirectorySessionAuthorityV1 | null> {
     try {
-      return await this.getJson<DirectorySessionSummary>("/auth/sessions/me", options);
+      const response = await this.request(`${this.requestBaseUrl}/auth/sessions/me`, { credentials: "include", headers: this.headers(false) }, { timeoutMs: DIRECTORY_HTTP_TIMEOUT_MS, signal: options?.signal });
+      if (!response.ok) throw new DirectoryHttpError(response.status, `directory: GET /auth/sessions/me failed (${response.status})`);
+      return parseDirectorySessionAuthorityJsonV1(await response.text());
     } catch (error) {
       if (error instanceof DirectoryHttpError && error.status === 401) return null;
       throw error;

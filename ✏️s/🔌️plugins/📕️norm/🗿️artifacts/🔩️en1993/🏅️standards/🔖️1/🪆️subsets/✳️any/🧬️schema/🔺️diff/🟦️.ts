@@ -151,8 +151,6 @@ export interface En1993Diff {
   craneDispersionMm?: number;
   /** @state artifact */
   craneTWMm?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 
 export interface En1993Artifact {
@@ -230,5 +228,4 @@ export interface En1993Artifact {
   craneWheelContactLengthMm: number;
   craneDispersionMm: number;
   craneTWMm: number;
-  selectedCheckIndex?: number | null;
 }

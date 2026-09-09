@@ -1,11 +1,10 @@
-
 use super::*;
-use crate::editor::wires::WiresCommand;
 use crate::editor::wires::commands::{add_node, canvas_pointer_move, canvas_pointer_up};
 use crate::editor::wires::testkit::{dispatch, new_app};
+use crate::editor::wires::WiresCommand;
 use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{INTERACTION_SELECT_ACTION_ID, PluginApp, testkit};
+use semio_framework_plugin::{testkit, PluginApp, INTERACTION_SELECT_ACTION_ID};
 
 #[semio_framework_async_macros::async_test]
 async fn pointer_drag_translates_node_by_screen_delta() {

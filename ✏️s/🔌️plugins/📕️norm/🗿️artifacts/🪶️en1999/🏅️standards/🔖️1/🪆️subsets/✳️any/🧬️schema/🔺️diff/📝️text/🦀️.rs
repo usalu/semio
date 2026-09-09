@@ -97,9 +97,6 @@ impl En1999Diff {
             if let Some(value) = &self.annex {
                 next.annex = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -231,7 +228,6 @@ impl MutationDiff<En1999Snapshot> for En1999Diff {
         take!(shell_r_mm);
         take!(sigma_ed_shell_mpa);
         take!(annex);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

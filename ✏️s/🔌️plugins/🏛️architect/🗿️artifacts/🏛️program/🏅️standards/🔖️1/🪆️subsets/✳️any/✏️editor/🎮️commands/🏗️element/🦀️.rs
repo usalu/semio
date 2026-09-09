@@ -2,14 +2,14 @@
 //! element (removing one also clears every adjacency touching it).
 
 pub mod add_element {
-    use dsl::{FromValue, ToValue};
+    use crate::editor::architect::catalog::default_element;
+    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::ProgramSnapshot;
-    use crate::editor::architect::catalog::default_element;
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use dsl::{FromValue, ToValue};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    
+
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-element")]
     pub struct AddElement {
@@ -29,13 +29,13 @@ pub mod add_element {
 }
 
 pub mod remove_element {
-    use dsl::{FromValue, ToValue};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::{EntityId, ProgramSnapshot};
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
+    use dsl::{FromValue, ToValue};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    
+
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "remove-element")]
     pub struct RemoveElement {

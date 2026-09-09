@@ -21,12 +21,12 @@
 //!   block-content field to receive it (a real, spec-mandated shape limitation of this subset's
 //!   own type, not invented here).
 
-use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxTransform};
-use semio_s_artifact_stdio_pptx::PptxSnapshot;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, RunStyle};
 use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxTransform};
+use semio_s_artifact_stdio_pptx::PptxSnapshot;
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -20,69 +20,7 @@ message Puzzle3dDiff {
   optional Puzzle3dTargetVolumesDelta target_volumes = 7;
   // @state artifact
   optional Puzzle3dReferencesDelta references = 8;
-  // @state presence
-  optional Puzzle3dStringList selected_object_ids = 9;
-  // @state presence
-  optional Puzzle3dStringList selected_vortex_ids = 10;
-  // @state presence
-  optional Puzzle3dStringList selected_attraction_ids = 11;
-  // @state presence
-  optional Puzzle3dStringList selected_target_volume_ids = 12;
-  // @state presence
-  optional Puzzle3dStringList selected_reference_ids = 13;
-  // @state presence
-  optional string active_utility_id = 14;
   // @state config
-  optional double camera_position_x = 15;
-  // @state config
-  optional double camera_position_y = 16;
-  // @state config
-  optional double camera_position_z = 17;
-  // @state config
-  optional double camera_target_x = 18;
-  // @state config
-  optional double camera_target_y = 19;
-  // @state config
-  optional double camera_target_z = 20;
-  // @state config
-  optional double camera_zoom = 21;
-  // @state config
-  optional string selection_method = 22;
-  // @state config
-  optional string selection_mode_default = 23;
-  // @state config
-  optional string engagement_input = 24;
-  // @state config
-  optional bool grid_visible = 25;
-  // @state config
-  optional bool grid_snap_enabled = 26;
-  // @state config
-  optional double grid_spacing = 27;
-  // @state config
-  optional double overlap_budget = 28;
-  // @state config
-  optional uint32 fill_count = 29;
-  // @state config
-  optional uint32 brush_candidate_index = 30;
-  // @state config
-  optional bool lod_automatic = 31;
-  // @state config
-  optional bool lod_depth_variable = 32;
-  // @state config
-  optional double lod_manual = 33;
-  // @state config
-  optional double proximity_radius = 34;
-  // @state config
-  // @state config
-  optional string runtime_extras_json = 36;
-  // @state artifact
-  optional string hovered_object_id = 37;
-  // @state artifact
-  optional string hovered_vortex_full_id = 38;
-  // @state artifact
-  optional string hovered_kind_id = 39;
-  // @state artifact
-  optional int64 preview_seq = 40;
 }
 
 message Puzzle3dArtifact { string schema = 1; }

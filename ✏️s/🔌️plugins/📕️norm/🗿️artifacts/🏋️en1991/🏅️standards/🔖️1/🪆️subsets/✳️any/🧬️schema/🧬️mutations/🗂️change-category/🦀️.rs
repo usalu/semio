@@ -1,6 +1,5 @@
 //! 🏷️ `change-category` — sets the En1991 imposed category scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

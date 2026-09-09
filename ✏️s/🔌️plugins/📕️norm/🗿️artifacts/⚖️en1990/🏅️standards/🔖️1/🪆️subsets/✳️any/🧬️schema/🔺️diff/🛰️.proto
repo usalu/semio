@@ -16,8 +16,6 @@ message En1990Diff {
   optional string annex = 6;
   // @state artifact
   optional double seismic_a_ed_kn = 7;
-  // @state presence
-  optional uint32 selected_check_index = 8;
 }
 
 message En1990Artifact {
@@ -27,7 +25,6 @@ message En1990Artifact {
   uint32 consequence_class = 4;
   string annex = 5;
   double seismic_a_ed_kn = 6;
-  optional uint32 selected_check_index = 7;
 }
 
 message En1990QkEntry { string category = 1; double value = 2; }

@@ -1,4 +1,3 @@
-
 use super::*;
 #[test]
 fn storey_payload_vectors_match_the_json_oracle() {

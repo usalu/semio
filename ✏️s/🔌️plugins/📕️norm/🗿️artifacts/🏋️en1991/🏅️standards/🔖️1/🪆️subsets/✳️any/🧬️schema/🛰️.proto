@@ -68,6 +68,4 @@ message En1991Artifact {
   double c_s = 31;
   // @state artifact
   double c_d = 32;
-  // @state presence
-  optional uint32 selected_check_index = 33;
 }

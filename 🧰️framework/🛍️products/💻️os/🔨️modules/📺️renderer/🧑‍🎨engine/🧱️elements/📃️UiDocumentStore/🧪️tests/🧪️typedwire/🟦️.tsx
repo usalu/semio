@@ -3071,6 +3071,43 @@ it("OwnedResidentReaderRevocation preserves the original read alias and parent c
   });
 
   describe("emitIntent", () => {
+    it("hands the displayed store intent to its exact browser actor mailbox without a descriptor projection", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const { BrowserActorActionMailboxV1 } = await import("../../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts");
+      const { decodeAppCommand, decodePackValue, packUInt, encodeBackboneWorkerRequest, decodeBackboneWorkerRequest } = await import("@semio-tech/framework-os");
+      const fixture = JSON.parse(readFileSync(new URL("../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const authored = fixture.uiIntent;
+      const store = new UiDocumentStore(authored.surface);
+      const node = { ...leaf(authored.node, authored.nodeKey), bindings: [{ trigger: authored.trigger, action: authored.action, args: authored.args, capability: null }] };
+      store.loadSnapshot({ ...snapshot(node.id, [node]), surface: authored.surface, revision: authored.revision });
+      expect(store.getRevisionSnapshot()).toBe(authored.revision);
+      const intent = emitIntent(store, node, authored.trigger, authored.input);
+      expect(intent).toBeDefined();
+      let sent: any;
+      const clientInstanceId = "12345678-1234-4123-8123-123456789abc";
+      const mailbox = new BrowserActorActionMailboxV1((request) => { sent = decodeBackboneWorkerRequest(encodeBackboneWorkerRequest({ ...request, clientInstanceId })); });
+      try {
+        const pending = mailbox.dispatchIntent(fixture.request, authored.surface, intent!);
+        expect(sent.clientInstanceId).toBe(clientInstanceId);
+        expect(sent.actionSequence).toBe(1);
+        expect(equal(decodePackValue(new Uint8Array(sent.payload.bytes)), { ...intent, surface: "0:map", revision: packUInt(3n), node: packUInt(42n), action: { ...authored.action, version: packUInt(1n) }, seq: packUInt(intent!.seq) })).toBe(true);
+        expect(mailbox.settle({ ...fixture.acknowledged, actionSequence: 1 })).toBe(true);
+        await pending;
+        const commandPending = mailbox.dispatchCommand(fixture.request, fixture.actionInvocation, fixture.commandViewState);
+        expect(sent.actionSequence).toBe(2);
+        expect(sent.payload.kind).toBe("app-command");
+        const command = decodeAppCommand(new Uint8Array(sent.payload.bytes));
+        if (!("Command" in command)) throw new Error("expected browser actor AppCommand::Command");
+        expect(equal(decodePackValue(Uint8Array.from(command.Command.command)), fixture.actionInvocation)).toBe(true);
+        expect(equal(decodePackValue(Uint8Array.from(command.Command.view_state)), fixture.commandViewState)).toBe(true);
+        expect(mailbox.settle({ ...fixture.acknowledged, actionSequence: 2 })).toBe(true);
+        await commandPending;
+      } finally {
+        mailbox.close("store test retired");
+      }
+    });
+
     it("carries the store's current revision and a monotonic per-surface seq", () => {
       const store = new UiDocumentStore("s");
       const button: UiNodeRecord = {

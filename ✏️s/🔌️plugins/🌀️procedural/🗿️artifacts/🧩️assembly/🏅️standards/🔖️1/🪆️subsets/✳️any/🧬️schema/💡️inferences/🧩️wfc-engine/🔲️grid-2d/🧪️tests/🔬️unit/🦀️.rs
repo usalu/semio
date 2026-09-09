@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -22,13 +21,22 @@ fn custom_stencil_rejects_duplicate_and_self_offset() {
 
 #[test]
 fn node_at_and_coords_roundtrip() {
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
+    let [width, height]: [usize; 2] = serde_json::from_value(oracle["dimensions2d"].clone()).unwrap();
     let mut b = ModelBuilder::new();
     b.add_pattern(1.0);
     let rels = declare_stencil_relations(&mut b, &Stencil2d::VonNeumann).unwrap();
-    let topo = Grid2dTopology::new(4, 3, &Stencil2d::VonNeumann, rels, Boundary::Open, Boundary::Open, None).unwrap();
+    let topo = Grid2dTopology::new(width, height, &Stencil2d::VonNeumann, rels, Boundary::Open, Boundary::Open, None).unwrap();
     let n = topo.node_at(2, 1).unwrap();
     assert_eq!(topo.coords(n), (2, 1));
-    assert_eq!(topo.node_at(4, 0), None);
+    assert_eq!((topo.width(), topo.height()), (width, height));
+    for y in 0..topo.height() {
+        for x in 0..topo.width() {
+            assert_eq!(topo.coords(topo.node_at(x, y).unwrap()), (x, y));
+        }
+    }
+    assert_eq!(topo.node_at(topo.width(), 0), None);
+    assert_eq!(topo.node_at(0, topo.height()), None);
 }
 
 #[test]

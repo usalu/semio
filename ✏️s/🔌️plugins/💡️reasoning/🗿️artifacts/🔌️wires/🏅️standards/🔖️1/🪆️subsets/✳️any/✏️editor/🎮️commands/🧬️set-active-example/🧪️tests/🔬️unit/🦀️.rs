@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::wires::WiresCommand;
 use crate::editor::wires::testkit::{dispatch, metabolism_app, new_app};
+use crate::editor::wires::WiresCommand;
 use crate::schema::fixture_nodes;
 
 /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned

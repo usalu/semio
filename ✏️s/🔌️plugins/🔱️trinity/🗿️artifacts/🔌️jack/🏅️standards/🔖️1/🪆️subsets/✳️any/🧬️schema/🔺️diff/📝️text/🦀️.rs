@@ -20,7 +20,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️Apply
 impl JackDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies document-owned sparse entries onto the artifact.
     pub fn apply_to_artifact(&self, artifact: &JackArtifact) -> protocol::MutationApplyResult<JackArtifact> {
         Ok({
             let mut next = artifact.clone();
@@ -44,32 +44,6 @@ impl JackDiff {
             }
             if let Some(value) = &self.root_node_id {
                 next.root_node_id = value.clone();
-            }
-            if let Some(value) = &self.jack_query {
-                next.jack_query = value.clone();
-            }
-            if let Some(modes) = &self.lod_mode_by_window {
-                for (key, value) in modes {
-                    if value.is_none() && !next.lod_mode_by_window.contains_key(key) {
-                        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed window LOD mode does not exist").at(["lodModeByWindow".to_string(), key.clone()]));
-                    }
-                }
-                for (key, value) in modes {
-                    match value {
-                        Some(v) => {
-                            next.lod_mode_by_window.insert(key.clone(), v.clone());
-                        }
-                        None => {
-                            next.lod_mode_by_window.remove(key);
-                        }
-                    }
-                }
-            }
-            if let Some(value) = &self.viewport_camera {
-                next.viewport_camera = value.clone();
-            }
-            if let Some(value) = &self.editor_selection {
-                next.editor_selection = value.clone();
             }
             next
         })
@@ -119,10 +93,6 @@ impl MutationDiff<JackSnapshot> for JackDiff {
         take!(camera);
         take!(content);
         take!(root_node_id);
-        take!(jack_query);
-        take!(lod_mode_by_window);
-        take!(viewport_camera);
-        take!(editor_selection);
     }
 }
 

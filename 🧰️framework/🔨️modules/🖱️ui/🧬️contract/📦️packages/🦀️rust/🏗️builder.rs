@@ -32,6 +32,17 @@ fn is_false(value: &bool) -> bool {
     !*value
 }
 
+/// 🔗️ Aliases one node's action bindings for [`BuiltNode::credited_clone`], each embedded
+/// [`crate::UiValue`] paying its own arena alias credit and refusing rather than overdrawing.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn credited_bindings(bindings: &crate::UiNodeBindings) -> Option<crate::UiNodeBindings> {
+    let mut aliased = crate::UiNodeBindings::default();
+    for binding in bindings.iter() {
+        aliased.try_push(binding.credited_clone()?).ok()?;
+    }
+    Some(aliased)
+}
+
 /// 🧱️ The contract-local shape a builder terminates into — everything a [`crate::UiNodeRecord`]
 /// carries except `id` (minted by the runtime at reconciliation, never by an author) and with
 /// `children` nested inline rather than addressed by [`crate::UiNodeId`], since a freshly authored
@@ -185,6 +196,18 @@ impl BuiltChildren {
         let index = self.len.checked_sub(1)?;
         self.len = index;
         self.backing.as_mut()?.get_mut(index)?.take().map(|node| *node)
+    }
+
+    /// 🧾️ A second owner of the same children, each level paying its own retirement reservation and
+    /// every embedded `UiValue` its own arena alias credit — never `Clone`, which would duplicate one
+    /// [`BuiltChildRetireKey`] into two owners and publish the same slot twice. Refuses when either
+    /// credit is exhausted, so an alias is a bounded admission and never a silent overdraft.
+    pub fn credited_clone(&self) -> Option<Self> {
+        let mut aliased = Self::default();
+        for child in self.iter() {
+            aliased.try_push(child.credited_clone()?).ok()?;
+        }
+        Some(aliased)
     }
 
     pub fn len(&self) -> usize {
@@ -402,6 +425,29 @@ impl BuiltNode {
     pub fn try_at(position: usize, component: crate::Component) -> Result<Self, crate::Component> {
         let Some(key) = positional_key(position) else { return Err(component) };
         Self::try_new(key, component)
+    }
+
+    /// 🧾️ A second owner of this whole subtree, credited the same way [`crate::Component::credited_clone`]
+    /// credits an embedded [`crate::UiValue`] — the retained read a memoizing author needs in order to
+    /// hand a cached tree back out. NOT a `Clone` impl: [`BuiltChildren`] owns a retirement reservation
+    /// that must be reserved per owner, so a derived `Clone` would publish one slot twice.
+    pub fn credited_clone(&self) -> Option<Self> {
+        Some(Self {
+            key: self.key.clone(),
+            component: self.component.credited_clone()?,
+            layout: self.layout.clone(),
+            style: self.style,
+            activity: self.activity,
+            disabled: self.disabled,
+            accessibility: self.accessibility.clone(),
+            bindings: credited_bindings(&self.bindings)?,
+            menu: match self.menu.as_ref() {
+                Some(menu) => Some(menu.credited_clone()?),
+                None => None,
+            },
+            children: self.children.credited_clone()?,
+            rejected_children: self.rejected_children.credited_clone()?,
+        })
     }
 
     pub fn empty_separator() -> Self {
@@ -750,7 +796,7 @@ pub trait HasStackLayout: HasBase {
 /// 🏗️ Finalizes any builder into a [`BuiltNode`], filling an empty key with the positional default
 /// `"#0"`. Blanket-implemented for every `T: Into<BuiltNode>`; [`ImageBuilder<NoAlt>`](ImageBuilder)
 /// deliberately does NOT implement `Into<BuiltNode>` (only [`ImageBuilder<HasAlt>`](ImageBuilder) does),
-/// so this trait — and therefore `.build()` — is simply absent from `ImageBuilder<NoAlt>`'s method set
+/// so this trait — and therefore `.try_build()` — is simply absent from `ImageBuilder<NoAlt>`'s method set
 /// at compile time, rather than present but panicking.
 pub trait Buildable: Into<BuiltNode> {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -1449,23 +1495,13 @@ enum ImageAlt {
 
 /// 🖼️ An image — `Component::Image`. Build with [`image`], which returns `ImageBuilder<NoAlt>`; call
 /// [`ImageBuilder::alt`] or [`ImageBuilder::decorative`] to obtain an `ImageBuilder<HasAlt>` before
-/// [`ImageBuilder::build`]/[`Buildable::build`] is even callable — CLAUDE.md's accessible-UI mandate
+/// [`Buildable::try_build`] is even callable — CLAUDE.md's accessible-UI mandate
 /// makes an image's accessible name non-optional, and a **typestate**, not a runtime panic, is the
 /// cheapest place to hold that line: a plugin that forgets `.alt(..)`/`.decorative()` fails to compile,
 /// it never reaches a running actor to crash.
 ///
-/// ```compile_fail
-/// use semio_framework_ui_contract::*;
-/// // ImageBuilder<NoAlt> has no `build()` — E0599, no method named `build` found.
-/// let _ = image("atlas://logo").build();
-/// ```
-///
-/// ```
-/// use semio_framework_ui_contract::*;
-/// // .alt(..)/.decorative() moves to ImageBuilder<HasAlt>, which DOES have `build()`.
-/// let _ = image("atlas://logo").alt("Company logo").build();
-/// let _ = image("atlas://deco").decorative().build();
-/// ```
+#[doc = concat!("```compile_fail\n", include_str!("../../🧪️tests/🚫️image-description-required/🦀️.rs"), "\n```\n\n")]
+#[doc = concat!("```\n", include_str!("../../🧪️tests/🖼️image-described/🦀️.rs"), "\n```")]
 pub struct ImageBuilder<State = NoAlt> {
     base: NodeBase,
     src: crate::UiText,
@@ -1473,21 +1509,21 @@ pub struct ImageBuilder<State = NoAlt> {
 }
 
 /// 🖼️ An image loaded from `src`, in state [`NoAlt`] — call [`ImageBuilder::alt`] or
-/// [`ImageBuilder::decorative`] before `.build()` becomes callable at all.
+/// [`ImageBuilder::decorative`] before `.try_build()` becomes callable at all.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn image(src: crate::UiText) -> ImageBuilder<NoAlt> {
     ImageBuilder { base: NodeBase::leaf(), src, alt: NoAlt }
 }
 
 impl<State> ImageBuilder<State> {
-    /// ♿️ Supplies the accessible alt text, unlocking `.build()` by transitioning to [`HasAlt`].
+    /// ♿️ Supplies the accessible alt text, unlocking `.try_build()` by transitioning to [`HasAlt`].
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn alt(self, alt: crate::Label) -> ImageBuilder<HasAlt> {
         ImageBuilder { base: self.base, src: self.src, alt: HasAlt(ImageAlt::Text(alt)) }
     }
 
     /// 🙈️ Explicitly opts out: the image is decorative and hidden from the accessibility tree.
-    /// Unlocks `.build()` by transitioning to [`HasAlt`], the same as [`ImageBuilder::alt`].
+    /// Unlocks `.try_build()` by transitioning to [`HasAlt`], the same as [`ImageBuilder::alt`].
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn decorative(self) -> ImageBuilder<HasAlt> {
         ImageBuilder { base: self.base, src: self.src, alt: HasAlt(ImageAlt::Decorative) }

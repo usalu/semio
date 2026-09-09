@@ -227,11 +227,30 @@ pub mod document_backbone_binding;
 
 #[path = "👥️presence/♻️retirement/🦀️.rs"]
 mod presence_retirement;
-pub use presence_retirement::{NoPresenceRetirementFactory, PresenceStoreOwnedDisposer};
+pub use presence_retirement::{
+    no_presence_local_root_retirement_factory, no_presence_peer_retirement_factory, no_presence_store_disposer, NoPresenceRetirementFactory, PresenceStoreOwnedDisposer,
+};
+
+#[path = "🎚️config/🚫️none/♻️retirement/🦀️.rs"]
+mod no_config_retirement;
+pub use no_config_retirement::{no_config_store_disposer, no_config_store_owners};
+
+#[path = "📝️draft/🚫️none/♻️retirement/🦀️.rs"]
+mod no_draft_retirement;
+pub use no_draft_retirement::{no_draft_store_disposer, no_draft_store_owners};
 
 #[path = "🫧️transient/♻️retirement/🦀️.rs"]
 mod transient_retirement;
-pub use transient_retirement::NoTransientStoreDisposer;
+pub use transient_retirement::{no_transient_local_root_retirement_factory, no_transient_store_disposer, NoTransientRetirementFactory, NoTransientStoreDisposer};
+
+#[path = "🫧️transient/🧵️publication/🦀️.rs"]
+mod transient_publication;
+
+#[path = "🪟️window/🫧️transient/🦀️.rs"]
+mod window_transient;
+
+#[path = "🪟️window/🎚️config/🦀️.rs"]
+mod window_config;
 
 #[path = "🕹️interaction/🦀️.rs"]
 pub(crate) mod local_interaction;
@@ -301,6 +320,14 @@ pub mod app {
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `AsyncTask`'s boxed `run` closure/future.
     use std::future::Future;
     use std::pin::Pin;
+    pub use super::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer};
+    pub use super::window_transient::{
+        bounded_window_transient_preparation_factory, bounded_window_transient_root_retirement_factory, bounded_window_transient_store_disposer, WindowTransientMutation, WindowTransientOwner,
+        WindowTransientOwnerRegistry, WindowTransientSnapshot,
+    };
+    pub use super::window_config::{
+        bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack, WindowConfigSnapshot,
+    };
     /// 🚪️ `os_io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
     /// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
     /// the `os_io` mount), so it is named through the `store::os_io::` path everywhere in this file,
@@ -6187,7 +6214,7 @@ pub mod app {
         //! `terminology_tests`/`panel_kit_tests` above for the sibling pattern of testing SDK primitives
         //! themselves inline.
 
-        use super::{register_framework_reserved_factories, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactToolFactoryRegistry, PluginApp, VcsArtifactApp};
+        use super::{register_framework_reserved_factories, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactToolFactoryRegistry, PluginApp, TypedOperationResultLane, VcsArtifactApp};
         use store::{Backbone, BackboneMessage, MemoryBackbone};
 
         pub const FIXTURE_TREE_MAX_DEPTH: usize = 64;
@@ -6222,6 +6249,17 @@ pub mod app {
                 let mut remaining = FIXTURE_TREE_MAX_NODES;
                 project_fixture_node(root, &mut remaining, 0).and_then(|value| serde_json::to_string(&value).map_err(|_| "projection-json"))
             })
+        }
+
+        /// 🎬️ Decodes the exact typed scene carried by a projected fixture's surface root.
+        pub fn decode_fixture_scene<T: semio_framework_ui_scene::SceneDoc>(projection: &str) -> Result<T, &'static str> {
+            let tree: serde_json::Value = serde_json::from_str(projection).map_err(|_| "fixture-scene-json")?;
+            let component = &tree["component"];
+            if component["type"].as_str() != Some("surface") || component["docSchema"].as_str() != Some(T::SCHEMA) {
+                return Err("fixture-scene-schema");
+            }
+            let bytes = component["doc"]["bytes"].as_array().ok_or("fixture-scene-bytes")?.iter().map(|value| value.as_u64().and_then(|value| u8::try_from(value).ok()).ok_or("fixture-scene-byte")).collect::<Result<Vec<_>, _>>()?;
+            T::decode_pack(&bytes).map_err(|_| "fixture-scene-pack")
         }
 
         pub(crate) fn observe_and_retire_fixture_tree<R>(tree: super::ComponentTree, project: impl FnOnce(&super::BuiltNode) -> R) -> R {
@@ -6284,6 +6322,60 @@ pub mod app {
         {
             let definition = manifest.await.definition;
             VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition)).await
+        }
+
+        /// 📬️ Host-visible output collected while one registered fixture operation reaches quiescence.
+        pub struct TypedOperationFixtureReceipt {
+            pub lanes: Vec<TypedOperationResultLane>,
+            pub effects: Vec<semio_framework::kernel::Effect>,
+            pub events: Vec<semio_framework::kernel::AppEvent>,
+            pub ui_scope: Option<semio_framework::kernel::UiDirtyScope>,
+        }
+
+        /// 🔁️ Drives the same bounded continuation and exact ACK protocol as the plugin host.
+        pub async fn settle_registered_typed_operation<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, receiver: u32) -> Result<TypedOperationFixtureReceipt, super::Fault> {
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+            let mut receipt = TypedOperationFixtureReceipt { lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None };
+            let mut publication_fault = None;
+            while app.has_pending_typed_operations() {
+                if std::time::Instant::now() >= deadline {
+                    return Err(super::Fault::from("registered fixture typed operation did not retire within 30 seconds"));
+                }
+                if let super::PluginCloseStep::Pending { released_items, released_bytes } = app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)? {
+                    if released_items > 1 || released_bytes > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+                        return Err(super::Fault::from("registered fixture typed operation exceeded its exact maintenance grant"));
+                    }
+                }
+                app.advance_typed_operation_publication().await?;
+                if let Some(page) = app.take_typed_operation_result_page(receiver) {
+                    let lane = page.lane;
+                    let fault = (lane == TypedOperationResultLane::Fault).then(|| super::Fault::from(format!("registered fixture typed operation fault: {}", String::from_utf8_lossy(page.bytes()))));
+                    if !app.acknowledge_typed_operation_result(page.token)? {
+                        return Err(super::Fault::from("registered fixture typed operation rejected its exact result ACK"));
+                    }
+                    receipt.lanes.push(lane);
+                    publication_fault = publication_fault.or(fault);
+                }
+                while let Some(effect) = app.take_typed_operation_effect() {
+                    receipt.effects.push(effect);
+                }
+                while let Some(event) = app.take_typed_operation_event() {
+                    receipt.events.push(event);
+                }
+                while let Some(scope) = app.take_typed_operation_ui_scope() {
+                    receipt.ui_scope = Some(scope);
+                }
+                while let Some(reply) = app.take_local_interaction_query_reply() {
+                    if let protocol::LocalInteractionQueryReply::Page { page } = reply {
+                        let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
+                        if !app.acknowledge_local_interaction_query(&token) {
+                            return Err(super::Fault::from("registered fixture typed operation rejected its exact local-interaction ACK"));
+                        }
+                    }
+                }
+                std::thread::yield_now();
+            }
+            publication_fault.map_or(Ok(receipt), Err)
         }
 
         /// 🧹️ Closes one registered fixture through the exact retained app close state machine.
@@ -6567,7 +6659,7 @@ pub mod app {
             let config = V::initial_config();
             let history = HistoryView::empty();
             let doc = ArtifactView::new(&snapshot, &history);
-            let cfg = ConfigView { snapshot: &config };
+            let cfg = ConfigView { snapshot: &config, window: None };
             let draft = NoDraft::default();
             let draft = DraftView { snapshot: &draft };
             let state = protocol::InteractionState::default();
@@ -7530,6 +7622,13 @@ pub mod app {
     /// config {@link ConfigStore} owned by {@link VcsArtifactApp}.
     pub struct ConfigView<'a, C> {
         pub snapshot: &'a C,
+        pub window: Option<&'a WindowConfigSnapshot>,
+    }
+
+    impl<'a, C> ConfigView<'a, C> {
+        pub fn window<O: WindowConfigOwner>(&self) -> Option<&O::State> {
+            self.window.and_then(WindowConfigSnapshot::get::<O>)
+        }
     }
 
     /// @emoji 📝️ Read-only view of an app's volatile draft snapshot — same role as {@link ConfigView}
@@ -7570,6 +7669,13 @@ pub mod app {
     /// never document content — the typed replacement for plugin `thread_local!` scratch state.
     pub struct TransientView<'a, T> {
         pub snapshot: &'a T,
+        pub window: Option<&'a WindowTransientSnapshot>,
+    }
+
+    impl<T> TransientView<'_, T> {
+        pub fn window<O: WindowTransientOwner>(&self) -> Option<&O::State> {
+            self.window.and_then(WindowTransientSnapshot::get::<O>)
+        }
     }
 
     //#region 🔖️InteractionView
@@ -8852,6 +8958,7 @@ pub mod app {
     pub struct Emit<Mutation, ConfigMutation = NoConfigMutation, DraftMutation = NoDraftMutation> {
         pub artifact_mutations: Vec<Mutation>,
         pub config_mutations: Vec<ConfigMutation>,
+        pub window_config_mutations: Vec<WindowConfigMutation>,
         pub draft_mutations: Vec<DraftMutation>,
         pub description: Option<String>,
         pub coalesce_key: Option<String>,
@@ -8870,6 +8977,11 @@ pub mod app {
         /// `store::CompositionCoordinator::dispatch_group` as one atomic multi-document gesture — see
         /// that method's own doc comment for the two-phase validate/apply protocol.
         pub child_emits: Vec<ChildEmit>,
+        /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): zero-or-more app-initiated
+        /// selection writes riding alongside this SAME gesture — see [`InteractionWrite`]. Applied
+        /// after this emit's own mutation lanes have landed, through the one single-writer path the
+        /// reserved interaction verbs already use. Empty by default, so no other app changes.
+        pub interaction_writes: Vec<InteractionWrite>,
         /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): zero-or-more tasks
         /// spawned onto this actor's `LocalExecutor` alongside this SAME gesture — `dispatch_emit`
         /// spawns each one (quota-gated, key-deduped) right after the mutation lanes above have
@@ -8885,6 +8997,7 @@ pub mod app {
             Self {
                 artifact_mutations: Vec::new(),
                 config_mutations: Vec::new(),
+                window_config_mutations: Vec::new(),
                 draft_mutations: Vec::new(),
                 description: None,
                 coalesce_key: None,
@@ -8892,6 +9005,7 @@ pub mod app {
                 events: Vec::new(),
                 ui_scope: UiDirtyScope::default(),
                 child_emits: Vec::new(),
+                interaction_writes: Vec::new(),
                 #[cfg(test)]
                 tasks: Vec::new(),
             }
@@ -9015,31 +9129,64 @@ pub mod app {
         pub presence: Vec<A::PresenceMutation>,
         /// 🫧️ Ephemeral LOCAL-ONLY — never leaves this client.
         pub transient: Vec<A::TransientMutation>,
+        /// 🪟️ Ephemeral LOCAL-ONLY state addressed to an exact concrete window instance.
+        pub window_transient: Vec<WindowTransientMutation>,
     }
 
     impl<A: ArtifactApp> Default for EphemeralEmit<A> {
         fn default() -> Self {
-            Self { presence: Vec::new(), transient: Vec::new() }
+            Self { presence: Vec::new(), transient: Vec::new(), window_transient: Vec::new() }
         }
     }
 
     impl<A: ArtifactApp> EphemeralEmit<A> {
         /// 👥️ Presence-only emission — the common case (a moved cursor, a changed selection).
         pub async fn presence(presence: Vec<A::PresenceMutation>) -> Self {
-            Self { presence, transient: Vec::new() }
+            Self { presence, transient: Vec::new(), window_transient: Vec::new() }
         }
 
         /// 🫧️ Transient-only emission — the common case (a hover, an in-flight gesture).
         pub async fn transient(transient: Vec<A::TransientMutation>) -> Self {
-            Self { presence: Vec::new(), transient }
+            Self { presence: Vec::new(), transient, window_transient: Vec::new() }
+        }
+
+        pub async fn window_transient(window_transient: Vec<WindowTransientMutation>) -> Self {
+            Self { presence: Vec::new(), transient: Vec::new(), window_transient }
         }
 
         /// 🈳️ Whether this emission touches neither ephemeral lane.
         pub async fn is_empty(&self) -> bool {
-            self.presence.is_empty() && self.transient.is_empty()
+            self.presence.is_empty() && self.transient.is_empty() && self.window_transient.is_empty()
         }
     }
     //#endregion 🔖️EphemeralEmit
+
+    /// 🕹️ One app-initiated selection write riding alongside an ordinary action's own mutations —
+    /// the ONLY way a reducer expresses "select what I just created/widened to" ("Select Same Kind",
+    /// duplicate/accept/place re-select). Never a new client-facing verb: the six reserved
+    /// `interactionSelect`-family actions stay the only EXTERNAL trigger, and every entry here is
+    /// applied through the very same single-writer state machine they use
+    /// (`protocol::next_selection` + `revalidate_and_persist_interaction_state`), after the
+    /// triggering action's document mutations have landed so a just-created id is already in
+    /// topology. See `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct InteractionWrite {
+        pub domain: String,
+        pub targets: Vec<protocol::InteractionTarget>,
+        pub merge: protocol::MergeMode,
+    }
+
+    impl InteractionWrite {
+        /// 🎯️ Replaces `domain`'s selection with `ids`, all at one granularity — the shape every
+        /// "select exactly these" reducer wants.
+        pub fn replace(domain: impl Into<String>, granularity: &str, ids: impl IntoIterator<Item = String>) -> Self {
+            Self {
+                domain: domain.into(),
+                targets: ids.into_iter().map(|id| protocol::InteractionTarget { granularity: granularity.to_string(), id }).collect(),
+                merge: protocol::MergeMode::Replace,
+            }
+        }
+    }
 
     /// 🧩️ One composed child's share of an `Emit` — the plugin-layer twin of `store::ChildDispatch`,
     /// minted exclusively by `ChildEmit::of` so a plugin author never hand-encodes an op or
@@ -9635,6 +9782,12 @@ pub mod app {
         fn register_tool_job_factories(_registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
             Ok(())
         }
+        fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
+            Ok(())
+        }
+        fn register_window_config_owners(_registry: &mut WindowConfigOwnerRegistry) -> Result<(), Fault> {
+            Ok(())
+        }
         /// 🧳️ Builds one operation owner retained by the concrete VCS app instance. The owner is
         /// never process-global and closes only after every mounted typed command has retired.
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
@@ -9966,6 +10119,16 @@ pub mod app {
         /// a single window kind and no splitting return `vec![kind_id]`-worth of entries either way.
         async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             HashMap::new()
+        }
+        /// 🫧️ Projects window chrome from the exact transient root captured for the addressed window.
+        async fn window_engagements_with_request_context(
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
+            transient: &TransientView<'_, Self::Transient>,
+        ) -> HashMap<String, WindowEngagement> {
+            let _ = transient;
+            Self::window_engagements(doc, cfg, view_state).await
         }
         /// 🪟️ See `window_engagements` — same per-window-instance keying.
         async fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -10418,6 +10581,10 @@ pub mod app {
         async fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault>;
         /// 🧮️ Object-safe counterpart to `load_document_pack`, targeting the config store.
         async fn load_config_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault>;
+        /// 🪟️ Returns every exact persisted-local window config envelope.
+        async fn window_config_packs(&self) -> Result<Vec<WindowConfigPack>, Fault>;
+        /// 🪟️ Reopens one exact persisted-local window config envelope under its registered owner.
+        async fn load_window_config_pack(&mut self, pack: WindowConfigPack) -> Result<(), Fault>;
         /// 🧸️ Adopts one owned child's persisted envelope into a live child store — the
         /// `AppCommand::LoadChildren` handler. A composing document restores its children through
         /// this, one call per child, after its own `load_document_pack`.
@@ -11274,7 +11441,13 @@ pub mod app {
         Draft,
         Presence,
         Transient,
+        WindowConfig,
+        WindowTransient,
         Child,
+        /// 🕹️ This tool's emit may carry [`InteractionWrite`]s — the framework-owned selection lane
+        /// (`interaction_store`, `HistoryLane::Interaction`). Never a document/config lane: it is
+        /// persisted-local and excluded from undo/redo by declaration.
+        Interaction,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -11696,7 +11869,10 @@ pub mod app {
         Draft,
         Presence,
         Transient,
+        WindowConfig,
+        WindowTransient,
         Child,
+        Interaction,
         Effect,
         Event,
         Ui,
@@ -11790,6 +11966,9 @@ pub mod app {
                 TypedOperationResultLane::Download => 9,
                 TypedOperationResultLane::Terminal => 10,
                 TypedOperationResultLane::Fault => 11,
+                TypedOperationResultLane::Interaction => 12,
+                TypedOperationResultLane::WindowTransient => 13,
+                TypedOperationResultLane::WindowConfig => 14,
             });
             bytes.extend_from_slice(&(self.len as u32).to_le_bytes());
             bytes.extend_from_slice(self.bytes());
@@ -11935,6 +12114,15 @@ pub mod app {
         }
     }
 
+    /// 📸️ State snapshots retained together by one app-owned tool job.
+    pub struct ArtifactOwnedToolJobSnapshots<A: ArtifactApp> {
+        pub children: std::sync::Arc<ChildContentView>,
+        pub draft: std::sync::Arc<A::Draft>,
+        pub transient: std::sync::Arc<A::Transient>,
+        pub window_config: Option<WindowConfigSnapshot>,
+        pub window_transient: Option<WindowTransientSnapshot>,
+    }
+
     /// 🧬 Immutable app-owned state captured by the scheduler for one retained job lifetime.
     pub struct ArtifactOwnedToolJobContext<A: ArtifactApp> {
         pub app_instance_id: u32,
@@ -11945,10 +12133,21 @@ pub mod app {
         pub children: std::sync::Arc<ChildContentView>,
         pub draft: std::sync::Arc<A::Draft>,
         pub transient: std::sync::Arc<A::Transient>,
+        pub window_config: Option<WindowConfigSnapshot>,
+        pub window_transient: Option<WindowTransientSnapshot>,
         identity_digest: u64,
     }
 
-    fn artifact_owned_tool_job_context_identity_digest(app_instance_id: u32, view_state: Option<&ViewModel>, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, children_digest: u64) -> u64 {
+    fn artifact_owned_tool_job_context_identity_digest(
+        app_instance_id: u32,
+        view_state: Option<&ViewModel>,
+        canonical_base_revision: [u8; 32],
+        draft_generation: u64,
+        transient_generation: u64,
+        children_digest: u64,
+        windows: (Option<&WindowConfigSnapshot>, Option<&WindowTransientSnapshot>),
+    ) -> u64 {
+        let (window_config, window_transient) = windows;
         fn extend(mut digest: u64, bytes: impl IntoIterator<Item = u8>) -> u64 {
             for byte in bytes {
                 digest = (digest ^ u64::from(byte)).wrapping_mul(0x1000_0000_01b3);
@@ -11956,18 +12155,46 @@ pub mod app {
             digest
         }
 
-        let mut digest = extend(0xcbf2_9ce4_8422_2325, b"ARC-CONTEXT-2".iter().copied());
+        let mut digest = extend(0xcbf2_9ce4_8422_2325, b"ARC-CONTEXT-4".iter().copied());
         digest = extend(digest, app_instance_id.to_le_bytes());
         digest = extend(digest, view_state.map(protocol::json::to_json_string).unwrap_or_default().bytes());
         digest = extend(digest, canonical_base_revision);
         digest = extend(digest, draft_generation.to_le_bytes());
         digest = extend(digest, transient_generation.to_le_bytes());
-        extend(digest, children_digest.to_le_bytes())
+        digest = extend(digest, children_digest.to_le_bytes());
+        digest = extend(digest, [u8::from(window_config.is_some())]);
+        if let Some(window) = window_config {
+            for value in [window.window_id(), window.window_kind_id()] {
+                digest = extend(digest, (value.len() as u64).to_le_bytes());
+                digest = extend(digest, value.bytes());
+            }
+            digest = extend(digest, window.generation().to_le_bytes());
+            digest = extend(digest, window.revision());
+        }
+        digest = extend(digest, [u8::from(window_transient.is_some())]);
+        if let Some(window) = window_transient {
+            for value in [window.window_id(), window.window_kind_id()] {
+                digest = extend(digest, (value.len() as u64).to_le_bytes());
+                digest = extend(digest, value.bytes());
+            }
+            digest = extend(digest, window.generation().to_le_bytes());
+        }
+        digest
     }
 
     #[cfg(test)]
     pub(crate) fn test_artifact_owned_tool_job_context_identity_digest(app_instance_id: u32, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, children_digest: u64) -> u64 {
-        artifact_owned_tool_job_context_identity_digest(app_instance_id, None, canonical_base_revision, draft_generation, transient_generation, children_digest)
+        artifact_owned_tool_job_context_identity_digest(app_instance_id, None, canonical_base_revision, draft_generation, transient_generation, children_digest, (None, None))
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_window_transient_context_identity(snapshot: Option<&WindowTransientSnapshot>) -> u64 {
+        artifact_owned_tool_job_context_identity_digest(7, None, [17; 32], 0, 0, 0, (None, snapshot))
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_window_config_context_identity(snapshot: Option<&WindowConfigSnapshot>) -> u64 {
+        artifact_owned_tool_job_context_identity_digest(7, None, [17; 32], 0, 0, 0, (snapshot, None))
     }
 
     impl<A: ArtifactApp> ArtifactOwnedToolJobContext<A> {
@@ -11977,12 +12204,19 @@ pub mod app {
             canonical_base_revision: [u8; 32],
             draft_generation: u64,
             transient_generation: u64,
-            children: std::sync::Arc<ChildContentView>,
-            draft: std::sync::Arc<A::Draft>,
-            transient: std::sync::Arc<A::Transient>,
+            snapshots: ArtifactOwnedToolJobSnapshots<A>,
         ) -> Self {
-            let identity_digest = artifact_owned_tool_job_context_identity_digest(app_instance_id, view_state.as_ref(), canonical_base_revision, draft_generation, transient_generation, children.identity_digest());
-            Self { app_instance_id, view_state, canonical_base_revision, draft_generation, transient_generation, children, draft, transient, identity_digest }
+            let ArtifactOwnedToolJobSnapshots { children, draft, transient, window_config, window_transient } = snapshots;
+            let identity_digest = artifact_owned_tool_job_context_identity_digest(
+                app_instance_id,
+                view_state.as_ref(),
+                canonical_base_revision,
+                draft_generation,
+                transient_generation,
+                children.identity_digest(),
+                (window_config.as_ref(), window_transient.as_ref()),
+            );
+            Self { app_instance_id, view_state, canonical_base_revision, draft_generation, transient_generation, children, draft, transient, window_config, window_transient, identity_digest }
         }
 
         pub fn identity_digest(&self) -> u64 {
@@ -12005,6 +12239,7 @@ pub mod app {
         pub canonical_base_revision: [u8; 32],
         pub snapshot: std::sync::Arc<A::Snapshot>,
         pub config: std::sync::Arc<A::Config>,
+        pub window_config: Option<WindowConfigSnapshot>,
         pub history: std::sync::Arc<HistoryView>,
         pub interaction_state: std::sync::Arc<protocol::InteractionState>,
         pub interaction_hover: std::sync::Arc<InteractionHoverState>,
@@ -14421,6 +14656,8 @@ pub mod app {
         Draft(store::ArtifactStoreOneItemPublication<A::Draft, A::DraftMutation>),
         Presence(store::ArtifactEphemeralOneItemPublication<A::Presence, A::PresenceMutation>),
         Transient(store::ArtifactEphemeralOneItemPublication<A::Transient, A::TransientMutation>),
+        WindowConfig(Box<dyn super::window_config::ErasedWindowConfigPublication>),
+        WindowTransient(Box<dyn super::window_transient::ErasedWindowTransientPublication>),
     }
 
     #[derive(Clone, Debug, PartialEq, Eq, ToValue)]
@@ -14547,6 +14784,8 @@ pub mod app {
                 Self::Draft(publication) => publication.acknowledge(),
                 Self::Presence(publication) => publication.acknowledge(),
                 Self::Transient(publication) => publication.acknowledge(),
+                Self::WindowConfig(publication) => publication.acknowledge(),
+                Self::WindowTransient(publication) => publication.acknowledge(),
             }
         }
 
@@ -14557,6 +14796,8 @@ pub mod app {
                 Self::Draft(publication) => publication.begin_close(),
                 Self::Presence(publication) => publication.begin_close(),
                 Self::Transient(publication) => publication.begin_close(),
+                Self::WindowConfig(publication) => publication.begin_close(),
+                Self::WindowTransient(publication) => publication.begin_close(),
             }
         }
 
@@ -14568,6 +14809,8 @@ pub mod app {
                 Self::Draft(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
                 Self::Presence(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
                 Self::Transient(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
+                Self::WindowConfig(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
+                Self::WindowTransient(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
             }
         }
 
@@ -14578,6 +14821,8 @@ pub mod app {
                 Self::Draft(publication) => publication.terminal_is_empty(),
                 Self::Presence(publication) => publication.terminal_is_empty(),
                 Self::Transient(publication) => publication.terminal_is_empty(),
+                Self::WindowConfig(publication) => publication.terminal_is_empty(),
+                Self::WindowTransient(publication) => publication.terminal_is_empty(),
             }
         }
     }
@@ -14592,6 +14837,8 @@ pub mod app {
         draft_generation: u64,
         presence_generation: u64,
         transient_generation: u64,
+        window_config_authority: Option<super::window_config::WindowConfigAuthority>,
+        window_transient_authority: Option<super::window_transient::WindowTransientAuthority>,
         publication_lanes: &'static [ArtifactToolPublicationLane],
         session: Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
         session_rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework::ErasedToolJob>>,
@@ -14744,7 +14991,7 @@ pub mod app {
                 return Ok(false);
             }
             let lane = page.lane;
-            if matches!(lane, TypedOperationResultLane::Artifact | TypedOperationResultLane::Config | TypedOperationResultLane::Draft | TypedOperationResultLane::Presence | TypedOperationResultLane::Transient)
+            if matches!(lane, TypedOperationResultLane::Artifact | TypedOperationResultLane::Config | TypedOperationResultLane::Draft | TypedOperationResultLane::Presence | TypedOperationResultLane::Transient | TypedOperationResultLane::WindowConfig | TypedOperationResultLane::WindowTransient)
                 && !self.pending_artifact_publication.as_mut().is_some_and(PendingArtifactStorePublication::acknowledge)
             {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.artifact-publication-ack"), "artifact-store result ACK lost its exact pending publication authority"));
@@ -14824,6 +15071,7 @@ pub mod app {
                                 || emit.draft_mutations.pop().is_some()
                                 || ephemeral.presence.pop().is_some()
                                 || ephemeral.transient.pop().is_some()
+                                || ephemeral.window_transient.pop().is_some()
                                 || emit.effects.pop().is_some()
                                 || emit.events.pop().is_some()
                             {
@@ -14845,7 +15093,7 @@ pub mod app {
                         }
                     }
                     ArtifactToolCompletionValue::Download(Ok(download), ephemeral) => {
-                        if maximum_items != 0 && (ephemeral.presence.pop().is_some() || ephemeral.transient.pop().is_some()) {
+                        if maximum_items != 0 && (ephemeral.presence.pop().is_some() || ephemeral.transient.pop().is_some() || ephemeral.window_transient.pop().is_some()) {
                             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                         }
                         if download.chunks.chunks_remaining() != 0 && (maximum_items == 0 || maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES) {
@@ -15988,6 +16236,8 @@ pub mod app {
         /// never becomes document content. The typed home for what used to live in plugin
         /// `thread_local!`s.
         pub(crate) transient_store: store::TransientStore<A::Transient, A::TransientMutation>,
+        window_config_store: WindowConfigOwnerRegistry,
+        window_transient_store: WindowTransientOwnerRegistry,
         artifact_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>>,
         config_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Config, A::ConfigMutation>>>,
         draft_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Draft, A::DraftMutation>>>,
@@ -16577,6 +16827,10 @@ pub mod app {
             let transient_one_item_factory = A::build_transient_store_one_item_preparation_factory();
             let presence_local_root_retirement_factory = A::build_presence_local_root_retirement_factory();
             let transient_local_root_retirement_factory = A::build_transient_local_root_retirement_factory();
+            let mut window_config_store = WindowConfigOwnerRegistry::default();
+            A::register_window_config_owners(&mut window_config_store).expect("window config owners must be uniquely registered by exact window kind");
+            let mut window_transient_store = WindowTransientOwnerRegistry::default();
+            A::register_window_transient_owners(&mut window_transient_store).expect("window transient owners must be uniquely registered by exact window kind");
             let mut unsupported_publication_contracts = BTreeMap::new();
             for registration in framework_tool_registrations.values().chain(app_tool_registrations.values()) {
                 let unsupported = registration.publication_lanes.iter().copied().find_map(|lane| match lane {
@@ -16585,13 +16839,18 @@ pub mod app {
                     ArtifactToolPublicationLane::Draft if draft_one_item_factory.is_none() => Some("draft"),
                     ArtifactToolPublicationLane::Presence if presence_one_item_factory.is_none() || presence_local_root_retirement_factory.is_none() => Some("presence"),
                     ArtifactToolPublicationLane::Transient if transient_one_item_factory.is_none() || transient_local_root_retirement_factory.is_none() => Some("transient"),
+                    ArtifactToolPublicationLane::WindowConfig if window_config_store.is_empty() => Some("window-config"),
+                    ArtifactToolPublicationLane::WindowTransient if window_transient_store.is_empty() => Some("window-transient"),
                     ArtifactToolPublicationLane::Child => None,
+                    ArtifactToolPublicationLane::Interaction => None,
                     ArtifactToolPublicationLane::HostOnly
                     | ArtifactToolPublicationLane::Artifact
                     | ArtifactToolPublicationLane::Config
                     | ArtifactToolPublicationLane::Draft
                     | ArtifactToolPublicationLane::Presence
                     | ArtifactToolPublicationLane::Transient => None,
+                    ArtifactToolPublicationLane::WindowConfig => None,
+                    ArtifactToolPublicationLane::WindowTransient => None,
                 });
                 if let Some(lane) = unsupported {
                     unsupported_publication_contracts.insert(registration.key.tool_id.clone(), lane);
@@ -16643,6 +16902,8 @@ pub mod app {
                 peer_presence_retirements: ArtifactFixedRegistry::new(),
                 presence_peer_retirements: ArtifactFixedRegistry::new(),
                 transient_store: store::TransientStore::new(A::Transient::default()),
+                window_config_store,
+                window_transient_store,
                 artifact_one_item_factory,
                 config_one_item_factory,
                 draft_one_item_factory,
@@ -16776,6 +17037,19 @@ pub mod app {
 
         pub fn artifact_generation_now(&self) -> semio_framework_job::Generation {
             semio_framework_job::Generation(self.store.generation_now())
+        }
+
+        /// 🫧️ Reads the immutable transient projection of one exact live window.
+        pub fn window_transient_snapshot(&mut self, view_state: &ViewModel) -> Result<Option<WindowTransientSnapshot>, Fault> {
+            Ok(self.window_transient_store.capture(Some(view_state))?.map(|authority| authority.snapshot))
+        }
+
+        pub fn window_transient_generation(&mut self, view_state: &ViewModel) -> Result<Option<u64>, Fault> {
+            Ok(self.window_transient_store.capture(Some(view_state))?.map(|authority| authority.generation))
+        }
+
+        pub async fn window_config_generation(&mut self, view_state: &ViewModel) -> Result<Option<u64>, Fault> {
+            Ok(self.window_config_store.capture(Some(view_state)).await?.map(|authority| authority.generation))
         }
 
         /// 📃️ Alternates one query unit with exact document, config, and interaction read-return pumps.
@@ -18024,6 +18298,7 @@ pub mod app {
             let Emit {
                 artifact_mutations,
                 config_mutations,
+                window_config_mutations,
                 draft_mutations,
                 description,
                 coalesce_key,
@@ -18031,6 +18306,7 @@ pub mod app {
                 events,
                 ui_scope,
                 child_emits,
+                interaction_writes,
                 #[cfg(test)]
                 tasks,
             } = emit;
@@ -18123,6 +18399,17 @@ pub mod app {
                 let amended_same_config_edit = before_config_edit_id.is_some() && self.config_store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_config_edit_id.as_ref();
                 config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
             }
+
+            if !window_config_mutations.is_empty() {
+                let authority = self
+                    .window_config_store
+                    .capture(meta.view_state.as_ref())
+                    .await?
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.window-context"), "window config emission requires one exact registered ViewModel window authority"))?;
+                for mutation in window_config_mutations {
+                    self.window_config_store.dispatch(&authority, &meta.actor, mutation, description.clone(), coalesce_key.clone()).await?;
+                }
+            }
             #[cfg(test)]
             debug_assert!(tasks.is_empty());
 
@@ -18132,7 +18419,9 @@ pub mod app {
             // path below. See that method's own doc comment for why the two paths stay genuinely
             // separate rather than being unified into one (the group protocol has no `AmendLast`).
             if !child_emits.is_empty() {
-                return self.dispatch_emit_group(verb, &artifact_mutations, &child_emits, &description, effects, events, ui_scope, config_edit_id, meta).await;
+                let result = self.dispatch_emit_group(verb, &artifact_mutations, &child_emits, &description, effects, events, ui_scope, config_edit_id, meta).await?;
+                self.apply_interaction_writes(&interaction_writes, meta).await?;
+                return Ok(result);
             }
 
             if artifact_mutations.is_empty() {
@@ -18152,6 +18441,7 @@ pub mod app {
                         },
                     },
                 };
+                self.apply_interaction_writes(&interaction_writes, meta).await?;
                 self.record_command(verb, kind, description.clone(), None, config_edit_id, None).await;
                 return Ok(Self::empty_result(verb, meta, effects, events, ui_scope).await);
             }
@@ -18177,6 +18467,7 @@ pub mod app {
             // any selection/hover id no longer present — a document edit that deleted a node must not
             // leave it lingering in another window's selection.
             self.revalidate_interaction_state_after_document_change(meta).await?;
+            self.apply_interaction_writes(&interaction_writes, meta).await?;
             let amended_same_edit = before_edit_id.is_some() && self.store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_edit_id.as_ref();
             // 🧾️ One command-log entry per VCS edit — a coalesced gesture (`amended_same_edit`) grows the
             // existing entry's `op_lines` live (see `build_history_view`), it never appends a new entry.
@@ -18591,7 +18882,7 @@ pub mod app {
                     self.refresh_cache().await?;
                     let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
                     let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root)).await;
-                    let cfg = ConfigView { snapshot: config.as_ref() };
+                    let cfg = ConfigView { snapshot: config.as_ref(), window: None };
                     let topology = A::interaction_topology(&doc, &cfg).await;
                     Ok(topology.domains.get(&def.id).cloned().unwrap_or_default())
                 }
@@ -18654,6 +18945,34 @@ pub mod app {
                 return Ok(());
             }
             self.revalidate_and_persist_interaction_state(self.interaction_state().await, meta).await
+        }
+
+        /// 🕹️ Applies an emit's [`InteractionWrite`]s through the SAME single-writer machine
+        /// `dispatch_interaction_action` uses (`protocol::next_selection` over freshly resolved
+        /// topology, then `revalidate_and_persist_interaction_state`), so an app-initiated re-select
+        /// obeys every declared `SelectionSpec` rule — mode clamping, transitive closure, pruning —
+        /// instead of poking `interaction_store` behind the state machine's back. Called only AFTER
+        /// the triggering action's own mutations landed, so a just-created id is already in topology.
+        /// An undeclared domain is a plugin bug, not a client input, so it faults rather than
+        /// silently dropping the write.
+        async fn apply_interaction_writes(&mut self, writes: &[InteractionWrite], meta: &ActionMeta) -> Result<(), Fault> {
+            if writes.is_empty() {
+                return Ok(());
+            }
+            let mut state = self.interaction_store.snapshot().unwrap_or_default();
+            for write in writes {
+                let def = self.registry.interaction(&write.domain).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("interaction write names undeclared domain {}", write.domain)))?;
+                let mode = state.active_mode.get(&write.domain).copied().unwrap_or_else(|| def.selection.modes.first().copied().unwrap_or(protocol::SelectionMode::Multiple));
+                let current = state.selection.get(&write.domain).cloned().unwrap_or_default();
+                let known_ids = current.ids.iter().cloned().chain(write.targets.iter().map(|target| target.id.clone()));
+                let topology = self.resolve_domain_topology(&def, known_ids).await?;
+                let selection_input = protocol::SelectionInput { targets: write.targets.clone(), merge: write.merge, mode };
+                let next = protocol::next_selection(&def.selection, &current, &topology, &selection_input).await;
+                state.selection.insert(write.domain.clone(), next);
+                state.active_mode.insert(write.domain.clone(), mode);
+            }
+            state.hover = self.interaction_hover.clone();
+            self.revalidate_and_persist_interaction_state(state, meta).await
         }
 
         /// 🕹️ The actual body of `dispatch_action`'s interception for the six framework interaction verbs
@@ -19522,7 +19841,13 @@ pub mod app {
             }
             let mut mounted =
                 self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority"), "typed-operation publication owner changed before one-unit transfer"))?;
-            let outcome = if mounted.pending_child_publication.is_some() { self.publish_mounted_typed_child_operation_unit(&mut mounted).await } else { self.publish_mounted_typed_operation_unit(&mut mounted) };
+            let outcome = if mounted.pending_child_publication.is_some() {
+                self.publish_mounted_typed_child_operation_unit(&mut mounted).await
+            } else if Self::mounted_typed_interaction_writes_are_next(&mounted) {
+                self.publish_mounted_typed_interaction_unit(&mut mounted).await
+            } else {
+                self.publish_mounted_typed_operation_unit(&mut mounted)
+            };
             if let Err(fault) = outcome {
                 mounted.publication_attempt = mounted.publication_attempt.saturating_add(1);
                 if mounted.publication_attempt > TYPED_OPERATION_MAXIMUM_RETRIES {
@@ -19539,6 +19864,48 @@ pub mod app {
             }
             self.tool_operations.insert_admitted(operation_id, mounted);
             Ok(())
+        }
+
+        /// 🕹️ Whether this operation's next publication unit is its [`InteractionWrite`] lane: every
+        /// durable store lane of its emit is already drained (a selection may only name ids the
+        /// document already holds), and there is at least one write left to apply. Sync and
+        /// allocation-free so the async caller can branch on it before mounting anything.
+        // 🚫️async: E1 pure field census over an already-mounted publication owner — see R9.
+        fn mounted_typed_interaction_writes_are_next(mounted: &MountedTypedCommandFullOperation<A>) -> bool {
+            let Some(ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral)) = mounted.publication.as_ref() else {
+                return false;
+            };
+            !emit.interaction_writes.is_empty()
+                && emit.artifact_mutations.is_empty()
+                && emit.config_mutations.is_empty()
+                && emit.draft_mutations.is_empty()
+                && emit.child_emits.is_empty()
+                && ephemeral.presence.is_empty()
+                && ephemeral.transient.is_empty()
+        }
+
+        /// 🕹️ Publishes this operation's whole [`InteractionWrite`] lane as ONE unit through the same
+        /// `apply_interaction_writes` single-writer path `dispatch_emit` uses — the retained-tool twin
+        /// of that call. It is one unit rather than one-write-per-turn because a selection is a single
+        /// state-machine transition per domain: draining it write-by-write would publish intermediate
+        /// selections no user ever asked for. `MountedTypedCommandFullOperation` needs no extra field:
+        /// the writes live in the retained emit until taken here, and the lane is only entered once
+        /// every durable lane is drained (`mounted_typed_interaction_writes_are_next`).
+        async fn publish_mounted_typed_interaction_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
+            let Some(ArtifactToolCompletionValue::Emit(Ok(emit), _)) = mounted.publication.as_mut() else {
+                return Err(plugin_sdk_fault("typed-operation interaction publication lost its emit owner"));
+            };
+            let writes = std::mem::take(&mut emit.interaction_writes);
+            let meta = mounted.meta.clone();
+            if let Err(fault) = self.apply_interaction_writes(&writes, &meta).await {
+                if let Some(ArtifactToolCompletionValue::Emit(Ok(emit), _)) = mounted.publication.as_mut() {
+                    emit.interaction_writes = writes;
+                }
+                return Err(fault);
+            }
+            let token = mounted.next_token();
+            let page = TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Interaction, &("accepted", writes.len()))?;
+            mounted.queue_page(page)
         }
 
         async fn advance_latest_wins_command_one(&mut self) -> Result<(), Fault> {
@@ -19586,6 +19953,8 @@ pub mod app {
                     draft_generation: 0,
                     presence_generation: 0,
                     transient_generation: 0,
+                    window_config_authority: None,
+                    window_transient_authority: None,
                     publication_lanes: &[],
                     session: None,
                     session_rejected: None,
@@ -19848,6 +20217,8 @@ pub mod app {
                     PendingArtifactStorePublication::Draft(_) => TypedOperationResultLane::Draft,
                     PendingArtifactStorePublication::Presence(_) => TypedOperationResultLane::Presence,
                     PendingArtifactStorePublication::Transient(_) => TypedOperationResultLane::Transient,
+                    PendingArtifactStorePublication::WindowConfig(_) => TypedOperationResultLane::WindowConfig,
+                    PendingArtifactStorePublication::WindowTransient(_) => TypedOperationResultLane::WindowTransient,
                 };
                 let advance = match pending {
                     PendingArtifactStorePublication::Artifact(publication) => {
@@ -19925,6 +20296,36 @@ pub mod app {
                         }
                         self.transient_store.advance_publish_one(publication, grant).map_err(plugin_sdk_fault)?
                     }
+                    PendingArtifactStorePublication::WindowConfig(publication) => {
+                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
+                            let failed = publication.fault().is_some();
+                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
+                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
+                                    mounted.pending_artifact_publication = None;
+                                    return if failed { Err(plugin_sdk_fault("window-config publication rejected stale or cancelled authority")) } else { Ok(()) };
+                                }
+                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("window-config publication closed without terminal emptiness")),
+                                _ if failed => return Err(plugin_sdk_fault("window-config publication is retiring a rejected authority")),
+                                _ => return Ok(()),
+                            }
+                        }
+                        self.window_config_store.advance(publication.as_mut(), grant)?
+                    }
+                    PendingArtifactStorePublication::WindowTransient(publication) => {
+                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
+                            let failed = publication.fault().is_some();
+                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
+                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
+                                    mounted.pending_artifact_publication = None;
+                                    return if failed { Err(plugin_sdk_fault("window-transient publication rejected stale or cancelled authority")) } else { Ok(()) };
+                                }
+                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("window-transient publication closed without terminal emptiness")),
+                                _ if failed => return Err(plugin_sdk_fault("window-transient publication is retiring a rejected authority")),
+                                _ => return Ok(()),
+                            }
+                        }
+                        self.window_transient_store.advance(publication.as_mut(), grant)?
+                    }
                 };
                 return match advance {
                     store::ArtifactStoreOneItemAdvance::Published(receipt) => {
@@ -19939,6 +20340,14 @@ pub mod app {
                             TypedOperationResultLane::Draft => mounted.draft_generation = receipt.generation_after,
                             TypedOperationResultLane::Presence => mounted.presence_generation = receipt.generation_after,
                             TypedOperationResultLane::Transient => mounted.transient_generation = receipt.generation_after,
+                            TypedOperationResultLane::WindowConfig => {
+                                let authority = mounted.window_config_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window config receipt lost its captured window authority"))?;
+                                self.window_config_store.refresh(authority)?;
+                            }
+                            TypedOperationResultLane::WindowTransient => {
+                                let authority = mounted.window_transient_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window transient receipt lost its captured window authority"))?;
+                                authority.generation = receipt.generation_after;
+                            }
                             _ => unreachable!("pending artifact publication has one durable store lane"),
                         }
                         let token = mounted.next_token();
@@ -19954,7 +20363,10 @@ pub mod app {
             let page = match mounted.publication.as_mut().expect("publication owner was installed") {
                 ArtifactToolCompletionValue::Emit(Err(fault), _) | ArtifactToolCompletionValue::Download(Err(fault), _) => TypedOperationResultPage::try_new(token, TypedOperationResultLane::Fault, fault.as_bytes())?,
                 ArtifactToolCompletionValue::Download(Ok(download), ephemeral) => {
-                    if (!ephemeral.presence.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Presence)) || (!ephemeral.transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Transient)) {
+                    if (!ephemeral.presence.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Presence))
+                        || (!ephemeral.transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Transient))
+                        || (!ephemeral.window_transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::WindowTransient))
+                    {
                         return Err(plugin_sdk_fault("typed-operation emitted an undeclared ephemeral publication lane"));
                     }
                     if let Some(mutation) = ephemeral.presence.pop() {
@@ -19981,6 +20393,11 @@ pub mod app {
                                 return Err(plugin_sdk_fault(reason));
                             }
                         }
+                    } else if let Some(mutation) = ephemeral.window_transient.pop() {
+                        let authority = mounted.window_transient_authority.as_ref().ok_or_else(|| plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"))?;
+                        let publication = self.window_transient_store.begin(mounted.operation.operation, authority, mutation)?;
+                        mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
+                        return Ok(());
                     } else {
                         TypedOperationResultPage::try_serialize(
                             token,
@@ -19992,10 +20409,13 @@ pub mod app {
                 ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
                     if (!emit.artifact_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Artifact))
                         || (!emit.config_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Config))
+                        || (!emit.window_config_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::WindowConfig))
                         || (!emit.draft_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Draft))
                         || (!ephemeral.presence.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Presence))
                         || (!ephemeral.transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Transient))
+                        || (!ephemeral.window_transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::WindowTransient))
                         || (!emit.child_emits.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Child))
+                        || (!emit.interaction_writes.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Interaction))
                     {
                         return Err(plugin_sdk_fault("typed-operation emitted a store lane absent from its exact factory publication contract"));
                     }
@@ -20037,6 +20457,13 @@ pub mod app {
                                 return Err(plugin_sdk_fault(reason));
                             }
                         }
+                    } else if let Some(mutation) = emit.window_config_mutations.pop() {
+                        let authority = mounted.window_config_authority.as_ref().ok_or_else(|| plugin_sdk_fault("window config emission requires one exact captured ViewModel window authority"))?;
+                        {
+                            let publication = self.window_config_store.begin(mounted.operation.operation, mounted.meta.actor.clone(), authority, mutation)?;
+                            mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowConfig(publication));
+                            return Ok(());
+                        }
                     } else if let Some(mutation) = emit.draft_mutations.pop() {
                         let revision = self.draft_store.content_revision_now();
                         match self.draft_store.begin_apply_one(mounted.operation.operation, mounted.draft_generation, revision, mounted.meta.actor.clone(), mutation, None, HistoryLane::Document, self.draft_one_item_factory.as_deref()) {
@@ -20074,6 +20501,11 @@ pub mod app {
                                 return Err(plugin_sdk_fault(reason));
                             }
                         }
+                    } else if let Some(mutation) = ephemeral.window_transient.pop() {
+                        let authority = mounted.window_transient_authority.as_ref().ok_or_else(|| plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"))?;
+                        let publication = self.window_transient_store.begin(mounted.operation.operation, authority, mutation)?;
+                        mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
+                        return Ok(());
                     } else if !emit.child_emits.is_empty() {
                         if mounted.pending_child_publication.is_some() {
                             return Err(plugin_sdk_fault("typed-operation retained more than one child-group publication owner"));
@@ -20232,13 +20664,15 @@ pub mod app {
             let draft_generation = self.draft_store.generation();
             let presence_generation = self.presence_store.generation().await;
             let transient_generation = self.transient_store.generation().await;
+            let window_config_authority = self.window_config_store.capture(meta.view_state.as_ref()).await?;
+            let window_transient_authority = self.window_transient_store.capture(meta.view_state.as_ref())?;
             let parent_document_id = self.store.envelope().id.clone();
             let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, base_revision.0)).await;
             let operation = semio_framework_job::Operation::new(operation_id, base_revision, generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
             let operation_key = ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id, base_revision, generation };
             let cancellation_lease = match reserved_lease {
                 Some(lease) => lease,
-                None => self.tool_cancellations.begin(operation_key)?,
+                None => self.tool_cancellations.begin_keyed(operation_key)?,
             };
             assert_eq!(cancellation_lease.key.base_revision, base_revision, "fresh worker receives a revision-rebound cancellation lease");
             assert_eq!(cancellation_lease.key.generation, generation, "fresh worker receives a generation-rebound cancellation lease");
@@ -20257,9 +20691,13 @@ pub mod app {
                 canonical_base_revision,
                 draft_generation,
                 transient_generation,
-                std::sync::Arc::clone(&children),
-                std::sync::Arc::clone(&draft_snapshot),
-                std::sync::Arc::clone(&transient),
+                ArtifactOwnedToolJobSnapshots {
+                    children: std::sync::Arc::clone(&children),
+                    draft: std::sync::Arc::clone(&draft_snapshot),
+                    transient: std::sync::Arc::clone(&transient),
+                    window_config: window_config_authority.as_ref().map(|authority| authority.snapshot.clone()),
+                    window_transient: window_transient_authority.as_ref().map(|authority| authority.snapshot.clone()),
+                },
             ));
             let operation_spec = match admission.proof.clone() {
                 QualifiedToolProof::Bounded(_) => {
@@ -20302,6 +20740,7 @@ pub mod app {
                     canonical_base_revision,
                     snapshot,
                     config,
+                    window_config: window_config_authority.as_ref().map(|authority| authority.snapshot.clone()),
                     history,
                     interaction_state,
                     interaction_hover: std::sync::Arc::new(interaction_hover),
@@ -20354,6 +20793,8 @@ pub mod app {
                     draft_generation,
                     presence_generation,
                     transient_generation,
+                    window_config_authority,
+                    window_transient_authority,
                     publication_lanes,
                     session,
                     session_rejected,
@@ -20589,7 +21030,7 @@ pub mod app {
             Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
         }
 
-        fn close_retained_fields_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        fn close_projection_cache_step(&mut self, maximum_items: usize) -> Result<PluginCloseStep, Fault> {
             if maximum_items == 0 {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -20610,154 +21051,161 @@ pub mod app {
                 drop(self.close_cache.take());
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
+            Ok(PluginCloseStep::Complete)
+        }
+
+        fn close_retained_fields_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            if maximum_items == 0 {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
             if let Some(entry) = self.command_log.last_mut() {
                 if let Some(value) = entry.config_edit_ids.pop() {
                     let bytes = value.len();
                     if bytes > maximum_bytes {
                         entry.config_edit_ids.push(value);
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                     }
                     drop(value);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
                 }
                 if let Some(value) = entry.child_edit_ids.pop() {
                     let bytes = value.len();
                     if bytes > maximum_bytes {
                         entry.child_edit_ids.push(value);
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                     }
                     drop(value);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
                 }
             }
             if let Some(entry) = self.command_log.pop() {
                 let bytes = entry.action_id.len().saturating_add(entry.label.len()).saturating_add(entry.timestamp.len()).saturating_add(entry.edit_id.as_ref().map_or(0, String::len));
                 if bytes > maximum_bytes {
                     self.command_log.push(entry);
-                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                 }
                 drop(entry);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
             }
             if let Some(sequence) = self.history_dirty_sequences.iter().next().copied() {
                 self.history_dirty_sequences.remove(&sequence);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(pin) = self.pending_child_pins.pop() {
                 drop(pin);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             match self.composition.close_step(maximum_items.min(1), maximum_bytes) {
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => return Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                store::SnapshotRetirementStep::Blocked => return Ok(PluginCloseStep::Blocked { reason: "composition graph retirement is externally blocked" }),
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => return PluginCloseStep::Pending { released_items, released_bytes },
+                store::SnapshotRetirementStep::Blocked => return PluginCloseStep::Blocked { reason: "composition graph retirement is externally blocked" },
                 store::SnapshotRetirementStep::Complete => {}
             }
             if let Some((domain, hover)) = self.interaction_hover.pop_first() {
                 let bytes = domain.len();
                 if bytes > maximum_bytes {
                     self.interaction_hover.insert(domain, hover);
-                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                 }
                 drop((domain, hover));
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
             }
             if let Some(domain) = self.interaction_ui_topology.keys().next() {
                 let bytes = domain.len();
                 if bytes > maximum_bytes {
-                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                 }
                 let domain = domain.clone();
                 drop(self.interaction_ui_topology.remove(&domain));
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
             }
             if let Some(transaction) = self.pending_transaction.as_mut() {
                 if let Some(operation) = transaction.ops.pop() {
                     drop(operation);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                 }
             }
             if let Some(transaction) = self.pending_transaction.take() {
                 drop(transaction);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(proposal) = self.pending_transaction_proposal.as_mut() {
                 if let Some(operation) = proposal.local_ops.pop() {
                     let bytes = operation.len();
                     if bytes > maximum_bytes {
                         proposal.local_ops.push(operation);
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                     }
                     drop(operation);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
                 }
                 if let Some(foreign) = proposal.foreign.pop() {
                     drop(foreign);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                 }
             }
             if let Some(proposal) = self.pending_transaction_proposal.take() {
                 drop(proposal);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(presence) = self.pending_presence.pop() {
                 drop(presence);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(wire) = self.last_emit_wire.as_mut() {
                 for bytes in [&mut wire.0, &mut wire.1, &mut wire.2] {
                     if bytes.capacity() != 0 {
                         let released = bytes.len();
                         if released > maximum_bytes {
-                            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                         }
                         drop(std::mem::take(bytes));
-                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: released });
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: released };
                     }
                 }
             }
             if self.last_emit_wire.take().is_some() {
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(effect) = self.typed_effect_outbox.pop() {
                 drop(effect);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(event) = self.typed_event_outbox.pop() {
                 drop(event);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(scope) = self.typed_ui_outbox.pop() {
                 drop(scope);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             let registry_step = self.registry.close_step(maximum_items.min(1), maximum_bytes);
             if registry_step != PluginCloseStep::Complete {
-                return Ok(registry_step);
+                return registry_step;
             }
             if self.bounded_tool_proofs.pop_first().is_some() {
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(contract) = self.bounded_tool_contracts.pop() {
                 drop(contract);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some((_, registration)) = self.framework_tool_registrations.pop_first() {
                 drop(registration);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some((_, registration)) = self.app_tool_registrations.pop_first() {
                 drop(registration);
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if !self.tool_job_controller_id.is_empty() {
                 let bytes = self.tool_job_controller_id.len();
                 if bytes > maximum_bytes {
-                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                 }
                 drop(std::mem::take(&mut self.tool_job_controller_id));
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
             }
-            Ok(PluginCloseStep::Complete)
+            PluginCloseStep::Complete
         }
 
         fn retained_fields_terminal_is_empty(&self) -> bool {
@@ -21291,6 +21739,10 @@ pub mod app {
                 self.close_store_replacement_jobs_drained = true;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
+            let cache_step = self.close_projection_cache_step(maximum_items)?;
+            if cache_step != PluginCloseStep::Complete {
+                return Ok(cache_step);
+            }
             if !self.close_snapshot_reads_drained {
                 let pump = &mut self.document_snapshot_read_returns;
                 let store = &mut self.store;
@@ -21310,8 +21762,10 @@ pub mod app {
                 2 => drive_artifact_owned_disposer("draft-store", &mut self.draft_store, &mut self.close_draft_disposer, maximum_items, maximum_bytes),
                 3 => drive_artifact_owned_disposer("presence-store", &mut self.presence_store, &mut self.close_presence_disposer, maximum_items, maximum_bytes),
                 4 => drive_artifact_owned_disposer("transient-store", &mut self.transient_store, &mut self.close_transient_disposer, maximum_items, maximum_bytes),
-                5 => drive_artifact_owned_disposer("interaction-store", &mut self.interaction_store, &mut self.close_interaction_disposer, maximum_items, maximum_bytes),
-                _ => return self.close_retained_fields_step(maximum_items, maximum_bytes),
+                5 => self.window_config_store.close_step(maximum_items, maximum_bytes),
+                6 => self.window_transient_store.close_step(maximum_items, maximum_bytes),
+                7 => drive_artifact_owned_disposer("interaction-store", &mut self.interaction_store, &mut self.close_interaction_disposer, maximum_items, maximum_bytes),
+                _ => return Ok(self.close_retained_fields_step(maximum_items, maximum_bytes)),
             }?;
             if owned_step == PluginCloseStep::Complete {
                 self.close_owned_stage = self.close_owned_stage.saturating_add(1);
@@ -21322,12 +21776,14 @@ pub mod app {
 
         fn close_terminal_is_empty(&self) -> bool {
             self.close_started
-                && self.close_owned_stage >= 6
+                && self.close_owned_stage >= 8
                 && self.close_document_disposer.is_none()
                 && self.close_config_disposer.is_none()
                 && self.close_draft_disposer.is_none()
                 && self.close_presence_disposer.is_none()
                 && self.close_transient_disposer.is_none()
+                && self.window_config_store.terminal_is_empty()
+                && self.window_transient_store.terminal_is_empty()
                 && self.close_interaction_disposer.is_none()
                 && self.tool_cancellations.active_operation_count() == 0
                 && self.tool_operations.is_empty()
@@ -22307,6 +22763,14 @@ pub mod app {
             store::print_document_pack(self.config_store.envelope()).await.map_err(|error| error.into_fault())
         }
 
+        async fn window_config_packs(&self) -> Result<Vec<WindowConfigPack>, Fault> {
+            self.window_config_store.packs().await
+        }
+
+        async fn load_window_config_pack(&mut self, pack: WindowConfigPack) -> Result<(), Fault> {
+            self.window_config_store.load(pack).await
+        }
+
         async fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
             self.open_child(slot, child_id, dialect, envelope_pack).await?;
             self.cache = None;
@@ -22441,14 +22905,16 @@ pub mod app {
             let interaction_hover = self.interaction_hover.clone();
             let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
+            let window_config = self.window_config_store.capture(Some(view_state)).await?;
+            let window_transient = self.window_transient_store.capture(Some(view_state))?;
             if let Some(json) = snapshot_override_json {
                 let snapshot: A::Snapshot = dsl::json::from_json_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 let history = self.build_history_view().await;
                 let doc = ArtifactView::new(&snapshot, &history);
                 let config = self.config_store.snapshot().unwrap_or_else(|_| A::Config::default());
-                let cfg = ConfigView { snapshot: &config };
+                let cfg = ConfigView { snapshot: &config, window: window_config.as_ref().map(|authority| &authority.snapshot) };
                 let transient = self.transient_store.current_root();
-                let transient = TransientView { snapshot: transient.as_ref() };
+                let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
                 let node = A::render_with_request_context(&self.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 self.stamp_and_cache_interaction_ui(&node, &interaction_state, body_key).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(node);
@@ -22467,9 +22933,9 @@ pub mod app {
                     return Err(plugin_sdk_fault("render cache unavailable after refresh"));
                 };
                 let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await;
-                let cfg = ConfigView { snapshot: config.as_ref() };
+                let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
                 let transient = self.transient_store.current_root();
-                let transient = TransientView { snapshot: transient.as_ref() };
+                let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
                 A::render_with_request_context(&self.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction).await.map_err(|error| plugin_sdk_fault(error.to_string()))?
             };
             self.stamp_and_cache_interaction_ui(&node, &interaction_state, body_key).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
@@ -22480,30 +22946,70 @@ pub mod app {
             if self.refresh_cache().await.is_err() {
                 return HashMap::new();
             }
-            let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root)).await;
-            let cfg = ConfigView { snapshot: config.as_ref() };
-            A::window_engagements(&doc, &cfg, view_state).await
+            let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, .. } = self;
+            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
+            let mut engagements = HashMap::new();
+            for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
+                let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
+                let window_config = match window_config_store.capture(Some(&window_view_state)).await {
+                    Ok(snapshot) => snapshot,
+                    Err(_) => continue,
+                };
+                let window_transient = match window_transient_store.capture(Some(&window_view_state)) {
+                    Ok(snapshot) => snapshot,
+                    Err(_) => continue,
+                };
+                let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
+                let transient_root = transient_store.current_root();
+                let transient = TransientView { snapshot: transient_root.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
+                let mut projected = A::window_engagements_with_request_context(&doc, &cfg, &window_view_state, &transient).await;
+                if let Some(engagement) = projected.remove(&window.id).or_else(|| projected.remove(&window.window_kind_id)) {
+                    engagements.insert(window.id.clone(), engagement);
+                }
+            }
+            engagements
         }
 
         async fn window_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             if self.refresh_cache().await.is_err() {
                 return HashMap::new();
             }
-            let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root)).await;
-            let cfg = ConfigView { snapshot: config.as_ref() };
-            A::window_measures(&doc, &cfg, view_state).await
+            let interaction_state = self.interaction_state().await;
+            let interaction_hover = self.interaction_hover.clone();
+            let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
+            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
+            let VcsArtifactApp { window_config_store, cache, child_content_root, .. } = self;
+            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
+            let mut measures = HashMap::new();
+            for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
+                let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
+                let window_config = match window_config_store.capture(Some(&window_view_state)).await {
+                    Ok(snapshot) => snapshot,
+                    Err(_) => continue,
+                };
+                let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
+                let mut projected = A::window_measures_with_request_context(&doc, &cfg, &window_view_state, &interaction).await;
+                if let Some(window_measures) = projected.remove(&window.id).or_else(|| projected.remove(&window.window_kind_id)) {
+                    measures.insert(window.id.clone(), window_measures);
+                }
+            }
+            measures
         }
 
         async fn tool_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             if self.refresh_cache().await.is_err() {
                 return HashMap::new();
             }
+            let window_config = match self.window_config_store.capture(Some(view_state)).await {
+                Ok(snapshot) => snapshot,
+                Err(_) => return HashMap::new(),
+            };
             let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
-            let cfg = ConfigView { snapshot: config.as_ref() };
+            let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
             A::tool_measures(&doc, &cfg, view_state).await
         }
 
@@ -22533,7 +23039,7 @@ pub mod app {
             let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, snapshot_read).await;
-            let cfg = ConfigView { snapshot: config.as_ref() };
+            let cfg = ConfigView { snapshot: config.as_ref(), window: None };
             A::pending_effects(&doc, &cfg).await
         }
 
@@ -22544,11 +23050,19 @@ pub mod app {
             if self.refresh_cache().await.is_err() {
                 return Vec::new();
             }
+            let interaction_state = self.interaction_state().await;
+            let interaction_hover = self.interaction_hover.clone();
+            let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
+            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
+            let window_config = match self.window_config_store.capture(Some(view_state)).await {
+                Ok(snapshot) => snapshot,
+                Err(_) => return Vec::new(),
+            };
             let VcsArtifactApp { app: _, cache, registry, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
-            let cfg = ConfigView { snapshot: config.as_ref() };
-            let items = A::context_menu(request, &doc, &cfg, view_state, registry).await;
+            let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
+            let items = A::context_menu_with_request_context(request, &doc, &cfg, view_state, &interaction, registry).await;
             ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id))
         }
 
@@ -22571,9 +23085,9 @@ pub mod app {
             let VcsArtifactApp { app: _, cache, child_content_root, transient_store, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
-            let _cfg = ConfigView { snapshot: config.as_ref() };
+            let _cfg = ConfigView { snapshot: config.as_ref(), window: None };
             let transient = transient_store.current_root();
-            A::export_media_with_request_context(port, &doc, &TransientView { snapshot: transient.as_ref() }).await
+            A::export_media_with_request_context(port, &doc, &TransientView { snapshot: transient.as_ref(), window: None }).await
         }
 
         async fn submit_media_export(&mut self, port: &str) -> Result<ArtifactMediaExportHandle, MediaError> {
@@ -22615,7 +23129,7 @@ pub mod app {
             let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
-            let _cfg = ConfigView { snapshot: config.as_ref() };
+            let _cfg = ConfigView { snapshot: config.as_ref(), window: None };
             A::media_fingerprint(port, &doc).await
         }
     }
@@ -23532,6 +24046,12 @@ pub mod app {
         fn register_tool_job_factories(_registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
             Ok(())
         }
+        fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
+            Ok(())
+        }
+        fn register_window_config_owners(_registry: &mut WindowConfigOwnerRegistry) -> Result<(), Fault> {
+            Ok(())
+        }
 
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
             Box::new(EmptyArtifactInstanceOperationOwner)
@@ -23766,6 +24286,10 @@ pub mod app {
         fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
+        fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>) -> HashMap<String, WindowEngagement> {
+            let _ = transient;
+            Self::window_engagements(doc, cfg, view_state)
+        }
         fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
@@ -23959,6 +24483,13 @@ pub mod app {
             false
         }
 
+        fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
+            Ok(())
+        }
+        fn register_window_config_owners(_registry: &mut WindowConfigOwnerRegistry) -> Result<(), Fault> {
+            Ok(())
+        }
+
         /// 📬️ Grants retained one-item config preparation to this viewer adapter.
         fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
             None
@@ -24043,14 +24574,35 @@ pub mod app {
         fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
+        fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>) -> HashMap<String, WindowEngagement> {
+            let _ = transient;
+            Self::window_engagements(doc, cfg, view_state)
+        }
         fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
+        }
+        /// 🕹️ See `ArtifactApp::window_measures_with_request_context` — same additive default.
+        fn window_measures_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, interaction: &InteractionView<'_>) -> HashMap<String, Vec<WindowMeasure>> {
+            let _ = interaction;
+            Self::window_measures(doc, cfg, view_state)
         }
         fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
+        }
+        /// 🕹️ See `ArtifactApp::context_menu_with_request_context` — same additive default.
+        fn context_menu_with_request_context(
+            request: &ContextMenuRequest,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
+            interaction: &InteractionView<'_>,
+            registry: &AppActionRegistry,
+        ) -> Vec<ContextMenuItemSpec> {
+            let _ = interaction;
+            Self::context_menu(request, doc, cfg, view_state, registry)
         }
         fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             None
@@ -24182,6 +24734,12 @@ pub mod app {
         fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
             E::register_tool_job_factories(registry)
         }
+        fn register_window_transient_owners(registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
+            E::register_window_transient_owners(registry)
+        }
+        fn register_window_config_owners(registry: &mut WindowConfigOwnerRegistry) -> Result<(), Fault> {
+            E::register_window_config_owners(registry)
+        }
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
             E::build_instance_operation_owner()
         }
@@ -24272,7 +24830,7 @@ pub mod app {
 
         async fn ephemeral(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, presence: &PresenceView<'_, Self::Presence>, transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
             let (presence_mutations, transient_mutations) = E::ephemeral(command, doc, cfg, presence, transient);
-            EphemeralEmit { presence: presence_mutations, transient: transient_mutations }
+            EphemeralEmit { presence: presence_mutations, transient: transient_mutations, window_transient: Vec::new() }
         }
         async fn config_schema() -> &'static str {
             E::config_schema()
@@ -24359,14 +24917,30 @@ pub mod app {
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             E::window_engagements(doc, cfg, view_state)
         }
+        async fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>) -> HashMap<String, WindowEngagement> {
+            E::window_engagements_with_request_context(doc, cfg, view_state, transient)
+        }
         async fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             E::window_measures(doc, cfg, view_state)
+        }
+        async fn window_measures_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, interaction: &InteractionView<'_>) -> HashMap<String, Vec<WindowMeasure>> {
+            E::window_measures_with_request_context(doc, cfg, view_state, interaction)
         }
         async fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             E::tool_measures(doc, cfg, view_state)
         }
         async fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             E::context_menu(request, doc, cfg, view_state, registry)
+        }
+        async fn context_menu_with_request_context(
+            request: &ContextMenuRequest,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
+            interaction: &InteractionView<'_>,
+            registry: &AppActionRegistry,
+        ) -> Vec<ContextMenuItemSpec> {
+            E::context_menu_with_request_context(request, doc, cfg, view_state, interaction, registry)
         }
         async fn genesis() -> Vec<Self::Mutation> {
             E::genesis()
@@ -24486,6 +25060,12 @@ pub mod app {
         fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
             V::mounted_job_prepare_snapshot_read(operation, snapshot)
         }
+        fn register_window_transient_owners(registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
+            V::register_window_transient_owners(registry)
+        }
+        fn register_window_config_owners(registry: &mut WindowConfigOwnerRegistry) -> Result<(), Fault> {
+            V::register_window_config_owners(registry)
+        }
         fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
             V::build_config_store_one_item_preparation_factory()
         }
@@ -24515,7 +25095,7 @@ pub mod app {
 
         async fn ephemeral(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, presence: &PresenceView<'_, Self::Presence>, transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
             let (presence_mutations, transient_mutations) = V::ephemeral(command, doc, cfg, presence, transient);
-            EphemeralEmit { presence: presence_mutations, transient: transient_mutations }
+            EphemeralEmit { presence: presence_mutations, transient: transient_mutations, window_transient: Vec::new() }
         }
         async fn config_schema() -> &'static str {
             V::config_schema()
@@ -24570,14 +25150,30 @@ pub mod app {
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             V::window_engagements(doc, cfg, view_state)
         }
+        async fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>) -> HashMap<String, WindowEngagement> {
+            V::window_engagements_with_request_context(doc, cfg, view_state, transient)
+        }
         async fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             V::window_measures(doc, cfg, view_state)
+        }
+        async fn window_measures_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, interaction: &InteractionView<'_>) -> HashMap<String, Vec<WindowMeasure>> {
+            V::window_measures_with_request_context(doc, cfg, view_state, interaction)
         }
         async fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             V::tool_measures(doc, cfg, view_state)
         }
         async fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             V::context_menu(request, doc, cfg, view_state, registry)
+        }
+        async fn context_menu_with_request_context(
+            request: &ContextMenuRequest,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
+            interaction: &InteractionView<'_>,
+            registry: &AppActionRegistry,
+        ) -> Vec<ContextMenuItemSpec> {
+            V::context_menu_with_request_context(request, doc, cfg, view_state, interaction, registry)
         }
         async fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             V::app_schema()
@@ -25257,7 +25853,7 @@ pub mod plugin_runtime {
         resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp, PluginAssemblyError, PluginProgram,
         PresenceRosterAdmission, TransactionProposalDraft, TypedOperationResultPage, TypedOperationResultToken,
     };
-    use crate::ArtifactApp;
+    use crate::{ArtifactApp, WindowConfigPack};
     use dsl::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
     use semio_framework::{
@@ -27437,7 +28033,7 @@ pub mod plugin_runtime {
         Ok(None)
     }
 
-    fn document_backbone_receipt_effect(receipt: crate::document_backbone_binding::DocumentBackboneBindingReceiptV1) -> Effect {
+    fn document_backbone_receipt_effect(receipt: &crate::document_backbone_binding::DocumentBackboneBindingReceiptV1) -> Effect {
         Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(receipt.instance_id.to_string()) }, payload: receipt.encode() }
     }
 
@@ -27448,14 +28044,14 @@ pub mod plugin_runtime {
         let source_matches = source_instance.parse::<u32>().ok() == Some(command.instance_id);
         let instance_live = runtime.guest_lifetimes.try_borrow().map_err(|_| plugin_internal_fault("lifecycle authority busy"))?.get(command.instance_id).is_some_and(|slot| slot.cell.is_live());
         if !source_matches || !instance_live {
-            return Ok(Some(vec![document_backbone_receipt_effect(crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.instance-refused"))]));
+            return Ok(Some(vec![document_backbone_receipt_effect(&crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.instance-refused"))]));
         }
         let state = runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?.get(command.instance_id).map(RuntimeDocumentBackboneBindingV1::state).unwrap_or_default();
         match decide_document_backbone_binding_v1(&state, &command) {
-            DocumentBackboneBindingDecisionV1::Replay(receipt) | DocumentBackboneBindingDecisionV1::Refuse(receipt) => Ok(Some(vec![document_backbone_receipt_effect(receipt)])),
+            DocumentBackboneBindingDecisionV1::Replay(receipt) | DocumentBackboneBindingDecisionV1::Refuse(receipt) => Ok(Some(vec![document_backbone_receipt_effect(&receipt)])),
             DocumentBackboneBindingDecisionV1::Bind(receipt) => {
                 if live_document_backbone_for_uri(runtime, &command.uri)?.is_some() {
-                    return Ok(Some(vec![document_backbone_receipt_effect(crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.binding-collision"))]));
+                    return Ok(Some(vec![document_backbone_receipt_effect(&crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.binding-collision"))]));
                 }
                 let (channel, owner) = store::ActorBackboneChannelOwner::pair(&command.uri);
                 let backbone = store::Backbones::Port(store::PortBackbone::with_channel(&command.uri, channel).await);
@@ -27466,29 +28062,32 @@ pub mod plugin_runtime {
                 .await;
                 if attached.is_err() {
                     owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
-                    return Ok(Some(vec![document_backbone_receipt_effect(crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.attach-refused"))]));
+                    return Ok(Some(vec![document_backbone_receipt_effect(&crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.attach-refused"))]));
                 }
-                let mut bindings = runtime.document_backbones.try_borrow_mut().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
-                if let Some(binding) = bindings.get_mut(command.instance_id) {
-                    if binding.state() != state {
-                        drop(bindings);
-                        let _ = plugin_detach_backbone(runtime, command.instance_id).await;
-                        owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
-                        return Ok(Some(vec![document_backbone_receipt_effect(crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.binding-collision"))]));
+                let rejected = {
+                    let mut bindings = runtime.document_backbones.try_borrow_mut().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
+                    if let Some(binding) = bindings.get_mut(command.instance_id) {
+                        if binding.state() != state {
+                            Some(("plugin.document-backbone.binding-collision", owner))
+                        } else {
+                            binding.generation = command.binding_generation;
+                            binding.uri = Some(command.uri.clone());
+                            binding.channel = Some(owner);
+                            None
+                        }
+                    } else if !bindings.can_insert(command.instance_id) {
+                        Some(("plugin.document-backbone.binding-capacity", owner))
+                    } else {
+                        bindings.insert_admitted(command.instance_id, RuntimeDocumentBackboneBindingV1 { generation: command.binding_generation, uri: Some(command.uri.clone()), channel: Some(owner) });
+                        None
                     }
-                    binding.generation = command.binding_generation;
-                    binding.uri = Some(command.uri.clone());
-                    binding.channel = Some(owner);
-                } else {
-                    if !bindings.can_insert(command.instance_id) {
-                        drop(bindings);
-                        let _ = plugin_detach_backbone(runtime, command.instance_id).await;
-                        owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
-                        return Ok(Some(vec![document_backbone_receipt_effect(crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.binding-capacity"))]));
-                    }
-                    bindings.insert_admitted(command.instance_id, RuntimeDocumentBackboneBindingV1 { generation: command.binding_generation, uri: Some(command.uri.clone()), channel: Some(owner) });
+                };
+                if let Some((code, owner)) = rejected {
+                    let _ = plugin_detach_backbone(runtime, command.instance_id).await;
+                    owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
+                    return Ok(Some(vec![document_backbone_receipt_effect(&crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, code))]));
                 }
-                Ok(Some(vec![document_backbone_receipt_effect(receipt)]))
+                Ok(Some(vec![document_backbone_receipt_effect(&receipt)]))
             }
             DocumentBackboneBindingDecisionV1::Retire(receipt) => {
                 let owner = runtime
@@ -27507,7 +28106,7 @@ pub mod plugin_runtime {
                 let binding = bindings.get_mut(command.instance_id).ok_or_else(|| plugin_internal_fault("document backbone binding disappeared during retirement"))?;
                 binding.uri = None;
                 binding.channel = None;
-                Ok(Some(vec![document_backbone_receipt_effect(receipt)]))
+                Ok(Some(vec![document_backbone_receipt_effect(&receipt)]))
             }
         }
     }
@@ -28884,6 +29483,45 @@ pub mod plugin_runtime {
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                     }
                 }
+                protocol::AppCommand::LoadWindowConfig { seq, entry } => {
+                    match store::decode_document_pack_bytes(&entry.envelope_pack).await {
+                        Ok((pack, spr)) => {
+                            let loaded = with_instances_mut(runtime, |list| {
+                                let mut instance = find_instance(list, instance_id)?;
+                                resolve_ready(instance.app.load_window_config_pack(WindowConfigPack {
+                                    window_id: entry.window_id,
+                                    window_kind_id: entry.window_kind_id,
+                                    files: store::ArtifactPackFiles { pack, spr, ops: String::new() },
+                                }))
+                            });
+                            match loaded.await {
+                                Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                                Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                            }
+                        }
+                        Err(error) => push_app_fault(&mut frames, Some(seq), error.into_fault()).await,
+                    }
+                }
+                protocol::AppCommand::ReadWindowConfigs { seq } => {
+                    let read = with_instances_mut(runtime, |list| {
+                        let instance = find_instance(list, instance_id)?;
+                        resolve_ready(instance.app.window_config_packs())
+                    });
+                    match read.await {
+                        Ok(packs) => {
+                            let mut entries = Vec::with_capacity(packs.len());
+                            for pack in packs {
+                                entries.push(protocol::WindowConfigPackEntry {
+                                    window_id: pack.window_id,
+                                    window_kind_id: pack.window_kind_id,
+                                    envelope_pack: store::encode_document_pack_bytes(&pack.files.pack, &pack.files.spr).await,
+                                });
+                            }
+                            frames.push(protocol::AppFrame::WindowConfigs { in_reply_to: seq, entries });
+                        }
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                    }
+                }
                 protocol::AppCommand::MediaIn { seq, port, descriptor, data } => {
                     let descriptor_value: DslValue = decode_wire_serialized_or(&descriptor, DslValue::Null).await;
                     let descriptor_json = serde_json::to_string(&descriptor_value).unwrap_or_else(|_| "{}".into());
@@ -29109,7 +29747,7 @@ pub mod plugin_runtime {
         .await?
         {
             if let Some(fault) = outcome.fault {
-                push_app_fault(&mut frames, Some(outcome.seq), fault).await
+                push_app_fault(&mut frames, Some(outcome.seq), fault).await;
             }
         }
 
@@ -29251,7 +29889,7 @@ pub mod plugin_runtime {
                 __semio_ensure_plugin_runtime();
                 let result = match input {
                     Ok(input) => {
-                        __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::reactor::poll_kernel(runtime, input.events, input.command_page, input.cold_pair_page, input.budget))).map_err(|fault| ::dsl::encode_fault_bytes(&fault))
+                        __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::reactor::poll_kernel(runtime, input.events, input.command_page, input.cold_pair_page, input.budget))).map_err(|fault| $crate::encode_fault_bytes(&fault))
                     }
                     Err(error) => Err(error),
                 };
@@ -29308,7 +29946,7 @@ pub mod plugin_runtime {
             #[unsafe(no_mangle)]
             pub extern "C" fn semio_owned_checkpoint_v1() -> u64 {
                 __semio_ensure_plugin_runtime();
-                let result = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::reactor::checkpoint_now(runtime))).map_err(|fault| ::dsl::encode_fault_bytes(&fault));
+                let result = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::reactor::checkpoint_now(runtime))).map_err(|fault| $crate::encode_fault_bytes(&fault));
                 $crate::owned_abi::return_json(&result)
             }
 
@@ -29318,7 +29956,7 @@ pub mod plugin_runtime {
                 let input = unsafe { $crate::owned_abi::take_json::<$crate::owned_abi::RestoreInput>(pointer, length) };
                 __semio_ensure_plugin_runtime();
                 let result = match input {
-                    Ok(input) => __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::reactor::restore_now(runtime, &input.state))).map_err(|fault| ::dsl::encode_fault_bytes(&fault)),
+                    Ok(input) => __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::reactor::restore_now(runtime, &input.state))).map_err(|fault| $crate::encode_fault_bytes(&fault)),
                     Err(error) => Err(error),
                 };
                 $crate::owned_abi::return_json(&result)
@@ -30530,6 +31168,7 @@ pub mod engagement {
 /// 🧩️ Cross-crate closure vocabulary required by `dyn_enum_close!` for `PluginApp`.
 pub mod plugin_app_close_prelude {
     pub use semio_framework_os_kernel as protocol;
+    pub use semio_framework_os_kernel as store;
     pub use crate::app::*;
     pub use crate::app::{tree_item, PeerMark};
     pub use semio_framework::kernel::ActionId;
@@ -30551,6 +31190,15 @@ pub use app::{
     bounded_config_store_owners,
     bounded_document_store_disposer,
     bounded_document_store_owners,
+    bounded_transient_preparation_factory,
+    bounded_transient_root_retirement_factory,
+    bounded_transient_store_disposer,
+    bounded_window_config_preparation_factory,
+    bounded_window_config_store_disposer,
+    bounded_window_config_store_owners,
+    bounded_window_transient_preparation_factory,
+    bounded_window_transient_root_retirement_factory,
+    bounded_window_transient_store_disposer,
     built_text_node,
     built_text_to_component_tree,
     built_to_component_tree,
@@ -30680,6 +31328,8 @@ pub use app::{
     HostMediaHandlerDescriptor,
     HostMediaHandlerKind,
     HostMediaRuntimeError,
+    InteractionView,
+    InteractionWrite,
     KeybindingSpec,
     MediaClass,
     MediaType,
@@ -30734,6 +31384,15 @@ pub use app::{
     WireArtifactInferenceProvenance,
     WireArtifactInferenceRequest,
     WireArtifactInferenceResult,
+    WindowConfigMutation,
+    WindowConfigOwner,
+    WindowConfigOwnerRegistry,
+    WindowConfigPack,
+    WindowConfigSnapshot,
+    WindowTransientMutation,
+    WindowTransientOwner,
+    WindowTransientOwnerRegistry,
+    WindowTransientSnapshot,
     ARTIFACT_INFERENCE_WIRE_VERSION,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};

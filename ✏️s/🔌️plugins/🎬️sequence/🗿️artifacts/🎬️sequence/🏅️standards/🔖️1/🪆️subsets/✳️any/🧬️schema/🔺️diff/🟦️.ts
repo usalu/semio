@@ -1,12 +1,10 @@
 /** 🧬️ Sequence diff schema — sparse field delta. */
+import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+
 export interface SequenceDiff {
   /** @state artifact */ artifact?: SequenceArtifact;
   /** @state artifact */ schema?: string;
-  /** @state artifact */ steps?: SequenceStepsDelta;
-  /** @state artifact */ edges?: SequenceEdgesDelta;
-  /** @state config */ lastRunJson?: string;
-  /** @state config */ orientation?: string;
-  /** @state config */ camera?: SequenceCamera;
+  /** @state artifact @child kind=s.stdio.semio.flow */ content?: ArtifactChild;
 }
 export interface SequenceStepsDelta { added: SequenceStep[]; removed: string[]; patched: SequenceStepPatchEntry[]; reordered?: string[]; }
 export interface SequenceEdgesDelta { added: SequenceEdge[]; removed: string[]; patched: SequenceEdgePatchEntry[]; reordered?: string[]; }
@@ -19,8 +17,7 @@ export interface SequenceStepPatch { params?: Record<string, unknown>; x?: numbe
 export interface SequenceEdgePatch { from?: string; to?: string; }
 export interface SequenceCamera { x: number; y: number; zoom: number; }
 export interface SequenceArtifact {
-  schema: string; steps: SequenceStep[]; edges: SequenceEdge[];
-  lastRunJson: string; orientation: string; camera: SequenceCamera;
+  schema: string; content: ArtifactChild;
 }
 
 //#region 🚪️Parsers

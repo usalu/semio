@@ -149,6 +149,4 @@ export interface En1993Artifact {
   craneDispersionMm: number;
   /** @state artifact */
   craneTWMm: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

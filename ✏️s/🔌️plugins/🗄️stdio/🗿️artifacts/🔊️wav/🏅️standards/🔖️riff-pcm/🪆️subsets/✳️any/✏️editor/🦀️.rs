@@ -3,11 +3,11 @@
 //! `seek-media` is declared (the frozen `MediaWindowKit` editable action) but intentionally performs no document mutation — playback position is host-side ephemeral transport state, not persisted document content this format's schema models.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
+use crate::editor::wav::modes::edit;
+use crate::editor::wav::modes::edit::windows::main;
 use crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
 use crate::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
-use crate::editor::wav::modes::edit;
-use crate::editor::wav::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;
 

@@ -1,12 +1,61 @@
 {
   "schema": "semio.os.gis-map-inference-port-fixture/v1",
   "version": 1,
+  "wire": {
+    "receipt": {
+      "schema": "semio.hub.inference-job-receipt/v1",
+      "jobId": "11111111111111111111111111111111",
+      "state": "accepted",
+      "proposalState": "none",
+      "proposalHash": null,
+      "cursor": 0,
+      "expiresAtMs": 1700000060000
+    },
+    "page": {
+      "schema": "semio.hub.inference-job-events/v1",
+      "jobId": "11111111111111111111111111111111",
+      "state": "running",
+      "proposalState": "none",
+      "cancelRequested": false,
+      "stale": false,
+      "proposalHash": null,
+      "events": [],
+      "progress": [],
+      "nextCursor": 0
+    }
+  },
+  "retainedClosing": {
+    "requestId": "dddddddddddddddddddddddddddddddd",
+    "operationEpoch": 20,
+    "cases": [
+      "lost-submit",
+      "retired-document",
+      "rotated-session"
+    ],
+    "approvalClose": [
+      "approval-response",
+      "reconcile-response"
+    ],
+    "queuedRetirement": [
+      "abort",
+      "session-rotation"
+    ],
+    "brokerReplacement": "queued-old-request-denied",
+    "authorityRetirement": ["invalid-response", "http-401", "non-200", "old-body-after-proof-replacement"],
+    "portReplacement": "old-body-cannot-bind-successor-port",
+    "successorProof": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "unknownPhase": "indeterminate",
+    "terminalPhase": "cancelled",
+    "reconcilePath": "POST /_semio/hub/spaces/sp-inference/documents/doc-inference/inference/gis-map/jobs/reconcile",
+    "closedKind": "inference-port-closed"
+  },
   "phases": [
     "idle",
     "submitting",
     "running",
     "offered",
     "approving",
+    "indeterminate",
     "applied",
     "cancelled",
     "stale",
@@ -24,6 +73,7 @@
     "running": "status",
     "offered": "status",
     "approving": "status",
+    "indeterminate": "status",
     "applied": "alert",
     "cancelled": "alert",
     "stale": "alert",
@@ -80,7 +130,28 @@
     "jobId": "11111111111111111111111111111111",
     "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
     "regionId": "inference-11111111111111111111111111111111",
-    "ring": [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]]
+    "ring": [
+      [
+        7,
+        46
+      ],
+      [
+        9,
+        46
+      ],
+      [
+        9,
+        48
+      ],
+      [
+        7,
+        48
+      ],
+      [
+        7,
+        46
+      ]
+    ]
   },
   "initial": {
     "phase": "idle",
@@ -92,6 +163,110 @@
     "cancelRequested": false,
     "code": null
   },
+  "uncertainLifecycle": [
+    {
+      "name": "sealed-request-awaits-receipt",
+      "event": {
+        "kind": "start"
+      },
+      "expected": {
+        "phase": "submitting",
+        "jobId": null,
+        "cursor": 0,
+        "completed": 0,
+        "total": 0,
+        "proposalHash": null,
+        "cancelRequested": false,
+        "code": null
+      }
+    },
+    {
+      "name": "lost-response-retains-unknown-owner",
+      "event": {
+        "kind": "indeterminate",
+        "code": "inference.transport"
+      },
+      "expected": {
+        "phase": "indeterminate",
+        "jobId": null,
+        "cursor": 0,
+        "completed": 0,
+        "total": 0,
+        "proposalHash": null,
+        "cancelRequested": false,
+        "code": "inference.transport"
+      }
+    },
+    {
+      "name": "close-records-cancel-without-a-terminal",
+      "event": {
+        "kind": "cancel"
+      },
+      "expected": {
+        "phase": "indeterminate",
+        "jobId": null,
+        "cursor": 0,
+        "completed": 0,
+        "total": 0,
+        "proposalHash": null,
+        "cancelRequested": true,
+        "code": "inference.transport"
+      }
+    },
+    {
+      "name": "reconciliation-discovers-original-job",
+      "event": {
+        "kind": "receipt",
+        "receipt": {
+          "schema": "semio.hub.inference-job-receipt/v1",
+          "jobId": "11111111111111111111111111111111",
+          "state": "accepted",
+          "proposalState": "none",
+          "cursor": 0,
+          "expiresAtMs": 1700000060000,
+          "proposalHash": null
+        }
+      },
+      "expected": {
+        "phase": "running",
+        "jobId": "11111111111111111111111111111111",
+        "cursor": 0,
+        "completed": 0,
+        "total": 0,
+        "proposalHash": null,
+        "cancelRequested": true,
+        "code": null
+      }
+    },
+    {
+      "name": "server-confirms-original-job-cancelled",
+      "event": {
+        "kind": "page",
+        "page": {
+          "schema": "semio.hub.inference-job-events/v1",
+          "jobId": "11111111111111111111111111111111",
+          "state": "cancelled",
+          "proposalState": "cancelled",
+          "cancelRequested": true,
+          "stale": false,
+          "events": [],
+          "progress": [],
+          "nextCursor": 0,
+          "proposalHash": null
+        }
+      },
+      "expected": {
+        "phase": "cancelled",
+        "jobId": "11111111111111111111111111111111",
+        "cursor": 0,
+        "completed": 0,
+        "total": 0,
+        "proposalHash": null,
+        "cancelRequested": true,
+        "code": null
+      }
+    }
+  ],
   "successLifecycle": [
     {
       "name": "operator-requests-a-proposal",
@@ -114,12 +289,13 @@
       "event": {
         "kind": "receipt",
         "receipt": {
-          "schema": "semio.hub.inference-receipt/v1",
+          "schema": "semio.hub.inference-job-receipt/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "accepted",
           "proposalState": "none",
           "cursor": 0,
-          "expiresAtMs": 1700000060000
+          "expiresAtMs": 1700000060000,
+          "proposalHash": null
         }
       },
       "expected": {
@@ -138,7 +314,7 @@
       "event": {
         "kind": "page",
         "page": {
-          "schema": "semio.hub.inference-events/v1",
+          "schema": "semio.hub.inference-job-events/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "running",
           "proposalState": "none",
@@ -154,7 +330,8 @@
               "atMs": 1700000001000
             }
           ],
-          "nextCursor": 1
+          "nextCursor": 1,
+          "proposalHash": null
         }
       },
       "expected": {
@@ -173,7 +350,7 @@
       "event": {
         "kind": "page",
         "page": {
-          "schema": "semio.hub.inference-events/v1",
+          "schema": "semio.hub.inference-job-events/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "running",
           "proposalState": "none",
@@ -189,7 +366,8 @@
               "atMs": 1700000002000
             }
           ],
-          "nextCursor": 2
+          "nextCursor": 2,
+          "proposalHash": null
         }
       },
       "expected": {
@@ -208,7 +386,7 @@
       "event": {
         "kind": "page",
         "page": {
-          "schema": "semio.hub.inference-events/v1",
+          "schema": "semio.hub.inference-job-events/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "succeeded",
           "proposalState": "offered",
@@ -220,7 +398,28 @@
             "jobId": "11111111111111111111111111111111",
             "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
             "regionId": "inference-11111111111111111111111111111111",
-            "ring": [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]]
+            "ring": [
+              [
+                7,
+                46
+              ],
+              [
+                9,
+                46
+              ],
+              [
+                9,
+                48
+              ],
+              [
+                7,
+                48
+              ],
+              [
+                7,
+                46
+              ]
+            ]
           },
           "events": [],
           "progress": [
@@ -247,7 +446,28 @@
           "jobId": "11111111111111111111111111111111",
           "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
           "regionId": "inference-11111111111111111111111111111111",
-          "ring": [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]]
+          "ring": [
+            [
+              7,
+              46
+            ],
+            [
+              9,
+              46
+            ],
+            [
+              9,
+              48
+            ],
+            [
+              7,
+              48
+            ],
+            [
+              7,
+              46
+            ]
+          ]
         },
         "cancelRequested": false,
         "code": null
@@ -270,7 +490,28 @@
           "jobId": "11111111111111111111111111111111",
           "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
           "regionId": "inference-11111111111111111111111111111111",
-          "ring": [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]]
+          "ring": [
+            [
+              7,
+              46
+            ],
+            [
+              9,
+              46
+            ],
+            [
+              9,
+              48
+            ],
+            [
+              7,
+              48
+            ],
+            [
+              7,
+              46
+            ]
+          ]
         },
         "cancelRequested": false,
         "code": null
@@ -289,7 +530,13 @@
           "applied": true,
           "undo": {
             "targetId": "22222222222222222222222222222222",
-            "expectedCurrent": { "documentId": "document-map", "headEditOrdinal": 2, "headEditId": "approval-edit", "lastCommitSeq": 2, "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130" }
+            "expectedCurrent": {
+              "documentId": "document-map",
+              "headEditOrdinal": 2,
+              "headEditId": "approval-edit",
+              "lastCommitSeq": 2,
+              "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130"
+            }
           }
         }
       },
@@ -305,6 +552,29 @@
       }
     }
   ],
+  "cancelBeforeReceipt": {
+    "intents": [
+      "inference-cancel",
+      "inference-close"
+    ],
+    "requestId": "cccccccccccccccccccccccccccccccc",
+    "operationEpoch": 12,
+    "expectedBeforeReceipt": {
+      "phase": "submitting",
+      "jobId": null,
+      "cancelRequested": true
+    },
+    "expectedAfterReceipt": {
+      "phase": "running",
+      "jobId": "11111111111111111111111111111111",
+      "cancelRequested": true
+    },
+    "expectedTerminal": "cancelled",
+    "expectedRequests": [
+      "POST /_semio/hub/spaces/sp-inference/documents/doc-inference/inference/gis-map/jobs",
+      "POST /_semio/hub/spaces/sp-inference/documents/doc-inference/inference/gis-map/jobs/11111111111111111111111111111111/cancel"
+    ]
+  },
   "cancelLifecycle": [
     {
       "name": "operator-requests-a-proposal",
@@ -327,12 +597,13 @@
       "event": {
         "kind": "receipt",
         "receipt": {
-          "schema": "semio.hub.inference-receipt/v1",
+          "schema": "semio.hub.inference-job-receipt/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "accepted",
           "proposalState": "none",
           "cursor": 0,
-          "expiresAtMs": 1700000060000
+          "expiresAtMs": 1700000060000,
+          "proposalHash": null
         }
       },
       "expected": {
@@ -351,7 +622,7 @@
       "event": {
         "kind": "page",
         "page": {
-          "schema": "semio.hub.inference-events/v1",
+          "schema": "semio.hub.inference-job-events/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "running",
           "proposalState": "none",
@@ -367,7 +638,8 @@
               "atMs": 1700000001000
             }
           ],
-          "nextCursor": 1
+          "nextCursor": 1,
+          "proposalHash": null
         }
       },
       "expected": {
@@ -402,7 +674,7 @@
       "event": {
         "kind": "page",
         "page": {
-          "schema": "semio.hub.inference-events/v1",
+          "schema": "semio.hub.inference-job-events/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "cancelled",
           "proposalState": "cancelled",
@@ -418,7 +690,8 @@
               "atMs": 1700000002000
             }
           ],
-          "nextCursor": 2
+          "nextCursor": 2,
+          "proposalHash": null
         }
       },
       "expected": {
@@ -493,12 +766,13 @@
       "event": {
         "kind": "receipt",
         "receipt": {
-          "schema": "semio.hub.inference-receipt/v1",
+          "schema": "semio.hub.inference-job-receipt/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "accepted",
           "proposalState": "none",
           "cursor": 0,
-          "expiresAtMs": 1700000060000
+          "expiresAtMs": 1700000060000,
+          "proposalHash": null
         }
       },
       "expected": {
@@ -527,7 +801,7 @@
       "event": {
         "kind": "page",
         "page": {
-          "schema": "semio.hub.inference-events/v1",
+          "schema": "semio.hub.inference-job-events/v1",
           "jobId": "22222222222222222222222222222222",
           "state": "succeeded",
           "proposalState": "offered",
@@ -581,7 +855,13 @@
           "applied": true,
           "undo": {
             "targetId": "22222222222222222222222222222222",
-            "expectedCurrent": { "documentId": "document-map", "headEditOrdinal": 2, "headEditId": "approval-edit", "lastCommitSeq": 2, "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130" }
+            "expectedCurrent": {
+              "documentId": "document-map",
+              "headEditOrdinal": 2,
+              "headEditId": "approval-edit",
+              "lastCommitSeq": 2,
+              "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130"
+            }
           }
         }
       },
@@ -619,7 +899,13 @@
           "applied": false,
           "undo": {
             "targetId": "22222222222222222222222222222222",
-            "expectedCurrent": { "documentId": "document-map", "headEditOrdinal": 2, "headEditId": "approval-edit", "lastCommitSeq": 2, "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130" }
+            "expectedCurrent": {
+              "documentId": "document-map",
+              "headEditOrdinal": 2,
+              "headEditId": "approval-edit",
+              "lastCommitSeq": 2,
+              "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130"
+            }
           }
         }
       },
@@ -649,7 +935,7 @@
       "event": {
         "kind": "page",
         "page": {
-          "schema": "semio.hub.inference-events/v1",
+          "schema": "semio.hub.inference-job-events/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "succeeded",
           "proposalState": "offered",
@@ -747,7 +1033,7 @@
       "event": {
         "kind": "page",
         "page": {
-          "schema": "semio.hub.inference-events/v1",
+          "schema": "semio.hub.inference-job-events/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "running",
           "proposalState": "none",
@@ -763,7 +1049,8 @@
               "atMs": 1700000009000
             }
           ],
-          "nextCursor": 9
+          "nextCursor": 9,
+          "proposalHash": null
         }
       },
       "expected": {
@@ -818,7 +1105,7 @@
       "event": {
         "kind": "page",
         "page": {
-          "schema": "semio.hub.inference-events/v1",
+          "schema": "semio.hub.inference-job-events/v1",
           "jobId": "11111111111111111111111111111111",
           "state": "succeeded",
           "proposalState": "offered",

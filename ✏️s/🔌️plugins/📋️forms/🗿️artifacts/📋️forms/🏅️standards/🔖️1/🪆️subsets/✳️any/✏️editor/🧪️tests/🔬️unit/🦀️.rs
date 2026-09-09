@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::forms::testkit::{building_component_contributions, building_component_question, forms_app, forms_app_with_registry};
 use crate::forms_steps;
@@ -151,7 +150,7 @@ async fn interaction_topology_walks_step_nesting_into_parent_links() {
     let config = FormsConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let topology = FormsPlayApp::interaction_topology(&doc, &cfg);
     let fields = topology.domains.get(FORMS_INTERACTION_FIELDS).expect("fields domain present in topology");
     let steps = forms_steps(&document);
@@ -168,7 +167,7 @@ async fn interaction_topology_has_a_section_node_and_no_field_nodes_for_a_docume
     let config = FormsConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let topology = FormsPlayApp::interaction_topology(&doc, &cfg);
     let fields = topology.domains.get(FORMS_INTERACTION_FIELDS).expect("fields domain present in topology");
     assert!(!fields.ordered.is_empty(), "the empty document's own single step still contributes a section node");

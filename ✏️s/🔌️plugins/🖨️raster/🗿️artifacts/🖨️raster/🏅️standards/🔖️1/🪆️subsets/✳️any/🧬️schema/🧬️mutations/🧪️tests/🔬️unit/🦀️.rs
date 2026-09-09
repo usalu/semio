@@ -1,11 +1,10 @@
-
 use super::*;
 use crate::standards::v1::subsets::any::schema::{empty_raster_snapshot, layer_name, layer_visible};
-use crate::{RASTER_DOCUMENT_SCHEMA, RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform};
+use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use protocol::Mutation;
 
 use semio_framework_os_kernel as vcs;
-use store::{ArtifactCommand, create_document_envelope};
+use store::{create_document_envelope, ArtifactCommand};
 
 fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
     RasterLayerNode::Pixel { id: id.into(), name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(512), height: Some(512), image_key: None }

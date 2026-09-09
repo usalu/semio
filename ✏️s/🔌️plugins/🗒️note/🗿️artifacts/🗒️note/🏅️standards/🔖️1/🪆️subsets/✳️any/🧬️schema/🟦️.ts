@@ -27,21 +27,6 @@ export interface NoteArtifact {
   eraserRadius?: number;
   /** @state artifact */
   assets: Record<string, NoteImageAsset>;
-  /** @state presence */
-  selectedBlockIds: string[];
-  /** @state presence */
-  activeUtilityId: string;
-  /** @state config */
-  engagementInput: string;
-  /** @state config */
-  cameraX: number;
-  /** @state config */
-  cameraY: number;
-  /** @state config */
-  cameraZoom: number;
-  /** @state config */
-  /** @state artifact */
-  hoveredBlockId?: string;
 }
 
 export interface NoteBlockNode {
@@ -119,13 +104,6 @@ export function parseNoteArtifact(value: unknown, at = "$"): NoteArtifact {
     pencilWidth: row["pencilWidth"] === undefined ? undefined : noteNoteArtifactGuardNumber(row["pencilWidth"], `${at}.pencilWidth`),
     eraserRadius: row["eraserRadius"] === undefined ? undefined : noteNoteArtifactGuardNumber(row["eraserRadius"], `${at}.eraserRadius`),
     assets: noteNoteArtifactGuardObject(row["assets"], `${at}.assets`),
-    selectedBlockIds: noteNoteArtifactGuardArray(row["selectedBlockIds"], `${at}.selectedBlockIds`).map((item, index) => noteNoteArtifactGuardString(item, `${at}.selectedBlockIds[${index}]`)),
-    activeUtilityId: noteNoteArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
-    engagementInput: noteNoteArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),
-    cameraX: noteNoteArtifactGuardNumber(row["cameraX"], `${at}.cameraX`),
-    cameraY: noteNoteArtifactGuardNumber(row["cameraY"], `${at}.cameraY`),
-    cameraZoom: noteNoteArtifactGuardNumber(row["cameraZoom"], `${at}.cameraZoom`),
-    hoveredBlockId: row["hoveredBlockId"] === undefined ? undefined : noteNoteArtifactGuardString(row["hoveredBlockId"], `${at}.hoveredBlockId`),
   };
 }
 

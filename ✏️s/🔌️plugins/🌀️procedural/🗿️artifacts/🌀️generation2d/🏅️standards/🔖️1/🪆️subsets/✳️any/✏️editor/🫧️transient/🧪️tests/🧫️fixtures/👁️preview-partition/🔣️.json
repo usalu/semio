@@ -1,0 +1,9 @@
+{
+  "steps": [
+    { "previewText": "{\"layers\":[1]}" },
+    { "previewText": "{\"layers\":[2]}" },
+    { "previewText": null }
+  ],
+  "expected": { "generationPreviewText": null }
+}
+

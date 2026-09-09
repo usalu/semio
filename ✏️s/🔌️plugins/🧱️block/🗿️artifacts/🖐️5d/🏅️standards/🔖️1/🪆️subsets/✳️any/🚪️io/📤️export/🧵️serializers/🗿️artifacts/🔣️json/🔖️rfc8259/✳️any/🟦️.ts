@@ -115,13 +115,12 @@ export const BLOCK5D_GRIP_TEMPLATE_FIELDS: readonly BlockJsonField[] = [
   { key: "radius3d", kind: "float" },
 ];
 
-/** 📸️ `Block5dSnapshot` — the member order the Rust struct declares, including the two
- * `#[value(rename = "2d"/"3d")]` members whose json keys are bare dimension names. */
+/** 📸️ `Block5dSnapshot` — the member order and canonical camel-case keys declared by Rust. */
 export const BLOCK5D_SNAPSHOT_FIELDS: readonly BlockJsonField[] = [
   { key: "schema", kind: "text" },
   { key: "partKind", kind: "record", fields: BLOCK_KIND_IDENTITY_FIELDS },
-  { key: "2d", kind: "record", fields: BLOCK5D_PART_2D_FIELDS },
-  { key: "3d", kind: "record", fields: BLOCK5D_PART_3D_FIELDS },
+  { key: "part2d", kind: "record", fields: BLOCK5D_PART_2D_FIELDS },
+  { key: "part3d", kind: "record", fields: BLOCK5D_PART_3D_FIELDS },
   { key: "representations", kind: "table", fields: BLOCK_REPRESENTATION_FIELDS },
   { key: "gripKinds", kind: "table", fields: BLOCK5D_GRIP_KIND_FIELDS },
   { key: "grips", kind: "table", fields: BLOCK5D_GRIP_TEMPLATE_FIELDS },

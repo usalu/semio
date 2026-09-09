@@ -1,7 +1,8 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `delete-rule-clause`.
 
-use crate::editor::rewriting::config::RewritingConfigMutation;
-use semio_s_artifact_trinity_jack::{Graph, JackSnapshot, PropertyValue};
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_graph::manifest::PropertyValue;
+use semio_s_artifact_trinity_jack::{Graph, JackSnapshot};
 use crate::standards::v1::subsets::any::schema::{ParameterKind, Rhs};
 use crate::rewriting_snapshot_mutations;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;

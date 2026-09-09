@@ -4,12 +4,12 @@
 //! `DocxDocument.body` block and editing it through the artifact's own
 //! `DocxMutation::SetBlockContent`.
 
+use crate::editor::docx::standards::v_ecma_376::subsets::transitional::modes::edit;
+use crate::editor::docx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
 use crate::schema::diff::DocxBlockPath;
 use crate::schema::mutations::set_block_content;
 use crate::schema::snapshot::{DocxBlock, DocxRun};
 use crate::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
-use crate::editor::docx::standards::v_ecma_376::subsets::transitional::modes::edit;
-use crate::editor::docx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };

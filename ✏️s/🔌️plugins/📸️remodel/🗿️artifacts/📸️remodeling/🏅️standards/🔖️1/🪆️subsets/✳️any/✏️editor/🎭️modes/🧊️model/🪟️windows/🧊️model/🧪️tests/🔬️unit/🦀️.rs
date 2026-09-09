@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::default_remodeling_scene;
 use crate::editor::remodeling::testkit::{app, render as render_body};

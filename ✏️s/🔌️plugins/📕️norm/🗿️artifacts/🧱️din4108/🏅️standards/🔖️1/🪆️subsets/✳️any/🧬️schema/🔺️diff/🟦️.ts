@@ -39,8 +39,6 @@ export interface Din4108Diff {
   applicationType?: string;
   /** @state artifact */
   declaredApplicationClass?: string;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 
 export interface Din4108Artifact {
@@ -62,7 +60,6 @@ export interface Din4108Artifact {
   bb2DetailsConform: boolean;
   applicationType: string;
   declaredApplicationClass: string;
-  selectedCheckIndex?: number | null;
 }
 export interface Din4108LayerDocument { thicknessM: number; lambdaWMk: number; }
 

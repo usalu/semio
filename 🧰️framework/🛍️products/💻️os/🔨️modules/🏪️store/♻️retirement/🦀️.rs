@@ -123,6 +123,41 @@ impl<T: RetireOwned> RetireOwned for Vec<T> {
         Box::new(Collection(ManuallyDrop::new(self)))
     }
 }
+
+struct OrderedMap<K: RetireOwned + Ord, V: RetireOwned>(ManuallyDrop<std::collections::BTreeMap<K, V>>);
+impl<K: RetireOwned + Ord, V: RetireOwned> RetirementCursor for OrderedMap<K, V> {
+    fn close_step(&mut self, _: usize) -> RetirementStep {
+        self.0.pop_first().map_or(RetirementStep::Complete, |entry| RetirementStep::Child(entry.retirement()))
+    }
+    fn terminal_is_empty(&self) -> bool { self.0.is_empty() }
+}
+impl<K: RetireOwned + Ord, V: RetireOwned> Drop for OrderedMap<K, V> {
+    fn drop(&mut self) {
+        assert!(self.0.is_empty(), "owned ordered map retired before terminal-empty");
+        unsafe { ManuallyDrop::drop(&mut self.0) };
+    }
+}
+impl<K: RetireOwned + Ord, V: RetireOwned> RetireOwned for std::collections::BTreeMap<K, V> {
+    fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(OrderedMap(ManuallyDrop::new(self))) }
+}
+impl<V: RetireOwned> RetireOwned for protocol::MapDelta<V> {
+    fn retirement(self) -> Box<dyn RetirementCursor> { self.into_entries().retirement() }
+}
+impl<V: RetireOwned> RetireOwned for protocol::MapEntryDelta<V> {
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        let (precondition, operation) = self.into_parts();
+        sequence(vec![leaf(precondition), operation.retirement()])
+    }
+}
+impl<V: RetireOwned> RetireOwned for protocol::MapEntryOperation<V> {
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        match self {
+            protocol::MapEntryOperation::Set(value) => sequence(vec![leaf(0u8), value.retirement()]),
+            protocol::MapEntryOperation::Remove => leaf(1u8),
+            protocol::MapEntryOperation::Reject => leaf(2u8),
+        }
+    }
+}
 impl<T: RetireOwned> RetireOwned for Option<T> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         self.map_or_else(|| sequence(Vec::new()), RetireOwned::retirement)
@@ -166,6 +201,31 @@ impl Drop for Sequence {
 }
 pub fn sequence(fields: Vec<Box<dyn RetirementCursor>>) -> Box<dyn RetirementCursor> {
     Box::new(Sequence(ManuallyDrop::new(fields)))
+}
+
+struct ValueRetirement(ManuallyDrop<Option<crate::DslValue>>);
+impl RetirementCursor for ValueRetirement {
+    fn close_step(&mut self, _: usize) -> RetirementStep {
+        match self.0.take() {
+            None | Some(crate::DslValue::Null) => RetirementStep::Complete,
+            Some(crate::DslValue::Bool(value)) => RetirementStep::Child(value.retirement()),
+            Some(crate::DslValue::Number(value)) => RetirementStep::Child(match value {
+                crate::Number::UInt(value) => value.retirement(),
+                crate::Number::Int(value) => value.retirement(),
+                crate::Number::Float(value) => value.retirement(),
+            }),
+            Some(crate::DslValue::String(value)) => RetirementStep::Child(value.retirement()),
+            Some(crate::DslValue::Array(value)) => RetirementStep::Child(value.retirement()),
+            Some(crate::DslValue::Object(value)) => RetirementStep::Child(value.retirement()),
+        }
+    }
+    fn terminal_is_empty(&self) -> bool { self.0.is_none() }
+}
+impl Drop for ValueRetirement {
+    fn drop(&mut self) { assert!(self.0.is_none(), "dynamic value retired before terminal-empty"); }
+}
+impl RetireOwned for crate::DslValue {
+    fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(ValueRetirement(ManuallyDrop::new(Some(self)))) }
 }
 
 struct CursorStack(ManuallyDrop<Vec<Box<dyn RetirementCursor>>>);

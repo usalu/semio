@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;

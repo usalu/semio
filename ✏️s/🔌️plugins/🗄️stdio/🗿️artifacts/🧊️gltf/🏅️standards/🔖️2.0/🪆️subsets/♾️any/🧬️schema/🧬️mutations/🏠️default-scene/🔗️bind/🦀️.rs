@@ -1,18 +1,32 @@
 //! 🧬️ Direct bind-default-scene mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::GltfSnapshot;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
+use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.bind-default-scene.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/scene"];
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-pub struct GltfBindDefaultScenePayload { pub scene: usize }
+pub struct GltfBindDefaultScenePayload {
+    pub scene: usize,
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn validate(payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.scene >= base.document.scenes.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/scenes", "scene must exist")); }
-    if Some(payload.scene) == base.document.scene { return Err(reject("gltf.mutation.no-observable-change", "document/scene", "scene is already default")); } Ok(()) }
+pub fn validate(payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.scene >= base.document.scenes.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/scenes", "scene must exist"));
+    }
+    if Some(payload.scene) == base.document.scene {
+        return Err(reject("gltf.mutation.no-observable-change", "document/scene", "scene is already default"));
+    }
+    Ok(())
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.scene = Some(payload.scene); Ok(next) }
+pub fn apply(payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.scene = Some(payload.scene);
+    Ok(next)
+}
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -28,7 +42,10 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindDefaultSc
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => { match apply(payload, base) { Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
+            Self::Apply(payload) => match apply(payload, base) {
+                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+                Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
+            },
             Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
                 Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
                 Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),

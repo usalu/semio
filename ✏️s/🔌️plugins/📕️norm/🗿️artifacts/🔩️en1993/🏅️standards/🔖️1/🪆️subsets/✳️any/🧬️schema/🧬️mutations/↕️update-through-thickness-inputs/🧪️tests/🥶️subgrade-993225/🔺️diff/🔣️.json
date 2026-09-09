@@ -53,8 +53,8 @@
   "fatigueCategory": null,
   "fatigueMethod": null,
   "t10SteelSubgrade": "K2",
-  "t10ActualThicknessMm": 40.0,
-  "t10TEdC": -20.0,
+  "t10ActualThicknessMm": 40,
+  "t10TEdC": -20,
   "tensionComponentFUkKn": null,
   "tensionComponentFKKn": null,
   "tensionComponentNEdKn": null,
@@ -73,6 +73,5 @@
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

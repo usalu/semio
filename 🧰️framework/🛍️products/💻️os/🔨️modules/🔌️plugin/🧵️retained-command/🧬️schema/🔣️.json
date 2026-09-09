@@ -542,13 +542,11 @@
         },
         "textMaximumBytes": {
           "type": "integer",
-          "minimum": 1,
-          "maximum": 65536
+          "const": 128
         },
         "grantBytes": {
           "type": "integer",
-          "minimum": 1,
-          "maximum": 16777216
+          "const": 4096
         },
         "sources": {
           "type": "array",
@@ -677,8 +675,14 @@
           "uniqueItems": true,
           "items": {
             "enum": [
+              "HostOnly",
+              "Artifact",
               "Config",
-              "HostOnly"
+              "Draft",
+              "Presence",
+              "Transient",
+              "Child",
+              "Interaction"
             ]
           }
         },

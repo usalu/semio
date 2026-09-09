@@ -42,8 +42,7 @@ pub enum GltfSourceForm {
 /// order survives decode->encode exactly. `Number` widens to `f64` (glTF extras/extensions are
 /// free-form JSON with no `bufferView`-precision requirement, unlike `stdio.json`'s own
 /// arbitrary-precision lexeme retention).
-#[derive(Clone, Debug, PartialEq)]
-#[derive(Default)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub enum GltfJson {
     #[default]
     Null,
@@ -53,7 +52,6 @@ pub enum GltfJson {
     Array(Vec<GltfJson>),
     Object(Vec<(String, GltfJson)>),
 }
-
 
 /// 🌱️ Additive alongside [`dsl::ToValue`]/[`dsl::FromValue`] below, not a replacement: `🚪️io/🦀️.rs`'s
 /// `.gltf`/`.glb` codec no longer needs this pair (it round-trips `GltfDocument` through `pack::json`

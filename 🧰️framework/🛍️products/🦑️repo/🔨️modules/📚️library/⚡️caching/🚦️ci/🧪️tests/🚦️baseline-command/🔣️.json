@@ -1,0 +1,8 @@
+{
+  "project": "repo",
+  "target": "ci-baseline",
+  "command": "bun ./🚦️ci/📜️script.ts baseline",
+  "arguments": ["baseline", "--full"],
+  "outputKeys": ["mode", "base", "head"],
+  "maximumImports": 16
+}

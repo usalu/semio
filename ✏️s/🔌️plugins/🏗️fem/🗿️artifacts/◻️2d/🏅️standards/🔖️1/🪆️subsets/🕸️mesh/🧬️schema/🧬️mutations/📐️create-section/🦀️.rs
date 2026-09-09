@@ -1,7 +1,7 @@
 //! 🌱️ Fem2d mutation — `CreateSection` payload + `MutationKind` impl.
 
-use crate::{Fem2dSnapshot, FemSection};
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use crate::{Fem2dSnapshot, FemSection};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

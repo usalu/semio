@@ -4,8 +4,14 @@
   "rhsJson": null,
   "parameterBindings": null,
   "ruleLayout": {
-    "shaft": null
-  },
-  "lodModeByWindow": null,
-  "beforePaneCamera": null
+    "entries": [
+      {
+        "key": "shaft",
+        "precondition": "present",
+        "operation": {
+          "kind": "remove"
+        }
+      }
+    ]
+  }
 }

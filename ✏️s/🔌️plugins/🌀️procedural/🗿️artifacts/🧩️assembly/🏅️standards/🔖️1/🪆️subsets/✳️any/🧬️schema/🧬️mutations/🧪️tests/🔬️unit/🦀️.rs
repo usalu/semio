@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::snapshot::{AssemblyRule, AssemblySlot, AssemblySlotEdge};
 use protocol::{MutationDiff, SemanticMutation};

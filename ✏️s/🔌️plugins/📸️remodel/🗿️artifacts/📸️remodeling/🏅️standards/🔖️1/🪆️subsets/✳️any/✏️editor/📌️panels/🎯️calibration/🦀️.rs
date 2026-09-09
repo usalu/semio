@@ -1,8 +1,8 @@
 //! 🎯️ Remodeling play app panel — the Calibration tab: per-camera intrinsics, rig extrinsics and ground
 //! control points.
 
-use crate::RemodelingSnapshot;
 use crate::editor::remodeling::terminology::RemodelingLabels;
+use crate::RemodelingSnapshot;
 use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
 
 //#region 🔖️Constants
@@ -35,7 +35,10 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemb
     }
     let cameras = crate::editor::remodeling::ui_node_list(cameras)?;
     let gcps = crate::editor::remodeling::ui_node_list(gcps)?;
-    PanelTreeBuilder::new("remodeling-calibration")?.section("remodeling-calibration.cameras", Some(crate::editor::remodeling::ui_label(labels.panel_calibration.as_str())?), true, cameras)?.section("remodeling-calibration.gcps", Some(crate::editor::remodeling::ui_label(labels.gcps.as_str())?), true, gcps)?.build()
+    PanelTreeBuilder::new("remodeling-calibration")?
+        .section("remodeling-calibration.cameras", Some(crate::editor::remodeling::ui_label(labels.panel_calibration.as_str())?), true, cameras)?
+        .section("remodeling-calibration.gcps", Some(crate::editor::remodeling::ui_label(labels.gcps.as_str())?), true, gcps)?
+        .build()
 }
 //#endregion 🔖️Render
 

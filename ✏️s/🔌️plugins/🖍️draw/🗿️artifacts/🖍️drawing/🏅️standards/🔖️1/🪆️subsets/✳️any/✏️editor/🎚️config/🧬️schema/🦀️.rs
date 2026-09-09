@@ -1,6 +1,5 @@
 //! 🧬️ Drawing app config schema — every local-ui field of DrawingConfig.
 
-
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Config
@@ -13,8 +12,6 @@ pub struct DrawingConfig {
     pub engagement_input: String,
     #[state(config)]
     pub camera: DrawingCamera,
-    #[state(config)]
-    pub active_utility_id: String,
     #[state(config)]
     pub trace_pointer_generation: u64,
     #[state(config)]
@@ -31,13 +28,7 @@ pub struct DrawingConfig {
 pub fn app_schema_descriptor() -> ::framework_schema::AppSchemaDescriptor {
     ::framework_schema::AppSchemaDescriptor {
         id: "s.draw.drawing",
-        config: ::framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        config: ::framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         presence: ::framework_schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),

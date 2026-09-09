@@ -142,7 +142,7 @@ fn pointer<T>(value: &T) -> *mut c_void {
 }
 
 fn optional<T>(value: Option<&T>) -> *mut c_void {
-    value.map(pointer).unwrap_or(std::ptr::null_mut())
+    value.map_or(std::ptr::null_mut(), pointer)
 }
 
 fn required_new<T>(pointer: *mut c_void, selector: &'static str) -> Owned<T> {

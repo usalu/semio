@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `AddType`.
 
-use crate::standards::v1::subsets::kit::schema::mutations::{SemioKitMutation, remove_type};
+use crate::standards::v1::subsets::kit::schema::mutations::{remove_type, SemioKitMutation};
 use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Inverse

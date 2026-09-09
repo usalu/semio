@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::standards::v_jfif_1_01::subsets::baseline::schema::{CODE_ARITHMETIC, CODE_COMPONENT_SAMPLING, CODE_HUFFMAN_TABLE_COUNT, CODE_PRECISION, CODE_SOF_MARKER, check_baseline_conformance};
+use crate::standards::v_jfif_1_01::subsets::baseline::schema::{check_baseline_conformance, CODE_ARITHMETIC, CODE_COMPONENT_SAMPLING, CODE_HUFFMAN_TABLE_COUNT, CODE_PRECISION, CODE_SOF_MARKER};
 use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::{JpgFrameHeader, JpgHuffmanClass};
 
 fn table(class: JpgHuffmanClass, id: u8) -> JpgHuffmanTable {

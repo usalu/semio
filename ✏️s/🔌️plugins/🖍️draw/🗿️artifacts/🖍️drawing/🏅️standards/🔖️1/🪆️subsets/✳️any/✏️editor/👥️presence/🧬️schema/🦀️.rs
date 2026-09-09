@@ -10,8 +10,6 @@ pub struct DrawingPresence {
     pub engagement_input: String,
     #[state(presence)]
     pub camera: DrawingCamera,
-    #[state(presence)]
-    pub active_utility_id: String,
 }
 
 //#region 🔁️Re-exports

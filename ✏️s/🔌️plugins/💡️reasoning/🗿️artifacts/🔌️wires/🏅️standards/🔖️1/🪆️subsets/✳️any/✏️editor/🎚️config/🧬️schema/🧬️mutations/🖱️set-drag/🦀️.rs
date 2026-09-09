@@ -20,7 +20,13 @@ impl protocol::MutationKind<WiresConfig, WiresConfigMutation> for SetDrag {
         next.drag_last_y = self.last_y;
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &WiresConfig) -> Vec<WiresConfigMutation> { vec![WiresConfigMutation::SetDrag(Self { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y })] }
-    fn label(&self) -> String { "Set Drag".into() }
-    fn target(&self) -> Vec<String> { vec!["drag".into()] }
+    fn inverse(&self, base: &WiresConfig) -> Vec<WiresConfigMutation> {
+        vec![WiresConfigMutation::SetDrag(Self { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y })]
+    }
+    fn label(&self) -> String {
+        "Set Drag".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["drag".into()]
+    }
 }

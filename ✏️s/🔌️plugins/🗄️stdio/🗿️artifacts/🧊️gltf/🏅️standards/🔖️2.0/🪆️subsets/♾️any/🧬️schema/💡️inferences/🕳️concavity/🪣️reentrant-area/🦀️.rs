@@ -18,7 +18,8 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfConcavityRaw) -> GltfMeasure<f64> {
-    raw.reentrant_area.map_or_else(|| unavailable(GltfUnit::SquareMetre, GltfAvailability::Degenerate, Vec::new(), context.sample_count, Some(context.topology)), |area| estimate(area, GltfUnit::SquareMetre, context.sample_count, Some(context.topology)))
+    raw.reentrant_area
+        .map_or_else(|| unavailable(GltfUnit::SquareMetre, GltfAvailability::Degenerate, Vec::new(), context.sample_count, Some(context.topology)), |area| estimate(area, GltfUnit::SquareMetre, context.sample_count, Some(context.topology)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

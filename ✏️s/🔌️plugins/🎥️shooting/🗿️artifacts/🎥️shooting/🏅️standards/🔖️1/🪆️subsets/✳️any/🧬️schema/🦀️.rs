@@ -1,16 +1,16 @@
 //! 🧬️ Shooting artifact schema — every field of the artifact with its state class.
 
 use crate::{ShootingEmblemChild, ShootingSnapshot};
+use dsl::json;
+use dsl::os_pack::json::Value;
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml;
 use semio_s_artifact_stdio_svg::SvgSnapshot;
-use dsl::json;
-use dsl::os_pack::json::Value;
 
 //#region 🔖️Artifact
-/// 🧬️ Full shooting artifact state across the artifact, presence and config lanes.
+/// 🧬️ shooting document artifact state.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.shooting.shooting")]
@@ -33,49 +33,13 @@ pub struct ShootingArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.image")]
     pub emblem: Option<ShootingEmblemChild>,
-    #[state(presence)]
-    pub selected_shot_ids: Vec<String>,
-    #[state(presence)]
-    pub active_utility_id: String,
-    #[state(config)]
-    pub default_shot_format: String,
-    #[state(config)]
-    pub default_shot_shape: String,
-    #[state(config)]
-    pub default_asset_format: String,
-    #[state(config)]
-    pub center_model: bool,
-    #[state(config)]
-    pub fit_revision: u32,
-    #[state(config)]
-    pub camera_draft_label: String,
-    #[state(config)]
-    pub camera: ShootingCamera,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for ShootingArtifact {
     fn default() -> Self {
-        Self {
-            schema: crate::SHOOTING_DOCUMENT_SCHEMA.into(),
-            assets: Vec::new(),
-            saved_cameras: Vec::new(),
-            scene: ShootingSceneLighting::default(),
-            shots: Vec::new(),
-            active_shot_id: String::new(),
-            active_asset_id: String::new(),
-            emblem: None,
-            selected_shot_ids: Vec::new(),
-            active_utility_id: "move".into(),
-            default_shot_format: "png".into(),
-            default_shot_shape: "rectangle".into(),
-            default_asset_format: "glb".into(),
-            center_model: true,
-            fit_revision: 0,
-            camera_draft_label: String::new(),
-            camera: ShootingCamera::default(),
-        }
+        Self { schema: crate::SHOOTING_DOCUMENT_SCHEMA.into(), assets: Vec::new(), saved_cameras: Vec::new(), scene: ShootingSceneLighting::default(), shots: Vec::new(), active_shot_id: String::new(), active_asset_id: String::new(), emblem: None }
     }
 }
 
@@ -94,7 +58,7 @@ impl ShootingArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: ShootingSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -353,20 +317,12 @@ pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &Sho
 }
 //#endregion 🔖️MediaExport
 
-
-
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.shooting.shooting` — twenty handcrafted schema leaves.
 pub fn shooting_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.shooting.shooting",
-        artifact: schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -375,11 +331,7 @@ pub fn shooting_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
         diff: schema::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
+            rust: include_str!("🔺️diff/🦀️.rs"), typescript: include_str!("🔺️diff/🟦️.ts"), graphql: include_str!("🔺️diff/🔗️.graphql"), json_schema: include_str!("🔺️diff/🔣️.json"), proto: include_str!("🔺️diff/🛰️.proto")
         },
         mutations: schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
@@ -514,10 +466,10 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
+pub use crate::ShootingAsset;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::ShootingCamera;
 pub use crate::ShootingSavedCamera;
-pub use crate::ShootingAsset;
-pub use crate::ShootingShot;
 pub use crate::ShootingSceneLighting;
+pub use crate::ShootingShot;
 //#endregion 🔁️Re-exports

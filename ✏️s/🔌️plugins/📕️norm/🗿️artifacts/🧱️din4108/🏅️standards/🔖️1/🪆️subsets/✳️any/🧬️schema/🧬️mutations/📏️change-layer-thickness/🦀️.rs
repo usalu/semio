@@ -1,7 +1,6 @@
 //! 📏️ `change-layer-thickness` — sets one construction layer's `thickness_m`, addressed by
 //! BASE-state index.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

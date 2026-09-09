@@ -7,7 +7,7 @@
   "aggregateVariant": "SetQuery",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-query",
-  "binaryTag": 3,
+  "binaryTag": 1,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
   "outcomeClasses": [

@@ -1,6 +1,5 @@
-
+use crate::schema::mutations::{apply_csv_mutation, CsvMutation};
 use crate::CsvSnapshot;
-use crate::schema::mutations::{CsvMutation, apply_csv_mutation};
 
 /// ▶️ Applies a set-snapshot mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -25,7 +24,11 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetSnapshot {
     fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {
         crate::schema::mutations::agg_inverse(&CsvMutation::SetSnapshot(SetSnapshot { snapshot: self.snapshot.clone() }), base)
     }
-    fn label(&self) -> String { "set-snapshot".to_string() }
-    fn target(&self) -> Vec<String> { Vec::new() }
+    fn label(&self) -> String {
+        "set-snapshot".to_string()
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
 }
 //#endregion 🔖️Payload

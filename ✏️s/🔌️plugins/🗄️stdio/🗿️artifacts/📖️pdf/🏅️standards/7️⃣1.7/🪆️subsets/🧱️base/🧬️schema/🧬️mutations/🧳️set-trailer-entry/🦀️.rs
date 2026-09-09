@@ -2,7 +2,10 @@
 
 use super::remove_trailer_entry::RemoveTrailerEntry;
 use super::PdfMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff}, snapshot::{PdfObject, PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{
+    diff::{self, PdfDiff},
+    snapshot::{PdfObject, PdfSnapshot},
+};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -22,7 +25,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetTrailerEntry {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
-        match base.trailer.iter().find(|entry| entry.key == self.key) { Some(entry) => vec![PdfMutation::SetTrailerEntry(SetTrailerEntry { key: self.key.clone(), value: entry.value.clone() })], None => vec![PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key: self.key.clone() })] }
+        match base.trailer.iter().find(|entry| entry.key == self.key) {
+            Some(entry) => vec![PdfMutation::SetTrailerEntry(SetTrailerEntry { key: self.key.clone(), value: entry.value.clone() })],
+            None => vec![PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key: self.key.clone() })],
+        }
     }
 
     fn label(&self) -> String {

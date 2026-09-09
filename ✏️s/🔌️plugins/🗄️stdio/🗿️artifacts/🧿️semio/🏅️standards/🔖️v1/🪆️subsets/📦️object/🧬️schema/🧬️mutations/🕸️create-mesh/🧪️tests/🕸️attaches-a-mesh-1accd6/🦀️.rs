@@ -49,11 +49,7 @@ async fn the_undo_delete_mesh_detaches_the_handle_again() {
     let base = before();
     let mutation = mutation();
     let undo = mutation.inverse(&base);
-    assert_eq!(
-        undo,
-        vec![SemioObjectMutation::DeleteMesh(crate::standards::v1::subsets::object::schema::mutations::delete_mesh::DeleteMesh {})],
-        "creating a child into an EMPTY slot must undo as the matching delete, not as another create"
-    );
+    assert_eq!(undo, vec![SemioObjectMutation::DeleteMesh(crate::standards::v1::subsets::object::schema::mutations::delete_mesh::DeleteMesh {})], "creating a child into an EMPTY slot must undo as the matching delete, not as another create");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward 🕸️create-mesh applies");
     for step in &undo {
         current = step.diff(&current).diff().apply(&current).expect("the undo DeleteMesh applies to the object that now has a child");

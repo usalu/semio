@@ -117,10 +117,7 @@ impl Curve3 {
         match self {
             Curve3::Nurbs { knots, controls, weights } => {
                 let controls_h: Vec<Vec<f64>> = controls.iter().zip(weights).map(|(p, &w)| vec![p.x * w, p.y * w, p.z * w, w]).collect();
-                curve_derivatives_rational(knots, &controls_h, t, order)
-                    .into_iter()
-                    .map(|v| Vec3::new(v[0], v[1], v[2]))
-                    .collect()
+                curve_derivatives_rational(knots, &controls_h, t, order).into_iter().map(|v| Vec3::new(v[0], v[1], v[2])).collect()
             }
             _ => (0..=order)
                 .map(|k| match k {
@@ -386,9 +383,7 @@ impl Curve3 {
     fn transformed_via_nurbs(&self, map: &Affine3) -> Curve3 {
         let nurbs = match self {
             Curve3::Circle { frame, radius } => arc_to_nurbs_with_span(frame, *radius, *radius, self.domain(), refined_max_span(*radius)),
-            Curve3::Ellipse { frame, major_radius, minor_radius } => {
-                arc_to_nurbs_with_span(frame, *major_radius, *minor_radius, self.domain(), refined_max_span(major_radius.max(*minor_radius)))
-            }
+            Curve3::Ellipse { frame, major_radius, minor_radius } => arc_to_nurbs_with_span(frame, *major_radius, *minor_radius, self.domain(), refined_max_span(major_radius.max(*minor_radius))),
             _ => self.to_nurbs(self.domain()),
         };
         Curve3::Nurbs { knots: nurbs.knots, controls: nurbs.controls.into_iter().map(|p| map.apply_point(p)).collect(), weights: nurbs.weights }

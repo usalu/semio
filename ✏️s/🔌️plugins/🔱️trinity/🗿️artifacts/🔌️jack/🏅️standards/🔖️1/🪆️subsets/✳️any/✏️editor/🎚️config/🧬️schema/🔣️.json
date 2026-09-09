@@ -4,26 +4,12 @@
   "title": "JackConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "camera",
-    "jackQuery",
-    "lodModeByWindow"
-  ],
+  "required": ["jackQuery"],
   "properties": {
-    "camera": {
-      "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera",
-      "x-semio-state": "config"
-    },
     "jackQuery": {
       "type": "string",
-      "x-semio-state": "config"
-    },
-    "lodModeByWindow": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      },
       "x-semio-state": "config"
     }
   }
 }
+

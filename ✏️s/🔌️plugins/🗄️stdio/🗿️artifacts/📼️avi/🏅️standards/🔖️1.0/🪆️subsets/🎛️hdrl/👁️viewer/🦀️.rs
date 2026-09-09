@@ -6,9 +6,9 @@
 
 use crate::standards::v1_0::subsets::any::schema::mutations::AviMutation;
 use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
-use crate::{AVI_DIALECT, STDIO_AVI_DOCUMENT_SCHEMA};
 use crate::viewer::avi::modes::view;
 use crate::viewer::avi::modes::view::windows::main;
+use crate::{AVI_DIALECT, STDIO_AVI_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

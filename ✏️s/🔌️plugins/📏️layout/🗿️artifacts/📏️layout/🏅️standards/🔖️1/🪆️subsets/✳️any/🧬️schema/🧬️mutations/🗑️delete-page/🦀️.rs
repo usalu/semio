@@ -1,9 +1,8 @@
 //! 🗑️ `delete-page` — removes a {@link Page} by id; inverse recreates it via `create-page`.
 
-
-use crate::{LayoutDiff, LayoutSnapshot};
-use crate::mutations::{LayoutMutation, create_page};
+use crate::mutations::{create_page, LayoutMutation};
 use crate::standards::v1::subsets::any::schema::diff::LayoutPagesDelta;
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -32,7 +31,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeletePage {
 }
 //#endregion 🗑️DeletePage
 
-
 //#region 🗑️DeletePage
 pub fn diff_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if !base.pages.iter().any(|page| page.id == payload.id) {
@@ -41,7 +39,6 @@ pub fn diff_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> protocol
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🗑️DeletePage
-
 
 //#region 🗑️DeletePage
 pub fn inverse_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

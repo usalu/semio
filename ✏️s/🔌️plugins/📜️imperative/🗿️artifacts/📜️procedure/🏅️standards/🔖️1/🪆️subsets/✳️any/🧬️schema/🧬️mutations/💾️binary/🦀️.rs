@@ -72,8 +72,7 @@ fn procedure_operation_to_dsl(operation: &ProcedureMutation) -> ProcedureMutatio
 }
 
 fn procedure_operation_from_dsl(dsl_op: ProcedureMutationDsl) -> ProcedureMutation {
-    let converters: &[ProcedureMutationDecoder] =
-        &[super::create_step::text::from_dsl, super::delete_step::text::from_dsl, super::reorder_steps::text::from_dsl, super::edit_step_params::text::from_dsl];
+    let converters: &[ProcedureMutationDecoder] = &[super::create_step::text::from_dsl, super::delete_step::text::from_dsl, super::reorder_steps::text::from_dsl, super::edit_step_params::text::from_dsl];
     let mut wire = dsl_op;
     for convert in converters {
         match convert(wire) {

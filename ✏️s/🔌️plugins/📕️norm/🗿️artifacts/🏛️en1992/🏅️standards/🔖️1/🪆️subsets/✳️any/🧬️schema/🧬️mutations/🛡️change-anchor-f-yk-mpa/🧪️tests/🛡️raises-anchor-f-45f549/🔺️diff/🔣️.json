@@ -29,11 +29,10 @@
   "anchorHEfMm": null,
   "anchorCracked": null,
   "anchorFUkMpa": null,
-  "anchorFYkMpa": 720.0,
+  "anchorFYkMpa": 720,
   "anchorASMm2": null,
   "anchorDMm": null,
   "anchorC1Mm": null,
   "anchorNEdKn": null,
-  "anchorVEdKn": null,
-  "selectedCheckIndex": null
+  "anchorVEdKn": null
 }

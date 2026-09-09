@@ -1,9 +1,8 @@
 //! 🪒 `change-v-ed-kn` payload — changes the En1997 document's `v_ed_kn` (design vertical load V_Ed [kN]).
 
-
-use crate::En1997Snapshot;
 use crate::diff::En1997Diff;
 use crate::mutations::En1997Mutation;
+use crate::En1997Snapshot;
 //#region 🔖️ChangeVEdKn
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ReplaceDailyScheduleHourlyValues` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceDailyScheduleHourlyValues, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -20,7 +20,11 @@ pub fn diff(payload: &super::ReplaceDailyScheduleHourlyValues, base: &EnergyMode
     }
     let mut model = base.model.clone();
     if let Some(item) = model.schedules.daily.iter_mut().find(|item| item.id == payload.id) {
-        item.hourly_values = { let mut values = [0.0f64; 24]; values.copy_from_slice(&payload.new_hourly_values); values };
+        item.hourly_values = {
+            let mut values = [0.0f64; 24];
+            values.copy_from_slice(&payload.new_hourly_values);
+            values
+        };
     }
     protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }

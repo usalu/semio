@@ -6,8 +6,7 @@
   "additionalProperties": false,
   "required": [
     "selectedShotIds",
-    "camera",
-    "activeUtilityId"
+    "camera"
   ],
   "properties": {
     "selectedShotIds": {
@@ -19,10 +18,6 @@
     },
     "camera": {
       "$ref": "https://semio.tech/schema/s/shooting/shooting/artifact.json#/$defs/ShootingCamera",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     }
   }

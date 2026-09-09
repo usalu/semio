@@ -43,48 +43,48 @@ use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "➕insert-vertex/🦀️.rs"]
-pub mod insert_vertex;
-#[path = "➖remove-vertex/🦀️.rs"]
-pub mod remove_vertex;
-#[path = "📍set-vertex/🦀️.rs"]
-pub mod set_vertex;
-#[path = "🧷insert-texcoord/🦀️.rs"]
-pub mod insert_tex_coord;
-#[path = "🚮remove-texcoord/🦀️.rs"]
-pub mod remove_tex_coord;
-#[path = "🧭set-texcoord/🦀️.rs"]
-pub mod set_tex_coord;
-#[path = "📐insert-normal/🦀️.rs"]
-pub mod insert_normal;
-#[path = "🚫remove-normal/🦀️.rs"]
-pub mod remove_normal;
-#[path = "🧲set-normal/🦀️.rs"]
-pub mod set_normal;
 #[path = "🔷insert-face/🦀️.rs"]
 pub mod insert_face;
+#[path = "📐insert-normal/🦀️.rs"]
+pub mod insert_normal;
+#[path = "🧷insert-texcoord/🦀️.rs"]
+pub mod insert_tex_coord;
+#[path = "➕insert-vertex/🦀️.rs"]
+pub mod insert_vertex;
 #[path = "🗑️remove-face/🦀️.rs"]
 pub mod remove_face;
+#[path = "🪓remove-group/🦀️.rs"]
+pub mod remove_group;
+#[path = "🚫remove-normal/🦀️.rs"]
+pub mod remove_normal;
+#[path = "🗃️remove-object/🦀️.rs"]
+pub mod remove_object;
+#[path = "🚮remove-texcoord/🦀️.rs"]
+pub mod remove_tex_coord;
+#[path = "➖remove-vertex/🦀️.rs"]
+pub mod remove_vertex;
 #[path = "🔶set-face/🦀️.rs"]
 pub mod set_face;
 #[path = "🏷️set-group/🦀️.rs"]
 pub mod set_group;
-#[path = "🪓remove-group/🦀️.rs"]
-pub mod remove_group;
-#[path = "📦set-object/🦀️.rs"]
-pub mod set_object;
-#[path = "🗃️remove-object/🦀️.rs"]
-pub mod remove_object;
 #[path = "🎨set-mtllib/🦀️.rs"]
 pub mod set_mtllib;
-#[path = "🖌️set-usemtl/🦀️.rs"]
-pub mod set_usemtl;
+#[path = "🧲set-normal/🦀️.rs"]
+pub mod set_normal;
+#[path = "📦set-object/🦀️.rs"]
+pub mod set_object;
 #[path = "🧵set-smoothing-groups/🦀️.rs"]
 pub mod set_smoothing_groups;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
+#[path = "🧭set-texcoord/🦀️.rs"]
+pub mod set_tex_coord;
 #[path = "🕳️set-unknown-statements/🦀️.rs"]
 pub mod set_unknown_statements;
+#[path = "🖌️set-usemtl/🦀️.rs"]
+pub mod set_usemtl;
+#[path = "📍set-vertex/🦀️.rs"]
+pub mod set_vertex;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed content mutation for `stdio.obj`. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`

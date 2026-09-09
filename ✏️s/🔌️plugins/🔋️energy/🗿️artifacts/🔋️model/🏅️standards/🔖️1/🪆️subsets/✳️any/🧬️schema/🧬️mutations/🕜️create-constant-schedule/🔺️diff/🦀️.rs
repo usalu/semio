@@ -1,12 +1,17 @@
 //! 🔺️ Sparse diff builder for `CreateConstantSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateConstantSchedule, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-    if base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.id) || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.id) || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.id) || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.id) || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.id) {
+    if base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.id)
+        || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.id)
+        || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.id)
+        || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.id)
+        || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.id)
+    {
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Schedule {} is already defined.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.schedules.constants.len() {

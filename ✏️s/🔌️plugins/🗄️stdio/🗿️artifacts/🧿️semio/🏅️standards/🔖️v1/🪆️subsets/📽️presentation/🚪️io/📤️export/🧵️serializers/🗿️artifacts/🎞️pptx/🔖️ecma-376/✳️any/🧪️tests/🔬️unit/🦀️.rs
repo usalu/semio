@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::document::schema::snapshot::RunStyle;
-use crate::standards::v1::subsets::presentation::schema::snapshot::{STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA, Slide, SlidePictureImage};
+use crate::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlidePictureImage, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_semio() -> SemioPresentationSnapshot {

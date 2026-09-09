@@ -1,0 +1,11 @@
+{
+  "bun": "1.3.14",
+  "node": "24.15.0",
+  "postCreateCommand": ["bun", "nx", "run", "workspace:deps-javascript"],
+  "retiredScripts": [".devcontainer/post-create.sh"],
+  "platforms": [
+    { "architecture": "amd64", "bunArchive": "x64-baseline", "bunSha256": "a063908ae08b7852ca10939bbdc6ceed3ddabce8fb9402dce83d65d73b36e6c7", "nodeArchive": "x64", "nodeSha256": "472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6" },
+    { "architecture": "arm64", "bunArchive": "aarch64", "bunSha256": "a27ffb63a8310375836e0d6f668ae17fa8d8d18b88c37c821c65331973a19a3b", "nodeArchive": "arm64", "nodeSha256": "f3d5a797b5d210ce8e2cb265544c8e482eaedcb8aa409a8b46da7e8595d0dda0" }
+  ],
+  "rejectedArchitectures": ["i386", "riscv64", "", "arm64; touch injected"]
+}

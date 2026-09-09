@@ -150,11 +150,7 @@ const PREVIEW_POINT_MARKER_HALF_EXTENT: f64 = 0.05;
 fn point_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshData {
     let (x, y, z) = (x as f32, y as f32, z as f32);
     let e = PREVIEW_POINT_MARKER_HALF_EXTENT as f32;
-    semio_framework_plugin::MeshData {
-        positions: vec![x, y, z],
-        edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e],
-        ..Default::default()
-    }
+    semio_framework_plugin::MeshData { positions: vec![x, y, z], edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e], ..Default::default() }
 }
 
 /// 👁️ Read-only twin of the other surface's own `vector_marker_mesh`.

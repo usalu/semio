@@ -17,12 +17,12 @@
   "fireMassivity": null,
   "fireMu0": null,
   "fireDesignTemperatureC": null,
-  "cfBBarMm": 120.0,
+  "cfBBarMm": 120,
   "cfTMm": 2.5,
   "cfKSigma": 0.5,
-  "cfPsi": -1.0,
-  "cfNEdKn": 28.0,
-  "cfGrossResistanceKn": 64.0,
+  "cfPsi": -1,
+  "cfNEdKn": 28,
+  "cfGrossResistanceKn": 64,
   "stainlessMEdKnm": null,
   "stainlessWPlMm3": null,
   "stainlessFYMpa": null,
@@ -73,6 +73,5 @@
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

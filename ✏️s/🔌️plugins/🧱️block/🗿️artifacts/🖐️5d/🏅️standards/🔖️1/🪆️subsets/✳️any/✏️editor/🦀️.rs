@@ -184,7 +184,7 @@ fn block5d_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block5dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Block5dMutation, Block5dConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 struct Block5dRetainedCommandJobFactory {
@@ -502,7 +502,7 @@ impl ArtifactEditor for Block5dPlayApp {
         InteractionTopology { domains }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = block5d_labels(view_state);
         let node = match body_key {
             board::BLOCK5D_BODY_BOARD => board::render(doc.snapshot, labels)?,
@@ -599,7 +599,7 @@ pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("removeGripKind", LocalizedLabel::native("Remove Grip Kind", "Griffart entfernen"))
             .mutation("addGrip", LocalizedLabel::native("Add Grip", "Griff hinzufügen"))
             .mutation("removeGrip", LocalizedLabel::native("Remove Grip", "Griff entfernen"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .action_interactive_job("patchPartKind", InteractiveJobClassification::Migrated)
             .action_interactive_job("addGripKind", InteractiveJobClassification::Migrated)

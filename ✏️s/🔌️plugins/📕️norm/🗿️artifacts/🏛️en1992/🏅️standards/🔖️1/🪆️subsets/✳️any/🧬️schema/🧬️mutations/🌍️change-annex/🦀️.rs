@@ -1,10 +1,9 @@
 //! 🔧 `change-annex` payload — changes the EN 1992 document's national annex.
 
-
-use crate::En1992Snapshot;
 use crate::diff::En1992Diff;
-use crate::mutations::En1992Mutation;
 use crate::document::AnnexChoice;
+use crate::mutations::En1992Mutation;
+use crate::En1992Snapshot;
 
 //#region 🔖️ChangeAnnex
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

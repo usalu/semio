@@ -1,11 +1,11 @@
 //! ⚡️ Artifact-neutral mounted Energy product session: admitted capture, worker job and immutable view.
 
-use crate::{EnergyModelReadLease, EnergyModelSnapshot};
 use crate::{
     EnergyAdmissionRejected, EnergyCheckpointRejected, EnergyJob, EnergyJobPreview, EnergyJobStage, EnergyModelCloseCursor, EnergyNumericalBounds, EnergyQualityTier, EnergyRestoreJob, EnergyWireLease, EnergyWirePacket, Model, SimulationConfig,
 };
-use semio_framework_plugin::kernel::{Effect, JobPlacement};
+use crate::{EnergyModelReadLease, EnergyModelSnapshot};
 use semio_framework_job::{CancelToken, Generation, InteractiveJob, Operation, OperationId, RevisionId, StepBudget, StepContext, StepOutcome};
+use semio_framework_plugin::kernel::{Effect, JobPlacement};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
 use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
 // 🌱️ Additive `ToValue`/`FromValue` — see the artifact root `🦀️.rs`'s own docstring note
@@ -31,7 +31,6 @@ const JOB_COUNTER_MAXIMUM: u64 = 0x0000_ffff_ffff_ffff;
 /// admitted model by [`EnergySimulationConfigProjection::build`], never carried here.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive)]
 pub struct EnergySimulationConfigProjection {
-    pub locale_de: bool,
     pub checkpoint_token: u64,
     pub zone_timestep_minutes: u32,
     pub system_timestep_minutes: u32,
@@ -48,7 +47,7 @@ impl EnergySimulationConfigProjection {
     /// 🎛️ Const twin of [`SimulationConfig::default`]'s three session fields — the fixed arena needs
     /// a `const` initializer, which `Default::default()` cannot be while it reads a non-const
     /// `SimulationConfig`. `settings_match_engine_defaults` keeps the two literally in lockstep.
-    pub const DEFAULT: Self = Self { locale_de: false, checkpoint_token: 0, zone_timestep_minutes: 60, system_timestep_minutes: 60, warmup_days: 7 };
+    pub const DEFAULT: Self = Self { checkpoint_token: 0, zone_timestep_minutes: 60, system_timestep_minutes: 60, warmup_days: 7 };
 
     /// 🎛️ Accepts an edited projection only inside the engine's own admissible ranges.
     pub fn is_valid(self) -> bool {
@@ -77,14 +76,7 @@ impl EnergySimulationConfigProjection {
 
     fn digest(self) -> u64 {
         let mut digest = 0xcbf2_9ce4_8422_2325u64;
-        for byte in [
-            self.zone_timestep_minutes.to_le_bytes().as_slice(),
-            self.system_timestep_minutes.to_le_bytes().as_slice(),
-            self.warmup_days.to_le_bytes().as_slice(),
-        ]
-        .into_iter()
-        .flatten()
-        {
+        for byte in [self.zone_timestep_minutes.to_le_bytes().as_slice(), self.system_timestep_minutes.to_le_bytes().as_slice(), self.warmup_days.to_le_bytes().as_slice()].into_iter().flatten() {
             digest = (digest ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3);
         }
         digest
@@ -107,11 +99,16 @@ impl EnergySimulationRequestIdentity {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EnergySimulationEventKind {
-    Start { request: u64, config: EnergySimulationConfigProjection },
-    /// 🎛️ Ephemeral local-only run settings for the addressed app instance — timesteps, warmup and
-    /// UI locale are NOT model data (`Model` owns the run period and the schedules instead), so they
-    /// are event-sourced into this session's fixed arena rather than into the document.
-    Configure { config: EnergySimulationConfigProjection },
+    Start {
+        request: u64,
+        config: EnergySimulationConfigProjection,
+    },
+    /// 🎛️ Ephemeral local-only run settings for the addressed app instance — timesteps and warmup
+    /// are not model data (`Model` owns the run period and schedules), so they are event-sourced
+    /// into this session's fixed arena rather than into the document.
+    Configure {
+        config: EnergySimulationConfigProjection,
+    },
     Cancel(EnergySimulationRequestIdentity),
     Retry(EnergySimulationRequestIdentity),
     Discard(EnergySimulationRequestIdentity),
@@ -156,7 +153,6 @@ pub struct EnergySimulationProjection {
     pub operation: OperationId,
     pub generation: Generation,
     pub config_digest: u64,
-    pub locale_de: bool,
     pub latest_sequence: u64,
     pub latest_tier: Option<EnergyQualityTier>,
     pub tiers: [Option<EnergyTierProjection>; 4],
@@ -175,7 +171,6 @@ impl EnergySimulationProjection {
             operation: identity.operation,
             generation: identity.generation,
             config_digest: identity.config_digest,
-            locale_de: false,
             latest_sequence: 0,
             latest_tier: None,
             tiers: [None; 4],
@@ -495,7 +490,9 @@ impl ModelCapture {
                 self.next_lane();
             }
             3 => dynamic!(
-                zones, source_item, target_item,
+                zones,
+                source_item,
+                target_item,
                 |item: &crate::model::Zone| crate::model::Zone { id: item.id, name: String::new(), volume_m3: item.volume_m3, multiplier: item.multiplier, conditioned: item.conditioned, part_of_total_floor_area: item.part_of_total_floor_area },
                 {
                     match self.substage {
@@ -511,7 +508,9 @@ impl ModelCapture {
                 }
             }),
             5 => dynamic!(
-                surfaces, source_item, target_item,
+                surfaces,
+                source_item,
+                target_item,
                 |item: &crate::model::Surface| crate::model::Surface {
                     id: item.id,
                     name: String::new(),
@@ -533,7 +532,9 @@ impl ModelCapture {
                 }
             ),
             6 => dynamic!(
-                fenestrations, source_item, target_item,
+                fenestrations,
+                source_item,
+                target_item,
                 |item: &crate::model::Fenestration| crate::model::Fenestration {
                     id: item.id,
                     name: String::new(),
@@ -560,7 +561,9 @@ impl ModelCapture {
                 }
             ),
             7 => dynamic!(
-                materials, source_item, target_item,
+                materials,
+                source_item,
+                target_item,
                 |item: &crate::model::Material| crate::model::Material {
                     id: item.id,
                     name: String::new(),
@@ -630,7 +633,9 @@ impl ModelCapture {
                 dehumidifying_throttle_range: item.dehumidifying_throttle_range,
             }),
             14 => dynamic!(
-                setpoint_managers, source_item, target_item,
+                setpoint_managers,
+                source_item,
+                target_item,
                 |item: &crate::model::SetpointManager| crate::model::SetpointManager {
                     id: item.id,
                     name: String::new(),
@@ -678,7 +683,9 @@ impl ModelCapture {
                 cooling_capacity_w: item.cooling_capacity_w,
             }),
             17 => dynamic!(
-                air_loops, source_item, target_item,
+                air_loops,
+                source_item,
+                target_item,
                 |item: &crate::model::ModelAirLoop| crate::model::ModelAirLoop {
                     id: item.id,
                     name: String::new(),
@@ -696,7 +703,9 @@ impl ModelCapture {
                 }
             ),
             18 => dynamic!(
-                plant_loops, source_item, target_item,
+                plant_loops,
+                source_item,
+                target_item,
                 |item: &crate::model::PlantLoopConfig| crate::model::PlantLoopConfig {
                     id: item.id,
                     name: String::new(),
@@ -740,13 +749,19 @@ impl ModelCapture {
                 fan_total_efficiency: item.fan_total_efficiency,
                 fan_delta_pressure_pa: item.fan_delta_pressure_pa
             }),
-            22 => dynamic!(shading_surfaces, source_item, target_item, |item: &crate::model::ShadingSurface| crate::model::ShadingSurface { id: item.id, name: String::new(), vertices_m: Vec::new(), transmittance_schedule_id: item.transmittance_schedule_id }, {
-                match self.substage {
-                    0 => text!(&mut target_item.name, &source_item.name),
-                    1 => items!(&mut target_item.vertices_m, &source_item.vertices_m),
-                    _ => finish_record!(),
+            22 => dynamic!(
+                shading_surfaces,
+                source_item,
+                target_item,
+                |item: &crate::model::ShadingSurface| crate::model::ShadingSurface { id: item.id, name: String::new(), vertices_m: Vec::new(), transmittance_schedule_id: item.transmittance_schedule_id },
+                {
+                    match self.substage {
+                        0 => text!(&mut target_item.name, &source_item.name),
+                        1 => items!(&mut target_item.vertices_m, &source_item.vertices_m),
+                        _ => finish_record!(),
+                    }
                 }
-            }),
+            ),
             23 => dynamic!(space_lists, source_item, target_item, |item: &crate::model::SpaceList| crate::model::SpaceList { id: item.id, name: String::new(), space_ids: Vec::new() }, {
                 match self.substage {
                     0 => text!(&mut target_item.name, &source_item.name),
@@ -778,15 +793,21 @@ impl ModelCapture {
                     _ => self.next_lane(),
                 }
             }
-            27 => dynamic!(electrical_load_centers, source_item, target_item, |item: &crate::model::ElectricalLoadCenter| crate::model::ElectricalLoadCenter { id: item.id, name: String::new(), generator_ids: Vec::new(), pv_ids: Vec::new(), battery_ids: Vec::new() }, {
-                match self.substage {
-                    0 => text!(&mut target_item.name, &source_item.name),
-                    1 => items!(&mut target_item.generator_ids, &source_item.generator_ids),
-                    2 => items!(&mut target_item.pv_ids, &source_item.pv_ids),
-                    3 => items!(&mut target_item.battery_ids, &source_item.battery_ids),
-                    _ => finish_record!(),
+            27 => dynamic!(
+                electrical_load_centers,
+                source_item,
+                target_item,
+                |item: &crate::model::ElectricalLoadCenter| crate::model::ElectricalLoadCenter { id: item.id, name: String::new(), generator_ids: Vec::new(), pv_ids: Vec::new(), battery_ids: Vec::new() },
+                {
+                    match self.substage {
+                        0 => text!(&mut target_item.name, &source_item.name),
+                        1 => items!(&mut target_item.generator_ids, &source_item.generator_ids),
+                        2 => items!(&mut target_item.pv_ids, &source_item.pv_ids),
+                        3 => items!(&mut target_item.battery_ids, &source_item.battery_ids),
+                        _ => finish_record!(),
+                    }
                 }
-            }),
+            ),
             28 => plain!(pv_systems, |item: &crate::model::PvSystemAssignment| crate::model::PvSystemAssignment {
                 id: item.id,
                 dc_capacity_w: item.dc_capacity_w,
@@ -921,7 +942,6 @@ enum MountedAdmissionError {
 impl MountedState {
     fn new(identity: MountedIdentity, snapshot: store::SnapshotRead<EnergyModelSnapshot>, config: EnergySimulationConfigProjection) -> Self {
         let mut projection = EnergySimulationProjection::new(identity);
-        projection.locale_de = config.locale_de;
         projection.checkpoint_token = config.checkpoint_token;
         Self {
             identity,
@@ -2212,12 +2232,7 @@ pub fn session_settings(render: Option<AppRenderOperationContext>) -> EnergySimu
 /// (`VcsArtifactApp`'s own `AppRenderOperationContext` construction).
 pub fn render_identity_of(operation: &semio_framework_plugin::app::AppOperationContext) -> Option<AppRenderOperationContext> {
     let lane = operation.canonical_base_revision.get(..8).and_then(|bytes| <[u8; 8]>::try_from(bytes).ok())?;
-    Some(AppRenderOperationContext {
-        app_instance_id: operation.app_instance_id,
-        base_revision: RevisionId(u64::from_be_bytes(lane)),
-        generation: Generation(operation.generation),
-        canonical_base_revision: operation.canonical_base_revision,
-    })
+    Some(AppRenderOperationContext { app_instance_id: operation.app_instance_id, base_revision: RevisionId(u64::from_be_bytes(lane)), generation: Generation(operation.generation), canonical_base_revision: operation.canonical_base_revision })
 }
 
 fn retire_one(app_instance_id: u32, maximum_bytes: usize) -> PluginCloseStep {

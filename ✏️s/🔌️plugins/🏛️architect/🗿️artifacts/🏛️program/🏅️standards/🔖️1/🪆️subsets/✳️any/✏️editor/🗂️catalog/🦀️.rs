@@ -6,6 +6,7 @@
 //! and panel layers, several produce framework `ActionArgOption`s, and the artifact has no other
 //! consumer that would benefit from owning them.
 
+use crate::editor::architect::chrome::{element_label, entity_to_json};
 use crate::op::ProgramMutation;
 use crate::registers::{
     Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ReportKind, ReportRecord, Requirement, RequirementKind,
@@ -16,7 +17,6 @@ use crate::standards::v1::subsets::any::schema::inferences::AnalysisResult;
 use crate::standards::v1::subsets::any::schema::inferences::ProgramReport;
 use crate::standards::v1::subsets::any::schema::normalize_pair;
 use crate::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
-use crate::editor::architect::chrome::{element_label, entity_to_json};
 use dsl::DslValue as Value;
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel};
 

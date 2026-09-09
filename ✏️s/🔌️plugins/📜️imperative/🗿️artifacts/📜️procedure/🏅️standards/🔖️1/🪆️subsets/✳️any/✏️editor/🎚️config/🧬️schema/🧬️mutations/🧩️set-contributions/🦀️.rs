@@ -21,7 +21,13 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetC
         next.contributions_json = self.json.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &ImperativeConfig) -> Vec<ImperativeConfigMutation> { vec![ImperativeConfigMutation::SetContributions(Self { json: base.contributions_json.clone() })] }
-    fn label(&self) -> String { "Set Contributions".into() }
-    fn target(&self) -> Vec<String> { vec!["contributions_json".into()] }
+    fn inverse(&self, base: &ImperativeConfig) -> Vec<ImperativeConfigMutation> {
+        vec![ImperativeConfigMutation::SetContributions(Self { json: base.contributions_json.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Contributions".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["contributions_json".into()]
+    }
 }

@@ -29,8 +29,6 @@ export interface Din18599Diff {
   energyCarrier?: string;
   /** @state artifact */
   referenceQPKwh?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 
 export interface Din18599Artifact {
@@ -47,5 +45,4 @@ export interface Din18599Artifact {
   annualLimitKwh: number;
   energyCarrier: string;
   referenceQPKwh: number;
-  selectedCheckIndex?: number | null;
 }

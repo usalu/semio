@@ -99,6 +99,4 @@ export interface En1998Artifact {
   wallR: number;
   /** @state artifact */
   wallHRdKn: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

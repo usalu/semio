@@ -9,19 +9,29 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-vector-style")]
-pub struct SetVectorStyle { pub value: String }
+pub struct SetVectorStyle {
+    pub value: String,
+}
 //#endregion 🧬️Payload
 
 //#region ⚙️Behavior
 impl MutationKind<Gis2dConfig, Gis2dConfigMutation> for SetVectorStyle {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "vector-style", kind: "set-vector-style", record: "SetVectorStyle" };
     fn diff(&self, base: &Gis2dConfig) -> MutationOutcome<Gis2dConfigDiff> {
-        if base.vector_style == self.value { return MutationOutcome::empty().warn("mutation.no-op", format!("Vector style is already \"{}\".", self.value)); }
+        if base.vector_style == self.value {
+            return MutationOutcome::empty().warn("mutation.no-op", format!("Vector style is already \"{}\".", self.value));
+        }
         MutationOutcome::new(Gis2dConfigDelta { vector_style: Some(self.value.clone()), ..Default::default() }.into())
     }
-    fn inverse(&self, base: &Gis2dConfig) -> Vec<Gis2dConfigMutation> { vec![Self { value: base.vector_style.clone() }.into()] }
-    fn label(&self) -> String { "Set vector style".into() }
-    fn target(&self) -> Vec<String> { vec!["vectorStyle".into()] }
+    fn inverse(&self, base: &Gis2dConfig) -> Vec<Gis2dConfigMutation> {
+        vec![Self { value: base.vector_style.clone() }.into()]
+    }
+    fn label(&self) -> String {
+        "Set vector style".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["vectorStyle".into()]
+    }
 }
 //#endregion ⚙️Behavior
 

@@ -20,7 +20,8 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
     context
         .topology
-        .genus.map_or_else(|| unavailable(GltfUnit::Unitless, GltfAvailability::NonManifold, Vec::new(), context.sample_count, Some(context.topology)), |value| exact(value, GltfUnit::Unitless, context.sample_count, Some(context.topology)))
+        .genus
+        .map_or_else(|| unavailable(GltfUnit::Unitless, GltfAvailability::NonManifold, Vec::new(), context.sample_count, Some(context.topology)), |value| exact(value, GltfUnit::Unitless, context.sample_count, Some(context.topology)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

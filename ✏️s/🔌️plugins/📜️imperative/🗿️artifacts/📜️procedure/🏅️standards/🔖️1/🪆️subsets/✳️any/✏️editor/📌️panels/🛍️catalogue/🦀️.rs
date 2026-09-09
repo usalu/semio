@@ -28,24 +28,12 @@ pub fn render(labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyRe
     let action_factory = ActionFactory::new(IMPERATIVE_PLAY_APP_ID);
     let mut action_items = semio_framework_plugin::UiFixedList::default();
     for (kind, label) in actions {
-        let kind_value = semio_framework_plugin::UiText::try_from_str(kind)
-            .map(semio_framework_plugin::UiValue::Text)
-            .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "fixed action kind admission failed"))?;
-        let mut args = semio_framework_plugin::UiMapBuilder::try_new()
-            .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.args", "fixed action argument map admission failed"))?;
-        args.push("kind".to_owned(), kind_value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.args.kind", "fixed action kind argument admission failed"))?;
+        let kind_value = semio_framework_plugin::UiText::try_from_str(kind).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "fixed action kind admission failed"))?;
+        let mut args = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.args", "fixed action argument map admission failed"))?;
+        args.push("kind".to_owned(), kind_value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.args.kind", "fixed action kind argument admission failed"))?;
         let item = tree_item_with_action(builder.item_id("action", kind)?, label.as_str(), Some(kind.into()), action_factory.action("addStep", Some(semio_framework_plugin::UiValue::Map(args.finish())))?)?;
-        action_items
-            .try_push(item)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue item admission failed"))?;
+        action_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue item admission failed"))?;
     }
     builder.section("imperative-play-catalogue.actions", Some(crate::editor::procedure::ui_label(labels.catalogue_title.as_str())?), true, action_items)?.selected([])?.build()
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

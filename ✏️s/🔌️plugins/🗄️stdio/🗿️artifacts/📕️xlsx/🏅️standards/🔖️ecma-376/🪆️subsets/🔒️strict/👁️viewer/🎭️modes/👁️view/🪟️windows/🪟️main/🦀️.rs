@@ -2,8 +2,8 @@
 //! in the workbook (same projection the sibling mutation-capable surface's own window renders —
 //! independent read, no edit affordances).
 
-use crate::XlsxSnapshot;
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::strict::{render_xlsx_cell_value, xlsx_flat_cells};
+use crate::XlsxSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

@@ -23,16 +23,8 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub fn build_catalogue_tree(labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let items = ui_node_list(TYPOLOGY_CATALOG.iter().map(|entry| {
-        let args = ui_value_map([
-            ("typology", ui_value_text(entry.typology)?),
-            ("modelDefinitionId", ui_value_text(entry.model_definition_id)?),
-        ])?;
-        cad_tree_item(
-                format!("cad-play-catalogue.{}", entry.typology),
-                typology_label(entry.typology, labels),
-                Some(entry.icon),
-                cad_action("addObject", Some(args))?,
-            )
+        let args = ui_value_map([("typology", ui_value_text(entry.typology)?), ("modelDefinitionId", ui_value_text(entry.model_definition_id)?)])?;
+        cad_tree_item(format!("cad-play-catalogue.{}", entry.typology), typology_label(entry.typology, labels), Some(entry.icon), cad_action("addObject", Some(args))?)
     }))?;
     PanelTreeBuilder::new("cad-play-catalogue")?.section("cad-play-catalogue.typologies", Some(ui_label(labels.typologies.as_str())?), true, items)?.build()
 }

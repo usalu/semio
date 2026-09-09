@@ -1,7 +1,6 @@
-
 use super::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 use semio_framework_os_kernel::ToValue;
 

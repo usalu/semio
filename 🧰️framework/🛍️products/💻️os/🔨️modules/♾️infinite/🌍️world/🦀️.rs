@@ -1139,8 +1139,8 @@ impl WorldDrawRebuildCursor {
         let Some(draft) = self.drafts.get_mut(usize::from(draw)).and_then(Option::as_mut) else {
             return Err(WorldDynamicFault::StaleToken);
         };
-        let bytes = id.len().checked_add(size_of::<Instance3d>()).unwrap_or(usize::MAX);
-        let next = usize::try_from(self.admitted_bytes).unwrap_or(usize::MAX).checked_add(bytes).unwrap_or(usize::MAX);
+        let bytes = id.len().saturating_add(size_of::<Instance3d>());
+        let next = usize::try_from(self.admitted_bytes).unwrap_or(usize::MAX).saturating_add(bytes);
         if next > usize::try_from(self.descriptor.byte_count).unwrap_or(0) || self.admitted_instances == self.descriptor.instance_count {
             return Err(WorldDynamicFault::ByteCapacity);
         }
@@ -1267,7 +1267,7 @@ fn quarantine_world_owner(owner: WorldOpaqueOwner) -> Result<WorldDynamicToken, 
 }
 
 pub fn world3d_opaque_quarantine_status() -> (usize, u64) {
-    WORLD_OPAQUE_QUARANTINE.lock().map(|quarantine| (usize::from(quarantine.len), quarantine.saturated)).unwrap_or((WORLD_OPAQUE_QUARANTINE_CAPACITY, u64::MAX))
+    WORLD_OPAQUE_QUARANTINE.lock().map_or((WORLD_OPAQUE_QUARANTINE_CAPACITY, u64::MAX), |quarantine| (usize::from(quarantine.len), quarantine.saturated))
 }
 
 pub struct World3dState {
@@ -2749,8 +2749,7 @@ impl WorldMarqueePickCursor {
             WorldMarqueeCandidate::Segment { .. } => 2,
             WorldMarqueeCandidate::Triangle { .. } => 3,
         };
-        for index in 0..count {
-            let point = points[index];
+        for (index, point) in points.iter().copied().take(count).enumerate() {
             if a[1] <= point[1] {
                 if b[1] > point[1] && Self::orient(a, b, point) > 0.0 {
                     self.winding[index] += 1;
@@ -3127,8 +3126,8 @@ impl WorldMarqueePublishJob {
         }
         if self.prepared.is_none() {
             let mut credits = [0usize; WORLD_MARQUEE_RESULT_PAGE_COUNT];
-            for page in 0..usize::from(self.results.page_len) {
-                credits[page] = self.page_credit(state, page)?;
+            for (page, credit) in credits.iter_mut().enumerate().take(usize::from(self.results.page_len)) {
+                *credit = self.page_credit(state, page)?;
             }
             let claims = input.claim_actions(&credits[..usize::from(self.results.page_len)])?;
             self.prepared = Some(ui_wgpu::wgpu::PreparedClaimedActionBatch::new(claims));
@@ -4145,7 +4144,7 @@ impl WorldComponentPickCursor {
         let action = WorldFlatAction {
             kind: if self.purpose == WorldComponentPickPurpose::Hover { WorldFlatActionKind::ComponentHover } else { WorldFlatActionKind::ComponentSelect },
             strings: [Some(controller), Some(surface), object_span, Some(mode), merge, None, None, None],
-            numbers: [object.map(|(_, id)| id as f64).unwrap_or(0.0), if object.is_some() { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            numbers: [object.map_or(0.0, |(_, id)| id as f64), if object.is_some() { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         };
         plan.push_action(action).then_some(plan).ok_or(WorldInteractionStep::Fault).map(Some)
     }
@@ -4385,7 +4384,7 @@ impl WorldGumballPickCursor {
                 context.consume_fuel(1);
                 return WorldInteractionStep::Pending;
             }
-            let pivot = state.gumball_target.map(|target| Vec3::new(target[0], target[1], target[2])).unwrap_or_else(|| self.sum.scale(1.0 / f32::from(self.selected_len)));
+            let pivot = state.gumball_target.map_or_else(|| self.sum.scale(1.0 / f32::from(self.selected_len)), |target| Vec3::new(target[0], target[1], target[2]));
             let Some((local_x, local_y, viewport)) = pointer_in_pick_rect(state, self.x, self.y) else {
                 self.complete = true;
                 context.consume_fuel(1);
@@ -4483,7 +4482,7 @@ impl WorldGumballPickCursor {
         };
         let pivot = self.pivot.expect("gumball terminal pivot");
         let anchor = handle.axis_dir().and_then(|axis| gumball_project_ray_onto_axis(self.origin, self.direction, pivot, axis, self.eye)).unwrap_or(0.0);
-        let start = handle.plane_normal().and_then(|normal| ray_plane_point(self.origin, self.direction, pivot, normal)).map(|point| if handle.is_rotate() { point.sub(pivot) } else { point }).unwrap_or(pivot);
+        let start = handle.plane_normal().and_then(|normal| ray_plane_point(self.origin, self.direction, pivot, normal)).map_or(pivot, |point| if handle.is_rotate() { point.sub(pivot) } else { point });
         Ok(Some(WorldGumballGesture {
             revision: self.revision,
             start_generation: self.generation,
@@ -5250,8 +5249,7 @@ impl WorldInteractionAuthority {
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Pending;
         }
-        if intent.phase == WorldInteractionPhase::PointerMove && intent.button == 0 && intent.down && self.gumball.is_some() {
-            let gumball = self.gumball.as_mut().expect("gumball gesture retained above");
+        if let (true, Some(gumball)) = (intent.phase == WorldInteractionPhase::PointerMove && intent.button == 0 && intent.down, self.gumball.as_mut()) {
             match gumball.begin_update(intent.generation, intent.x, intent.y) {
                 WorldInteractionStep::Stale => return WorldInteractionAuthorityStep::Stale,
                 WorldInteractionStep::Fault => {
@@ -5311,8 +5309,7 @@ impl WorldInteractionAuthority {
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Complete;
         }
-        if intent.phase == WorldInteractionPhase::PointerMove && intent.button == 0 && intent.down && self.marquee.is_some() {
-            let marquee = self.marquee.as_mut().expect("marquee gesture retained above");
+        if let (true, Some(marquee)) = (intent.phase == WorldInteractionPhase::PointerMove && intent.button == 0 && intent.down, self.marquee.as_mut()) {
             if intent.generation <= marquee.start_generation || !marquee.push([intent.x, intent.y]) {
                 self.faulted = true;
                 return WorldInteractionAuthorityStep::Fault;
@@ -6293,14 +6290,14 @@ where
         *self.counts.entry(key).or_insert(0) += 1;
     }
 
-    fn release(&mut self, key: K) -> bool {
-        match self.counts.get_mut(&key) {
+    fn release(&mut self, key: &K) -> bool {
+        match self.counts.get_mut(key) {
             Some(count) if *count > 1 => {
                 *count -= 1;
                 false
             }
             Some(_) => {
-                self.counts.remove(&key);
+                self.counts.remove(key);
                 true
             }
             None => false,
@@ -6437,7 +6434,7 @@ fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, 
     }
     let stale: Vec<String> = state.mesh_pool.keys().filter(|key| !needed_mesh_keys.contains(*key) && !PINNED.contains(&key.as_str())).cloned().collect();
     for key in stale {
-        if state.mesh_pool.release(key.clone()) {
+        if state.mesh_pool.release(&key) {
             if !retire_world_mesh(state, &key) || !retire_world_pixels(state, &key, true) {
                 return;
             }
@@ -6593,7 +6590,7 @@ enum WorldTerrainMeshStep {
 }
 
 impl WorldTerrainMeshCursor {
-    fn new(surface_id: &str, z: u32, x: u32, y: u32, payload: TerrainTileMeshPayload, generation: u64, source_revision: u64, terrain_revision: u64) -> Result<Self, WorldDynamicFault> {
+    fn new(surface_id: &str, (z, x, y): (u32, u32, u32), payload: TerrainTileMeshPayload, generation: u64, source_revision: u64, terrain_revision: u64) -> Result<Self, WorldDynamicFault> {
         if surface_id.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY || !payload.positions.len().is_multiple_of(3) || !payload.normals.len().is_multiple_of(3) || !payload.indices.len().is_multiple_of(3) || !payload.uvs.len().is_multiple_of(2) {
             return Err(if surface_id.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY { WorldDynamicFault::IdCapacity } else { WorldDynamicFault::ByteCapacity });
         }
@@ -6988,7 +6985,7 @@ fn sync_terrain_state(state: &mut World3dState, camera: &Camera3d) -> (Vec<Terra
                     let next = state.placeholder_generation.checked_add(TERRAIN_COLOR_BANDS as u64);
                     if let Some(next) = next {
                         let generation = state.placeholder_generation + 1;
-                        match WorldTerrainMeshCursor::new(&state.surface_id, z, x, y, mesh_payload, generation, state.terrain_revision, state.terrain_revision) {
+                        match WorldTerrainMeshCursor::new(&state.surface_id, (z, x, y), mesh_payload, generation, state.terrain_revision, state.terrain_revision) {
                             Ok(cursor) => {
                                 state.placeholder_generation = next;
                                 state.terrain_build = Some(cursor);
@@ -8533,7 +8530,7 @@ fn apply_gumball_preview(state: &mut World3dState) {
 
 fn retained_gumball_gesture(state: &World3dState) -> Option<&WorldGumballGesture> {
     let authority = state.interaction_authority.as_ref()?;
-    authority.gumball.as_ref().or_else(|| match authority.active.as_ref() {
+    authority.gumball.as_ref().or(match authority.active.as_ref() {
         Some(WorldInteractionActive::GumballCommit { job, .. }) => Some(&job.gesture),
         _ => None,
     })
@@ -8556,7 +8553,7 @@ fn retained_gumball_preview_model(state: &World3dState, draw_index: usize, insta
     let next = if gesture.translate.length() > 1e-4 {
         base.add(gesture.translate)
     } else if gesture.angle.abs() > 1e-6 {
-        gesture.handle.axis_dir().map(|axis| gesture.pivot.add(rotate_vector(base.sub(gesture.pivot), axis, gesture.angle))).unwrap_or(base)
+        gesture.handle.axis_dir().map_or(base, |axis| gesture.pivot.add(rotate_vector(base.sub(gesture.pivot), axis, gesture.angle)))
     } else if let Some(axis) = gesture.handle.axis_dir() {
         let factor = match gesture.handle {
             GumballHandle::ScaleX => gesture.scale.x,
@@ -10405,7 +10402,7 @@ fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
 }
 
 fn vortex_unit_direction(direction: Option<[f64; 3]>) -> Vec3 {
-    let dir = direction.map(|value| Vec3::new(value[0] as f32, value[1] as f32, value[2] as f32)).unwrap_or(Vec3::new(0.0, 0.0, -1.0));
+    let dir = direction.map_or(Vec3::new(0.0, 0.0, -1.0), |value| Vec3::new(value[0] as f32, value[1] as f32, value[2] as f32));
     if dir.dot(dir) < 1e-12 {
         Vec3::new(0.0, 0.0, -1.0)
     } else {
@@ -10587,13 +10584,13 @@ fn preview_scale(scale: Option<&serde_json::Value>) -> [f32; 3] {
 }
 
 fn reference_image_aspect(state: &World3dState, url: &str) -> f32 {
-    state.reference_pixels.get(url).map(|(width, height, _)| *width as f32 / (*height).max(1) as f32).unwrap_or(1.0).max(0.01)
+    state.reference_pixels.get(url).map_or(1.0, |(width, height, _)| *width as f32 / (*height).max(1) as f32).max(0.01)
 }
 
 /// 👻️ Mesh key for `BrushPreviewGhost`: the real GLB's resolved id when a `meshUrl` is given
 /// (loaded lazily, same as any other mesh), else the shared "box" primitive fallback ghost.
 fn brush_preview_mesh_id(mesh_url: Option<&str>) -> String {
-    mesh_url.map(mesh_id_from_url).unwrap_or_else(|| "box".to_string())
+    mesh_url.map_or_else(|| "box".to_string(), mesh_id_from_url)
 }
 
 fn append_box_wireframe(lines: &mut Vec<LineVertex3d>, origin: [f64; 3], orientation: [f64; 4], scale: [f64; 3], color: [f32; 4]) {
@@ -10739,7 +10736,7 @@ impl WorldAssetFetchOwner {
     }
 
     pub fn push_page(&mut self, page: WorldAssetResponsePage) -> Result<(), WorldAssetResponsePage> {
-        let next = self.received_bytes.checked_add(page.bytes.len()).unwrap_or(usize::MAX);
+        let next = self.received_bytes.saturating_add(page.bytes.len());
         if self.closing || self.sealed || usize::from(self.page_len) == WORLD_ASSET_RESPONSE_PAGE_CAPACITY || next > self.reserved_bytes {
             return Err(page);
         }

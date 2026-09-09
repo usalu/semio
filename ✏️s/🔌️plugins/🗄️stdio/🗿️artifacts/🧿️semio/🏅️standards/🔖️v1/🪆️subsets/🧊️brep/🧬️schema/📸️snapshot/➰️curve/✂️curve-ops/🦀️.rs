@@ -9,7 +9,6 @@
 /// ➰ Common knot vector with homogeneous controls for both curves.
 pub type HarmonizedCurveControls = (KnotVector, Vec<Vec<f64>>, Vec<Vec<f64>>);
 
-
 use super::bezier::RationalBezier3;
 use super::bspline::{basis_functions, de_boor, elevate_bezier_span_multi, elevate_degree, insert_knot, insert_knot_multi, KnotVector};
 use super::{Curve3, NurbsCurve3};
@@ -347,9 +346,7 @@ fn span_seeds(t0: f64, t1: f64) -> [f64; 5] {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn closest_on_nurbs(curve: &Curve3, domain: (f64, f64), target: Pnt3, tol: f64) -> ClosestParam {
-    let Curve3::Nurbs { knots, controls, weights } = curve else {
-        unreachable!("closest_on_nurbs called on a non-NURBS curve")
-    };
+    let Curve3::Nurbs { knots, controls, weights } = curve else { unreachable!("closest_on_nurbs called on a non-NURBS curve") };
     let nurbs = NurbsCurve3 { knots: knots.clone(), controls: controls.clone(), weights: weights.clone() };
     let mut spans: Vec<(f64, f64, f64)> = bezier_spans(&nurbs)
         .into_iter()
@@ -383,9 +380,7 @@ fn closest_on_nurbs(curve: &Curve3, domain: (f64, f64), target: Pnt3, tol: f64) 
 /// multi-minimum counterpart of [`closest_on_nurbs`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn all_local_minima_nurbs(curve: &Curve3, domain: (f64, f64), target: Pnt3, tol: f64) -> Vec<ClosestParam> {
-    let Curve3::Nurbs { knots, controls, weights } = curve else {
-        unreachable!("all_local_minima_nurbs called on a non-NURBS curve")
-    };
+    let Curve3::Nurbs { knots, controls, weights } = curve else { unreachable!("all_local_minima_nurbs called on a non-NURBS curve") };
     let nurbs = NurbsCurve3 { knots: knots.clone(), controls: controls.clone(), weights: weights.clone() };
     let mut results: Vec<ClosestParam> = Vec::new();
     for (t0, t1, _) in bezier_spans(&nurbs) {

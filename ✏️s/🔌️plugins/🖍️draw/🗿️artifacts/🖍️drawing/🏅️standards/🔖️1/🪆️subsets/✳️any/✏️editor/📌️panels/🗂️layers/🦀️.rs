@@ -1,9 +1,9 @@
 //! 🗂️ Drawing play app panel — the layer tree (constitutional: was `ui`'s `Panels` region, layers half).
 
-use crate::schema::{drawing_play_boolean_child_row_id, drawing_play_layers_tree_row_id, find_drawing_layer, layer_base};
-use crate::{DrawingLayerNode, DrawingSnapshot};
 use crate::editor::drawing::terminology::DrawingPlayLabels;
 use crate::editor::drawing::{drawing_play_action, DRAWING_INTERACTION_DOMAIN};
+use crate::schema::{drawing_play_boolean_child_row_id, drawing_play_layers_tree_row_id, find_drawing_layer, layer_base};
+use crate::{DrawingLayerNode, DrawingSnapshot};
 use semio_framework_plugin::{tree_item, tree_item_with_action, Buildable, HasBase, HasChildren, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 pub const DRAWING_PLAY_BODY_LAYERS: &str = "drawing.play.layers";
@@ -50,13 +50,10 @@ fn layer_tree_item(doc: &DrawingSnapshot, layer: &DrawingLayerNode) -> semio_fra
         _ => base.blend_mode.clone(),
     };
     let mut drag_data = semio_framework_plugin::UiFixedMap::default();
-    let drag_key = semio_framework_plugin::UiText::try_from_str("application/x-semio-drawing-layer-id")
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.drag-key", "fixed drag key admission failed"))?;
-    let drag_value = semio_framework_plugin::UiText::try_from_str(&base.id)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.drag-value", "fixed drag value admission failed"))?;
+    let drag_key = semio_framework_plugin::UiText::try_from_str("application/x-semio-drawing-layer-id").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.drag-key", "fixed drag key admission failed"))?;
+    let drag_value = semio_framework_plugin::UiText::try_from_str(&base.id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.drag-value", "fixed drag value admission failed"))?;
     drag_data.try_push(drag_key, drag_value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.drag-data", "fixed drag-data admission failed"))?;
-    let label = semio_framework_ui_contract::Label::try_from(base.name.clone())
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.label", "fixed layer label admission failed"))?;
+    let label = semio_framework_ui_contract::Label::try_from(base.name.clone()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.label", "fixed layer label admission failed"))?;
     let mut builder = semio_framework_ui_contract::tree_item(label)
         .try_id(row_id)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.id", "fixed layer id admission failed"))?
@@ -81,7 +78,8 @@ fn boolean_child_item(doc: &DrawingSnapshot, boolean_id: &str, child_id: &str) -
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         props.draggable = Some(false);
         if let Some(child) = find_drawing_layer(doc, child_id) {
-            props.description = Some(semio_framework_plugin::UiText::try_from_str(&crate::schema::layer_kind_label(child)).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.description", "fixed layer description admission failed"))?);
+            props.description =
+                Some(semio_framework_plugin::UiText::try_from_str(&crate::schema::layer_kind_label(child)).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.description", "fixed layer description admission failed"))?);
         } else {
             props.icon = Some(semio_framework_plugin::UiText::try_from_str("alert-circle").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.icon", "fixed layer icon admission failed"))?);
         }
@@ -121,8 +119,7 @@ pub fn render(document: &DrawingSnapshot, labels: &DrawingPlayLabels) -> semio_f
     for item in action_items.into_iter().chain(layer_items) {
         items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.items", "fixed layer-list admission failed"))?;
     }
-    let section = semio_framework_ui_contract::Label::try_from(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.section-label", "fixed layer section label admission failed"))?;
+    let section = semio_framework_ui_contract::Label::try_from(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.section-label", "fixed layer section label admission failed"))?;
     PanelTreeBuilder::new("drawing-play-layers")?.section("drawing-play-layers", Some(section), true, items)?.interaction_domain(DRAWING_INTERACTION_DOMAIN)?.build()
 }
 //#endregion 🔖️Render

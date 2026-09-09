@@ -1,5 +1,521 @@
 # Current End-to-End Acceptance Frontier
 
+## 2026-09-09 03:20 UTC Current Hub Inference Wire
+
+At03:57UTC the actual broker MessagePort session-binding law17468 is GREEN1 after
+baseline56178 reproduced the absent worker authority. Worker acceptance reads a
+bounded2KiB canonical body inside the serialized proof turn, checks original
+admission after EOF, and retires authenticated directory/mounted/Undo owners on a
+changed binding while retaining an already sealed inference request indeterminate.
+Directory client canonical-response97099 was RED on accepted invalid input; its
+unchecked cast and Shell's unchecked identity cast are now replaced by the shared
+parser. Broad54282 is GREEN18. Hostile89489 passed invalid-body/401/proof-replacement
+cases, but its delayed-body assertion was subsequently tightened to wait for an
+actually locked body reader; that tighter case is not yet qualified.
+
+Terra identified remaining port replacement ownership: attachLocalBrokerPort closes
+the old port without aborting its pending reader or rotating broker admission.
+New33554 covers that exact old-body race plus non-200 refusal before correction.
+Directory page-to-session binding checks and production identity-refresh/fresh-proof
+handoff are still required; current green tests do not claim them. Home's shared
+session-authority source gate passed16 via owning-script fallback after an Nx worker
+admission failure. WGPU's mounted ACK/checkpoint/frontier81290 passed6 focused tests,
+not a two-browser journey; it now owns staged selected-GIS byte provenance.
+
+At03:41UTC native26951 became terminal RED, exit1, while compiling GIS Map.
+The42 diagnostics cascade from two unsupported `#[value(required)]` attributes on
+SetLayerStrokeScale and SetLayerVisibility; the compiled derive then provides neither
+ToValue nor FromValue. WGPU is checking current source versus a potentially changed
+derive before changing semantics. No component staging, Hub runtime, mounted pair or
+restart succeeded in this attempt. Cargo ownership is released to Home for queued
+native laws; root has no Cargo process. Existing cache remains ticket-owned.
+
+At03:39UTC the locale source79115 is GREEN17 laws. A new independent broker
+admission law67643 reproduced an old queued request spending the newly installed
+proof (`dispatched` instead of `queued-old-request-denied`). The worker now retains
+a stable explicit broker-admission token separately from per-request ratchet proof
+consumption, rechecking it after queue admission, hashing and response. Focused87342
+passed1 and broad inference9917 passed16. These qualify proof-admission replacement,
+not yet the authenticated Hub session identity. Home is authoring the canonical
+session-authority contract; root's real MessagePort-to-me worker binding law56178
+is active against the still-unwired authority state. No authenticated-rotation pass
+is claimed.
+
+Follow-up: full OS46692 is GREEN322/322 across5 files (22.8s Nx), and exact-wire85032
+is GREEN1/321 skipped. Renderer type10971 is RED435 diagnostics across the changing
+repository; no inference/directory worker/ShellHost/action-handoff diagnostic was
+found in that run. Do not promote OS test success to global typecheck success.
+Proposal source94452 is GREEN, including checkpoint-control hostile11 with the
+post-heartbeat source condition and proposal process-source27. The two-author source
+law2040 reproduced a locale defect: German author B's existing-artifact branch used
+English Open. The row-scoped exact selector now selects Öffnen/Open by explicit
+locale; source rerun79115 is active. Current26951 loaded the earlier runner before
+these edits, so a complete current acceptance rerun may still be needed after its
+native prerequisite evidence is retained.
+
+The actual Hub HTTP receipt and event page serialize required `proposalHash: null`
+before a proposal exists. Root58299 reproduced the browser parser rejecting that
+production shape with `gis-map-inference.invalid-hex`. OS schema-first DTOs, parsers,
+neutral positive and hostile envelopes, worker reconciliation and independent oracle
+casts now require the nullable field and exact current receipt/page/approval tags.
+The Rust DTO no longer omits a missing hash. Its new serde_json-reference roundtrip
+law and the indeterminate lifecycle law remain authored, not native-qualified.
+
+Root32231 passed all15 browser inference laws (307 skipped, terminal0), including
+the exact Hub JSON-schema/fast-deep-equal wire comparison, retained uncertain submit,
+late approval/reconcile document retirement, cancellation and proof replacement.
+The source oracle passed AJV1, hostile7, transitions33, strings62, twinStrings20 and
+the existing history checks. Exact-wire96283 was an intermediate RED after parsing
+advanced to the page schema: its Ajv validator lacked the repository's annotation
+keyword `x-semio-formats`. Registering that annotation preserves strict validation;
+32231 includes the corrected exact-wire law. A separate verbose rerun85032 is active.
+
+Full OS21385 previously passed316 and failed5. Root fixed the cancel-after-send
+test to wait for actual dispatch, Home qualified the raw maximum-u64 fixture repair
+with one direct-script test after an Nx graph failure, and WGPU owns the remaining
+bootstrap/reservation/cold-pair fixture failures. A full current rerun is still due.
+
+The proposal and ledger positive binding digests now match the independently frozen
+protocol15 digest `4cf67ba4dfb31d8edef0ede1f674596b12ba347efb6c6bc2c2ece03fde1f24ea`.
+Registered proposal-source94452 is active. Home's post-heartbeat checkpoint source
+oracle passed11 hostile cases; real MCP progress/cancel remains unqualified.
+
+Native26951 continues compiling current trusted two-author prerequisites in
+`hub-build-KWWnWp`; no mounted peer, CreateRegion, Undo or restart receipt is yet
+available from this run. WGPU's exact command/raw-mutation controlled-child62205
+passed1 law; that is not a mounted two-author checkpoint acknowledgement. The fleet
+continues with WGPU on exact mounted ACK correlation, Home on authenticated identity
+binding, Terra auditing the actual acceptance runner, and root on current wire and
+acceptance composition. No goal or ticket closure is justified.
+
+## 2026-09-09 02:44 UTC Retained Inference Closing
+
+At02:58UTC Terra confirmed the actual identity integration is still missing:
+directorySessionEpoch advances only through unused directory-open; the real Shell
+uses directory-bootstrap-open and sends only inference-close on identity updates.
+The broker proof is installed once at startup. Thus14 passing laws qualify local
+retained-owner, close, queue and proof-replacement behavior, not authenticated
+production session rotation. The required next packet is a server-authenticated
+broker/session generation + fresh proof handoff and an explicit worker authority
+replacement fence. Home will assess the backend binding after its deterministic
+MCP progress packet; root will own the TS handoff. No replays under replacement are
+permitted, and old unresolved requests remain indeterminate.
+
+Home46557 passed the reconcile source oracle. The exact POST reconcile route,
+256-byte request bound, runtime document gate, fresh live Author recheck, exact-reader
+SQLite lookup and committed approval/Undo reconstruction are now authored. Native
+and raw HTTP laws remain queued behind26951; do not infer process success from source.
+
+Follow-up at02:55UTC: root90719 passed13 browser laws (307 skipped), terminal0,
+after separating pre-dispatch lease admission from post-response original-owner
+retention. A document may close after dispatch without discarding its valid pending
+receipt, while a replaced session/proof owner cannot overwrite the successor proof.
+Root63007 passed14 laws (307 skipped), with the neutral oracle passing AJV1,
+33 transitions,62 localized strings,20 twin strings and the existing history checks.
+Root1003/50368 were intermediate REDs caused by using the dispatch lease predicate
+after response; both are terminal and superseded by90719/63007.
+
+Queued already-aborted broker work now rechecks cancellation before consuming any
+proof (both after queue admission and after hashing). Undo captures the original
+session and checks exact owner/mount at dispatch. A suggested directory-close test
+2522 was RED but subsequently withdrawn as an invalid contract: ordinary directory
+bootstrap internally uses closeDirectory for transport replacement, and no production
+renderer sends the bare directory-close message. No workerEpoch pin or transport
+teardown change was implemented. The replacement neutral test covers genuine queued
+abort and original-session epoch rotation; actual Shell-to-worker identity retirement
+is under a separate source audit rather than claimed from that test seam.
+
+Root26951 remains the sole native Cargo owner, compiling the trusted two-author
+attempt in `🗑️generated/hub-target`; current build directory is hub-build-KWWnWp.
+No mounted-browser acceptance is claimed.
+
+Root91484 reproduced the lost-submit owner being discarded (1 RED/317 skipped).
+Root7721 passed the initial retained-owner law (1/317 skipped) for malformed/lost
+submit receipt, in-flight document retirement, and rotated session. The private
+worker now retains the immutable request, scope, original client and lease fields,
+uses an existing-only requestId reconcile route, and never resubmits /jobs. Unknown
+outcomes have an explicit nonterminal indeterminate phase and bounded retries.
+The reducer, JSON schema, EN/DE vocabulary, Shell schema/mirror and Rust twins now
+carry that phase. The neutral corpus includes five unknown-to-confirmed transitions.
+A new native corpus law is authored but has not been executed.
+
+Root26547 passed the exact closed wire/parser law (1/317 skipped), including strict
+unknown-field refusal and binary roundtrip. Shell Close now retains its owner until
+the exact epoch/scope inference-port-closed receipt. Normal terminals remain visible
+until explicit Close. Document retirement permits only cancel/reconcile cleanup;
+new submit/approval requires a live execution lease. Queued requests recheck the
+original directory session before dispatch.
+
+Root32213 reproduced actual relay reconcile404/upstream0. Root39659 passed live
+relay38 checks after adding the exact POST reconcile route plus wrong-method/query
+hostiles. This qualifies relay forwarding/proof/bounds only, not Hub reconciliation.
+Home owns the actual Hub runtime/HTTP/SQLite recovery packet, still in progress.
+Found:false remains indeterminate: it does not fence a delayed original submit
+handler from accepting later, even under a matching reader and document gate.
+
+The broad cohort4332 first exposed the missing Shell phase twin;11447 then exposed
+test-harness retained-owner leakage and obsolete optimistic-failure assertions.
+3901 passed10 but failed the retirement law because its close happened before the
+new queued admission check; that law now deliberately pauses the actual fetch after
+dispatch before retiring the document. These failures were not weakened into passes.
+
+Terra identified late approval/reconcile resurrecting an Undo owner after document
+retirement and an old broker response overwriting an initialized successor proof.
+Root49254 reproduced both (2 RED/318 skipped). The worker now discards retired
+browser Undo presentation and fences proof installation by an exact private owner
+token plus post-response admission. Root1003 and50368 are validating these fixes;
+they are not yet qualified.
+
+Remaining acceptance audit work: WGPU owns correlating mounted-worker checkpoint/
+frontier ACKs to the exact rebootstrap controls (side witness sockets alone are
+insufficient). Home will add a deterministic persisted-progress observation before
+MCP cancellation (the prior FD4 checkpoint pauses before heartbeat persistence).
+Native WGPU inference still refuses because its execution lease is never populated;
+before enabling it, its detached submit/cancel lifetime must receive the same retained
+original-request closing semantics. The overall goal remains incomplete.
+
+## 2026-09-09 02:03 UTC Current Protocol and First Full Browser Attempt
+
+Root26951 is running the registered trusted Stdio+GIS two-author Shell acceptance
+command against the script-owned `🗑️generated/hub-target` native target (the script
+overrides the inherited reactor-lifecycle target). Root owns the sole
+Cargo slot until terminal; Home remains source-only on reconciliation. This is an
+attempt, not acceptance. Home31931 completed seven exact native laws, terminal0,
+including real binary-WebSocket MockHub roundtrip and retained owner cancellation;
+it does not qualify database Hub or mounted Shells.
+
+Root42728 passed the full current trusted source closure after protocol15 alignment,
+terminal0,9.7s. Root64862 passed the new registered open-plan source gate after exact
+catalog golden reissue. The catalog is893 bytes and SHA256
+2bb0378fb7e9c4ae59a3c5af0d7dddcd67f27a30d8ec7aca09c8fd888ef2978f;
+the bootstrap generation is e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52.
+Both Node and WebCrypto agree. Root rejected an892-byte transcription in the audit
+report and reconstructed the exact golden from the two framed protocol payloads.
+The report is corrected. Descriptor hashes and selected-closure hash were preserved.
+Home separately passed frozen-binding protocol15 source checks54 with its new digest.
+
+Additional actual failures were fixed, not bypassed: compiled-dependency raw Pack still
+contained14, so only its version payload changed while duplicate/trailing-byte hostiles
+were preserved; its unsupported-version probe15 collided with current15 and now uses
+CURRENT+1. A moved browser-actor fixture now resolves from its current fixtures directory.
+The fresh staging test had a local variable named source shadowing its captured owner
+and throwing before fixture read; renamed only that retained input. Root21680 passed
+browser-describe AJV, focused TypeScript,10 deep-equality/normalization laws and process
+evidence. Root47290 passed relay35 checks including chunked1025-byte request refusal
+without upstream dispatch, exactly one proof advance, and successful next-proof use.
+
+Root58149 reproduced false local cancellation on Close while submit was pending.
+Root79514 passed the extended Cancel/Close neutral row (1/316 skipped), terminal0.
+Close now records cancellation without aborting an in-flight submit; an idle unused
+port can retire locally. This is only the still-live-document close path. Document
+retirement, authorization change, lost submit/cancel/approval responses, retained
+indeterminate state and server-confirmed closed receipt still require the reconciliation
+packet. Root owns browser lifetime/wire/UI; Home owns exact-reader existing-job lookup,
+expiry-independent terminal observation and committed approval/undo recovery. No
+resubmission under a changed identity is allowed. WGPU owns direct catalog command
+integration; its controlled-child command lane72903 is GREEN, Shell dispatch is in progress.
+
+## 2026-09-09 01:28 UTC Inference Admission and Real Browser Relay
+
+Follow-up at01:45UTC: root74246 passed the live inference relay34 checks, terminal0.
+The first73961 attempt failed schema strict typing before runtime; corrected1145
+reproduced real submit404/upstream0, then74246 passed after allowlist and bounds.
+Terra found no relay path/auth bypass; chunked request overflow remains a test to add.
+Opening semantic swapped-code test5576 was RED; parser/schema now enforce opened/null,
+refused/capacity-invalid-lease, and indeterminate/transport. Root90169 passed1/314
+skipped, terminal0. Root74885 reproduced cancellation lost while submit was pending;
+root56358 passed after recording Cancel before the job-id guard (1/315 skipped).
+The owned neutral corpus and independent reducer oracle include this transition.
+Root77801 passed the registered inference port browser cohort10/306 skipped, terminal0,
+including AJV,7 hostile corpora,28 transitions,60 strings,18 twin strings, and history
+oracle/source checks. No live Hub cancellation/reconciliation is claimed by that cohort.
+
+Root47841 then reproduced a current-protocol preflight failure (fixture14 vs compiled15).
+Root56674 passed the corrected two-author source topology and real Bun/ws socket-retirement
+checks; this is not the mounted two-Shell journey. Root aligned26 positive protocol lines
+in Hub document-open/dependency/staging oracles, trusted bootstrap/generation/two-package
+fixtures, OS plan/browser-open fixtures, browser-describe schema/fixture/producers, and
+MCP live-catalog schema/positive fixtures. Intentional version13 and extra-field14 hostiles
+are unchanged. Derived bootstrap/catalog goldens are being recomputed independently by
+Terra before validation; Home owns frozen inference schema and its derived binding digest.
+Root63675 is the current trusted source preflight, not yet qualified.
+
+Root30357 passed three selected opening/predecessor/publication laws (312 skipped,
+315 total; 8.54s Vitest). Root86839 passed the predecessor cohort before the explicit
+Rust-present routing change. Red83802 first demonstrated that Rust dispatch bypassed
+the TypeScript inference owner; all seven inference request kinds now explicitly
+reach that owner. The opening mailbox waits for the exact epoch/scope receipt before
+Shell installs the successor and posts propose. It forbids replayed epochs and keeps
+the old operation alive on capacity refusal. Shell publication awaits this admission.
+Global renderer typecheck25943 remains RED1088, with no diagnostics naming ShellHost,
+action-handoff, or inference/opening. Earlier full renderer51592 remains 702/702,
+but predates this latest opening change and is not mounted-browser acceptance.
+
+Root1145 reproduced the real relay defect: submit returned404 and upstream calls0.
+The new inference-relay-check uses an independent AJV route schema,29 neutral route
+rows, actual Bun relay and upstream HTTP servers, exact request forwarding, the
+browser proof ratchet,1024-byte requests, and16384-byte responses including streaming
+overflow. Root74246 is the first production allowlist/bounds run; not yet qualified.
+Both launch configurations now expose the relay gate and expanded opening cohort.
+
+WGPU reports direct controlled-child law18633 GREEN1/314 skipped after fixing exact
+cold-pair reinstallation resetting documentBackboneReady. That law includes native
+instance0, full u64 UiIntent, skipped outer sequence, mandatory canonical Emit,
+singleton inference effect, patch feedback, whole-turn raw ingress serialization,
+and retirement. WGPU now owns the same-child catalog AppCommand bridge: Map's menu
+proposal action still enters the separate PR handle until that packet is finished.
+
+Home native9238 reached and passed the real two-actor WebSocket Session/Commands law,
+then failed to compile a later plugin test group whose literals lacked two newly
+required authority fields. Clean rerun and fixture alignment remain with Home, the
+sole native Cargo owner. Next it owns reader/session-bound existing-only inference
+requestId reconciliation. Root owns safe close retention and the browser relay;
+Terra continues read-only lifecycle/acceptance audits. None of this qualifies the
+ordinary cold Map → two mounted authenticated Shell peers → real MCP progress/cancel
+→ approved CreateRegion → durable Undo → same-root Hub restart acceptance yet.
+
+Current lifecycle defects remain explicit: close locally aborts and forgets uncertain
+Hub jobs; cancel while submitting is lost; no server-confirmed cancellation is required
+before predecessor release. A cancelled POST can persist yet return Expired, so close
+must retain an indeterminate tombstone until an authoritative terminal read. These
+fixes are in progress, not completed. Repo ticket MCP tools remain unavailable; no
+ticket or goal closure is claimed.
+
+## 2026-09-09 00:37 UTC Real Intent Publication Ownership
+
+Current follow-up at00:57UTC: root51592 passed the full current long renderer cohort,
+702/702 in18 files, terminal0 (93.78s Vitest). Root72492 passed4 selected publication/
+intent-owner tests with308 skipped, terminal0 (5.70s). These include exact Error(None)
+only, guest-applied result semantics, one host effect per action, authority-free
+inference and bounded HTTP(S) OpenExternalUrl. URL tests refuse executable/local/
+relative schemes, embedded credentials, controls and overlong values. Direct effects
+never enter PR refresh. Initial duplicate-effect concern was confirmed: two inference
+effects would replace the singleton job owner; the batch now rejects before any callback.
+
+During this packet, another fleet advanced the actual protocol to15. Root10584 failed4
+tests because owned fixtures still said14; root aligned AH fixtures/schema15 rather
+than weakening validation. WGPU updated the exact lease corpus and descriptor digest
+to15 and reported execution-target-lease-check99065 GREEN. Root28782 global renderer
+typecheck remains RED1086, with no diagnostics naming ShellHost/action-handoff.
+
+The next real-user gap is catalog actions: Map proposeBoundsRegion exists in the
+action catalog, while Shell onAction and onCommand still use the separate PR handle.
+The new displayed-UiIntent route alone does not qualify that menu action. Same-child
+catalog command ingress remains required; no synthetic UiIntent or domain-specific
+Shell bypass is acceptable.
+
+Terra also found that existing inference replacement/unmount only aborts local
+transport and forgets its Hub job. Root now owns inference opening/closing admission
+and reconciliation; WGPU keeps ownership of DocumentBrowserActorReservation. A new
+opening receipt contract must keep the old owner until the worker admits a successor.
+Close during uncertain submit must retain the sealed request, and reconciliation may
+never resubmit under a changed authenticated identity. These lifecycle fixes are
+in progress and not yet qualified.
+
+Native plugin_dispatch_intents emits an ordinary AppFrame::Emit for every successful
+intent and AppFrame::Error on guest refusal. The reactor sends both to Shell(0).
+The reservation previously rejected all such ordinary frames as foreign Shell
+effects, and rejected the actual GIS RequestInferenceProposal effect. This means
+patch-only mock turns never qualified real intent execution.
+
+Root55102 first failed for the missing canonical publication decoder. Root17769
+then passed the selected publication law with 307 skipped, terminal0, 3.84s Vitest.
+The strict language-neutral fixture is validated by AJV; fast-deep-equal independently
+compares the encoded inference effect and its decoded result. Tests reject trailing
+frame bytes, nonzero reply owners, unknown or authority-bearing effects, noncanonical
+Pack, more than64 effects, and batches larger than256KiB. Rejected results cannot
+carry host effects. Root37850 is the updated ownership cohort including validation
+of all effects before any callback and current-owner checks between callbacks.
+
+The private action result now requires bounded hostEffects byte vectors. Root owns
+the canonical Emit/Error decoder and exact WIT inference projection. WGPU owns
+worker accumulation across initial, continuation and patch-feedback turns and
+must emit the mandatory real AppFrame in its controlled child fixture. Binding
+Bound/Retired receipts remain a distinct control-only lane.
+
+Shell now shares an exact document-owner inference opener between generic and
+direct effect callers. Direct results use that opener only after the mailbox
+matches the whole owner tuple and the mounted lifetime remains current. Direct
+inference no longer enters generic applyHostEffects, whose trailing refreshUi
+would address the separate PR instance. No same-child support for arbitrary host
+callbacks or PublishEvent is claimed. No real mounted browser acceptance is claimed.
+
+Home native16614 was still RED after grant return, before TCP. It added bounded
+phase diagnostics and swallowed-panic reporting for the next warm run. The current
+goal remains active and the sole Cargo target stays with Home.
+
+## 2026-09-09 00:08 UTC Displayed Intent Composition and Exact Mount Readiness
+
+Current terminal qualification at00:17UTC: root13587 passed702/702 across18 files,
+terminal0 (63.34s Vitest), after the obsolete provisioning reference was corrected.
+This is the complete current registered long renderer cohort, not exhaustive or
+mounted-browser acceptance. Strict intent scalar coverage also includes unsigned
+sequence0 as well as u64::MAX; activation generations remain positive.
+
+Follow-up: full renderer56293 finished RED1/GREEN701 in18 files (96.24s), not
+green. Its sole failure read removed .devcontainer/post-create.sh while another
+fleet replaced startup with digest-verified Docker runtimes and Bun/Nx postCreate.
+Root updated only the stale package-integration law: Docker Bun version must equal
+the root packageManager, both architecture digest rows and checksum execution are
+required, postCreate must call workspace:deps-javascript, and native bootstrap must
+derive its version from packageManager. TypeScript's JSONC parser is the independent
+configuration oracle; native Bash syntax is checked. Focus19085 passed1/16 skipped,
+terminal0. This does not claim an actual Docker build or native setup run. Full long
+renderer13587 is the new current rerun.
+
+Root96841 passed the real UiDocumentStore emitIntent → typed Pack → private worker
+wire → exact mailbox reply composition (1 selected,210 skipped), terminal0.
+The initial exhaustive24788 test misread void loadSnapshot as an outcome; it now
+asserts the actual retained revision. Long76489 had selected no source, not a law.
+
+New language-neutral mounted-opening fixture validates against strict renderer AJV.
+Root43105 first failed for absent browserDocumentMountIsCurrentV1; implemented27244
+passed1/9 skipped, terminal0. The actual Shell uses that predicate to bind current
+client, scope, Shell instance, retained activation/surface/revision and native
+instance0 before publishing entry.ready and restoring a rebootstrap view.
+A foreign scope, client, generation, surface, native instance, revision or replaced
+Shell session does not publish readiness. First direct patches also reject nonzero
+native instances before changing the displayed store.
+
+Worker must now withhold generic snapshotReplaced for a verified closed-browser
+owner and emit browser-actor-ui-mounted only after its full guest patch-feedback
+turn and exact document bind settle. WGPU owns that implementation and its tests.
+The existing private response alone does not prove DOM presentation, and no real
+mounted-peer acceptance is claimed. Current raw-route audit requires a full turn
+lane, not only serialized child.invoke; late/failed pending-open shutdown may report
+unconfirmed but must never fabricate Retired.
+
+Renderer typecheck94695 remains globally RED1084, terminal1, with no diagnostics
+naming current ShellHost, action-handoff or document admission. Full long renderer
+56293 is now live after Shell mounted-readiness changes. The authored and generated
+browser-ui-readiness launch entry selects both exact-mount and store-intent tests
+under the registered exhaustive level.
+
+Native94908 still failed before TCP despite successful grant callbacks. Home identified
+a retained-source waker crossing finite actor-turn generation fences; stable
+weak-runner ArtifactReadinessWake now serves only retained connect/read readiness.
+Terra is auditing cancellation and stale-wake behavior while Home performs the next
+warm native cohort. The sole native target remains assigned to Home.
+
+## 2026-09-08 23:54 UTC Complete Intent Ownership and Finished Renderer Cohort
+
+Full long renderer37801 passed699/699 in18 files, terminal0 (72.02s Vitest),
+after56904 isolated the final missing authored panel bodyKey. This is the registered
+long cohort, not the exhaustive retained-wire matrices or mounted acceptance.
+The earlier pending-open disposal failure was a real production bug: PluginRuntime
+now acknowledges its exact Captured receipt before beginClose. Completion cohort65774
+passed12/12 selected; its test cancellation registry now actually disposes the fake
+client and the late completion law releases work before awaiting serialized retirement.
+
+Shared document binding is now canonical at OS plugin/backbone/binding/TypeScript,
+including full-u32 instance0. React PluginRuntime, Shell and their tests import it;
+the former renderer-local source moved without a wrapper. Binding80627 passed8/8
+before the move; the later full renderer37801 includes the relocated bindings.
+
+Action handoff now carries complete UiIntent Pack bytes, not a command/viewState
+projection. Schema bounds activation generation to u64 decimal and outer revision
+and action sequence to JS-safe integers. UiIntent seq remains u64, independent of
+the per-owner mailbox request counter. Native contract inspection confirmed revision
+and node are u64 (renderer safe numeric subset), while action.version is u16; every
+typed natural is minted with packUInt, because ordinary JS numbers encode as F64.
+The neutral largest-u64 intent preserves action, args, input, node, nodeKey and trigger
+while binding map to native0:map. Strict AJV and fast-deep-equal independently compare
+the grammar and expected output.
+
+Root5436 exposed an invalid client-a fixture (worker requires UUIDv4); corrected42387
+passed1/304 skipped. Complete-intent72674 and mailbox76241 first failed for missing
+implementations. Initial helper26623 failed due to one wrong relative import, corrected.
+Combined62639 passed3/304 skipped; full OS67776 passed307/307 in4 files, terminal0.
+The dedicated browser-intent-ownership launch gate is in authored seed and launch output.
+
+Shell now owns a bounded one-pending mailbox per retained authenticated display,
+settles only exact client+owner replies, preserves the store intent, and closes pending
+waiters on rebootstrap, scope loss, document retirement, unmount and worker failure.
+Its direct body refuses descriptor fallback into the shadow PluginRuntime.
+Root24360 typecheck remained RED1086 and included one new missing mounted-field access;
+that access now uses the checked app-channel constant. Recheck54704 remains globally
+RED with no ShellHost/action-handoff diagnostics. No global typecheck is claimed.
+Actual UiDocumentStore-to-wire composition76489 selected no files at long level;
+it is rerunning under the registered exhaustive level because that source is intentionally
+excluded from long. No passing receipt is claimed yet.
+
+Native fleet49787 now distinguishes successful grant.entered/grant.returned from absent
+TCP acceptance. The grant job is retained through WorkerPool contention, and native
+actor polling now enters its captured Tokio I/O handle for each finite poll. Warm45677
+is active. WGPU owns serialized direct reservation binding/intent/raw effects/retirement;
+Terra audits that work and insists on canonical intent preflight plus exact retirement
+ACKs. None of these tests replace current trusted Stdio+GIS, two mounted authenticated
+Shell peers, real MCP progress/cancel, approval, durable Undo and same-root Hub restart.
+
+## 2026-09-08 23:13 UTC Accepted Document Cache and Bounded Renderer Diagnosis
+
+Root72953 reproduced the engine-contract failure: strict AJV did not know the
+schema's x-semio-formats annotation. Registering that array metadata kept strict
+validation enabled; full engine-contract37237 passed443/443, terminal0.
+Full renderer94575 instead exhausted its1800s process budget after30m6s without
+a terminal Vitest summary. Root79795 reruns the full suite with verbose individual
+law output and30s per-test/hook/teardown timeouts inside the same1800s outer budget;
+the old run is not recorded as a completed full-suite result.
+
+AppChannelClient now retains a LoadDocument candidate on its exact pending request
+and publishes it only after an accepted Done or Document reply. A refused reply,
+transport failure, synchronous enqueue failure, or mixed Document+Error leaves
+the last accepted cache unchanged. Input and exposed output byte arrays cannot
+mutate the cache; disposal clears it. Neutral six-row fixture and strict AJV law
+first reproduced the optimistic/aliased candidate bug (2134 RED1), then74560
+passed the law (1,303 skipped); full OS73517 passed304/304 in4 files, terminal0.
+The cache acceptance launch gate is in both authored seed and generated output.
+
+The authenticated direct browser reservation remains the required execution owner:
+the general PluginRuntime module URL has no document-specific lease/grant/bundle
+authority. Direct integration must use genuine UiIntent bytes, serialize child
+polls, consume exact raw Backbone effects, and make lifecycle0 legal in shared
+binding controls. Root owns TS/Shell integration; Home owns the neutral/native
+instance0 binding law after its current phase-labelled relay diagnostic. WGPU
+continues its separate exact-owner bridge. No mounted acceptance is claimed.
+
+## 2026-09-08 22:55 UTC Portable Actor Tests and Split Browser Ownership
+
+Root2144 completed GREEN212/212 in 10 files (44.29s Vitest, terminal0), after
+the actor/kernel inline test descriptors used portable URL-derived directories.
+Renderer typecheck13117 ended RED632 diagnostics, predominantly extracted-test
+types and Bun-only source metadata; this is not a green typecheck. The exact stale
+Storybook PlaygroundAssetSpec import now names the existing generated
+🎮️playgrounds.ts file. A later typecheck still needs to qualify that change.
+
+Full renderer94575 remains live; engine-contract reports one failing session-scope
+law. Focus85187 selected zero files because its filter was repository-relative;
+72953 reruns that exact law with an absolute source path. Neither is a passing
+receipt yet. The full run's long per-test budget may hide a hanging later law.
+
+Terra's current read-only audit found that Shell can display the authenticated
+direct browser actor's instance0 store while dispatching actions and raw backbone
+traffic through a separate PluginRuntime actor. Root owns unifying that Shell
+route. WGPU owns only its separate bridge's exact lifecycle/UI authority route.
+Home68611 stopped at compile errors after strict codec passed; exact callback
+types and the moved SPR fixture include are repaired, with native80267 now live
+as sole Cargo cohort. Home's full OS quick73431 passed303/303. No native, mounted
+multi-user, or trusted current AI/Map acceptance is inferred from these results.
+
+## 2026-09-08 22:38 UTC Fleet Resumed and Full Renderer Qualification
+
+The prior turn made authoritative progress (actor212 and final-ACK retry law).
+All3 subagents then reported usage-limit errors, but follow-ups resumed them;
+the current fleet listing confirms root and all3 agents running. No account reset
+or purchase was requested or performed.
+
+WGPU read terminal61121: nonempty actual UI composition GREEN1,696 skipped,
+Vitest70.97s,Nx0. That result was delivered through its PTY without a separately
+saved log; it is not represented as a file-backed receipt. Root now owns broad
+renderer94575 (test-long, maxWorkers2,1800s test budget) and fresh typecheck13117,
+each with distinct ticket-local Nx graph metadata. WGPU continues the independent
+WGPU browser route; Home diagnoses native relay and rechecks the full OS suite;
+Terra audits current materialized receipt/cold-pair/raw conversion paths read-only.
+
+The three new launch gates are present in seed and output. The two actor cleanup
+gates explicitly select test-long so launch-time budgets cover their source laws.
+No mounted multi-user or complete frontend/backend/AI acceptance is inferred.
+
 ## 2026-09-08 22:20 UTC Runtime Retry Qualified; Alternate Browser Route Open
 
 Root40577 passed the actual production-wrapper/real ShardClient retry law (1 test,

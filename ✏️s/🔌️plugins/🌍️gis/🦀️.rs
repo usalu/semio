@@ -52,18 +52,8 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<semio_s_artifact_gis_gisterrain::viewer::gisterrain::GisTerrainViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_gis_gismap::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest {
-            id: CapabilityId("documents.write".into()),
-            scope: "plugin".into(),
-            reason: "persist gis2d/gis3d editor edits (map features, terrain) to the open gismap document".into(),
-            optional: false,
-        })
-        .requests(CapabilityRequest {
-            id: CapabilityId("shell.navigate".into()),
-            scope: "plugin".into(),
-            reason: "the `shell` command opens an external basemap/attribution URL (Effect::OpenExternalUrl)".into(),
-            optional: false,
-        })
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist gis2d/gis3d editor edits (map features, terrain) to the open gismap document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("shell.navigate".into()), scope: "plugin".into(), reason: "the `shell` command opens an external basemap/attribution URL (Effect::OpenExternalUrl)".into(), optional: false })
         .try_build()
 }
 

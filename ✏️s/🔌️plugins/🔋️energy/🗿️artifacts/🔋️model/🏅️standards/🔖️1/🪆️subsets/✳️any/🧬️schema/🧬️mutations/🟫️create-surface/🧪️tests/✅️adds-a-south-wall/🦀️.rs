@@ -21,7 +21,22 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(1, "ZONE ONE"));
     model.materials.push(fixtures::material(4, "PLASTERBOARD"));
     model.constructions.push(fixtures::construction(2, "LIGHTWEIGHT WALL", 4));
-    (snapshot(model), super::create_surface(crate::model::EntityId(3), "WALL SOUTH".into(), crate::model::EntityId(1), crate::model::SurfaceClass::ExteriorWall, vec![[0.0, 0.0, 0.0], [8.0, 0.0, 0.0], [8.0, 0.0, 2.7], [0.0, 0.0, 2.7]], crate::model::EntityId(2), crate::model::OutsideBoundaryKind::OutdoorAir, None, true, true, 1))
+    (
+        snapshot(model),
+        super::create_surface(
+            crate::model::EntityId(3),
+            "WALL SOUTH".into(),
+            crate::model::EntityId(1),
+            crate::model::SurfaceClass::ExteriorWall,
+            vec![[0.0, 0.0, 0.0], [8.0, 0.0, 0.0], [8.0, 0.0, 2.7], [0.0, 0.0, 2.7]],
+            crate::model::EntityId(2),
+            crate::model::OutsideBoundaryKind::OutdoorAir,
+            None,
+            true,
+            true,
+            1,
+        ),
+    )
 }
 
 fn case() -> Case {

@@ -5,7 +5,7 @@ use semio_framework_plugin::{tree_item, tree_item_with_action, PanelTreeBuilder}
 
 pub(crate) fn render(labels: &TrinityJackLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let jack_action = crate::editor::jack::jack_action;
-    let preset_query = crate::editor::jack::commands::query::preset_query;
+    let preset_query = crate::editor::jack::commands::preset_query;
     let fixtures = [("nakagin", "Nakagin — Table"), ("branch-chain", "Branch — Graph")];
     let examples = [
         ("where-or", "Where Or", "MATCH (a:Piece) WHERE a.name = 't_f0_b_c0' OR a.name = 't_f0_b_c1' RETURN a.name"),

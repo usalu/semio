@@ -7,10 +7,6 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::snapshot::text::{
-    CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl, camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl,
-    widget_to_dsl,
-};
 use crate::standards::v1::subsets::any::schema::mutations::change_generation_value::ChangeGenerationValue;
 use crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema;
 use crate::standards::v1::subsets::any::schema::mutations::connect_synapse::ConnectSynapse;
@@ -22,10 +18,14 @@ use crate::standards::v1::subsets::any::schema::mutations::delete_widget_positio
 use crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse::DisconnectSynapse;
 use crate::standards::v1::subsets::any::schema::mutations::move_widget::MoveWidget;
 use crate::standards::v1::subsets::any::schema::mutations::rename_generation::RenameGeneration;
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::update_camera::UpdateCamera;
 use crate::standards::v1::subsets::any::schema::mutations::update_synapse::UpdateSynapse;
 use crate::standards::v1::subsets::any::schema::mutations::update_widget::UpdateWidget;
-use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::text::{
+    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
+    WidgetLayoutDsl,
+};
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
 use protocol::OpBinary;
 use store::ErasedSnapshotRetirement;
@@ -136,9 +136,7 @@ fn generation3d_operation_to_dsl(operation: &Generation3dMutation) -> Generation
         Generation3dMutation::CreateGeneration(CreateGeneration { generation }) => Generation3dOperationDsl::CreateGeneration { generation: form_generation_to_dsl(generation) },
         Generation3dMutation::DeleteGeneration(DeleteGeneration { id }) => Generation3dOperationDsl::DeleteGeneration { id: id.clone() },
         Generation3dMutation::RenameGeneration(RenameGeneration { id, new_name }) => Generation3dOperationDsl::RenameGeneration { id: id.clone(), new_name: new_name.clone() },
-        Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value }) => {
-            Generation3dOperationDsl::ChangeGenerationValue { id: id.clone(), question_id: question_id.clone(), new_value: new_value.clone() }
-        }
+        Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value }) => Generation3dOperationDsl::ChangeGenerationValue { id: id.clone(), question_id: question_id.clone(), new_value: new_value.clone() },
     }
 }
 
@@ -157,9 +155,7 @@ fn generation3d_operation_from_dsl(operation: Generation3dOperationDsl) -> Resul
         Generation3dOperationDsl::CreateGeneration { generation } => Generation3dMutation::CreateGeneration(CreateGeneration { generation: form_generation_from_dsl(generation) }),
         Generation3dOperationDsl::DeleteGeneration { id } => Generation3dMutation::DeleteGeneration(DeleteGeneration { id }),
         Generation3dOperationDsl::RenameGeneration { id, new_name } => Generation3dMutation::RenameGeneration(RenameGeneration { id, new_name }),
-        Generation3dOperationDsl::ChangeGenerationValue { id, question_id, new_value } => {
-            Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value })
-        }
+        Generation3dOperationDsl::ChangeGenerationValue { id, question_id, new_value } => Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value }),
     })
 }
 
@@ -530,7 +526,9 @@ struct Generation3dReplayRetirement {
 
 impl ErasedSnapshotRetirement for Generation3dReplayRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.domain.is_empty() { return self.domain.close_step(maximum_items, maximum_bytes); }
+        if !self.domain.is_empty() {
+            return self.domain.close_step(maximum_items, maximum_bytes);
+        }
         if maximum_items == 0 || maximum_bytes < GENERATION3D_OWNER_BYTES {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -605,7 +603,12 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             if !payload.layout.x.is_finite() || !payload.layout.y.is_finite() {
                 return Err("generation3d-replay.layout-nonfinite");
             }
-            snapshot.fixture.layout.insert(generation3d_copy_string(&payload.id)?, semio_framework_artifact_flow_flow::WidgetLayout { x: payload.layout.x, y: payload.layout.y }).map(Generation3dReplayDisplaced::Layout).and_then(generation3d_retire_displaced)
+            snapshot
+                .fixture
+                .layout
+                .insert(generation3d_copy_string(&payload.id)?, semio_framework_artifact_flow_flow::WidgetLayout { x: payload.layout.x, y: payload.layout.y })
+                .map(Generation3dReplayDisplaced::Layout)
+                .and_then(generation3d_retire_displaced)
         }
         Generation3dMutation::DeleteWidgetPosition(payload) => snapshot.fixture.layout.remove(&payload.id).map(Generation3dReplayDisplaced::Layout).and_then(generation3d_retire_displaced),
         Generation3dMutation::UpdateCamera(payload) => {
@@ -675,8 +678,16 @@ impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotRetirement {
         }
         if let Some(generation) = self.generation.as_mut() {
             let step = generation.close_step(maximum_items, maximum_bytes)?;
-            if matches!(step, store::SnapshotRetirementStep::Complete) { self.generation.take(); }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: match step { store::SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => 0 } });
+            if matches!(step, store::SnapshotRetirementStep::Complete) {
+                self.generation.take();
+            }
+            return Ok(store::SnapshotRetirementStep::Pending {
+                released_items: 1,
+                released_bytes: match step {
+                    store::SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes,
+                    _ => 0,
+                },
+            });
         }
         if !self.flow.is_empty() {
             return self.flow.close_step(maximum_items, maximum_bytes);
@@ -696,7 +707,9 @@ impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotRetirement {
 
 impl Drop for Generation3dRetainedSnapshotRetirement {
     fn drop(&mut self) {
-        if !std::thread::panicking() { assert!(ErasedSnapshotRetirement::terminal_is_empty(self), "Generation3d snapshot reached Drop before typed retirement"); }
+        if !std::thread::panicking() {
+            assert!(ErasedSnapshotRetirement::terminal_is_empty(self), "Generation3d snapshot reached Drop before typed retirement");
+        }
     }
 }
 
@@ -736,7 +749,9 @@ impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotArcRetirement {
 
 impl Drop for Generation3dRetainedSnapshotArcRetirement {
     fn drop(&mut self) {
-        if !std::thread::panicking() { assert!(ErasedSnapshotRetirement::terminal_is_empty(self), "Generation3d Arc snapshot reached Drop before retained close"); }
+        if !std::thread::panicking() {
+            assert!(ErasedSnapshotRetirement::terminal_is_empty(self), "Generation3d Arc snapshot reached Drop before retained close");
+        }
     }
 }
 
@@ -1468,7 +1483,11 @@ impl Generation3dRetainedMutationOwner {
                             *field = None;
                         }
                         Some(Generation3dMutationFrame::NeuralValue { field, value, .. }) if matches!(*field, Some(0 | 1)) && value.is_none() => {
-                            *value = Some(if *field == Some(0) { semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null) } else { semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(boolean)) });
+                            *value = Some(if *field == Some(0) {
+                                semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null)
+                            } else {
+                                semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(boolean))
+                            });
                             *field = None;
                         }
                         _ => return Err("generation3d-mutation.boolean-owner"),
@@ -2352,10 +2371,18 @@ fn generation3d_copy_neural_value(source: &semio_framework_artifact_flow_flow::n
     }
     Ok(match source {
         semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null) => semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null),
-        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(value)) => semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(*value)),
-        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(value)) => semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(*value)),
-        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Decimal(value)) => semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Decimal(*value)),
-        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(value)) => semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(generation3d_copy_string(value)?)),
+        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(value)) => {
+            semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(*value))
+        }
+        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(value)) => {
+            semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(*value))
+        }
+        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Decimal(value)) => {
+            semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Decimal(*value))
+        }
+        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(value)) => {
+            semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(generation3d_copy_string(value)?))
+        }
         semio_framework_artifact_flow_flow::neural::Value::Dictionary(value) => semio_framework_artifact_flow_flow::neural::Value::Dictionary(generation3d_copy_dictionary(value, depth + 1)?),
     })
 }
@@ -2405,7 +2432,9 @@ fn generation3d_copy_flow_ui(source: &semio_framework_artifact_flow_flow::FlowGu
     for (id, node) in &source.nodes {
         let chrome = match &node.chrome {
             semio_framework_artifact_flow_flow::NodeChrome::Plain { preview } => semio_framework_artifact_flow_flow::NodeChrome::Plain { preview: *preview },
-            semio_framework_artifact_flow_flow::NodeChrome::Slider { label, min, max, step, value } => semio_framework_artifact_flow_flow::NodeChrome::Slider { label: generation3d_copy_string(label)?, min: *min, max: *max, step: *step, value: *value },
+            semio_framework_artifact_flow_flow::NodeChrome::Slider { label, min, max, step, value } => {
+                semio_framework_artifact_flow_flow::NodeChrome::Slider { label: generation3d_copy_string(label)?, min: *min, max: *max, step: *step, value: *value }
+            }
             semio_framework_artifact_flow_flow::NodeChrome::Note { text } => semio_framework_artifact_flow_flow::NodeChrome::Note { text: generation3d_copy_string(text)? },
             semio_framework_artifact_flow_flow::NodeChrome::Image { src } => semio_framework_artifact_flow_flow::NodeChrome::Image { src: generation3d_copy_string(src)? },
             semio_framework_artifact_flow_flow::NodeChrome::Variable { name, schema } => semio_framework_artifact_flow_flow::NodeChrome::Variable { name: generation3d_copy_string(name)?, schema: generation3d_copy_string(schema)? },
@@ -2448,12 +2477,23 @@ fn generation3d_copy_widget(source: &semio_framework_artifact_flow_flow::Widget)
             for value in output_ports {
                 outputs.push(generation3d_copy_string(value)?);
             }
-            semio_framework_artifact_flow_flow::Widget::Neuron { id: generation3d_copy_string(id)?, neuron_kind: generation3d_copy_string(neuron_kind)?, params: generation3d_copy_dictionary(params, 0)?, input_ports: inputs, output_ports: outputs, preview: *preview }
+            semio_framework_artifact_flow_flow::Widget::Neuron {
+                id: generation3d_copy_string(id)?,
+                neuron_kind: generation3d_copy_string(neuron_kind)?,
+                params: generation3d_copy_dictionary(params, 0)?,
+                input_ports: inputs,
+                output_ports: outputs,
+                preview: *preview,
+            }
         }
-        semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, value, min, max, step } => semio_framework_artifact_flow_flow::Widget::InputSlider { id: generation3d_copy_string(id)?, label: generation3d_copy_string(label)?, value: *value, min: *min, max: *max, step: *step },
+        semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, value, min, max, step } => {
+            semio_framework_artifact_flow_flow::Widget::InputSlider { id: generation3d_copy_string(id)?, label: generation3d_copy_string(label)?, value: *value, min: *min, max: *max, step: *step }
+        }
         semio_framework_artifact_flow_flow::Widget::InputNote { id, text } => semio_framework_artifact_flow_flow::Widget::InputNote { id: generation3d_copy_string(id)?, text: generation3d_copy_string(text)? },
         semio_framework_artifact_flow_flow::Widget::InputImage { id, src } => semio_framework_artifact_flow_flow::Widget::InputImage { id: generation3d_copy_string(id)?, src: generation3d_copy_string(src)? },
-        semio_framework_artifact_flow_flow::Widget::Variable { id, name, schema } => semio_framework_artifact_flow_flow::Widget::Variable { id: generation3d_copy_string(id)?, name: generation3d_copy_string(name)?, schema: generation3d_copy_string(schema)? },
+        semio_framework_artifact_flow_flow::Widget::Variable { id, name, schema } => {
+            semio_framework_artifact_flow_flow::Widget::Variable { id: generation3d_copy_string(id)?, name: generation3d_copy_string(name)?, schema: generation3d_copy_string(schema)? }
+        }
         semio_framework_artifact_flow_flow::Widget::OutputPreview { id, preview, expanded } => {
             let mut next_expanded = semio_framework_artifact_flow_flow::OrderedSet::new();
             for value in expanded {
@@ -2463,7 +2503,9 @@ fn generation3d_copy_widget(source: &semio_framework_artifact_flow_flow::Widget)
         }
         semio_framework_artifact_flow_flow::Widget::OutputAction { id, action } => semio_framework_artifact_flow_flow::Widget::OutputAction { id: generation3d_copy_string(id)?, action: generation3d_copy_string(action)? },
         semio_framework_artifact_flow_flow::Widget::OutputExport { id, format } => semio_framework_artifact_flow_flow::Widget::OutputExport { id: generation3d_copy_string(id)?, format: generation3d_copy_string(format)? },
-        semio_framework_artifact_flow_flow::Widget::Cluster { id, name, tree, flow } => semio_framework_artifact_flow_flow::Widget::Cluster { id: generation3d_copy_string(id)?, name: generation3d_copy_string(name)?, tree: generation3d_copy_tree(tree, 0)?, flow: generation3d_copy_flow_ui(flow)? },
+        semio_framework_artifact_flow_flow::Widget::Cluster { id, name, tree, flow } => {
+            semio_framework_artifact_flow_flow::Widget::Cluster { id: generation3d_copy_string(id)?, name: generation3d_copy_string(name)?, tree: generation3d_copy_tree(tree, 0)?, flow: generation3d_copy_flow_ui(flow)? }
+        }
     })
 }
 
@@ -2495,7 +2537,13 @@ struct Generation3dSnapshotCopyCursor {
 impl Generation3dSnapshotCopyCursor {
     fn new(source: &Generation3dSnapshot) -> Result<Self, &'static str> {
         let mut target = Generation3dSnapshot {
-            fixture: semio_framework_artifact_flow_flow::FlowFixture { schema: String::new(), camera: semio_framework_artifact_flow_flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: semio_framework_artifact_flow_flow::OrderedMap::new() },
+            fixture: semio_framework_artifact_flow_flow::FlowFixture {
+                schema: String::new(),
+                camera: semio_framework_artifact_flow_flow::CameraJson::default(),
+                widgets: Vec::new(),
+                synapses: Vec::new(),
+                layout: semio_framework_artifact_flow_flow::OrderedMap::new(),
+            },
             generation: semio_framework_artifact_playbook_playbook::GenerationPlayState::default().into(),
         };
         target.fixture.widgets.try_reserve_exact(source.fixture.widgets.len()).map_err(|_| "generation3d-initializer.widgets-preflight")?;
@@ -3367,11 +3415,17 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
         "nested".into(),
         dsl::DslValue::object([("array".to_string(), dsl::DslValue::Array(vec![dsl::DslValue::Bool(true), dsl::DslValue::Null, dsl::DslValue::float(3.5)])), ("text".to_string(), dsl::DslValue::String("retained".to_string()))]),
     );
-    let params = semio_framework_artifact_flow_flow::neural::Dictionary::new()
-        .insert("integer", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(7)))
-        .insert("nested", semio_framework_artifact_flow_flow::neural::Value::Dictionary(semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("text", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String("retained".into())))));
+    let params = semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("integer", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(7))).insert(
+        "nested",
+        semio_framework_artifact_flow_flow::neural::Value::Dictionary(
+            semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("text", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String("retained".into()))),
+        ),
+    );
     vec![
-        Generation3dMutation::CreateWidget(CreateWidget { index: 0, widget: semio_framework_artifact_flow_flow::Widget::Neuron { id: "retained-a".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true } }),
+        Generation3dMutation::CreateWidget(CreateWidget {
+            index: 0,
+            widget: semio_framework_artifact_flow_flow::Widget::Neuron { id: "retained-a".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true },
+        }),
         Generation3dMutation::UpdateWidget(UpdateWidget { widget: semio_framework_artifact_flow_flow::Widget::Cluster { id: "retained-a".into(), name: "Updated".into(), tree: Default::default(), flow: Default::default() } }),
         Generation3dMutation::DeleteWidget(DeleteWidget { id: "retained-a".into() }),
         Generation3dMutation::ConnectSynapse(ConnectSynapse { index: 0, synapse: generation3d_copy_synapse(&synapse).expect("P3 synapse fixture copy") }),

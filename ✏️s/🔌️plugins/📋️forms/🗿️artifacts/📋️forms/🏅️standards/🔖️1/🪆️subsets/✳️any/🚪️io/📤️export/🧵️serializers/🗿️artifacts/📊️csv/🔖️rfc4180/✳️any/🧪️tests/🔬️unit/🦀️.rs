@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::onboarding_example_spec;
 

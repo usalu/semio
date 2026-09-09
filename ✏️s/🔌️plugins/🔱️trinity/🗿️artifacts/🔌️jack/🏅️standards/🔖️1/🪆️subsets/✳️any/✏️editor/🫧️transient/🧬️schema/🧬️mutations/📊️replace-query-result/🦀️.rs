@@ -8,7 +8,6 @@ use crate::ast::QueryResult;
 #[mutation_leaf(contract = ::protocol)]
 pub struct ReplaceQueryResult {
     pub execution_id: Option<String>,
-    #[dsl(block)]
     pub result: Option<QueryResult>,
     pub error: Option<String>,
 }

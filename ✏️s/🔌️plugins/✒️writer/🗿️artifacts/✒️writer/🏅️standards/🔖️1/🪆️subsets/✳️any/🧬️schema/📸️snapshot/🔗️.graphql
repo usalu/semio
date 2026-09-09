@@ -1,9 +1,9 @@
 # 🧬️ Writer snapshot schema.
 
 type WriterSnapshot {
-  schema: String!
-  id: String!
-  languageId: String!
-  uri: String!
-  text: String!
+  schema: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  languageId: String! @state(class: ARTIFACT)
+  uri: String! @state(class: ARTIFACT)
+  document: ArtifactChild! @state(class: ARTIFACT)
 }

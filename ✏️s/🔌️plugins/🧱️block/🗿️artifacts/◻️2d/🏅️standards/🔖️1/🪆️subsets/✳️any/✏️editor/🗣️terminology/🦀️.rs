@@ -18,7 +18,7 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
+/// 🗣️ Resolves the active label set from the shared view state.
 pub fn block2d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Block2dLabels {
     semio_framework_plugin::resolve_labels::<Block2dLabels>(view_state)
 }

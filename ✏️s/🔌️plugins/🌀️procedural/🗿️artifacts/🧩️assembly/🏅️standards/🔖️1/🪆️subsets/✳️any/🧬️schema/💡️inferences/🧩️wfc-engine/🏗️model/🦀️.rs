@@ -21,9 +21,6 @@ pub struct PatternInfo {
     pub tags: Vec<u32>,
     /// 🧩️ The authored tile this pattern was compiled from, when built via a tiled/extracted model.
     pub tile: Option<TileId>,
-    /// 🧩️ Symmetry-orbit canonical pattern id, when built via symmetry expansion (`P5`); `None`
-    /// for patterns with no declared symmetry.
-    pub orbit_canonical: Option<PatternId>,
 }
 
 /// ↔ Per-relation metadata: a display name and its declared directed inverse.
@@ -45,7 +42,6 @@ pub struct ModelBuilder {
     weights: Vec<f64>,
     tags: Vec<Vec<u32>>,
     tiles: Vec<Option<TileId>>,
-    orbit_canonical: Vec<Option<PatternId>>,
     tag_names: Vec<String>,
     tag_ids: std::collections::HashMap<String, u32>,
     relation_names: Vec<String>,
@@ -66,7 +62,6 @@ impl ModelBuilder {
         self.weights.push(weight);
         self.tags.push(Vec::new());
         self.tiles.push(None);
-        self.orbit_canonical.push(None);
         id
     }
 
@@ -160,7 +155,7 @@ impl ModelBuilder {
         }
         let base_support: Vec<u32> = supporters.iter().map(|s| s.count_ones()).collect();
 
-        let patterns: Vec<PatternInfo> = (0..pattern_count).map(|i| PatternInfo { weight: self.weights[i], tags: self.tags[i].clone(), tile: self.tiles[i], orbit_canonical: self.orbit_canonical[i] }).collect();
+        let patterns: Vec<PatternInfo> = (0..pattern_count).map(|i| PatternInfo { weight: self.weights[i], tags: self.tags[i].clone(), tile: self.tiles[i] }).collect();
         let relations: Vec<RelationInfo> = (0..relation_count).map(|i| RelationInfo { name: self.relation_names[i].clone(), inverse: self.relation_inverse[i] }).collect();
 
         let mut model = CompiledModel { patterns, relations, allowed, supporters, base_support, weights, tag_names: self.tag_names, tag_ids: self.tag_ids, fingerprint: 0 };
@@ -315,7 +310,7 @@ impl AssemblyModelBuild {
                         } else {
                             self.all_integral = false;
                         }
-                        self.patterns.push(PatternInfo { weight: value, tags: Vec::new(), tile: None, orbit_canonical: None });
+                        self.patterns.push(PatternInfo { weight: value, tags: Vec::new(), tile: None });
                     }
                     self.mix(&value.to_bits().to_le_bytes());
                     self.mix(&0u64.to_le_bytes());

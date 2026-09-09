@@ -1,12 +1,12 @@
 //! 🕹️ 🕹️ Note play app commands command — `nudge-selection`.
 
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::schema::{block_id, flatten_blocks};
 use crate::{NoteBlockNode, NoteSnapshot};
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use std::collections::HashSet;
 use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::HashSet;
 
 //#region 🔖️Helpers
 /// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — one `drag-blocks` mutation for the

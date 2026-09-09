@@ -8,7 +8,7 @@ This late pass repairs mutation support trees added after the main Rust layout c
 - Rust queue: 28 distinct nested Rust sources in seven fixture families.
 - Classification: 9 sources contained 16 `#[test]` bodies; 19 sources were mutation rosters/leaves without executable bodies.
 - Asset move: 74 files moved as 12 intact support subtrees, including Rust, descriptor JSON, schemas, and the command-close vector/schema pair.
-- Exact changed-file payload: the fenced JSON array below contains 172 unique repository-relative paths: 171 implementation/asset paths plus this durable report. The temporary standalone copy is removed with this lane’s generated output.
+- Exact changed-file payload: the fenced JSON array below contains 173 unique repository-relative paths: 171 implementation/asset paths plus this durable report and its retained runtime input. The temporary standalone copy is removed with this lane’s generated output.
 
 ## Support ownership
 
@@ -44,13 +44,14 @@ This late pass repairs mutation support trees added after the main Rust layout c
 - `rustfmt --edition 2021 --config skip_children=true` completed for the nine extracted bodies and their nine fixture callers.
 - `git diff HEAD --check -- <172 exact paths>` completed with zero whitespace errors.
 - `bun nx run @semio-tech/framework-plugin:test-quick --skip-nx-cache` reached the plugin task after all three generation dependencies passed, then stopped before Cargo in the independent completion-rejection oracle: `writer loses the returned completion owner`. This is a preserved concurrent production-source/tooling integration failure outside the fixture paths; no passing claim is made for that target.
-- Focused Cargo compilation/runtime: pending below.
+- Focused runtime completed after the executor stopped at its usage limit. The produced plugin test binary contains all new paths in its compiler dependency file. The coordinator normalized literal relative dependency paths and confirmed all 52 extant changed Rust inputs were compiled and no newer than the binary. Public Bun/Nx then ran the 16 fully-qualified laws individually with `--exact --nocapture`; all 16 passed (each reported one passed, zero failed). No second compilation was started. The retained input is `🧑‍💻late-plugin-runtime/📜️script.ts`.
 
 ## Exact changed paths
 
 ```json
 [
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/📓️test-layout-late-rust-mutation-fixtures-2026-09-09.md",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/🧑‍💻late-plugin-runtime/📜️script.ts",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations-mutations-add-value-unit/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations/🧬️mutations/➕️add-value/🔣️.json",

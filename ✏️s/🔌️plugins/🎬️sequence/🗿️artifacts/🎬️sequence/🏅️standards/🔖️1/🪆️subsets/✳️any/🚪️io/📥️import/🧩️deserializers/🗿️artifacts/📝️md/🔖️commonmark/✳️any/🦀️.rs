@@ -5,7 +5,7 @@ use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_md::schema::snapshot::MdBlock;
-use semio_s_artifact_stdio_md::{MdSnapshot};
+use semio_s_artifact_stdio_md::MdSnapshot;
 
 pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 

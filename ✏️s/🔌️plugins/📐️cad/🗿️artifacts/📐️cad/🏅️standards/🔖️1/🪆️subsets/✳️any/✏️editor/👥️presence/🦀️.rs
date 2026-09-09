@@ -8,7 +8,7 @@ use store::ArtifactPack;
 pub mod retirement;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live CAD view state — camera, active utility, engagement step. Peer mesh
+/// 👥️ Shareable live CAD view state — camera and engagement step. Peer mesh
 /// selection/hover now broadcasts via the framework's typed `PresenceInteraction`, not here.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
@@ -23,14 +23,13 @@ pub struct CadPresence {
     pub camera_target: [f64; 3],
     pub camera_zoom: f64,
     pub camera_fov: f64,
-    pub active_utility_id: String,
     pub engagement_step: String,
     pub engagement_pane: Option<String>,
 }
 
 impl Default for CadPresence {
     fn default() -> Self {
-        Self { camera_position: [12.0, -12.0, 8.0], camera_target: [0.0, 0.0, 0.0], camera_zoom: 1.0, camera_fov: 50.0, active_utility_id: "move".into(), engagement_step: "Idle".into(), engagement_pane: None }
+        Self { camera_position: [12.0, -12.0, 8.0], camera_target: [0.0, 0.0, 0.0], camera_zoom: 1.0, camera_fov: 50.0, engagement_step: "Idle".into(), engagement_pane: None }
     }
 }
 
@@ -103,9 +102,22 @@ pub enum CadPresenceMutation {
 impl Mutation<CadPresence> for CadPresenceMutation {
     type Diff = CadPresence;
 
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot",
+        semantic_kind: "snapshot",
+        display_name: "Snapshot",
+        emoji: "📄",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {

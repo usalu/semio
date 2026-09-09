@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🏗️ Shared fixture for both the JSON and the `.remodeling` DSL round-trip tests: a scene that

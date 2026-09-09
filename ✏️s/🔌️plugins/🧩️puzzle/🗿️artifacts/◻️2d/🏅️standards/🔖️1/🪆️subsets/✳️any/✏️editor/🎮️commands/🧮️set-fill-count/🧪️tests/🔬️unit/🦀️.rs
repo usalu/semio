@@ -11,8 +11,8 @@ fn registry_free_session_source_contract(source: &str) -> bool {
     let Some(start) = production.find("pub struct Puzzle2dFillSessionWork {") else { return false };
     let Some(end) = production[start..].find("impl Puzzle2dFillSessionWork {") else { return false };
     let owner = &production[start..start + end];
-    owner.contains("search: Option<infinite_canvas::BoardFillJob>")
-        && owner.contains("checkpoint: Option<infinite_canvas::BoardFillCheckpoint>")
+    owner.contains("search: Option<crate::editor::puzzle2d::engine::BoardFillJob>")
+        && owner.contains("checkpoint: Option<crate::editor::puzzle2d::engine::BoardFillCheckpoint>")
         && owner.contains("apply: Option<FillPlacementApplyCursor>")
         && owner.contains("operation: semio_framework_job::Operation")
         && !owner.contains("app_instance_id")
@@ -24,7 +24,8 @@ fn registry_free_session_source_contract(source: &str) -> bool {
         && !production.contains("Effect::DispatchAction")
         && production.contains("fn bind_operation(&mut self, operation: semio_framework_job::Operation)")
         && production.contains("semio_framework_job::StepContext::new(operation.operation, operation.generation, budget, semio_framework_job::root_cancel_token(), puzzle2d_fill_monotonic_zero, preview_sequence)")
-        && production.contains("Puzzle2dConfigMutation::Fill { runtime }")
+        && production.contains("window_config: Puzzle2dWindowConfig")
+        && !production.contains("Puzzle2dConfigMutation::Fill")
 }
 
 fn fixed_placement_owner_source_contract(source: &str) -> bool {
@@ -38,7 +39,7 @@ fn fixed_placement_owner_source_contract(source: &str) -> bool {
     let Some(view_start) = production.find("enum FillPlacementPublishHandles") else { return false };
     let Some(view_end) = production[view_start..].find("fn publish_fixed_placement") else { return false };
     let view = &production[view_start..view_start + view_end];
-    owners.contains("edge_kind: infinite_canvas::BoardFillText")
+    owners.contains("edge_kind: crate::editor::puzzle2d::engine::BoardFillText")
         && owners.contains("text_byte: usize")
         && owners.contains("fn copy_fill_text_one")
         && owners.contains("destination.try_push_byte(value)")
@@ -51,12 +52,12 @@ fn fixed_placement_owner_source_contract(source: &str) -> bool {
         && apply.contains("fixed_handle_id(self.handle_cursor)")
         && apply.contains("fixed_handle_kind(self.handle_cursor)")
         && apply.contains("FillPlacementPublishView::from_cursor")
-        && !apply.contains("let placement = infinite_canvas::BoardFillCommitPlacement")
+        && !apply.contains("let placement = crate::editor::puzzle2d::engine::BoardFillCommitPlacement")
         && !apply.contains("handles: std::array::from_fn(|index|")
         && !apply.contains("= placement.node_id;")
         && !apply.contains("= placement.edge_kind;")
         && !apply.contains(".to_string(")
-        && view.contains("edge_kind: &'a infinite_canvas::BoardFillText")
+        && view.contains("edge_kind: &'a crate::editor::puzzle2d::engine::BoardFillText")
         && view.contains("FillPlacementPublishHandles::Commit(&placement.handles)")
         && view.contains("FillPlacementPublishHandles::Cursor(handles)")
         && !view.contains("String")
@@ -120,7 +121,11 @@ fn registry_and_worker_pool_reintroductions_are_rejected() {
     assert!(!registry_free_session_source_contract(&registry));
     let pool = source.replacen("fn puzzle2d_fill_monotonic_zero", "fn pool() { semio_framework_async::process_worker_pool(); }\nfn puzzle2d_fill_monotonic_zero", 1);
     assert!(!registry_free_session_source_contract(&pool));
-    let lease = source.replacen("    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,", "    lease: Option<store::SnapshotRead<Puzzle2dPlaySnapshot>>,\n    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,", 1);
+    let lease = source.replacen(
+        "    ingress: Option<crate::editor::puzzle2d::engine::BoardFillSnapshotIngress>,",
+        "    lease: Option<store::SnapshotRead<Puzzle2dPlaySnapshot>>,\n    ingress: Option<crate::editor::puzzle2d::engine::BoardFillSnapshotIngress>,",
+        1,
+    );
     assert!(!registry_free_session_source_contract(&lease));
 }
 
@@ -129,32 +134,35 @@ fn registry_and_worker_pool_reintroductions_are_rejected() {
 fn mounted_fill_fixed_placement_owner_mutations_are_rejected() {
     let source = include_str!("../../🦀️.rs");
     assert!(fixed_placement_owner_source_contract(source));
-    let dynamic = source.replacen("edge_kind: infinite_canvas::BoardFillText,", "edge_kind: String,", 1);
+    let dynamic = source.replacen("edge_kind: crate::editor::puzzle2d::engine::BoardFillText,", "edge_kind: String,", 1);
     assert!(!fixed_placement_owner_source_contract(&dynamic));
-    let dynamic_view = source.replacen("edge_kind: &'a infinite_canvas::BoardFillText,", "edge_kind: String,", 1);
+    let dynamic_view = source.replacen("edge_kind: &'a crate::editor::puzzle2d::engine::BoardFillText,", "edge_kind: String,", 1);
     assert!(!fixed_placement_owner_source_contract(&dynamic_view));
     let whole_text = source.replacen("if copy_fill_text_one(&placement.edge_kind, destination, &mut self.text_byte)? {", "if { *destination = placement.edge_kind; true } {", 1);
     assert!(!fixed_placement_owner_source_contract(&whole_text));
-    let whole_candidate =
-        source.replacen("FillPlacementPublishView::from_cursor(node, edge, &self.handles, self.handle_cursor)", "infinite_canvas::BoardFillCommitPlacement { handles: std::array::from_fn(|index| self.handles[index]), ..Default::default() }", 1);
+    let whole_candidate = source.replacen(
+        "FillPlacementPublishView::from_cursor(node, edge, &self.handles, self.handle_cursor)",
+        "crate::editor::puzzle2d::engine::BoardFillCommitPlacement { handles: std::array::from_fn(|index| self.handles[index]), ..Default::default() }",
+        1,
+    );
     assert!(!fixed_placement_owner_source_contract(&whole_candidate));
 }
 
 /// 🔡️ A MAX fixed label advances by exactly one character byte per retained apply opportunity.
 #[test]
 fn mounted_fill_fixed_placement_text_cursor_is_one_byte_per_turn() {
-    let source = "x".repeat(infinite_canvas::BOARD_FILL_TEXT_BYTES);
-    let source = infinite_canvas::BoardFillText::try_from_str(&source).expect("MAX fixed placement text");
-    let mut destination = infinite_canvas::BoardFillText::empty();
+    let source = "x".repeat(crate::editor::puzzle2d::engine::BOARD_FILL_TEXT_BYTES);
+    let source = crate::editor::puzzle2d::engine::BoardFillText::try_from_str(&source).expect("MAX fixed placement text");
+    let mut destination = crate::editor::puzzle2d::engine::BoardFillText::empty();
     let mut byte = 0usize;
-    for index in 0..infinite_canvas::BOARD_FILL_TEXT_BYTES {
+    for index in 0..crate::editor::puzzle2d::engine::BOARD_FILL_TEXT_BYTES {
         let complete = copy_fill_text_one(&source, &mut destination, &mut byte).expect("fixed byte copy");
         assert_eq!(destination.as_str().len(), index + 1);
-        assert_eq!(complete, index + 1 == infinite_canvas::BOARD_FILL_TEXT_BYTES);
+        assert_eq!(complete, index + 1 == crate::editor::puzzle2d::engine::BOARD_FILL_TEXT_BYTES);
     }
     assert_eq!(destination, source);
-    let over = "x".repeat(infinite_canvas::BOARD_FILL_TEXT_BYTES + 1);
-    assert!(infinite_canvas::BoardFillText::try_from_str(&over).is_err());
+    let over = "x".repeat(crate::editor::puzzle2d::engine::BOARD_FILL_TEXT_BYTES + 1);
+    assert!(crate::editor::puzzle2d::engine::BoardFillText::try_from_str(&over).is_err());
 }
 
 /// 📦️ Replacing the full exact terminal placement with a summary decoder fails the live terminal law.
@@ -217,12 +225,11 @@ fn fill_capture_reads_the_document_node_kind_slice() {
 }
 
 /// 🎛️ Every control verb is a pure runtime transition, and only the four search verbs ask for a
-/// search — the property that lets `setActiveUtility` discard a session without reaching any
-/// live owner.
+/// search, so leaving the utility can discard a session without reaching any live owner.
 #[test]
 fn fill_control_verbs_are_pure_runtime_transitions() {
     let mut effects = Vec::new();
-    let mut runtime = Puzzle2dFillRuntime::from_config(&Puzzle2dConfig::default());
+    let mut runtime = Puzzle2dFillRuntime::for_count(0);
     runtime.fill_count = 12;
     runtime.fill_job_accepted_count = 4;
     runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Running;

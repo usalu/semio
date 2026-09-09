@@ -3,7 +3,6 @@
 use crate::{RemodelingDurableArtifactStore, RemodelingSnapshot};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Ids
@@ -61,7 +60,7 @@ pub fn video_codec_from_label(label: &str) -> VideoCodec {
 //#endregion 🔖️Codecs
 
 //#region 🔖️Artifact
-/// 🧬️ Full remodeling artifact state across the artifact, presence and config lanes.
+/// 🧬️ remodeling document artifact state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodeling")]
@@ -86,72 +85,8 @@ pub struct RemodelingArtifact {
     pub job: ReconstructionJob,
     #[state(artifact)]
     pub results: ReconstructionResults,
-    #[state(presence)]
-    pub selection: RemodelingUiSelection,
-    #[state(presence)]
-    pub report_table: String,
-    #[state(presence)]
-    pub frame_cursor: RemodelingUiFrameCursor,
-    #[state(config)]
-    pub camera: RemodelingUiCamera,
-    #[state(config)]
-    pub layers: RemodelingUiLayers,
 }
 //#endregion 🔖️Artifact
-
-//#region 🔖️UiHelpers
-/// 🎥️ Artifact-owned orbit camera (mirror of app config camera).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
-#[serde(rename_all = "camelCase", default)]
-pub struct RemodelingUiCamera {
-    pub position: [f64; 3],
-    pub target: [f64; 3],
-    pub fov: f64,
-}
-
-impl Default for RemodelingUiCamera {
-    fn default() -> Self {
-        Self { position: [4.0, -4.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }
-    }
-}
-
-/// 🖱️ Artifact-owned selection (mirror of app config selection).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
-#[serde(rename_all = "camelCase", default)]
-pub struct RemodelingUiSelection {
-    pub mode: String,
-    pub ids: Vec<String>,
-}
-
-/// 👁️ Artifact-owned layer visibility (mirror of app config layers).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
-#[serde(rename_all = "camelCase", default)]
-pub struct RemodelingUiLayers {
-    pub mesh: bool,
-    pub dense: bool,
-    pub sparse: bool,
-    pub cameras: bool,
-    pub gcps: bool,
-}
-
-impl Default for RemodelingUiLayers {
-    fn default() -> Self {
-        Self { mesh: true, dense: true, sparse: true, cameras: true, gcps: true }
-    }
-}
-
-/// 🎞️ Artifact-owned frame cursor (mirror of app config frame cursor).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
-#[serde(rename_all = "camelCase", default)]
-pub struct RemodelingUiFrameCursor {
-    pub stream_id: Option<String>,
-    pub frame_index: u32,
-}
-//#endregion 🔖️UiHelpers
 
 //#region 🔖️Conversions
 impl Default for RemodelingArtifact {
@@ -177,7 +112,7 @@ impl RemodelingArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: RemodelingSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -190,11 +125,6 @@ impl RemodelingArtifact {
             gcps: snapshot.gcps,
             job: snapshot.job,
             results: snapshot.results,
-            selection: RemodelingUiSelection::default(),
-            report_table: "frames".into(),
-            frame_cursor: RemodelingUiFrameCursor::default(),
-            camera: RemodelingUiCamera::default(),
-            layers: RemodelingUiLayers::default(),
         }
     }
 
@@ -219,18 +149,22 @@ impl RemodelingArtifact {
 pub fn remodeling_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.remodel.remodeling",
-        artifact: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"), typescript: include_str!("🔺️diff/🟦️.ts"), graphql: include_str!("🔺️diff/🔗️.graphql"), json_schema: include_str!("🔺️diff/🔣️.json"), proto: include_str!("🔺️diff/🛰️.proto")
+        diff: framework_schema::FacetLeaves {
+            rust: include_str!("🔺️diff/🦀️.rs"),
+            typescript: include_str!("🔺️diff/🟦️.ts"),
+            graphql: include_str!("🔺️diff/🔗️.graphql"),
+            json_schema: include_str!("🔺️diff/🔣️.json"),
+            proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),

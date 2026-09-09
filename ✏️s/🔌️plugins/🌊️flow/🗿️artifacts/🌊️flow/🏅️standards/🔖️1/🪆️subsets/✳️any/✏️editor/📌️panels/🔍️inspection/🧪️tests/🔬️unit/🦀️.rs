@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::flow::FLOW_PLAY_BODY_INSPECTOR as BODY_INSPECTOR;
 use crate::editor::flow::testkit::{flow_app, render as render_body};
+use crate::editor::flow::FLOW_PLAY_BODY_INSPECTOR as BODY_INSPECTOR;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_inspector_no_longer_shows_canvas_settings() {

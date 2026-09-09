@@ -11,8 +11,8 @@
 //! ephemeral SFM/BA working state, which this codebase deliberately never persists — see
 //! `MotionTrackSummary`'s own docstring on why raw tracks/observations stay plugin-runtime scratch).
 
-use crate::{CameraPosePreview, RemodelingSnapshot};
 use crate::lie::{Se3, So3};
+use crate::{CameraPosePreview, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

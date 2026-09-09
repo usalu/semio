@@ -7,16 +7,16 @@
 //! `🦀️.rs` is outside this file's own directory anyway).
 
 #[cfg(feature = "component-app-assembly")]
-use crate::standards::v_raw::subsets::any::{io, schema};
-#[cfg(feature = "component-app-assembly")]
 use crate::editor::binary as editor;
+#[cfg(feature = "component-app-assembly")]
+use crate::standards::v_raw::subsets::any::{io, schema};
 #[cfg(feature = "component-app-assembly")]
 use crate::viewer::binary as viewer;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::{Dialect, StandardId, SubsetId};
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::ExampleSource;
+use semio_framework_plugin::{Dialect, StandardId, SubsetId};
 #[cfg(feature = "component-app-assembly")]
 use std::sync::OnceLock;
 

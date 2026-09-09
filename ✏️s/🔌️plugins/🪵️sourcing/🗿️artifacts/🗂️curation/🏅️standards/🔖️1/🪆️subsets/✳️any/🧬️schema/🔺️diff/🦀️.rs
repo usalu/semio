@@ -1,6 +1,6 @@
 //! 🧬️ Curation diff schema — sparse field delta over the artifact.
 
-use crate::{CuratedItem, Filters, ObjectKindExtra};
+use crate::{CuratedItem, ObjectKindExtra};
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
@@ -23,10 +23,6 @@ pub struct CurationDiff {
     pub stock_extra: Option<CurationStockExtraDelta>,
     #[state(artifact)]
     pub curated: Option<CurationCuratedDelta>,
-    #[state(config)]
-    pub filters: Option<Filters>,
-    #[state(config)]
-    pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff
 

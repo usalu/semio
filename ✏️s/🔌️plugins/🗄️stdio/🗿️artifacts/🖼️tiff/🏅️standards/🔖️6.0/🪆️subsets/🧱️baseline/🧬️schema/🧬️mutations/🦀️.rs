@@ -70,25 +70,25 @@ use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffFieldType,
 use protocol::{Mutation, MutationDiff};
 
 //#region 🔖️Mutations
+#[path = "🧱️insert-tile-tags/🦀️.rs"]
+pub mod insert_tile_tags;
+#[path = "✂️remove-strip-offsets/🦀️.rs"]
+pub mod remove_strip_offsets;
+#[path = "🗑️remove-tile-tags/🦀️.rs"]
+pub mod remove_tile_tags;
+#[path = "🔢️set-bits-per-sample/🦀️.rs"]
+pub mod set_bits_per_sample;
+#[path = "🗜️set-compression/🦀️.rs"]
+pub mod set_compression;
+#[path = "🌈️set-photometric-interpretation/🦀️.rs"]
+pub mod set_photometric_interpretation;
 /// 📐️ Typed conformance-class mutation for `stdio.tiff` under Adobe TIFF 6.0 Part 1 Baseline.
 /// Every variant addresses ONE axis of the class; none addresses arbitrary document content.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🗜️set-compression/🦀️.rs"]
-pub mod set_compression;
-#[path = "🌈️set-photometric-interpretation/🦀️.rs"]
-pub mod set_photometric_interpretation;
-#[path = "🔢️set-bits-per-sample/🦀️.rs"]
-pub mod set_bits_per_sample;
-#[path = "🧱️insert-tile-tags/🦀️.rs"]
-pub mod insert_tile_tags;
-#[path = "🗑️remove-tile-tags/🦀️.rs"]
-pub mod remove_tile_tags;
 #[path = "📍️set-strip-offsets/🦀️.rs"]
 pub mod set_strip_offsets;
-#[path = "✂️remove-strip-offsets/🦀️.rs"]
-pub mod remove_strip_offsets;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -136,11 +136,7 @@ pub fn encode_tiff_baseline_projection_json(snapshot: &TiffSnapshot) -> String {
         },
         None => "absent".to_string(),
     };
-    let verdict = crate::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(snapshot)
-        .into_iter()
-        .map(|finding| format!("\"{}\"", finding.code.0))
-        .collect::<Vec<_>>()
-        .join(",");
+    let verdict = crate::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(snapshot).into_iter().map(|finding| format!("\"{}\"", finding.code.0)).collect::<Vec<_>>().join(",");
     format!(
         "{{\"format\":\"tiff-baseline\",\"ifdCount\":{},\"compression\":\"{}\",\"photometric\":\"{}\",\"bitsPerSample\":\"{}\",\"tileWidth\":\"{}\",\"tileLength\":\"{}\",\"stripOffsets\":\"{}\",\"conformance\":[{verdict}]}}",
         snapshot.ifds.len(),
@@ -199,14 +195,7 @@ fn ifd0_diff(added: Vec<TiffTagAdded>, modified: Vec<TiffTagModified>, removed: 
     if added.is_empty() && modified.is_empty() && removed.is_empty() {
         return TiffDiff::default();
     }
-    TiffDiff {
-        ifds: Some(TiffIfdsDiff {
-            removed: Vec::new(),
-            modified: vec![TiffIfdModified { index: 0, diff: TiffIfdDiff { entries: TiffTagsDiff { removed, modified, added }, pixels: None } }],
-            added: Vec::new(),
-        }),
-        ..Default::default()
-    }
+    TiffDiff { ifds: Some(TiffIfdsDiff { removed: Vec::new(), modified: vec![TiffIfdModified { index: 0, diff: TiffIfdDiff { entries: TiffTagsDiff { removed, modified, added }, pixels: None } }], added: Vec::new() }), ..Default::default() }
 }
 
 /// ✏️ Creates-or-updates one IFD-0 tag, and produces the empty diff when the value is already what
@@ -267,74 +256,79 @@ fn longs(values: &TiffValues) -> Vec<u32> {
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &TiffBaselineMutation, base: &TiffSnapshot) -> protocol::MutationOutcome<TiffDiff> {
-        protocol::MutationOutcome::new(match this {
-            TiffBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => crate::standards::v6_0::subsets::document::schema::diff::diff_set_snapshot(base, snapshot),
-            TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression }) => set_ifd0_tag(base, TAG_COMPRESSION, TiffFieldType::Short, TiffValues::Short(vec![*compression])),
-            TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric }) => set_ifd0_tag(base, TAG_PHOTOMETRIC, TiffFieldType::Short, TiffValues::Short(vec![*photometric])),
-            TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits }) => set_ifd0_tag(base, TAG_BITS_PER_SAMPLE, TiffFieldType::Short, TiffValues::Short(bits.clone())),
-            TiffBaselineMutation::InsertTileTags(insert_tile_tags::InsertTileTags { tile_width, tile_length }) => {
-                if base.ifds.is_empty() {
-                    return protocol::MutationOutcome::new(TiffDiff::default());
-                }
-                let mut added = Vec::new();
-                let mut modified = Vec::new();
-                for (tag, value) in [(TAG_TILE_WIDTH, *tile_width), (TAG_TILE_LENGTH, *tile_length)] {
-                    let values = TiffValues::Long(vec![value]);
-                    match ifd0_tag(base, tag) {
-                        Some(existing) if existing.kind == TiffFieldType::Long && existing.values == values => {}
-                        Some(_) => modified.push(TiffTagModified { tag, kind: TiffFieldType::Long, values }),
-                        None => added.push(TiffTagAdded { tag, kind: TiffFieldType::Long, values }),
-                    }
-                }
-                ifd0_diff(added, modified, Vec::new())
+    protocol::MutationOutcome::new(match this {
+        TiffBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => crate::standards::v6_0::subsets::document::schema::diff::diff_set_snapshot(base, snapshot),
+        TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression }) => set_ifd0_tag(base, TAG_COMPRESSION, TiffFieldType::Short, TiffValues::Short(vec![*compression])),
+        TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric }) => set_ifd0_tag(base, TAG_PHOTOMETRIC, TiffFieldType::Short, TiffValues::Short(vec![*photometric])),
+        TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits }) => set_ifd0_tag(base, TAG_BITS_PER_SAMPLE, TiffFieldType::Short, TiffValues::Short(bits.clone())),
+        TiffBaselineMutation::InsertTileTags(insert_tile_tags::InsertTileTags { tile_width, tile_length }) => {
+            if base.ifds.is_empty() {
+                return protocol::MutationOutcome::new(TiffDiff::default());
             }
-            TiffBaselineMutation::RemoveTileTags(_) => remove_ifd0_tags(base, &[TAG_TILE_WIDTH, TAG_TILE_LENGTH]),
-            TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets }) => set_ifd0_tag(base, TAG_STRIP_OFFSETS, TiffFieldType::Long, TiffValues::Long(offsets.clone())),
-            TiffBaselineMutation::RemoveStripOffsets(_) => remove_ifd0_tags(base, &[TAG_STRIP_OFFSETS]),
-        })
-    }
+            let mut added = Vec::new();
+            let mut modified = Vec::new();
+            for (tag, value) in [(TAG_TILE_WIDTH, *tile_width), (TAG_TILE_LENGTH, *tile_length)] {
+                let values = TiffValues::Long(vec![value]);
+                match ifd0_tag(base, tag) {
+                    Some(existing) if existing.kind == TiffFieldType::Long && existing.values == values => {}
+                    Some(_) => modified.push(TiffTagModified { tag, kind: TiffFieldType::Long, values }),
+                    None => added.push(TiffTagAdded { tag, kind: TiffFieldType::Long, values }),
+                }
+            }
+            ifd0_diff(added, modified, Vec::new())
+        }
+        TiffBaselineMutation::RemoveTileTags(_) => remove_ifd0_tags(base, &[TAG_TILE_WIDTH, TAG_TILE_LENGTH]),
+        TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets }) => set_ifd0_tag(base, TAG_STRIP_OFFSETS, TiffFieldType::Long, TiffValues::Long(offsets.clone())),
+        TiffBaselineMutation::RemoveStripOffsets(_) => remove_ifd0_tags(base, &[TAG_STRIP_OFFSETS]),
+    })
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &TiffBaselineMutation, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
-        vec![match this {
-            TiffBaselineMutation::SetSnapshot(_) => TiffBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            TiffBaselineMutation::SetCompression(_) => restore_or_remove(
-                base,
-                TAG_COMPRESSION,
-                |values| TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression: shorts(values).first().copied().unwrap_or(1) }),
-                // 🧭️ A document with no Compression tag reads as "uncompressed" per TIFF 6.0's own
-                // default, so restoring the absent state means writing that default back rather
-                // than removing a tag this vocabulary has no removal kind for.
-                TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression: 1 }),
-            ),
-            TiffBaselineMutation::SetPhotometricInterpretation(_) => restore_or_remove(
-                base,
-                TAG_PHOTOMETRIC,
-                |values| TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric: shorts(values).first().copied().unwrap_or(1) }),
-                TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric: 1 }),
-            ),
-            TiffBaselineMutation::SetBitsPerSample(_) => restore_or_remove(
-                base,
-                TAG_BITS_PER_SAMPLE,
-                |values| TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: shorts(values) }),
-                // 🧭️ TIFF 6.0's own default for a missing BitsPerSample is a single 1-bit sample.
-                TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: vec![1] }),
-            ),
-            TiffBaselineMutation::InsertTileTags(_) => match (ifd0_tag(base, TAG_TILE_WIDTH), ifd0_tag(base, TAG_TILE_LENGTH)) {
-                (Some(width), Some(length)) => TiffBaselineMutation::InsertTileTags(insert_tile_tags::InsertTileTags { tile_width: longs(&width.values).first().copied().unwrap_or(0), tile_length: longs(&length.values).first().copied().unwrap_or(0) }),
-                _ => TiffBaselineMutation::RemoveTileTags(remove_tile_tags::RemoveTileTags {}),
-            },
-            TiffBaselineMutation::RemoveTileTags(_) => match (ifd0_tag(base, TAG_TILE_WIDTH), ifd0_tag(base, TAG_TILE_LENGTH)) {
-                (Some(width), Some(length)) => TiffBaselineMutation::InsertTileTags(insert_tile_tags::InsertTileTags { tile_width: longs(&width.values).first().copied().unwrap_or(0), tile_length: longs(&length.values).first().copied().unwrap_or(0) }),
-                _ => return Vec::new(),
-            },
-            TiffBaselineMutation::SetStripOffsets(_) => restore_or_remove(base, TAG_STRIP_OFFSETS, |values| TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: longs(values) }), TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {})),
-            TiffBaselineMutation::RemoveStripOffsets(_) => match ifd0_tag(base, TAG_STRIP_OFFSETS) {
-                Some(tag) => TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: longs(&tag.values) }),
-                None => return Vec::new(),
-            },
-        }]
-    }
+    vec![match this {
+        TiffBaselineMutation::SetSnapshot(_) => TiffBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        TiffBaselineMutation::SetCompression(_) => restore_or_remove(
+            base,
+            TAG_COMPRESSION,
+            |values| TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression: shorts(values).first().copied().unwrap_or(1) }),
+            // 🧭️ A document with no Compression tag reads as "uncompressed" per TIFF 6.0's own
+            // default, so restoring the absent state means writing that default back rather
+            // than removing a tag this vocabulary has no removal kind for.
+            TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression: 1 }),
+        ),
+        TiffBaselineMutation::SetPhotometricInterpretation(_) => restore_or_remove(
+            base,
+            TAG_PHOTOMETRIC,
+            |values| TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric: shorts(values).first().copied().unwrap_or(1) }),
+            TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric: 1 }),
+        ),
+        TiffBaselineMutation::SetBitsPerSample(_) => restore_or_remove(
+            base,
+            TAG_BITS_PER_SAMPLE,
+            |values| TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: shorts(values) }),
+            // 🧭️ TIFF 6.0's own default for a missing BitsPerSample is a single 1-bit sample.
+            TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: vec![1] }),
+        ),
+        TiffBaselineMutation::InsertTileTags(_) => match (ifd0_tag(base, TAG_TILE_WIDTH), ifd0_tag(base, TAG_TILE_LENGTH)) {
+            (Some(width), Some(length)) => TiffBaselineMutation::InsertTileTags(insert_tile_tags::InsertTileTags { tile_width: longs(&width.values).first().copied().unwrap_or(0), tile_length: longs(&length.values).first().copied().unwrap_or(0) }),
+            _ => TiffBaselineMutation::RemoveTileTags(remove_tile_tags::RemoveTileTags {}),
+        },
+        TiffBaselineMutation::RemoveTileTags(_) => match (ifd0_tag(base, TAG_TILE_WIDTH), ifd0_tag(base, TAG_TILE_LENGTH)) {
+            (Some(width), Some(length)) => TiffBaselineMutation::InsertTileTags(insert_tile_tags::InsertTileTags { tile_width: longs(&width.values).first().copied().unwrap_or(0), tile_length: longs(&length.values).first().copied().unwrap_or(0) }),
+            _ => return Vec::new(),
+        },
+        TiffBaselineMutation::SetStripOffsets(_) => restore_or_remove(
+            base,
+            TAG_STRIP_OFFSETS,
+            |values| TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: longs(values) }),
+            TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {}),
+        ),
+        TiffBaselineMutation::RemoveStripOffsets(_) => match ifd0_tag(base, TAG_STRIP_OFFSETS) {
+            Some(tag) => TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: longs(&tag.values) }),
+            None => return Vec::new(),
+        },
+    }]
+}
 //#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests

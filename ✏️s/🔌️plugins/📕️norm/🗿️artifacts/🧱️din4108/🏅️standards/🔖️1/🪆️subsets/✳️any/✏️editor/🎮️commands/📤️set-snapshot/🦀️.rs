@@ -5,9 +5,9 @@
 //! (base + target, since `layers` is a real ordered collection needing full remove/re-insert),
 //! bundled into a single atomic edit.
 
+use crate::config::{NormConfig, NormConfigMutation};
 use crate::op::Din4108Mutation;
 use crate::Din4108Snapshot;
-use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

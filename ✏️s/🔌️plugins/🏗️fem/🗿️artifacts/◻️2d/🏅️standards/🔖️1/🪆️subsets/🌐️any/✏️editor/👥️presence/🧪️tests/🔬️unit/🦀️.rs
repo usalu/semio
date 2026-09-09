@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧷️ LAW: the single `Fem2dPresenceMutation` variant owns exactly one `MutationLeafDescriptor`.

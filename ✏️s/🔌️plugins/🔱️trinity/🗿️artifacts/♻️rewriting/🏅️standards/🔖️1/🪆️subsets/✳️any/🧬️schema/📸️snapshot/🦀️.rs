@@ -1,6 +1,5 @@
 //! 🧬️ Rewriting snapshot schema — artifact-lane fields only.
 
-
 use crate::LayoutPoint;
 use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
@@ -123,5 +122,5 @@ pub fn rewrite_rule_summary(snapshot: &RewritingSnapshot) -> String {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use semio_s_artifact_trinity_jack::PropertyValue;
+pub use semio_framework_graph::manifest::PropertyValue;
 //#endregion 🔁️Re-exports

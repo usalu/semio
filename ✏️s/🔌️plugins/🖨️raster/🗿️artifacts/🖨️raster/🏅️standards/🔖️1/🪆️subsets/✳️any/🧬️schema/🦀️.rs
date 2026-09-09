@@ -4,7 +4,7 @@ use crate::{RasterAssetChild, RasterOwnedMap, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full raster artifact state across the artifact, presence and config lanes.
+/// 🧬️ raster document artifact state.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster")]
@@ -19,43 +19,13 @@ pub struct RasterArtifact {
     pub layers: Vec<RasterLayerNode>,
     #[state(artifact)]
     pub assets: RasterOwnedMap<RasterAssetChild>,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
-    #[state(config)]
-    pub brush_size: f64,
-    #[state(config)]
-    pub brush_opacity: f64,
-    #[state(config)]
-    pub composite_viewport: Option<RasterViewportSize>,
-    #[state(config)]
-    pub camera_x: f64,
-    #[state(config)]
-    pub camera_y: f64,
-    #[state(config)]
-    pub camera_zoom: f64,
-    #[state(artifact)]
-    pub hovered_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for RasterArtifact {
     fn default() -> Self {
-        Self {
-            schema: RASTER_DOCUMENT_SCHEMA.into(),
-            id: String::new(),
-            title: None,
-            layers: Vec::new(),
-            assets: RasterOwnedMap::new(),
-            selected_ids: Vec::new(),
-            brush_size: 24.0,
-            brush_opacity: 1.0,
-            composite_viewport: None,
-            camera_x: 0.0,
-            camera_y: 0.0,
-            camera_zoom: 1.0,
-            hovered_id: None,
-        }
+        Self { schema: RASTER_DOCUMENT_SCHEMA.into(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() }
     }
 }
 
@@ -65,7 +35,7 @@ impl RasterArtifact {
         RasterSnapshot { schema: self.schema.clone(), id: self.id.clone(), title: self.title.clone(), layers: self.layers.clone(), assets: self.assets.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: RasterSnapshot) -> Self {
         Self { schema: snapshot.schema, id: snapshot.id, title: snapshot.title, layers: snapshot.layers, assets: snapshot.assets, ..Self::default() }
     }
@@ -86,13 +56,7 @@ impl RasterArtifact {
 pub fn raster_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.raster.raster",
-        artifact: schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -101,11 +65,7 @@ pub fn raster_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
         diff: schema::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
+            rust: include_str!("🔺️diff/🦀️.rs"), typescript: include_str!("🔺️diff/🟦️.ts"), graphql: include_str!("🔺️diff/🔗️.graphql"), json_schema: include_str!("🔺️diff/🔣️.json"), proto: include_str!("🔺️diff/🛰️.proto")
         },
         mutations: schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
@@ -465,8 +425,6 @@ pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
     }
 }
 //#endregion 🔖️DocumentHelpers
-
-
 
 //#region 🧪️Tests
 #[cfg(test)]

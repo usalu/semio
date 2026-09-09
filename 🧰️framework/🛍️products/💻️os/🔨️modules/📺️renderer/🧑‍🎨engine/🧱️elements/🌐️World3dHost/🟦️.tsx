@@ -243,7 +243,7 @@ type WorldLodRecord = {
   readonly manualLod?: number;
 };
 
-type WorldVortexRecord = {
+type WorldVortexRecord = World3dMarkerInteractionFields & {
   readonly fullId: string;
   readonly objectId?: string;
   readonly vortexKind?: string;
@@ -256,14 +256,14 @@ type WorldVortexRecord = {
   readonly hovered?: boolean;
 };
 
-type WorldAttractionRecord = {
+type WorldAttractionRecord = World3dMarkerInteractionFields & {
   readonly id: string;
   readonly from: readonly [number, number, number];
   readonly to: readonly [number, number, number];
   readonly color?: string;
 };
 
-type WorldTargetVolumeRecord = {
+type WorldTargetVolumeRecord = World3dMarkerInteractionFields & {
   readonly id: string;
   readonly origin: readonly [number, number, number];
   readonly orientation?: readonly [number, number, number, number];
@@ -274,7 +274,7 @@ type WorldTargetVolumeRecord = {
   readonly selected?: boolean;
 };
 
-type WorldReferenceRecord = {
+type WorldReferenceRecord = World3dMarkerInteractionFields & {
   readonly id: string;
   readonly url: string;
   readonly origin: readonly [number, number, number];
@@ -1127,14 +1127,7 @@ export function mapContextMenuSpecs(
             dispatch(spec.action!, { ...spec.args, ...pointArgs });
           }
         : undefined,
-      onHover: spec.hoverAction
-        ? () => {
-            if (spec.hoverAction === "hoverSuggestion") {
-              console.log(`[DEBUG] hoverSuggestion`, { index: spec.hoverArgs?.index, color: spec.color, icon: spec.icon });
-            }
-            dispatch(spec.hoverAction!, spec.hoverArgs);
-          }
-        : undefined,
+      onHover: spec.hoverAction ? () => dispatch(spec.hoverAction!, spec.hoverArgs) : undefined,
       children: spec.children?.length ? mapContextMenuSpecs(spec.children, dispatch, keysByActionId) : undefined,
     };
   });
@@ -3861,6 +3854,35 @@ export function interactionTargetsForInstances(instances: readonly WorldInstance
   }
   return targets;
 }
+
+/** 🧿️ The pickable non-instance layers of a `World3dScene`, each named after the scene field it is
+ * parsed from (`vorticesJson`, `attractionsJson`, `targetVolumesJson`, `referencesJson`). */
+export type World3dMarkerLayer = "vortex" | "attraction" | "targetVolume" | "reference";
+
+/** 🧿️ Granularity a marker hit reports when its scene record declares no `interactionGranularityId`
+ * — the layer's own name, the same way {@link WORLD3D_DEFAULT_INTERACTION_GRANULARITY} names the
+ * instance layer's default. Keeps the host free of any per-app granularity vocabulary: an app that
+ * calls its marker rows something else overrides it per record from the scene JSON. */
+export const WORLD3D_DEFAULT_MARKER_GRANULARITY: Readonly<Record<World3dMarkerLayer, string>> = {
+  vortex: "vortex",
+  attraction: "attraction",
+  targetVolume: "targetVolume",
+  reference: "reference",
+};
+
+/** 🧿️ What every pickable marker record may carry to redirect its own hit — both read straight off
+ * the scene JSON, so which interaction target a marker stands for is the plugin's statement, never
+ * the host's guess. */
+export type World3dMarkerInteractionFields = {
+  readonly interactionId?: string;
+  readonly interactionGranularityId?: string;
+};
+
+/** 🧿️ Resolves the `{ granularity, id }` interaction target one marker hit stands for — the record's
+ * own scene-JSON fields win, else the record's own id at its layer's default granularity. */
+export function world3dMarkerInteractionTarget(layer: World3dMarkerLayer, id: string, record?: World3dMarkerInteractionFields): { readonly granularity: string; readonly id: string } {
+  return { granularity: record?.interactionGranularityId ?? WORLD3D_DEFAULT_MARKER_GRANULARITY[layer], id: record?.interactionId ?? id };
+}
 //#endregion 🎯️WorldInteractionDomain
 
 //#region World3dHost
@@ -3923,8 +3945,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     setDetachEpoch(0);
     setProjectionFramePending(Boolean(pendingProjectionSpecRef.current));
     projectionContentFrameSeededRef.current = false;
-    console.log("[DEBUG] world3d viewport reattached to scene camera", { surfaceId: node.surfaceId, sceneCameraJson });
-  }, [node.surfaceId, sceneCameraJson]);
+  }, [sceneCameraJson]);
   const cameraState = viewportCamera ?? sceneCamera;
   const cameraSeedKey = world3dViewportCameraSeedKey(sceneCameraJson, detachEpoch);
 
@@ -4060,6 +4081,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const pendingCelebrateCatalogueDropIdsRef = useRef<ReadonlySet<string> | null>(null);
   const instancesRef = useRef(instances);
   instancesRef.current = instances;
+  const vorticesRef = useRef(vortices);
+  vorticesRef.current = vortices;
   const wasMarqueeDragRef = useRef(false);
   const [marqueeCommitHold, setMarqueeCommitHold] = useState<{
     readonly mergedComponentIds: readonly number[] | null;
@@ -4071,7 +4094,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const gumballDragStartPoseRef = useRef<GumballPose | null>(null);
   /** 🧲️ Serialized WASM begin/end chain — mid-drag is local-only; one absolute start→end delta commits on drag end. */
   const gumballDragChainRef = useRef(Promise.resolve());
-  const gumballDragDebugTickRef = useRef(0);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
   const suggestionMenuOpen = Boolean(interaction.suggestionMenu?.open);
@@ -4079,10 +4101,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const suggestionMenuCheckingPlacementLabel = useLabel("ui.host.checkingPlacement");
   const suggestionMenuNoPlacementLabel = useLabel("ui.host.noPlacement");
   const suggestionMenuTitleLabel = useLabel("ui.surfaceContextMenu.placementSuggestions");
-  useEffect(() => {
-    if (!brushPreview) return;
-    console.log(`[DEBUG] brushPreview`, { color: brushPreview.color, objectKindId: brushPreview.objectKindId, meshUrl: brushPreview.meshUrl });
-  }, [brushPreview]);
   const gridFactor = lod.gridFactor ?? interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
   const marqueeDown = marqueePath.length > 0;
   const method = selection.method ?? "rectangle";
@@ -4108,13 +4126,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const adoptViewportCamera = useCallback(
     (next: WorldCameraState, applyToRig: boolean) => {
       setViewportCamera((prev) => mergeWorldViewportCamera(prev ?? sceneCamera, next));
-      setViewportOwned((owned) => {
-        if (!owned) console.log("[DEBUG] world3d viewport detached from shared scene camera", { surfaceId: node.surfaceId });
-        return true;
-      });
+      setViewportOwned(true);
       if (applyToRig) setDetachEpoch((epoch) => epoch + 1);
     },
-    [node.surfaceId, sceneCamera],
+    [sceneCamera],
   );
 
   // 🧭️ Syncs a completed user-driven camera gesture (orbit/pan/zoom end, gizmo view snap) to the plugin so
@@ -4162,6 +4177,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const handleReferenceSelect = useCallback(
     (id: string) => {
       const reference = references.find((entry) => entry.id === id);
+      if (interactionDomainId) {
+        const target = world3dMarkerInteractionTarget("reference", id, reference);
+        dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, target.granularity, reference?.locked ? [] : [target.id], "replace"));
+        return;
+      }
       if (reference?.locked) {
         dispatch("worldPick", {
           granularity: selectionMode,
@@ -4175,23 +4195,33 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         referenceId: id,
       });
     },
-    [dispatch, node.surfaceId, references, selectionMode],
+    [dispatch, interactionDomainId, node.surfaceId, references, selectionMode],
   );
 
   const handleReferenceHover = useCallback(
     (id: string | null) => {
+      if (interactionDomainId) {
+        const target = id ? world3dMarkerInteractionTarget("reference", id, references.find((entry) => entry.id === id)) : null;
+        dispatch("interactionHover", world3dHoverActionArgs(interactionDomainId, target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.reference, target?.id));
+        return;
+      }
       if (!id) {
         dispatch("referenceHover", {});
         return;
       }
       dispatch("referenceHover", { referenceId: id });
     },
-    [dispatch],
+    [dispatch, interactionDomainId, references],
   );
 
   const handleTargetVolumeSelect = useCallback(
     (id: string) => {
       const volume = targetVolumes.find((entry) => entry.id === id);
+      if (interactionDomainId) {
+        const target = world3dMarkerInteractionTarget("targetVolume", id, volume);
+        dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, target.granularity, volume?.locked ? [] : [target.id], "replace"));
+        return;
+      }
       if (volume?.locked) {
         dispatch("worldPick", { granularity: selectionMode, id: null, merge: "replace" });
         return;
@@ -4200,7 +4230,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         selection: { objectIds: [], vortexIds: [], attractionIds: [], targetVolumeIds: [id], referenceIds: [] },
       });
     },
-    [dispatch, selectionMode, targetVolumes],
+    [dispatch, interactionDomainId, selectionMode, targetVolumes],
   );
 
   const handleTargetVolumeRelocate = useCallback(
@@ -4416,10 +4446,15 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const dispatchVortexHover = useMemo(
     () =>
       createCoalescingActionDispatcher<string | null>((fullId) => {
+        if (interactionDomainId) {
+          const target = fullId ? world3dMarkerInteractionTarget("vortex", fullId, vorticesRef.current.find((entry) => entry.fullId === fullId)) : null;
+          dispatch("interactionHover", world3dHoverActionArgs(interactionDomainId, target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex, target?.id));
+          return;
+        }
         if (!fullId) dispatch("worldVortexHover", {});
         else dispatch("worldVortexHover", { fullId });
       }),
-    [dispatch],
+    [dispatch, interactionDomainId],
   );
 
   const handleInstancePointerMove = useCallback(
@@ -4450,9 +4485,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const handleVortexSelect = useCallback(
     (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
       const merge = instanceMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event ?? {}, persistentSelectionMode));
+      if (interactionDomainId) {
+        const target = world3dMarkerInteractionTarget("vortex", fullId, vortices.find((entry) => entry.fullId === fullId));
+        dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, target.granularity, [target.id], merge));
+        return;
+      }
       dispatch("worldVortexSelect", { fullId, merge });
     },
-    [dispatch, selection.selectionMergeMode],
+    [dispatch, interactionDomainId, persistentSelectionMode, selection.selectionMergeMode, vortices],
   );
 
   const handleConnectDragStart = useCallback(
@@ -4713,8 +4753,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const handleGumballDragStart = useCallback(
     (_kind: GumballHandleKind, before: GumballPose) => {
       gumballDragStartPoseRef.current = before;
-      gumballDragDebugTickRef.current = 0;
-      console.log("[DEBUG] gumball drag begin", { position: before.position });
       void enqueueGumballDispatch(() => Promise.resolve(dispatch("transformBegin")));
     },
     [dispatch, enqueueGumballDispatch],
@@ -4728,12 +4766,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
       const startPose = gumballDragStartPoseRef.current ?? before;
       gumballDragStartPoseRef.current = null;
-      const tick = ++gumballDragDebugTickRef.current;
-      console.log("[DEBUG] gumball drag end", {
-        kind,
-        tick,
-        delta: [after.position[0] - startPose.position[0], after.position[1] - startPose.position[1], after.position[2] - startPose.position[2]],
-      });
       void enqueueGumballDispatch(async () => {
         // One absolute start→end delta — the app commits it directly; `transformEnd` only closes the host bracket.
         await dispatchGumballPoseDelta(kind, startPose, after);

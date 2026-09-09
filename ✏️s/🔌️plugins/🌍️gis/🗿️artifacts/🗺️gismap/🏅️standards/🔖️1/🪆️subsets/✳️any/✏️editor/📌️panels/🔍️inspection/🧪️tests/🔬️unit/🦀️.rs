@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::editor::gis2d::testkit::{app, render as render_body};
+use crate::editor::gis2d::testkit::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn the_inspector_always_summarises_the_schema_and_visible_count() {
@@ -8,6 +7,8 @@ async fn the_inspector_always_summarises_the_schema_and_visible_count() {
     let json = render_body(&mut app, GIS2D_PLAY_BODY_INSPECTION).await;
     assert!(json.contains(GIS_MAP_SCHEMA));
     assert!(json.contains(&format!("{}/{}", GIS_MAP_LAYER_IDS.len(), GIS_MAP_LAYER_IDS.len())));
+    drop(json);
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

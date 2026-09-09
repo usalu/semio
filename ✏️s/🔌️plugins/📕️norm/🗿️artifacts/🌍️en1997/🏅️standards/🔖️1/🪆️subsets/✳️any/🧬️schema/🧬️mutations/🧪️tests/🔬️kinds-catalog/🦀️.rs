@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling

@@ -11,21 +11,21 @@
 //! routing table: `handle` → `RemodelingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::op::RemodelingMutation;
-use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::modes::{analyze, capture, model};
 use crate::editor::remodeling::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
 use crate::editor::remodeling::presence::{RemodelingPresence, RemodelingPresenceMutation};
 use crate::editor::remodeling::terminology::remodeling_labels;
+use crate::op::RemodelingMutation;
+use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView,
-    Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError,
-    MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp,
+    Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use std::collections::HashMap;
 use store::ArtifactPack;
@@ -505,7 +505,7 @@ const REMODELING_RETAINED_TOOL_IDS: &[&str] = &[
     "setLayerVisibility",
     "setFrameCursor",
     "setReportTable",
-        "importFrames",
+    "importFrames",
     "importVideo",
     "exportQcReport",
     "advanceReconstruction",
@@ -613,7 +613,7 @@ fn remodeling_retained_reduce(
     if !REMODELING_RETAINED_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.route"), "the bounded Remodeling reducer rejects undeclared routes"));
     }
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 /// 🏭️ The app-owned retained command job factory — `factory_type:` in the proof block below binds this
@@ -1010,7 +1010,17 @@ impl ArtifactEditor for RemodelingPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             RemodelingCommand::command_id,
             REMODELING_RETAINED_RAW_BYTES,
             REMODELING_RETAINED_WORK_ITEMS,
@@ -1045,8 +1055,8 @@ impl ArtifactEditor for RemodelingPlayApp {
                 // through the working-scene cache, honestly `Err` on a cold cache (documented
                 // staleness gap, matches every prior exemplar in this ticket) rather than exporting a
                 // fabricated empty mesh.
-                let mesh = crate::resolve_bounded_remodeling_mesh(&doc.snapshot.durable_artifacts, &doc.snapshot.results.mesh.mesh)
-                    .ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: bounded composed mesh content is unavailable".into()))?;
+                let mesh =
+                    crate::resolve_bounded_remodeling_mesh(&doc.snapshot.durable_artifacts, &doc.snapshot.results.mesh.mesh).ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: bounded composed mesh content is unavailable".into()))?;
                 let bytes = MeshExporter::export(&GlbExporter, &mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64_codec::base64_standard_encode(bytes) } })
             }
@@ -1079,11 +1089,7 @@ impl ArtifactEditor for RemodelingPlayApp {
                 let asset = ImageAsset { mime: "image/png".into(), data: json.clone(), width, height };
                 let mut mutations = vec![crate::mutations::create_asset(asset_key.clone(), asset)];
                 match scene.streams.iter().any(|stream| stream.id == stream_id) {
-                    true => mutations.push(crate::mutations::add_stream_frame(
-                        stream_id.to_string(),
-                        FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key },
-                        MediaKind::ImageSequence,
-                    )),
+                    true => mutations.push(crate::mutations::add_stream_frame(stream_id.to_string(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key }, MediaKind::ImageSequence)),
                     false => mutations.push(crate::mutations::create_stream(MediaStream {
                         id: stream_id.to_string(),
                         name: "Workflow Photos".into(),
@@ -1122,7 +1128,8 @@ impl ArtifactEditor for RemodelingPlayApp {
         command: &RemodelingCommand,
         doc: &ArtifactView<'_, RemodelingSnapshot>,
         cfg: &ConfigView<'_, RemodelingConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation, Self::DraftMutation>, Fault> {
@@ -1158,12 +1165,6 @@ impl ArtifactEditor for RemodelingPlayApp {
 //#endregion 🔖️RemodelingPlayApp
 
 //#region 🔖️Manifest
-/// 🛠️ An internal (non-palette) action declaration — the panel/window/gesture-bound vocabulary the
-/// chrome dispatches, never a palette command. Every row still needs to EXIST as an `ActionDefinition`,
-/// because the classification gate and `validate_tool_job_rows` both read the declared action set.
-fn remodeling_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
-}
 
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/utility declarations (which have no dedicated `_def` passthrough) are written
@@ -1252,9 +1253,9 @@ pub fn create_remodeling_app() -> AppDefinition {
             )
             .default_value(&"extracting-features")])
             // 📥️ Ingestion.
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::bounded_catalog("importFrames", LocalizedLabel::native("Import Frames", "Frames importieren"), ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("importFrames", LocalizedLabel::native("Import Frames", "Frames importieren"), ActionKind::Shell, "hard-drive") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importFramePayload", LocalizedLabel::native("Import Frame Payload", "Bild-Payload importieren"), ActionKind::Mutation) })
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::bounded_catalog("importVideo", LocalizedLabel::native("Import Video", "Video importieren"), ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("importVideo", LocalizedLabel::native("Import Video", "Video importieren"), ActionKind::Shell, "hard-drive") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importVideoFramePayload", LocalizedLabel::native("Import Video Frame Payload", "Video-Frame-Payload importieren"), ActionKind::Mutation) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importVideoDone", LocalizedLabel::native("Import Video Done", "Video-Import abgeschlossen"), ActionKind::Mutation) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importVideoBytesPayload", LocalizedLabel::native("Import Video Bytes Payload", "Video-Byte-Payload importieren"), ActionKind::Mutation) })
@@ -1385,7 +1386,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             .mutation("clearGeoProducts", LocalizedLabel::native("Clear Geo Products", "Geo-Produkte löschen"))
             .mutation("clearResult", LocalizedLabel::native("Clear Result", "Ergebnis löschen"))
             // 👁️ View-only runtime actions.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setLayerVisibility", LocalizedLabel::native("Set Layer Visibility", "Ebenensichtbarkeit festlegen"), ActionKind::View) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setFrameCursor", LocalizedLabel::native("Set Frame Cursor", "Frame-Cursor festlegen"), ActionKind::View) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setReportTable", LocalizedLabel::native("Set Report Table", "Berichtstabelle festlegen"), ActionKind::View) })
@@ -1399,10 +1400,9 @@ pub fn create_remodeling_app() -> AppDefinition {
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("gcpPlace", LocalizedLabel::native("Place GCP", "Passpunkt setzen"), "crosshair") })
             // 👁️ Internal (non-palette) view actions the panels/windows dispatch — declared so they are
             // real `ActionDefinition`s the classification gate and the tool-proof catalog can both see.
-            .action_with(remodeling_internal_action(LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 🎬️ Example picker — one option per `crate::editor::remodeling::examples::REMODELING_EXAMPLES`
             // entry, so appending an example there is the only edit a new example needs.
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::bounded_catalog("setActiveExample", LocalizedLabel::native("Load Example", "Beispiel laden"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("setActiveExample", LocalizedLabel::native("Load Example", "Beispiel laden"), ActionKind::Mutation, "panel-left") })
             .action_args("setActiveExample", vec![ActionArgDef::select(
                 "exampleId",
                 LocalizedLabel::native("Example", "Beispiel"),

@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/reasoning/wires/editor/commands/schema.json",
+  "title": "Wires Editor Commands",
+  "$defs": {
+    "WiresRetainedCommandRoutes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "maximumRawBytes",
+        "maximumWorkItems",
+        "routes"
+      ],
+      "properties": {
+        "schema": {
+          "const": "reasoning.wires.retained-command-routes.v1"
+        },
+        "maximumRawBytes": {
+          "type": "integer",
+          "const": 8192
+        },
+        "maximumWorkItems": {
+          "type": "integer",
+          "const": 1048576
+        },
+        "routes": {
+          "allOf": [
+            {
+              "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes"
+            },
+            {
+              "type": "array",
+              "minItems": 9,
+              "maxItems": 9,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "disposition",
+                  "lanes",
+                  "reason"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "disposition": {
+                    "enum": [
+                      "migrated",
+                      "batch-only-pending-rewrite"
+                    ]
+                  },
+                  "lanes": {
+                    "type": "array",
+                    "items": {
+                      "enum": [
+                        "artifact",
+                        "config",
+                        "transient",
+                        "host-only",
+                        "window-transient"
+                      ]
+                    },
+                    "uniqueItems": true
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    }
+  }
+}

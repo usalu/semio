@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ChangeInfiltrationTemperatureTermCoefficient` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeInfiltrationTemperatureTermCoefficient, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -10,7 +10,11 @@ pub fn diff(payload: &super::ChangeInfiltrationTemperatureTermCoefficient, base:
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Infiltration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_temperature_term_coefficient.is_finite() || payload.new_temperature_term_coefficient < 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Infiltration {}: the temperature term coefficient B must be a finite non-negative value, got {}.", payload.id.0, payload.new_temperature_term_coefficient), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error(
+            "mutation.invariant",
+            format!("Infiltration {}: the temperature term coefficient B must be a finite non-negative value, got {}.", payload.id.0, payload.new_temperature_term_coefficient),
+            [payload.id.0.to_string()],
+        );
     }
     if existing.temperature_term_coefficient == payload.new_temperature_term_coefficient {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Infiltration {} already carries this the temperature term coefficient B: {}.", payload.id.0, payload.new_temperature_term_coefficient));

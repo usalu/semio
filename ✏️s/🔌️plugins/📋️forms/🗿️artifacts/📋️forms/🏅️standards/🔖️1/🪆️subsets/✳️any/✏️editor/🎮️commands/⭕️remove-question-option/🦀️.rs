@@ -1,8 +1,8 @@
 //! 🔘️ 🔘️ Forms play app commands command — `remove-question-option`.
 
+use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::schema::update_block_operation;
 use crate::{op::FormMutation, FormsSnapshot};
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

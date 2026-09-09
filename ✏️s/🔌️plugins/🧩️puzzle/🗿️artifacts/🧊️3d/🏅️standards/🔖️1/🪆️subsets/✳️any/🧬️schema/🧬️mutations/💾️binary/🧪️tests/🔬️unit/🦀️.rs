@@ -1,13 +1,12 @@
-
 use super::*;
 
 #[test]
 fn puzzle3d_document_vcs_replays_granular_operations() {
     use crate::standards::v1::subsets::any::schema::empty_puzzle3d_snapshot;
-    use crate::{PUZZLE_3D_SCHEMA, Puzzle3dObject};
-    use store::{ArtifactCommand, create_document_envelope};
+    use crate::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
+    use store::{create_document_envelope, ArtifactCommand};
 
-    let mut store = semio_framework::io::resolve_ready(Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None))).expect("store");
+    let mut store = semio_framework::io::resolve_ready(puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None))).expect("store");
     semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply {
         mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(
             Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
@@ -19,6 +18,7 @@ fn puzzle3d_document_vcs_replays_granular_operations() {
     let projection = store.snapshot().expect("projection");
     assert_eq!(projection.objects.len(), 1);
     assert_eq!(projection.objects[0].id, "o1");
+    close_puzzle3d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 
 /// 🔗️ Minimal scene JSON matching `SceneConfig`'s real wire shape (camelCase, per its

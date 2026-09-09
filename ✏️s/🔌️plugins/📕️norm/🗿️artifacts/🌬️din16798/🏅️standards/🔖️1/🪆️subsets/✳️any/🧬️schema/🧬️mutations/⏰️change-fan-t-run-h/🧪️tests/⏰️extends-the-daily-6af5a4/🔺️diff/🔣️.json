@@ -27,7 +27,7 @@
   "humidificationRequiredKgH": null,
   "humidificationProvidedKgH": null,
   "fanQVM3S": null,
-  "fanTRunH": 12.0,
+  "fanTRunH": 12,
   "fanEnergyReferenceKwh": null,
   "nightSetbackK": null,
   "hrMDotKgS": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

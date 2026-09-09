@@ -1,5 +1,5 @@
 /** 👁️ Generation2d editor — Preview window (generate mode): typed twin of `🦀️.rs`'s
- * view-model. Mirrors `render(config: &Generation2dConfig, labels: &Generation2dLabels)` — the
+ * view-model. Mirrors the config plus app-transient preview render input — the
  * evaluated generation output preview, hinting when no generation has been evaluated yet. */
 
 export interface Generation2dGeneratePreviewViewModel {

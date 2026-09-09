@@ -2,10 +2,10 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioModelEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation;
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 use crate::editor::semio_model::modes::edit;
 use crate::editor::semio_model::modes::edit::windows::main;
+use crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation;
+use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
@@ -69,7 +69,8 @@ impl ArtifactEditor for SemioModelEditor {
         command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {

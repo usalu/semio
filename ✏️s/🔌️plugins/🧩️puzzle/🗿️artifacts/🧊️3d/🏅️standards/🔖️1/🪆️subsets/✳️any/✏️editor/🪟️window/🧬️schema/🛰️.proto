@@ -1,0 +1,74 @@
+syntax = "proto3";
+package semio.s.puzzle.puzzle3d.window;
+
+message Puzzle3dSelectableKinds {
+  bool objects = 1;
+  bool vortices = 2;
+  bool attractions = 3;
+}
+
+message WorldSunConfig {
+  bool enabled = 1;
+  double azimuth = 2;
+  double elevation = 3;
+  double intensity = 4;
+  string color = 5;
+}
+
+message WorldProjectionConfig {
+  string kind = 1;
+  string orthographic_view = 2;
+  string axonometric_variant = 3;
+  double axonometric_angle_a = 4;
+  double axonometric_angle_b = 5;
+  string axonometric_quadrant = 6;
+  string oblique_variant = 7;
+  double oblique_angle = 8;
+  double oblique_depth = 9;
+  string one_point_axis = 10;
+  double fov = 11;
+  double two_point_shift = 12;
+  double curvilinear_fov = 13;
+  double curvilinear_strength = 14;
+  string curvilinear_mapping = 15;
+}
+
+message Puzzle3dCamera {
+  repeated double position = 1;
+  repeated double target = 2;
+  double zoom = 3;
+  repeated double up = 4;
+  WorldProjectionConfig projection = 5;
+}
+
+message Puzzle3dSuggestionMenu {
+  double x = 1;
+  double y = 2;
+  string window_id = 3;
+  string vortex_full_id = 4;
+}
+
+message Puzzle3dWindowConfig {
+  bool lod_automatic = 1;
+  bool lod_depth_variable = 2;
+  bool grid_visible = 3;
+  double lod_manual = 4;
+  bool grid_snap_enabled = 5;
+  double grid_spacing = 6;
+  Puzzle3dSelectableKinds selectable_kinds = 7;
+  double proximity_radius = 8;
+  double chunk_size = 9;
+  repeated uint32 voxel_dims = 10;
+  bool transform_move = 11;
+  bool transform_rotate = 12;
+  string vortex_show = 13;
+  string vortex_direction = 14;
+  WorldSunConfig sun = 15;
+  Puzzle3dCamera camera = 16;
+}
+
+message Puzzle3dWindowTransient {
+  optional Puzzle3dSuggestionMenu suggestion_menu = 1;
+  string engagement_input = 2;
+  uint64 brush_candidate_index = 3;
+}

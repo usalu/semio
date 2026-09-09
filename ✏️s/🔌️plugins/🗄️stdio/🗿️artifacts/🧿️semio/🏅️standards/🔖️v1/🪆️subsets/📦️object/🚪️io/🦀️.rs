@@ -112,7 +112,8 @@ pub mod derived_composition {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::object::schema::semio_object_artifact_schema_descriptor());
         store::register_document_codec(store::ArtifactCodec::of::<SemioObjectSnapshot, crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation>(
             crate::standards::v1::subsets::object::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA,
-        )).expect("static Stdio registration must be available and conflict-free");
+        ))
+        .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();

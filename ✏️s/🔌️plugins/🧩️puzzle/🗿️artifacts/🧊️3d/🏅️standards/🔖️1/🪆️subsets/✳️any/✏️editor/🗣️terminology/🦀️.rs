@@ -23,6 +23,8 @@ semio_framework_plugin::app_labels! {
         example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
         fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
+        fill_cancel: native_en "Cancel fill", native_de "Füllen abbrechen", reuse_en "Cancel fill", reuse_de "Füllen abbrechen";
+        fill_planned: native_en "planned", native_de "geplant", reuse_en "planned", reuse_de "geplant";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
         move_flag: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";
@@ -100,9 +102,25 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale
-/// 🗣️ Resolves the active label set from the canonical host view axes.
-pub fn puzzle3d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Puzzle3dLabels {
-    semio_framework_plugin::resolve_labels::<Puzzle3dLabels>(view_state)
+/// 🚦️ The only label axes this app admits: the four region-tolerant locale tags it has authored an
+/// `app_labels!` cell for, crossed with the two terminology ids. Every other tag is refused — per
+/// CLAUDE.md this UI has no default language, so an unauthored axis must never fall back to English
+/// or to native terminology, and the caller has to surface `ui.localization.unsupported` instead.
+pub fn puzzle3d_label_axes(locale_tag: &str, terminology_tag: &str) -> Option<(Locale, Terminology)> {
+    match (locale_tag, terminology_tag) {
+        ("en" | "en-US", "native") => Some((Locale::En, Terminology::Native)),
+        ("en" | "en-US", "reuse") => Some((Locale::En, Terminology::Reuse)),
+        ("de" | "de-DE", "native") => Some((Locale::De, Terminology::Native)),
+        ("de" | "de-DE", "reuse") => Some((Locale::De, Terminology::Reuse)),
+        _ => None,
+    }
+}
+
+/// 🗣️ Resolves the active label set from the canonical host view axes, failing closed through
+/// [`puzzle3d_label_axes`] whenever the host names an axis this app never authored.
+pub fn puzzle3d_labels(view_state: &semio_framework_plugin::ViewModel) -> Option<&'static Puzzle3dLabels> {
+    let (locale, terminology) = puzzle3d_label_axes(view_state.locale.as_str(), view_state.terminology.as_str())?;
+    Some(Puzzle3dLabels::labels(locale, terminology))
 }
 
 /// 🗺️ Builds a full locale×terminology `LocalizedLabel` from one `Puzzle3dLabels` field, reusing the

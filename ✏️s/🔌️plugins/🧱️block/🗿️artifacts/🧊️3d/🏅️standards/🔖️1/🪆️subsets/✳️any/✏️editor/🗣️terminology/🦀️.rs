@@ -1,7 +1,6 @@
 //! 🗣️ Block 3D play app — the single `app_labels!` block plus the locale resolvers every taxonomy node
 //! reaches for.
 
-use semio_framework_plugin::{AppLabels, Locale, Terminology};
 
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the block3d-play app; one field per label makes every locale
@@ -27,17 +26,7 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewModel`-driven resolver.
-fn block3d_is_de_locale(view_state: &semio_framework_plugin::ViewModel) -> bool {
-    view_state.locale == semio_framework_plugin::Locale::De
-}
-
-fn block3d_locale(view_state: &semio_framework_plugin::ViewModel) -> Locale {
-    view_state.locale
-}
-
-/// 🗣️ Resolves the active `Block3dLabels` cell from the config-carried locale. `Block3dConfig` carries
-/// no terminology field, so terminology is always `Native`.
+/// 🗣️ Resolves the active `Block3dLabels` cell from the shared view state.
 pub fn block3d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Block3dLabels {
     semio_framework_plugin::resolve_labels::<Block3dLabels>(view_state)
 }

@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️Apply
 impl Puzzle2dDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &Puzzle2dArtifact) -> protocol::MutationApplyResult<Puzzle2dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -34,66 +34,6 @@ impl Puzzle2dDiff {
             }
             if let Some(meta) = &self.meta {
                 next.meta = meta.clone();
-            }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
-            }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
-            if let Some(value) = self.camera_x {
-                next.camera_x = value;
-            }
-            if let Some(value) = self.camera_y {
-                next.camera_y = value;
-            }
-            if let Some(value) = self.camera_zoom {
-                next.camera_zoom = value;
-            }
-            if let Some(value) = &self.selection_method {
-                next.selection_method = value.clone();
-            }
-            if let Some(value) = self.grid_snap_enabled {
-                next.grid_snap_enabled = value;
-            }
-            if let Some(value) = self.grid_factor {
-                next.grid_factor = value;
-            }
-            if let Some(value) = self.suggestion_offset {
-                next.suggestion_offset = value;
-            }
-            if let Some(value) = self.fill_count {
-                next.fill_count = value;
-            }
-            if let Some(value) = self.brush_candidate_index {
-                next.brush_candidate_index = value;
-            }
-            if let Some(value) = &self.brush_candidate_source_handle_id {
-                next.brush_candidate_source_handle_id = value.clone();
-            }
-            if let Some(value) = &self.lod_mode_by_pane_json {
-                next.lod_mode_by_pane_json = value.clone();
-            }
-            if let Some(value) = &self.engagement_input_by_pane_json {
-                next.engagement_input_by_pane_json = value.clone();
-            }
-            if let Some(value) = &self.brush_candidates_json {
-                next.brush_candidates_json = value.clone();
-            }
-            if let Some(value) = &self.node_kind_weights_json {
-                next.node_kind_weights_json = value.clone();
-            }
-            if let Some(value) = &self.handle_kind_weights_json {
-                next.handle_kind_weights_json = value.clone();
-            }
-            if let Some(value) = &self.active_utility_by_window_id_json {
-                next.active_utility_by_window_id_json = value.clone();
-            }
-            if let Some(value) = &self.hovered_node_id {
-                next.hovered_node_id = value.clone();
-            }
-            if let Some(value) = self.preview_seq {
-                next.preview_seq = value;
             }
             next
         })
@@ -206,26 +146,6 @@ impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
         take!(schema);
         take!(camera);
         take!(meta);
-        take!(selected_ids);
-        take!(active_utility_id);
-        take!(camera_x);
-        take!(camera_y);
-        take!(camera_zoom);
-        take!(selection_method);
-        take!(grid_snap_enabled);
-        take!(grid_factor);
-        take!(suggestion_offset);
-        take!(fill_count);
-        take!(brush_candidate_index);
-        take!(brush_candidate_source_handle_id);
-        take!(lod_mode_by_pane_json);
-        take!(engagement_input_by_pane_json);
-        take!(brush_candidates_json);
-        take!(node_kind_weights_json);
-        take!(handle_kind_weights_json);
-        take!(active_utility_by_window_id_json);
-        take!(hovered_node_id);
-        take!(preview_seq);
         if let Some(delta) = other.nodes {
             match &mut self.nodes {
                 Some(existing) => {

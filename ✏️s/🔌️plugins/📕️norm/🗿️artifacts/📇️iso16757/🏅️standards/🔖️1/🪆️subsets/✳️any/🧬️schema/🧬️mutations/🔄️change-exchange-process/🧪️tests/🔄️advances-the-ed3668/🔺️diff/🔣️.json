@@ -7,6 +7,5 @@
   "partNumberRule": null,
   "partNumberInputs": null,
   "scriptLimits": null,
-  "exchangeProcess": "DetermineProduct",
-  "selectedCheckIndex": null
+  "exchangeProcess": "DetermineProduct"
 }

@@ -1,10 +1,9 @@
-
 use super::DagNodeGraphEditOp;
 use super::*;
-use crate::editor::dag::DagCommand;
 use crate::editor::dag::commands::{connect_media_ports, disconnect, move_media_node};
 use crate::editor::dag::testkit;
-use semio_framework_plugin::{INTERACTION_SELECT_ACTION_ID, InteractionTarget, PluginApp, testkit::meta};
+use crate::editor::dag::DagCommand;
+use semio_framework_plugin::{testkit::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
 use serde_json::json;
 
 /// 🧪️ `nodeGraphEdit` batches multiple sub-edits (connect + delete-selection here) into a single

@@ -669,6 +669,7 @@ impl GpuContext {
         self.raster_store.retain_engine_allocation_fault(admission, texture, view);
     }
 
+    #[expect(clippy::result_large_err, reason = "GPU admission returns the exact resource and reservation owner without allocating during refusal.")]
     pub fn stage_engine_texture(&mut self, admission: RasterTextureAdmission, texture: wgpu::Texture, view: wgpu::TextureView, expected: RasterTextureWitness) -> Result<(), RasterTextureStageFault> {
         self.raster_store.stage_gpu_bind_group(&self.device, self.pipelines.globals_buffer(), &self.pipelines.glyph_view(), self.pipelines.glyph_sampler(), admission, view, texture, expected)
     }

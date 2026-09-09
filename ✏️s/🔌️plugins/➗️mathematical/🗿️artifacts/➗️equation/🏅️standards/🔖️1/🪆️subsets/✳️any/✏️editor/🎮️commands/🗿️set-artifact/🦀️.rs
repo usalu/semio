@@ -2,11 +2,10 @@
 
 use crate::document_dsl::EquationGraphDsl;
 use crate::op::EquationMutation;
-use crate::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
 use crate::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
+use crate::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
 use crate::{EquationGeometry, EquationSnapshot};
-use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
@@ -18,7 +17,7 @@ pub struct SetArtifact {
     pub geometry: EquationGeometry,
 }
 
-pub fn handle(payload: &SetArtifact, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
+pub fn handle(payload: &SetArtifact, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
     let Ok(graph) = crate::document_dsl::math_graph_from_dsl(payload.graph.clone()) else {
         return Ok(Emit::default());
     };

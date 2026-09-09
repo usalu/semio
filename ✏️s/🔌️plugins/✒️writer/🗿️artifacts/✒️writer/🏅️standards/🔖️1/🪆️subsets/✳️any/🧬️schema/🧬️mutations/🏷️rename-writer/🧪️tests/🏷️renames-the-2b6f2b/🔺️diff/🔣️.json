@@ -4,14 +4,5 @@
   "id": "mission-brief",
   "languageId": null,
   "uri": null,
-  "document": null,
-  "editorSelection": null,
-  "editorSettings": null,
-  "formatSignal": null,
-  "lintSignal": null,
-  "revision": null,
-  "engagementInput": null,
-  "cameraX": null,
-  "cameraY": null,
-  "cameraZoom": null
+  "document": null
 }

@@ -82,7 +82,7 @@ impl Default for DagConfig {
         // 🎥️ Matches `DagCamera`'s own implicit default (`x: 0.0, y: 0.0, zoom: 1.0`, see `DagFixture`'s
         // `Default` impl in the kernel crate) without needing to parse the bundled demo document just to
         // read a trivial camera default.
-        Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, }
+        Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0 }
     }
 }
 
@@ -98,7 +98,6 @@ pub fn dag_config_camera(config: &DagConfig) -> DagCamera {
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub use mutations::*;
-
 
 //#region 🧪️Tests
 #[cfg(test)]

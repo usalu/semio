@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn seeded_noise(n: usize, seed: u64) -> Vec<f64> {

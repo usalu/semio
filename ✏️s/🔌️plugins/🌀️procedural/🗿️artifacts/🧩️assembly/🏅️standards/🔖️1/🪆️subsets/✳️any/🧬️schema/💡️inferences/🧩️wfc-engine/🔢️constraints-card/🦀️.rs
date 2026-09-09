@@ -2,7 +2,7 @@
 //! matching a selector.
 
 use crate::wfc_engine::bitset::PatternSet;
-use crate::wfc_engine::constraint::{AdjacencyView, Constraint, Exactness, PatternSelector};
+use crate::wfc_engine::constraint::{AdjacencyView, Constraint, PatternSelector};
 use crate::wfc_engine::domain::DomainStore;
 use crate::wfc_engine::error::ConstraintError;
 use crate::wfc_engine::ids::{NodeId, PatternId, RegionId};
@@ -51,14 +51,6 @@ impl CardinalityConstraint {
 }
 
 impl Constraint for CardinalityConstraint {
-    fn name(&self) -> &'static str {
-        "cardinality"
-    }
-
-    fn exactness(&self) -> Exactness {
-        Exactness::Exact
-    }
-
     fn initialize(&self, domains: &DomainStore, _weights: &WeightTable, adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
         let selected = self.selector.as_pattern_set(&self.model);
         let scoped_nodes: Vec<NodeId> = (0..adjacency.node_count()).map(NodeId::from_index).filter(|&n| self.scope.contains(n, adjacency)).collect();

@@ -14,5 +14,4 @@ type Din18599Artifact {
   annualLimitKwh: Float! @state(class: ARTIFACT)
   energyCarrier: String! @state(class: ARTIFACT)
   referenceQPKwh: Float! @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }

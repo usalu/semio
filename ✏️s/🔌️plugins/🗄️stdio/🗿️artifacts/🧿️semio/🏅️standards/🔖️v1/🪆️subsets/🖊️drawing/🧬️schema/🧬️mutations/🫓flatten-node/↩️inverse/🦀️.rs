@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `FlattenNode`.
 
 use crate::standards::v1::subsets::drawing::schema::diff::node_at;
-use crate::standards::v1::subsets::drawing::schema::mutations::{SemioDrawingMutation, unflatten_node};
+use crate::standards::v1::subsets::drawing::schema::mutations::{unflatten_node, SemioDrawingMutation};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Inverse

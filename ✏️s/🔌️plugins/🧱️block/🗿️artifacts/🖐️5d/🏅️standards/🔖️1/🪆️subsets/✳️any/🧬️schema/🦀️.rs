@@ -5,7 +5,7 @@ use crate::{Block5dSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full block5d artifact state across the artifact, presence and config lanes.
+/// 🧬️ block5d document artifact state.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -38,8 +38,6 @@ pub struct Block5dArtifact {
     pub camera3d: BlockCamera3d,
     #[state(artifact)]
     pub meta: BlockMeta,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -70,7 +68,7 @@ impl Block5dArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Block5dSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -86,7 +84,6 @@ impl Block5dArtifact {
             camera2d: snapshot.camera2d,
             camera3d: snapshot.camera3d,
             meta: snapshot.meta,
-            selected_ids: Vec::new(),
         }
     }
 

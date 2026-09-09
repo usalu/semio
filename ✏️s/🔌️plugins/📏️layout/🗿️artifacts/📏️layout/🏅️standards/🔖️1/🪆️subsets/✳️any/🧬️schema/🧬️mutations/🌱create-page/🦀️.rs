@@ -1,9 +1,8 @@
 //! 🌱️ `create-page` — brings a new {@link Page} into existence in the id-keyed `pages` collection.
 
-
-use crate::{LayoutDiff, LayoutSnapshot, Page};
-use crate::mutations::{LayoutMutation, delete_page};
+use crate::mutations::{delete_page, LayoutMutation};
 use crate::standards::v1::subsets::any::schema::diff::LayoutPagesDelta;
+use crate::{LayoutDiff, LayoutSnapshot, Page};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -35,7 +34,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreatePage {
 }
 //#endregion 🌱️CreatePage
 
-
 //#region 🌱️CreatePage
 pub fn diff_create_page(payload: &CreatePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.pages.iter().any(|page| page.id == payload.page.id) {
@@ -44,7 +42,6 @@ pub fn diff_create_page(payload: &CreatePage, base: &LayoutSnapshot) -> protocol
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { added: vec![payload.page.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🌱️CreatePage
-
 
 //#region 🌱️CreatePage
 pub fn inverse_create_page(payload: &CreatePage, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {

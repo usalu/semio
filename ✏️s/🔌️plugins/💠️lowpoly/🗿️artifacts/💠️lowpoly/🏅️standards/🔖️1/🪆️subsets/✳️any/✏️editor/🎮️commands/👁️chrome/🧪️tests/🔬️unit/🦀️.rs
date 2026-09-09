@@ -1,6 +1,5 @@
-
-use crate::editor::lowpoly::LowpolyCommand;
 use crate::editor::lowpoly::testkit::{app, dispatch};
+use crate::editor::lowpoly::LowpolyCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn toggle_show_edges_emits_config_operation() {

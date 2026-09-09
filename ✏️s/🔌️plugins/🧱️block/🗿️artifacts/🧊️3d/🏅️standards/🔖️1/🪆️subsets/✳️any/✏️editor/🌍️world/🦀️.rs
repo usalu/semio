@@ -3,9 +3,10 @@
 //! `crate::standards::v1::subsets::any::schema`/`crate::standards::v1::subsets::any::schema::inferences` on purpose: an
 //! artifact must never depend on an app, and every function here takes at least one app-only type.
 
-use crate::{Block3dBrushPreview, Block3dWindowView};
+use crate::Block3dWindowView;
 use crate::{Block3dSnapshot, Block3dVortexKind};
-use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
+use crate::editor::block3d::config::Block3dConfig;
+use crate::editor::block3d::modes::edit::windows::world::transient::Block3dBrushPreview;
 use crate::BlockRepresentation;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
 use dsl::json;
@@ -89,7 +90,7 @@ pub fn block3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
     format!("{object_id}:{vortex_id}")
 }
 
-pub fn world_vortices_json(definition: &Block3dSnapshot, config: &Block3dConfig, visible: &[&BlockRepresentation], view: &Block3dWindowView) -> String {
+pub fn world_vortices_json(definition: &Block3dSnapshot, config: &Block3dConfig, visible: &[&BlockRepresentation], view: &Block3dWindowView, brush_preview: Option<&Block3dBrushPreview>) -> String {
     let mut records = Vec::new();
     for (index, representation) in visible.iter().enumerate() {
         let offset = arrangement_offset(&view.arrangement, index, view.spacing);
@@ -106,7 +107,7 @@ pub fn world_vortices_json(definition: &Block3dSnapshot, config: &Block3dConfig,
             }));
         }
     }
-    if let Some(preview) = &config.brush_preview {
+    if let Some(preview) = brush_preview {
         let direction = if config.brush_flip { [-preview.direction[0], -preview.direction[1], -preview.direction[2]] } else { preview.direction };
         records.push(json!({
             "fullId": "__brush_preview__",
@@ -143,8 +144,8 @@ pub fn world_selection_json(_config: &Block3dConfig) -> String {
     value.to_string()
 }
 
-pub fn world_interaction_json(config: &Block3dConfig, window_id: &str) -> String {
-    json!({ "activeUtility": block3d_window_view(config, window_id).active_utility }).to_string()
+pub fn world_interaction_json(active_utility: &str) -> String {
+    json!({ "activeUtility": active_utility }).to_string()
 }
 //#endregion 🔖️Scene
 

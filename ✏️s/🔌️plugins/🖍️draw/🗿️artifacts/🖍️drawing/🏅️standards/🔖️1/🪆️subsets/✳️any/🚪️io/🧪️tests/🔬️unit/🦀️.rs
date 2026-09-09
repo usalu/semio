@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_drawing_document, default_layer_base};
 use crate::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
@@ -9,7 +8,7 @@ use crate::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
 /// of substring-matching hand-rolled markup, since the markup is no longer hand-rolled.
 #[semio_framework_async_macros::async_test]
 async fn drawing_document_to_svg_bridges_shape_text_image_and_gradient_nodes_through_semio_drawing() {
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{SvgElement, parse_svg_xml, svg_element_from_xml_node};
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{parse_svg_xml, svg_element_from_xml_node, SvgElement};
 
     let mut rect = create_drawing_shape_layer_rect("Rect");
     if let DrawingLayerNode::Shape(shape) = &mut rect {

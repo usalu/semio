@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::standards::v1::subsets::any::schema::Rhs;
 use protocol::{OpBinary, OpText};
-use semio_framework_plugin::{App, EditorApp, Locale, PluginApp, Terminology, VcsArtifactApp, ViewModel, testkit};
+use semio_framework_plugin::{testkit, App, EditorApp, Locale, PluginApp, Terminology, VcsArtifactApp, ViewModel};
 
 /// 🎫️ See `jack`'s `trinity_jack_manifest_for_testkit` doc comment for why this wrapper exists
 /// (SDK gap, `testkit::new_app_with_registry`'s signature is still `fn(manifest: fn() -> App)`).
@@ -28,7 +27,7 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
         TrinityRewritingCommand::PatchNodes { node_ids: vec!["a".into()], field: "name".into(), value: "Renamed".into() },
         TrinityRewritingCommand::SetViewport { surface_id: Some("trinity.rewriting.before".into()), viewport_json: "{\"x\":1.0,\"y\":2.0,\"zoom\":1.0}".into() },
         TrinityRewritingCommand::Reorganize,
-        TrinityRewritingCommand::SetLodMode { window_id: "trinity-rewriting-before".into(), value: "compact".into() },
+        TrinityRewritingCommand::SetLodMode { value: "compact".into() },
     ];
     for command in commands {
         let bytes = command.encode_op().expect("encode");
@@ -68,7 +67,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request).await;
+    let menu = app.context_menu(&request, &ViewModel::default()).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");
@@ -83,20 +82,6 @@ async fn renders_before_and_after_graphs() {
     let after = app.render(TRINITY_REWRITING_PLAY_BODY_AFTER, None, &ViewModel::default()).await.expect("render");
     assert!(serde_json::to_string(&before.root).expect("serialize semantic UI test tree").contains("node-graph"));
     assert!(serde_json::to_string(&after.root).expect("serialize semantic UI test tree").contains("node-graph"));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn set_viewport_writes_before_pane_config_camera_without_artifact_mutations() {
-    let mut app = new_app().await;
-    let before_state = app.snapshot().unwrap();
-    let result = app
-        .dispatch_typed(TrinityRewritingCommand::SetViewport { surface_id: Some(TRINITY_REWRITING_PLAY_SURFACE_BEFORE.into()), viewport_json: pack::json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local"))
-        .await
-        .expect("viewport");
-    assert!(result.mutations.is_empty(), "camera is a config-only command, no document operations");
-    assert_eq!(app.snapshot().unwrap(), before_state, "document is untouched by a viewport pan");
-    let before = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, &ViewModel::default()).await.expect("render");
-    assert!(serde_json::to_string(&before.root).expect("serialize semantic UI test tree").contains("2.5"), "render reads the live config camera");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -230,4 +215,20 @@ async fn rewriting_io_declares_graph_in_and_graph_out_ports() {
     assert_eq!(graph_in.multiplicity, semio_framework_plugin::PortMultiplicity::One);
     let graph_out = io.ports.iter().find(|port| port.id == "graph:out").expect("graph:out declared");
     assert_eq!(graph_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_history() {
+    use store::ArtifactPack;
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
+    let source = RewritingSnapshot { before_fixture_json: "{}".into(), lhs_json: "{}".into(), rhs_json: "{}".into(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() };
+    let before = serde_json::to_value(&source).unwrap();
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = reset_document_effect(&source) else { panic!("reset must load a document"); };
+    let decoded = <RewritingSnapshot as ArtifactPack>::decode_pack(&pack).unwrap();
+    assert_eq!(serde_json::to_value(decoded).unwrap(), before);
+    assert_eq!(serde_json::to_value(&source).unwrap(), before);
+    let history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.unwrap();
+    let actual = serde_json::json!({ "documentId": history.doc_id, "schema": history.schema, "edits": history.edits.len(), "changes": history.changes.len(), "checkpoints": history.checkpoints.len(), "alternatives": history.alternatives.len(), "conflicts": history.conflicts.len() });
+    assert_eq!(actual, expected);
+    println!("[DEBUG] rewriting reset preserves its source and pack and emits neutral edit-free history without an envelope owner");
 }

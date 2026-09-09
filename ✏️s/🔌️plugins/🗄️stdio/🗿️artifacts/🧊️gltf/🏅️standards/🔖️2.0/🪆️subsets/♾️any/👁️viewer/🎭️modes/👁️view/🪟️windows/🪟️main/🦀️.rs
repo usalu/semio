@@ -7,7 +7,7 @@
 //! packet's own report for the tradeoff).
 
 use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
-use semio_framework_plugin::{world3d_meshes_json_from_kinds, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{world3d_camera_json, world3d_meshes_json_from_kinds, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;

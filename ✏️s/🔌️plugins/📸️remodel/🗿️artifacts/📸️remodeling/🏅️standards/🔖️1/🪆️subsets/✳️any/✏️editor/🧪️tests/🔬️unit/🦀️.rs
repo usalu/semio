@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::remodeling::testkit::{app, app_with_registry, remodeling_app_manifest_for_testkit, render};
 use protocol::{OpBinary, OpText};

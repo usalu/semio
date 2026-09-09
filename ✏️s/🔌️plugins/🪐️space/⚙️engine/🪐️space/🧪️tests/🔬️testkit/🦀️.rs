@@ -31,7 +31,7 @@ pub(crate) async fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> se
 pub(crate) async fn studio_emit(projection: &WorkflowSnapshot, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let history = empty_history();
     let doc = ArtifactView::new(projection, &history);
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     command.dispatch(&doc, &cfg)
 }
 

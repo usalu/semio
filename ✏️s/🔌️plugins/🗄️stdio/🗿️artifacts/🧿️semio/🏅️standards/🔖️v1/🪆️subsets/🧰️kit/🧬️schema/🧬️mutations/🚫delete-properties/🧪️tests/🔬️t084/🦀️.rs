@@ -116,7 +116,11 @@ async fn committed_diff_json_pins_the_option_option_collapse() {
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("re-encode"), serde_json::json!({}), "so re-encoding the decoded value drops the key entirely");
     let authored = SemioKitDiff { properties: Some(None), ..Default::default() };
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&authored)).expect("authored diff encodes"), committed, "the committed JSON IS the canonical encoding of the Some(None) diff, even though it cannot be decoded back into one");
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&authored)).expect("authored diff encodes"),
+        committed,
+        "the committed JSON IS the canonical encoding of the Some(None) diff, even though it cannot be decoded back into one"
+    );
 }
 
 /// 🩹 The diff carries `before` to `after` — exercised against the in-memory `Some(None)` diff,

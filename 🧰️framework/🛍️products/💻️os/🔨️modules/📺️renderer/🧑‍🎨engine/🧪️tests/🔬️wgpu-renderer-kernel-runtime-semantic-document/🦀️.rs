@@ -1,6 +1,12 @@
 mod semantic_document_tests {
     use super::*;
 
+    fn recovery_job(owner: &MountedProductReplayRecoveryOwner) -> u64 {
+        match owner {
+            MountedProductReplayRecoveryOwner::Request(request) | MountedProductReplayRecoveryOwner::Claim { request, .. } | MountedProductReplayRecoveryOwner::Authority { request, .. } => request.raw.job,
+        }
+    }
+
     fn document(generation: u64, surface: &str) -> UiDocumentLease {
         let id = ui_contract::UiNodeId(1);
         let surface = SurfaceId::try_from(surface).expect("bounded command retirement surface");
@@ -421,7 +427,7 @@ mod semantic_document_tests {
         {
             let registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
             assert_eq!(registry.slots[token.index].generation, token.generation);
-            assert_eq!(registry.slots[token.index].owner.as_ref().map(MountedProductReplayRecoveryOwner::job), Some(7));
+            assert_eq!(registry.slots[token.index].owner.as_ref().map(recovery_job), Some(7));
         }
         while mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").has_close_work() {
             assert!(mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").close_one());
@@ -436,7 +442,7 @@ mod semantic_document_tests {
         assert_eq!((rejected.instance(), rejected.job()), (59, 7));
         rejected.retire();
         let mut registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
-        assert_eq!((registry.slots[token.index].generation, registry.slots[token.index].owner.as_ref().map(MountedProductReplayRecoveryOwner::job)), (token.generation, Some(7)));
+        assert_eq!((registry.slots[token.index].generation, registry.slots[token.index].owner.as_ref().map(recovery_job)), (token.generation, Some(7)));
         while registry.has_close_work() {
             assert!(registry.close_one());
         }
@@ -474,7 +480,7 @@ mod semantic_document_tests {
         authorities[0] = Some(authority);
         authorities[0].take().expect("fault retains exact authority").retire();
         let mut registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
-        assert_eq!((registry.slots[token.index].generation, registry.slots[token.index].owner.as_ref().map(MountedProductReplayRecoveryOwner::job)), (token.generation, Some(7)));
+        assert_eq!((registry.slots[token.index].generation, registry.slots[token.index].owner.as_ref().map(recovery_job)), (token.generation, Some(7)));
         while registry.has_close_work() {
             assert!(registry.close_one());
         }
@@ -1026,7 +1032,7 @@ mod semantic_document_tests {
     #[test]
     fn fixed_kernel_request_queue_shutdown_releases_surface_and_rejected_events_in_fifo_units() {
         let queue = KernelRequestQueue::default();
-        queue.try_push(KernelRequest::Exchange { instance: 1, event: QueuedKernelEvent { surface_visible: Some("surface".to_string()) } }, Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
+        queue.try_push(KernelRequest::Exchange { instance: 1, event: QueuedKernelEvent { surface_visible: Some("surface".to_string()), surface_body_key: None, surface_view_state: None } }, Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
         queue
             .try_push(KernelRequest::CloseRejectedEvents { owner: RejectedKernelEvents { events: std::collections::VecDeque::from([Event::Wake, Event::Wake]) } }, Arc::new(ResponseSlot::default()), None)
             .unwrap_or_else(|_| panic!("fixture request queue admission"));

@@ -1,10 +1,10 @@
 //! 🗑️ 🗑️ Wires play app commands command — `delete-selection`.
 
+use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::op::WiresMutation;
 use crate::schema::fixture_edges;
 use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::WiresSnapshot;
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

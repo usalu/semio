@@ -1,4 +1,3 @@
-
 use super::*;
 use graph_core::Undirected;
 

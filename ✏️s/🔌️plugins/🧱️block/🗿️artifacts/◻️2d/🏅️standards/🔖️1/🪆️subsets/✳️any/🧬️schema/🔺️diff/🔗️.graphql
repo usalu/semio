@@ -12,7 +12,6 @@ type Block2dDiff {
   authors: Block2dAuthorList @state(class: ARTIFACT)
   camera2d: BlockCamera2d @state(class: ARTIFACT)
   meta: BlockMeta @state(class: ARTIFACT)
-  selectedIds: Block2dStringList @state(class: PRESENCE)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }

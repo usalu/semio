@@ -4,14 +4,14 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
+use super::bounds::{all_lon_lat_pairs, lon_lat_bounds};
 use crate::{GisMapDrawingChild, GisMapSnapshot, GisMapValueChild};
 use ::semio_framework_schema::ArtifactSchema;
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::diff::NodePath;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::{create_node, inverse_semio_drawing_mutation, SemioDrawingMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::{inverse_semio_value_mutation, SemioValueMutation};
-use super::bounds::{all_lon_lat_pairs, lon_lat_bounds};
-use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gismap snapshot. Today: per-collection feature counts and the
 /// geographic bounding box across every `positions`/`routes`/`regions` feature (see
@@ -199,7 +199,9 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets:
 pub fn gismap_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
     ::semio_framework_schema::ArtifactInferenceDescriptor {
         id: "s.gis.gismap.inference",
-        inference: ::semio_framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        inference: ::semio_framework_schema::FacetLeaves {
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
+        },
     }
 }
 //#endregion 🔖️Descriptor

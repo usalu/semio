@@ -8,7 +8,8 @@
     "schema",
     "objectKind",
     "representations",
-    "vortexKinds",
+    "catalog",
+    "vortexKindExtra",
     "vortices",
     "compatibility",
     "attributes",
@@ -32,10 +33,14 @@
       },
       "x-semio-state": "artifact"
     },
-    "vortexKinds": {
+    "catalog": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact"
+    },
+    "vortexKindExtra": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dVortexKind"
+        "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dVortexKindExtra"
       },
       "x-semio-state": "artifact"
     },

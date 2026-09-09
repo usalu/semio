@@ -22,7 +22,14 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
-    model.zone_equipment.push(crate::model::ZoneEquipmentAssignment { id: crate::model::EntityId(13), zone_id: crate::model::EntityId(1), equipment_type: crate::model::ZoneEquipmentType::Baseboard, priority: 1, heating_capacity_w: 2000.0, cooling_capacity_w: 0.0 });
+    model.zone_equipment.push(crate::model::ZoneEquipmentAssignment {
+        id: crate::model::EntityId(13),
+        zone_id: crate::model::EntityId(1),
+        equipment_type: crate::model::ZoneEquipmentType::Baseboard,
+        priority: 1,
+        heating_capacity_w: 2000.0,
+        cooling_capacity_w: 0.0,
+    });
     (snapshot(model), super::change_zone_equipment_type(crate::model::EntityId(99), crate::model::ZoneEquipmentType::FanCoil))
 }
 

@@ -1,10 +1,9 @@
-
 use super::*;
 use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
-use crate::standards::v_ecma_376::subsets::base::io::DocxError;
 use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_docx, document_to_xml, encode_docx};
 use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_docx, sniff_docx_bytes};
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode, xml_document_to_text};
+use crate::standards::v_ecma_376::subsets::base::io::DocxError;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
 async fn sample_document() -> DocxDocument {

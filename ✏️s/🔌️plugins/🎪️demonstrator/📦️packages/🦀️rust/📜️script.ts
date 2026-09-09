@@ -5,9 +5,9 @@ import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runC
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted(["semio-s-plugin-demonstrator"], this.repoRoot, rest);
+    await runCargoTestBudgeted(["semio-s-plugin-demonstrator"], this.repoRoot, rest);
   }
 }
 

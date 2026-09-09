@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.framework.value;
+enum NullValue { NULL_VALUE = 0; }
+message Number { oneof literal { uint64 uint_value = 1; sint64 int_value = 2; double float_value = 3; } }
+message DslArray { repeated DslValue values = 1; }
+message DslEntry { string key = 1; DslValue value = 2; }
+message DslObject { repeated DslEntry fields = 1; }
+message DslValue {
+  oneof value {
+    NullValue null_value = 1;
+    bool bool_value = 2;
+    Number number_value = 3;
+    string string_value = 4;
+    DslArray array_value = 5;
+    DslObject object_value = 6;
+  }
+}

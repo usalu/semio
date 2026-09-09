@@ -1,11 +1,9 @@
-
 use super::*;
-use crate::CadPaneId;
-use crate::editor::cad::config::CadConfig;
 use crate::editor::cad::terminology::cad_labels;
 use crate::editor::cad::testkit::*;
-use crate::editor::cad::{CadPlayRuntime, make_object_for_typology};
+use crate::editor::cad::{make_object_for_typology, CadPlayRuntime};
 use crate::standards::v1::subsets::any::schema::inferences::default_document;
+use crate::CadPaneId;
 use semio_framework_plugin::{ui_inspector_groups_to_tree, Locale, Terminology, ViewModel};
 fn selected_box_panel(view_state: &ViewModel) -> String {
     let runtime = CadPlayRuntime::default();

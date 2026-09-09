@@ -1,7 +1,7 @@
 //! 🔥️ Internal gains: people, lighting, equipment, process, data center decomposition.
 
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️GainDecomposition
 /// 📊️ Internal gain split into sensible, radiant, latent, and return-air fractions [W].

@@ -11,8 +11,7 @@ pub use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutat
 
 use crate::standards::v1::subsets::base::schema::triples::split_top_level;
 use crate::standards::v1::subsets::table::schema::mutations::{
-    create_column::CreateColumn, delete_column::DeleteColumn, edit_cell::EditCell, insert_row::InsertRow, remove_row::RemoveRow, rename_column::RenameColumn,
-    reorder_columns::ReorderColumns, reorder_rows::ReorderRows,
+    create_column::CreateColumn, delete_column::DeleteColumn, edit_cell::EditCell, insert_row::InsertRow, remove_row::RemoveRow, rename_column::RenameColumn, reorder_columns::ReorderColumns, reorder_rows::ReorderRows,
 };
 use crate::standards::v1::subsets::table::schema::snapshot::{dec_cell_kind, dec_row, enc_cell_kind, enc_row};
 use crate::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_str, enc_semio_value, enc_str};

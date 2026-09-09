@@ -8,7 +8,6 @@ type En1990Diff {
   consequenceClass: Int @state(class: ARTIFACT)
   annex: String @state(class: ARTIFACT)
   seismicAEdKn: Float @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type En1990Artifact {
@@ -18,7 +17,6 @@ type En1990Artifact {
   consequenceClass: Int
   annex: String
   seismicAEdKn: Float
-  selectedCheckIndex: Int
 }
 
 type En1990QkEntry {

@@ -4,9 +4,9 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::{Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use crate::viewer::generation2d::modes::view;
 use crate::viewer::generation2d::modes::view::windows::preview;
+use crate::{Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

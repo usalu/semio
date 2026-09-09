@@ -55,7 +55,7 @@ mod envelope_serde {
     /// RemoteMutations` `#[value(serialize_with = ..., deserialize_with = ...)]` field bridge —
     /// wire shape is a `DslValue::Array` of `DslValue::Number` (one per byte), matching what the
     /// former serde `serialize_seq` path produced.
-    pub fn to_value(envelopes: &Vec<MutationEnvelope>) -> super::DslValue {
+    pub fn to_value(envelopes: &[MutationEnvelope]) -> super::DslValue {
         let bytes = encode_envelopes(envelopes);
         super::DslValue::Array(bytes.into_iter().map(|byte| super::DslValue::uint(byte as u64)).collect())
     }
@@ -1038,10 +1038,8 @@ where
     /// @emoji 📥️ Advances one buffered sync event, then gives the store one inbound pump opportunity.
     pub async fn tick(&mut self) -> Result<bool, SyncError> {
         if let Some(events) = &mut self.events {
-            if let Ok(event) = events.try_recv() {
-                if let ArtifactEvent::Status(status) = &event {
-                    self.status = status.clone();
-                }
+            if let Ok(ArtifactEvent::Status(status)) = events.try_recv() {
+                self.status = status;
             }
         }
         self.store.tick().await.map_err(|error| SyncError::Vcs(error.to_string()))
@@ -1315,8 +1313,7 @@ impl ArtifactHost {
         let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(document) = state.documents.get_mut(document_key) else { return false };
         let Some(peer) = document.presence.offer(now_ms, peer) else { return false };
-        let sent = document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(peer) }).is_ok();
-        sent
+        document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(peer) }).is_ok()
     }
 
     /// @emoji ✂️ Transfers a document into generation-keyed retained close ownership. The runner
@@ -1402,6 +1399,18 @@ mod native_actor {
         stream: WsStream,
         socket_actor: String,
         authority: crate::os_directory::client::DocumentSocketAuthorityV1,
+    }
+
+    struct ArtifactReadinessWake(Arc<dyn Fn() + Send + Sync>);
+
+    impl std::task::Wake for ArtifactReadinessWake {
+        fn wake(self: Arc<Self>) {
+            (self.0)();
+        }
+
+        fn wake_by_ref(self: &Arc<Self>) {
+            (self.0)();
+        }
     }
 
     struct WipeSocketHeader(String);
@@ -1580,6 +1589,7 @@ mod native_actor {
         drive_phase: ArtifactDrivePhase,
         closing: bool,
         readiness: Option<Arc<dyn Fn() + Send + Sync>>,
+        readiness_requested: Arc<std::sync::atomic::AtomicBool>,
         #[cfg(test)]
         fail_bootstrap_local_replay_once: bool,
     }
@@ -1671,6 +1681,7 @@ mod native_actor {
                 drive_phase: ArtifactDrivePhase::Connect,
                 closing: false,
                 readiness: None,
+                readiness_requested: Arc::new(std::sync::atomic::AtomicBool::new(false)),
                 #[cfg(test)]
                 fail_bootstrap_local_replay_once: false,
             }
@@ -1714,6 +1725,13 @@ mod native_actor {
                 }
             }
             self.command_turns = 0;
+            if self.readiness_requested.swap(false, std::sync::atomic::Ordering::AcqRel) {
+                if self.connect_future.is_some() {
+                    self.drive_phase = ArtifactDrivePhase::ConnectResult;
+                } else if self.semio_hub.is_some() {
+                    self.drive_phase = ArtifactDrivePhase::Hub;
+                }
+            }
             let phase = self.drive_phase;
             self.drive_phase = match phase {
                 ArtifactDrivePhase::Connect => ArtifactDrivePhase::Hub,
@@ -1728,30 +1746,34 @@ mod native_actor {
             match phase {
                 ArtifactDrivePhase::Connect => self.start_connect_hub().await,
                 ArtifactDrivePhase::Hub => {
-                    let message = std::future::poll_fn(|context| {
-                        let polled = self.semio_hub.as_mut().map(|connection| connection.read.poll_next_unpin(context));
-                        std::task::Poll::Ready(match polled {
+                    let message = self.readiness.clone().and_then(|readiness| {
+                        let waker = std::task::Waker::from(Arc::new(ArtifactReadinessWake(readiness)));
+                        let mut context = std::task::Context::from_waker(&waker);
+                        match self.semio_hub.as_mut().map(|connection| connection.read.poll_next_unpin(&mut context)) {
                             Some(std::task::Poll::Ready(message)) => Some(message),
                             Some(std::task::Poll::Pending) | None => None,
-                        })
-                    })
-                    .await;
+                        }
+                    });
                     if let Some(message) = message {
+                        self.drive_phase = ArtifactDrivePhase::Hub;
                         self.on_hub_message(message).await;
                     }
                 }
                 ArtifactDrivePhase::ConnectResult => {
-                    let connection = std::future::poll_fn(|context| {
-                        let polled = self.connect_future.as_mut().map(|future| future.as_mut().poll(context));
-                        std::task::Poll::Ready(match polled {
+                    let connection = self.readiness.clone().and_then(|readiness| {
+                        let waker = std::task::Waker::from(Arc::new(ArtifactReadinessWake(readiness)));
+                        let mut context = std::task::Context::from_waker(&waker);
+                        match self.connect_future.as_mut().map(|future| future.as_mut().poll(&mut context)) {
                             Some(std::task::Poll::Ready(connection)) => Some(connection),
                             Some(std::task::Poll::Pending) | None => None,
-                        })
-                    })
-                    .await;
+                        }
+                    });
                     if let Some(connection) = connection {
                         self.connect_future = None;
                         self.finish_connect_hub(connection).await;
+                        if self.semio_hub.is_some() {
+                            self.drive_phase = ArtifactDrivePhase::Hub;
+                        }
                     }
                 }
                 ArtifactDrivePhase::Watch => {
@@ -2064,7 +2086,7 @@ mod native_actor {
 
         async fn start_connect_hub(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
-            if self.connect_future.is_some() {
+            if self.semio_hub.is_some() || self.connect_future.is_some() || self.reconnect_at.is_some_and(|deadline| deadline > Instant::now()) {
                 return;
             }
             if self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
@@ -2086,11 +2108,18 @@ mod native_actor {
             let expectation = crate::os_directory::client::DocumentSocketExpectationV1 { artifact_schema: schema, pack_schema_hash, requested_surface_id: surface, lease: self.document_execution_target_lease.clone() };
             let client_instance_id = format!("native-document-{:016x}", self.hlc_seed);
             let operation_cancel = self.operation_cancel.child_now();
+            let pool = self.pool.clone();
             self.set_remote_state(RemoteState::Connecting).await;
             self.connect_future = Some(Box::pin(async move {
                 let ctx = semio_framework_async::OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 1, deadline_ms: None, cancel: operation_cancel, capability: None };
                 let admission_ctx = ctx.clone();
-                let admission = tokio::task::spawn_blocking(move || source.admit_document_socket(&admission_ctx, &space_id, &document_id, &expectation, &client_instance_id, 5_000)).await.map_err(|_| ())?.map_err(|_| ())?;
+                let (admission_sender, admission_receiver) = semio_framework_async::oneshot::channel();
+                let admission_job = Box::new(move || {
+                    let admission = source.admit_document_socket(&admission_ctx, &space_id, &document_id, &expectation, &client_instance_id, 5_000);
+                    let _ = admission_sender.send(admission);
+                });
+                pool.submit_at(pool.now_ms(), semio_framework_async::Lane::Io, admission_job);
+                let admission = admission_receiver.await.map_err(|_| ())?.map_err(|_| ())?;
                 if ctx.cancel.is_cancelled_now() || admission.authority.expires_at_unix_ms <= now_ms().await {
                     return Err(());
                 }
@@ -2687,10 +2716,10 @@ mod native_actor {
     const ACTOR_RUNNER_RETRY_MS: u64 = 1;
     const ACTOR_RUNNER_RETRY_LIMIT: u8 = 8;
 
-    type ActorTurnFuture = std::pin::Pin<Box<dyn std::future::Future<Output = (ArtifactActor, ArtifactDrive)> + Send>>;
+    type ActorTurnFuture = std::pin::Pin<Box<dyn std::future::Future<Output = (Box<ArtifactActor>, ArtifactDrive)> + Send>>;
 
     enum ActorTurnOwner {
-        Actor(ArtifactActor),
+        Actor(Box<ArtifactActor>),
         Future(ActorTurnFuture),
     }
 
@@ -2734,6 +2763,7 @@ mod native_actor {
 
     struct ActorRunner {
         pool: Arc<semio_framework_async::WorkerPool>,
+        io_reactor: Option<tokio::runtime::Handle>,
         generation: u64,
         turn: std::sync::Mutex<Option<ActorTurnOwner>>,
         terminal_turn: std::sync::Mutex<Option<ActorTurnOwner>>,
@@ -2989,6 +3019,7 @@ mod native_actor {
             let generation = self.turn_generation.load(std::sync::atomic::Ordering::Acquire);
             let waker = std::task::Waker::from(Arc::new(ActorTurnWake { runner: Arc::downgrade(&self), generation }));
             let mut context = std::task::Context::from_waker(&waker);
+            let _io_reactor = self.io_reactor.as_ref().map(tokio::runtime::Handle::enter);
             let polled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| future.as_mut().poll(&mut context)));
             match polled {
                 Ok(std::task::Poll::Pending) => {
@@ -2999,8 +3030,7 @@ mod native_actor {
                         return;
                     }
                     *self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Future(future));
-                    self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                    if self.wake_requested.swap(false, std::sync::atomic::Ordering::AcqRel) {
+                    if self.release_scheduled_after_turn_with(|| {}) {
                         self.enqueue(false);
                     }
                 }
@@ -3029,8 +3059,7 @@ mod native_actor {
                         }
                         ArtifactDrive::MoreWork | ArtifactDrive::Idle { .. } => {
                             *self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Actor(actor));
-                            let woke = self.wake_requested.swap(false, std::sync::atomic::Ordering::AcqRel);
-                            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                            let woke = self.release_scheduled_after_turn_with(|| {});
                             if outcome == ArtifactDrive::MoreWork || woke {
                                 self.schedule();
                             } else if let ArtifactDrive::Idle { deadline } = outcome {
@@ -3046,6 +3075,12 @@ mod native_actor {
                     self.enqueue(true);
                 }
             }
+        }
+
+        fn release_scheduled_after_turn_with(&self, after_release: impl FnOnce()) -> bool {
+            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+            after_release();
+            self.wake_requested.swap(false, std::sync::atomic::Ordering::AcqRel)
         }
 
         fn arm_deadline(self: &Arc<Self>, deadline: Option<Instant>) {
@@ -3099,7 +3134,6 @@ mod native_actor {
 
         fn cancel(self: &Arc<Self>) {
             self.begin_terminal(ArtifactActorTerminalReason::Cancelled);
-            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
             self.enqueue(true);
         }
 
@@ -3205,12 +3239,14 @@ mod native_actor {
         document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
         operation_cancel: semio_framework_async::CancelToken,
     ) -> ArtifactActorRunnerHandle {
+        let io_reactor = tokio::runtime::Handle::try_current().ok();
         let mailbox = cmd_rx.close_handle();
         let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events, credential, socket_grant_source, document_execution_target_lease, operation_cancel).await;
         let runner = Arc::new(ActorRunner {
             pool,
+            io_reactor,
             generation,
-            turn: std::sync::Mutex::new(Some(ActorTurnOwner::Actor(actor))),
+            turn: std::sync::Mutex::new(Some(ActorTurnOwner::Actor(Box::new(actor)))),
             terminal_turn: std::sync::Mutex::new(None),
             mailbox,
             scheduled: std::sync::atomic::AtomicBool::new(false),
@@ -3239,8 +3275,14 @@ mod native_actor {
             }
         });
         if let Some(ActorTurnOwner::Actor(actor)) = runner.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_mut() {
-            actor.cmd_rx.set_wake(schedule.clone());
-            actor.set_readiness(schedule);
+            let readiness_requested = actor.readiness_requested.clone();
+            let readiness_schedule = schedule.clone();
+            let readiness: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
+                readiness_requested.store(true, std::sync::atomic::Ordering::Release);
+                readiness_schedule();
+            });
+            actor.cmd_rx.set_wake(schedule);
+            actor.set_readiness(readiness);
         }
         ArtifactActorRunnerHandle { generation, runner }
     }

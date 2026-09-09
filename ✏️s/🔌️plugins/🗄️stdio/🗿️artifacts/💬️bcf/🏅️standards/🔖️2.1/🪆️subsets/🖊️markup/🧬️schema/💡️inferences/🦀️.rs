@@ -9,7 +9,7 @@
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::topicstats::{compute_bcf_topic_stats};
+use super::topicstats::compute_bcf_topic_stats;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a bcf snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topicStats`, backed by the `🗒️topicstats/` slug dir).
@@ -66,13 +66,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v2_1::subset
 pub fn bcf_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.bcf.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

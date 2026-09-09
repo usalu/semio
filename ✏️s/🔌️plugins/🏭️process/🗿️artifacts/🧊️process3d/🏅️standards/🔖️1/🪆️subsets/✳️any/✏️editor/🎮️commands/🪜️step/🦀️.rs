@@ -1,5 +1,6 @@
 //! 🪜️ Process 3d play app commands — process-step lifecycle (add / remove / move / update / enable).
 
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::mutations::change_step_enabled::ChangeStepEnabled;
 use crate::mutations::change_step_origin::ChangeStepOrigin;
 use crate::mutations::rename_step::RenameStep;
@@ -8,7 +9,6 @@ use crate::mutations::replace_step_measure::ReplaceStepMeasure;
 use crate::schema::inferences::{capability_for_measure_kind, find_capability, measure_for_capability};
 use crate::schema::{insert_step_mutations, next_step_id, remove_step_mutations};
 use crate::{op::Process3dMutation, MeasureKind, Process3dSnapshot, ProcessStep, StepOrigin};
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -26,12 +26,7 @@ pub mod add_step {
         pub position: Option<[f64; 3]>,
     }
 
-    pub fn handle(
-        payload: &AddStep,
-        doc: &ArtifactView<'_, Process3dSnapshot>,
-        _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
-    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let resolved = if let (Some(machine_id), Some(capability_id)) = (payload.machine_id.as_deref(), payload.capability_id.as_deref()) {
             find_capability(&fixture.workshop, machine_id, capability_id).map(|(machine, capability)| (machine.clone(), capability.clone()))
@@ -69,12 +64,7 @@ pub mod remove_step {
         pub id: String,
     }
 
-    pub fn handle(
-        payload: &RemoveStep,
-        doc: &ArtifactView<'_, Process3dSnapshot>,
-        _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
-    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         match remove_step_mutations(fixture, &payload.id) {
             Some(operations) => Ok(Emit { artifact_mutations: operations, ..Default::default() }),
@@ -127,12 +117,7 @@ pub mod move_step {
 
     /// 🔀 Existence is validated at diff time (`ReorderSteps`'s own `target-missing` error against
     /// `step_payloads`), so this handler stays a thin, unconditional dispatch.
-    pub fn handle(
-        payload: &MoveStep,
-        doc: &ArtifactView<'_, Process3dSnapshot>,
-        _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
-    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &MoveStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let _ = doc;
         Ok(Emit::mutations(vec![Process3dMutation::ReorderSteps(ReorderSteps { id: payload.id.clone(), to_index: payload.index })]))
     }
@@ -158,12 +143,7 @@ pub mod update_step {
     /// all four unconditionally rather than diffing `payload.step` against the current entity first;
     /// each mutation's own `mutation.no-op` guard against `step_payloads` makes an unchanged field a
     /// harmless warning rather than a spurious write.
-    pub fn handle(
-        payload: &UpdateStep,
-        doc: &ArtifactView<'_, Process3dSnapshot>,
-        _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
-    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &UpdateStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let _ = doc;
         let step: ProcessStep = semio_framework_os_kernel::json::from_json_str(&payload.step_json).map_err(|e| Fault::from(e.to_string()))?;
         let operations = vec![

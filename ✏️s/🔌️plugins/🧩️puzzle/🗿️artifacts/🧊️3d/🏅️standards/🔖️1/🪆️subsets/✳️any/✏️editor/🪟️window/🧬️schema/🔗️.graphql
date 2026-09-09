@@ -1,0 +1,71 @@
+type Puzzle3dSelectableKinds {
+  objects: Boolean!
+  vortices: Boolean!
+  attractions: Boolean!
+}
+
+type Puzzle3dWorldSunConfig {
+  enabled: Boolean!
+  azimuth: Float!
+  elevation: Float!
+  intensity: Float!
+  color: String!
+}
+
+type Puzzle3dWorldProjectionConfig {
+  kind: String!
+  orthographicView: String!
+  axonometricVariant: String!
+  axonometricAngleA: Float!
+  axonometricAngleB: Float!
+  axonometricQuadrant: String!
+  obliqueVariant: String!
+  obliqueAngle: Float!
+  obliqueDepth: Float!
+  onePointAxis: String!
+  fov: Float!
+  twoPointShift: Float!
+  curvilinearFov: Float!
+  curvilinearStrength: Float!
+  curvilinearMapping: String!
+}
+
+type Puzzle3dCamera {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+  up: [Float!]
+  projection: Puzzle3dWorldProjectionConfig!
+}
+
+type Puzzle3dSuggestionMenu {
+  x: Float!
+  y: Float!
+  windowId: String!
+  vortexFullId: String!
+}
+
+type Puzzle3dWindowConfig {
+  lodAutomatic: Boolean!
+  lodDepthVariable: Boolean!
+  gridVisible: Boolean!
+  lodManual: Float!
+  gridSnapEnabled: Boolean!
+  gridSpacing: Float!
+  selectableKinds: Puzzle3dSelectableKinds!
+  proximityRadius: Float!
+  chunkSize: Float!
+  voxelDims: [Int!]!
+  transformMove: Boolean!
+  transformRotate: Boolean!
+  vortexShow: String!
+  vortexDirection: String!
+  sun: Puzzle3dWorldSunConfig!
+  camera: Puzzle3dCamera!
+}
+
+type Puzzle3dWindowTransient {
+  suggestionMenu: Puzzle3dSuggestionMenu
+  engagementInput: String!
+  brushCandidateIndex: Int!
+}

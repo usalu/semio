@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::empty_paint_pixels;
 
@@ -39,8 +38,8 @@ async fn artifact_engine_apply_and_inverse_round_trip() {
     // `LowpolyEngine` never exposed a `snapshot()`/apply-mutation API either) and constructed
     // the since-removed `LowpolyMutation::ObjectsPatch` bag variant. Rewritten against the real
     // `protocol::Mutation` diff/apply/inverse contract and the new `rename-object` mutation.
-    use crate::LowpolyMutation;
     use crate::mutations::rename_object;
+    use crate::LowpolyMutation;
     use protocol::{Mutation, MutationDiff};
     let base = default_snapshot();
     let object_id = base.objects[0].id.clone();

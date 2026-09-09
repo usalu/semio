@@ -1,6 +1,5 @@
-
-use crate::editor::note::NOTE_PLAY_BODY_CATALOGUE as BODY_CATALOGUE;
 use crate::editor::note::testkit::{note_app, render as render_body};
+use crate::editor::note::NOTE_PLAY_BODY_CATALOGUE as BODY_CATALOGUE;
 
 #[semio_framework_async_macros::async_test]
 async fn catalogue_lists_every_block_kind() {
@@ -12,13 +11,9 @@ async fn catalogue_lists_every_block_kind() {
 
 #[semio_framework_async_macros::async_test]
 async fn catalogue_resolves_german_locale() {
-    use crate::editor::note::NoteCommand;
-    use crate::editor::note::commands::set_locale::SetLocale;
-    use crate::editor::note::testkit::dispatch;
-
     let mut app = note_app().await;
-    dispatch(&mut app, NoteCommand::SetLocale(SetLocale { value: "de-DE".into() })).await;
-    let json = render_body(&mut app, BODY_CATALOGUE).await;
+    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let json = crate::editor::note::testkit::render_with_view(&mut app, BODY_CATALOGUE, &view_state).await;
     assert!(json.contains("Blockarten"));
     assert!(json.contains("Text — reicher Textblock"));
 }

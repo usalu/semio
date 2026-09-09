@@ -9,26 +9,7 @@
     "camera",
     "nodes",
     "edges",
-    "meta",
-    "selectedIds",
-    "activeUtilityId",
-    "cameraX",
-    "cameraY",
-    "cameraZoom",
-    "selectionMethod",
-    "gridSnapEnabled",
-    "gridFactor",
-    "suggestionOffset",
-    "fillCount",
-    "brushCandidateIndex",
-    "brushCandidateSourceHandleId",
-    "lodModeByPaneJson",
-    "engagementInputByPaneJson",
-    "brushCandidatesJson",
-    "nodeKindWeightsJson",
-    "handleKindWeightsJson",
-    "activeUtilityByWindowIdJson",
-    "previewSeq"
+    "meta"
   ],
   "properties": {
     "schema": {
@@ -55,105 +36,6 @@
     },
     "meta": {
       "$ref": "#/$defs/Puzzle2dMeta",
-      "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "cameraX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "gridSnapEnabled": {
-      "type": "boolean",
-      "x-semio-state": "config"
-    },
-    "gridFactor": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "suggestionOffset": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "fillCount": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "brushCandidateIndex": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "brushCandidateSourceHandleId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "lodModeByPaneJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "engagementInputByPaneJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "brushCandidatesJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "nodeKindWeightsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "handleKindWeightsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "activeUtilityByWindowIdJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "hoveredNodeId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "previewSeq": {
-      "type": "integer",
-      "format": "int64",
       "x-semio-state": "artifact"
     }
   },

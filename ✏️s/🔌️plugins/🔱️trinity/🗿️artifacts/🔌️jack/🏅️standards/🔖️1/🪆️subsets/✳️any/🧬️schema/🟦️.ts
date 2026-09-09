@@ -17,21 +17,8 @@ export interface JackArtifact {
   edges: Edge[];
   /** @state artifact */
   rootNodeId?: string;
-  /** @state config */
-  jackQuery: string;
-  /** @state config */
-  lodModeByWindow: Record<string, string>;
-  /** @state config */
-  viewportCamera: Camera;
-  /** @state config */
-  /** @state config */
-  editorSelection?: JackEditorSelection;
 }
 
-export interface JackEditorSelection {
-  start: number;
-  end: number;
-}
 
 export interface Camera {
   x: number;
@@ -136,10 +123,6 @@ export function parseJackArtifact(value: unknown, at = "$"): JackArtifact {
     nodes: trinityJackArtifactGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parseNode(item, `${at}.nodes[${index}]`)),
     edges: trinityJackArtifactGuardArray(row["edges"], `${at}.edges`).map((item, index) => parseEdge(item, `${at}.edges[${index}]`)),
     rootNodeId: row["rootNodeId"] === undefined ? undefined : trinityJackArtifactGuardString(row["rootNodeId"], `${at}.rootNodeId`),
-    jackQuery: trinityJackArtifactGuardString(row["jackQuery"], `${at}.jackQuery`),
-    lodModeByWindow: trinityJackArtifactGuardObject(row["lodModeByWindow"], `${at}.lodModeByWindow`),
-    viewportCamera: parseCamera(row["viewportCamera"], `${at}.viewportCamera`),
-    editorSelection: row["editorSelection"] === undefined ? undefined : parseJackEditorSelection(row["editorSelection"], `${at}.editorSelection`),
   };
 }
 
@@ -209,13 +192,5 @@ export function parseManifestPortKind(value: unknown, at = "$"): ManifestPortKin
   return {
     name: trinityJackArtifactGuardString(row["name"], `${at}.name`),
     direction: trinityJackArtifactGuardString(row["direction"], `${at}.direction`),
-  };
-}
-
-export function parseJackEditorSelection(value: unknown, at = "$"): JackEditorSelection {
-  const row = trinityJackArtifactGuardObject(value, at);
-  return {
-    start: trinityJackArtifactGuardInteger(row["start"], `${at}.start`),
-    end: trinityJackArtifactGuardInteger(row["end"], `${at}.end`),
   };
 }

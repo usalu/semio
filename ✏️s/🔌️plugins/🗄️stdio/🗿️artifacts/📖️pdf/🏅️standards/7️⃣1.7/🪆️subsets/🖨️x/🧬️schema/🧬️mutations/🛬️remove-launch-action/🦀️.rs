@@ -26,10 +26,7 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveLaunchAction {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfXMutation> {
-        support::action_with(base, "Launch", "F", &self.target)
-            .map(|_| PdfXMutation::InsertLaunchAction(InsertLaunchAction { target: self.target.clone() }))
-            .into_iter()
-            .collect()
+        support::action_with(base, "Launch", "F", &self.target).map(|_| PdfXMutation::InsertLaunchAction(InsertLaunchAction { target: self.target.clone() })).into_iter().collect()
     }
 
     fn label(&self) -> String {

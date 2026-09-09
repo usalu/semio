@@ -14,6 +14,9 @@ const LIBRARY_ROOT = dirname(fileURLToPath(import.meta.url));
 const RUNTIME_COMPONENT_MODULE = "🕸️dependencies/🧩️runtime/🟨️.mjs";
 const runtimeRevision = createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex");
 const { runtimeComponentClosure } = await import(new URL(`./${RUNTIME_COMPONENT_MODULE}?revision=${runtimeRevision}`, import.meta.url).href);
+const SOURCE_INPUT_MODULE = "🕸️dependencies/🟦️typescript/🟨️.mjs";
+const sourceInputRevision = createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex");
+const { readSourceInputContract, relativeSourceInputs } = await import(new URL(`./${SOURCE_INPUT_MODULE}?revision=${sourceInputRevision}`, import.meta.url).href);
 const POLICY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"), "utf8"));
 const TAXONOMY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"), "utf8"));
 const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revision") ?? implementationRevision();
@@ -281,6 +284,40 @@ function cargoSourceInputs(root, workspaceRoot, facts, includeTests = true) {
   catch { return undefined; }
 }
 
+const SCRIPT_IMPORT_CACHE = new Map();
+
+/** 🔗️ Collects executable import expressions while excluding erased TypeScript declarations. */
+function commandImports(path, source, compiler) {
+  const previous = SCRIPT_IMPORT_CACHE.get(path);
+  if (previous?.source === source) return previous.imports;
+  const imports = new Set(), add = (node) => { if (node && compiler.isStringLiteralLike(node) && node.text.startsWith(".")) imports.add(node.text); };
+  const visit = (node) => {
+    if (compiler.isImportTypeNode(node)) return;
+    if (compiler.isImportDeclaration(node)) {
+      const clause = node.importClause, bindings = clause?.namedBindings;
+      if (!clause?.isTypeOnly && !(bindings && compiler.isNamedImports(bindings) && !clause.name && bindings.elements.length && bindings.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier);
+      return;
+    }
+    if (compiler.isExportDeclaration(node)) {
+      if (!node.isTypeOnly) add(node.moduleSpecifier);
+      return;
+    }
+    if (compiler.isImportEqualsDeclaration(node)) {
+      if (!node.isTypeOnly && compiler.isExternalModuleReference(node.moduleReference)) add(node.moduleReference.expression);
+      return;
+    }
+    if (compiler.isCallExpression(node)) {
+      const expression = node.expression;
+      if (expression.kind === compiler.SyntaxKind.ImportKeyword || compiler.isIdentifier(expression) && expression.text === "require" || compiler.isCallExpression(expression) && compiler.isIdentifier(expression.expression) && expression.expression.text === "createRequire") add(node.arguments[0]);
+    }
+    compiler.forEachChild(node, visit);
+  };
+  if (!/\.(?:json|d\.[cm]?ts)$/.test(path)) visit(compiler.createSourceFile(path, source, compiler.ScriptTarget.Latest, false));
+  const result = [...imports];
+  SCRIPT_IMPORT_CACHE.set(path, { source, imports: result });
+  return result;
+}
+
 /** 🧭️ Tracks literal relative command imports through the existing TypeScript tooling boundary. */
 function relativeScriptInputs(entries, workspaceRoot) {
   const compiler = createRequire(import.meta.url)("typescript"), files = new Set();
@@ -288,13 +325,10 @@ function relativeScriptInputs(entries, workspaceRoot) {
     if (files.has(path)) return;
     files.add(path);
     const source = readFileSync(path, "utf8");
-    for (const entry of compiler.preProcessFile(source, true, true).importedFiles) {
-      if (!entry.fileName.startsWith(".")) continue;
-      const resolved = createRequire(path).resolve(entry.fileName);
+    for (const entry of commandImports(path, source, compiler)) {
+      const resolved = createRequire(path).resolve(entry);
       if (nxPath(relative(workspaceRoot, resolved)).startsWith("../")) throw new Error(`Command import escapes workspace: ${resolved}`);
       visit(resolved);
-      const declaration = resolved.replace(/\.(?:[cm]?js)$/, ".d.ts");
-      if (declaration !== resolved && existsSync(declaration)) visit(declaration);
     }
   };
   for (const entry of entries) visit(resolve(entry));
@@ -314,6 +348,20 @@ function nativeCommandInputs(workspaceRoot) {
     ...[...javascript.commands, ...cargo.commands].map((runtime) => ({ runtime })),
     { runtime: 'node -p "process.platform.concat(process.arch)"' },
   ];
+}
+
+/** 🧭️ Adds the selected native target's local router and executable import closure. */
+function nativeTargetCommandInputs(target, workspaceRoot, fallback = nativeCommandInputs(workspaceRoot)) {
+  const command = target.options?.command;
+  if (typeof command !== "string") return fallback;
+  const cwd = resolve(workspaceRoot, target.options?.cwd ?? ".");
+  const entries = [...command.matchAll(/"([^"\n]+)"|'([^'\n]+)'|([^\s"';&|]+)/g)]
+    .map((match) => match[1] ?? match[2] ?? match[3])
+    .filter((token) => token.endsWith(SCRIPT_BASENAME))
+    .map((token) => resolve(cwd, token))
+    .filter((path) => existsSync(path) && !nxPath(relative(workspaceRoot, path)).startsWith("../"));
+  if (!entries.length) return fallback;
+  return [...new Set([...relativeScriptInputs(entries, workspaceRoot), ...fallback])];
 }
 
 /** 🛡️ Side effects and live processes cannot be replayed as completed task results. */
@@ -444,6 +492,18 @@ function goManifest(root, workspaceRoot) {
   return goScript && existsSync(manifest) ? manifest : undefined;
 }
 
+/** 🧬️ Derives named task inputs from explicit relative source-graph contracts. */
+function declaredSourceInputs(json, workspaceRoot) {
+  const groups = {};
+  for (const [name, path] of Object.entries(json.metadata?.sourceInputs ?? {})) {
+    if (["default", "production", "nativeSources", "nativeTestSources", "artifactSources", "artifactCommandSources"].includes(name) || Object.hasOwn(json.namedInputs ?? {}, name)) throw new Error(`Duplicate source input group ${name}`);
+    if (typeof path !== "string" || isAbsolute(path) || path.split(/[\\/]/).includes("..")) throw new Error(`Invalid source input contract path ${path}`);
+    const contractPath = resolve(workspaceRoot, path), contract = readSourceInputContract(contractPath), sources = relativeSourceInputs(contract, workspaceRoot);
+    groups[name] = [...new Set([contractPath, join(LIBRARY_ROOT, SOURCE_INPUT_MODULE), join(LIBRARY_ROOT, "🕸️dependencies/🟦️typescript/🔣️schema.json"), ...sources.files])].map(file => `{workspaceRoot}/${nxPath(relative(workspaceRoot, file))}`).concat([{ externalDependencies: sources.externalDependencies }]);
+  }
+  return groups;
+}
+
 /** 📥️ Shared command implementation and host identity are inputs of every script-backed task. */
 function projectInputs(json, root, workspaceRoot, facts) {
   const tools = ["javascript"];
@@ -504,7 +564,7 @@ function projectInputs(json, root, workspaceRoot, facts) {
   const artifactSources = artifactTypeScript ? [...relativeScriptInputs([artifactSource], workspaceRoot), "{projectRoot}/package.json", ...exclusions] : [];
   const javascript = POLICY.toolchains.javascript;
   const artifactCommandSources = artifactTypeScript ? [...relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot), `{workspaceRoot}/bunfig.toml`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
-  return { ...declarations, default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...production, ...(declarations.production ?? [])], nativeSources: [...native(nativeSources), ...(declarations.nativeSources ?? [])], nativeTestSources: [...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])], ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) };
+  return { ...declarations, ...declaredSourceInputs(json, workspaceRoot), default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...production, ...(declarations.production ?? [])], nativeSources: [...native(nativeSources), ...(declarations.nativeSources ?? [])], nativeTestSources: [...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])], ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) };
 }
 
 /**
@@ -551,14 +611,16 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
   const ownsScript = existsSync(join(projectDir, SCRIPT_BASENAME));
   const nativeProject = existsSync(join(projectDir, "Cargo.toml"));
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript");
-  const declared = { ...(root === "." && ownsScript ? rootCommandTargets(join(projectDir, SCRIPT_BASENAME)) : {}), ...cargoTargets(root, workspaceRoot, commandInputs), ...json.targets, ...componentTargets(root, workspaceRoot, commandInputs), ...printDocumentTargets(json, root, workspaceRoot) };
+  const declared = withWasmTooling({ ...(root === "." && ownsScript ? rootCommandTargets(join(projectDir, SCRIPT_BASENAME)) : {}), ...cargoTargets(root, workspaceRoot, commandInputs), ...json.targets, ...componentTargets(root, workspaceRoot, commandInputs), ...printDocumentTargets(json, root, workspaceRoot) }, ownsScript && json.targets?.wasm ? readFileSync(join(projectDir, SCRIPT_BASENAME), "utf8") : "");
   for (const contract of Object.values(contracts)) {
     if (contract.ownership !== "owned" || contract.ownerPath !== root) continue;
     const name = contract.target.slice(contract.target.lastIndexOf(":") + 1), target = declared[name];
     if (!target || contract.target !== `${json.name}:${name}`) throw new Error(`Generator target has no project owner: ${contract.target}`);
     const inputs = [...(target.inputs ?? ["default", "^default"]), ...contract.inputPatterns.map((path) => `{workspaceRoot}/${path}`)];
-    if (contract.inputDiscovery) inputs.push({ runtime: `bun ${JSON.stringify(nxPath(relative(workspaceRoot, join(LIBRARY_ROOT, "⚡️caching/📜️script.ts"))))} generator-inputs ${contract.inputDiscovery.kind}` });
-    declared[name] = { ...target, inputs, outputs: contract.outputRoots.map((output) => `{workspaceRoot}/${output.path}`) };
+    const fingerprint = contract.inputDiscovery ? POLICY.generatorInputs[contract.inputDiscovery.kind] : undefined;
+    if (contract.inputDiscovery && !fingerprint) throw new Error(`Generator input discovery has no fingerprint owner: ${contract.inputDiscovery.kind}`);
+    if (fingerprint) inputs.push({ dependentTasksOutputFiles: fingerprint.output });
+    declared[name] = { ...target, inputs, ...(fingerprint ? { dependsOn: [...new Set([...(target.dependsOn ?? []), fingerprint.target])] } : {}), outputs: contract.outputRoots.map((output) => `{workspaceRoot}/${output.path}`) };
     if (contract.checkTarget) {
       const check = contract.checkTarget.slice(contract.checkTarget.lastIndexOf(":") + 1);
       if (declared[check]) declared[check] = { ...declared[check], cache: false };
@@ -570,12 +632,18 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
     const nativeTarget = nativeProject && /^(build|wasm|native|test(?:-(?:quick|long|exhaustive))?$|lint|check$)/.test(name) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts");
     if (nativeTarget) {
       policy.parallelism ??= false;
-      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...(commandInputs ?? nativeCommandInputs(workspaceRoot)), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : [])];
+      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...nativeTargetCommandInputs(policy, workspaceRoot, commandInputs), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : [])];
     }
     if (artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name)) policy.inputs = ["artifactSources", "artifactCommandSources"];
     normalized[name] = root === "." || json.name === "@semio-tech/repo-test-domain" ? { ...policy, cache: policy.cache === false ? false : target.cache ?? false } : policy;
   }
   return { ...json, name: json.name, root, namedInputs: projectInputs({ ...json, targets: declared }, root, workspaceRoot, facts), targets: normalized };
+}
+
+/** 🛠️ Exposes wasm-pack's immutable optimizer preparation to Nx before compiler execution. */
+function withWasmTooling(targets, source) {
+  if (!targets.wasm || !/\brunWasmPackWebBuild\s*\(/.test(source)) return targets;
+  return { ...targets, wasm: { ...targets.wasm, dependsOn: [...new Set([...(targets.wasm.dependsOn ?? []), "workspace:deps-wasm-opt"])] } };
 }
 
 /** 📄️ Projects a document catalog into separately owned PDF tasks without executing a compiler. */
@@ -642,7 +710,7 @@ function componentTargets(root, workspaceRoot, commandInputs) {
   }], [`materialize-${profile}`, {
     executor: DEFAULT_EXECUTOR,
     cache: true,
-    dependsOn: [`component-${profile}`, `@semio-tech/framework-plugin-web:support-${profile}`],
+    dependsOn: [`component-${profile}`, `@semio-tech/framework-plugin-web:support-${profile}`, ...(profile === "release" ? ["workspace:deps-wasm-opt"] : [])],
     inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*" }, `{workspaceRoot}/${webRoot}/**/*.{ts,json}`, `{workspaceRoot}/${deployment}/*.json`, `!{workspaceRoot}/${webRoot}/dist/**/*`],
     outputs: [`{workspaceRoot}/${webRoot}/dist/${profile}/🔌️plugin-modules/${moduleDirectory}`],
     options: { cwd: ".", command: `bun ${JSON.stringify(`${webRoot}/📜️script.ts`)} materialize ${profile} --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, path)))}` },
@@ -880,7 +948,7 @@ function createDependenciesImplementation(_options, context) {
 
 /** ♻️ Reloads authored graph code and policy while retaining Nx's daemon and task cache. */
 function implementationRevision() {
-  return createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"))).update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex");
+  return createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"))).update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex");
 }
 
 function invokeCurrentImplementation(kind, args) {
@@ -899,4 +967,4 @@ export default {
   createDependencies,
 };
 
-export const cacheInternals = { runtimeComponentClosure, playgroundPreparationTargets, bunLockGraph, printDocumentTargets, targetPolicy, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, projectInputs, rootCommandTargets };
+export const cacheInternals = { declaredSourceInputs, withWasmTooling, runtimeComponentClosure, playgroundPreparationTargets, bunLockGraph, printDocumentTargets, targetPolicy, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, projectInputs, rootCommandTargets };

@@ -10,10 +10,10 @@
 //! `Other{fourcc:"anim "}` marker -- this is a structurally-valid container capturing ONLY real
 //! timing, never a fabricated playable video, matching the ticket's "honest boundary" rule.
 
-use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
-use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
+use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };

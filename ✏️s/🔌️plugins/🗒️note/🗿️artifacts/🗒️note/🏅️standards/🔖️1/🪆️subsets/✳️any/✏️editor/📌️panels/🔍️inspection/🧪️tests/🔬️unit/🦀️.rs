@@ -1,6 +1,5 @@
-
-use crate::editor::note::NOTE_PLAY_BODY_PROPERTIES as BODY_PROPERTIES;
 use crate::editor::note::testkit::{note_app, render as render_body};
+use crate::editor::note::NOTE_PLAY_BODY_PROPERTIES as BODY_PROPERTIES;
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {

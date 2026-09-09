@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::default_snapshot;
 use crate::schema::mutations::delete_node;

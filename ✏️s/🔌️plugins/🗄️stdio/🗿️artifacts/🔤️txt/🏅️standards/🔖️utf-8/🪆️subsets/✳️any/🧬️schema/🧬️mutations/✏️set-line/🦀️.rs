@@ -1,8 +1,8 @@
 //! 🧬️ Direct set-line mutation owner.
 //#region 🔖️Payload
-use crate::TxtSnapshot;
 use crate::schema::diff::{TxtDiff, TxtLineModified, TxtLinesDiff};
 use crate::schema::mutation_support::{native_shape_error, native_snapshot_error, native_text_error, txt_u32_to_usize};
+use crate::TxtSnapshot;
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -21,10 +21,7 @@ pub type SetLinePayload = SetLineMutation;
 
 pub fn decode_set_line_payload(value: &dsl::DslValue) -> Result<SetLinePayload, String> {
     let fields = crate::schema::mutation_support::txt_required_object(value, &["index", "text"])?;
-    Ok(SetLinePayload {
-        index: crate::schema::mutation_support::txt_graphql_u32_variable(fields[0].1)?,
-        text: crate::schema::mutation_support::txt_unicode_string(fields[1].1, "text")?,
-    })
+    Ok(SetLinePayload { index: crate::schema::mutation_support::txt_graphql_u32_variable(fields[0].1)?, text: crate::schema::mutation_support::txt_unicode_string(fields[1].1, "text")? })
 }
 //#endregion 🔖️Payload
 

@@ -10,7 +10,7 @@
   "lCrMm": null,
   "thetaC": null,
   "deltaSigmaEd": null,
-  "deltaSigmaC": 90.0,
+  "deltaSigmaC": 90,
   "fatigueM": null,
   "nCycles": null,
   "vWeldEdKn": null,
@@ -25,6 +25,5 @@
   "shellTMm": null,
   "shellRMm": null,
   "sigmaEdShellMpa": null,
-  "annex": null,
-  "selectedCheckIndex": null
+  "annex": null
 }

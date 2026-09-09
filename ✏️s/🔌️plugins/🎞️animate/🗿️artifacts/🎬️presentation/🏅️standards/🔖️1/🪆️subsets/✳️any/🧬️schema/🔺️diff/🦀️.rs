@@ -21,10 +21,6 @@ pub struct PresentationDiff {
     pub schema: Option<String>,
     #[state(artifact)]
     pub presentation: Option<PresentationChild>,
-    #[state(presence)]
-    pub selected_ids: Option<PresentationStringList>,
-    #[state(config)]
-    pub engagement_input: Option<String>,
 }
 //#endregion 🔖️Diff
 

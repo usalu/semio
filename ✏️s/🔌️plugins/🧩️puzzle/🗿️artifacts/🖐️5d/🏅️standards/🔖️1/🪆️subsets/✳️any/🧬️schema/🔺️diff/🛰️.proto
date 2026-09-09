@@ -17,62 +17,14 @@ message Puzzle5dDiff {
   // @state artifact
   optional Puzzle5dKindCatalogs kind_catalogs = 6;
   // @state artifact
+  optional Puzzle5dKindCatalogsExtra kind_catalogs_extra = 10;
+  // @state artifact
   optional Puzzle5dKindCompatibilityDelta kind_compatibility = 7;
   // @state artifact
   optional Puzzle5dPartsDelta parts = 8;
   // @state artifact
   optional Puzzle5dFastenersDelta fasteners = 9;
-  // @state presence
-  optional Puzzle5dStringList selected_part_ids = 10;
-  // @state presence
-  optional Puzzle5dStringList selected_grip_ids = 11;
-  // @state presence
-  optional Puzzle5dStringList selected_fastener_ids = 12;
-  // @state presence
-  optional string active_utility_id = 13;
   // @state config
-  optional double camera2d_x = 14;
-  // @state config
-  optional double camera2d_y = 15;
-  // @state config
-  optional double camera2d_zoom = 16;
-  // @state config
-  optional double camera3d_position_x = 17;
-  // @state config
-  optional double camera3d_position_y = 18;
-  // @state config
-  optional double camera3d_position_z = 19;
-  // @state config
-  optional double camera3d_target_x = 20;
-  // @state config
-  optional double camera3d_target_y = 21;
-  // @state config
-  optional double camera3d_target_z = 22;
-  // @state config
-  optional double camera3d_zoom = 23;
-  // @state config
-  optional string selection_method = 24;
-  // @state config
-  optional bool grid_snap_enabled = 25;
-  // @state config
-  optional double grid_factor = 26;
-  // @state config
-  optional double suggestion_offset = 27;
-  // @state config
-  optional double overlap_budget = 28;
-  // @state config
-  optional uint32 fill_count = 29;
-  // @state config
-  optional uint32 brush_candidate_index = 30;
-  // @state config
-  optional string lod_mode = 31;
-  // @state config
-  // @state config
-  optional string runtime_extras_json = 33;
-  // @state artifact
-  optional string hovered_part_id = 34;
-  // @state artifact
-  optional int64 preview_seq = 35;
 }
 
 message Puzzle5dArtifact { string schema = 1; }
@@ -88,6 +40,7 @@ message Puzzle5dFastener { string id = 1; string source = 2; string target = 3; 
 message Puzzle5dKindCompatibility { string source = 1; string target = 2; bool bidirectional = 3; bool important = 4; Puzzle5dCompatSpecificity specificity = 5; }
 message Puzzle5dMeta { bool _placeholder = 1; }
 message Puzzle5dKindCatalogs { bool _placeholder = 1; }
+message Puzzle5dKindCatalogsExtra { bool _placeholder = 1; }
 
 message Puzzle5dKindCompatibilityList { repeated Puzzle5dKindCompatibility values = 1; }
 

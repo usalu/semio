@@ -2,12 +2,12 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioBrepEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
+use crate::editor::semio_brep::modes::edit;
+use crate::editor::semio_brep::modes::edit::windows::main;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::brep::schema::mutations::move_vertex::MoveVertex;
 use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::editor::semio_brep::modes::edit;
-use crate::editor::semio_brep::modes::edit::windows::main;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
@@ -109,7 +109,8 @@ impl ArtifactEditor for SemioBrepEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
@@ -133,13 +134,10 @@ impl ArtifactEditor for SemioBrepEditor {
         if action != "set-vertex" {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioBrepEditor")));
         }
-        let point = args
-            .and_then(|value| value.get("point"))
-            .and_then(DslValue::as_array)
-            .map_or([0.0, 0.0, 0.0], |array| {
-                let get = |index: usize| array.get(index).and_then(DslValue::as_f64).unwrap_or(0.0);
-                [get(0), get(1), get(2)]
-            });
+        let point = args.and_then(|value| value.get("point")).and_then(DslValue::as_array).map_or([0.0, 0.0, 0.0], |array| {
+            let get = |index: usize| array.get(index).and_then(DslValue::as_f64).unwrap_or(0.0);
+            [get(0), get(1), get(2)]
+        });
         Ok(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point }))
     }
 }

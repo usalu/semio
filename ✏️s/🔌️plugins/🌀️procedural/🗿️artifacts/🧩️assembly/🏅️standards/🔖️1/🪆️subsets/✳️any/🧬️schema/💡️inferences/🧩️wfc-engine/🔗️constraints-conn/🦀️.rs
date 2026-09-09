@@ -3,7 +3,7 @@
 //! crate, so this crate owns a minimal one rather than reaching into it).
 
 use crate::wfc_engine::bitset::PatternSet;
-use crate::wfc_engine::constraint::{AdjacencyView, Constraint, Exactness, PatternSelector};
+use crate::wfc_engine::constraint::{AdjacencyView, Constraint, PatternSelector};
 use crate::wfc_engine::domain::DomainStore;
 use crate::wfc_engine::error::ConstraintError;
 use crate::wfc_engine::ids::{NodeId, PatternId};
@@ -62,14 +62,6 @@ impl ConnectivityConstraint {
 }
 
 impl Constraint for ConnectivityConstraint {
-    fn name(&self) -> &'static str {
-        "connectivity"
-    }
-
-    fn exactness(&self) -> Exactness {
-        Exactness::Exact
-    }
-
     fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
         Ok(Vec::new())
     }
@@ -115,14 +107,6 @@ impl ReachabilityConstraint {
 }
 
 impl Constraint for ReachabilityConstraint {
-    fn name(&self) -> &'static str {
-        "reachability"
-    }
-
-    fn exactness(&self) -> Exactness {
-        Exactness::Exact
-    }
-
     fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
         Ok(Vec::new())
     }

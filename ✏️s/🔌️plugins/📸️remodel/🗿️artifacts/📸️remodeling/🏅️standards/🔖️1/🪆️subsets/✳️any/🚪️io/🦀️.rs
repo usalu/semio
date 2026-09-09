@@ -26,13 +26,13 @@ use semio_s_artifact_stdio_las::standards::v1_0::engine as las_engine;
 use semio_s_artifact_stdio_ply::standards::v1_0::engine as ply_engine;
 use semio_s_artifact_stdio_png::PngSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::{
-        subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv},
-        subsets::image::schema::snapshot::SemioImageSnapshot,
-        subsets::mesh::{
-            io::export::serializers::artifacts::{las::v1_0::any::SemioMeshToLas, ply::v1_0::any::SemioMeshToPly},
-            schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology},
-        },
-    };
+    subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv},
+    subsets::image::schema::snapshot::SemioImageSnapshot,
+    subsets::mesh::{
+        io::export::serializers::artifacts::{las::v1_0::any::SemioMeshToLas, ply::v1_0::any::SemioMeshToPly},
+        schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology},
+    },
+};
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"]

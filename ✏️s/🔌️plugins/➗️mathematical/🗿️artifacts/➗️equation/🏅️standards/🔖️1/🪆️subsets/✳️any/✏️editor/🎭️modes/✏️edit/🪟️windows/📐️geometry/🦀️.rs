@@ -1,8 +1,8 @@
 //! 📐️ Equation play app — the geometry window: the convex-hull/centroid canvas.
 
-use crate::EquationGeometry;
 use crate::editor::equation::geometry_layers_json;
-use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use crate::EquationGeometry;
+use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const MATH_PLAY_WINDOW_GEOMETRY: &str = "math-geometry";
@@ -33,7 +33,11 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(geometry: &EquationGeometry) -> UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(MATH_PLAY_BODY_GEOMETRY, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: geometry_layers_json(geometry), snapshot: None })
+    semio_framework_plugin::scene_surface(
+        MATH_PLAY_BODY_GEOMETRY,
+        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
+        &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: geometry_layers_json(geometry), snapshot: None },
+    )
 }
 //#endregion 🔖️Render
 

@@ -61,13 +61,22 @@ pub(crate) struct FixedOwnerVec<T, const N: usize = FIXED_OWNER_SLOTS> {
 }
 
 impl<T, const N: usize> FixedOwnerVec<T, N> {
+    /// 🧱️ Allocates the page directly on the heap. `Box::new(std::array::from_fn(..))` materializes the
+    /// whole array as a stack temporary first, which at document capacity is hundreds of kilobytes per
+    /// owner — enough to overflow a test thread's stack and far past any wasm guest's. `try_reserve_exact`
+    /// keeps allocation failure a handled `None` page (capacity zero) instead of an abort.
     pub(crate) fn new() -> Self {
         assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES);
-        Self { page: Some(Box::new(std::array::from_fn(|_| MaybeUninit::uninit()))), len: 0 }
+        let mut page: Vec<MaybeUninit<T>> = Vec::new();
+        if page.try_reserve_exact(N).is_err() {
+            return Self { page: None, len: 0 };
+        }
+        page.resize_with(N, MaybeUninit::uninit);
+        Self { page: page.into_boxed_slice().try_into().ok(), len: 0 }
     }
 
     pub(crate) const fn page_bytes() -> usize {
-        std::mem::size_of::<[MaybeUninit<T>; N]>()
+        size_of::<[MaybeUninit<T>; N]>()
     }
 
     #[cfg(test)]
@@ -155,13 +164,21 @@ pub(crate) enum FixedOwnerMapInsert<K, V> {
 }
 
 impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
+    /// 🧱️ Heap-only page allocation, for the same reason as [`FixedOwnerVec::new`]: a document-capacity
+    /// array built through `Box::new(std::array::from_fn(..))` is a stack temporary of the page's full
+    /// size before it ever reaches the heap.
     pub(crate) fn new() -> Self {
         assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES);
-        Self { page: Some(Box::new(std::array::from_fn(|_| None))), len: 0 }
+        let mut page: Vec<Option<(K, V)>> = Vec::new();
+        if page.try_reserve_exact(N).is_err() {
+            return Self { page: None, len: 0 };
+        }
+        page.resize_with(N, || None);
+        Self { page: page.into_boxed_slice().try_into().ok(), len: 0 }
     }
 
     pub(crate) const fn page_bytes() -> usize {
-        std::mem::size_of::<[Option<(K, V)>; N]>()
+        size_of::<[Option<(K, V)>; N]>()
     }
 
     pub(crate) const fn capacity(&self) -> usize {
@@ -918,7 +935,9 @@ pub(crate) enum CollisionMutationStep {
     Stale,
 }
 
-#[cfg(test)]
+/// 🗑️ Resumable withdrawal of one indexed owner — the production counterpart of
+/// [`CollisionIndexMutation`], driven one cell per step by the interactive brush lane's incremental
+/// scene sync so a deleted object leaves the broad phase without a whole-index rebuild.
 pub(crate) struct CollisionIndexRemoval {
     owner: CollisionIndexOwner,
     id: String,
@@ -967,6 +986,13 @@ impl CollisionQueryCursor {
 
     pub(crate) fn truncated(&self) -> bool {
         self.truncated
+    }
+
+    /// 📏️ Broad-phase work actually spent by this cursor — `(cells, members)`. The interactive brush
+    /// lane publishes it so a document-scale scene can prove the query touched only the cells its own
+    /// bounds span instead of every placed object.
+    pub(crate) fn examined(&self) -> (usize, usize) {
+        (self.examined_cells, self.examined_members)
     }
 
     pub(crate) fn retire_one_owner(&mut self) -> bool {
@@ -1027,6 +1053,21 @@ impl CollisionSpatialIndex {
     pub(crate) fn new(cell_size: f32) -> Self {
         assert!(cell_size.is_finite() && cell_size > 0.0);
         Self { cell_size, entries: FixedOwnerMap::new(), cells: FixedOwnerMap::new(), oversized: FixedOwnerSet::new(), retiring_key: None, retiring_bucket: None }
+    }
+
+    /// 📐️ World bounds already indexed for one owner id, or `None` when it was never admitted.
+    pub(crate) fn entry_bounds(&self, id: &str) -> Option<&CollisionAabb> {
+        self.entries.get(id)
+    }
+
+    /// 🔑️ Every indexed owner id, in the entries page's own sorted order — the incremental scene sync
+    /// walks it one id per step to withdraw owners the new scene no longer carries.
+    pub(crate) fn entry_ids(&self) -> impl Iterator<Item = &String> {
+        self.entries.keys()
+    }
+
+    pub(crate) fn entry_len(&self) -> usize {
+        self.entries.len()
     }
 
     pub(crate) fn begin_replacement(&self, owner: CollisionIndexOwner, id: String, bounds: CollisionAabb) -> CollisionIndexMutation {
@@ -1163,13 +1204,11 @@ impl CollisionSpatialIndex {
         CollisionMutationStep::Rejected(CollisionIndexRejectedOwner::Capacity(std::mem::take(&mut mutation.id)))
     }
 
-    #[cfg(test)]
     pub(crate) fn begin_removal(&self, owner: CollisionIndexOwner, id: String) -> Option<CollisionIndexRemoval> {
         let bounds = *self.entries.get(id.as_str())?;
         Some(CollisionIndexRemoval { owner, id, span: CollisionCellSpan::new(self.cell_size, bounds), cursor: 0, complete: false })
     }
 
-    #[cfg(test)]
     pub(crate) fn step_removal(&mut self, removal: &mut CollisionIndexRemoval, current: CollisionIndexOwner) -> CollisionMutationStep {
         if removal.owner != current {
             return CollisionMutationStep::Stale;

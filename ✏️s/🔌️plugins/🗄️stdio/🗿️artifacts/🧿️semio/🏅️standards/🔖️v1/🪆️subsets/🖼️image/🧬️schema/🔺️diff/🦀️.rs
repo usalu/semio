@@ -9,10 +9,9 @@
 //! following the docx/gif precedent (`f6-docx-ecma-376-report.md`, `f6-final-summary.md` §4.4). No
 //! `snapshot: Option<SemioImageSnapshot>` full-replace slot anywhere.
 
-use crate::standards::v1::subsets::base::schema::triples::{
-    dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff,
-};
+use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — the `#[cfg(test)] mod tests` block below calls `print_diff`/`parse_diff`/
 /// `encode_diff`/`decode_diff` via method syntax on `SemioImageDiff`, which needs `DiffCodec` in
@@ -20,7 +19,6 @@ use protocol::command::DiffAlgebra;
 /// but callers using method syntax do not get the trait for free) (W2b closer fix).
 use protocol::DiffCodec;
 use protocol::MutationDiff;
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️FrameDiff
 /// 🔺️ Sparse per-field diff for one [`SemioImageFrame`] — a strong entity, per the recipe.

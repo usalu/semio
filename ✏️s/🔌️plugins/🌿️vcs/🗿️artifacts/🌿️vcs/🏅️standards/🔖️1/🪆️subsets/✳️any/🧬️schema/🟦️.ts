@@ -13,9 +13,6 @@ export interface VcsArtifact {
   status: string;
   /** @state artifact */
   tags: string[];
-  /** @state presence */
-  selectedCheckpointIds: string[];
-  /** @state config */
 }
 
 //#region 🚪️Parsers
@@ -74,6 +71,5 @@ export function parseVcsArtifact(value: unknown, at = "$"): VcsArtifact {
     notes: vcsVcsArtifactGuardString(row["notes"], `${at}.notes`),
     status: vcsVcsArtifactGuardString(row["status"], `${at}.status`),
     tags: vcsVcsArtifactGuardArray(row["tags"], `${at}.tags`).map((item, index) => vcsVcsArtifactGuardString(item, `${at}.tags[${index}]`)),
-    selectedCheckpointIds: vcsVcsArtifactGuardArray(row["selectedCheckpointIds"], `${at}.selectedCheckpointIds`).map((item, index) => vcsVcsArtifactGuardString(item, `${at}.selectedCheckpointIds[${index}]`)),
   };
 }

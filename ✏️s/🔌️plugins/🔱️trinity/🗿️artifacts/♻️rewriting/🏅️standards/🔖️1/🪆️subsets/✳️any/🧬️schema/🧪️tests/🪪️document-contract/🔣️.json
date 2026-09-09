@@ -1,0 +1,58 @@
+{
+  "validBindings": [
+    null,
+    true,
+    1.25,
+    "label",
+    [
+      null,
+      false,
+      2
+    ],
+    {
+      "nested": [
+        {
+          "value": null
+        }
+      ]
+    }
+  ],
+  "invalidDocuments": [
+    {
+      "field": "camera",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      }
+    },
+    {
+      "field": "ruleLayout",
+      "value": {
+        "node": {
+          "x": 1
+        }
+      }
+    },
+    {
+      "field": "ruleLayout",
+      "value": {
+        "node": {
+          "x": 1,
+          "y": 2,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "field": "parameterBindings",
+      "value": []
+    }
+  ],
+  "invalidDynamic": [
+    "undefined",
+    "not-a-number",
+    "positive-infinity",
+    "function"
+  ]
+}

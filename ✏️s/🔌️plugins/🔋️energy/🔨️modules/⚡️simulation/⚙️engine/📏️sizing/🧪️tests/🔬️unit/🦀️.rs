@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::model::EntityId;
 use crate::model::{Model, Site, Zone};

@@ -4,8 +4,8 @@
 //! flattened block count, and `wordCount` a real sum over every `Text` block's run text.
 
 use crate::{NoteBlockNode, NoteSnapshot};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 fn block_name(block: &NoteBlockNode) -> &str {

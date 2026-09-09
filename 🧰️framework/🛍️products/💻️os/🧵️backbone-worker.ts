@@ -7,6 +7,8 @@
  */
 // #endregion Header
 
+import { parseDirectorySessionAuthorityJsonV1, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
+
 import type {
   ArtifactBootstrapControl,
   ArtifactBootstrapProgress,
@@ -55,6 +57,7 @@ import {
   decodeBackboneWorkerRequest,
   decodeBackboneWorkerResponse,
   decodeDocumentPackBytes,
+  decodeAppCommand,
   decodePackWire,
   decodePackValue,
   documentRuntimeKeyV1,
@@ -62,24 +65,31 @@ import {
   encodeBackboneWorkerRequest,
   encodeBackboneWorkerResponse,
   encodeDocumentPackBytes,
+  encodeAppCommand,
   encodePackValue,
   isPackInteger,
   packUIntSafeOrNull,
   packWireNatural,
+  BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
   parseBrowserBrokerPortRequestV1,
   parseDocumentBackboneMessage,
   parseSocketGrantReceiptV1,
   socketGrantProtocolsV1,
 } from "./🟦️";
 import type { PackValue } from "./🟦️";
+import { parseInferenceJobReconcileRequestV1, parseInferenceJobReconcileResultV1 } from "../../../🌎️hub/💡️inference/🧬️schema/🟦️.ts";
 import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1, sealSpaceArtifactCreateV1, type SpaceArtifactCreationCatalogV1 as HubSpaceArtifactCreationCatalogV1, type SpaceArtifactCreationStatusV1 as HubSpaceArtifactCreationStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
 import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
 import { BROWSER_ACTOR_CHILD_LIMITS, measureChildValue } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
 import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
-import { actorInstanceCapturedReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
+import { createShardCommandIngressPages } from "../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt } from "../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
+import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, parseBrowserActorActionRequestV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
+import { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, encodeBrowserActorHostEffectV1, requireBrowserActorCommandBackboneProjectionV1, type BrowserActorCommandBackboneEnvelopeV1, type BrowserActorCommandPublicationV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
+import { ActorDocumentBindingV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1 } from "./🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { parseBrowserActorViewStateRequest } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
 import { windowViewContext, type ResolvedPluginViewState } from "../../🔨️modules/🛂️manifest/🟦️.ts";
 import type {
@@ -96,6 +106,7 @@ import type {
   GisMapApprovalUndoHandleV1,
   GisMapApprovalUndoReceiptV1,
   GisMapInferenceApprovalReceiptV1,
+  GisMapInferenceJobRequestV1,
   GisMapInferencePortCodeV1,
   GisMapInferencePortEventV1,
   GisMapInferencePortStatusV1,
@@ -210,7 +221,11 @@ function dispatchBackboneWorkerRequest(request: BackboneWorkerRequest, host: Rus
     typescriptDispatch(request);
     return;
   }
-  if (request.kind === "browser-actor-ui-patch-result" || request.kind === "browser-actor-view-state") {
+  if (request.kind === "browser-actor-action" || request.kind === "browser-actor-ui-patch-result" || request.kind === "browser-actor-view-state") {
+    typescriptDispatch(request);
+    return;
+  }
+  if (request.kind === "inference-open" || request.kind === "inference-propose" || request.kind === "inference-poll" || request.kind === "inference-cancel" || request.kind === "inference-approve" || request.kind === "inference-close" || request.kind === "inference-history-undo") {
     typescriptDispatch(request);
     return;
   }
@@ -485,6 +500,9 @@ const BROWSER_BROKER_PROOF_DOMAIN = new TextEncoder().encode("semio/browser-brok
 const BROWSER_BROKER_PROOF_TTL_MS = 15_000;
 let socketGrantTestIssue: ((baseUrl: string, path: string, signal?: AbortSignal) => Promise<SocketGrantReceiptV1>) | null = null;
 let localBrowserBrokerProof: Uint8Array | undefined;
+let localBrowserBrokerOwner: object = {};
+let localBrowserBrokerAdmission: object = {};
+let browserSessionAuthority: DirectorySessionAuthorityV1 | null = null;
 let localBrowserBrokerProofExpiresAtMs = 0;
 let localBrowserBrokerQueue: Promise<void> = Promise.resolve();
 let localBrowserBrokerQueued = 0;
@@ -510,6 +528,55 @@ async function browserBrokerProofDigest(value: Uint8Array): Promise<Uint8Array> 
 }
 
 function clearLocalBrowserBrokerProof(): void {
+  localBrowserBrokerAdmission = {};
+  consumeLocalBrowserBrokerProof();
+  retireBrowserSessionAuthority();
+}
+
+/** 🪪️ Retires authenticated work without forgetting an already submitted inference request. */
+function retireBrowserSessionAuthority(): void {
+  if (browserSessionAuthority === null) return;
+  browserSessionAuthority = null;
+  directorySessionEpoch += 1;
+  closeDirectory();
+  if (inferencePort !== null) {
+    inferencePort.closeRequested = true;
+    terminateInferencePort(inferencePort, "inference.transport");
+  }
+  if (inferenceApprovalUndoOwner !== null) retireInferenceApprovalUndo(inferenceApprovalUndoOwner);
+  for (const [runtimeKey, state] of artifacts) {
+    const binding = hubBinding(state.config);
+    if (binding === null) continue;
+    emitExecutionTargetStatus(state, binding, "stale");
+    post({ ...artifactBootstrapFailure(state, new Error("document authority cancelled")), retryable: false });
+    closeArtifactRuntime(runtimeKey);
+  }
+}
+
+/** 🔐️ Installs only the server's canonical authority after the broker has advanced its proof. */
+async function acceptBrowserSessionAuthority(response: FetchTimeoutResponse, admission: object, signal?: AbortSignal): Promise<FetchTimeoutResponse> {
+  if (response.status !== 200) throw new Error("directory session authority: unexpected response");
+  const assertCurrent = (): void => {
+    if (admission !== localBrowserBrokerAdmission) throw new Error("browser broker owner retired");
+  };
+  const bytes = await readBoundedExecutionTargetBody(response, null, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, { signal: signal ?? new AbortController().signal, deadlineAtMs: Date.now() + 2000, assertCurrent }, () => {});
+  assertCurrent();
+  const body = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  const authority = Object.freeze(parseDirectorySessionAuthorityJsonV1(body));
+  if (authority.expiresAt <= Date.now()) throw new Error("directory session authority: expired");
+  const current = browserSessionAuthority;
+  if (current !== null && (current.sessionBindingSha256 !== authority.sessionBindingSha256 || current.authorizationGeneration !== authority.authorizationGeneration)) {
+    localBrowserBrokerAdmission = {};
+    retireBrowserSessionAuthority();
+  } else if (current !== null && (current.userId !== authority.userId || current.expiresAt !== authority.expiresAt || current.sessionKind !== authority.sessionKind)) {
+    throw new Error("directory session authority: contradictory binding");
+  }
+  browserSessionAuthority = authority;
+  return { ok: response.ok, status: response.status, statusText: response.statusText, headers: response.headers, text: async () => body, json: async () => JSON.parse(body) };
+}
+
+function consumeLocalBrowserBrokerProof(): void {
+  localBrowserBrokerOwner = {};
   localBrowserBrokerProof?.fill(0);
   localBrowserBrokerProof = undefined;
   localBrowserBrokerProofExpiresAtMs = 0;
@@ -521,13 +588,17 @@ function installLocalBrowserBrokerProof(proof: string): boolean {
     decoded?.fill(0);
     return false;
   }
+  retireBrowserSessionAuthority();
   localBrowserBrokerProof = decoded;
+  localBrowserBrokerOwner = {};
+  localBrowserBrokerAdmission = {};
   localBrowserBrokerProofExpiresAtMs = Date.now() + BROWSER_BROKER_PROOF_TTL_MS;
   return true;
 }
 
-async function browserBrokerFetch(input: string, init: RequestInit = {}, options: { readonly timeoutMs: number; readonly signal?: AbortSignal }): Promise<FetchTimeoutResponse> {
+async function browserBrokerFetch(input: string, init: RequestInit = {}, options: { readonly timeoutMs: number; readonly signal?: AbortSignal; readonly admit?: () => boolean; readonly retain?: () => boolean; readonly accept?: (response: FetchTimeoutResponse, admission: object) => Promise<FetchTimeoutResponse> }): Promise<FetchTimeoutResponse> {
   if (options.signal?.aborted) throw options.signal.reason ?? new Error("browser broker cancelled");
+  const admission = localBrowserBrokerAdmission;
   if (localBrowserBrokerQueued >= 64) throw new Error("browser broker capacity exceeded");
   localBrowserBrokerQueued += 1;
   let resolveTurn: () => void = () => undefined;
@@ -537,6 +608,8 @@ async function browserBrokerFetch(input: string, init: RequestInit = {}, options
   });
   await prior;
   try {
+    if (options.signal?.aborted) throw options.signal.reason ?? new Error("browser broker cancelled");
+    if (admission !== localBrowserBrokerAdmission || options.admit?.() === false) throw new Error("browser broker owner retired");
     const current = localBrowserBrokerProof;
     if (!current || Date.now() > localBrowserBrokerProofExpiresAtMs) {
       clearLocalBrowserBrokerProof();
@@ -544,8 +617,14 @@ async function browserBrokerFetch(input: string, init: RequestInit = {}, options
     }
     const next = crypto.getRandomValues(new Uint8Array(32));
     const nextDigest = await browserBrokerProofDigest(next);
+    if (options.signal?.aborted || admission !== localBrowserBrokerAdmission || options.admit?.() === false) {
+      next.fill(0);
+      nextDigest.fill(0);
+      throw new Error("browser broker owner retired");
+    }
     const currentHex = bytesHex(current);
-    clearLocalBrowserBrokerProof();
+    consumeLocalBrowserBrokerProof();
+    const owner = localBrowserBrokerOwner;
     try {
       const response = await fetchWithTimeout(
         input,
@@ -555,6 +634,7 @@ async function browserBrokerFetch(input: string, init: RequestInit = {}, options
         },
         options,
       );
+      if (admission !== localBrowserBrokerAdmission || localBrowserBrokerOwner !== owner || (options.retain ?? options.admit)?.() === false) throw new Error("browser broker owner retired");
       if (response.headers.get("x-semio-browser-broker-advanced") === "1" && response.status !== 401) {
         localBrowserBrokerProof = next;
         localBrowserBrokerProofExpiresAtMs = Date.now() + BROWSER_BROKER_PROOF_TTL_MS;
@@ -564,10 +644,11 @@ async function browserBrokerFetch(input: string, init: RequestInit = {}, options
         throw new Error("browser broker rebootstrap required");
       }
       nextDigest.fill(0);
-      return response;
+      return options.accept === undefined ? response : await options.accept(response, admission);
     } catch {
       next.fill(0);
       nextDigest.fill(0);
+      if (localBrowserBrokerOwner === owner) clearLocalBrowserBrokerProof();
       throw new Error("browser broker rebootstrap required");
     }
   } finally {
@@ -576,8 +657,19 @@ async function browserBrokerFetch(input: string, init: RequestInit = {}, options
   }
 }
 
+/** 🔌️ Retires one private port and every body reader it admitted before a successor attaches. */
+function detachLocalBrokerPort(): void {
+  if (localBrowserBrokerPort === undefined) return;
+  localBrowserBrokerPort.onmessage = null;
+  localBrowserBrokerPort.close();
+  localBrowserBrokerPort = undefined;
+  clearLocalBrowserBrokerProof();
+  for (const controller of localBrowserBrokerRpcControllers.values()) controller.abort(new Error("browser broker port retired"));
+  localBrowserBrokerRpcControllers.clear();
+}
+
 function attachLocalBrokerPort(port: MessagePort): void {
-  localBrowserBrokerPort?.close();
+  detachLocalBrokerPort();
   localBrowserBrokerPort = port;
   port.onmessage = (event: MessageEvent<unknown>) => {
     const message = parseBrowserBrokerPortRequestV1(event.data);
@@ -600,7 +692,7 @@ function attachLocalBrokerPort(port: MessagePort): void {
     const requestId = message.requestId;
     const controller = new AbortController();
     localBrowserBrokerRpcControllers.set(requestId, controller);
-    void browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 2_000, signal: controller.signal })
+    void browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 2_000, signal: controller.signal, accept: (response, admission) => acceptBrowserSessionAuthority(response, admission, controller.signal) })
       .then(async (response) => {
         const body = await response.text();
         const result: BrowserBrokerPortResponseV1 = { kind: "response", requestId, status: response.status, body };
@@ -610,7 +702,9 @@ function attachLocalBrokerPort(port: MessagePort): void {
         const result: BrowserBrokerPortResponseV1 = { kind: "response", requestId, status: error instanceof Error && error.message === "browser broker rebootstrap required" ? 428 : 503, body: "" };
         port.postMessage(result);
       })
-      .finally(() => localBrowserBrokerRpcControllers.delete(requestId));
+      .finally(() => {
+        if (localBrowserBrokerRpcControllers.get(requestId) === controller) localBrowserBrokerRpcControllers.delete(requestId);
+      });
   };
   port.start();
 }
@@ -1272,6 +1366,20 @@ function browserActorCapturedReceipt(value: BrowserActorChildValue, request: Act
   return receipt;
 }
 
+function browserActorCloseReceipt(value: BrowserActorChildValue, request: ActorInstanceCloseRequest, accepted: ActorInstanceLifecycleReceipt | null): ActorInstanceLifecycleReceipt | null {
+  const raw = unwrapBrowserActorOption(browserActorTurnResult(value).lifecycleReceipt);
+  if (raw === undefined) return null;
+  const tagged = browserActorRecord(raw, "document browser actor: invalid close receipt");
+  const body = browserActorRecord(tagged.val, "document browser actor: invalid close receipt body");
+  if (tagged.tag !== "accepted" && tagged.tag !== "retired") throw new Error("document browser actor: invalid close receipt phase");
+  const sequence = body.requestSequence,
+    closeGeneration = body.closeGeneration;
+  if (typeof sequence !== "bigint" || sequence < 1n || sequence > BigInt(Number.MAX_SAFE_INTEGER) || typeof closeGeneration !== "bigint" || closeGeneration < 1n || closeGeneration > 0xffffffffffffffffn) throw new Error("document browser actor: invalid close receipt authority");
+  const receipt: ActorInstanceLifecycleReceipt = { kind: tagged.tag, lifetime: parseColdDocumentPairLifetime(body.lifetime), requestSequence: Number(sequence), closeGeneration };
+  if (!actorInstanceCloseReceiptMatches(request, accepted, receipt)) throw new Error("document browser actor: close receipt mismatch");
+  return receipt;
+}
+
 function browserActorColdStatus(value: BrowserActorChildValue, allowLifecycleReceipt = false): ColdPairIngressStatus {
   const result = browserActorTurnResult(value);
   if (!allowLifecycleReceipt && unwrapBrowserActorOption(result.lifecycleReceipt) !== undefined) throw new Error("document browser actor: unexpected lifecycle receipt");
@@ -1286,9 +1394,173 @@ function browserActorTurnBudget(): BrowserActorChildValue {
   return { fuel: 80_000_000n, deadlineMs: BROWSER_ACTOR_CHILD_LIMITS.invokeMs, maxEffects: 512, maxPatchBytes: 2_097_152, maxFrames: 8 };
 }
 
+function browserActorBytes(value: BrowserActorChildValue | undefined, code: string): Uint8Array {
+  if (value instanceof Uint8Array) return value.slice();
+  if (!Array.isArray(value) || value.length === 0 || value.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || value.some((byte) => typeof byte !== "number" || !Number.isInteger(byte) || byte < 0 || byte > 255)) throw new Error(code);
+  return Uint8Array.from(value);
+}
+
+function validateBrowserActorUiValues(values: readonly PackValue[]): void {
+  const encoder = new TextEncoder(),
+    pending = values.map(value => ({ value, depth: 0 }));
+  let items = 0;
+  while (pending.length > 0) {
+    const entry = pending.pop()!;
+    items++;
+    if (items > 256 || entry.depth > 256) throw new Error("document browser actor: intent value capacity");
+    if (entry.value === null || typeof entry.value === "boolean") continue;
+    if (typeof entry.value === "number") {
+      if (!Number.isFinite(entry.value)) throw new Error("document browser actor: invalid intent number");
+      continue;
+    }
+    if (typeof entry.value === "string") {
+      if (encoder.encode(entry.value).byteLength > 512) throw new Error("document browser actor: intent text capacity");
+      continue;
+    }
+    if (isPackInteger(entry.value)) throw new Error("document browser actor: invalid intent value integer");
+    if (Array.isArray(entry.value)) {
+      if (entry.value.length > 256) throw new Error("document browser actor: intent value capacity");
+      for (let index = entry.value.length - 1; index >= 0; index--) pending.push({ value: entry.value[index]!, depth: entry.depth + 1 });
+      continue;
+    }
+    if (entry.value === null || typeof entry.value !== "object" || entry.value instanceof Uint8Array) throw new Error("document browser actor: invalid intent value");
+    const fields = Object.entries(entry.value);
+    if (fields.length > 256) throw new Error("document browser actor: intent value capacity");
+    for (let index = fields.length - 1; index >= 0; index--) {
+      const [key, value] = fields[index]!;
+      if (encoder.encode(key).byteLength > 512) throw new Error("document browser actor: intent text capacity");
+      pending.push({ value, depth: entry.depth + 1 });
+    }
+  }
+}
+
+function browserActorUiIntentBytes(request: BrowserActorActionRequestV1, windowKindId: string): Uint8Array {
+  if (request.payload.kind !== "ui-intent") throw new Error("document browser actor: invalid intent payload");
+  const bytes = Uint8Array.from(request.payload.bytes),
+    decoded = decodePackValue(bytes),
+    encoder = new TextEncoder();
+  if (decoded === null || typeof decoded !== "object" || Array.isArray(decoded)) throw new Error("document browser actor: invalid intent record");
+  const value = decoded as Readonly<Record<string, PackValue>>,
+    keys = ["action", "args", "input", "node", "nodeKey", "revision", "seq", "surface", "trigger"];
+  if (Object.keys(value).sort().join(",") !== keys.sort().join(",")) throw new Error("document browser actor: invalid intent fields");
+  const action = value.action;
+  if (action === null || typeof action !== "object" || Array.isArray(action)) throw new Error("document browser actor: invalid intent action");
+  const actionRecord = action as Readonly<Record<string, PackValue>>;
+  if (Object.keys(actionRecord).sort().join(",") !== "name,scope,version" || typeof actionRecord.scope !== "string" || typeof actionRecord.name !== "string" || actionRecord.scope.length === 0 || actionRecord.name.length === 0 || encoder.encode(actionRecord.scope).byteLength > 512 || encoder.encode(actionRecord.name).byteLength > 512) throw new Error("document browser actor: invalid intent action");
+  const uint = (field: PackValue | undefined, maximum: bigint, code: string): bigint => {
+    if (!isPackInteger(field) || field.kind !== "uint" || field.value > maximum) throw new Error(code);
+    return field.value;
+  };
+  if (
+    value.surface !== `${request.instanceId}:${windowKindId}` ||
+    encoder.encode(value.surface).byteLength > 512 ||
+    uint(value.revision, BigInt(Number.MAX_SAFE_INTEGER), "document browser actor: invalid intent revision") !== BigInt(request.surfaceRevision) ||
+    uint(value.node, BigInt(Number.MAX_SAFE_INTEGER), "document browser actor: invalid intent node") > BigInt(Number.MAX_SAFE_INTEGER) ||
+    uint(actionRecord.version, 0xffffn, "document browser actor: invalid intent action version") > 0xffffn ||
+    uint(value.seq, 0xffffffffffffffffn, "document browser actor: invalid intent sequence") > 0xffffffffffffffffn ||
+    typeof value.nodeKey !== "string" || encoder.encode(value.nodeKey).byteLength > 512 ||
+    typeof value.trigger !== "string" || !["abort", "activate", "change", "commit", "delta", "drop", "hoverPreview", "repeatLast", "submit"].includes(value.trigger)
+  ) throw new Error("document browser actor: intent owner mismatch");
+  validateBrowserActorUiValues([value.args, value.input]);
+  const canonical = encodePackValue(value);
+  if (canonical.byteLength !== bytes.byteLength || canonical.some((byte, index) => byte !== bytes[index])) throw new Error("document browser actor: noncanonical intent");
+  return bytes;
+}
+
+function browserActorExactRecord(value: PackValue | undefined, fields: readonly string[], code: string): Readonly<Record<string, PackValue>> {
+  if (value === null || typeof value !== "object" || Array.isArray(value) || value instanceof Uint8Array) throw new Error(code);
+  const record = value as Readonly<Record<string, PackValue>>;
+  if (Object.keys(record).sort().join(",") !== [...fields].sort().join(",")) throw new Error(code);
+  return record;
+}
+
+function browserActorPackRecord(value: PackValue | undefined, code: string): Readonly<Record<string, PackValue>> {
+  if (value === null || typeof value !== "object" || Array.isArray(value) || value instanceof Uint8Array) throw new Error(code);
+  return value as Readonly<Record<string, PackValue>>;
+}
+
+function browserActorOwnedText(value: PackValue | undefined, expected: string | null, code: string): string {
+  if (typeof value !== "string" || value.length === 0 || new TextEncoder().encode(value).byteLength > 256 || (expected !== null && value !== expected)) throw new Error(code);
+  return value;
+}
+
+function browserActorAppCommandBytes(request: BrowserActorActionRequestV1, fields: DocumentExecutionTargetLeaseFieldsV1): Uint8Array {
+  if (request.payload.kind !== "app-command") throw new Error("document browser actor: invalid command payload");
+  const bytes = Uint8Array.from(request.payload.bytes),
+    command = decodeAppCommand(bytes);
+  if (!("Command" in command) || command.Command.seq !== request.actionSequence) throw new Error("document browser actor: command sequence mismatch");
+  const canonical = encodeAppCommand(command);
+  if (canonical.byteLength !== bytes.byteLength || canonical.some((byte, index) => byte !== bytes[index])) throw new Error("document browser actor: noncanonical command");
+  const invocationBytes = Uint8Array.from(command.Command.command),
+    viewStateBytes = Uint8Array.from(command.Command.view_state),
+    invocation = browserActorExactRecord(decodePackValue(invocationBytes), ["address", "arguments"], "document browser actor: invalid command invocation"),
+    rawAddress = browserActorPackRecord(invocation.address, "document browser actor: invalid command address"),
+    address = browserActorExactRecord(rawAddress, Object.hasOwn(rawAddress, "pluginId") ? ["actionId", "appId", "modeId", "pluginId", "windowInstanceId", "windowKindId"] : ["commandId", "owner"], "document browser actor: invalid command address"),
+    viewState = browserActorPackRecord(decodePackValue(viewStateBytes), "document browser actor: invalid command view state"),
+    invocationCanonical = encodePackValue(invocation),
+    viewStateCanonical = encodePackValue(viewState);
+  validateBrowserActorUiValues([invocation.arguments, viewState]);
+  if (invocationCanonical.byteLength !== invocationBytes.byteLength || invocationCanonical.some((byte, index) => byte !== invocationBytes[index]) || viewStateCanonical.byteLength !== viewStateBytes.byteLength || viewStateCanonical.some((byte, index) => byte !== viewStateBytes[index])) throw new Error("document browser actor: noncanonical command values");
+  const pluginId = fields.package.pluginId,
+    appId = fields.surface.appId,
+    windowKindId = fields.surface.windowKindId;
+  if ("pluginId" in address) {
+    browserActorOwnedText(address.pluginId, pluginId, "document browser actor: command owner mismatch");
+    browserActorOwnedText(address.appId, appId, "document browser actor: command owner mismatch");
+    browserActorOwnedText(address.modeId, null, "document browser actor: invalid command mode");
+    browserActorOwnedText(address.windowKindId, windowKindId, "document browser actor: command owner mismatch");
+    browserActorOwnedText(address.windowInstanceId, windowKindId, "document browser actor: command owner mismatch");
+    browserActorOwnedText(address.actionId, null, "document browser actor: invalid command action");
+  } else {
+    browserActorOwnedText(address.commandId, null, "document browser actor: invalid command id");
+    if (address.owner === "os") throw new Error("document browser actor: command owner mismatch");
+    const rawOwner = browserActorPackRecord(address.owner, "document browser actor: invalid command owner"),
+      ownerKeys = Object.keys(rawOwner);
+    if (ownerKeys.length !== 1) throw new Error("document browser actor: invalid command owner");
+    const ownerKind = ownerKeys[0],
+      ownerRecord = browserActorExactRecord(rawOwner, [ownerKind!], "document browser actor: invalid command owner");
+    if (ownerKind !== "plugin" && ownerKind !== "app" && ownerKind !== "mode") throw new Error("document browser actor: invalid command owner");
+    const ownerFields = browserActorExactRecord(ownerRecord[ownerKind], ownerKind === "plugin" ? ["pluginId"] : ownerKind === "app" ? ["appId", "pluginId"] : ["appId", "modeId", "pluginId"], "document browser actor: invalid command owner");
+    browserActorOwnedText(ownerFields.pluginId, pluginId, "document browser actor: command owner mismatch");
+    if (ownerKind !== "plugin") browserActorOwnedText(ownerFields.appId, appId, "document browser actor: command owner mismatch");
+    if (ownerKind === "mode") browserActorOwnedText(ownerFields.modeId, typeof viewState.activeModeId === "string" ? viewState.activeModeId : null, "document browser actor: command owner mismatch");
+  }
+  if (viewState.activeWindowKindId !== undefined && viewState.activeWindowKindId !== windowKindId) throw new Error("document browser actor: command view owner mismatch");
+  if (viewState.windowId !== undefined && viewState.windowId !== windowKindId) throw new Error("document browser actor: command view owner mismatch");
+  return bytes;
+}
+
+function browserActorActionDisposition(request: BrowserActorActionRequestV1, outcome: "guest-applied" | "rejected", mutationCount: number, hostEffects: readonly (readonly number[])[] = [], reason?: string): BrowserActorActionResultV1 {
+  return {
+    kind: "browser-actor-action-result",
+    scope: { ...request.scope },
+    verifiedSurfaceId: request.verifiedSurfaceId,
+    appChannelVersion: request.appChannelVersion,
+    activationGeneration: request.activationGeneration,
+    instanceId: request.instanceId,
+    surfaceRevision: request.surfaceRevision,
+    actionSequence: request.actionSequence,
+    outcome,
+    mutationCount,
+    hostEffects,
+    ...(reason === undefined ? {} : { reason }),
+  };
+}
+
+type BrowserActorActionPublication = { readonly kind: "ui-intent" | "app-command"; readonly sequence: number; frames: number; readonly hostEffects: (readonly number[])[] };
+
+function browserActorCommandIngressStatus(value: BrowserActorChildValue): string {
+  const ingress = browserActorRecord(browserActorTurnResult(value).commandIngress, "document browser actor: invalid command ingress"),
+    tag = ingress.tag;
+  if (typeof tag !== "string" || !["idle", "page-accepted", "backpressure", "command-pending", "command-complete", "fault"].includes(tag)) throw new Error("document browser actor: invalid command ingress");
+  return tag;
+}
+
 /** 🧷️ Owns one document's reserved child; only the live private lease and exchanged grant select it. */
 class DocumentBrowserActorReservation {
   readonly generation: bigint;
+  private readonly scope: Readonly<{ spaceId: string; documentId: string }>;
+  private readonly windowKindId: string;
   private readonly abort = new AbortController();
   private child: DocumentBrowserActorChild | null = null;
   private activation: Promise<void> | null = null;
@@ -1299,25 +1571,123 @@ class DocumentBrowserActorReservation {
   private socket: WebSocket | null = null;
   private pendingUiPatch: { readonly offer: BrowserActorUiPatchOfferV1; readonly resolve: (result: BrowserActorUiPatchResultV1) => void; readonly reject: (error: Error) => void; readonly timer: ReturnType<typeof setTimeout> } | null = null;
   private renderedUiPatch = false;
+  private renderedUiRevision = 0;
+  private acknowledgedUiRevision = 0;
+  private mountedUiRevision = 0;
   private renderedViewState: ResolvedPluginViewState | null = null;
   private viewRefresh: Promise<void> | null = null;
+  private documentBinding: ActorDocumentBindingV1 | null = null;
+  private documentBindingGeneration = 0n;
+  private documentBackboneReady = false;
+  private pendingBackboneBeforeBinding: Uint8Array[] = [];
+  private pendingBackboneBeforeBindingBytes = 0;
+  private pollTail: Promise<void> = Promise.resolve();
+  private turnTail: Promise<void> = Promise.resolve();
+  private localEffectTail: Promise<void> = Promise.resolve();
+  private localEffectFailure: Error | null = null;
+  private lastActionSequence = 0;
+  private pendingActionSequence: number | null = null;
+  private retirement: Promise<"retired" | "unconfirmed"> | null = null;
   private closed = false;
+
+  get retirementOutcome(): Promise<"retired" | "unconfirmed"> | null {
+    return this.retirement;
+  }
+
+  private invokeWithPages(child: DocumentBrowserActorChild, events: BrowserActorChildValue[], commandPage: BrowserActorChildValue | null, coldPairPage: BrowserActorChildValue | null, assertCurrent: () => void, allowClosing = false): Promise<BrowserActorChildValue> {
+    const work = this.pollTail.then(async () => {
+      if ((!allowClosing && this.closed) || this.child !== child) throw new Error("document browser actor: closed poll lane");
+      assertCurrent();
+      const value = await child.invoke(["reactor", "poll"], [events, commandPage, coldPairPage, browserActorTurnBudget()]);
+      assertCurrent();
+      return value;
+    });
+    this.pollTail = work.then(() => {}, () => {});
+    return work;
+  }
+
+  private invokePoll(child: DocumentBrowserActorChild, events: BrowserActorChildValue[], coldPairPage: BrowserActorChildValue | null, assertCurrent: () => void, allowClosing = false): Promise<BrowserActorChildValue> {
+    return this.invokeWithPages(child, events, null, coldPairPage, assertCurrent, allowClosing);
+  }
+
+  private invokeCommandPage(child: DocumentBrowserActorChild, page: BrowserActorChildValue | null, assertCurrent: () => void): Promise<BrowserActorChildValue> {
+    return this.invokeWithPages(child, [], page, null, assertCurrent);
+  }
+
+  private enqueueTurn<T>(work: () => Promise<T>, allowClosing = false): Promise<T> {
+    const operation = this.turnTail.then(async () => {
+      if (this.closed && !allowClosing) throw new Error("document browser actor: closed turn lane");
+      return work();
+    });
+    this.turnTail = operation.then(() => {}, () => {});
+    return operation;
+  }
+
+  private currentDocumentSource() {
+    return { runtimeKey: this.state.runtimeKey, clientInstanceId: this.state.openClientInstanceId, scope: { ...this.scope } } as const;
+  }
+
+  private publishMountedIfReady(): void {
+    if (!this.renderedUiPatch || this.renderedUiRevision < 1 || this.acknowledgedUiRevision !== this.renderedUiRevision || this.mountedUiRevision !== 0 || this.documentBinding === null || !this.documentBackboneReady) return;
+    const cold = this.coldApplied;
+    if (cold === null) return;
+    cold.assertCurrent();
+    const identity = this.lease.fields(),
+      headEditOrdinal = cold.frontier.headEditOrdinal,
+      lastCommitSeq = cold.frontier.lastCommitSeq;
+    if (identity.browserActor.kind !== "closed-browser-actor") throw new Error("document browser actor: mounted identity mismatch");
+    if (headEditOrdinal > BigInt(Number.MAX_SAFE_INTEGER) || lastCommitSeq > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("document browser actor: mounted frontier capacity");
+    const frontier = {
+      documentId: cold.frontier.documentId,
+      headEditOrdinal: Number(headEditOrdinal),
+      headEditId: cold.frontier.headEditId,
+      lastCommitSeq: Number(lastCommitSeq),
+      chainHash: Array.from(cold.frontier.chainSha256),
+    };
+    if (
+      identity.checkpoint.baselineFrontier.documentId !== frontier.documentId ||
+      identity.checkpoint.baselineFrontier.headEditOrdinal !== frontier.headEditOrdinal ||
+      identity.checkpoint.baselineFrontier.headEditId !== frontier.headEditId ||
+      identity.checkpoint.baselineFrontier.lastCommitSeq !== frontier.lastCommitSeq ||
+      identity.checkpoint.baselineFrontier.chainHash.some((byte, index) => byte !== frontier.chainHash[index])
+    ) throw new Error("document browser actor: mounted checkpoint mismatch");
+    post({
+      kind: "browser-actor-ui-mounted",
+      scope: { ...identity.scope },
+      clientInstanceId: this.state.openClientInstanceId,
+      activationGeneration: this.generation.toString(),
+      instanceId: 0,
+      verifiedSurfaceId: identity.surface.surfaceId,
+      catalogGenerationId: identity.catalog.generationId,
+      componentSha256: identity.package.componentSha256,
+      descriptorSha256: identity.package.descriptorByteSha256,
+      browserActorSha256: identity.browserActor.sha256,
+      activeCheckpointId: identity.checkpoint.checkpointId,
+      descriptorDigestV1: identity.checkpoint.descriptorDigestV1,
+      frontier,
+      uiRevision: this.renderedUiRevision,
+    });
+    this.mountedUiRevision = this.renderedUiRevision;
+  }
 
   refreshHostView(): void {
     if (this.closed || !this.activation || this.viewRefresh) return;
+    const activation = this.activation;
     this.viewRefresh = (async () => {
-      await this.activation;
+      await activation;
       await this.coldTransfer;
-      const child = this.child;
-      if (!child || !this.coldApplied) return;
-      const assertCurrent = () => {
-        if (this.closed || this.state.socket !== this.socket || this.state.browserActorReservation !== this || documentBrowserActorLease(this.state) !== this.lease) throw new Error("document browser actor: stale host view");
-        this.lease.assertBrowserActorCurrent();
-      };
-      while (this.state.browserActorViewState !== null && this.state.browserActorViewState !== this.renderedViewState) {
-        assertCurrent();
-        await this.renderSurface(child, assertCurrent);
-      }
+      await this.enqueueTurn(async () => {
+        const child = this.child;
+        if (!child || !this.coldApplied) return;
+        const assertCurrent = () => {
+          if (this.closed || this.state.socket !== this.socket || this.state.browserActorReservation !== this || documentBrowserActorLease(this.state) !== this.lease) throw new Error("document browser actor: stale host view");
+          this.lease.assertBrowserActorCurrent();
+        };
+        while (this.state.browserActorViewState !== null && this.state.browserActorViewState !== this.renderedViewState) {
+          assertCurrent();
+          await this.renderSurface(child, assertCurrent);
+        }
+      });
     })().catch(() => {
       if (this.closed) return;
       const binding = hubBinding(this.state.config);
@@ -1330,6 +1700,246 @@ class DocumentBrowserActorReservation {
     const owner = this.coldApplied;
     if (owner !== null && this.renderedUiPatch) bindInferenceApprovalUndoToMountedPair(this.state, this, owner);
   }
+
+  private assertDocumentOwnerCurrent(): void {
+    if (this.closed || this.state.browserActorReservation !== this || documentBrowserActorLease(this.state) !== this.lease || this.lease.browserActorGrant() !== this.grant) throw new Error("actor-document-port.stale");
+    this.lease.assertBrowserActorCurrent();
+  }
+
+  private async routeTurnEffects(value: BrowserActorChildValue, mode: "ordinary" | "control" | BrowserActorActionPublication = "ordinary"): Promise<Readonly<{ receipts: readonly Uint8Array[]; mutations: number; publications: number; hostEffects: readonly (readonly number[])[] }>> {
+    const result = browserActorTurnResult(value),
+      effects = result.effects;
+    if (effects !== undefined && !Array.isArray(effects)) throw new Error("document browser actor: invalid effects");
+    const receipts: Uint8Array[] = [],
+      hostEffects: (readonly number[])[] = [],
+      messages: Readonly<{ payload: Uint8Array }>[] = [],
+      commandEnvelopes: BrowserActorCommandBackboneEnvelopeV1[] = [];
+    let mutations = 0,
+      publications = 0,
+      commandPublication: Extract<BrowserActorCommandPublicationV1, { readonly kind: "invocation" }> | null = null;
+    for (const raw of (effects ?? []) as BrowserActorChildValue[]) {
+      const effect = browserActorRecord(raw, "document browser actor: invalid effect");
+      if (effect.tag !== "send-message") {
+        if (typeof mode === "string") throw new Error("document browser actor: unsupported effect");
+        hostEffects.push(encodeBrowserActorHostEffectV1(effect));
+        continue;
+      }
+      const body = browserActorRecord(effect.val, "document browser actor: invalid message effect"),
+        target = browserActorRecord(body.target, "document browser actor: invalid message target"),
+        payload = browserActorBytes(body.payload, "document browser actor: invalid message payload");
+      if (target.tag === "shell") {
+        if (target.val !== 0) throw new Error("document browser actor: foreign shell effect");
+        if (mode === "control") receipts.push(payload);
+        else if (typeof mode !== "string") {
+          const publication = mode.kind === "ui-intent" ? decodeBrowserActorIntentPublicationV1(payload) : decodeBrowserActorCommandPublicationV1(payload, mode.sequence);
+          if (publication.kind === "error") throw new Error(publication.reason);
+          if (mode.kind === "app-command") commandPublication = publication as Extract<BrowserActorCommandPublicationV1, { readonly kind: "invocation" }>;
+          publications += 1;
+        } else throw new Error("document browser actor: foreign shell effect");
+        continue;
+      }
+      if (mode === "control") throw new Error("actor-document-control.data-before-receipt");
+      if (target.tag !== "backbone" || typeof target.val !== "string") throw new Error("document browser actor: unsupported message target");
+      if (!this.documentBackboneReady) throw new Error("actor-document-port.not-live");
+      const binding = this.documentBinding;
+      if (binding === null || target.val !== binding.port.uri) throw new Error("actor-document-port.foreign-uri");
+      const kind = documentBackboneEffectV1(payload),
+        parsed = kind === "mutations" ? parseDocumentBackboneMessage(payload) : null,
+        messageMutations = parsed?.envelopes.length ?? 0;
+      mutations += messageMutations;
+      if (mutations > BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM) throw new Error("document browser actor: mutation effect limit");
+      if (typeof mode !== "string" && mode.kind === "app-command" && parsed !== null) commandEnvelopes.push(...parsed.envelopes);
+      messages.push({ payload });
+    }
+    if (typeof mode !== "string" && mode.kind === "app-command" && (commandPublication !== null || commandEnvelopes.length !== 0)) {
+      if (commandPublication === null) throw new Error("action-publication-unprojected");
+      requireBrowserActorCommandBackboneProjectionV1(commandPublication, commandEnvelopes);
+    }
+    const retainedHostEffects = parseBrowserActorHostEffectBytesV1(hostEffects);
+    if (retainedHostEffects.length > 1) throw new Error("document browser actor: host effect limit");
+    for (const message of messages) {
+      const binding = this.documentBinding;
+      if (binding === null || !binding.port.send(binding.port.uri, message.payload)) throw new Error("actor-document-port.retired");
+    }
+    await this.localEffectTail;
+    if (this.localEffectFailure !== null) throw this.localEffectFailure;
+    return { receipts, mutations, publications, hostEffects: retainedHostEffects };
+  }
+
+  private async bindDocumentBackbone(child: DocumentBrowserActorChild): Promise<void> {
+    if (this.documentBinding !== null) return this.documentBinding.bind();
+    const owner = { ...this.currentDocumentSource(), actorId: this.grant.actorId, activationGeneration: this.generation, instanceId: 0 } as const,
+      binding = new ActorDocumentBindingV1(owner, ++this.documentBindingGeneration, {
+        current: () => {
+          try { this.assertDocumentOwnerCurrent(); return true; } catch { return false; }
+        },
+        assertActive: () => this.assertDocumentOwnerCurrent(),
+        limits: { messageBytes: BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, pendingBytes: DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes, pendingMessages: DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages },
+        send: payload => {
+          const kind = documentBackboneEffectV1(payload);
+          if (kind === "remote-ingest-receipt") return;
+          const work = this.localEffectTail.then(async () => {
+            if (this.localEffectFailure !== null) throw this.localEffectFailure;
+            const priorBytes = this.state.pendingDocumentBackboneBytes,
+              priorMessages = this.state.pendingDocumentBackboneMessages;
+            await handleLocalMsg(this.state, { kind: "documentBackbone", message: payload });
+            if (this.state.pendingDocumentBackboneMessages !== priorMessages + 1 || this.state.pendingDocumentBackboneBytes !== priorBytes + payload.byteLength) throw new Error("actor-document-port.admission-refused");
+          });
+          this.localEffectTail = work.then(
+            () => {},
+            error => { this.localEffectFailure = error instanceof Error ? error : new Error("actor-document-port.admission-refused"); },
+          );
+        },
+        exchange: async command => {
+          const exchange = async () => {
+            let result: BrowserActorChildValue | null = null;
+            try {
+              result = await this.invokePoll(
+                child,
+                [{ tag: "message", val: { source: { tag: "shell", val: 0 }, payload: encodeDocumentBackboneControlV1(command) } }],
+                null,
+                () => {
+                  if (this.child !== child || this.lifetime === null) throw new Error("actor-document-control.stale-child");
+                  if (command.operation !== "retire") this.assertDocumentOwnerCurrent();
+                },
+                command.operation === "retire",
+              );
+              if (browserActorColdStatus(result).kind !== "idle" || this.captureUiPatch(result, this.lifetime!) !== null) throw new Error("actor-document-control.unexpected-turn-output");
+              const routed = await this.routeTurnEffects(result, "control");
+              if (routed.mutations !== 0) throw new Error("actor-document-control.data-before-receipt");
+              return routed.receipts;
+            } finally {
+              if (result !== null) wipeBrowserActorValue(result);
+            }
+          };
+          return command.operation === "retire" ? this.enqueueTurn(exchange, true) : exchange();
+        },
+        deliver: async payload => {
+          await this.enqueueTurn(async () => {
+            let result: BrowserActorChildValue | null = null;
+            try {
+              result = await this.invokePoll(child, [{ tag: "message", val: { source: { tag: "backbone", val: binding.port.uri }, payload } }], null, () => this.assertDocumentOwnerCurrent());
+              if (browserActorColdStatus(result).kind !== "idle") throw new Error("actor-document-port.unexpected-cold-ingress");
+              await this.driveTurnResult(result, child, () => this.assertDocumentOwnerCurrent());
+              result = null;
+            } finally {
+              if (result !== null) wipeBrowserActorValue(result);
+            }
+          });
+        },
+      });
+    this.documentBinding = binding;
+    try {
+      await binding.bind();
+    } catch (error) {
+      if (this.documentBinding === binding) this.documentBinding = null;
+      void binding.port.retire().catch(() => {});
+      throw error;
+    }
+  }
+
+  private async flushPendingBackbone(): Promise<void> {
+    const binding = this.documentBinding;
+    if (binding === null) throw new Error("actor-document-port.unbound");
+    while (this.pendingBackboneBeforeBinding.length > 0) {
+      const queued = this.pendingBackboneBeforeBinding;
+      this.pendingBackboneBeforeBinding = [];
+      this.pendingBackboneBeforeBindingBytes = 0;
+      for (const payload of queued) if (!(await binding.port.receive(this.currentDocumentSource(), payload))) throw new Error("actor-document-port.stale-queued-message");
+    }
+    this.documentBackboneReady = true;
+    this.publishMountedIfReady();
+  }
+
+  private retainBackboneBeforeBinding(bytes: Uint8Array): void {
+    const parsed = parseDocumentBackboneMessage(bytes);
+    if (parsed.envelopes.some(envelope => envelope.document_id !== this.state.config.documentId)) throw new Error("actor-document-port.scope");
+    if (this.pendingBackboneBeforeBinding.length >= DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages || parsed.message.byteLength > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - this.pendingBackboneBeforeBindingBytes) throw new Error("actor-document-port.capacity");
+    this.pendingBackboneBeforeBinding.push(parsed.message);
+    this.pendingBackboneBeforeBindingBytes += parsed.message.byteLength;
+  }
+
+  async receiveBackbone(bytes: Uint8Array): Promise<void> {
+    this.assertDocumentOwnerCurrent();
+    const binding = this.documentBinding;
+    if (binding === null || !this.documentBackboneReady) {
+      this.retainBackboneBeforeBinding(bytes);
+      return;
+    }
+    const parsed = parseDocumentBackboneMessage(bytes);
+    if (parsed.envelopes.some(envelope => envelope.document_id !== this.state.config.documentId)) throw new Error("actor-document-port.scope");
+    if (!(await binding.port.receive(this.currentDocumentSource(), parsed.message))) throw new Error("actor-document-port.stale");
+  }
+
+  async dispatchAction(raw: BrowserActorActionRequestV1): Promise<BrowserActorActionResultV1> {
+    const request = parseBrowserActorActionRequestV1(raw);
+    if (this.pendingActionSequence !== null) return browserActorActionDisposition(request, "rejected", 0, [], "action-busy");
+    this.pendingActionSequence = request.actionSequence;
+    let invoked = false;
+    try {
+      return await this.enqueueTurn(async () => {
+        const fields = this.lease.fields();
+        this.assertDocumentOwnerCurrent();
+        if (
+          request.scope.spaceId !== fields.scope.spaceId ||
+          request.scope.documentId !== fields.scope.documentId ||
+          request.verifiedSurfaceId !== fields.surface.surfaceId ||
+          request.appChannelVersion !== BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION ||
+          request.activationGeneration !== this.generation.toString() ||
+          request.instanceId !== 0 ||
+          request.surfaceRevision !== this.renderedUiRevision ||
+          request.actionSequence <= this.lastActionSequence ||
+          this.documentBinding === null ||
+          !this.documentBackboneReady ||
+          this.state.artifactBootstrap !== null ||
+          this.state.artifactRebootstrapRequired ||
+          this.state.requiredTailFrontier !== null ||
+          this.coldApplied === null ||
+          this.coldTransfer !== null ||
+          this.pendingUiPatch !== null ||
+          this.viewRefresh !== null
+        ) throw new Error("action-owner-mismatch");
+        const child = this.child;
+        if (child === null) throw new Error("action-child-unavailable");
+        this.lastActionSequence = request.actionSequence;
+        const publication: BrowserActorActionPublication = { kind: request.payload.kind, sequence: request.actionSequence, frames: 0, hostEffects: [] };
+        let mutationCount = 0;
+        if (request.payload.kind === "ui-intent") {
+          const intent = browserActorUiIntentBytes(request, fields.surface.windowKindId);
+          invoked = true;
+          const result = await this.invokePoll(child, [{ tag: "ui-intent", val: { instance: 0, intent } }], null, () => this.assertDocumentOwnerCurrent());
+          mutationCount = await this.driveTurnResult(result, child, () => this.assertDocumentOwnerCurrent(), publication);
+        } else {
+          const command = browserActorAppCommandBytes(request, fields),
+            pages = createShardCommandIngressPages({ owner: 0n, generation: this.generation, commandIndex: 0, commandCount: 1, instance: 0, seq: BigInt(request.actionSequence), command });
+          let terminal = "idle";
+          for (const page of pages) {
+            invoked = true;
+            const result = await this.invokeCommandPage(child, page as unknown as BrowserActorChildValue, () => this.assertDocumentOwnerCurrent());
+            terminal = browserActorCommandIngressStatus(result);
+            mutationCount += await this.driveTurnResult(result, child, () => this.assertDocumentOwnerCurrent(), publication);
+            if (terminal === "backpressure" || terminal === "fault") throw new Error("action-command-ingress-refused");
+          }
+          for (let turn = 0; terminal !== "command-complete" && turn < 1_024; turn += 1) {
+            const result = await this.invokeCommandPage(child, null, () => this.assertDocumentOwnerCurrent());
+            terminal = browserActorCommandIngressStatus(result);
+            mutationCount += await this.driveTurnResult(result, child, () => this.assertDocumentOwnerCurrent(), publication);
+            if (terminal === "backpressure" || terminal === "fault") throw new Error("action-command-ingress-refused");
+          }
+          if (terminal !== "command-complete") throw new Error("action-command-ingress-unconfirmed");
+        }
+        if (publication.frames !== 1) throw new Error("action-publication-mismatch");
+        return browserActorActionDisposition(request, "guest-applied", mutationCount, parseBrowserActorHostEffectBytesV1(publication.hostEffects));
+      });
+    } catch (error) {
+      const explicitRefusal = error instanceof Error && error.message === "action-guest-refused";
+      if (invoked && !explicitRefusal) this.close();
+      const reason = error instanceof Error && /^(action-owner-mismatch|action-child-unavailable|action-guest-refused)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : "action-refused";
+      return browserActorActionDisposition(request, "rejected", 0, [], reason);
+    } finally {
+      if (this.pendingActionSequence === request.actionSequence) this.pendingActionSequence = null;
+    }
+  }
   private readonly timer: ReturnType<typeof setTimeout>;
   private readonly retire = () => this.close();
 
@@ -1339,6 +1949,9 @@ class DocumentBrowserActorReservation {
     private readonly grant: DocumentBrowserActorGrant,
   ) {
     if (documentBrowserActorGeneration === 0xffffffffffffffffn) throw new Error("document browser actor: generation exhausted");
+    const fields = lease.fields();
+    this.scope = Object.freeze({ ...fields.scope });
+    this.windowKindId = fields.surface.windowKindId;
     this.generation = ++documentBrowserActorGeneration;
     state.docAbort.signal.addEventListener("abort", this.retire, { once: true });
     lease.retirement.addEventListener("abort", this.retire, { once: true });
@@ -1397,8 +2010,10 @@ class DocumentBrowserActorReservation {
     return this.activation;
   }
 
-  async installColdPair(owner: VerifiedColdDocumentPair): Promise<void> {
+  async installColdPair(owner: VerifiedColdDocumentPair, retainedBackbone: readonly Uint8Array[] = []): Promise<void> {
     if (this.closed) throw new Error("document browser actor: closed reservation");
+    this.documentBackboneReady = false;
+    for (const message of retainedBackbone) this.retainBackboneBeforeBinding(message);
     if (!this.lifetime || !this.child || !this.socket || !this.activation) return;
     await this.activation;
     await this.viewRefresh;
@@ -1410,6 +2025,7 @@ class DocumentBrowserActorReservation {
       owner.assertCurrent();
     };
     await this.transferColdPair(owner, this.child, binding, assertCurrent);
+    if (!this.documentBackboneReady) await this.flushPendingBackbone();
     this.refreshHostView();
   }
 
@@ -1420,11 +2036,10 @@ class DocumentBrowserActorReservation {
       quotas = new Uint8Array(0);
     let result: BrowserActorChildValue | null = null;
     try {
-      result = await child.invoke(
-        ["reactor", "poll"],
+      result = await this.invokePoll(
+        child,
         [
-          [
-            {
+          {
               tag: "instance-open",
               val: {
                 instance: request.instanceId,
@@ -1437,21 +2052,16 @@ class DocumentBrowserActorReservation {
                 capabilities: [],
                 quotas,
               },
-            },
-          ],
-          null,
-          null,
-          browserActorTurnBudget(),
+          },
         ],
+        null,
+        assertCurrent,
       );
       assertCurrent();
       const captured = browserActorCapturedReceipt(result, request);
       if (browserActorColdStatus(result, true).kind !== "idle") throw new Error("document browser actor: cold ingress before ACK");
       if (this.captureUiPatch(result, captured.lifetime) !== null) throw new Error("document browser actor: patch before lifecycle ACK");
-      const acknowledged = await child.invoke(
-        ["reactor", "poll"],
-        [[{ tag: "instance-lifecycle-ack", val: { tag: "captured", val: { lifetime: { ...captured.lifetime }, requestSequence: BigInt(captured.requestSequence) } } }], null, null, browserActorTurnBudget()],
-      );
+      const acknowledged = await this.invokePoll(child, [{ tag: "instance-lifecycle-ack", val: { tag: "captured", val: { lifetime: { ...captured.lifetime }, requestSequence: BigInt(captured.requestSequence) } } }], null, assertCurrent);
       wipeBrowserActorValue(result);
       result = acknowledged;
       assertCurrent();
@@ -1472,7 +2082,14 @@ class DocumentBrowserActorReservation {
     const lifetime = this.lifetime;
     if (!lifetime) return Promise.reject(new Error("document browser actor: guest not live"));
     this.coldOwner = owner;
-    this.coldTransfer = (async () => {
+    this.coldApplied = null;
+    this.renderedUiPatch = false;
+    this.renderedUiRevision = 0;
+    this.acknowledgedUiRevision = 0;
+    this.mountedUiRevision = 0;
+    this.lastActionSequence = 0;
+    this.documentBackboneReady = false;
+    this.coldTransfer = this.enqueueTurn(async () => {
       for (let pageIndex = 0; pageIndex < owner.pageCount; pageIndex += 1) {
         assertCurrent();
         const page = owner.page(lifetime, pageIndex);
@@ -1481,12 +2098,14 @@ class DocumentBrowserActorReservation {
         if (!(bytes instanceof Uint8Array)) throw new Error("document browser actor: invalid cold bytes");
         let result: BrowserActorChildValue | null = null;
         try {
-          result = await child.invoke(["reactor", "poll"], [[], null, page, browserActorTurnBudget()]);
+          result = await this.invokePoll(child, [], page, assertCurrent);
           if (bytes.byteLength !== 0) throw new Error("document browser actor: cold page ownership not transferred");
           assertCurrent();
           const status = browserActorColdStatus(result);
           if (pageIndex + 1 === owner.pageCount) {
             owner.assertApplied(status, lifetime);
+            this.coldApplied = owner;
+            await this.bindDocumentBackbone(child);
             await this.reconcileUiPatches(result, child, assertCurrent);
             await this.renderSurface(child, assertCurrent);
           } else {
@@ -1503,7 +2122,7 @@ class DocumentBrowserActorReservation {
       this.coldApplied = owner;
       this.bindApprovalUndoIfMounted();
       if (!this.renderedUiPatch) emitExecutionTargetStatus(this.state, binding, "renderer-unavailable");
-    })().finally(() => {
+    }).then(() => this.flushPendingBackbone()).finally(() => {
       if (this.coldOwner === owner) this.coldOwner = null;
       this.coldTransfer = null;
     });
@@ -1523,14 +2142,15 @@ class DocumentBrowserActorReservation {
     const bodyKey = this.lease.renderBodyKey();
     for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
       assertCurrent();
-      let result: BrowserActorChildValue | null = await child.invoke(["reactor", "poll"], [[turn === 0 ? { tag: "surface-visible", val: { surface, bodyKey, viewState: encodePackValue(viewState) } } : { tag: "wake" }], null, null, browserActorTurnBudget()]);
+      let result: BrowserActorChildValue | null = await this.invokePoll(child, [turn === 0 ? { tag: "surface-visible", val: { surface, bodyKey, viewState: encodePackValue(viewState) } } : { tag: "wake" }], null, assertCurrent);
       try {
         assertCurrent();
         if (browserActorColdStatus(result).kind !== "idle") throw new Error("document browser actor: unexpected cold ingress during render");
         const owned = result;
         result = null;
-        if (!(await this.reconcileUiPatches(owned, child, assertCurrent))) {
+        if (!(await this.reconcileUiPatches(owned, child, assertCurrent)).moreWork) {
           this.renderedViewState = hostView;
+          this.publishMountedIfReady();
           return;
         }
       } finally {
@@ -1541,10 +2161,9 @@ class DocumentBrowserActorReservation {
   }
 
   private captureUiPatch(value: BrowserActorChildValue, lifetime: ActorInstanceLifetime) {
-    const result = browserActorTurnResult(value),
-      fields = this.lease.fields();
+    const result = browserActorTurnResult(value);
     const rawReceipt = result.uiPatchReceipt;
-    return captureBrowserActorUiPatchV1(result.uiPatches, rawReceipt instanceof Uint8Array ? rawReceipt : unwrapBrowserActorOption(rawReceipt), lifetime, fields.surface.windowKindId, { decodePack: decodePackWire, natural: packWireNatural });
+    return captureBrowserActorUiPatchV1(result.uiPatches, rawReceipt instanceof Uint8Array ? rawReceipt : unwrapBrowserActorOption(rawReceipt), lifetime, this.windowKindId, { decodePack: decodePackWire, natural: packWireNatural });
   }
 
   private awaitUiPatchResult(offer: BrowserActorUiPatchOfferV1): Promise<BrowserActorUiPatchResultV1> {
@@ -1572,14 +2191,30 @@ class DocumentBrowserActorReservation {
     pending.resolve(result);
   }
 
-  private async reconcileUiPatches(initial: BrowserActorChildValue, child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<boolean> {
+  private async reconcileUiPatches(
+    initial: BrowserActorChildValue,
+    child: DocumentBrowserActorChild,
+    assertCurrent: () => void,
+    publication: BrowserActorActionPublication | null = null,
+  ): Promise<Readonly<{ moreWork: boolean; mutations: number }>> {
     const lifetime = this.lifetime;
     if (lifetime === null) throw new Error("document browser actor: missing patch lifetime");
     let value: BrowserActorChildValue | null = initial;
+    let mutations = 0;
     try {
       for (let patchCount = 0; patchCount < 8; patchCount += 1) {
+        const routed = await this.routeTurnEffects(value, publication ?? "ordinary");
+        mutations += routed.mutations;
+        if (publication !== null) {
+          publication.frames += routed.publications;
+          publication.hostEffects.push(...routed.hostEffects);
+          parseBrowserActorHostEffectBytesV1(publication.hostEffects);
+          if (publication.frames > 1) throw new Error("action-publication-mismatch");
+          if (publication.hostEffects.length > 1) throw new Error("document browser actor: host effect limit");
+        }
+        if (mutations > BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM) throw new Error("document browser actor: mutation effect limit");
         const captured = this.captureUiPatch(value, lifetime);
-        if (captured === null) return browserActorRecord(browserActorTurnResult(value).status, "document browser actor: invalid render status").tag === "more-work";
+        if (captured === null) return { moreWork: browserActorRecord(browserActorTurnResult(value).status, "document browser actor: invalid render status").tag === "more-work", mutations };
         const fields = this.lease.fields();
         const offer: BrowserActorUiPatchOfferV1 = {
           kind: "browser-actor-ui-patch",
@@ -1597,21 +2232,7 @@ class DocumentBrowserActorReservation {
         if (result.outcome === "acknowledged" && result.revision !== captured.patch.revision) throw new Error("document browser actor: acknowledged revision mismatch");
         if (result.outcome === "acknowledged") {
           this.renderedUiPatch = true;
-          const identity = this.lease.fields();
-          if (identity.browserActor.kind !== "closed-browser-actor") throw new Error("document browser actor: mounted identity mismatch");
-          post({
-            kind: "browser-actor-ui-mounted",
-            scope: { ...identity.scope },
-            clientInstanceId: this.state.openClientInstanceId,
-            activationGeneration: this.generation.toString(),
-            instanceId: captured.instanceId,
-            verifiedSurfaceId: identity.surface.surfaceId,
-            catalogGenerationId: identity.catalog.generationId,
-            componentSha256: identity.package.componentSha256,
-            descriptorSha256: identity.package.descriptorByteSha256,
-            browserActorSha256: identity.browserActor.sha256,
-            uiRevision: result.revision,
-          });
+          this.renderedUiRevision = result.revision;
         }
         const feedback = {
           tag: result.outcome === "acknowledged" ? "patch-ack" : "patch-rejected",
@@ -1622,13 +2243,89 @@ class DocumentBrowserActorReservation {
             ...(result.outcome === "rejected" ? { reason: result.reason } : {}),
           },
         };
-        value = await child.invoke(["reactor", "poll"], [[feedback], null, null, browserActorTurnBudget()]);
+        value = await this.invokePoll(child, [feedback], null, assertCurrent);
         assertCurrent();
         if (browserActorColdStatus(value).kind !== "idle") throw new Error("document browser actor: cold ingress after patch feedback");
+        if (result.outcome === "acknowledged") this.acknowledgedUiRevision = result.revision;
       }
       throw new Error("document browser actor: patch feedback limit");
     } finally {
       if (value !== null) wipeBrowserActorValue(value);
+    }
+  }
+
+  private async driveTurnResult(
+    initial: BrowserActorChildValue,
+    child: DocumentBrowserActorChild,
+    assertCurrent: () => void,
+    publication: BrowserActorActionPublication | null = null,
+  ): Promise<number> {
+    let value: BrowserActorChildValue | null = initial,
+      mutations = 0;
+    try {
+      for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
+        const owned = value;
+        value = null;
+        const settled = await this.reconcileUiPatches(owned, child, assertCurrent, publication);
+        mutations += settled.mutations;
+        if (mutations > BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM) throw new Error("document browser actor: mutation effect limit");
+        if (!settled.moreWork) {
+          this.publishMountedIfReady();
+          return mutations;
+        }
+        value = await this.invokePoll(child, [{ tag: "wake" }], null, assertCurrent);
+      }
+      throw new Error("document browser actor: turn continuation limit");
+    } finally {
+      if (value !== null) wipeBrowserActorValue(value);
+    }
+  }
+
+  private async retireGuest(child: DocumentBrowserActorChild, lifetime: ActorInstanceLifetime): Promise<"retired" | "unconfirmed"> {
+    const request: ActorInstanceCloseRequest = { kind: "close", lifetime, requestSequence: 2 },
+      assertRetained = () => {
+        if (this.child !== child || this.lifetime === null || !actorInstanceLifetimeEquals(this.lifetime, lifetime)) throw new Error("document browser actor: stale retirement owner");
+      };
+    let result: BrowserActorChildValue | null = null;
+    try {
+      result = await this.invokePoll(child, [{ tag: "instance-close", val: { lifetime: { ...lifetime }, requestSequence: BigInt(request.requestSequence) } }], null, assertRetained, true);
+      let receipt = browserActorCloseReceipt(result, request, null);
+      if (receipt?.kind !== "accepted" || this.captureUiPatch(result, lifetime) !== null || ((browserActorTurnResult(result).effects as readonly unknown[] | undefined)?.length ?? 0) !== 0) throw new Error("document browser actor: close not accepted");
+      wipeBrowserActorValue(result);
+      result = null;
+      const accepted: ActorInstanceLifecycleReceipt = receipt;
+      result = await this.invokePoll(
+        child,
+        [{ tag: "instance-lifecycle-ack", val: { tag: "accepted", val: { lifetime: { ...accepted.lifetime }, requestSequence: BigInt(accepted.requestSequence), closeGeneration: accepted.closeGeneration } } }],
+        null,
+        assertRetained,
+        true,
+      );
+      for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
+        receipt = browserActorCloseReceipt(result, request, accepted);
+        if (this.captureUiPatch(result, lifetime) !== null || ((browserActorTurnResult(result).effects as readonly unknown[] | undefined)?.length ?? 0) !== 0) throw new Error("document browser actor: close emitted work");
+        if (receipt?.kind === "retired") {
+          const retired = receipt;
+          wipeBrowserActorValue(result);
+          result = await this.invokePoll(
+            child,
+            [{ tag: "instance-lifecycle-ack", val: { tag: "retired", val: { lifetime: { ...retired.lifetime }, requestSequence: BigInt(retired.requestSequence), closeGeneration: retired.closeGeneration } } }],
+            null,
+            assertRetained,
+            true,
+          );
+          if (browserActorCloseReceipt(result, request, retired) !== null || this.captureUiPatch(result, lifetime) !== null || ((browserActorTurnResult(result).effects as readonly unknown[] | undefined)?.length ?? 0) !== 0) throw new Error("document browser actor: retired ACK not terminal");
+          return "retired";
+        }
+        if (receipt !== null && receipt.kind !== "accepted") throw new Error("document browser actor: invalid close progress");
+        wipeBrowserActorValue(result);
+        result = await this.invokePoll(child, [], null, assertRetained, true);
+      }
+      return "unconfirmed";
+    } catch {
+      return "unconfirmed";
+    } finally {
+      if (result !== null) wipeBrowserActorValue(result);
     }
   }
 
@@ -1638,21 +2335,45 @@ class DocumentBrowserActorReservation {
     clearTimeout(this.timer);
     this.state.docAbort.signal.removeEventListener("abort", this.retire);
     this.lease.retirement.removeEventListener("abort", this.retire);
-    this.abort.abort();
     if (this.pendingUiPatch !== null) {
       const pending = this.pendingUiPatch;
       this.pendingUiPatch = null;
       clearTimeout(pending.timer);
       pending.reject(new Error("document browser actor: closed with pending patch"));
     }
-    this.lifetime = null;
+    const child = this.child,
+      lifetime = this.lifetime;
     this.coldOwner = null;
     this.coldApplied = null;
     this.renderedUiPatch = false;
+    this.renderedUiRevision = 0;
+    this.acknowledgedUiRevision = 0;
+    this.mountedUiRevision = 0;
     this.renderedViewState = null;
-    this.child?.close();
-    this.child = null;
+    this.lastActionSequence = 0;
+    this.pendingBackboneBeforeBinding = [];
+    this.pendingBackboneBeforeBindingBytes = 0;
+    this.documentBackboneReady = false;
     if (this.state.browserActorReservation === this) this.state.browserActorReservation = null;
+    if (child === null || lifetime === null) {
+      const outcome = child === null ? "retired" as const : "unconfirmed" as const;
+      this.abort.abort();
+      child?.close(outcome === "retired" ? "retired" : "retirement unconfirmed");
+      this.child = null;
+      this.lifetime = null;
+      this.documentBinding = null;
+      this.retirement = Promise.resolve(outcome);
+      return;
+    }
+    const bindingRetirement = this.documentBinding?.port.retire() ?? Promise.resolve();
+    this.retirement = bindingRetirement.then(() => this.enqueueTurn(() => this.retireGuest(child, lifetime), true), () => "unconfirmed" as const).then(outcome => {
+      this.abort.abort();
+      child?.close(outcome === "retired" ? "retired" : "retirement unconfirmed");
+      this.child = null;
+      this.lifetime = null;
+      this.documentBinding = null;
+      return outcome;
+    });
   }
 }
 
@@ -3037,13 +3758,16 @@ async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArt
       coldOwner = new VerifiedColdDocumentPair(verifiedColdDocumentPairMintToken, state, lease, assembler.bootstrap, pair, { pack: publishedPack, spr: publishedSpr });
       state.verifiedColdPair = coldOwner;
       coldOwner.assertCurrent();
-      await state.browserActorReservation?.installColdPair(coldOwner);
+      const reservation = state.browserActorReservation;
+      if (reservation === null) throw new Error("artifact bootstrap missing browser actor reservation");
+      const retainedBackbone = state.outbox.length === 0 ? [] : [documentBackboneMessageFromDomain(state, state.outbox)];
+      await reservation.installColdPair(coldOwner, retainedBackbone);
       owner.assertCurrent();
       coldOwner.assertCurrent();
     }
-    emitEvent(state, { kind: "snapshotReplaced", pack: Array.from(pair.pack), spr: Array.from(pair.spr) });
+    if (coldOwner === null) emitEvent(state, { kind: "snapshotReplaced", pack: Array.from(pair.pack), spr: Array.from(pair.spr) });
     owner.assertCurrent();
-    if (state.outbox.length > 0) {
+    if (state.outbox.length > 0 && coldOwner === null) {
       emitMutationEvent(state, [...state.outbox]);
       owner.assertCurrent();
     }
@@ -3205,7 +3929,15 @@ async function handleHubFrame(
     }
     if (frame.Commands.origin !== state.actor) {
       if (frame.Commands.envelopes.length > 0 && commandBatch === null) throw new Error("document backbone: exact server command batch missing");
-      if (frame.Commands.envelopes.length > 0 && commandBatch !== null) emitEvent(state, { kind: "documentBackbone", message: encodeBackboneMessage({ kind: "mutations", envelopes: commandBatch }) });
+      if (frame.Commands.envelopes.length > 0 && commandBatch !== null) {
+        const message = encodeBackboneMessage({ kind: "mutations", envelopes: commandBatch }),
+          reservation = state.browserActorReservation;
+        if (reservation === null) emitEvent(state, { kind: "documentBackbone", message });
+        else {
+          try { await reservation.receiveBackbone(message); }
+          catch (error) { reservation.close(); throw error; }
+        }
+      }
     }
     state.frontier = frame.Commands.frontier;
     finishCatchupIfReady(state);
@@ -4147,13 +4879,9 @@ function closeDirectoryAdministration(operationEpoch: number): void {
 //#endregion 🔖️SpaceAdministration
 
 //#region 💡️Inference
-/** 💡️ The single shell-owned retained inference operation. It is NOT a socket, NOT a queue and NOT
- * a document command: it owns exactly one document scope, at most one submitted job, and one bounded
- * poll timer. It refuses to exist at all unless that document currently owns a LIVE verified
- * execution-target lease, and it shares the document's own `docAbort` so a close, rebootstrap or
- * identity change cancels every in-flight call before the renderer is told anything. Nothing it
- * holds is ever persisted into the document: the proposal reaches the Map only through the hub's
- * own server-stamped approval command. */
+/** 💡️ One private request owner and bounded poll timer. A verified writable lease admits it;
+ * cancel/reconcile cleanup outlives document retirement. Unknown outcomes retain the original
+ * request without resubmission. Only the Hub's approved command mutates the document. */
 const INFERENCE_PORT_CAPACITY = 1;
 /** ⏱️ Bounded, jitter-free poll cadence for one running job — a `setTimeout` chain, never an
  * interval and never a busy loop. */
@@ -4167,13 +4895,17 @@ type InferenceOperationV1 = {
   readonly operationEpoch: number;
   readonly scope: DocumentScope;
   readonly abort: AbortController;
+  readonly sessionEpoch: number;
+  readonly clientInstanceId: string;
+  readonly leaseFields: DocumentExecutionTargetLeaseFieldsV1;
+  request: Readonly<GisMapInferenceJobRequestV1> | null;
+  closeRequested: boolean;
+  reconcileRequired: boolean;
   status: GisMapInferencePortStatusV1;
   turns: number;
   pollTimer: ReturnType<typeof setTimeout> | null;
   inFlight: boolean;
-  /** 🛑️ Whether the one cancel request this operation may ever send has actually left. A Cancel
-   * clicked while another call is in flight is recorded here and sent on the very next turn, never
-   * dropped and never sent twice. */
+  /** 🛑️ A sent cancellation is retried only after reconciliation observes it was not recorded. */
   cancelSent: boolean;
   closed: boolean;
 };
@@ -4196,6 +4928,7 @@ type InferenceApprovalUndoOwnerV1 = {
   readonly historyEpoch: number;
   readonly scope: DocumentScope;
   readonly clientInstanceId: string;
+  readonly sessionEpoch: number;
   readonly receipt: GisMapInferenceApprovalReceiptV1;
   readonly idempotencyKey: string;
   readonly sourceCatalogGenerationId: string;
@@ -4275,6 +5008,7 @@ function reissueInferenceApprovalUndoForRebootstrap(state: ArtifactState): void 
     historyEpoch: ++inferenceApprovalUndoEpoch,
     scope: structuredClone(owner.scope),
     clientInstanceId: owner.clientInstanceId,
+    sessionEpoch: owner.sessionEpoch,
     receipt: structuredClone(owner.receipt),
     idempotencyKey: owner.idempotencyKey,
     sourceCatalogGenerationId: owner.sourceCatalogGenerationId,
@@ -4335,15 +5069,16 @@ function bindInferenceApprovalUndoToMountedPair(state: ArtifactState, reservatio
 
 function retainInferenceApprovalUndo(operation: InferenceOperationV1, receipt: GisMapInferenceApprovalReceiptV1): void {
   const state = artifactState(operation.scope.documentId, operation.scope.spaceId);
-  const lease = state?.executionTargetLease;
-  const fields = lease?.live ? lease.fields() : null;
-  if (!receipt.applied || receipt.undo.expectedCurrent.documentId !== operation.scope.documentId || state === undefined || fields === null || state.openClientInstanceId.length === 0 || fields.browserActor.kind !== "closed-browser-actor") throw new Error("gis map approval undo: invalid source owner");
+  if (state === undefined || state.closed || state.openClientInstanceId !== operation.clientInstanceId || operation.sessionEpoch !== directorySessionEpoch) return;
+  const fields = operation.leaseFields;
+  if (!receipt.applied || receipt.undo.expectedCurrent.documentId !== operation.scope.documentId || operation.clientInstanceId.length === 0 || fields.browserActor.kind !== "closed-browser-actor") throw new Error("gis map approval undo: invalid source owner");
   if (inferenceApprovalUndoOwner !== null) retireInferenceApprovalUndo(inferenceApprovalUndoOwner);
   if (inferenceApprovalUndoEpoch >= Number.MAX_SAFE_INTEGER) throw new Error("gis map approval undo: epoch exhausted");
   const owner: InferenceApprovalUndoOwnerV1 = {
     historyEpoch: ++inferenceApprovalUndoEpoch,
     scope: structuredClone(operation.scope),
-    clientInstanceId: state.openClientInstanceId,
+    clientInstanceId: operation.clientInstanceId,
+    sessionEpoch: operation.sessionEpoch,
     receipt: structuredClone(receipt),
     idempotencyKey: mintInferenceApprovalUndoIdempotencyKeyV1(),
     sourceCatalogGenerationId: fields.catalog.generationId,
@@ -4360,7 +5095,7 @@ function retainInferenceApprovalUndo(operation: InferenceOperationV1, receipt: G
     retryable: true,
   };
   inferenceApprovalUndoOwner = owner;
-  state.browserActorReservation?.bindApprovalUndoIfMounted();
+  state?.browserActorReservation?.bindApprovalUndoIfMounted();
 }
 
 /** 🔭️ Observation seam mirroring {@link executionTargetStatusObserver}: a harness without a worker
@@ -4397,20 +5132,24 @@ function inferenceJobPath(scope: DocumentScope, suffix: string): string {
   return `/spaces/${encodeURIComponent(scope.spaceId)}/documents/${encodeURIComponent(scope.documentId)}/inference/gis-map${suffix}`;
 }
 
-/** 🚪️ The only broker operation this lane owns: exactly the four protected document-scoped inference
- * calls for the port's own scope. Anything else is denied before a request exists. */
+/** 🚪️ Scope-bound submit, events, cancel, approval and existing-request reconciliation. */
 async function inferenceBrokerFetch(operation: InferenceOperationV1, suffix: string, init: { readonly method: "GET" | "POST"; readonly body?: string }): Promise<FetchTimeoutResponse> {
   const path = inferenceJobPath(operation.scope, suffix);
-  if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/inference\/gis-map\/jobs(?:\/[0-9a-f]{32}\/(?:events\?after=\d{1,3}|cancel|approval))?$/u.test(path)) throw new Error("gis map inference: operation denied");
-  const documentAbort = artifactState(operation.scope.documentId, operation.scope.spaceId)?.docAbort.signal;
-  if (documentAbort?.aborted ?? true) throw new Error("gis map inference: document closed");
+  if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/inference\/gis-map\/jobs(?:\/reconcile|\/[0-9a-f]{32}\/(?:events\?after=\d{1,3}|cancel|approval))?$/u.test(path)) throw new Error("gis map inference: operation denied");
+  if (operation.sessionEpoch !== directorySessionEpoch) throw new Error("gis map inference: original session unavailable");
+  if ((suffix === "/jobs" || suffix.endsWith("/approval")) && !inferenceLeaseVerified(operation.scope)) throw new Error("gis map inference: document closed");
   return browserBrokerFetch(
     `/_semio/hub${path}`,
     {
       method: init.method,
       ...(init.body === undefined ? {} : { headers: { "content-type": "application/json" }, body: init.body }),
     },
-    { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: operation.abort.signal },
+    {
+      timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS,
+      signal: operation.abort.signal,
+      admit: () => operation.sessionEpoch === directorySessionEpoch && !operation.closed && ((suffix !== "/jobs" && !suffix.endsWith("/approval")) || inferenceLeaseVerified(operation.scope)),
+      retain: () => operation.sessionEpoch === directorySessionEpoch && !operation.closed,
+    },
   );
 }
 
@@ -4420,7 +5159,15 @@ async function inferenceApprovalUndoBrokerFetch(owner: InferenceApprovalUndoOwne
   return browserBrokerFetch(
     `/_semio/hub${inferenceJobPath(owner.scope, "/approval-undos")}`,
     { method: "POST", headers: { "content-type": "application/json" }, body },
-    { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: owner.abort.signal },
+    {
+      timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS,
+      signal: owner.abort.signal,
+      admit: () => {
+        const current = artifactState(owner.scope.documentId, owner.scope.spaceId);
+        return inferenceApprovalUndoOwner === owner && owner.sessionEpoch === directorySessionEpoch && current !== undefined && sameApprovalUndoMountV1(current, owner);
+      },
+      retain: () => owner.sessionEpoch === directorySessionEpoch,
+    },
   );
 }
 
@@ -4433,27 +5180,30 @@ async function readInferenceJson(response: FetchTimeoutResponse): Promise<unknow
   return JSON.parse(text);
 }
 
-/** 🔎️ Returns the live operation for `operationEpoch`, or `null` once it has been replaced, closed,
- * or had its document's lease invalidated under it. */
+/** 🔎️ Finds the retained epoch; lease retirement records closing without losing a pending receipt. */
 function liveInferencePort(operationEpoch: number): InferenceOperationV1 | null {
   const operation = inferencePort;
   if (operation === null || operation.closed || operation.operationEpoch !== operationEpoch) return null;
   if (!inferenceLeaseVerified(operation.scope)) {
-    terminateInferencePort(operation, "inference.lease-unverified");
-    return null;
+    operation.closeRequested = true;
+    advanceInferencePort(operation, { kind: "cancel" });
   }
   return operation;
 }
 
-/** 🧯️ Reports one closed terminal exactly once and retires the operation with its timer cleared. */
+/** 🧯️ Pre-submit failures can retire; uncertain submitted work keeps its original private owner. */
 function terminateInferencePort(operation: InferenceOperationV1, code: GisMapInferencePortCodeV1): void {
   if (operation.closed) return;
-  operation.closed = true;
   if (operation.pollTimer !== null) clearTimeout(operation.pollTimer);
   operation.pollTimer = null;
-  operation.abort.abort(new Error("gis map inference port closed"));
-  if (inferencePort === operation) inferencePort = null;
-  advanceInferencePort(operation, { kind: "failed", code });
+  if (operation.request === null) {
+    advanceInferencePort(operation, { kind: "failed", code });
+    retireInferencePort(operation);
+    return;
+  }
+  operation.reconcileRequired = true;
+  advanceInferencePort(operation, { kind: "indeterminate", code: code === "inference.cancelled" ? "inference.transport" : code });
+  if (operation.turns < INFERENCE_MAX_POLL_TURNS && operation.sessionEpoch === directorySessionEpoch) scheduleInferencePoll(operation);
 }
 
 function inferenceCodeFromRejection(error: unknown, aborted: boolean): GisMapInferencePortCodeV1 {
@@ -4462,32 +5212,36 @@ function inferenceCodeFromRejection(error: unknown, aborted: boolean): GisMapInf
   return status === undefined ? "inference.transport" : gisMapInferenceCodeFromStatusV1(status);
 }
 
-/** 🆕️ Installs the one retained port for exactly one document scope, retiring any predecessor. The
+/** 🆕️ Installs the one retained port for exactly one document scope without replacing a predecessor. The
  * lease precondition is checked BEFORE the operation exists, so a refusal never leaves a port open. */
 function openInferencePort(operationEpoch: number, scope: DocumentScope): void {
-  if (inferencePort !== null && INFERENCE_PORT_CAPACITY === 1) closeInferencePort(inferencePort.operationEpoch);
-  if (!Number.isSafeInteger(operationEpoch) || operationEpoch < 0 || scope.spaceId.length === 0 || scope.documentId.length === 0) {
-    post({ kind: "inference-port-status", operationEpoch, scope, status: { ...idleGisMapInferencePortStatusV1(), phase: "failed", code: "inference.invalid" } });
+  if (!Number.isSafeInteger(operationEpoch) || operationEpoch < 1 || scope.spaceId.length === 0 || scope.documentId.length === 0) {
+    post({ kind: "inference-port-opened", operationEpoch, scope, outcome: "refused", code: "inference.invalid" });
     return;
   }
-  const operation: InferenceOperationV1 = { operationEpoch, scope, abort: new AbortController(), status: idleGisMapInferencePortStatusV1(), turns: 0, pollTimer: null, inFlight: false, cancelSent: false, closed: false };
+  if (inferencePort !== null && INFERENCE_PORT_CAPACITY === 1) {
+    post({ kind: "inference-port-opened", operationEpoch, scope, outcome: "refused", code: "inference.capacity" });
+    return;
+  }
   if (!inferenceLeaseVerified(scope)) {
-    operation.closed = true;
-    advanceInferencePort(operation, { kind: "lease-unverified" });
+    post({ kind: "inference-port-opened", operationEpoch, scope, outcome: "refused", code: "inference.lease-unverified" });
     return;
   }
+  const state = artifactState(scope.documentId, scope.spaceId)!;
+  const operation: InferenceOperationV1 = { operationEpoch, scope: Object.freeze({ ...scope }), abort: new AbortController(), sessionEpoch: directorySessionEpoch, clientInstanceId: state.openClientInstanceId, leaseFields: structuredClone(state.executionTargetLease!.fields()), request: null, closeRequested: false, reconcileRequired: false, status: idleGisMapInferencePortStatusV1(), turns: 0, pollTimer: null, inFlight: false, cancelSent: false, closed: false };
   inferencePort = operation;
+  post({ kind: "inference-port-opened", operationEpoch, scope, outcome: "opened", code: null });
   postInferencePortStatus(operation);
 }
 
-/** 📮️ Submits exactly one job and advances only on an exact server receipt. A submit is never
- * retried: an indeterminate transport is terminal, so a replay can never mint a second job. */
+/** 📮️ Seals one request before dispatch and never retries its submit, including after response loss. */
 async function submitInferenceJob(operationEpoch: number, requestId: string): Promise<void> {
   const operation = liveInferencePort(operationEpoch);
   if (operation === null || operation.status.phase !== "idle" || operation.inFlight) return;
   let body: string;
   try {
-    body = JSON.stringify(sealGisMapInferenceJobRequestV1(requestId, INFERENCE_JOB_LIFETIME_MS));
+    operation.request = Object.freeze(sealGisMapInferenceJobRequestV1(requestId, INFERENCE_JOB_LIFETIME_MS));
+    body = JSON.stringify(operation.request);
   } catch {
     terminateInferencePort(operation, "inference.invalid");
     return;
@@ -4499,11 +5253,67 @@ async function submitInferenceJob(operationEpoch: number, requestId: string): Pr
     if (!response.ok) throw new DirectoryHttpError(response.status, "");
     const receipt = parseGisMapInferenceJobReceiptV1(await readInferenceJson(response));
     if (liveInferencePort(operationEpoch) !== operation) return;
+    if (receipt.proposalState === "approved") {
+      operation.status = { ...operation.status, jobId: receipt.jobId, proposalHash: receipt.proposalHash ?? null };
+      terminateInferencePort(operation, "inference.transport");
+      scheduleInferencePoll(operation);
+      return;
+    }
     advanceInferencePort(operation, { kind: "receipt", receipt });
-    scheduleInferencePoll(operation);
+    if (gisMapInferencePortTerminalV1(operation.status.phase)) retireInferencePort(operation);
+    else scheduleInferencePoll(operation);
   } catch (error) {
     if (operation.closed) return;
     terminateInferencePort(operation, inferenceCodeFromRejection(error, operation.abort.signal.aborted));
+  } finally {
+    operation.inFlight = false;
+  }
+}
+
+/** 🔎️ Recovers only the original accepted request; this route cannot submit another job. */
+async function reconcileInferenceJob(operation: InferenceOperationV1): Promise<void> {
+  if (operation.request === null || operation.inFlight || operation.closed) return;
+  operation.turns += 1;
+  operation.inFlight = true;
+  try {
+    const request = parseInferenceJobReconcileRequestV1({ schema: "semio.hub.inference-job-reconcile/v1", version: 1, requestId: operation.request.requestId });
+    const response = await inferenceBrokerFetch(operation, "/jobs/reconcile", { method: "POST", body: JSON.stringify(request) });
+    if (!response.ok) throw new DirectoryHttpError(response.status, "");
+    const result = parseInferenceJobReconcileResultV1(await readInferenceJson(response));
+    if (inferencePort !== operation || operation.closed) return;
+    if (result.requestId !== operation.request.requestId) throw new Error("gis map inference: different request");
+    const job = result.job;
+    if (!result.found || job === null) {
+      terminateInferencePort(operation, "inference.transport");
+      return;
+    }
+    if (operation.status.jobId !== null && operation.status.jobId !== job.receipt.jobId) throw new Error("gis map inference: different job");
+    operation.reconcileRequired = false;
+    if (job.approval !== null) {
+      operation.status = { ...operation.status, jobId: job.receipt.jobId, proposalHash: job.receipt.proposalHash };
+      if (job.approval.state === "undo-prepared") {
+        terminateInferencePort(operation, "inference.transport");
+        scheduleInferencePoll(operation);
+        return;
+      }
+      if (job.approval.receipt !== null) {
+        const receipt = parseGisMapInferenceApprovalReceiptV1(job.approval.receipt);
+        retainInferenceApprovalUndo(operation, receipt);
+        advanceInferencePort(operation, { kind: "indeterminate", code: "inference.transport" });
+        advanceInferencePort(operation, { kind: "approval", receipt });
+        retireInferencePort(operation);
+        return;
+      }
+    } else if (operation.status.jobId === null) {
+      advanceInferencePort(operation, { kind: "receipt", receipt: job.receipt });
+    }
+    const { expired: _expired, ...page } = job.page;
+    operation.cancelSent = job.page.cancelRequested;
+    advanceInferencePort(operation, { kind: "page", page: { ...page, schema: "semio.hub.inference-job-events/v1", stale: page.proposalState === "stale" } });
+    if (gisMapInferencePortTerminalV1(operation.status.phase)) retireInferencePort(operation);
+    else scheduleInferencePoll(operation);
+  } catch (error) {
+    if (!operation.closed) terminateInferencePort(operation, inferenceCodeFromRejection(error, false));
   } finally {
     operation.inFlight = false;
   }
@@ -4528,7 +5338,11 @@ function scheduleInferencePoll(operation: InferenceOperationV1): void {
  * so a Cancel clicked while another call was in flight is transmitted on the very next turn. */
 async function driveInferencePort(operationEpoch: number): Promise<void> {
   const operation = liveInferencePort(operationEpoch);
-  if (operation === null) return;
+  if (operation === null || operation.inFlight) return;
+  if (operation.reconcileRequired || operation.status.phase === "indeterminate") {
+    await reconcileInferenceJob(operation);
+    return;
+  }
   if (operation.status.cancelRequested && !operation.cancelSent) {
     await cancelInferenceJob(operationEpoch);
     return;
@@ -4547,6 +5361,11 @@ async function pollInferenceJob(operationEpoch: number): Promise<void> {
     if (!response.ok) throw new DirectoryHttpError(response.status, "");
     const page = parseGisMapInferenceEventPageV1(await readInferenceJson(response));
     if (liveInferencePort(operationEpoch) !== operation) return;
+    if (page.proposalState === "approved") {
+      terminateInferencePort(operation, "inference.transport");
+      scheduleInferencePoll(operation);
+      return;
+    }
     advanceInferencePort(operation, { kind: "page", page });
     if (gisMapInferencePortTerminalV1(operation.status.phase)) {
       retireInferencePort(operation);
@@ -4565,9 +5384,9 @@ async function pollInferenceJob(operationEpoch: number): Promise<void> {
  * may report `cancelled`, so a hub that refuses the cancel can never be misreported as honoured. */
 async function cancelInferenceJob(operationEpoch: number): Promise<void> {
   const operation = liveInferencePort(operationEpoch);
-  if (operation === null || operation.status.jobId === null) return;
+  if (operation === null) return;
   advanceInferencePort(operation, { kind: "cancel" });
-  if (operation.inFlight || operation.cancelSent) return;
+  if (operation.status.jobId === null || operation.inFlight || operation.cancelSent) return;
   operation.cancelSent = true;
   operation.inFlight = true;
   try {
@@ -4575,6 +5394,11 @@ async function cancelInferenceJob(operationEpoch: number): Promise<void> {
     if (!response.ok) throw new DirectoryHttpError(response.status, "");
     const page = parseGisMapInferenceEventPageV1(await readInferenceJson(response));
     if (liveInferencePort(operationEpoch) !== operation) return;
+    if (page.proposalState === "approved") {
+      terminateInferencePort(operation, "inference.transport");
+      scheduleInferencePoll(operation);
+      return;
+    }
     advanceInferencePort(operation, { kind: "page", page });
     if (gisMapInferencePortTerminalV1(operation.status.phase)) retireInferencePort(operation);
     else scheduleInferencePoll(operation);
@@ -4597,6 +5421,8 @@ async function approveInferenceProposal(operationEpoch: number): Promise<void> {
     operation.status.proposalHash === null ||
     operation.status.preview?.jobId !== operation.status.jobId ||
     operation.status.preview.proposalHash !== operation.status.proposalHash ||
+    operation.closeRequested ||
+    operation.status.cancelRequested ||
     operation.inFlight
   )
     return;
@@ -4670,22 +5496,30 @@ async function undoInferenceApproval(historyEpoch: number, clientInstanceId: str
 /** 🏁️ Releases a port that already reported its terminal, without publishing a second one. */
 function retireInferencePort(operation: InferenceOperationV1): void {
   if (operation.closed) return;
-  operation.closed = true;
   if (operation.pollTimer !== null) clearTimeout(operation.pollTimer);
   operation.pollTimer = null;
+  if (!operation.closeRequested && operation.request !== null && gisMapInferencePortTerminalV1(operation.status.phase)) return;
+  operation.closed = true;
   operation.abort.abort(new Error("gis map inference port retired"));
   if (inferencePort === operation) inferencePort = null;
+  post({ kind: "inference-port-closed", operationEpoch: operation.operationEpoch, scope: operation.scope });
 }
 
-/** 🛑️ Renderer unmount or document close: cancel every in-flight call and report `cancelled` once. */
+/** 🛑️ Closing records cancellation without aborting a submit whose Hub receipt may still arrive. */
 function closeInferencePort(operationEpoch: number): void {
   const operation = inferencePort;
   if (operation === null || operation.operationEpoch !== operationEpoch) return;
-  if (gisMapInferencePortTerminalV1(operation.status.phase)) {
+  operation.closeRequested = true;
+  if (operation.status.phase === "idle" || gisMapInferencePortTerminalV1(operation.status.phase)) {
     retireInferencePort(operation);
     return;
   }
-  terminateInferencePort(operation, "inference.cancelled");
+  if (operation.status.phase === "indeterminate") {
+    advanceInferencePort(operation, { kind: "cancel" });
+    void driveInferencePort(operationEpoch);
+    return;
+  }
+  void cancelInferenceJob(operationEpoch);
 }
 //#endregion 💡️Inference
 
@@ -5137,6 +5971,18 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
     case "inference-history-undo":
       void undoInferenceApproval(request.historyEpoch, request.clientInstanceId, request.scope);
       break;
+    case "browser-actor-action": {
+      const state = artifactState(request.scope.documentId, request.scope.spaceId),
+        { clientInstanceId, ...raw } = request,
+        action = parseBrowserActorActionRequestV1(raw);
+      void (async () => {
+        const result = state?.openClientInstanceId === clientInstanceId && state.browserActorReservation !== null
+          ? await state.browserActorReservation.dispatchAction(action)
+          : browserActorActionDisposition(action, "rejected", 0, [], "action-owner-mismatch");
+        post({ ...result, clientInstanceId });
+      })();
+      break;
+    }
     case "browser-actor-view-state": {
       const context = parseBrowserActorViewStateRequest(request);
       const state = artifactState(context.scope.documentId, context.scope.spaceId);
@@ -5162,6 +6008,8 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts");
   const testSeams = {
+    get inferencePort() { return inferencePort; },
+    set inferencePort(value: typeof inferencePort) { inferencePort = value; },
     get directoryAdministration() { return directoryAdministration; },
     set directoryAdministration(value: typeof directoryAdministration) { directoryAdministration = value; },
     get directoryClient() { return directoryClient; },
@@ -5178,6 +6026,9 @@ if (import.meta.vitest) {
     set localBrowserBrokerProofExpiresAtMs(value: typeof localBrowserBrokerProofExpiresAtMs) { localBrowserBrokerProofExpiresAtMs = value; },
     get localBrowserBrokerQueued() { return localBrowserBrokerQueued; },
     set localBrowserBrokerQueued(value: typeof localBrowserBrokerQueued) { localBrowserBrokerQueued = value; },
+    get browserSessionAuthority() { return browserSessionAuthority; },
+    attachLocalBrokerPort,
+    detachLocalBrokerPort,
     get socketGrantTestIssue() { return socketGrantTestIssue; },
     set socketGrantTestIssue(value: typeof socketGrantTestIssue) { socketGrantTestIssue = value; },
     get spaceArtifactCreationTestFetch() { return spaceArtifactCreationTestFetch; },

@@ -13,27 +13,7 @@
     "structureClassicObjects",
     "referencesByModelDefinitionId",
     "nodes",
-    "activeModelDefinitionId",
-    "selectedObjectIds",
-    "selectedNodeIds",
-    "componentSelection",
-    "selectionMethod",
-    "engagementInput",
-    "engagementStep",
-    "sunEnabled",
-    "sunAzimuth",
-    "sunElevation",
-    "sunIntensity",
-    "sunColor",
-    "camera",
-    "cameraBuilding",
-    "cameraEnergy",
-    "cameraStructureClassic",
-    "dislocateShape",
-    "dislocateBuilding",
-    "dislocateEnergy",
-    "dislocateStructureClassic",
-    "contributionsJson"
+    "activeModelDefinitionId"
   ],
   "properties": {
     "schema": {
@@ -105,150 +85,6 @@
     "activeModelDefinitionId": {
       "type": "string",
       "x-semio-state": "artifact"
-    },
-    "selectedObjectIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "selectedNodeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "activeObjectId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "componentSelection": {
-      "$ref": "#/$defs/CadComponentSelection",
-      "x-semio-state": "presence"
-    },
-    "selectedReferenceModelDefinitionId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "selectedReferenceId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "selectedPrimitiveId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "selectedPrimitiveKind": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "activeExampleId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "engagementStep": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "engagementPane": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "engagementSessionJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "lastFinalizedInteractionId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "sunEnabled": {
-      "type": "boolean",
-      "x-semio-state": "config"
-    },
-    "sunAzimuth": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "sunElevation": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "sunIntensity": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "sunColor": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "camera": {
-      "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "config"
-    },
-    "cameraBuilding": {
-      "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "config"
-    },
-    "cameraEnergy": {
-      "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "config"
-    },
-    "cameraStructureClassic": {
-      "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "config"
-    },
-    "dislocateShape": {
-      "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "config"
-    },
-    "dislocateBuilding": {
-      "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "config"
-    },
-    "dislocateEnergy": {
-      "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "config"
-    },
-    "dislocateStructureClassic": {
-      "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "config"
-    },
-    "contributionsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "hoveredObjectId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "hoveredTargetObjectId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "hoveredTargetMode": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "hoveredTargetId": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {
@@ -305,29 +141,6 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {}
-    },
-    "CadComponentSelection": {
-      "title": "CadComponentSelection",
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {}
-    },
-    "CadDislocateOptions": {
-      "title": "CadDislocateOptions",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "moveEnabled",
-        "rotateEnabled"
-      ],
-      "properties": {
-        "moveEnabled": {
-          "type": "boolean"
-        },
-        "rotateEnabled": {
-          "type": "boolean"
-        }
-      }
     },
     "CadStringList": {
       "title": "CadStringList",

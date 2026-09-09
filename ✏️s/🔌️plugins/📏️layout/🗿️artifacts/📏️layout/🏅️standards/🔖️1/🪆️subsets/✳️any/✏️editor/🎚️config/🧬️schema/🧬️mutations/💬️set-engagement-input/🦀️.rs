@@ -17,7 +17,13 @@ impl protocol::MutationKind<LayoutConfig, LayoutConfigMutation> for SetEngagemen
         next.engagement_input = self.value.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &LayoutConfig) -> Vec<LayoutConfigMutation> { vec![LayoutConfigMutation::SetEngagementInput(Self { value: base.engagement_input.clone() })] }
-    fn label(&self) -> String { "Set Engagement Input".into() }
-    fn target(&self) -> Vec<String> { vec!["engagement_input".into()] }
+    fn inverse(&self, base: &LayoutConfig) -> Vec<LayoutConfigMutation> {
+        vec![LayoutConfigMutation::SetEngagementInput(Self { value: base.engagement_input.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Engagement Input".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["engagement_input".into()]
+    }
 }

@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateRefrigerationSystem` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateRefrigerationSystem, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -12,7 +12,12 @@ pub fn diff(payload: &super::CreateRefrigerationSystem, base: &EnergyModelSnapsh
     if payload.index as usize > base.model.refrigeration_systems.len() {
         return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} refrigeration_systems.", payload.index, base.model.refrigeration_systems.len()), [payload.id.0.to_string()]);
     }
-    if !(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.defrost_schedule_id) || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.defrost_schedule_id) || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.defrost_schedule_id) || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.defrost_schedule_id) || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.defrost_schedule_id)) {
+    if !(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.defrost_schedule_id)
+        || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.defrost_schedule_id)
+        || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.defrost_schedule_id)
+        || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.defrost_schedule_id)
+        || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.defrost_schedule_id))
+    {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.defrost_schedule_id.0), [payload.defrost_schedule_id.0.to_string()]);
     }
     let mut model = base.model.clone();

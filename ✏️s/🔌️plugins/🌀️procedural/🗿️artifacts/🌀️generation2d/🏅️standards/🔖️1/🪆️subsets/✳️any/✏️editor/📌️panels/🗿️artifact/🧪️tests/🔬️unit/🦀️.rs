@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::generation2d::testkit::{app, render as render_body};
 

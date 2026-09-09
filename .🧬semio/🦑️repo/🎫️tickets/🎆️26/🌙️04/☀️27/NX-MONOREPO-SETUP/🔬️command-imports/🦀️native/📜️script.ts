@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import { resolve, relative } from "node:path";
+const workspace = process.cwd(), require = createRequire(import.meta.url), library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const { cacheInternals } = await import(resolve(workspace, library, "🟨️.mjs")), entry = resolve(workspace, library, "⚡️caching/🦀️cargo/📜️script.ts");
+const started = Date.now(), actual = cacheInternals.relativeScriptInputs([entry], workspace);
+const built = await require("esbuild").build({ entryPoints: [entry], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
+const expected = Object.keys(built.metafile.inputs).map((path: string) => "{workspaceRoot}/" + relative(workspace, resolve(workspace, path))).sort();
+const missing = expected.filter(path => !actual.includes(path)), extra = actual.filter((path: string) => !expected.includes(path));
+console.log(JSON.stringify({ elapsedMs: Date.now() - started, actual: actual.length, expected: expected.length, paths: expected.map(path => path.replace("{workspaceRoot}/", "")), missing: missing.slice(0, 10), extra: extra.slice(0, 10) }));
+assert.equal(missing.length + extra.length, 0);

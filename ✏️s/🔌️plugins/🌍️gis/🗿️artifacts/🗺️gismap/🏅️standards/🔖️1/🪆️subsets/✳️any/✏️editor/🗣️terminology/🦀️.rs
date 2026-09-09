@@ -1,7 +1,6 @@
 //! 🗣️ GIS 2D play app — the single `app_labels!` block plus the locale resolvers every taxonomy node
 //! reaches for.
 
-
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the GIS 2D app; one field per label makes every locale combination compile-checked.

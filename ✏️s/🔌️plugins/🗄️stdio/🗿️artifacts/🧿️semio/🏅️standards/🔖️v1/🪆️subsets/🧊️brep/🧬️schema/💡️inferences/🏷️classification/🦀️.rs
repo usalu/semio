@@ -10,6 +10,7 @@
 //! in the peel plan — so this file is classify-only for now.
 
 use crate::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
+use crate::standards::v1::subsets::brep::schema::engine::PointClassification;
 use crate::standards::v1::subsets::brep::schema::inferences::bounding_volume::{build_face_bvh, FaceBvh};
 use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::closest_point_on_solid;
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, LoopId, SolidId};
@@ -21,7 +22,6 @@ use crate::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coed
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::predicates::{orient2d, Orient};
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
-use crate::standards::v1::subsets::brep::schema::engine::PointClassification;
 
 // #region 🔖️Api
 

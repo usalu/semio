@@ -1,0 +1,18 @@
+syntax = "proto3";
+package semio.app.puzzle.puzzle2d.window;
+message Puzzle2dWindowConfig {
+  double camera_x = 1;
+  double camera_y = 2;
+  double camera_zoom = 3;
+  string lod_mode = 4;
+  uint32 fill_count = 5;
+  bool grid_snap_enabled = 6;
+  double grid_factor = 7;
+  double suggestion_offset = 8;
+}
+message Puzzle2dWindowTransient {
+  string engagement_input = 1;
+  uint64 brush_candidate_index = 2;
+  repeated string brush_candidates_json = 3;
+  string brush_candidate_source_handle_id = 4;
+}

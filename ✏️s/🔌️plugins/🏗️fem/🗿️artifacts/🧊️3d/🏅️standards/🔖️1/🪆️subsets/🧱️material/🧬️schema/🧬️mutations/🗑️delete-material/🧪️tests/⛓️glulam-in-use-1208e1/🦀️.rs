@@ -53,7 +53,25 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(messages.len(), 1, "delete-material/glulam-in-use-1208e1: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-referenced", "delete-material/glulam-in-use-1208e1: the refusal is reported as mutation.target-referenced");
     assert_eq!(messages[0].level, protocol::Severity::Error, "delete-material/glulam-in-use-1208e1: a live referrer is an Error, the same level a missed target raises — the request is answerable, just not now");
-    assert_eq!(messages[0].target, vec!["gl24h".to_string(), "col_l_0".to_string(), "raf_l_0".to_string(), "raf_r_0".to_string(), "col_r_0".to_string(), "col_l_1".to_string(), "raf_l_1".to_string(), "raf_r_1".to_string(), "col_r_1".to_string(), "col_l_2".to_string(), "raf_l_2".to_string(), "raf_r_2".to_string(), "col_r_2".to_string()], "delete-material/glulam-in-use-1208e1: the diagnostic addresses exactly \"gl24h\", \"col_l_0\", \"raf_l_0\", \"raf_r_0\", \"col_r_0\", \"col_l_1\", \"raf_l_1\", \"raf_r_1\", \"col_r_1\", \"col_l_2\", \"raf_l_2\", \"raf_r_2\", \"col_r_2\"");
+    assert_eq!(
+        messages[0].target,
+        vec![
+            "gl24h".to_string(),
+            "col_l_0".to_string(),
+            "raf_l_0".to_string(),
+            "raf_r_0".to_string(),
+            "col_r_0".to_string(),
+            "col_l_1".to_string(),
+            "raf_l_1".to_string(),
+            "raf_r_1".to_string(),
+            "col_r_1".to_string(),
+            "col_l_2".to_string(),
+            "raf_l_2".to_string(),
+            "raf_r_2".to_string(),
+            "col_r_2".to_string()
+        ],
+        "delete-material/glulam-in-use-1208e1: the diagnostic addresses exactly \"gl24h\", \"col_l_0\", \"raf_l_0\", \"raf_r_0\", \"col_r_0\", \"col_l_1\", \"raf_l_1\", \"raf_r_1\", \"col_r_1\", \"col_l_2\", \"raf_l_2\", \"raf_r_2\", \"col_r_2\""
+    );
 }
 
 /// ↩️ The inverse is computed from `before` and the mutation payload alone, never from the verdict,

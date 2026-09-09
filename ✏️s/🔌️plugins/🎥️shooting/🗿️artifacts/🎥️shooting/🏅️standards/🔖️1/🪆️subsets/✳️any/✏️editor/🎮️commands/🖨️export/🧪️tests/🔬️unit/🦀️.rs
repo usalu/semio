@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::shooting::ShootingCommand;
 use crate::editor::shooting::testkit::{dispatch, shooting_app};
+use crate::editor::shooting::ShootingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn export_active_shot_produces_one_icon_render_item() {

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::STDIO_PDF_DOCUMENT_SCHEMA;
 

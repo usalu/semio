@@ -28,7 +28,7 @@ pub use crate::os_spr::causal::{
     DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES, DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES,
 };
 pub use crate::os_spr::channel::{
-    decode_app_frame, encode_app_command, encode_app_frame, encode_local_interaction_query_frame_into, AppCommand, AppFrame, ChildPackEntry, DecodedAppCommandOwner, PagedAppCommandDecodeCursor, PresenceCommandCursor, CHANNEL_VERSION,
+    decode_app_frame, encode_app_command, encode_app_frame, encode_local_interaction_query_frame_into, AppCommand, AppFrame, ChildPackEntry, DecodedAppCommandOwner, PagedAppCommandDecodeCursor, PresenceCommandCursor, WindowConfigPackEntry, CHANNEL_VERSION,
     INVOCATION_RESULT_PACK_MAXIMUM_BYTES,
 };
 pub use crate::os_spr::command::{

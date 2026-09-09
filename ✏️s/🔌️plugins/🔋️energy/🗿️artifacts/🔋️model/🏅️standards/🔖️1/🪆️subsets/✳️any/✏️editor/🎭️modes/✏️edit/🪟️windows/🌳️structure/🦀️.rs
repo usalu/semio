@@ -40,10 +40,7 @@ pub fn actions() -> Vec<ActionDefinition> {
             "assign-surface-construction",
             "Assign construction",
             "Konstruktion zuweisen",
-            vec![
-                ActionArgDef::number("surface", LocalizedLabel::native("Surface id", "Flächen-Id")).required(),
-                ActionArgDef::number("construction", LocalizedLabel::native("Construction id", "Konstruktions-Id")).required(),
-            ],
+            vec![ActionArgDef::number("surface", LocalizedLabel::native("Surface id", "Flächen-Id")).required(), ActionArgDef::number("construction", LocalizedLabel::native("Construction id", "Konstruktions-Id")).required()],
         ),
         action(
             "set-material-property",

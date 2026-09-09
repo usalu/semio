@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn elem(name: &str, attrs: Vec<(&str, &str)>, children: Vec<XmlNode>) -> XmlNode {

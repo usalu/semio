@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::schema::diff::{DocxBlockDiff, DocxOpcPartDiff};
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 
 #[semio_framework_async_macros::async_test]
 async fn insert_then_remove_block_apply_and_inverse() {

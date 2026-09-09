@@ -9,7 +9,7 @@ use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::duration::{compute_mp4_duration};
+use super::duration::compute_mp4_duration;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an mp4 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
@@ -67,13 +67,7 @@ impl ArtifactInferrer for crate::standards::isobmff::subsets::any::schema::Mp4Bu
 pub fn mp4_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.mp4.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

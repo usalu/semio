@@ -1,10 +1,10 @@
 //! 🔍️ Animate presentation app panel — the inspector: field editors for the selected tile(s).
 
-use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use crate::editor::animate::terminology::AnimatePresentationLabels;
+use crate::editor::animate::{ui_children, ui_label, ui_node};
+use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_ui_contract::{column, field, section, text, BuiltNode};
-use crate::editor::animate::{ui_children, ui_label, ui_node};
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_BODY_DETAILS: &str = "animate.presentation.play.details";

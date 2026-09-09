@@ -5,10 +5,10 @@
 //! records the SOURCE colorspace only — frame buffers are always normalized RGBA8 — so this
 //! mutation must never rewrite a single pixel, which is the load-bearing claim below.
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::set_colorspace;
 use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-use crate::standards::v1::subsets::image::schema::mutations::set_colorspace;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/

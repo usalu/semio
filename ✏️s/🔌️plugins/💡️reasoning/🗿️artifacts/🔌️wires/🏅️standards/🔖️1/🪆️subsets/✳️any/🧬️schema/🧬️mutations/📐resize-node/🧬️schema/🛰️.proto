@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.mutation.resize_node;
+
+message ResizeNode {
+  string node_id = 1;
+  optional double new_radius = 2;
+  optional double new_width = 3;
+  optional double new_height = 4;
+}

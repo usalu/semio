@@ -1,10 +1,9 @@
 //! 🖇️ `create-link` — brings a new {@link ImageLink} into existence in the id-keyed `links`
 //! collection.
 
-
-use crate::{ImageLink, LayoutDiff, LayoutSnapshot};
-use crate::mutations::{LayoutMutation, delete_link};
+use crate::mutations::{delete_link, LayoutMutation};
 use crate::standards::v1::subsets::any::schema::diff::LayoutLinksDelta;
+use crate::{ImageLink, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -34,7 +33,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateLink {
 }
 //#endregion 🖇️CreateLink
 
-
 //#region 🖇️CreateLink
 pub fn diff_create_link(payload: &CreateLink, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.links.iter().any(|link| link.id == payload.link.id) {
@@ -43,7 +41,6 @@ pub fn diff_create_link(payload: &CreateLink, base: &LayoutSnapshot) -> protocol
     protocol::MutationOutcome::new(LayoutDiff { links: Some(LayoutLinksDelta { added: vec![payload.link.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🖇️CreateLink
-
 
 //#region 🖇️CreateLink
 pub fn inverse_create_link(payload: &CreateLink, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {

@@ -4,9 +4,9 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::{Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
 use crate::viewer::block3d::modes::view;
 use crate::viewer::block3d::modes::view::windows::world;
+use crate::{Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `Dialect`/`InteractionView` are
 // only reachable through `app`, not yet in the crate-root re-export list (`ArtifactViewer`/`Viewer`/
@@ -64,11 +64,18 @@ impl ArtifactViewer for Block3dViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to representation") is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(
+        _command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
             world::BODY_KEY => world::render(doc.snapshot)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block3d viewer unknown-body label admission failed"))?,
@@ -80,7 +87,7 @@ impl ArtifactViewer for Block3dViewer {
 
 //#region 🔖️Manifest
 pub fn create_block3d_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(BLOCK3D_DIALECT).icon_id("box").mode_def(view::definition()).default_mode_id(view::BLOCK3D_VIEW_MODE_VIEW).window_kind_def(world::definition()).default_layout(view::layout()).build_definition()
+    Viewer::builder(BLOCK3D_DIALECT).document(["semio", "block", "3d"]).icon_id("box").mode_def(view::definition()).default_mode_id(view::BLOCK3D_VIEW_MODE_VIEW).window_kind_def(world::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

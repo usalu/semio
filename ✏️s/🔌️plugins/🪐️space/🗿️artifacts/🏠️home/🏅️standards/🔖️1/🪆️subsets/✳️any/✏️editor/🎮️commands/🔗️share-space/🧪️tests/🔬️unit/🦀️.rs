@@ -11,7 +11,7 @@ async fn empty_email_opens_the_share_dialog() {
     let doc_snapshot = SHomeSnapshot::default();
     let doc = doc_view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&ShareSpace { space_id: "sp-1".into(), email: String::new(), role: String::new() }, &doc, &cfg).expect("handle");
     assert!(matches!(emit.effects.as_slice(), [Effect::OpenDialog { dialog_id, .. }] if dialog_id == "shareSpace"));
 }
@@ -22,7 +22,7 @@ async fn email_and_role_relay_upsert_member() {
     let doc_snapshot = SHomeSnapshot::default();
     let doc = doc_view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&ShareSpace { space_id: "sp-1".into(), email: "ada@semio.dev".into(), role: "author".into() }, &doc, &cfg).expect("handle");
     let (action_id, args) = emit
         .effects
@@ -44,7 +44,7 @@ async fn blank_role_defaults_to_spectator() {
     let doc_snapshot = SHomeSnapshot::default();
     let doc = doc_view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&ShareSpace { space_id: "sp-1".into(), email: "ada@semio.dev".into(), role: String::new() }, &doc, &cfg).expect("handle");
     let args = emit
         .effects

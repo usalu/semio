@@ -67,8 +67,6 @@ export interface En1991Diff {
   cS?: number;
   /** @state artifact */
   cD?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 
 export interface En1991Artifact {
@@ -104,5 +102,4 @@ export interface En1991Artifact {
   siloK: number;
   cS: number;
   cD: number;
-  selectedCheckIndex?: number | null;
 }

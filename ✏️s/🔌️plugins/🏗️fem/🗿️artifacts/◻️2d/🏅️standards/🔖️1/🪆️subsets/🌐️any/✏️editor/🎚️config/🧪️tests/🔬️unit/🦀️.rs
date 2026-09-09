@@ -1,6 +1,4 @@
-
 use super::*;
-
 
 /// 🧮️ `Fem2dConfig`'s `MutationDiff` is a whole-record replace, mirroring `ShootingConfig`'s
 /// identical B1 pilot pattern: `apply` ignores `base` entirely.
@@ -8,7 +6,6 @@ use super::*;
 fn fem2d_config_operation_diff_is_a_whole_record_replace() {
     let base = Fem2dConfig::default();
     let mut replacement = Fem2dConfig::default();
-    replacement.locale = "de-DE".into();
     replacement.camera = FemCamera { x: 1.0, y: 2.0, zoom: 3.0 };
     let applied = protocol::MutationDiff::apply(&replacement, &base).expect("valid config mutation diff");
     assert_eq!(applied, replacement);
@@ -39,16 +36,11 @@ fn set_result_display_config_operation_round_trips() {
     assert_eq!(next.result_mode_index, 2);
 }
 
-
 /// 🧷️ LAW: every `Fem2dConfigMutation` variant owns exactly one `MutationLeafDescriptor`, and
 /// `descriptor()` returns the one whose `aggregate_variant` names it.
 #[test]
 fn every_config_mutation_variant_has_its_own_descriptor() {
-    let variants = [
-        Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() },
-        Fem2dConfigMutation::SetResultDisplay { source_id: None, mode: "static".into(), mode_index: 0 },
-        Fem2dConfigMutation::SetCamera { camera: FemCamera::default() },
-    ];
+    let variants = [Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() }, Fem2dConfigMutation::SetResultDisplay { source_id: None, mode: "static".into(), mode_index: 0 }, Fem2dConfigMutation::SetCamera { camera: FemCamera::default() }];
     assert_eq!(<Fem2dConfigMutation as Mutation<Fem2dConfig>>::DESCRIPTORS.len(), variants.len());
     for (index, variant) in variants.iter().enumerate() {
         let descriptor = variant.descriptor();

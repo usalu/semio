@@ -1,9 +1,9 @@
 //! 🔀️ `reorder-tiles` mutation payload — repositions a figure tile within `tiles` by id (id-keyed
 //! collection, so addressing is `id`+`to_index`, not a bare index pair).
 
-use crate::PresentationSnapshot;
 use crate::diff::PresentationDiff;
 use crate::mutations::PresentationMutation;
+use crate::PresentationSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔹Payload

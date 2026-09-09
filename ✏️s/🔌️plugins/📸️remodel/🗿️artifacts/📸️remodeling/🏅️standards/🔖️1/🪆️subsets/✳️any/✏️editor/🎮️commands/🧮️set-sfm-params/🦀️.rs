@@ -1,9 +1,9 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-sfm-params`.
 
+use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::mutations::update_sfm_params;
 use crate::op::RemodelingMutation;
 use crate::{RemodelingSnapshot, RobustLossKind, SfmParams};
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

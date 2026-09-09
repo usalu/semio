@@ -5,7 +5,7 @@
   "vEdKn": null,
   "hEdKn": null,
   "zMm3": null,
-  "areaMm2": 640000.0,
+  "areaMm2": 640000,
   "shearAreaMm2": null,
   "fKMpa": null,
   "fVkMpa": null,
@@ -21,6 +21,5 @@
   "bedJointThicknessMm": null,
   "storeys": null,
   "hEfMm": null,
-  "tEfMm": null,
-  "selectedCheckIndex": null
+  "tEfMm": null
 }

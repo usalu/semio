@@ -31,9 +31,13 @@ impl MutationKind<Gis2dPresence, Gis2dPresenceMutation> for SetCamera {
         vec![Self { camera_json: base.camera_json.clone() }.into()]
     }
 
-    fn label(&self) -> String { "Set camera".into() }
+    fn label(&self) -> String {
+        "Set camera".into()
+    }
 
-    fn target(&self) -> Vec<String> { vec!["cameraJson".into()] }
+    fn target(&self) -> Vec<String> {
+        vec!["cameraJson".into()]
+    }
 }
 //#endregion ⚙️Behavior
 

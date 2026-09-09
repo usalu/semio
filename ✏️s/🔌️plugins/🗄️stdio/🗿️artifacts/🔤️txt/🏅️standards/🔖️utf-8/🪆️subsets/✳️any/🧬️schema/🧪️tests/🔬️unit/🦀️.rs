@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::schema::mutations::InsertLineMutation;
-use crate::{STDIO_TXT_DOCUMENT_SCHEMA, TxtDiff, TxtMutation};
+use crate::{TxtDiff, TxtMutation, STDIO_TXT_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {
@@ -93,8 +92,8 @@ fn sweep_b() -> TxtSnapshot {
 /// already checks in both directions anyway.
 #[semio_framework_async_macros::async_test]
 async fn field_sweep_covers_every_mutable_field() {
-    use protocol::MutationDiff;
     use protocol::os_spr::command::DiffAlgebra;
+    use protocol::MutationDiff;
     let a = sweep_a();
     let b = sweep_b();
 

@@ -12,11 +12,11 @@
 //! machinery — see `🧭topology/🦀️.rs` for the derivation).
 
 use crate::ProgramSnapshot;
-use protocol::Inference;
 use framework_schema::ArtifactSchema;
+use protocol::Inference;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_topology};
+use super::topology::compute_topology;
 //#region 🔖️DerivedComputeImports
 /// 🧭️ Dissolved out of the former `⚙️engine` topic files (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — every `fn(&ProgramSnapshot, ...) ->
@@ -102,13 +102,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ProgramBui
 pub fn program_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.architect.program.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

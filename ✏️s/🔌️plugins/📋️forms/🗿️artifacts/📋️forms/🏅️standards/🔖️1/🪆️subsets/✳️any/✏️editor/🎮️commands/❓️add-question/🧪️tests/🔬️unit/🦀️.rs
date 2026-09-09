@@ -1,11 +1,10 @@
-
 use super::*;
-use crate::editor::forms::FormsCommand;
 use crate::editor::forms::commands::drop_question_kind::DropQuestionKind;
 use crate::editor::forms::commands::move_question::MoveQuestion;
 use crate::editor::forms::commands::patch_questions::PatchQuestions;
 use crate::editor::forms::commands::remove_question::RemoveQuestion;
 use crate::editor::forms::testkit::{dispatch, forms_app};
+use crate::editor::forms::FormsCommand;
 use AddQuestion;
 
 #[semio_framework_async_macros::async_test]

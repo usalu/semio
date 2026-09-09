@@ -1,19 +1,12 @@
-# 🧬️ Playbook diff schema — sparse field delta over the artifact.
-
+# 🪪️ PlaybookDiff imports the canonical OS Store child identity.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import PlaybookArtifact from "../🔗️.graphql"
 type PlaybookDiff {
-  artifact: PlaybookArtifact @state(class: ARTIFACT)
-  schema: String @state(class: ARTIFACT)
-  id: String @state(class: ARTIFACT)
-  version: String @state(class: ARTIFACT)
-  title: String @state(class: ARTIFACT)
-  document: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.document")
-  flow: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.flow")
-  selectedIds: PlaybookStringList @state(class: PRESENCE)
-  contributionsJson: String @state(class: CONFIG)
+  artifact: PlaybookArtifact
+  schema: String
+  id: String
+  version: String
+  title: String
+  document: ArtifactChild
+  flow: ArtifactChild
 }
-
-type PlaybookStringList {
-  values: [String!]!
-}
-
-type PlaybookArtifact { schema: String! }

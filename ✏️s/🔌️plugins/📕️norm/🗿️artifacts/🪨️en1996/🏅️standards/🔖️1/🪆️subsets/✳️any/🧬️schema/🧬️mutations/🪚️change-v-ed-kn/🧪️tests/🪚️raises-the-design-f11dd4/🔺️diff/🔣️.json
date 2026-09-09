@@ -2,7 +2,7 @@
   "artifact": null,
   "mEdKnm": null,
   "nEdKn": null,
-  "vEdKn": 48.0,
+  "vEdKn": 48,
   "hEdKn": null,
   "zMm3": null,
   "areaMm2": null,
@@ -21,6 +21,5 @@
   "bedJointThicknessMm": null,
   "storeys": null,
   "hEfMm": null,
-  "tEfMm": null,
-  "selectedCheckIndex": null
+  "tEfMm": null
 }

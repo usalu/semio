@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `UnbindRepresentation`.
 
-use crate::standards::v1::subsets::kit::schema::mutations::{SemioKitMutation, bind_representation};
+use crate::standards::v1::subsets::kit::schema::mutations::{bind_representation, SemioKitMutation};
 use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Inverse

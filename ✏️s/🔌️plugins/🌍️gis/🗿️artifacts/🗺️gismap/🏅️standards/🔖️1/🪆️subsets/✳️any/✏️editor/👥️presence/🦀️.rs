@@ -1,9 +1,9 @@
 //! 👥️ Gis2d presence — shareable live ephemeral state + mutations.
 
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of gis2d view state — just the camera now; selection/hover broadcast

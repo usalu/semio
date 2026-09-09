@@ -2,20 +2,16 @@
 //! live document AND its own view-only camera/LOD state, so — like `block`/`cad`'s app-level
 //! `world.rs` precedent — this lives at app level rather than in the artifact's `🧬️schema`).
 
-use semio_s_artifact_trinity_jack::{move_node, TrinityGraphMutation};
-use semio_s_artifact_trinity_jack::{port_key, Graph, JackSnapshot, Node, PortDirection};
-use crate::standards::v1::subsets::any::schema::{ApplyRuleResult, Rule};
+use crate::standards::v1::subsets::any::schema::{self, ApplyRuleResult, Rule};
+pub use semio_framework_os_infinite::canvas;
+use semio_framework_os_infinite::BoardHost;
+use semio_framework_os_infinite::{compute_edge_bezier_points, distance_between, force_graph::apply_force_graph_layout_to_fixture_v1_json, BoardEngine, CanvasPalette, HandleRole};
 use semio_s_artifact_trinity_jack::ast::QueryResult;
 use semio_s_artifact_trinity_jack::executor::execute;
 use semio_s_artifact_trinity_jack::language_service::{complete as complete_jack, parse};
 use semio_s_artifact_trinity_jack::lexer::tokenize as tokenize_jack;
-use semio_framework_os_infinite::{
-    compute_edge_bezier_points, distance_between,
-    force_graph::apply_force_graph_layout_to_fixture_v1_json,
-    BoardEngine, CanvasPalette, HandleRole,
-};
-use semio_framework_os_infinite::BoardHost;
-pub use semio_framework_os_infinite::canvas;
+use semio_s_artifact_trinity_jack::{move_node, TrinityGraphMutation};
+use semio_s_artifact_trinity_jack::{port_key, Graph, JackSnapshot, Node, PortDirection};
 use std::cell::Cell;
 use std::collections::HashMap;
 
@@ -651,9 +647,7 @@ struct JackRunWithFixture {
 /// shape byte-for-byte.
 impl dsl::ToValue for JackRunWithFixture {
     fn to_value(&self) -> dsl::DslValue {
-        let dsl::DslValue::Object(mut entries) = dsl::ToValue::to_value(&self.result) else {
-            unreachable!("QueryResult::to_value always produces an object")
-        };
+        let dsl::DslValue::Object(mut entries) = dsl::ToValue::to_value(&self.result) else { unreachable!("QueryResult::to_value always produces an object") };
         entries.push(("fixtureJson".to_string(), dsl::ToValue::to_value(&self.fixture_json)));
         dsl::DslValue::Object(entries)
     }

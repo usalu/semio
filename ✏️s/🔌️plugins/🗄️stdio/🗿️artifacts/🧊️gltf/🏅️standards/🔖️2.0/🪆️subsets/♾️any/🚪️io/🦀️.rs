@@ -181,7 +181,6 @@ impl std::str::FromStr for GltfAccessorType {
 }
 
 impl GltfAccessorType {
-
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_str(self) -> &'static str {
         match self {

@@ -19,8 +19,7 @@ fn op_pack_err(error: &dsl::PackError) -> protocol::ProtocolError {
 }
 pub fn decode(bytes: &[u8]) -> Result<PngMutation, protocol::ProtocolError> {
     let mut r = dsl::ByteReader::new(bytes);
-    let result: Result<PngMutation, protocol::ProtocolError> =
-        Ok(PngMutation::ChangeTimestamp(ChangeTimestampMutation { time: read_bin_option(&mut r, read_bin_timestamp).map_err(|error| op_pack_err(&error))? }));
+    let result: Result<PngMutation, protocol::ProtocolError> = Ok(PngMutation::ChangeTimestamp(ChangeTimestampMutation { time: read_bin_option(&mut r, read_bin_timestamp).map_err(|error| op_pack_err(&error))? }));
     let position = r.position();
     if position != bytes.len() {
         return Err(protocol::ProtocolError::Malformed { what: "change-timestamp", offset: position as u64, detail: "trailing payload bytes".into() });

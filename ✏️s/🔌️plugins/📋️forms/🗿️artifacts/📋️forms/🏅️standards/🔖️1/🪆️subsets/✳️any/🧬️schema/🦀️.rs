@@ -7,12 +7,11 @@ use crate::op::FormMutation;
 // reference in this file (confirmed by `cargo check`: E0425/E0433 "not found in `dsl`").
 use crate::document_dsl as forms_dsl;
 use crate::{forms_snapshot_with_state, forms_steps, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
-use framework_schema::ArtifactSchema;
 use dsl::os_pack::json::{Object, Value};
-use std::collections::BTreeMap;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full forms artifact state across the artifact, presence and config lanes. Ticket
+/// 🧬️ forms document artifact state. Ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`forms→C:value,table`): `steps: Vec<FormStep>` is
 /// replaced by the same `structure`/`results` composed-child slot pair as `FormsSnapshot` — read
 /// through `crate::forms_artifact_steps`, never a bare field.
@@ -35,14 +34,6 @@ pub struct FormsArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
     pub results: FormsResultsChild,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
-    #[state(config)]
-    pub current_step_index: u32,
-    #[state(config)]
-    pub try_values: BTreeMap<String, Vec<String>>,
-    #[state(config)]
-    pub contributions_json: String,
 }
 //#endregion 🔖️Artifact
 
@@ -50,18 +41,7 @@ pub struct FormsArtifact {
 impl Default for FormsArtifact {
     fn default() -> Self {
         let empty = forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, Vec::new());
-        Self {
-            schema: empty.schema,
-            id: empty.id,
-            version: empty.version,
-            title: empty.title,
-            structure: empty.structure,
-            results: empty.results,
-            selected_ids: Vec::new(),
-            current_step_index: 0,
-            try_values: BTreeMap::new(),
-            contributions_json: "[]".into(),
-        }
+        Self { schema: empty.schema, id: empty.id, version: empty.version, title: empty.title, structure: empty.structure, results: empty.results }
     }
 }
 
@@ -71,7 +51,7 @@ impl FormsArtifact {
         FormsSnapshot { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), structure: self.structure.clone(), results: self.results.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: FormsSnapshot) -> Self {
         Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, structure: snapshot.structure, results: snapshot.results, ..Self::default() }
     }
@@ -246,13 +226,7 @@ pub fn json_f64_value(value: &Value) -> f64 {
 pub fn forms_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.forms.forms",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -292,7 +266,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
+pub use crate::FormQuestion;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::FormStep;
-pub use crate::FormQuestion;
 //#endregion 🔁️Re-exports

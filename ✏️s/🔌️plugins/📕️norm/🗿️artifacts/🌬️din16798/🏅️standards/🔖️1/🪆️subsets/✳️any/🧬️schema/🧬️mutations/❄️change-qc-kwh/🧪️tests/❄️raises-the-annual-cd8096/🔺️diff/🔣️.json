@@ -50,7 +50,7 @@
   "coolingReferenceKwh": null,
   "chillerType": null,
   "eerActual": null,
-  "qCKwh": 1250.0,
+  "qCKwh": 1250,
   "generationReferenceKwh": null,
   "dataCenterSupplyC": null,
   "hStWK": null,
@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

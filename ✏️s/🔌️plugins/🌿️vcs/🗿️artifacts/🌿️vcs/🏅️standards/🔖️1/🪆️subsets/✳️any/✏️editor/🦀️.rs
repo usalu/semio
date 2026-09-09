@@ -8,7 +8,6 @@
 //! `VcsCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
-use crate::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEMA};
 use crate::editor::vcs::commands::edit as edit_command;
 use crate::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, patch_snapshot, text_edit};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
@@ -17,12 +16,13 @@ use crate::editor::vcs::modes::edit::windows::{editor, history};
 use crate::editor::vcs::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::vcs::presence::{VcsDemoPresence, VcsDemoPresenceMutation};
 use crate::editor::vcs::terminology::vcs_play_labels;
+use crate::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
-    HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
 };
 use std::collections::BTreeSet;
 use store::EngineHandles;
@@ -144,7 +144,7 @@ semio_framework_plugin::app_commands! {
 /// 🧪️ B1: unit struct — the former `VcsPlayApp::selected_checkpoint_ids` `RefCell` field passed through
 /// `crate::editor::vcs::config::VcsDemoConfig` before becoming the framework-owned "history" interaction
 /// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM, see `VCS_INTERACTION_HISTORY`'s
-/// doc comment); `locale` is the only field left in `Config`, written through `VcsDemoConfigMutation`s.
+/// doc comment); the config no longer duplicates host-owned view preferences.
 #[derive(Default)]
 pub struct VcsPlayApp;
 
@@ -166,10 +166,8 @@ const VCS_BOUNDED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "canvasWheel", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
-const VCS_RESUMABLE_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "edit", lanes: &[ArtifactToolPublicationLane::Artifact] },
-];
+const VCS_RESUMABLE_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
+    &[ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::Artifact] }, ArtifactToolPublicationContract { tool_id: "edit", lanes: &[ArtifactToolPublicationLane::Artifact] }];
 
 fn vcs_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(VCS_BOUNDED_RAW_BYTES, 32, 32, 16_384, 7_500)
@@ -198,7 +196,7 @@ fn vcs_bounded_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<VcsPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 fn vcs_edit_text(command: &VcsCommand) -> Option<&str> {
@@ -613,7 +611,9 @@ struct VcsOneItemPreparationFactory<P, M> {
 }
 
 impl<P, M> VcsOneItemPreparationFactory<P, M> {
-    fn new(lane: store::HistoryLane) -> Self { Self { lane, marker: std::marker::PhantomData } }
+    fn new(lane: store::HistoryLane) -> Self {
+        Self { lane, marker: std::marker::PhantomData }
+    }
 }
 
 struct VcsOneItemPreparation<P, M> {
@@ -630,13 +630,28 @@ struct VcsOneItemPreparation<P, M> {
 fn vcs_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
     let id = format!("vcs-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
     protocol::Edit {
-        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse,
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
         }],
-        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
     }
 }
 
@@ -647,15 +662,30 @@ where
     M::Diff: protocol::MutationDiff<P>,
 {
     fn preflight(&self, _mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != self.lane || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) { return Err("VCS one-item preparation rejected its lane or description envelope".into()); }
+        if lane != self.lane || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("VCS one-item preparation rejected its lane or description envelope".into());
+        }
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
-        if request.lane != self.lane || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES { return Err(request); }
+        if request.lane != self.lane
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
         Ok(Box::new(VcsOneItemPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
         }))
     }
 }
@@ -667,8 +697,12 @@ where
     M::Diff: protocol::MutationDiff<P>,
 {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
         let base = self.base.as_ref().ok_or_else(|| "VCS one-item preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "VCS one-item preparation lost its mutation owner".to_string())?;
         let inverse = mutation.inverse(base.get());
@@ -680,29 +714,49 @@ where
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("VCS one-item preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() {
+                return Err("VCS one-item preparation could not return its exact base root".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
             let bytes = authority.actor().len();
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.authority = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         Ok(store::SnapshotRetirementStep::Complete)
     }
 
-    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none() }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
 }
 //#endregion 📬️StorePreparation
 
@@ -803,7 +857,17 @@ impl ArtifactEditor for VcsPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             VcsCommand::command_id,
             VCS_BOUNDED_RAW_BYTES,
             if bounded { VCS_BOUNDED_WORK_ITEMS } else { VCS_EDIT_MAXIMUM_WORK_ITEMS },
@@ -865,14 +929,15 @@ impl ArtifactEditor for VcsPlayApp {
         command: &VcsCommand,
         doc: &ArtifactView<'_, VcsSnapshot>,
         cfg: &ConfigView<'_, VcsDemoConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = vcs_play_labels(view_state);
         match body_key {
             VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
@@ -902,12 +967,12 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(inspection_panel::definition())
             .mutation("incrementCounter", LocalizedLabel::native("Increment Counter", "Zähler erhöhen"))
             .mutation("patchSnapshot", LocalizedLabel::native("Patch Projection", "Projektion aktualisieren"))
-            .mutation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), semio_framework_plugin::ActionKind::Mutation, "typography"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .view_action("noMutation", LocalizedLabel::native("No-operation", "Keine Aktion"))
-            .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
-            .view_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
-            .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
             .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Leinwand-Mausrad"))
             .action_interactive_job("incrementCounter", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchSnapshot", InteractiveJobClassification::Migrated)

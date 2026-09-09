@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn neutral_input() -> ComfortInput {

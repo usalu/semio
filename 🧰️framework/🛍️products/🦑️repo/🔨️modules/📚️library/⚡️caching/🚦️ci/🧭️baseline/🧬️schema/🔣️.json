@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repositoryId", "workflowId", "runId", "branch", "head", "full"],
+      "properties": {
+        "repositoryId": {"type": "integer", "minimum": 1}, "workflowId": {"type": "integer", "minimum": 1}, "runId": {"type": "integer", "minimum": 1},
+        "branch": {"type": "string", "minLength": 1, "pattern": "^[^\\u0000-\\u001f]+$"}, "head": {"$ref": "#/definitions/sha"}, "full": {"type": "boolean"}
+      }
+    },
+    "run": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "number", "repositoryId", "workflowId", "branch", "head", "event", "status", "conclusion"],
+      "properties": {
+        "id": {"type": "integer", "minimum": 1}, "number": {"type": "integer", "minimum": 1},
+        "repositoryId": {"type": "integer", "minimum": 1}, "workflowId": {"type": "integer", "minimum": 1},
+        "branch": {"type": "string"}, "head": {"$ref": "#/definitions/sha"}, "event": {"type": "string"}, "status": {"type": "string"}, "conclusion": {"type": ["string", "null"]}
+      }
+    },
+    "selection": {
+      "type": "object", "additionalProperties": false, "required": ["mode", "head", "base", "runId", "reason"],
+      "properties": {
+        "mode": {"enum": ["affected", "all"]}, "head": {"$ref": "#/definitions/sha"},
+        "base": {"anyOf": [{"$ref": "#/definitions/sha"}, {"type": "null"}]},
+        "runId": {"type": ["integer", "null"]}, "reason": {"enum": ["last-successful-ancestor", "full-requested", "no-successful-ancestor"]}
+      }
+    }
+  }
+}

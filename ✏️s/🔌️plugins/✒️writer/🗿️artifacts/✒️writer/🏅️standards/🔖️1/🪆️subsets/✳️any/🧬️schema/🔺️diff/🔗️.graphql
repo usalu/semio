@@ -1,4 +1,4 @@
-# 🧬️ Writer diff schema.
+# 🔺️ Writer sparse durable document delta.
 
 type WriterDiff {
   artifact: WriterArtifact @state(class: ARTIFACT)
@@ -6,54 +6,5 @@ type WriterDiff {
   id: String @state(class: ARTIFACT)
   languageId: String @state(class: ARTIFACT)
   uri: String @state(class: ARTIFACT)
-  text: WriterTextDelta @state(class: ARTIFACT)
-  editorSelection: WriterEditorSelection @state(class: PRESENCE)
-  editorSettings: WriterEditorSettings @state(class: PRESENCE)
-  formatSignal: Int @state(class: CONFIG)
-  lintSignal: Int @state(class: CONFIG)
-  revision: Int @state(class: CONFIG)
-  engagementInput: String @state(class: CONFIG)
-  cameraX: Float @state(class: CONFIG)
-  cameraY: Float @state(class: CONFIG)
-  cameraZoom: Float @state(class: CONFIG)
-}
-
-type WriterArtifact {
-  schema: String!
-  id: String!
-  languageId: String!
-  uri: String!
-  text: String!
-  editorSelection: WriterEditorSelection
-  editorSettings: WriterEditorSettings!
-  formatSignal: Int!
-  lintSignal: Int!
-  revision: Int!
-  engagementInput: String!
-  cameraX: Float!
-  cameraY: Float!
-  cameraZoom: Float!
-}
-
-type WriterEditorSelection {
-  start: Int!
-  end: Int!
-}
-
-type WriterEditorSettings {
-  showLineNumbers: Boolean!
-  fontPx: Int!
-  lineHeight: Int!
-  tabSize: Int!
-}
-
-type WriterTextDelta {
-  replacement: String
-  edits: [WriterTextRangeEdit!]!
-}
-
-type WriterTextRangeEdit {
-  start: Int!
-  end: Int!
-  insert: String!
+  document: ArtifactChild @state(class: ARTIFACT)
 }

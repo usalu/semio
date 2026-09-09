@@ -1,7 +1,5 @@
 //! 🪞 `update-stainless-inputs` — atomically updates the stainless-inputs facet (stainless_m_ed_knm, stainless_w_pl_mm3, stainless_f_y_mpa are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

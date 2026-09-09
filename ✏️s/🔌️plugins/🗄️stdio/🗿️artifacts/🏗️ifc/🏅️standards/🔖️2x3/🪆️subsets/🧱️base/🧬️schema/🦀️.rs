@@ -3,7 +3,7 @@
 //! distinct schema id `s.stdio.ifc.2x3` so the two standards' descriptors never collide in the
 //! flat `::framework_schema::register_artifact_schema_descriptor` registry.
 
-use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3Snapshot};
+use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -56,13 +56,7 @@ impl Ifc2x3Artifact {
 pub fn ifc2x3_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.ifc.2x3",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -284,7 +278,7 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
             Part21Instance { id: 2, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset, Part21Value::Int(0)])] },
         ],
     };
-    
+
     Ifc2x3Snapshot { schema: crate::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: None }
 }
 //#endregion 🔖️DocumentHelpers
@@ -310,9 +304,8 @@ pub fn register() {
     ::framework_schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
-    store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(
-        crate::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA,
-    )).expect("static Stdio registration must be available and conflict-free");
+    store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(crate::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA))
+        .expect("static Stdio registration must be available and conflict-free");
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each subset's `ComposerEntry`
     // is registered separately via this standard's own `composer::entries()` aggregation.

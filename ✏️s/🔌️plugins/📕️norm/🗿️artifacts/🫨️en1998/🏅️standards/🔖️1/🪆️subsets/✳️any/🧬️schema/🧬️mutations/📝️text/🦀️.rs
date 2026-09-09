@@ -174,9 +174,7 @@ fn en1998_mutation_from_dsl(mutation: En1998MutationDsl) -> En1998Mutation {
         En1998MutationDsl::ChangeVRdKn { new_v_rd_kn } => En1998Mutation::ChangeVRdKn(change_v_rd_kn::ChangeVRdKn { new_v_rd_kn }),
         En1998MutationDsl::ChangeDriftMm { new_drift_mm } => En1998Mutation::ChangeDriftMm(change_drift_mm::ChangeDriftMm { new_drift_mm }),
         En1998MutationDsl::ChangeHeightM { new_height_m } => En1998Mutation::ChangeHeightM(change_height_m::ChangeHeightM { new_height_m }),
-        En1998MutationDsl::ChangeMultipleResistingSystems { new_multiple_resisting_systems } => {
-            En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::ChangeMultipleResistingSystems { new_multiple_resisting_systems })
-        }
+        En1998MutationDsl::ChangeMultipleResistingSystems { new_multiple_resisting_systems } => En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::ChangeMultipleResistingSystems { new_multiple_resisting_systems }),
         En1998MutationDsl::ChangeAnnex { new_annex } => En1998Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex }),
         En1998MutationDsl::ChangeEnAGr { new_en_a_gr } => En1998Mutation::ChangeEnAGr(change_en_a_gr::ChangeEnAGr { new_en_a_gr }),
         En1998MutationDsl::ChangeEnGroundType { new_en_ground_type } => En1998Mutation::ChangeEnGroundType(change_en_ground_type::ChangeEnGroundType { new_en_ground_type }),

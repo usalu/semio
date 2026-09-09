@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "windowId": "left", "windowKindId": "graph", "generation": 3, "revisionByte": 17 },
+    { "windowId": "right", "windowKindId": "graph", "generation": 3, "revisionByte": 17 },
+    { "windowId": "left", "windowKindId": "graph", "generation": 4, "revisionByte": 23 }
+  ],
+  "expectedUniqueContexts": 3
+}

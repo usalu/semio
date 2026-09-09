@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -6,8 +5,9 @@ fn shooting_window_actions_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️window-actions.json")).expect("neutral window vectors");
     let document = crate::standards::v1::subsets::any::schema::default_snapshot();
     let config = ShootingConfig::default();
-    for locale in ["en-US", "de-DE"] {
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::shooting::terminology::ShootingLabels>(locale);
+    for locale in [semio_framework_plugin::Locale::En, semio_framework_plugin::Locale::De] {
+        let view_state = semio_framework_plugin::ViewModel { locale, ..Default::default() };
+        let labels = shooting_play_labels(&view_state);
         for (kind, measures) in [("scene", scene_window::window_measures(&document, labels)), ("icon", icon_window::window_measures(&document, labels))] {
             let json = serde_json::to_value(measures).expect("independent window oracle");
             let actions = json

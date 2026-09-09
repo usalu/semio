@@ -7,14 +7,14 @@ use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutations
+#[path = "➕️append-bytes/🦀️.rs"]
+pub mod append_bytes;
+#[path = "✂️replace-byte-range/🦀️.rs"]
+pub mod replace_byte_range;
 /// 📐️ Typed content mutation for `stdio.binary`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "✂️replace-byte-range/🦀️.rs"]
-pub mod replace_byte_range;
-#[path = "➕️append-bytes/🦀️.rs"]
-pub mod append_bytes;
 #[path = "🔪️truncate-at/🦀️.rs"]
 pub mod truncate_at;
 //#endregion 🔖️Leaves

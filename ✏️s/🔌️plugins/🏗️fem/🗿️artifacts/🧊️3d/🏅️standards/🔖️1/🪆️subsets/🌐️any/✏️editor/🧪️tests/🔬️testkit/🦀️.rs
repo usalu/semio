@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::testkit::{meta, new_app};
 use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};

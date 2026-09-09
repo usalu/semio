@@ -5,7 +5,7 @@
   "footingAreaM2": null,
   "phiDeg": null,
   "cKpa": null,
-  "gammaKnM3": 20.0,
+  "gammaKnM3": 20,
   "bM": null,
   "dFM": null,
   "eSMpa": null,
@@ -21,6 +21,5 @@
   "qBKpa": null,
   "pileBaseAreaM2": null,
   "pileNProfiles": null,
-  "zInvestigatedM": null,
-  "selectedCheckIndex": null
+  "zInvestigatedM": null
 }

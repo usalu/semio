@@ -8,13 +8,7 @@
     "schema",
     "id",
     "layers",
-    "assets",
-    "selectedIds",
-    "brushSize",
-    "brushOpacity",
-    "cameraX",
-    "cameraY",
-    "cameraZoom"
+    "assets"
   ],
   "properties": {
     "schema": {
@@ -39,49 +33,10 @@
     "assets": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/$defs/RasterImageAsset"
+        "$ref": "https://semio.tech/schema/os/store/child.json"
       },
-      "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "brushSize": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "brushOpacity": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "compositeViewport": {
-      "$ref": "#/$defs/RasterViewportSize",
-      "x-semio-state": "config"
-    },
-    "cameraX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "hoveredId": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio.image"
     }
   },
   "$defs": {
@@ -105,15 +60,84 @@
     },
     "RasterLayerNode": {
       "title": "RasterLayerNode",
-      "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "kind"
-      ],
-      "properties": {
-        "kind": {
-          "type": "string"
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "name", "visible", "opacity", "blendMode", "transform"],
+          "properties": {
+            "kind": { "const": "pixel" },
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "visible": { "type": "boolean" },
+            "opacity": { "type": "number" },
+            "blendMode": { "type": "string" },
+            "transform": { "$ref": "#/$defs/RasterTransform" },
+            "mask": { "$ref": "#/$defs/RasterLayerMask" },
+            "width": { "type": "integer", "minimum": 0 },
+            "height": { "type": "integer", "minimum": 0 },
+            "imageKey": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "name", "visible", "opacity", "blendMode", "transform", "children"],
+          "properties": {
+            "kind": { "const": "group" },
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "visible": { "type": "boolean" },
+            "opacity": { "type": "number" },
+            "blendMode": { "type": "string" },
+            "transform": { "$ref": "#/$defs/RasterTransform" },
+            "mask": { "$ref": "#/$defs/RasterLayerMask" },
+            "children": { "type": "array", "items": { "$ref": "#/$defs/RasterLayerNode" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "name", "visible", "opacity", "blendMode", "transform", "adjustmentKind", "params"],
+          "properties": {
+            "kind": { "const": "adjustment" },
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "visible": { "type": "boolean" },
+            "opacity": { "type": "number" },
+            "blendMode": { "type": "string" },
+            "transform": { "$ref": "#/$defs/RasterTransform" },
+            "adjustmentKind": { "type": "string" },
+            "params": {
+              "type": "object",
+              "additionalProperties": { "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/DslValue" }
+            }
+          }
         }
+      ]
+    },
+    "RasterTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "scaleX", "scaleY", "rotation"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "scaleX": { "type": "number" },
+        "scaleY": { "type": "number" },
+        "rotation": { "type": "number" }
+      }
+    },
+    "RasterLayerMask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "linked", "invert"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "linked": { "type": "boolean" },
+        "invert": { "type": "boolean" },
+        "width": { "type": "integer", "minimum": 0 },
+        "height": { "type": "integer", "minimum": 0 }
       }
     },
     "RasterViewportSize": {

@@ -74,6 +74,4 @@ message En1992Artifact {
   double anchor_n_ed_kn = 34;
   // @state artifact
   double anchor_v_ed_kn = 35;
-  // @state presence
-  optional uint32 selected_check_index = 36;
 }

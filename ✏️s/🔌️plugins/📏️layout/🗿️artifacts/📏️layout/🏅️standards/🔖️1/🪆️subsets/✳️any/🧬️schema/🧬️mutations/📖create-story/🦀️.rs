@@ -1,10 +1,9 @@
 //! 📖 `create-story` — brings a new {@link TextStory} into existence in the id-keyed `stories`
 //! collection.
 
-
-use crate::{LayoutDiff, LayoutSnapshot, TextStory};
-use crate::mutations::{LayoutMutation, delete_story};
+use crate::mutations::{delete_story, LayoutMutation};
 use crate::standards::v1::subsets::any::schema::diff::LayoutStoriesDelta;
+use crate::{LayoutDiff, LayoutSnapshot, TextStory};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -34,7 +33,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateStory {
 }
 //#endregion 📖CreateStory
 
-
 //#region 📖CreateStory
 pub fn diff_create_story(payload: &CreateStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.stories.iter().any(|story| story.id == payload.story.id) {
@@ -43,7 +41,6 @@ pub fn diff_create_story(payload: &CreateStory, base: &LayoutSnapshot) -> protoc
     protocol::MutationOutcome::new(LayoutDiff { stories: Some(LayoutStoriesDelta { added: vec![payload.story.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 📖CreateStory
-
 
 //#region 📖CreateStory
 pub fn inverse_create_story(payload: &CreateStory, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {

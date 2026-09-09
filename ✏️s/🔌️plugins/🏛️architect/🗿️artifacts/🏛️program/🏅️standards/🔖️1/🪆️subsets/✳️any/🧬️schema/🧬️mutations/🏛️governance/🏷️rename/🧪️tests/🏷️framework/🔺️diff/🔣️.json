@@ -99,16 +99,5 @@
     "accountabilityRules": [],
     "exceptionManagement": [],
     "governancePerformance": []
-  },
-  "selectedIds": null,
-  "activeRegister": null,
-  "adjacencyKindFilter": null,
-  "activeReportJson": null,
-  "searchQuery": null,
-  "searchHistoryJson": null,
-  "lastResultJson": null,
-  "lastAnalysisJson": null,
-  "graphCameraX": null,
-  "graphCameraY": null,
-  "graphCameraZoom": null
+  }
 }

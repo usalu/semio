@@ -13,7 +13,6 @@
 /// 🧩 Borrowed PNG chunk type tag and payload.
 type PngChunkView<'a> = ([u8; 4], &'a [u8]);
 
-
 use crate::{
     schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency},
     PngSnapshot,

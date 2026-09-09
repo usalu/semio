@@ -7,18 +7,11 @@ export interface GisTerrainDiff {
   exaggeration?: number;
   /** @state artifact */
   importedFeaturesJson?: string;
-  /** @state presence */
-  selectedIds?: GisTerrainStringList;
-  /** @state config */
-  cameraJson?: string;
-  /** @state config */
 }
 
 export interface GisTerrainArtifact {
   exaggeration: number;
   importedFeaturesJson: string;
-  selectedIds: string[];
-  cameraJson: string;
 }
 
 export interface GisTerrainStringList {
@@ -78,8 +71,6 @@ export function parseGisTerrainDiff(value: unknown, at = "$"): GisTerrainDiff {
     artifact: row["artifact"] === undefined ? undefined : gisGisterrainDiffGuardObject(row["artifact"], `${at}.artifact`),
     exaggeration: row["exaggeration"] === undefined ? undefined : gisGisterrainDiffGuardNumber(row["exaggeration"], `${at}.exaggeration`),
     importedFeaturesJson: row["importedFeaturesJson"] === undefined ? undefined : gisGisterrainDiffGuardString(row["importedFeaturesJson"], `${at}.importedFeaturesJson`),
-    selectedIds: row["selectedIds"] === undefined ? undefined : parseGisTerrainStringList(row["selectedIds"], `${at}.selectedIds`),
-    cameraJson: row["cameraJson"] === undefined ? undefined : gisGisterrainDiffGuardString(row["cameraJson"], `${at}.cameraJson`),
   };
 }
 

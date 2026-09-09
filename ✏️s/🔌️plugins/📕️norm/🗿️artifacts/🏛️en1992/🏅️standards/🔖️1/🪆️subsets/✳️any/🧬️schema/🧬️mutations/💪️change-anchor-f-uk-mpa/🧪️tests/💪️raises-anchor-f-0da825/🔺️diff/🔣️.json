@@ -28,12 +28,11 @@
   "liquidSRMaxMm": null,
   "anchorHEfMm": null,
   "anchorCracked": null,
-  "anchorFUkMpa": 900.0,
+  "anchorFUkMpa": 900,
   "anchorFYkMpa": null,
   "anchorASMm2": null,
   "anchorDMm": null,
   "anchorC1Mm": null,
   "anchorNEdKn": null,
-  "anchorVEdKn": null,
-  "selectedCheckIndex": null
+  "anchorVEdKn": null
 }

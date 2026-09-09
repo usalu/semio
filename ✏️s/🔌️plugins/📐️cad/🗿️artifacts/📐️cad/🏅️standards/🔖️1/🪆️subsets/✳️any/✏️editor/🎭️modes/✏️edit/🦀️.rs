@@ -2,20 +2,20 @@
 //! energy/structure-classic) plus the world-scene, selection-overlay and engagement-HUD builders its
 //! four windows share. Each window binds these to its own pane; nothing here is pane-specific.
 
-use crate::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
-use crate::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
-use crate::{CadPaneId, CadSnapshot, CadWorkingScene};
 use crate::editor::cad::config::CadDislocateOptions;
 use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::terminology::CadLabels;
 use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_PLAY_APP_ID};
+use crate::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
+use crate::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
+use crate::{CadPaneId, CadSnapshot, CadWorkingScene};
+use protocol::DslValue;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{
-    mesh_from_kind, world3d_mesh_id_from_url, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, ModeDefinition, UiAssemblyResult, WindowEngagement, WindowEngagementInput,
-    WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+    mesh_from_kind, world3d_mesh_id_from_url, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, ModeDefinition, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
+    WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
-use protocol::DslValue;
 
 pub const CAD_PLAY_MODE_EDIT: &str = "edit";
 
@@ -261,13 +261,7 @@ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &C
                 id: transition.event_kind.clone(),
                 label: transition.label,
                 detail: Some(transition.key),
-                action: Some(cad_action(
-                    "engagementPossibleSelect",
-                    Some(DslValue::object([
-                        ("pane".to_string(), DslValue::String(cad_pane_suffix(pane).to_string())),
-                        ("possibleId".to_string(), DslValue::String(transition.event_kind)),
-                    ])),
-                )),
+                action: Some(cad_action("engagementPossibleSelect", Some(DslValue::object([("pane".to_string(), DslValue::String(cad_pane_suffix(pane).to_string())), ("possibleId".to_string(), DslValue::String(transition.event_kind))])))),
             })
             .collect()
     } else {
@@ -277,10 +271,7 @@ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &C
                 id: entry.id.clone(),
                 label: entry.label.clone(),
                 detail: Some(entry.key.clone()),
-                action: Some(cad_action(
-                    "engagementPossibleSelect",
-                    Some(DslValue::object([("pane".to_string(), DslValue::String(cad_pane_suffix(pane).to_string())), ("possibleId".to_string(), DslValue::String(entry.id.clone()))])),
-                )),
+                action: Some(cad_action("engagementPossibleSelect", Some(DslValue::object([("pane".to_string(), DslValue::String(cad_pane_suffix(pane).to_string())), ("possibleId".to_string(), DslValue::String(entry.id.clone()))])))),
             })
             .collect()
     };

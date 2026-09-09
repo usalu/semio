@@ -1,0 +1,8 @@
+type Generation2dTransient {
+  generationPreviewText: String @state(class: EPHEMERAL_LOCAL_APP)
+}
+
+input SetGenerationPreview {
+  previewText: String
+}
+

@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveVmlPart {
-        pub(crate) path: String,
-    }
+    pub(crate) path: String,
+}
 
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for RemoveVmlPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "vml-part", kind: "remove-vml-part", record: "RemoveVmlPart" };

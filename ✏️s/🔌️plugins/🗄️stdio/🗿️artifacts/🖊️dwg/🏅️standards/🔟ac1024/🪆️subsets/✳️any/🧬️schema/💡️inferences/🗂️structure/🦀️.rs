@@ -17,7 +17,6 @@ pub struct DwgStructure {
     pub version: String,
 }
 
-
 /// 🗂️ Computes [`DwgStructure`] from standard logical drawing concepts.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn compute_dwg_structure(snapshot: &DwgSnapshot) -> DwgStructure {

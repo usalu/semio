@@ -8,11 +8,6 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
-extern crate semio_framework_value_derive as value_derive;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
@@ -20,21 +15,26 @@ extern crate semio_framework_schema as schema;
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
 //#region 🗿️Artifacts
-mod artifacts { pub use semio_s_artifact_lowpoly_lowpoly as lowpoly; }
+mod artifacts {
+    pub use semio_s_artifact_lowpoly_lowpoly as lowpoly;
+}
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_lowpoly_lowpoly::editor::*; }
+mod editor {
+    pub use semio_s_artifact_lowpoly_lowpoly::editor::*;
+}
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_lowpoly_lowpoly::viewer::*; }
+mod viewer {
+    pub use semio_s_artifact_lowpoly_lowpoly::viewer::*;
+}
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::LowpolyApps);
-
 
 //#endregion 🔖️Plugin

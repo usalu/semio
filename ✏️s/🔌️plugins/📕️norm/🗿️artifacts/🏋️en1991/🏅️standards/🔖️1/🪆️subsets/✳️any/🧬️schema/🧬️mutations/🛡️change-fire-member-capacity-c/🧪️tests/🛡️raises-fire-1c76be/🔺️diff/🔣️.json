@@ -8,7 +8,7 @@
   "assumedGKKnM2": null,
   "fireCurve": null,
   "fireResistanceMin": null,
-  "fireMemberCapacityC": 700.0,
+  "fireMemberCapacityC": 700,
   "snowZone": null,
   "snowAltitudeM": null,
   "enSKKnM2": null,
@@ -31,6 +31,5 @@
   "siloMu": null,
   "siloK": null,
   "cS": null,
-  "cD": null,
-  "selectedCheckIndex": null
+  "cD": null
 }

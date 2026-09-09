@@ -1,48 +1,8 @@
-# 🔺️ Equation diff schema.
-
+# import DslValue from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type EquationDiff {
-  artifact: EquationArtifact @state(class: ARTIFACT)
-  graph: EquationGraph @state(class: ARTIFACT)
-  geometry: EquationGeometry @state(class: ARTIFACT)
-  cameraX: Float @state(class: CONFIG)
-  cameraY: Float @state(class: CONFIG)
-  cameraZoom: Float @state(class: CONFIG)
-}
-
-type EquationArtifact {
-  graph: EquationGraph!
-  geometry: EquationGeometry!
-  cameraX: Float!
-  cameraY: Float!
-  cameraZoom: Float!
-}
-
-type EquationGraph {
-  directed: Boolean!
-  nodes: [EquationNode!]!
-  edges: [EquationEdge!]!
-  algorithm: String!
-  algorithmSeed: String
-}
-
-type EquationNode {
-  id: String!
-  label: String!
-  x: Float!
-  y: Float!
-}
-
-type EquationEdge {
-  id: String!
-  source: String!
-  target: String!
-}
-
-type EquationPoint {
-  x: Float!
-  y: Float!
-}
-
-type EquationGeometry {
-  points: [EquationPoint!]!
+  notation: ArtifactChild @state(class: ARTIFACT)
+  results: ArtifactChild @state(class: ARTIFACT)
+  computed: ArtifactChild @state(class: ARTIFACT)
+  equation: DslValue @state(class: ARTIFACT)
 }

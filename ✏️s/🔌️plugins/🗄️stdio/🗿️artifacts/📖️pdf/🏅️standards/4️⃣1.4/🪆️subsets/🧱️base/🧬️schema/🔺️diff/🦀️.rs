@@ -16,9 +16,9 @@
 //! it exactly, at 1.4's own much smaller field set (`W`=width, `H`=height, `X`=text).
 
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️PageDiff

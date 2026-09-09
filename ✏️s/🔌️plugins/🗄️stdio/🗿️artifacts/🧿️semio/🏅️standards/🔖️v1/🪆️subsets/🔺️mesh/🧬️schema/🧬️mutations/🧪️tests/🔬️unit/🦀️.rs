@@ -1,4 +1,3 @@
-
 use super::*;
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff, SemanticMutation};

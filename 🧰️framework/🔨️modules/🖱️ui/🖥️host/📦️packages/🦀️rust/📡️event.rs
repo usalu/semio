@@ -727,7 +727,7 @@ pub fn ime_event_from_winit(event: winit::event::Ime) -> ImeEvent {
     match event {
         winit::event::Ime::Enabled => ImeEvent::Start,
         winit::event::Ime::Preedit(text, cursor) => {
-            let cursor = cursor.map(|(start, _end)| start).unwrap_or(text.len());
+            let cursor = cursor.map_or(text.len(), |(start, _end)| start);
             ImeEvent::Update { text, cursor }
         }
         winit::event::Ime::Commit(text) => ImeEvent::Commit { text },

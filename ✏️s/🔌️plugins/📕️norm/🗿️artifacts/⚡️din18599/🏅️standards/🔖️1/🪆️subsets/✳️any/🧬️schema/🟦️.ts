@@ -27,6 +27,4 @@ export interface Din18599Artifact {
   energyCarrier: string;
   /** @state artifact */
   referenceQPKwh: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

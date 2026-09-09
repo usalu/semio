@@ -3,10 +3,10 @@ use crate::schema::diff::XmlDiff;
 use crate::schema::snapshot::XmlDeclaration;
 use crate::XmlSnapshot;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -18,7 +18,10 @@ pub struct SetDeclarationPayload {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum SetDeclarationMutation { Apply(SetDeclarationPayload), Restore(XmlDiff) }
+pub enum SetDeclarationMutation {
+    Apply(SetDeclarationPayload),
+    Restore(XmlDiff),
+}
 
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDeclarationMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "declaration", kind: "set-declaration", record: "SetDeclaration" };
@@ -32,13 +35,19 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDeclarationM
 
     fn inverse(&self, base: &XmlSnapshot) -> Vec<super::XmlMutation> {
         let outcome = <Self as protocol::MutationKind<XmlSnapshot, super::XmlMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::is_empty(outcome.diff()) { return Vec::new(); }
+        if !outcome.messages().is_empty() || <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::is_empty(outcome.diff()) {
+            return Vec::new();
+        }
         let inverse = <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::inverse(outcome.diff(), base);
         vec![super::XmlMutation::SetDeclaration(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String { "Set Declaration".to_string() }
-    fn target(&self) -> Vec<String> { vec!["set-declaration".to_string()] }
+    fn label(&self) -> String {
+        "Set Declaration".to_string()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-declaration".to_string()]
+    }
 }
 
 #[cfg(test)]

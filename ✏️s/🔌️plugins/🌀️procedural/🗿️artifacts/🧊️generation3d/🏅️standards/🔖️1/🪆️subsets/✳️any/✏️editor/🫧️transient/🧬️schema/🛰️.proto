@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.app.generation.three_d.transient;
+
+message Generation3dTransient {
+  optional string generation_preview_text = 1;
+}
+
+message SetGenerationPreview {
+  optional string preview_text = 1;
+}

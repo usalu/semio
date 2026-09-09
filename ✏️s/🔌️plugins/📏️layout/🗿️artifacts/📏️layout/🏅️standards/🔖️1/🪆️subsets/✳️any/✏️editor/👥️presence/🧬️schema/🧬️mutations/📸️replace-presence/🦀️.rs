@@ -16,7 +16,13 @@ impl protocol::MutationKind<LayoutPresence, LayoutPresenceMutation> for ReplaceP
     fn diff(&self, _base: &LayoutPresence) -> protocol::MutationOutcome<LayoutPresence> {
         protocol::MutationOutcome::new(self.presence.clone())
     }
-    fn inverse(&self, base: &LayoutPresence) -> Vec<LayoutPresenceMutation> { vec![LayoutPresenceMutation::ReplacePresence(Self { presence: base.clone() })] }
-    fn label(&self) -> String { "Replace Presence".into() }
-    fn target(&self) -> Vec<String> { vec!["presence".into()] }
+    fn inverse(&self, base: &LayoutPresence) -> Vec<LayoutPresenceMutation> {
+        vec![LayoutPresenceMutation::ReplacePresence(Self { presence: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Presence".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["presence".into()]
+    }
 }

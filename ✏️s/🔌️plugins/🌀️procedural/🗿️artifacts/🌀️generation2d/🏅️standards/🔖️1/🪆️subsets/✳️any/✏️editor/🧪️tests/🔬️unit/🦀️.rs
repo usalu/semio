@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::editor::generation2d::testkit::{app, app_with_registry};
 use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_plugin::PluginApp;
 use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
+use semio_framework_plugin::PluginApp;
 
 fn production_initial_snapshot(label: &str) -> Generation2dSnapshot {
     let mut snapshot = Generation2dSnapshot::default();
@@ -127,7 +126,8 @@ fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
 
 fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
-        crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("P2 authority refresh immediately before production maintenance");
+        crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
+            .expect("P2 authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one P2 production maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("P2 production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
@@ -187,29 +187,86 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
 fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-    assert_eq!(GENERATION2D_BOUNDED_TOOL_IDS.len(), 7);
-    assert_eq!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 7);
-    assert_eq!(Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 7);
+    assert_eq!(GENERATION2D_BOUNDED_TOOL_IDS.len(), 12);
+    assert_eq!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 12);
+    assert_eq!(Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 12);
     assert_eq!(generation2d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(generation2d_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
     assert!(GENERATION2D_BOUNDED_TOOL_IDS.iter().all(|tool_id| Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
-    for blocked in [
-        "nodeGraphEdit",
-        "moveMediaNode",
-        "addWidget",
-        "removeWidget",
-        "connectMediaPorts",
-        "reorganize",
-        "addGeneration",
-        "removeGeneration",
-        "renameGeneration",
-        "updateGenerationValues",
-        "setEvalOutputs",
-        "selectGeneration",
-        "flowEvalTick",
-    ] {
+    for blocked in ["nodeGraphEdit", "moveMediaNode", "addWidget", "removeWidget", "connectMediaPorts", "reorganize", "setEvalOutputs", "flowEvalTick"] {
         assert!(!GENERATION2D_BOUNDED_TOOL_IDS.contains(&blocked));
     }
+}
+
+async fn drive_preview_operation(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>) -> Result<(u64, u64, u64), String> {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    let mut artifact = 0;
+    let mut config = 0;
+    let mut transient = 0;
+    while app.has_pending_typed_operations() {
+        if std::time::Instant::now() >= deadline {
+            return Err("Generation2d preview operation did not finish".into());
+        }
+        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
+        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
+        while let Some(page) = app.take_typed_operation_result_page(1) {
+            use semio_framework_plugin::app::TypedOperationResultLane;
+            if page.lane == TypedOperationResultLane::Fault {
+                return Err(format!("preview operation fault: {:?}", page.bytes()));
+            }
+            artifact += u64::from(page.lane == TypedOperationResultLane::Artifact);
+            config += u64::from(page.lane == TypedOperationResultLane::Config);
+            transient += u64::from(page.lane == TypedOperationResultLane::Transient);
+            app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
+        }
+        app.take_typed_operation_effect();
+        app.take_typed_operation_event();
+        app.take_typed_operation_ui_scope();
+        std::thread::yield_now();
+    }
+    Ok((artifact, config, transient))
+}
+
+#[semio_framework_async_macros::async_test]
+async fn generation_preview_is_one_app_transient_shared_by_two_generation_windows() {
+    let mut app = app_with_registry().await;
+    let result: Result<(), String> = async {
+        let before_document = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
+        let before_generation = app.ephemeral_snapshot().await.transient_generation;
+        app.dispatch_typed(Generation2dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::testkit::meta("preview-owner")).await.map_err(|error| format!("{error:?}"))?;
+        if drive_preview_operation(&mut app).await? != (1, 1, 1) {
+            return Err("preview command did not publish artifact, selection config, and app transient exactly once".into());
+        }
+        if app.ephemeral_snapshot().await.transient_generation != before_generation + 1 {
+            return Err("preview app transient generation did not advance exactly once".into());
+        }
+        if app.snapshot().map_err(|error| format!("{error:?}"))?.generation.as_state().generations.len() != before_document.generation.as_state().generations.len() + 1 {
+            return Err("addGeneration did not preserve its document behavior".into());
+        }
+        let view = semio_framework_plugin::ViewModel {
+            window_instances: vec![
+                semio_framework::ViewWindowInstance { id: "preview-a".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
+                semio_framework::ViewWindowInstance { id: "preview-b".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
+            ],
+            ..Default::default()
+        };
+        let mut rendered = Vec::new();
+        for window_id in ["preview-a", "preview-b"] {
+            let context = view.for_window_instance(window_id).ok_or("missing generation preview window")?;
+            let tree = app.render(generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW, None, &context).await.map_err(|error| format!("{error:?}"))?;
+            rendered.push(semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?);
+        }
+        if rendered[0] != rendered[1] {
+            return Err("generation windows did not consume the same app-transient preview".into());
+        }
+        if include_str!("../../🎚️config/🧬️schema/🔣️.json").contains("generationPreviewText") {
+            return Err("config schema still owns computed preview output".into());
+        }
+        Ok(())
+    }
+    .await;
+    semio_framework_plugin::testkit::close_registered_fixture_app(&mut app);
+    result.expect("Generation2d preview ownership runtime");
 }
 
 #[test]
@@ -256,7 +313,6 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "canvas-wheel",
         "select-generation",
         "flow-eval-tick",
-        "locale",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -374,7 +430,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 async fn context_menu_stays_within_disclosure_budget() {
     let mut app = app_with_registry().await;
     let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
-    let items = app.context_menu(&request).await;
+    let items = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
     assert!(items.len() <= 9, "top-level menu rows (leaves + groups + separator) must stay within disclosure budget, got {}", items.len());
     assert!(items.iter().all(|item| item.id != "delete-selection"), "no interaction data at context_menu time means delete-selection cannot appear");
 }

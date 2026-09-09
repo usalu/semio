@@ -1,11 +1,12 @@
 syntax = "proto3";
 package semio.s.draw.drawing.snapshot;
-message JsonSnapshot {
-  string schema = 1;
-  string value_wire = 2;
-}
+import "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
 message DrawingSnapshot {
-  optional string schema = 1;
-  optional string value = 2;
+  string schema = 1;
+  string id = 2;
+  optional string title = 3;
+  repeated semio.s.draw.drawing.artifact.DrawingLayerNode layers = 4;
+  map<string, semio.s.draw.drawing.artifact.DrawingImageAsset> assets = 5;
+  optional semio.s.draw.drawing.artifact.DrawingArtboard artboard = 6;
 }

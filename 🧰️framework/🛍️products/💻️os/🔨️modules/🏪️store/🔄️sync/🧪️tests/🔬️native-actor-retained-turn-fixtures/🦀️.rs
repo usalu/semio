@@ -4,6 +4,7 @@ pub(super) mod retained_turn_fixtures {
     fn runner_with(pool: Arc<semio_framework_async::WorkerPool>, owner: Option<ActorTurnOwner>, mailbox: ArtifactMailboxClose) -> Arc<ActorRunner> {
         Arc::new(ActorRunner {
             pool,
+            io_reactor: None,
             generation: 1,
             turn: std::sync::Mutex::new(owner),
             terminal_turn: std::sync::Mutex::new(None),
@@ -50,6 +51,53 @@ pub(super) mod retained_turn_fixtures {
     }
 
     #[test]
+    fn retained_readiness_wake_after_turn_release_is_observed_once() {
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let worker_entered = Arc::new(std::sync::Barrier::new(2));
+        let worker_release = Arc::new(std::sync::Barrier::new(2));
+        let worker_entered_job = worker_entered.clone();
+        let worker_release_job = worker_release.clone();
+        pool.submit(
+            semio_framework_async::Lane::UserVisible,
+            Box::new(move || {
+                worker_entered_job.wait();
+                worker_release_job.wait();
+            }),
+        );
+        worker_entered.wait();
+        let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let future_polls = polls.clone();
+        let future: ActorTurnFuture = Box::pin(std::future::poll_fn(move |_| {
+            future_polls.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            std::task::Poll::Pending
+        }));
+        let (_, receiver) = artifact_mailbox_pair();
+        let runner = runner_with(pool.clone(), Some(ActorTurnOwner::Future(future)), receiver.close_handle());
+        runner.scheduled.store(true, std::sync::atomic::Ordering::Release);
+        let observed = runner.release_scheduled_after_turn_with(|| {
+            assert!(!runner.scheduled.load(std::sync::atomic::Ordering::Acquire));
+            runner.request_wake(runner.turn_generation.load(std::sync::atomic::Ordering::Acquire));
+        });
+        assert!(observed);
+        assert!(!runner.wake_requested.load(std::sync::atomic::Ordering::Acquire));
+        assert!(runner.scheduled.load(std::sync::atomic::Ordering::Acquire));
+        worker_release.wait();
+        let deadline = std::time::Instant::now() + Duration::from_secs(1);
+        while runner.scheduled.load(std::sync::atomic::Ordering::Acquire) && std::time::Instant::now() < deadline {
+            std::thread::yield_now();
+        }
+        assert_eq!(polls.load(std::sync::atomic::Ordering::Acquire), 1);
+        assert!(!runner.scheduled.load(std::sync::atomic::Ordering::Acquire));
+        runner.cancel();
+        let cancel_deadline = std::time::Instant::now() + Duration::from_secs(1);
+        while !runner.complete.load(std::sync::atomic::Ordering::Acquire) && std::time::Instant::now() < cancel_deadline {
+            std::thread::yield_now();
+        }
+        assert!(runner.complete.load(std::sync::atomic::Ordering::Acquire));
+        pool.shutdown().expect("fixture pool shuts down after exact readiness successor");
+    }
+
+    #[test]
     fn turn_fault_and_cancel_retain_then_close_one_owner_per_grant() {
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
         pool.shutdown().expect("fixture pool shuts down without retained uses");
@@ -68,10 +116,56 @@ pub(super) mod retained_turn_fixtures {
         assert!(runner.close_one_terminal_owner(), "retained fault future is a distinct terminal owner");
 
         let (_, receiver) = artifact_mailbox_pair();
-        let cancelled: ActorTurnFuture = Box::pin(async { std::future::pending::<(ArtifactActor, ArtifactDrive)>().await });
+        let cancelled: ActorTurnFuture = Box::pin(async { std::future::pending::<(Box<ArtifactActor>, ArtifactDrive)>().await });
         let cancelled_runner = runner_with(runner.pool.clone(), Some(ActorTurnOwner::Future(cancelled)), receiver.close_handle());
         cancelled_runner.cancel();
         assert_eq!(*cancelled_runner.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner), Some(ArtifactActorTerminalReason::Cancelled));
+    }
+
+    #[test]
+    fn cancellation_cannot_complete_before_an_inflight_turn_returns_its_exact_owner() {
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let worker_entered = Arc::new(std::sync::Barrier::new(2));
+        let worker_release = Arc::new(std::sync::Barrier::new(2));
+        let worker_entered_job = worker_entered.clone();
+        let worker_release_job = worker_release.clone();
+        pool.submit(
+            semio_framework_async::Lane::UserVisible,
+            Box::new(move || {
+                worker_entered_job.wait();
+                worker_release_job.wait();
+            }),
+        );
+        worker_entered.wait();
+
+        let turn_entered = Arc::new(std::sync::Barrier::new(2));
+        let turn_release = Arc::new(std::sync::Barrier::new(2));
+        let turn_entered_future = turn_entered.clone();
+        let turn_release_future = turn_release.clone();
+        let future: ActorTurnFuture = Box::pin(std::future::poll_fn(move |_| {
+            turn_entered_future.wait();
+            turn_release_future.wait();
+            std::task::Poll::Pending
+        }));
+        let (_, receiver) = artifact_mailbox_pair();
+        let runner = runner_with(pool.clone(), Some(ActorTurnOwner::Future(future)), receiver.close_handle());
+        runner.scheduled.store(true, std::sync::atomic::Ordering::Release);
+        let active = runner.clone();
+        let active_turn = std::thread::spawn(move || active.run_job());
+        turn_entered.wait();
+        runner.cancel();
+        assert!(runner.scheduled.load(std::sync::atomic::Ordering::Acquire));
+        assert!(!runner.complete.load(std::sync::atomic::Ordering::Acquire));
+        assert!(runner.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        turn_release.wait();
+        active_turn.join().expect("inflight turn returns");
+        assert!(runner.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
+        assert!(!runner.complete.load(std::sync::atomic::Ordering::Acquire));
+        worker_release.wait();
+        while !runner.complete.load(std::sync::atomic::Ordering::Acquire) {
+            std::thread::yield_now();
+        }
+        pool.shutdown().expect("fixture pool closes after exact terminal owner");
     }
 
     #[test]
@@ -337,7 +431,7 @@ pub(super) mod retained_turn_fixtures {
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
         pool.shutdown().expect("fixture pool shuts down without retained uses");
         let (_, receiver) = artifact_mailbox_pair();
-        let pending: ActorTurnFuture = Box::pin(async { std::future::pending::<(ArtifactActor, ArtifactDrive)>().await });
+        let pending: ActorTurnFuture = Box::pin(async { std::future::pending::<(Box<ArtifactActor>, ArtifactDrive)>().await });
         let runner = runner_with(pool, Some(ActorTurnOwner::Future(pending)), receiver.close_handle());
         *runner.self_retained.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(runner.clone());
         runner.request_close();

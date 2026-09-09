@@ -6,9 +6,9 @@
 
 use crate::standards::v6_0::subsets::document::schema::mutations::TiffMutation;
 use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
-use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
 use crate::viewer::tiff_any::modes::view;
 use crate::viewer::tiff_any::modes::view::windows::main;
+use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

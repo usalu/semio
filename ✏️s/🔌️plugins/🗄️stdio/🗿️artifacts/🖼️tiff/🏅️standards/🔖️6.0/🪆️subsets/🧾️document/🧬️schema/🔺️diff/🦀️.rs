@@ -9,9 +9,9 @@
 
 use crate::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
 use crate::TiffSnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 //#region 🔖️TagsTriple
@@ -513,18 +513,13 @@ pub fn diff_set_snapshot(base: &TiffSnapshot, next: &TiffSnapshot) -> TiffDiff {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
@@ -1207,7 +1202,8 @@ pub(crate) fn demo_diff_cases() -> Vec<TiffDiff> {
     let a = TiffSnapshot {
         schema: "stdio.tiff".into(),
         byte_order: TiffByteOrder::LittleEndian,
-        ifds: vec![TiffIfd { pixels: Vec::new(),
+        ifds: vec![TiffIfd {
+            pixels: Vec::new(),
             entries: vec![
                 tag(256, TiffFieldType::Long, TiffValues::Long(vec![4])),
                 tag(258, TiffFieldType::Short, TiffValues::Short(vec![8, 8, 8])),

@@ -1,7 +1,7 @@
 //! 🔍️ Imperative play app panel — inspection: read-only summary of the document.
 
-use crate::ProcedureSnapshot;
 use crate::editor::procedure::terminology::ImperativeLabels;
+use crate::ProcedureSnapshot;
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
@@ -32,9 +32,7 @@ pub fn render(document: &ProcedureSnapshot, labels: &ImperativeLabels) -> semio_
     let path = crate::procedure_working_scene(document).path;
     let field = tree_item_desc("imperative-play-inspector.steps", labels.inspector_steps.as_str(), Some(path.steps.len().to_string()))?;
     let mut fields = semio_framework_plugin::UiFixedList::default();
-    fields
-        .try_push(field)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed inspector field admission failed"))?;
+    fields.try_push(field).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed inspector field admission failed"))?;
     PanelTreeBuilder::new("imperative-play-inspector")?.section("imperative-play-inspector.summary", Some(crate::editor::procedure::ui_label(labels.inspection_title.as_str())?), true, fields)?.build()
 }
 //#endregion 🔖️Render

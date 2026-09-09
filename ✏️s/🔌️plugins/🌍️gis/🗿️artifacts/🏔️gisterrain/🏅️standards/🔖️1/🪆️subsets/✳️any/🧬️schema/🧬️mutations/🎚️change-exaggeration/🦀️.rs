@@ -3,9 +3,9 @@ use crate::diff::GisTerrainDiff;
 use crate::mutations::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔹Payload
 /// 🎚️ Sets `GisTerrainSnapshot::exaggeration` to `new_exaggeration`. Diff/inverse delegate to the

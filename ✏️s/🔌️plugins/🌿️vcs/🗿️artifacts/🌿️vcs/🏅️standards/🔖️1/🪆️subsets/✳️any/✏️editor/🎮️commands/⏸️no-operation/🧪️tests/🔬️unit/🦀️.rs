@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::vcs::VcsCommand;
 use crate::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel};
+use crate::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn vcs_demo_command_op_text_round_trips() {

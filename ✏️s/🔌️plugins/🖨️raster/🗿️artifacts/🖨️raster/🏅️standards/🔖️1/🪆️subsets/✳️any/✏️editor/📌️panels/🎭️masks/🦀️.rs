@@ -1,9 +1,9 @@
 //! 🎭️ Raster play app panel — masked layers.
 
-use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
 use crate::editor::raster::{mask_row_id, ui_label, RASTER_TREE_PREFIX};
+use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText};
 
 //#region 🔖️Constants

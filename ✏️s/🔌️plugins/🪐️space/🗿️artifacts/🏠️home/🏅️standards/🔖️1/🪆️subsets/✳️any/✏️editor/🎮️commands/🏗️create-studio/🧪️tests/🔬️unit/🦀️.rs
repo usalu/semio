@@ -30,7 +30,7 @@ async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg).expect("handle");
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "ephemeral create must not download");

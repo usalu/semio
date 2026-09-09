@@ -13,8 +13,8 @@
 use crate::diff::Process3dDiff;
 use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️ReplaceStockSolid
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]

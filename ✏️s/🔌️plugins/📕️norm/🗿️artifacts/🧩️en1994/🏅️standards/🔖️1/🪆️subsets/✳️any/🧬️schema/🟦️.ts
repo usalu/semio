@@ -45,6 +45,4 @@ export interface En1994Artifact {
   nCyclesStud: number;
   /** @state artifact */
   deltaTauStudMpa: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

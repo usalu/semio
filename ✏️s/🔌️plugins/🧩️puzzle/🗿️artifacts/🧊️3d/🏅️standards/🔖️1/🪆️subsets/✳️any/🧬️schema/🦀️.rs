@@ -3,7 +3,7 @@
 use crate::{Puzzle3dSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
 //#region 🔖️Artifact
-/// 🧬️ Full puzzle3d artifact state across the artifact, presence and config lanes.
+/// 🧬️ puzzle3d document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle3d")]
@@ -22,68 +22,6 @@ pub struct Puzzle3dArtifact {
     pub target_volumes: Vec<Puzzle3dTargetVolume>,
     #[state(artifact)]
     pub references: Vec<Puzzle3dReference>,
-    #[state(presence)]
-    pub selected_object_ids: Vec<String>,
-    #[state(presence)]
-    pub selected_vortex_ids: Vec<String>,
-    #[state(presence)]
-    pub selected_attraction_ids: Vec<String>,
-    #[state(presence)]
-    pub selected_target_volume_ids: Vec<String>,
-    #[state(presence)]
-    pub selected_reference_ids: Vec<String>,
-    #[state(presence)]
-    pub active_utility_id: String,
-    #[state(config)]
-    pub camera_position_x: f64,
-    #[state(config)]
-    pub camera_position_y: f64,
-    #[state(config)]
-    pub camera_position_z: f64,
-    #[state(config)]
-    pub camera_target_x: f64,
-    #[state(config)]
-    pub camera_target_y: f64,
-    #[state(config)]
-    pub camera_target_z: f64,
-    #[state(config)]
-    pub camera_zoom: f64,
-    #[state(config)]
-    pub selection_method: String,
-    #[state(config)]
-    pub selection_mode_default: String,
-    #[state(config)]
-    pub engagement_input: String,
-    #[state(config)]
-    pub grid_visible: bool,
-    #[state(config)]
-    pub grid_snap_enabled: bool,
-    #[state(config)]
-    pub grid_spacing: f64,
-    #[state(config)]
-    pub overlap_budget: f64,
-    #[state(config)]
-    pub fill_count: u32,
-    #[state(config)]
-    pub brush_candidate_index: u32,
-    #[state(config)]
-    pub lod_automatic: bool,
-    #[state(config)]
-    pub lod_depth_variable: bool,
-    #[state(config)]
-    pub lod_manual: f64,
-    #[state(config)]
-    pub proximity_radius: f64,
-    #[state(config)]
-    pub runtime_extras_json: String,
-    #[state(artifact)]
-    pub hovered_object_id: Option<String>,
-    #[state(artifact)]
-    pub hovered_vortex_full_id: Option<String>,
-    #[state(artifact)]
-    pub hovered_kind_id: Option<String>,
-    #[state(artifact)]
-    pub preview_seq: i64,
 }
 //#endregion 🔖️Artifact
 
@@ -108,7 +46,7 @@ impl Puzzle3dArtifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Puzzle3dSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -118,37 +56,6 @@ impl Puzzle3dArtifact {
             attractions: snapshot.attractions,
             target_volumes: snapshot.target_volumes,
             references: snapshot.references,
-            selected_object_ids: Vec::new(),
-            selected_vortex_ids: Vec::new(),
-            selected_attraction_ids: Vec::new(),
-            selected_target_volume_ids: Vec::new(),
-            selected_reference_ids: Vec::new(),
-            active_utility_id: "select".into(),
-            camera_position_x: 0.0,
-            camera_position_y: 0.0,
-            camera_position_z: 0.0,
-            camera_target_x: 0.0,
-            camera_target_y: 0.0,
-            camera_target_z: 0.0,
-            camera_zoom: 1.0,
-            selection_method: "rectangle".into(),
-            selection_mode_default: "default".into(),
-            engagement_input: String::new(),
-            grid_visible: true,
-            grid_snap_enabled: false,
-            grid_spacing: 1.0,
-            overlap_budget: 0.0,
-            fill_count: 0,
-            brush_candidate_index: 0,
-            lod_automatic: true,
-            lod_depth_variable: false,
-            lod_manual: 1.0,
-            proximity_radius: 0.75,
-            runtime_extras_json: "{}".into(),
-            hovered_object_id: None,
-            hovered_vortex_full_id: None,
-            hovered_kind_id: None,
-            preview_seq: 0,
         }
     }
 

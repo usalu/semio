@@ -109,7 +109,5 @@ pub struct En1998Diff {
     pub wall_r: Option<f64>,
     #[state(artifact)]
     pub wall_h_rd_kn: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff

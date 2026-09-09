@@ -1,8 +1,8 @@
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::set_colorspace;
 use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageSnapshot};
 use protocol::Mutation;
-use crate::standards::v1::subsets::image::schema::mutations::set_colorspace;
 
 /// 🔺️ Diff helper for set-colorspace — a root-scoped singleton field; `colorspace` already equal
 /// to `base.colorspace` is `mutation.no-op` (Warning, empty diff). No `mutation.invariant` check:

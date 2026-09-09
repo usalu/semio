@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::flow::FlowCommand;
 use crate::editor::flow::testkit::{dispatch, flow_app};
+use crate::editor::flow::FlowCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn toggle_extension_and_run_action_reorganizes_fixture() {

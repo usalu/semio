@@ -14,10 +14,10 @@
 //! and is dropped. `version` is always emitted as the fixed literal `"2.1"` (never captured on
 //! decode, so there is nothing to round-trip it from); `parts` is always empty.
 
-use semio_s_artifact_stdio_bcf::schema::snapshot::{BcfComment, BcfComponents, BcfTopic, BcfViewpoint, BcfVisibility};
-use semio_s_artifact_stdio_bcf::BcfSnapshot;
 use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, PsetValue, RelationKind, SemioModelSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_bcf::schema::snapshot::{BcfComment, BcfComponents, BcfTopic, BcfViewpoint, BcfVisibility};
+use semio_s_artifact_stdio_bcf::BcfSnapshot;
 
 //#region 🔖️Serializer
 pub struct SemioModelToBcf;

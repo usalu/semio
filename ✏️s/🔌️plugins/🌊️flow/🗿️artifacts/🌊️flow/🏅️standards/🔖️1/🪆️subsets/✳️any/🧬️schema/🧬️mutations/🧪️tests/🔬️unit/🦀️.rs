@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::mutations::connect_widgets::ConnectWidgets;
 use crate::schema::mutations::create_widget::CreateWidget;

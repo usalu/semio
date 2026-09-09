@@ -2,7 +2,6 @@ type Generation2dConfig {
   camera: CameraJson! @state(class: CONFIG)
   showMode: String! @state(class: CONFIG)
   selectedGenerationId: String @state(class: CONFIG)
-  generationPreviewText: String @state(class: CONFIG)
 }
 type CameraJson {
   x: Float!

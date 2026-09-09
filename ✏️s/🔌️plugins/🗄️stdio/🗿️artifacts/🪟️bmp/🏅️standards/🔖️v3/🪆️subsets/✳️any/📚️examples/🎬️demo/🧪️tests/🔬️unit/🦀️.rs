@@ -1,4 +1,3 @@
-
 use super::*;
 #[semio_framework_async_macros::async_test]
 async fn demo_source_nonempty() {
@@ -11,8 +10,8 @@ async fn demo_source_nonempty() {
 /// parsed through the real `ArtifactDsl` codec — not a hand-built stub).
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::BmpSnapshot;
     use crate::standards::v_v3::subsets::any::schema::inferences::BmpInference;
+    use crate::BmpSnapshot;
     use protocol::Inference;
     let snapshot = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
     assert_eq!(BmpInference::infer(&snapshot), BmpInference::infer(&snapshot));
@@ -20,8 +19,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::BmpSnapshot;
     use crate::standards::v_v3::subsets::any::schema::inferences::BmpInference;
+    use crate::BmpSnapshot;
     use protocol::Inference;
     assert_eq!(BmpInference::infer(&BmpSnapshot::default()), BmpInference::default());
 }

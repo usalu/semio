@@ -1,3 +1,6 @@
+import type { ArtifactDialect } from "../🚪️io/🧬️schema/🟦️.ts";
+import type { AppRole, AppRef } from "./🧬️schema/🟦️.ts";
+export { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "./🧬️schema/🟦️.ts";
 // #region 🛂️Manifest
 /// <reference types="vitest/importMeta" />
 /** @emoji 🛂️ `@semio-tech/framework` — AppDefinition, PluginManifest, contributions, and declarative UI contract. */
@@ -131,9 +134,6 @@ import type {
   // 🎫️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION §C8.1: the
   // `🔖️HostResolvedArgs` region below (`ArtifactKindChoice`/`SurfaceAppChoice`/`artifactKindChoices`)
   // names all three by hand, unlike `ArgFormat`'s inline `roles: Array<AppRole>` above.
-  AppRole as GeneratedAppRole,
-  AppRef as GeneratedAppRef,
-  ArtifactDialect as GeneratedArtifactDialect,
 } from "./🤖️generated/🪪️manifest.ts";
 // #endregion 🧬️GeneratedMirror
 
@@ -933,18 +933,7 @@ export type PluginManifest = {
 };
 
 //#region 🔖️HostResolvedArgs
-/** 🎯️ Generated from Rust `AppRole`/`AppRef` (`🛂️manifest/🦀️.rs`) and `ArtifactDialect`
- * (`🚪️io/🧬️schema/🦀️component.rs`) — surface role, cross-plugin surface address, and dialect
- * coordinate; `artifactKindChoices` below needs all three by name (unlike `ArgFormat`'s inline
- * `roles: Array<AppRole>` above, which never has to name the type itself). Module-private (NOT
- * re-exported under these bare names): `🎠️kernel/🟦️.ts` already hand-declares structurally
- * identical `AppRole`/`AppRef`/`ArtifactDialect` types (see its own `🔖️AppRouter` region doc comment)
- * that flow through the same `@semio-tech/framework` barrel (`🟦️.ts`'s `export *`) — a second
- * public export of the same bare names here is an ambiguous-export error (`TS2308`) at that barrel,
- * not a new type callers need. */
-type AppRole = GeneratedAppRole;
-type AppRef = GeneratedAppRef;
-type ArtifactDialect = GeneratedArtifactDialect;
+
 
 /** 🗂️ TS twin of Rust `ArtifactKindChoice` — one artifact-kind choice offered by an
  * `ActionArgControl.artifactKind` dialog field, resolved by the host from its live plugin catalogue

@@ -11,10 +11,10 @@
 //! real window, `main` (`DocumentWindowKit`) -- see its own module doc comment for the render/
 //! mutation-mapping strategy and its honest scope limit.
 
-use crate::standards::v1_7::subsets::base::schema::mutations::AppendPageContent;
-use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use crate::editor::pdf17ua::modes::edit;
 use crate::editor::pdf17ua::modes::edit::windows::main;
+use crate::standards::v1_7::subsets::base::schema::mutations::AppendPageContent;
+use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     built_to_component_tree, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
     StandardId, SubsetId,

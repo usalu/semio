@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::document::{AnnexChoice, DesignSituation};
 use crate::part_2;

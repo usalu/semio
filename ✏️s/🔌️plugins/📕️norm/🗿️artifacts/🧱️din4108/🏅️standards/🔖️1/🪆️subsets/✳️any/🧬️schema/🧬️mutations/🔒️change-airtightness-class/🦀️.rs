@@ -1,6 +1,5 @@
 //! 🎚️ `change-airtightness-class` — sets the DIN 4108 `airtightness_class` scalar.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

@@ -23,7 +23,16 @@ pub struct CreateLightingGain {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_lighting_gain(index: u32, id: crate::model::EntityId, zone_id: crate::model::EntityId, schedule_id: crate::model::ScheduleId, watts_per_area: f64, radiant_fraction: f64, visible_fraction: f64, return_air_fraction: f64) -> EnergyModelMutation {
+pub fn create_lighting_gain(
+    index: u32,
+    id: crate::model::EntityId,
+    zone_id: crate::model::EntityId,
+    schedule_id: crate::model::ScheduleId,
+    watts_per_area: f64,
+    radiant_fraction: f64,
+    visible_fraction: f64,
+    return_air_fraction: f64,
+) -> EnergyModelMutation {
     EnergyModelMutation::CreateLightingGain(CreateLightingGain { index, id, zone_id, schedule_id, watts_per_area, radiant_fraction, visible_fraction, return_air_fraction })
 }
 

@@ -5,11 +5,6 @@ export interface GisTerrainArtifact {
   exaggeration: number;
   /** @state artifact */
   importedFeaturesJson: string;
-  /** @state presence */
-  selectedIds: string[];
-  /** @state config */
-  cameraJson: string;
-  /** @state config */
 }
 
 //#region 🚪️Parsers
@@ -64,7 +59,5 @@ export function parseGisTerrainArtifact(value: unknown, at = "$"): GisTerrainArt
   return {
     exaggeration: gisGisterrainArtifactGuardNumber(row["exaggeration"], `${at}.exaggeration`),
     importedFeaturesJson: gisGisterrainArtifactGuardString(row["importedFeaturesJson"], `${at}.importedFeaturesJson`),
-    selectedIds: gisGisterrainArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => gisGisterrainArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    cameraJson: gisGisterrainArtifactGuardString(row["cameraJson"], `${at}.cameraJson`),
   };
 }

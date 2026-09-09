@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwRecord, STDIO_EPW_DOCUMENT_SCHEMA};
 

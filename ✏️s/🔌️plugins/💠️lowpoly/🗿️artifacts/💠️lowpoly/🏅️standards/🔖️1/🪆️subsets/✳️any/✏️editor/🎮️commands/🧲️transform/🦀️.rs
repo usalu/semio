@@ -2,10 +2,10 @@
 //! `rotateSelection`/`scaleSelection`/`transformEnd`). Mid-drag ticks emit zero operations; the whole
 //! drag commits as one `Objects(Patch)` on `transformEnd` — see `crate::editor::lowpoly::session::LowpolyScratch`.
 
-use crate::op::LowpolyMutation;
-use crate::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::{LowpolyScratch, Transform};
+use crate::op::LowpolyMutation;
+use crate::LowpolySnapshot;
 use semio_framework_3d::mesh::Vec3;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]

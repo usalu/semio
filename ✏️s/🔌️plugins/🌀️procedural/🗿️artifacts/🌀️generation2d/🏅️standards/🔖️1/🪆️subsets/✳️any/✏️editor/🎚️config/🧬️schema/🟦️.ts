@@ -6,9 +6,6 @@ export interface Generation2dConfig {
   showMode: string;
   /** @state config */
   selectedGenerationId?: string;
-  /** @state config */
-  generationPreviewText?: string;
-  /** @state config */
 }
 
 export type CameraJson = { x: number; y: number; zoom: number };

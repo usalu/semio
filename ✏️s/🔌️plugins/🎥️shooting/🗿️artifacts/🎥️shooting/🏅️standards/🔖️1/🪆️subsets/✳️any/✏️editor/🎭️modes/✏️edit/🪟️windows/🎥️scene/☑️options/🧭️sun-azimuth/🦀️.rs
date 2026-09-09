@@ -1,8 +1,8 @@
 //! 🧭️ Scene-window option — the sun azimuth slider.
 //! Its command handler lives in `🎮️commands/☀️scene::set_sun_azimuth`.
 
-use crate::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
+use crate::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

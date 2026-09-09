@@ -26,10 +26,10 @@
 //! relocate `io_declaration()` there as `io()` (verbatim rename), add the six typed leaves, and swap
 //! this file's `io: io_declaration()` back to `io: io::io()` to match the template exactly.
 
-use crate::standards::v1::subsets::any::schema;
-use crate::{PlaybookMutation, PlaybookSnapshot, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
 use crate::editor::playbook as editor;
+use crate::standards::v1::subsets::any::schema;
 use crate::viewer::playbook as viewer;
+use crate::{PlaybookMutation, PlaybookSnapshot, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;

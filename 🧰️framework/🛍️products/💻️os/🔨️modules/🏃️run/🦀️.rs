@@ -359,6 +359,7 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         AppFrame::Error { in_reply_to, .. } => *in_reply_to,
         AppFrame::DocumentChanged { .. } | AppFrame::ConfigChanged { .. } => None,
         AppFrame::Config { in_reply_to, .. } => Some(*in_reply_to),
+        AppFrame::WindowConfigs { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::Emit { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::Draft { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::Children { in_reply_to, .. } => Some(*in_reply_to),
@@ -2162,6 +2163,8 @@ fn app_command_seq(command: &AppCommand) -> u64 {
         | AppCommand::ReadDocument { seq }
         | AppCommand::LoadConfig { seq, .. }
         | AppCommand::ReadConfig { seq }
+        | AppCommand::LoadWindowConfig { seq, .. }
+        | AppCommand::ReadWindowConfigs { seq }
         | AppCommand::MediaIn { seq, .. }
         | AppCommand::MediaOut { seq, .. }
         | AppCommand::MediaFingerprint { seq, .. }

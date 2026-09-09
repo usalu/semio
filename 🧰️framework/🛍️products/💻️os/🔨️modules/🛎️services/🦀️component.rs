@@ -853,28 +853,28 @@ fn schedule_compute_job_step<J: InteractiveJob + 'static>(pool: &WorkerPool, sta
             WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
                 let retry_pool = pool.clone();
                 let retained = error.into_job();
-                pool.callback_at(pool.now_ms().saturating_add(1), move || submit_retained_compute_job(retry_pool, lane, retained, retry_state));
+                pool.callback_at(pool.now_ms().saturating_add(1), move || submit_retained_compute_job(&retry_pool, lane, retained, retry_state));
             }
-            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(retry_state),
+            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(&retry_state),
         },
     }
 }
 
-fn submit_retained_compute_job<J: InteractiveJob + 'static>(pool: WorkerPool, lane: Lane, job: semio_framework_async::Job, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
+fn submit_retained_compute_job<J: InteractiveJob + 'static>(pool: &WorkerPool, lane: Lane, job: semio_framework_async::Job, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
     match pool.try_submit(lane, job) {
         Ok(()) => {}
         Err(error) => match error.kind() {
             WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
                 let retry = pool.clone();
                 let retained = error.into_job();
-                pool.callback_at(pool.now_ms().saturating_add(1), move || submit_retained_compute_job(retry, lane, retained, state));
+                pool.callback_at(pool.now_ms().saturating_add(1), move || submit_retained_compute_job(&retry, lane, retained, state));
             }
-            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(state),
+            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(&state),
         },
     }
 }
 
-fn fail_compute_job_state<J: InteractiveJob + 'static>(state: Arc<Mutex<ComputeJobDriveState<J>>>) {
+fn fail_compute_job_state<J: InteractiveJob + 'static>(state: &Mutex<ComputeJobDriveState<J>>) {
     let mut state = state.lock().expect("ComputeJobDriveState mutex poisoned");
     if let Some(outcome) = state.retained_outcome.as_mut() {
         while !outcome.terminal_is_empty() {

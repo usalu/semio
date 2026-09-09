@@ -1,11 +1,11 @@
 //! ✨️ EN 1999 artifact schema — every field with its state class.
 
-use crate::En1999Snapshot;
 use crate::document::AnnexChoice;
+use crate::En1999Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full EN 1999 artifact state (persisted document + shared UI).
+/// 🧬️ EN 1999 document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -64,8 +64,6 @@ pub struct En1999Artifact {
     pub sigma_ed_shell_mpa: f64,
     #[state(artifact)]
     pub annex: AnnexChoice,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -142,7 +140,6 @@ impl En1999Artifact {
             shell_r_mm: snapshot.shell_r_mm,
             sigma_ed_shell_mpa: snapshot.sigma_ed_shell_mpa,
             annex: snapshot.annex,
-            selected_check_index: None,
         }
     }
 
@@ -181,13 +178,7 @@ impl En1999Artifact {
 pub fn en1999_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1999",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -336,8 +327,8 @@ use crate::document::{CheckReport, CheckResult, ClauseId, Quantity};
 
 // #region 🔖️NaDe
 pub mod na_de {
-    pub use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::na_de::NaDe;
     use crate::document::AnnexChoice;
+    pub use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::na_de::NaDe;
 
     pub const HAZ_ZONE_MM: f64 = 25.0;
 

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::LayoutPoint;
 use protocol::Inference;

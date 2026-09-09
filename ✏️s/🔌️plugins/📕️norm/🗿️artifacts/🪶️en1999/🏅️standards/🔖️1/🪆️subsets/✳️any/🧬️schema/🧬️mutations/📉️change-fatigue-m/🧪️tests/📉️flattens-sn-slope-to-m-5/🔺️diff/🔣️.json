@@ -11,7 +11,7 @@
   "thetaC": null,
   "deltaSigmaEd": null,
   "deltaSigmaC": null,
-  "fatigueM": 5.0,
+  "fatigueM": 5,
   "nCycles": null,
   "vWeldEdKn": null,
   "weldThroatMm": null,
@@ -25,6 +25,5 @@
   "shellTMm": null,
   "shellRMm": null,
   "sigmaEdShellMpa": null,
-  "annex": null,
-  "selectedCheckIndex": null
+  "annex": null
 }

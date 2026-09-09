@@ -3,14 +3,107 @@
   "$id": "https://semio.tech/schema/s/raster/raster/diff.json",
   "title": "RasterDiff",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "schema": {
-      "type": "string",
+    "artifact": {
+      "anyOf": [
+        { "$ref": "https://semio.tech/schema/s/raster/raster/artifact.json" },
+        { "type": "null" }
+      ],
       "x-semio-state": "artifact"
     },
-    "value": {
-      "type": "string",
+    "schema": {
+      "type": ["string", "null"],
       "x-semio-state": "artifact"
+    },
+    "id": {
+      "type": ["string", "null"],
+      "x-semio-state": "artifact"
+    },
+    "title": {
+      "type": ["string", "null"],
+      "x-semio-state": "artifact"
+    },
+    "layers": {
+      "anyOf": [{ "$ref": "#/$defs/RasterLayersDelta" }, { "type": "null" }],
+      "x-semio-state": "artifact"
+    },
+    "assets": {
+      "anyOf": [{ "$ref": "#/$defs/RasterAssetsDelta" }, { "type": "null" }],
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "RasterAssetsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries"],
+      "properties": {
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              { "$ref": "https://semio.tech/schema/s/raster/raster/artifact.json#/$defs/RasterImageAsset" },
+              { "type": "null" }
+            ]
+          }
+        }
+      }
+    },
+    "RasterLayersDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["added", "removed", "patched", "moved"],
+      "properties": {
+        "added": { "type": "array", "items": { "$ref": "#/$defs/RasterLayerInsertion" } },
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "patched": { "type": "array", "items": { "$ref": "#/$defs/RasterLayerPatchEntry" } },
+        "moved": { "type": "array", "items": { "$ref": "#/$defs/RasterLayerMove" } }
+      }
+    },
+    "RasterLayerInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "layer"],
+      "properties": {
+        "parentId": { "type": ["string", "null"] },
+        "index": { "type": "integer", "minimum": 0 },
+        "layer": { "$ref": "https://semio.tech/schema/s/raster/raster/artifact.json#/$defs/RasterLayerNode" }
+      }
+    },
+    "RasterLayerMove": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "index"],
+      "properties": {
+        "id": { "type": "string" },
+        "parentId": { "type": ["string", "null"] },
+        "index": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "RasterLayerPatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "patch"],
+      "properties": {
+        "id": { "type": "string" },
+        "patch": { "$ref": "#/$defs/RasterLayerPatch" }
+      }
+    },
+    "RasterLayerPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "visible": { "type": ["boolean", "null"] },
+        "opacity": { "type": ["number", "null"] },
+        "blendMode": { "type": ["string", "null"] },
+        "transformX": { "type": ["number", "null"] },
+        "transformY": { "type": ["number", "null"] },
+        "width": { "type": ["integer", "null"], "minimum": 0 },
+        "height": { "type": ["integer", "null"], "minimum": 0 },
+        "adjustmentKind": { "type": ["string", "null"] }
+      }
     }
   }
 }

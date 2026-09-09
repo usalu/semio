@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::flow::FlowCommand;
 use crate::editor::flow::testkit::{dispatch, flow_app};
+use crate::editor::flow::FlowCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn disconnecting_an_unknown_synapse_is_a_no_operation() {

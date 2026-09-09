@@ -3261,7 +3261,7 @@ impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
 #[cfg(feature = "testkit")]
 pub fn durable_owned_group_journal_test_record() -> DurableOwnedGroupJournalRecordV1 {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("durable group fixture");
-    let hex = |value: &str| value.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("fixture hex"), 16).expect("fixture byte")).collect::<Vec<_>>();
+    let hex = |value: &str| value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("fixture hex"), 16).expect("fixture byte")).collect::<Vec<_>>();
     let revision = |value: &str| -> [u8; 32] { hex(value).try_into().expect("fixed fixture revision") };
     let reference = |value: &serde_json::Value| crate::os_pack::json::from_json_str(&serde_json::to_string(value).expect("fixture reference json")).expect("fixture reference");
     let member = |value: &serde_json::Value| DurableOwnedGroupMemberV1 {
@@ -3409,8 +3409,8 @@ where
         anchor_sha256: semio_framework_hash::sha256_hex(crate::os_pack::json::to_json_string(&anchor).as_bytes()),
         decision_sha256: String::new(),
         parent: durable_group_test_member(PARENT_ROLE, document.clone(), None, &parent_outcome)?,
-        drawing: durable_group_test_member(DRAWING_ROLE, drawing_reference.clone(), Some(OwnerRef { parent: document.clone(), slot: DRAWING_ROLE.into(), child_id: drawing_reference.artifact_id.clone() }), &drawing_outcome)?,
-        value: durable_group_test_member(VALUE_ROLE, value_reference.clone(), Some(OwnerRef { parent: document.clone(), slot: VALUE_ROLE.into(), child_id: value_reference.artifact_id.clone() }), &value_outcome)?,
+        drawing: durable_group_test_member(DRAWING_ROLE, drawing_reference.clone(), Some(OwnerRef { parent: document.clone(), slot: DRAWING_ROLE.into(), child_id: drawing_reference.artifact_id }), &drawing_outcome)?,
+        value: durable_group_test_member(VALUE_ROLE, value_reference.clone(), Some(OwnerRef { parent: document, slot: VALUE_ROLE.into(), child_id: value_reference.artifact_id }), &value_outcome)?,
         anchor,
     };
     decision.decision_sha256 = semio_framework_hash::sha256_hex(decision.canonical_unsigned_json().as_bytes());

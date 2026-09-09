@@ -1,16 +1,24 @@
-
 use super::*;
 use crate::standards::v1::subsets::any::schema::empty_generation2d_snapshot;
 
 #[test]
-fn diff_absorb_prefers_incoming_fixture_and_scalars() {
+fn diff_absorb_prefers_incoming_fixture_and_preserves_generation() {
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧲️absorb/🔣️.json")).unwrap();
     let base = empty_generation2d_snapshot();
-    let mut first = diff_fixture_from_helpers(&base, WidgetsDiff { removed: vec!["w1".into()], set: vec![] }, SynapsesDiff::default(), LayoutDiff::default(), Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 }), None);
-    let second = Generation2dDiff { show_mode: Some("wire".into()), ..Generation2dDiff::default() };
-    first.absorb(second);
-    assert!(first.fixture.is_some());
-    assert_eq!(first.show_mode.as_deref(), Some("wire"));
-    assert_eq!(first.locale.as_deref(), Some("de-DE"));
+    let mut first_fixture = base.fixture.clone();
+    first_fixture.camera = pack::from_json_str(&oracle["firstCamera"].to_string()).unwrap();
+    let mut incoming = base.fixture.clone();
+    incoming.camera = pack::from_json_str(&oracle["incomingCamera"].to_string()).unwrap();
+    let mut first = Generation2dDiff { fixture: Some(first_fixture), generation: Some(base.generation.clone()), ..Default::default() };
+    first.absorb(Generation2dDiff { fixture: Some(incoming.clone()), ..Default::default() });
+    assert_eq!(first.fixture.as_ref(), Some(&incoming));
+    assert_eq!(first.generation.as_ref(), Some(&base.generation));
+    let mut expected = base.clone();
+    expected.fixture = incoming;
+    let next = first.apply(&base).expect("absorbed diff applies");
+    assert_eq!(next, expected);
+    let camera: serde_json::Value = serde_json::from_str(&pack::to_json_string(&next.fixture.camera)).unwrap();
+    assert_eq!(camera, oracle["incomingCamera"]);
 }
 
 #[test]

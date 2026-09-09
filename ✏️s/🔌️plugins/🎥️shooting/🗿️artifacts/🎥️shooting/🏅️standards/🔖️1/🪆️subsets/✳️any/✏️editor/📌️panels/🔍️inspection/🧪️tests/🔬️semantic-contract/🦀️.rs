@@ -1,9 +1,17 @@
-
 use super::*;
 
 fn project(node: BuiltNode) -> serde_json::Value {
     let text = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire inspected semantic tree");
     serde_json::from_str(&text).expect("independent semantic JSON oracle")
+}
+
+fn view_state(locale: &str) -> semio_framework_plugin::ViewModel {
+    let locale = match locale {
+        "en-US" => semio_framework_plugin::Locale::En,
+        "de-DE" => semio_framework_plugin::Locale::De,
+        value => panic!("unexpected fixture locale {value}"),
+    };
+    semio_framework_plugin::ViewModel { locale, ..Default::default() }
 }
 
 #[test]
@@ -12,7 +20,7 @@ fn shooting_semantic_panels_match_the_json_oracle() {
     let mut snapshot = crate::standards::v1::subsets::any::schema::default_snapshot();
     let cfg = ShootingConfig::default();
     for row in vectors["cases"].as_array().expect("locales") {
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<ShootingLabels>(row["locale"].as_str().expect("locale"));
+        let labels = crate::editor::shooting::terminology::shooting_play_labels(&view_state(row["locale"].as_str().expect("locale")));
         let node = render(&snapshot, &cfg, labels).expect("shot inspector");
         let fields = &node.children[0].children;
         let bindings: Vec<serde_json::Value> = [0, 3, 4].into_iter().map(|i| serde_json::to_value(&fields[i].children[0].bindings[0]).expect("independent binding oracle")).collect();
@@ -26,7 +34,7 @@ fn shooting_semantic_panels_match_the_json_oracle() {
             assert_eq!(binding["trigger"], "change");
         }
     }
-    for node in [crate::editor::shooting::modes::edit::windows::scene::render(&snapshot, &cfg).expect("editor scene"), crate::viewer::shooting::modes::view::windows::scene::render(&snapshot).expect("viewer scene")] {
+    for node in [crate::editor::shooting::modes::edit::windows::scene::render(&snapshot, &cfg, "select").expect("editor scene"), crate::viewer::shooting::modes::view::windows::scene::render(&snapshot).expect("viewer scene")] {
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("3D surface") };
         let scene: semio_framework_plugin::World3dScene = semio_framework_ui_scene::decode(props).expect("packed scene");
         let frame: serde_json::Value = serde_json::from_str(scene.frame_json.as_deref().expect("active frame")).expect("independent frame oracle");
@@ -42,7 +50,7 @@ fn shooting_semantic_panels_match_the_json_oracle() {
     snapshot.shots.clear();
     snapshot.active_shot_id.clear();
     for row in vectors["cases"].as_array().expect("locales") {
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<ShootingLabels>(row["locale"].as_str().expect("locale"));
+        let labels = crate::editor::shooting::terminology::shooting_play_labels(&view_state(row["locale"].as_str().expect("locale")));
         let tree = project(render(&snapshot, &cfg, labels).expect("empty inspector"));
         assert_eq!(tree["children"][0]["component"]["label"], row["summary"]);
     }

@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::animate::PresentationCommand;
 use crate::editor::animate::commands::{delete_selection, delete_tile, patch_tile_crops, rename_tiles};
 use crate::editor::animate::testkit::{dispatch, presentation_app, presentation_app_with_registry};
+use crate::editor::animate::PresentationCommand;
 use semio_framework_plugin::testkit::meta;
 
 async fn seed_2x2(app: &mut crate::editor::animate::testkit::PresentationApp) {
@@ -39,7 +38,7 @@ async fn patch_tile_crop_clamps_and_is_reversible() {
 #[semio_framework_async_macros::async_test]
 async fn delete_selection_removes_only_the_selected_tile() {
     use crate::editor::animate::{PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY};
-    use semio_framework_plugin::{INTERACTION_SELECT_ACTION_ID, PluginApp};
+    use semio_framework_plugin::{PluginApp, INTERACTION_SELECT_ACTION_ID};
     let mut app = presentation_app_with_registry().await;
     seed_2x2(&mut app).await;
     let first_id = crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();

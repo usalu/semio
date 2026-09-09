@@ -5,7 +5,68 @@
   "payloadSchema": "puzzle.3d.fixture.tool-command.v1",
   "toolIds": [
     "openAddObjectDialog",
-    "worldPointerDown"
+    "worldPointerDown",
+    "transformBegin",
+    "transformEnd",
+    "setActiveExample",
+    "setFillCount",
+    "addTargetVolume",
+    "acceptSuggestion",
+    "addBrushObject",
+    "addObjectKind",
+    "createAttraction",
+    "deleteAttraction",
+    "deleteSelection",
+    "deleteTargetVolume",
+    "duplicateSelection",
+    "patchInspector",
+    "rotateSelection",
+    "scaleSelection",
+    "setFillCountStep",
+    "setSelectionFlag",
+    "setTargetVolumeFlag",
+    "translateSelection",
+    "worldRelocate",
+    "closeVortexSuggestions",
+    "cycleBrushCandidate",
+    "cycleBrushCandidateBack",
+    "engagementAbort",
+    "engagementControlSelect",
+    "engagementInput",
+    "engagementRepeatLast",
+    "engagementSubmit",
+    "cancelFillBuild",
+    "fillBuildTick",
+    "focusSelection",
+    "hoverSuggestion",
+    "openVortexSuggestions",
+    "registerBrushMesh",
+    "relocateTargetVolume",
+    "selectSameKindSelection",
+    "setBrushPlacementOverlapBudget",
+    "setCamera",
+    "setChunkSize",
+    "setGridSnapEnabled",
+    "setGridSpacing",
+    "setGridVisible",
+    "setLodAutomatic",
+    "setLodDepthVariable",
+    "setLodManual",
+    "setObjectKindWeight",
+    "setProjection",
+    "setProjectionParam",
+    "setProximityRadius",
+    "setSelectableKind",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setTransformGumballFlag",
+    "setVortexDirection",
+    "setVortexKindWeight",
+    "setVortexShow",
+    "setVoxelDims",
+    "suggestionsTick",
+    "toggleSun"
   ],
   "evidenceToolIds": [
     "acceptSuggestion",
@@ -1965,8 +2026,7 @@
       },
       "expectedMutations": [
         "SetWindowEngagementInput:",
-        "SetBrushCandidateIndex:0",
-        "SetActiveUtility:"
+        "SetBrushCandidateIndex:0"
       ],
       "expectedEffects": [
         "SetActiveUtility:fenster-ä:"
@@ -2065,7 +2125,6 @@
         "value": "fill 7"
       },
       "expectedMutations": [
-        "SetActiveUtility:fill",
         "SetWindowEngagementInput:"
       ],
       "expectedEffects": [
@@ -2084,7 +2143,6 @@
         "value": "  BRUSH  "
       },
       "expectedMutations": [
-        "SetActiveUtility:brush",
         "SetWindowEngagementInput:"
       ],
       "expectedEffects": [

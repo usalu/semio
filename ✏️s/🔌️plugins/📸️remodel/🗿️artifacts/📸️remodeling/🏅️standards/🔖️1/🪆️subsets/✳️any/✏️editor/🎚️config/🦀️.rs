@@ -134,7 +134,7 @@ store::impl_whole_record_config!(RemodelingConfig);
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
-pub use mutations::{RemodelingConfigMutation, ReplaceConfig, SetCamera, SetLayerVisibility, SetFrameCursor, SetReportTable};
+pub use mutations::{RemodelingConfigMutation, ReplaceConfig, SetCamera, SetFrameCursor, SetLayerVisibility, SetReportTable};
 
 //#region 🧪️Tests
 #[cfg(test)]

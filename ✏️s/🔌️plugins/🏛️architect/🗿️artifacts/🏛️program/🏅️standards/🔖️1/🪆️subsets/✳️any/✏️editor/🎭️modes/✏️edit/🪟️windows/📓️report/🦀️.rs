@@ -2,7 +2,7 @@
 
 use crate::editor::architect::config::{parse_active_report, ArchitectConfig};
 use crate::editor::architect::ui_label;
-use semio_framework_plugin::{tree_item_desc,  LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub(crate) const ARCHITECT_WINDOW_REPORT: &str = "architect-report";

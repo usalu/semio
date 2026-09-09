@@ -1,23 +1,18 @@
 //! 📤️ Deterministic, resumable Layout export jobs.
 
-use crate::{Frame, GridSettings, LayoutBounds, LayoutSnapshot, Page, PageOverride};
 use crate::editor::layout::LayoutPlayApp;
-use semio_framework_value_derive::{FromValue, ToValue};
+use crate::{Frame, GridSettings, LayoutBounds, LayoutSnapshot, Page, PageOverride};
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_job::{
-    Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter,
-    StepContext, StepOutcome,
-};
-use semio_framework_plugin::app::{
-    ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion,
-};
-use semio_framework_plugin::{ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactReservedJob, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType, PluginCloseStep};
+#[cfg(test)]
+use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, RevisionId};
+use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
+use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
+use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType, PluginCloseStep};
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment};
 use std::sync::Arc;
-#[cfg(test)]
-use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, RevisionId};
 
 //#region 🔖️Contract
 pub const LAYOUT_EXPORT_TOOL_IDS: &[&str] = &["exportPng", "exportSvg", "exportPdf", "exportPackage"];

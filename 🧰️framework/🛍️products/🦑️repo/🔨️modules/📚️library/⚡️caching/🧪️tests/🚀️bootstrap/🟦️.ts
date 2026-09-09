@@ -19,7 +19,7 @@ export async function testNxBootstrap(workspace: string, output: string): Promis
   const graph = await require("esbuild").build({ absWorkingDir: workspace, entryPoints: [entry], bundle: true, write: false, metafile: true, packages: "external", platform: "node", format: "esm", logLevel: "silent" });
   assert.deepEqual(Object.keys(graph.metafile.inputs).map(path => relative(workspace, resolve(workspace, path)).replaceAll("\\", "/")).sort(), [...fixture.eagerSources].sort());
   for (const output of Object.values(graph.metafile.outputs) as { imports: { path: string; external: boolean }[] }[]) for (const dependency of output.imports) assert.ok(dependency.external && dependency.path.startsWith("node:"), `Non-system bootstrap import: ${dependency.path}`);
-  const env = { ...process.env, NX_WORKSPACE_ROOT: root, REPO_ROOT: root, NX_DAEMON: "false", NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NO_COLOR: "1", FORCE_COLOR: "0" };
+  const env = { ...process.env, NX_WORKSPACE_ROOT_PATH: root, NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NX_WORKSPACE_ROOT: root, REPO_ROOT: root, NX_DAEMON: "false", NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NO_COLOR: "1", FORCE_COLOR: "0" };
   const run = async (name: string, argv: string[]) => {
     const child = Bun.spawn(argv, { cwd: root, env, stdout: "pipe", stderr: "pipe" });
     const timer = setTimeout(() => child.kill("SIGKILL"), 30000);

@@ -1,31 +1,10 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/repo-vscode` router: `bun ./📜️script.ts <dev|test [level]|build|lint|build-vsix>`. */
-import { builtinModules } from "node:module";
-import { resolve } from "node:path";
-import { build, type InlineConfig } from "vite";
+import { build } from "vite";
+import { extensionBuildConfig, extensionPackageEnvironment } from "./⚙️build/🟦️.ts";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, TEST_LEVELS } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 //#region Build
-const extensionExternals = new Set(["vscode", ...builtinModules, ...builtinModules.map((name) => `node:${name}`)]);
-
-/** 📦️Defines a dependency-bundled CommonJS entry while retaining VS Code and Node host modules. */
-function extensionBuildConfig(root: string, entry: string, outputDirectory: string, outputFile: string, watch: boolean): InlineConfig {
-  return {
-    configFile: false,
-    root,
-    build: {
-      emptyOutDir: true,
-      lib: { entry: resolve(root, entry), formats: ["cjs"], fileName: () => outputFile },
-      minify: false,
-      outDir: resolve(root, outputDirectory),
-      rollupOptions: { external: (id) => extensionExternals.has(id) },
-      sourcemap: false,
-      target: "node22",
-      watch: watch ? {} : undefined,
-    },
-  };
-}
-
 /** 🧩️Builds the extension host entry and its extension-host test bundle. */
 async function buildExtension(root: string, watch: boolean): Promise<void> {
   await build(extensionBuildConfig(root, "🟦️.ts", "out", "extension.js", watch));
@@ -64,7 +43,7 @@ class LintScript extends BundleScript {
 /** 📦️Packages the VSIX; nx's `dependsOn: ["build"]` runs the build target first. */
 class BuildVsixScript extends BundleScript {
   run(): void {
-    runBunx(["vsce", "package", "--no-dependencies", "--out", "🧩️repo.vsix"], this.root);
+    runBunx(["vsce", "package", "--no-dependencies", "--out", "🧩️repo.vsix"], this.root, extensionPackageEnvironment(process.env));
   }
 }
 

@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::LayoutSnapshot;
 use crate::mutations::rename_layout;
+use crate::LayoutSnapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {

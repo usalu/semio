@@ -1,11 +1,11 @@
 //! 📄️ Animate presentation app panel — the document tree: tiles of the current deck.
 
-use crate::PresentationSnapshot;
 use crate::editor::animate::terminology::AnimatePresentationLabels;
+use crate::editor::animate::ui_label;
 use crate::editor::animate::PRESENTATION_INTERACTION_DOMAIN;
+use crate::PresentationSnapshot;
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use semio_framework_ui_contract::BuiltNode;
-use crate::editor::animate::ui_label;
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_BODY_DOCUMENT: &str = "animate.presentation.play.document";

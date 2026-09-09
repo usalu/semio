@@ -246,7 +246,6 @@ impl Default for Din16798Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-
 //#region 🌉️ExternalCodecBridge
 /// 📤️ The canonical JSON projection of a [`Din16798Snapshot`] — the surface
 /// `../../../../../🧪️tests/🌬️mutate-din16798-1` is compared through under `ordered-json-v1`.

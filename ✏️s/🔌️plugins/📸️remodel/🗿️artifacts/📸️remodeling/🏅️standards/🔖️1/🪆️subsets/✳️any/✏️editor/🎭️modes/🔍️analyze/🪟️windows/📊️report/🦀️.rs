@@ -1,14 +1,14 @@
 //! 📊️ Remodeling play app — the Report window: a Table surface over whichever reconstruction dataset the
 //! config's `report_table` selects.
 
-use crate::RemodelingSnapshot;
 use crate::editor::remodeling::config::RemodelingConfig;
+use crate::RemodelingSnapshot;
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TableScene, UiAssemblyResult, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use pack::JsonValue;
+use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
 pub const REMODELING_PLAY_WINDOW_REPORT: &str = "remodeling-report";
@@ -67,13 +67,7 @@ fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, String
                 .cameras
                 .iter()
                 .map(|camera| {
-                    row([
-                        ("id", JsonValue::from(camera.id.as_str())),
-                        ("model", JsonValue::from(camera.model.as_str())),
-                        ("fx", JsonValue::from(camera.fx)),
-                        ("fy", JsonValue::from(camera.fy)),
-                        ("rms", optional_number(camera.rms_reprojection_px)),
-                    ])
+                    row([("id", JsonValue::from(camera.id.as_str())), ("model", JsonValue::from(camera.model.as_str())), ("fx", JsonValue::from(camera.fx)), ("fy", JsonValue::from(camera.fy)), ("rms", optional_number(camera.rms_reprojection_px))])
                 })
                 .collect(),
         ),
@@ -84,12 +78,7 @@ fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, String
                 .tracks
                 .iter()
                 .map(|track| {
-                    row([
-                        ("id", JsonValue::from(track.id.as_str())),
-                        ("length", JsonValue::from(u64::from(track.length))),
-                        ("class", JsonValue::from(format!("{:?}", track.class))),
-                        ("speed", JsonValue::from(f64::from(track.mean_speed_m_s))),
-                    ])
+                    row([("id", JsonValue::from(track.id.as_str())), ("length", JsonValue::from(u64::from(track.length))), ("class", JsonValue::from(format!("{:?}", track.class))), ("speed", JsonValue::from(f64::from(track.mean_speed_m_s)))])
                 })
                 .collect(),
         ),
@@ -110,14 +99,8 @@ fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, String
                 })
                 .collect(),
         ),
-        "qcStages" => (
-            vec![column("stage", "Stage"), column("status", "Status")],
-            vec![row([("stage", JsonValue::from(format!("{:?}", scene.job.stage))), ("status", JsonValue::from(if scene.job.error.is_some() { "error" } else { "ok" }))])],
-        ),
-        "matches" => (
-            vec![column("note", "Note")],
-            vec![row([("note", JsonValue::from("Pairwise match data is reconstruction-runtime scratch, never distilled into durable document state."))])],
-        ),
+        "qcStages" => (vec![column("stage", "Stage"), column("status", "Status")], vec![row([("stage", JsonValue::from(format!("{:?}", scene.job.stage))), ("status", JsonValue::from(if scene.job.error.is_some() { "error" } else { "ok" }))])]),
+        "matches" => (vec![column("note", "Note")], vec![row([("note", JsonValue::from("Pairwise match data is reconstruction-runtime scratch, never distilled into durable document state."))])]),
         _ => (
             vec![column("streamId", "Stream"), column("index", "Index"), column("timestampMs", "Timestamp (ms)"), column("assetId", "Asset")],
             scene
@@ -125,12 +108,7 @@ fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, String
                 .iter()
                 .flat_map(|stream| {
                     stream.frames.iter().map(move |frame| {
-                        row([
-                            ("streamId", JsonValue::from(stream.id.as_str())),
-                            ("index", JsonValue::from(u64::from(frame.index))),
-                            ("timestampMs", JsonValue::from(frame.timestamp_ms)),
-                            ("assetId", JsonValue::from(frame.asset_id.as_str())),
-                        ])
+                        row([("streamId", JsonValue::from(stream.id.as_str())), ("index", JsonValue::from(u64::from(frame.index))), ("timestampMs", JsonValue::from(frame.timestamp_ms)), ("assetId", JsonValue::from(frame.asset_id.as_str()))])
                     })
                 })
                 .collect(),

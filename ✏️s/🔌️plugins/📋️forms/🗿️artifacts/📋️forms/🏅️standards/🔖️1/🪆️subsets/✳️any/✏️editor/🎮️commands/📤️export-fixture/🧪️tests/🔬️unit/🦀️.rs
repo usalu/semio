@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::forms::FormsCommand;
 use crate::editor::forms::testkit::{dispatch, forms_app};
+use crate::editor::forms::FormsCommand;
 use ExportFixture;
 
 #[semio_framework_async_macros::async_test]

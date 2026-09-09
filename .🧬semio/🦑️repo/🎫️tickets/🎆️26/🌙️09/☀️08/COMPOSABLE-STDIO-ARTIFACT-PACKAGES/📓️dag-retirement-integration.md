@@ -52,3 +52,7 @@ CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo cargo test -p semio-framework-a
 ```
 
 Result: 1 passed, 0 failed, with 55 unrelated tests filtered out. The full first-party/serde fixture equivalence and all bounded grant/ownership/terminal assertions passed.
+
+## DAG casing audit
+
+`DagNodeKind` intentionally does not use an enum-wide `rename_all_fields`. The authoritative mutation fixture `🌿️vcs/🧫️fixtures/🔣️mutations.json` declares `variadic_inputs` and `variadic_outputs`, including hostile camel-case and wrong-type vectors; the source preserves those names with explicit field renames. `AppInstance` separately declares its established `instanceId`, `pluginId`, `appId`, and `appIcon` fields. Existing direct intrinsic fixture tests parse these vectors with the first-party codec and independently with `serde_json`, so no production or fixture change was required.

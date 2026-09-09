@@ -8,10 +8,10 @@
         "id": "root",
         "kind": "Piece",
         "name": "core",
-        "x": 0.0,
-        "y": 0.0,
-        "width": 80.0,
-        "height": 40.0,
+        "x": 0,
+        "y": 0,
+        "width": 80,
+        "height": 40,
         "properties": {},
         "ports": [
           {
@@ -26,10 +26,10 @@
         "id": "child",
         "kind": "Piece",
         "name": "capsule",
-        "x": 120.0,
-        "y": 0.0,
-        "width": 80.0,
-        "height": 40.0,
+        "x": 120,
+        "y": 0,
+        "width": 80,
+        "height": 40,
         "properties": {},
         "ports": [
           {
@@ -48,8 +48,8 @@
         "source": "root@out",
         "target": "child@in",
         "properties": {
-          "u": 1.0,
-          "v": 2.0
+          "u": 1,
+          "v": 2
         }
       }
     ]
@@ -57,7 +57,9 @@
   "cases": [
     {
       "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, b.name",
-      "oracle": { "select": "SELECT a.name, b.name FROM nodes a JOIN edges r ON r.source = a.id JOIN nodes b ON b.id = r.target WHERE a.kind = 'Piece' AND r.kind = 'Connection' AND b.kind = 'Piece' ORDER BY a.id, r.id" },
+      "oracle": {
+        "select": "SELECT a.name, b.name FROM nodes a JOIN edges r ON r.source = a.id JOIN nodes b ON b.id = r.target WHERE a.kind = 'Piece' AND r.kind = 'Connection' AND b.kind = 'Piece' ORDER BY a.id, r.id"
+      },
       "columns": [
         "a.name",
         "b.name"
@@ -72,7 +74,10 @@
     },
     {
       "query": "MATCH (a:Piece) WHERE a.name = 'core' SET a.label = 'root-core' RETURN a.name",
-      "oracle": { "mutate": "UPDATE nodes SET label = 'root-core' WHERE kind = 'Piece' AND name = 'core'", "select": "SELECT name FROM nodes WHERE kind = 'Piece' AND name = 'core' ORDER BY id" },
+      "oracle": {
+        "mutate": "UPDATE nodes SET label = 'root-core' WHERE kind = 'Piece' AND name = 'core'",
+        "select": "SELECT name FROM nodes WHERE kind = 'Piece' AND name = 'core' ORDER BY id"
+      },
       "columns": [
         "a.name"
       ],
@@ -85,14 +90,18 @@
     },
     {
       "query": "CREATE (n:Piece)",
-      "oracle": { "mutate": "INSERT INTO nodes (id, kind, name) VALUES ('n-2', 'Piece', 'n')" },
+      "oracle": {
+        "mutate": "INSERT INTO nodes (id, kind, name) VALUES ('n-2', 'Piece', 'n')"
+      },
       "columns": [],
       "rows": [],
       "mutations": 1
     },
     {
       "query": "MATCH (a:Piece) WHERE a.name = 'missing' RETURN a.name",
-      "oracle": { "select": "SELECT name FROM nodes WHERE kind = 'Piece' AND name = 'missing' ORDER BY id" },
+      "oracle": {
+        "select": "SELECT name FROM nodes WHERE kind = 'Piece' AND name = 'missing' ORDER BY id"
+      },
       "columns": [
         "a.name"
       ],
@@ -105,11 +114,110 @@
         "nodes": "SELECT id FROM nodes WHERE id IN (SELECT source FROM edges WHERE kind = 'Connection' UNION SELECT target FROM edges WHERE kind = 'Connection') ORDER BY id",
         "edges": "SELECT id FROM edges WHERE kind = 'Connection' ORDER BY id"
       },
-      "columns": ["a", "r", "b"],
+      "columns": [
+        "a",
+        "r",
+        "b"
+      ],
       "rows": [],
-      "nodeIds": ["child", "root"],
-      "edgeIds": ["e1"],
+      "nodeIds": [
+        "child",
+        "root"
+      ],
+      "edgeIds": [
+        "e1"
+      ],
+      "mutations": 0
+    },
+    {
+      "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b",
+      "inlineManifest": true,
+      "manifestId": null,
+      "oracle": {
+        "nodes": "SELECT id FROM nodes WHERE id IN (SELECT source FROM edges WHERE kind = 'Connection' UNION SELECT target FROM edges WHERE kind = 'Connection') ORDER BY id",
+        "edges": "SELECT id FROM edges WHERE kind = 'Connection' ORDER BY id"
+      },
+      "columns": [
+        "a",
+        "r",
+        "b"
+      ],
+      "rows": [],
+      "nodeIds": [
+        "child",
+        "root"
+      ],
+      "edgeIds": [
+        "e1"
+      ],
       "mutations": 0
     }
-  ]
+  ],
+  "interleaving": {
+    "query": "MATCH (a:Piece) RETURN a.name",
+    "selections": [
+      {
+        "windowId": "query-editor-left",
+        "start": 2,
+        "end": 5
+      },
+      {
+        "windowId": "query-editor-right",
+        "start": 8,
+        "end": 12
+      }
+    ],
+    "expected": {
+      "queryResults": 1,
+      "documentChanged": false,
+      "selectionRows": [
+        [
+          "query-editor-left",
+          2,
+          5
+        ],
+        [
+          "query-editor-right",
+          8,
+          12
+        ]
+      ],
+      "appTransientPublications": 1,
+      "windowTransientPublications": 2,
+      "appTransientGeneration": 1,
+      "windowTransientGenerationById": {
+        "query-editor-left": 1,
+        "query-editor-right": 1
+      }
+    }
+  },
+  "retainedExecution": {
+    "maximumQueryBytes": 4096,
+    "maximumWorkUnitsPerStep": 1,
+    "cancelAfterWorkUnits": 7,
+    "retirementItemsPerStep": 1,
+    "retirementBytesPerStep": 4096,
+    "sourceRemainsLive": true,
+    "checkpointOwnership": {
+      "operationId": 501,
+      "generation": 12,
+      "collisionOperationId": 4194805,
+      "collisionGeneration": 13,
+      "legalReplayProgress": 1000001,
+      "maximumFactors": [4096, 16384, 16384, 16384],
+      "exactTupleRequired": true
+    },
+    "entityAdmission": {
+      "maximumBytesPerStep": 4096,
+      "oversizedPropertyBytes": 8192,
+      "nodeRejectedBeforeClone": true,
+      "edgeRejectedBeforeClone": true
+    },
+    "outputAdmission": {
+      "maximumBytes": 1048576,
+      "rowCount": 300,
+      "cellBytes": 3900,
+      "oversizedTableRejected": true
+    }
+  }
 }

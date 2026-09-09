@@ -80,6 +80,4 @@ type CurationArtifact {
   catalog: ArtifactLink! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.kit")
   stockExtra: [ObjectKindExtra!]! @state(class: ARTIFACT)
   curated: [CuratedItem!]! @state(class: ARTIFACT)
-  filters: Filters! @state(class: CONFIG)
-  contributionsJson: String! @state(class: CONFIG)
 }

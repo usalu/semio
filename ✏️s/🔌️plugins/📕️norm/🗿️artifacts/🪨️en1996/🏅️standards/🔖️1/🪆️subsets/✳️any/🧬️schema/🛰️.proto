@@ -47,6 +47,4 @@ message En1996Artifact {
   double h_ef_mm = 21;
   // @state artifact
   double t_ef_mm = 22;
-  // @state presence
-  optional uint32 selected_check_index = 23;
 }

@@ -1,6 +1,5 @@
 //! 👥️ Animate presentation presence — shareable live ephemeral state + mutations.
 
-
 use store::ArtifactPack;
 
 //#region 🔖️Presence

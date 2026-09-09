@@ -480,11 +480,8 @@ pub fn results_report_json(case: &str, epw_text: &str, epw_file: &str, epw_sha25
 pub fn report_json(projected: &CaseResults, epw_file: &str, epw_sha256: &str) -> String {
     let numbers = |values: &[f64]| pack::json::array(values.iter().map(|value| pack::json::Value::from(*value)));
     let controlled = !is_free_float(&projected.case);
-    let annual = if controlled {
-        pack::json::object([("heatingKwh".to_string(), pack::json::Value::from(projected.annual_heating_kwh)), ("coolingKwh".to_string(), pack::json::Value::from(projected.annual_cooling_kwh))])
-    } else {
-        pack::json::Value::Null
-    };
+    let annual =
+        if controlled { pack::json::object([("heatingKwh".to_string(), pack::json::Value::from(projected.annual_heating_kwh)), ("coolingKwh".to_string(), pack::json::Value::from(projected.annual_cooling_kwh))]) } else { pack::json::Value::Null };
     let peak = if controlled {
         pack::json::object([
             ("heatingKw".to_string(), pack::json::Value::from(projected.peak_heating_kw)),
@@ -522,14 +519,7 @@ pub fn report_json(projected: &CaseResults, epw_file: &str, epw_sha256: &str) ->
         ("annual".to_string(), annual),
         ("peak".to_string(), peak),
         ("freeFloat".to_string(), free_float),
-        (
-            "hourly".to_string(),
-            pack::json::object([
-                ("zoneAirTemperatureC".to_string(), numbers(&projected.zone_air_temperature_c)),
-                ("heatingW".to_string(), numbers(&projected.heating_w)),
-                ("coolingW".to_string(), numbers(&projected.cooling_w)),
-            ]),
-        ),
+        ("hourly".to_string(), pack::json::object([("zoneAirTemperatureC".to_string(), numbers(&projected.zone_air_temperature_c)), ("heatingW".to_string(), numbers(&projected.heating_w)), ("coolingW".to_string(), numbers(&projected.cooling_w))])),
     ]);
     pack::json::to_string(&report)
 }
@@ -557,15 +547,8 @@ pub fn case_parameters_json(case: &str) -> Option<String> {
     let built = model(case)?;
     let resistance = |construction_id: EntityId| -> f64 {
         let construction = built.constructions.iter().find(|construction| construction.id == construction_id);
-        let layers: f64 = construction
-            .map_or(0.0, |construction| {
-                construction
-                    .layer_material_ids
-                    .iter()
-                    .filter_map(|id| built.materials.iter().find(|material| material.id == *id))
-                    .map(|material| material.thickness_m / material.conductivity_w_m_k)
-                    .sum()
-            });
+        let layers: f64 =
+            construction.map_or(0.0, |construction| construction.layer_material_ids.iter().filter_map(|id| built.materials.iter().find(|material| material.id == *id)).map(|material| material.thickness_m / material.conductivity_w_m_k).sum());
         layers + crate::material::R_FILM_INTERIOR_M2K_W + crate::material::R_FILM_EXTERIOR_M2K_W
     };
     let surfaces = pack::json::array(built.surfaces.iter().map(|surface| {

@@ -128,6 +128,4 @@ message Din16798Artifact {
   double duct_test_pressure_pa = 61;
   // @state artifact
   double duct_leakage_m3_s_m2 = 62;
-  // @state presence
-  optional uint32 selected_check_index = 63;
 }

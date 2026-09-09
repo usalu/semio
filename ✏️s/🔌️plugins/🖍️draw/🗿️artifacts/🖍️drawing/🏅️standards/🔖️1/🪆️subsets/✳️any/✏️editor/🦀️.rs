@@ -7,12 +7,10 @@
 //! This file is a routing table: `handle` → `DrawingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::op::DrawingMutation;
-use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
 use crate::editor::drawing::commands::canvas_pointer_down::{DrawingGesturePreview, DrawingSession};
 use crate::editor::drawing::commands::{
     add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
-    engagement_submit, move_layer, patch_layer, patch_layers, set_active_example, set_active_utility, set_camera, set_camera_zoom, set_fixture_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
+    engagement_submit, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_fixture_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
 };
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use crate::editor::drawing::modes::edit;
@@ -20,13 +18,15 @@ use crate::editor::drawing::modes::edit::windows::canvas as canvas_window;
 use crate::editor::drawing::panels::{catalogue as catalogue_panel, layers as layers_panel, properties as properties_panel};
 use crate::editor::drawing::presence::{DrawingPresence, DrawingPresenceMutation};
 use crate::editor::drawing::terminology::DrawingPlayLabels;
+use crate::op::DrawingMutation;
+use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
+use semio_framework_job::FixedOperationOwner;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel,
     Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
     WindowEngagementStatus,
 };
-use semio_framework_job::FixedOperationOwner;
 use store::ArtifactPack;
 use store::EngineHandles;
 
@@ -55,12 +55,9 @@ fn drawing_manifest_action(action: &str) -> ActionDescriptor {
     ActionDescriptor { controller_id: DRAWING_PLAY_CONTROLLER_ID.into(), action: action.into(), args: None }
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -73,27 +70,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -103,13 +93,10 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
-
 
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector-bound vocabulary
 /// that is dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
@@ -144,7 +131,6 @@ semio_framework_plugin::app_commands! {
         "combineBoolean" as "combine-boolean" => combine_boolean::CombineBoolean,
         "patchLayer" as "patch-layer" => patch_layer::PatchLayer,
         "patchLayers" as "patch-layers" => patch_layers::PatchLayers,
-        "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
@@ -188,8 +174,8 @@ struct DrawingGestureOperationOwner {
 }
 
 impl DrawingGestureOperationOwner {
-    fn new() -> Self {
-        Self { session: Some(DrawingSession::default()), closing: false }
+    fn new(active_utility_id: &str) -> Self {
+        Self { session: Some(DrawingSession::with_active_utility(active_utility_id)), closing: false }
     }
 }
 
@@ -239,6 +225,7 @@ impl DrawingInstanceOperationOwner {
         command: &DrawingCommand,
         snapshot: &DrawingSnapshot,
         config: &DrawingConfig,
+        active_utility_id: &str,
         history: &semio_framework_plugin::HistoryView,
         operation: semio_framework_plugin::AppOperationContext,
     ) -> Result<Option<Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation>>, Fault> {
@@ -246,14 +233,15 @@ impl DrawingInstanceOperationOwner {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.closing"), "the Drawing gesture operation owner is closing"));
         }
         if let Some((active, observed_revision)) = self.active {
-            if observed_revision != base_revision {
+            let same_utility = self.operations.get(active).and_then(|owner| owner.session.as_ref()).is_some_and(|session| session.active_utility_id == active_utility_id);
+            if observed_revision != base_revision || !same_utility {
                 self.operations.cancel(active);
                 self.active = None;
             }
         }
         let live_key = self.active.map_or(key, |(active, _)| active);
         if self.operations.get(live_key).is_none() {
-            self.operations.admit(live_key, DrawingGestureOperationOwner::new()).map_err(|mut rejected| {
+            self.operations.admit(live_key, DrawingGestureOperationOwner::new(active_utility_id)).map_err(|mut rejected| {
                 rejected.owner.cancel();
                 rejected.owner.begin_close();
                 let _ = rejected.owner.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
@@ -261,10 +249,7 @@ impl DrawingInstanceOperationOwner {
             })?;
             self.active = Some((live_key, base_revision));
         }
-        let retained = self
-            .operations
-            .get_mut(live_key)
-            .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the exact Drawing gesture owner changed before its bounded reducer step"))?;
+        let retained = self.operations.get_mut(live_key).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the exact Drawing gesture owner changed before its bounded reducer step"))?;
         let session = retained.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the Drawing gesture session is already closing"))?;
         if session.gesture.context.points_overflowed {
             self.operations.cancel(live_key);
@@ -311,11 +296,7 @@ impl DrawingInstanceOperationOwner {
                 }
             };
             let query = session.point_query.take().expect("the exact published query remains retained");
-            let effect = if query.hover {
-                canvas_pointer_down::interaction_hover_effect_from_targets(targets)
-            } else {
-                canvas_pointer_down::interaction_select_effect_from_targets(targets, &query.merge)
-            };
+            let effect = if query.hover { canvas_pointer_down::interaction_hover_effect_from_targets(targets) } else { canvas_pointer_down::interaction_select_effect_from_targets(targets, &query.merge) };
             let mut emit = Emit::default();
             emit.effects.push(effect);
             if session.gesture.matches("idle") && session.trace_pointer.is_none() {
@@ -330,7 +311,7 @@ impl DrawingInstanceOperationOwner {
                 let tolerance = canvas_pointer_down::DRAWING_PICK_TOLERANCE_PX / config.camera.zoom.max(1e-6);
                 session.point_query = Some(canvas_pointer_down::DrawingPointQuery::new(
                     command.command_id(),
-                    canvas_pointer_down::TracePointerJob::new_query(snapshot, [world_x, world_y], tolerance, config.active_utility_id == "selectDirect"),
+                    canvas_pointer_down::TracePointerJob::new_query(snapshot, [world_x, world_y], tolerance, session.active_utility_id == "selectDirect"),
                     true,
                     "replace".into(),
                     false,
@@ -343,13 +324,7 @@ impl DrawingInstanceOperationOwner {
                 let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
                 Some(session.step_gesture_retained(
                     command.command_id(),
-                    canvas_pointer_down::drawing_gesture::Event::PointerUp {
-                        utility: config.active_utility_id.clone(),
-                        world: [world_x, world_y],
-                        shift: payload.shift,
-                        ctrl: payload.ctrl,
-                        meta: payload.meta,
-                    },
+                    canvas_pointer_down::drawing_gesture::Event::PointerUp { utility: session.active_utility_id.clone(), world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta },
                     snapshot,
                     config,
                 ))
@@ -366,7 +341,7 @@ impl DrawingInstanceOperationOwner {
             return Ok(Some(emit));
         }
         let doc = ArtifactView::with_operation(snapshot, history, operation);
-        let cfg = ConfigView { snapshot: config };
+        let cfg = ConfigView { snapshot: config, window: None };
         let emit = match command {
             DrawingCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle(payload, &doc, &cfg, session),
             DrawingCommand::CanvasPointerMove(payload) => canvas_pointer_move::handle(payload, &doc, &cfg, session),
@@ -394,8 +369,10 @@ impl DrawingInstanceOperationOwner {
             return None;
         }
         let session = self.operations.get_mut(key).and_then(|owner| owner.session.as_mut())?;
-        if active_utility != "trace" {
-            session.trace_pointer = None;
+        if session.active_utility_id != active_utility {
+            self.operations.cancel(key);
+            self.active = None;
+            return None;
         }
         if session.gesture.matches("idle") && session.trace_pointer.is_none() && session.point_query.is_none() && session.draft_query.is_none() {
             self.operations.cancel(key);
@@ -439,6 +416,7 @@ struct DrawingGestureOperationPayload {
     history: std::sync::Arc<semio_framework_plugin::HistoryView>,
     instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     operation_context: semio_framework_plugin::AppOperationContext,
+    active_utility_id: String,
     completion: semio_framework_plugin::ArtifactToolCompletion<semio_framework_plugin::EditorApp<DrawingPlayApp>>,
 }
 
@@ -592,7 +570,9 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
             let Some(input) = self.raw_input.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
             if let Some(page) = input.page(self.raw_page_cursor) {
                 if let Some(byte) = page.get(self.raw_byte_cursor) {
-                    let Some(decoder) = self.decoder.as_mut() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
+                    let Some(decoder) = self.decoder.as_mut() else {
+                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                    };
                     decoder.feed(*byte);
                     if decoder.phase == DrawingRetainedDecodePhase::Fault {
                         return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
@@ -620,7 +600,7 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
             let Some(payload) = self.payload.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
             let key = semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
             let emit = payload.instance_owner.with_mut::<DrawingInstanceOperationOwner, _>(|owner| {
-                owner.dispatch(key, payload.operation_context.canonical_base_revision, &payload.command, &payload.snapshot, &payload.config, &payload.history, payload.operation_context.clone())
+                owner.dispatch(key, payload.operation_context.canonical_base_revision, &payload.command, &payload.snapshot, &payload.config, &payload.active_utility_id, &payload.history, payload.operation_context.clone())
             });
             let emit = match emit {
                 Ok(Some(emit)) => Ok(emit),
@@ -773,9 +753,7 @@ mod gesture_operation_owner_tests;
 /// command enum exactly (pinned by `retained_route_dispositions_are_exact_and_exhaustive`): an id
 /// missing from both lists is unreachable from the client, because `validate_tool_job_rows` demands
 /// one proof row per `Migrated` generated id and `validate_ui_dispatch_classification` rejects
-/// anything that is not `Migrated`. `setActiveUtility` belongs here even though the manifest never
-/// declares it: the framework injects it — already classified `Migrated` — for every app with
-/// utilities, and registers no factory of its own for it.
+/// anything that is not `Migrated`.
 const DRAWING_BOUNDED_TOOL_IDS: &[&str] = &[
     "setSnapshot",
     "commitDocument",
@@ -792,11 +770,10 @@ const DRAWING_BOUNDED_TOOL_IDS: &[&str] = &[
     "combineBoolean",
     "patchLayer",
     "patchLayers",
-    "setActiveUtility",
     "setCamera",
     "setCameraZoom",
     "engagementInput",
-    ];
+];
 const DRAWING_BOUNDED_PAYLOAD_SCHEMA: &str = "drawing.tool-command.v1";
 const DRAWING_BOUNDED_RAW_BYTES: usize = 65_536;
 const DRAWING_BOUNDED_WORK_ITEMS: usize = 4_096;
@@ -821,7 +798,6 @@ const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactT
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "combineBoolean", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
@@ -852,15 +828,16 @@ fn drawing_bounded_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &::protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<DrawingPlayApp>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<DrawingPlayApp>>>,
     operation: &semio_framework_plugin::AppOperationContext,
 ) -> Result<Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation>, Fault> {
     if !DRAWING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.bounded.route"), "the bounded Drawing command owner rejects a gesture command"));
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let cfg = ConfigView { snapshot: config };
-    let mut session = DrawingSession::default();
+    let cfg = ConfigView { snapshot: config, window: None };
+    let active_utility = context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.active_utility_id.as_deref()).unwrap_or(DRAWING_DEFAULT_UTILITY);
+    let mut session = DrawingSession::with_active_utility(active_utility);
     session.interaction.ids = interaction.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
     command.dispatch(&doc, &cfg, &mut session)
 }
@@ -937,7 +914,17 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
         canonical_base_revision: request.canonical_base_revision,
     };
     let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            history: request.history,
+            interaction_state: request.interaction_state,
+            interaction_hover: request.interaction_hover,
+            context: Some(request.context),
+            operation: operation_context,
+            completion: request.completion,
+        },
         DrawingCommand::command_id,
         DRAWING_BOUNDED_RAW_BYTES,
         DRAWING_BOUNDED_WORK_ITEMS,
@@ -1242,7 +1229,7 @@ impl DrawingBoundedProofs {
         tools: [
             "setSnapshot", "commitDocument", "setFixtureJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
             "addLayer", "dropLayerKind", "moveLayer", "deleteLayer", "duplicateLayer", "toggleLayerVisible", "combineBoolean",
-            "patchLayer", "patchLayers", "setActiveUtility", "setCamera", "setCameraZoom", "engagementInput",         ]
+            "patchLayer", "patchLayers", "setCamera", "setCameraZoom", "engagementInput",         ]
     }
 }
 //#endregion 🧾️ProofCatalogs
@@ -1274,14 +1261,13 @@ fn render_drawing_body(
     view_state: &semio_framework_plugin::ViewModel,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let labels = semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
-    let active_utility = config.active_utility_id.as_str();
+    let active_utility = view_state.active_utility_id.as_deref().unwrap_or(DRAWING_DEFAULT_UTILITY);
     let root = match body_key {
         DRAWING_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, preview, active_utility),
         DRAWING_PLAY_BODY_LAYERS => layers_panel::render(document, labels),
         DRAWING_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels),
         DRAWING_PLAY_BODY_PROPERTIES => properties_panel::render(document, active_utility),
-        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("drawing.body.label", "the fixed Drawing unknown-body label exceeds its UI bound")),
+        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("drawing.body.label", "the fixed Drawing unknown-body label exceeds its UI bound")),
     }?;
     Ok(semio_framework_plugin::built_to_component_tree(root))
 }
@@ -1379,6 +1365,7 @@ impl ArtifactEditor for DrawingPlayApp {
             history: request.history,
             instance_owner: request.instance_operation_owner,
             operation_context,
+            active_utility_id: request.context.view_state.as_ref().and_then(|view| view.active_utility_id.clone()).unwrap_or_else(|| DRAWING_DEFAULT_UTILITY.into()),
             completion: request.completion,
         };
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
@@ -1427,14 +1414,15 @@ impl ArtifactEditor for DrawingPlayApp {
         command: &DrawingCommand,
         doc: &ArtifactView<'_, DrawingSnapshot>,
         cfg: &ConfigView<'_, DrawingConfig>,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &InteractionView<'_>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<DrawingMutation, DrawingConfigMutation, Self::DraftMutation>, Fault> {
         if DRAWING_GESTURE_TOOL_IDS.contains(&command.command_id()) {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.retained-route"), "Drawing gesture commands are reachable only through their exact retained factory owner"));
         }
-        let mut session = DrawingSession::default();
+        let mut session = DrawingSession::with_active_utility(view_state.and_then(|view| view.active_utility_id.as_deref()).unwrap_or(DRAWING_DEFAULT_UTILITY));
         session.interaction.ids = interaction.selection(DRAWING_INTERACTION_DOMAIN).ids.clone();
         command.dispatch(doc, cfg, &mut session)
     }
@@ -1452,7 +1440,7 @@ impl ArtifactEditor for DrawingPlayApp {
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let preview = match doc.render_operation() {
             Some(operation) => owner
-                .with_mut::<DrawingInstanceOperationOwner, _>(|owner| Ok(owner.preview_projection(operation.canonical_base_revision, &cfg.snapshot.active_utility_id)))
+                .with_mut::<DrawingInstanceOperationOwner, _>(|owner| Ok(owner.preview_projection(operation.canonical_base_revision, view_state.active_utility_id.as_deref().unwrap_or(DRAWING_DEFAULT_UTILITY))))
                 .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("drawing.gesture.preview-owner", error.message))?
                 .unwrap_or_default(),
             None => DrawingGesturePreview::default(),
@@ -1577,15 +1565,15 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .action_with(drawing_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Mutation))
             .action_interactive_job("patchLayers", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🖱️ Internal pointer/gesture vocabulary — commit-time handlers emit operations, the rest are pure View.
-            .action_with(drawing_internal_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::Mutation))
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::Mutation, "mouse-pointer") })
             .action_interactive_job("canvasPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::Mutation))
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::Mutation, "mouse-pointer") })
             .action_interactive_job("canvasPointerUp", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("canvasDoubleClick", LocalizedLabel::native("Canvas Double Click", "Leinwand-Doppelklick"), ActionKind::Mutation))
             .action_interactive_job("canvasDoubleClick", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("canvasCommitDraft", LocalizedLabel::native("Canvas Commit Draft", "Leinwand-Entwurf übernehmen"), ActionKind::Mutation))
             .action_interactive_job("canvasCommitDraft", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View))
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View, "mouse-pointer") })
             .action_interactive_job("canvasPointerMove", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("canvasEscape", LocalizedLabel::native("Canvas Escape", "Leinwand abbrechen"), ActionKind::View))
             .action_interactive_job("canvasEscape", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -1593,10 +1581,10 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             // below): interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
             // setInteractionGranularity auto-inject, never declared here (ticket
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-            .action_with(drawing_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 📷️ Camera — session-only runtime pose, never a document operation.
-            .action_with(drawing_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
             .action_interactive_job("setCameraZoom", semio_framework_plugin::InteractiveJobClassification::Migrated)

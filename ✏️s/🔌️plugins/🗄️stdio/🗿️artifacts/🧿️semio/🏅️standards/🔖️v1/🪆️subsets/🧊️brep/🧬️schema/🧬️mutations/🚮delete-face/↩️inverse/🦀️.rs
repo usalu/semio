@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteFace`.
 
-use crate::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, create_face, delete_face};
+use crate::standards::v1::subsets::brep::schema::mutations::{create_face, delete_face, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse
@@ -10,14 +10,8 @@ pub fn inverse(payload: &super::DeleteFace, base: &SemioBrepSnapshot) -> Vec<Sem
         return Vec::new();
     };
     let tail = &base.faces[index..];
-    let mut undo: Vec<SemioBrepMutation> = tail
-        .iter()
-        .skip(1)
-        .map(|x| SemioBrepMutation::DeleteFace(delete_face::DeleteFace { id: x.id.clone() }))
-        .collect();
-    undo.extend(tail.iter().map(|x| {
-        SemioBrepMutation::CreateFace(create_face::CreateFace { id: x.id.clone(), outer_loop: x.outer_loop.clone(), inner_loops: x.inner_loops.clone(), surface: x.surface.clone(), orientation: x.orientation })
-    }));
+    let mut undo: Vec<SemioBrepMutation> = tail.iter().skip(1).map(|x| SemioBrepMutation::DeleteFace(delete_face::DeleteFace { id: x.id.clone() })).collect();
+    undo.extend(tail.iter().map(|x| SemioBrepMutation::CreateFace(create_face::CreateFace { id: x.id.clone(), outer_loop: x.outer_loop.clone(), inner_loops: x.inner_loops.clone(), surface: x.surface.clone(), orientation: x.orientation })));
     undo
 }
 //#endregion 🔖️Inverse

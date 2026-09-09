@@ -96,14 +96,12 @@ async fn change_foundation_area_m2_produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is canonical and decodes back into `En1998Diff` with `foundationAreaM2` set.
-/// `selected_check_index` stays unset on purpose: it is an `Option<Option<u32>>` whose `None` and
-/// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-foundation-area-m2`
-/// never writes it anyway.
+/// 🕹️ Presence selection is absent from the artifact diff encoding.
 #[semio_framework_async_macros::async_test]
 async fn change_foundation_area_m2_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-foundation-area-m2 committed diff decodes");
     assert_eq!(decoded.foundation_area_m2, Some(144.0), "change-foundation-area-m2/raises-foundation-area-m2-to-144-0: the committed diff must carry foundation_area_m2 at 144.0");
-    assert!(decoded.selected_check_index.is_none(), "change-foundation-area-m2/raises-foundation-area-m2-to-144-0: the committed diff must leave the presence-lane selected_check_index unset");
+    assert!(serde_json::to_value(&decoded).expect("diff JSON").get("selectedCheckIndex").is_none(), "change-foundation-area-m2/raises-foundation-area-m2-to-144-0: the committed diff must leave the presence-lane selectedCheckIndex absent");
     let reencoded = serde_json::to_value(&decoded).expect("change-foundation-area-m2 committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-foundation-area-m2 committed diff reparses");
     assert_eq!(reencoded, original, "change-foundation-area-m2/raises-foundation-area-m2-to-144-0: committed diff JSON is not canonical");

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport, element_id, load_id};
+use crate::{element_id, load_id, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use protocol::MutationDiff;
 use std::collections::BTreeMap;
 

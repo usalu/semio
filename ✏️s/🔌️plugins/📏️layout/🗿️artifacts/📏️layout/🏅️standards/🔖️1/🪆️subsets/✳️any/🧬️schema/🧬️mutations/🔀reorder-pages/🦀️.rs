@@ -1,10 +1,9 @@
 //! 🔀 `reorder-pages` — repositions a page within the display-ordered `pages` list (document page
 //! sequence, unlike `stories`/`links` which have no display order).
 
-
-use crate::{LayoutDiff, LayoutSnapshot};
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::diff::LayoutPagesDelta;
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -34,7 +33,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderPages {
 }
 //#endregion 🔀ReorderPages
 
-
 //#region 🔀ReorderPages
 pub fn diff_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if !base.pages.iter().any(|page| page.id == payload.id) {
@@ -53,7 +51,6 @@ pub fn diff_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> prot
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { reordered: Some(ids), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔀ReorderPages
-
 
 //#region 🔀ReorderPages
 pub fn inverse_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

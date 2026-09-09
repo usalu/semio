@@ -11,6 +11,11 @@ use semio_framework_plugin::StandardId;
 /// five `dsl::LanguageSpec`s also declare. `mimes` is a documented synthesis: no MIME registration for
 /// this artifact exists anywhere in the pre-declaration code, matching `🗒️note`/`🔱️trinity`'s
 /// identical deviation.
-pub fn standard() -> StandardDeclaration<crate::RemodelApps> {
+pub fn standard<PA>() -> StandardDeclaration<PA>
+where
+    PA: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::remodeling::RemodelingPlayApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::remodeling::RemodelingViewer>>>,
+{
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.remodeling+json"], extensions: &["remodeling"] }, subsets: vec![subsets::any::subset()] }
 }

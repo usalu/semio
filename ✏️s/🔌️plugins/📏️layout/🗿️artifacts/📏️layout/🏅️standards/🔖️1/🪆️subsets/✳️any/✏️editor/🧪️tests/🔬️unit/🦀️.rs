@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::editor::layout::testkit::{dispatch, layout_app, layout_app_with_registry, render, test_screen_point};
-use semio_framework_plugin::PluginApp;
 use semio_framework_plugin::testkit;
+use semio_framework_plugin::PluginApp;
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -165,7 +164,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_cover_both_windows() {
     let mut app = layout_app().await;
-    let engagements = app.window_engagements().await;
+    let engagements = app.window_engagements(&semio_framework_plugin::ViewModel::default()).await;
     let blueprint_engagement = engagements.get(LAYOUT_PLAY_WINDOW_BLUEPRINT).expect("blueprint engagement");
     let status = blueprint_engagement.status.as_ref().and_then(|rows| rows.first()).expect("status");
     assert!(status.text.contains("Page"));

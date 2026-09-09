@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::wfc_engine::grid2d::{Boundary, Stencil2d, declare_stencil_relations_tiled};
+use crate::wfc_engine::grid2d::{declare_stencil_relations_tiled, Boundary, Stencil2d};
 use crate::wfc_engine::tiled::TiledModelBuilder;
 
 fn checkerboard(width: usize, height: usize, boundary: Boundary) -> (CompiledModel, Grid2dTopology) {
@@ -165,4 +164,47 @@ fn decode_tiles_round_trips_tile_provenance() {
         }
         other => panic!("expected Solved, got {other:?}"),
     }
+}
+
+#[test]
+fn grid_domain_constraints_enumeration_and_cancellation_match_neutral_oracle() {
+    use crate::wfc_engine::constraint::PatternSelector;
+    use crate::wfc_engine::constraints_card::{CardinalityConstraint, Scope};
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🎲️solver-contracts/🔣️.json")).unwrap();
+    let row = &oracle["grid2d"];
+    let size = row["size"].as_u64().unwrap() as usize;
+    let nodes = row["nodes"].as_u64().unwrap() as usize;
+    let seed = oracle["seed"].as_u64().unwrap();
+    let (model, topology) = checkerboard(size, size, Boundary::Open);
+    let mut pinned = PatternSet::new_empty(2);
+    pinned.set(PatternId(0), true);
+    assert!(Grid2dSolverBuilder::new(model.clone(), topology.clone()).domain(size, 0, pinned.clone()).is_err());
+    let build = |count| {
+        let constraint = CardinalityConstraint::new(model.clone(), PatternSelector::Pattern(PatternId(0)), Scope::All, count, count).unwrap();
+        Grid2dSolverBuilder::new(model.clone(), topology.clone()).domain(0, 0, pinned.clone()).unwrap().constraint(constraint.into()).build().unwrap()
+    };
+    let mut solver = build(row["cardinality"].as_u64().unwrap() as u32);
+    assert_eq!(solver.model().fingerprint(), model.fingerprint());
+    assert_eq!(solver.topology().node_count(), nodes);
+    let cancel = CancelToken::new();
+    cancel.cancel();
+    let SolveOutcome::Cancelled { partial, report } = solver.solve_cancellable(seed, &cancel) else {
+        panic!("cancelled grid solve");
+    };
+    assert_eq!(partial.domains.len(), nodes);
+    assert_eq!(partial.decided.len(), nodes);
+    assert_eq!(report.seed, seed);
+    assert_eq!(report.model_fingerprint, model.fingerprint());
+    let (solutions, complete) = solver.solve_all(seed, 10);
+    assert!(complete);
+    let assignments: Vec<Vec<u32>> = solutions.iter().map(|solution| solution.assignment.iter().map(|pattern| pattern.get()).collect()).collect();
+    assert_eq!(serde_json::to_value(&assignments).unwrap(), row["assignments"]);
+    for (solution, expected) in solutions.iter().zip(&assignments) {
+        let tiles: Vec<u32> = solver.decode_tiles(solution).into_iter().map(|tile| tile.expect("authored tile provenance").get()).collect();
+        assert_eq!(&tiles, expected);
+    }
+    let mut impossible = build(row["impossibleCardinality"].as_u64().unwrap() as u32);
+    let (solutions, complete) = impossible.solve_all(seed, 10);
+    assert!(complete);
+    assert!(solutions.is_empty());
 }

@@ -23,14 +23,6 @@
       "type": "object",
       "additionalProperties": true,
       "x-semio-state": "artifact"
-    },
-    "selectedStepIds": {
-      "$ref": "#/$defs/ProcedureStringList",
-      "x-semio-state": "presence"
-    },
-    "contributionsJson": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::shooting::testkit::{scene_window_measures, shooting_app};
 

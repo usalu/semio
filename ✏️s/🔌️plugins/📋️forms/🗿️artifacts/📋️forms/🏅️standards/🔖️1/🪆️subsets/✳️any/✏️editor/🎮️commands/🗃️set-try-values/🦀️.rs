@@ -1,15 +1,15 @@
 //! 🧪️ 🧪️ Forms play app commands command — `set-try-values`.
 
-use crate::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::commands::set_try_value::{cancel_pending_generations, stage_command_input, ChunkAddressableJson, ChunkedSource, SetTryValueStep, MAX_TRY_VALUE_BYTES_PER_STEP, SET_TRY_VALUE_STEP_ACTION_ID};
 use crate::editor::forms::config::{discard_staged_try_value, discard_staged_try_values_batch, FormsConfig, FormsConfigMutation};
+use crate::{op::FormMutation, FormsSnapshot};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️BulkSession
 const MAX_BULK_KEY_BYTES: usize = 4_096;
@@ -94,7 +94,10 @@ pub(crate) fn cancel_pending_bulk(app_instance_id: u32, document_id: &str) -> Ve
         let Some(session) = bulk_sessions().lock().expect("forms bulk sessions lock").remove(&key) else { continue };
         discard_staged_try_value(&session.value_staging_id);
         discard_staged_try_values_batch(&session.batch_id);
-        mutations.extend([FormsConfigMutation::DiscardTryValueStaging(crate::editor::forms::config::DiscardTryValueStaging { staging_id: session.value_staging_id }), FormsConfigMutation::DiscardTryValuesBatch(crate::editor::forms::config::DiscardTryValuesBatch { staging_id: session.batch_id })]);
+        mutations.extend([
+            FormsConfigMutation::DiscardTryValueStaging(crate::editor::forms::config::DiscardTryValueStaging { staging_id: session.value_staging_id }),
+            FormsConfigMutation::DiscardTryValuesBatch(crate::editor::forms::config::DiscardTryValuesBatch { staging_id: session.batch_id }),
+        ]);
     }
     mutations
 }
@@ -104,8 +107,13 @@ fn bulk_queue(generation: u64, cursor: usize, session: &BulkSession) -> Effect {
         req: RequestId(NEXT_BULK_REQUEST.fetch_add(1, Ordering::Relaxed)),
         action: SET_TRY_VALUE_STEP_ACTION_ID.into(),
         args: Some(dsl::ToValue::to_value(&SetTryValueStep {
-            app_id: session.app_id.clone(), document_id: session.document_id.clone(), operation_id: session.operation_id.clone(),
-            generation, cursor: cursor as u64, target_index: u64::MAX, base_revision: session.base_revision.clone(),
+            app_id: session.app_id.clone(),
+            document_id: session.document_id.clone(),
+            operation_id: session.operation_id.clone(),
+            generation,
+            cursor: cursor as u64,
+            target_index: u64::MAX,
+            base_revision: session.base_revision.clone(),
         })),
         delay_ms: 0,
     }
@@ -322,7 +330,11 @@ pub(crate) fn advance_if_bulk(payload: &SetTryValueStep, config: &FormsConfig) -
     let key = BulkJobKey { app_id: payload.app_id.clone(), document_id: payload.document_id.clone(), operation_id: payload.operation_id.clone(), base_revision: payload.base_revision.clone(), generation: payload.generation };
     let Some(mut session) = bulk_sessions().lock().expect("forms bulk sessions lock").remove(&key) else { return Some(Ok(Emit::default())) };
     let active = active_bulk_generations().lock().expect("forms bulk active lock").get(&(payload.app_id.clone(), payload.document_id.clone(), payload.operation_id.clone())).cloned();
-    if active.as_ref().is_none_or(|(generation, revision)| *generation != payload.generation || *revision != payload.base_revision) || session.baseline_root_token != config.try_values.root_token() || session.baseline_revision != config.try_values.revision() || payload.cursor != session.cursor as u64 {
+    if active.as_ref().is_none_or(|(generation, revision)| *generation != payload.generation || *revision != payload.base_revision)
+        || session.baseline_root_token != config.try_values.root_token()
+        || session.baseline_revision != config.try_values.revision()
+        || payload.cursor != session.cursor as u64
+    {
         discard_staged_try_value(&session.value_staging_id);
         discard_staged_try_values_batch(&session.batch_id);
         clear_active_bulk(&session, payload.generation);

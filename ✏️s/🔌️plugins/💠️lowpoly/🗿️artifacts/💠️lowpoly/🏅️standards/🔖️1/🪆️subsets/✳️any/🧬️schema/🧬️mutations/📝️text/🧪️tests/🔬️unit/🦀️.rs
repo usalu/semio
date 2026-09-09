@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::mutations::{create_mesh, create_object, delete_mesh, delete_object, edit_paint_layer, insert_paint_layer, rename_object};
 use crate::schema::default_snapshot;

@@ -234,7 +234,14 @@ fn decode_energy_model_snapshot_binary(bytes: &[u8]) -> Result<EnergyModelSnapsh
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    Ok(EnergyModelSnapshot { schema: read_str_lp(&mut reader)?, model: read_dsl_json(&mut reader)?, structure: read_child(&mut reader)?, zones: read_child(&mut reader)?, referenced_model: read_dsl_json(&mut reader)?, weather_link: read_dsl_json(&mut reader)? })
+    Ok(EnergyModelSnapshot {
+        schema: read_str_lp(&mut reader)?,
+        model: read_dsl_json(&mut reader)?,
+        structure: read_child(&mut reader)?,
+        zones: read_child(&mut reader)?,
+        referenced_model: read_dsl_json(&mut reader)?,
+        weather_link: read_dsl_json(&mut reader)?,
+    })
 }
 //#endregion 🔖️BinaryPrimitives
 

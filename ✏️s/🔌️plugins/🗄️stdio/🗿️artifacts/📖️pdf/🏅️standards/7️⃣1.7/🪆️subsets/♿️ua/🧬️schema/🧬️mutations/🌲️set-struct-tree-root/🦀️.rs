@@ -2,7 +2,11 @@
 
 use super::remove_struct_tree_root::RemoveStructTreeRoot;
 use super::PdfUaMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::{PdfObject, PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{
+    conformance_support as support,
+    diff::PdfDiff,
+    snapshot::{PdfObject, PdfSnapshot},
+};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 

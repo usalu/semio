@@ -6,8 +6,7 @@
   "additionalProperties": false,
   "required": [
     "engagementInput",
-    "camera",
-    "activeUtilityId"
+    "camera"
   ],
   "properties": {
     "engagementInput": {
@@ -16,10 +15,6 @@
     },
     "camera": {
       "$ref": "#/$defs/DrawingCamera",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     }
   },

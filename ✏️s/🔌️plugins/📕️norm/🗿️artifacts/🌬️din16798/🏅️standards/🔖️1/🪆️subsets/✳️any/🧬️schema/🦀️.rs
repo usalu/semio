@@ -134,8 +134,6 @@ pub struct Din16798Artifact {
     pub duct_test_pressure_pa: f64,
     #[state(artifact)]
     pub duct_leakage_m3_s_m2: f64,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -209,7 +207,7 @@ impl Din16798Artifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::Din16798Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
@@ -274,14 +272,11 @@ impl Din16798Artifact {
             duct_class: snapshot.duct_class,
             duct_test_pressure_pa: snapshot.duct_test_pressure_pa,
             duct_leakage_m3_s_m2: snapshot.duct_leakage_m3_s_m2,
-            selected_check_index: None,
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
     pub fn set_snapshot(&mut self, snapshot: crate::Din16798Snapshot) {
-        let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
-        self.selected_check_index = selected;
     }
 }
 
@@ -292,13 +287,7 @@ impl Din16798Artifact {
 pub fn din16798_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.din16798",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

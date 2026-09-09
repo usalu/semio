@@ -26,9 +26,9 @@ pub mod derived_construction {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
     use crate::standards::v_ecma_376::subsets::transitional::schema::{check_transitional_conformance, TRANSITIONAL_R_NS, TRANSITIONAL_SML_NS};
     use crate::{XlsxDiff, XlsxMutation};
-    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlNode};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
+    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlNode};
 
     const WORKBOOK_PART: &str = "xl/workbook.xml";
     const WORKBOOK_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
@@ -134,9 +134,9 @@ pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use crate::standards::v_ecma_376::subsets::base::schema::XlsxAnalyzer as XlsxAnyAnalyzer;
     pub use crate::standards::v_ecma_376::subsets::base::schema::XlsxParts;
-    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlNode};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlNode};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };

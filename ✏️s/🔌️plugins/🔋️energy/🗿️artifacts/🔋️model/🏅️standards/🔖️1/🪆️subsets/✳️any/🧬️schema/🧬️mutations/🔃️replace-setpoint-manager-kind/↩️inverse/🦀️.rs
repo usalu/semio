@@ -17,7 +17,38 @@ pub fn inverse(payload: &super::ReplaceSetpointManagerKind, base: &EnergyModelSn
         crate::model::SetpointManagerKind::Scheduled
     };
     match base.model.setpoint_managers.iter().find(|item| item.id == payload.id) {
-        Some(item) if item.kind != kind && !((!matches!(payload.new_kind.as_str(), "Scheduled" | "OutdoorAirReset" | "WarmestZone" | "ColdestZone")) || (payload.new_kind != "OutdoorAirReset" && !(payload.new_low_outdoor_c == 0.0 && payload.new_high_outdoor_c == 0.0 && payload.new_low_setpoint_c == 0.0 && payload.new_high_setpoint_c == 0.0)) || (payload.new_kind == "OutdoorAirReset" && payload.new_high_outdoor_c <= payload.new_low_outdoor_c)) => vec![vocabulary::replace_setpoint_manager_kind(payload.id, match &item.kind { crate::model::SetpointManagerKind::OutdoorAirReset { .. } => "OutdoorAirReset".to_string(), crate::model::SetpointManagerKind::WarmestZone => "WarmestZone".to_string(), crate::model::SetpointManagerKind::ColdestZone => "ColdestZone".to_string(), crate::model::SetpointManagerKind::Scheduled => "Scheduled".to_string() }, match &item.kind { crate::model::SetpointManagerKind::OutdoorAirReset { low_outdoor_c, .. } => *low_outdoor_c, _ => 0.0 }, match &item.kind { crate::model::SetpointManagerKind::OutdoorAirReset { high_outdoor_c, .. } => *high_outdoor_c, _ => 0.0 }, match &item.kind { crate::model::SetpointManagerKind::OutdoorAirReset { low_setpoint_c, .. } => *low_setpoint_c, _ => 0.0 }, match &item.kind { crate::model::SetpointManagerKind::OutdoorAirReset { high_setpoint_c, .. } => *high_setpoint_c, _ => 0.0 })],
+        Some(item)
+            if item.kind != kind
+                && !((!matches!(payload.new_kind.as_str(), "Scheduled" | "OutdoorAirReset" | "WarmestZone" | "ColdestZone"))
+                    || (payload.new_kind != "OutdoorAirReset" && !(payload.new_low_outdoor_c == 0.0 && payload.new_high_outdoor_c == 0.0 && payload.new_low_setpoint_c == 0.0 && payload.new_high_setpoint_c == 0.0))
+                    || (payload.new_kind == "OutdoorAirReset" && payload.new_high_outdoor_c <= payload.new_low_outdoor_c)) =>
+        {
+            vec![vocabulary::replace_setpoint_manager_kind(
+                payload.id,
+                match &item.kind {
+                    crate::model::SetpointManagerKind::OutdoorAirReset { .. } => "OutdoorAirReset".to_string(),
+                    crate::model::SetpointManagerKind::WarmestZone => "WarmestZone".to_string(),
+                    crate::model::SetpointManagerKind::ColdestZone => "ColdestZone".to_string(),
+                    crate::model::SetpointManagerKind::Scheduled => "Scheduled".to_string(),
+                },
+                match &item.kind {
+                    crate::model::SetpointManagerKind::OutdoorAirReset { low_outdoor_c, .. } => *low_outdoor_c,
+                    _ => 0.0,
+                },
+                match &item.kind {
+                    crate::model::SetpointManagerKind::OutdoorAirReset { high_outdoor_c, .. } => *high_outdoor_c,
+                    _ => 0.0,
+                },
+                match &item.kind {
+                    crate::model::SetpointManagerKind::OutdoorAirReset { low_setpoint_c, .. } => *low_setpoint_c,
+                    _ => 0.0,
+                },
+                match &item.kind {
+                    crate::model::SetpointManagerKind::OutdoorAirReset { high_setpoint_c, .. } => *high_setpoint_c,
+                    _ => 0.0,
+                },
+            )]
+        }
         _ => Vec::new(),
     }
 }

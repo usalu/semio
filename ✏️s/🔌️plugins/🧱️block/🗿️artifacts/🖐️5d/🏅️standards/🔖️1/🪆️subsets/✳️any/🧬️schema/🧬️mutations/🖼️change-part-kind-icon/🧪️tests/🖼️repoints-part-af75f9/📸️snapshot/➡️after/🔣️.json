@@ -9,13 +9,13 @@
     "icon": "icon://pod",
     "unit": "m"
   },
-  "2d": {
+  "part2d": {
     "shape": "circle",
     "radius": 0.5,
     "color": "#3366ff",
     "iconKind": "icon.capsule"
   },
-  "3d": {
+  "part3d": {
     "orientation": [
       0,
       0,

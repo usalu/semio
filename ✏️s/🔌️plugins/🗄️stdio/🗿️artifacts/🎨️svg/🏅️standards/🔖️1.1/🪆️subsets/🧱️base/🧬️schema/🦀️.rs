@@ -52,13 +52,7 @@ impl SvgArtifact {
 pub fn svg_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.svg",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -87,8 +81,8 @@ pub fn svg_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescr
 pub mod derived_construction {
     use crate::schema::snapshot::{set_element_attr, svg_element_to_xml_node, view_box_to_string, CommonAttrs, PathCommand, SvgElement, ViewBox};
     use crate::{SvgDiff, SvgMutation, SvgSnapshot};
-    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
     use semio_framework_plugin::ArtifactBuilder;
+    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
     //#region 🔖️PathBuilder
     /// 🖊️ Fluent constructor for a `d` attribute's typed command list -- mirrors the path mini-language
@@ -530,8 +524,8 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::schema::snapshot::{svg_document_to_typed, SvgElement};
     use crate::SvgSnapshot;
-    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlNode};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlNode};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.svg` parts. `typed` is the real 1.1 semantic model (`SvgElement` tree),

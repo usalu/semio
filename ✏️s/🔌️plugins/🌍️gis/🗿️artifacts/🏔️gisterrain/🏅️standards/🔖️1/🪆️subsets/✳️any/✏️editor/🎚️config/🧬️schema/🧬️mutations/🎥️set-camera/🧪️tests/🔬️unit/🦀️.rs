@@ -1,4 +1,3 @@
-
 use super::*;
 use protocol::{Mutation, MutationDiff};
 #[test]

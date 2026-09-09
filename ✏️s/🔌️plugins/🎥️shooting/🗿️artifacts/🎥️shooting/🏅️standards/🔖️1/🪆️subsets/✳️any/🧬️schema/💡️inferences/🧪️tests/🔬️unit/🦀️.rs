@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{ShootingCamera, ShootingSavedCamera, ShootingShot};
 use protocol::Inference;

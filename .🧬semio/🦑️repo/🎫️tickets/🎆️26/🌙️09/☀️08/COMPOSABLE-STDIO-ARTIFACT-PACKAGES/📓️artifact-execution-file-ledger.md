@@ -4,15 +4,26 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 
 ## workspace
 
-- Files: 1
+- Files: 2
 
+- `updated` `Cargo.lock`
 - `updated` `Cargo.toml`
+
+## shared prerequisite
+
+- Files: 4
+
+- `updated` `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🎯️targets/🧊️wgpu/🦀️.rs`
+- `updated` `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`
+- `updated` `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts`
+- `updated` `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️test-platform/🟦️.ts`
 
 ## 🌀️procedural
 
-- Files: 34
+- Files: 37
 
 - `updated` `✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/Cargo.toml`
+- `updated` `✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/📜️script.ts`
 - `removed` `✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/🦀️.rs`
 - `created` `✏️s/🔌️plugins/🌀️procedural/🫀️core/🖼️semantic-ui/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🦀️.rs`
@@ -23,6 +34,7 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
@@ -37,6 +49,7 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
@@ -49,9 +62,10 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 
 ## 🏗️fem
 
-- Files: 20
+- Files: 21
 
 - `updated` `✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/Cargo.toml`
+- `updated` `✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📜️script.ts`
 - `removed` `✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🏗️fem/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🌉️wasm/🧪️tests/🔬️unit/🦀️.rs`
@@ -74,18 +88,14 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 
 ## 🔱️trinity
 
-- Files: 41
+- Files: 37
 
 - `updated` `✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml`
+- `updated` `✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/📜️script.ts`
 - `removed` `✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🔱️trinity/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🧪️tests/🔬️unit/🦀️.rs`
-- `updated` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs`
-- `updated` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️contract-vectors/🦀️.rs`
-- `updated` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs`
-- `updated` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs`
-- `updated` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️reorganize/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
@@ -120,7 +130,10 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 
 ## 🗄️stdio
 
-- Files: 332
+- Files: 335
+
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔮️oracle/🔣️.json`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🔬️6-mutate-step-ap214-cc6/🦀️.rs`
 
 - `updated` `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️tests/🔬️catalog-projection-budget/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml`
@@ -369,6 +382,7 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 - `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🪞️change-sides/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🪞️change-sides/🧪️tests/🔬️direct-leaf/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🪞️change-sides/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧪️tests/🔬️contract/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️.rs`
@@ -457,11 +471,12 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 
 ## 🧩️puzzle
 
-- Files: 85
+- Files: 86
 
 - `updated` `✏️s/🔌️plugins/🧩️puzzle/🎮️commands/🧵️retained/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧩️puzzle/🎮️commands/🧵️retained/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml`
+- `updated` `✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📜️script.ts`
 - `removed` `✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs`
 - `removed` `✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🦀️.rs`
@@ -547,11 +562,13 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 
 ## 🧱️block
 
-- Files: 27
+- Files: 34
 
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
@@ -559,8 +576,10 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
@@ -568,10 +587,13 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
@@ -644,6 +666,23 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 - `updated` `✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🦀️.rs`
 - `updated` `✏️s/🔌️plugins/🌍️gis/🧪️tests/🔬️surface/🦀️.rs`
 
+## GIS Map registered fixture repair
+
+- Files: 12
+
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/📜️script.ts`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️example/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️features/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💡️inference/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌐️shell/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️view/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs`
+
 ## artifact package manifests
 
 - Files: 53
@@ -702,6 +741,17 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 - `updated` `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml`
 - `updated` `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml`
 
+## Historical touched paths later retired externally
+
+These five sources received extraction namespace edits before the separate WindowConfig ownership work removed them. They remain part of the historical touch record and are excluded from the 676-path current-state ledger so this task does not claim their deletion.
+
+- `historically updated; externally removed` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs`
+- `historically updated; externally removed` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️contract-vectors/🦀️.rs`
+- `historically updated; externally removed` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs`
+- `historically updated; externally removed` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs`
+- `historically updated; externally removed` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs`
+
 ## Counts
 
-- Total exact paths: 650
+- Total exact current-state paths: 678
+- Historical touched paths later removed externally: 5

@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/puzzle/puzzle2d/window.json",
+  "definitions": {
+    "Puzzle2dWindowConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cameraX", "cameraY", "cameraZoom", "lodMode", "fillCount", "gridSnapEnabled", "gridFactor", "suggestionOffset"],
+      "properties": {
+        "cameraX": {"type": "number", "x-semio-state": "window-config"},
+        "cameraY": {"type": "number", "x-semio-state": "window-config"},
+        "cameraZoom": {"type": "number", "x-semio-state": "window-config"},
+        "lodMode": {"type": "string", "x-semio-state": "window-config"},
+        "fillCount": {"type": "integer", "minimum": 0, "x-semio-state": "window-config"},
+        "gridSnapEnabled": {"type": "boolean", "x-semio-state": "window-config"},
+        "gridFactor": {"type": "number", "x-semio-state": "window-config"},
+        "suggestionOffset": {"type": "number", "x-semio-state": "window-config"}
+      }
+    },
+    "Puzzle2dWindowTransient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engagementInput", "brushCandidateIndex", "brushCandidates", "brushCandidateSourceHandleId"],
+      "properties": {
+        "engagementInput": {"type": "string", "x-semio-state": "window-transient"},
+        "brushCandidateIndex": {"type": "integer", "minimum": 0, "x-semio-state": "window-transient"},
+        "brushCandidates": {"type": "array", "items": {}, "x-semio-state": "window-transient"},
+        "brushCandidateSourceHandleId": {"type": "string", "x-semio-state": "window-transient"}
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/definitions/Puzzle2dWindowConfig" },
+    { "$ref": "#/definitions/Puzzle2dWindowTransient" }
+  ]
+}

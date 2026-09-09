@@ -119,7 +119,7 @@ async fn interaction_topology_nests_handles_under_their_handle_kind() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = Block2dConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let topology = Block2dPlayApp::interaction_topology(&doc, &cfg);
     let domain = topology.domains.get(BLOCK2D_INTERACTION_HANDLE).expect("handle domain topology present");
     let handle_node = domain.ordered.iter().find(|node| node.id == format!("handle:{handle_id}")).expect("handle node present");

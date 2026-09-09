@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2;
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};

@@ -42,11 +42,7 @@ async fn applies_to_committed_after() {
     let outcome = apply_ifc_mutation(&mut snapshot, &mutation());
     assert!(outcome.messages().is_empty(), "set-snapshot/renames-the-exterior-wall: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/renames-the-exterior-wall: applied state differs from committed after-snapshot");
-    assert_eq!(
-        snapshot.entities[0].args[2],
-        crate::standards::v4::subsets::any::schema::snapshot::IfcValue::String("Exterior Wall".into()),
-        "set-snapshot/renames-the-exterior-wall: the wall's Name attribute must land on 'Exterior Wall'"
-    );
+    assert_eq!(snapshot.entities[0].args[2], crate::standards::v4::subsets::any::schema::snapshot::IfcValue::String("Exterior Wall".into()), "set-snapshot/renames-the-exterior-wall: the wall's Name attribute must land on 'Exterior Wall'");
     assert_eq!(snapshot.entities[0].name, "IFCWALL", "set-snapshot/renames-the-exterior-wall: the EXPRESS entity keyword is untouched");
     assert!(matches!(snapshot.entities[0].args[1], crate::standards::v4::subsets::any::schema::snapshot::IfcValue::Unset), "set-snapshot/renames-the-exterior-wall: the OwnerHistory attribute stays the Part-21 unset marker");
     assert_eq!(snapshot.entities[1], before().entities[1], "set-snapshot/renames-the-exterior-wall: the IFCPROJECT instance is identical on both sides and must survive untouched");

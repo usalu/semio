@@ -12,9 +12,9 @@
 
 use crate::schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility};
 use crate::BcfSnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️GenericNamedEngine
 /// 🏷️ Name/key-keyed collection triple, generic over key `K`, item `T`, and per-field diff `D`.

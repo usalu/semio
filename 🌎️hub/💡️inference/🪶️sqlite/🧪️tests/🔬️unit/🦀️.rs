@@ -1,4 +1,3 @@
-
 use super::*;
 use std::sync::{Arc, Barrier};
 
@@ -163,6 +162,55 @@ fn gis_inference_sqlite_request_identity_capacity_expiry_and_progress_are_bounde
 }
 
 #[test]
+fn inference_request_reconciliation_is_existing_only_reader_bound_and_expiry_independent() {
+    let fixture = fixture();
+    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).unwrap();
+    let request = &reconcile["request"];
+    assert!(InferenceJobReconcileRequestV1::decode(&serde_json::to_vec(request).unwrap()).is_ok());
+    for row in reconcile["requestCases"].as_array().unwrap() {
+        let mut candidate = request.clone();
+        if let Some(field) = row["path"].as_array().unwrap().first() {
+            candidate[field.as_str().unwrap()] = row["value"].clone();
+        }
+        assert_eq!(InferenceJobReconcileRequestV1::decode(&serde_json::to_vec(&candidate).unwrap()).is_ok(), row["accepted"].as_bool().unwrap(), "{}", row["name"]);
+    }
+    let mut boundary = serde_json::to_vec(request).unwrap();
+    boundary.resize(RECONCILE_REQUEST_MAX_BYTES, b' ');
+    assert!(InferenceJobReconcileRequestV1::decode(&boundary).is_ok());
+    boundary.push(b' ');
+    assert_eq!(InferenceJobReconcileRequestV1::decode(&boundary), Err(InferenceErrorV1::Bounds));
+
+    let selected = selected(&fixture);
+    let input = InferencePrivateBytesV1::new(fixture["input"].as_str().unwrap().as_bytes().to_vec(), INPUT_MAX_BYTES).unwrap();
+    let ledger = memory();
+    let accepted = ledger.accept(&selected, &input, 1000).unwrap();
+    let live = ledger.reconcile_request(&selected.request.request_id, &reader(&selected), 1001).unwrap().unwrap();
+    assert_eq!(live.receipt.job_id, accepted.job_id);
+    assert_eq!(live.receipt.state, InferenceJobStateV1::Accepted);
+    assert!(!live.page.expired);
+    assert!(live.approval.is_none());
+    let live_result = InferenceJobReconcileResultV1 { schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, request_id: selected.request.request_id.clone(), found: true, job: Some(live) };
+    let expected_live = reconcile["results"].as_array().unwrap().iter().find(|row| row["name"] == "accepted-live").unwrap();
+    assert_eq!(serde_json::to_value(live_result).unwrap(), expected_live["value"]);
+
+    let session = InferenceReaderV1 { session_id: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", ..reader(&selected) };
+    assert!(matches!(ledger.reconcile_request(&selected.request.request_id, &session, 1001), Err(InferenceErrorV1::Denied)));
+    let user = InferenceReaderV1 { user_id: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", ..reader(&selected) };
+    assert!(ledger.reconcile_request(&selected.request.request_id, &user, 1001).unwrap().is_none());
+    assert!(ledger.reconcile_request(&"22".repeat(16), &reader(&selected), 1001).unwrap().is_none());
+    assert_eq!(ledger.connection.lock().unwrap().query_row("SELECT COUNT(*) FROM inference_job_v1", [], |row| read_integer(row, 0)).unwrap(), 1);
+
+    assert!(ledger.request_cancel(&accepted.job_id, &reader(&selected), accepted.expires_at_ms).unwrap());
+    assert!(matches!(ledger.events(&accepted.job_id, &reader(&selected), 0, accepted.expires_at_ms), Err(InferenceErrorV1::Expired)));
+    let terminal = ledger.reconcile_request(&selected.request.request_id, &reader(&selected), accepted.expires_at_ms).unwrap().unwrap();
+    assert_eq!(terminal.receipt.state, InferenceJobStateV1::Cancelled);
+    assert!(terminal.page.expired);
+    let terminal_result = InferenceJobReconcileResultV1 { schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, request_id: selected.request.request_id.clone(), found: true, job: Some(terminal) };
+    let expected_terminal = reconcile["results"].as_array().unwrap().iter().find(|row| row["name"] == "cancelled-expired").unwrap();
+    assert_eq!(serde_json::to_value(terminal_result).unwrap(), expected_terminal["value"]);
+}
+
+#[test]
 fn gis_inference_sqlite_concurrent_connections_have_one_durable_request_winner() {
     let fixture = fixture();
     let selected = selected(&fixture);
@@ -260,6 +308,17 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
         assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 18, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms).map(|value| value.applied), Err(InferenceErrorV1::Conflict));
         let reconciled = reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms).unwrap();
         assert!(reconciled.applied);
+        let recovered = reopened.reconcile_request(&selected.request.request_id, &reader(&selected), receipt.expires_at_ms).unwrap().unwrap();
+        assert!(recovered.page.expired);
+        let recovered_approval = recovered.approval.expect("approved job recovers its private approval authority");
+        assert_eq!(recovered_approval.state, InferenceJobReconcileApprovalStateV1::Available);
+        let recovered_receipt = recovered_approval.receipt.expect("available approval carries an actionable undo receipt");
+        assert!(recovered_receipt.applied);
+        assert_eq!(recovered_receipt.job_id, receipt.job_id);
+        assert_eq!(recovered_receipt.mutation_id, prepared.mutation_id);
+        assert_eq!(recovered_receipt.command_hash, prepared.command_hash);
+        assert_eq!(recovered_receipt.proposal_hash, prepared.proposal_hash);
+        assert_eq!(recovered_receipt.undo, reconciled.undo);
         let undo_target = reopened.gis_map_approval_undo_target(&reconciled.undo.target_id, &reader(&selected)).expect("original owner reads the retained command");
         assert_eq!(undo_target.original_command.as_slice(), command.as_slice());
         assert_eq!(undo_target.after_frontier, frontier);
@@ -269,6 +328,10 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
         let undo_command = InferencePrivateBytesV1::new(vec![9], 8192).unwrap();
         let undo_command_hash = sha256(undo_command.as_slice());
         assert!(matches!(reopened.prepare_gis_map_approval_undo(&undo_target, &"55".repeat(16), &"66".repeat(16), &"77".repeat(32), &"88".repeat(16), &undo_command_hash, &undo_command), Ok(GisMapApprovalUndoAdmissionV1::Prepared)));
+        let recovered = reopened.reconcile_request(&selected.request.request_id, &reader(&selected), receipt.expires_at_ms).unwrap().unwrap();
+        let recovered_approval = recovered.approval.expect("approved job retains its private recovery phase");
+        assert_eq!(recovered_approval.state, InferenceJobReconcileApprovalStateV1::UndoPrepared);
+        assert!(recovered_approval.receipt.is_none(), "an in-flight undo is not re-exposed as available");
         assert!(
             matches!(reopened.prepare_gis_map_approval_undo(&undo_target, &"aa".repeat(16), &"66".repeat(16), &"77".repeat(32), &"88".repeat(16), &undo_command_hash, &undo_command), Err(InferenceErrorV1::Conflict)),
             "a distinct retry identity cannot take over the durable target",
@@ -283,6 +346,19 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
         );
         let count = reopened.connection.lock().unwrap().query_row("SELECT COUNT(*) FROM inference_job_event_v1 WHERE kind='approved'", [], |row| read_integer(row, 0)).unwrap();
         assert_eq!(count, outbox["reconciledCount"].as_u64().unwrap());
+        reopened
+            .connection
+            .lock()
+            .unwrap()
+            .execute(
+                "UPDATE inference_approval_undo_v1 SET phase='committed',original_command=X'',undo_command=X'',undo_frontier_head_ordinal=?2,undo_frontier_head_edit_id=?3,undo_frontier_commit_seq=?4,undo_frontier_chain_sha256=?5 WHERE target_id=?1",
+                params![reconciled.undo.target_id, frontier.head_edit_ordinal + 1, "99".repeat(16), frontier.last_commit_seq + 1, "aa".repeat(32)],
+            )
+            .unwrap();
+        let recovered = reopened.reconcile_request(&selected.request.request_id, &reader(&selected), receipt.expires_at_ms).unwrap().unwrap();
+        let recovered_approval = recovered.approval.expect("approved job retains its terminal undo phase");
+        assert_eq!(recovered_approval.state, InferenceJobReconcileApprovalStateV1::Undone);
+        assert!(recovered_approval.receipt.is_none(), "a consumed undo target is never re-exposed");
     }
     drop(reopened);
     std::fs::remove_file(path).unwrap();

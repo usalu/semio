@@ -31,8 +31,42 @@ pub struct CreateFenestration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_fenestration(id: crate::model::EntityId, name: String, surface_id: crate::model::EntityId, u_value_w_m2k: f64, shgc: f64, vlt: f64, area_m2: f64, height_m: f64, sill_height_m: f64, frame_conductance_w_k: f64, divider_conductance_w_k: f64, overhang_depth_m: f64, overhang_offset_m: f64, fin_depth_m: f64, fin_offset_m: f64, glazing_construction_id: Option<crate::model::EntityId>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateFenestration(CreateFenestration { id, name, surface_id, u_value_w_m2k, shgc, vlt, area_m2, height_m, sill_height_m, frame_conductance_w_k, divider_conductance_w_k, overhang_depth_m, overhang_offset_m, fin_depth_m, fin_offset_m, glazing_construction_id })
+pub fn create_fenestration(
+    id: crate::model::EntityId,
+    name: String,
+    surface_id: crate::model::EntityId,
+    u_value_w_m2k: f64,
+    shgc: f64,
+    vlt: f64,
+    area_m2: f64,
+    height_m: f64,
+    sill_height_m: f64,
+    frame_conductance_w_k: f64,
+    divider_conductance_w_k: f64,
+    overhang_depth_m: f64,
+    overhang_offset_m: f64,
+    fin_depth_m: f64,
+    fin_offset_m: f64,
+    glazing_construction_id: Option<crate::model::EntityId>,
+) -> EnergyModelMutation {
+    EnergyModelMutation::CreateFenestration(CreateFenestration {
+        id,
+        name,
+        surface_id,
+        u_value_w_m2k,
+        shgc,
+        vlt,
+        area_m2,
+        height_m,
+        sill_height_m,
+        frame_conductance_w_k,
+        divider_conductance_w_k,
+        overhang_depth_m,
+        overhang_offset_m,
+        fin_depth_m,
+        fin_offset_m,
+        glazing_construction_id,
+    })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateFenestration {

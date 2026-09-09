@@ -169978,3 +169978,2545 @@ test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; 
 - `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs`
 - `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
 - `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+
+### Compiler Suggestions Applied from native643
+
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs`
+
+### Compiler Suggestions Applied from native643
+
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️utility/🦀️.rs`
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs`
+
+### Compiler Suggestions Applied from native643
+
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/🧪️tests/🔬️interactive-job-catalog/🦀️.rs`
+- `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️window-action-contract/🦀️.rs`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🧪️tests/🔬️unit/🦀️.rs`
+
+### Compiler Suggestions Applied from native643
+
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️compliance-report/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧪️tests/🔬️unit/🦀️.rs`
+
+### Compiler Suggestions Applied from native679
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📐️layout/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/☑️options/🖌️brush/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/🌫️ambient/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/🎯️center-model/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/✨️roughness/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/🌑️shadow/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/🧭️sun-azimuth/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/📐️sun-elevation/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/☀️sun-enabled/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/💡️sun-intensity/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️icon/☑️options/🗂️format/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️icon/☑️options/🔷️shape/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️icon/☑️options/📷️shot/🧪️tests/🔬️unit/🦀️.rs`
+
+### Compiler Suggestions Applied from native697
+
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs`
+
+### Compiler Suggestions Applied from native714
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️native-actor-retained-turn-fixtures/🦀️.rs`
+
+### Compiler Suggestions Applied from native718
+
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🪜️execution/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛜️wire-runtime/🦀️.rs`
+
+### Compiler Suggestions Applied from native718
+
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+
+### Compiler Suggestions Applied from runtime758
+
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+
+### Native Verification: semio-s-plugin-writer
+
+5 exact native assertions passed; executable SHA-256 7682b3d3679266e721329ea425c114688fce171056f6c5c48508a36dcbf3466a.
+
+- plugin::surface_tests::standard_mounts_exactly_one_subset
+- plugin::surface_tests::subset_dialect_is_the_canonical_writer_dialect
+- plugin::surface_tests::subset_declares_ten_io_entries
+- plugin::surface_tests::writer_viewer_never_mutates
+- plugin::surface_tests::writer_editor_and_viewer_share_dialect
+
+Compiler diagnostics: 0 errors, 11 warnings.
+
+
+
+### Native Verification Failure: semio-s-artifact-block-3d
+
+Error: exact Cargo law native failed: status=101 signal=none artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws/exact-cargo-laws-yyU6Ph/00; native assertion editor::block3d::component::tests::retained_route_dispositions_are_exact_and_exhaustive did not pass exactly once; 
+running 1 test
+test editor::block3d::component::tests::retained_route_dispositions_are_exact_and_exhaustive ... FAILED
+
+successes:
+
+successes:
+
+failures:
+
+---- editor::block3d::component::tests::retained_route_dispositions_are_exact_and_exhaustive stdout ----
+
+thread 'editor::block3d::component::tests::retained_route_dispositions_are_exact_and_exhaustive' (4589421) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:5528:64:
+app-definition.invalid: app s.block.block3d@1/*#editor document must contain non-empty segments
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    editor::block3d::component::tests::retained_route_dispositions_are_exact_and_exhaustive
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 339 filtered out; finished in 0.00s
+
+
+
+Compiler diagnostics: 0 errors, 1 warnings.
+
+
+
+### Native Verification Failure: semio-s-artifact-procedural-assembly
+
+Error: exact Cargo law build failed: status=101 signal=none artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws/exact-cargo-laws-5FSb9g/00; exit; error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:164:60
+    |
+164 |     ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault>;
+    |                                                            ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:169:53
+    |
+169 |     ) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
+    |                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0425]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:170:84
+    |
+170 |     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+    |                                                                                    ^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+
+Compiler diagnostics: 56 errors, 0 warnings.
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:164:60
+    |
+164 |     ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault>;
+    |                                                            ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:169:53
+    |
+169 |     ) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
+    |                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0425]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:170:84
+    |
+170 |     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+    |                                                                                    ^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:170:101
+    |
+170 |     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+    |                                                                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:200:60
+    |
+200 |     ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault> {
+    |                                                            ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:205:26
+    |
+205 | ...   .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation ...
+    |                    ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:205:37
+    |
+205 | ...   .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation ...
+    |                               ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:205:61
+    |
+205 | ...   .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation ...
+    |                                                       ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:210:33
+    |
+210 |             .map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), rejected.reason))?;
+    |                                 ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:210:44
+    |
+210 |             .map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), rejected.reason))?;
+    |                                            ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:210:68
+    |
+210 |             .map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), rejected.reason))?;
+    |                                                                    ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:218:53
+    |
+218 |     ) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
+    |                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:222:28
+    |
+222 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication-type"), "window transient publ...
+    |                      ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:222:39
+    |
+222 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication-type"), "window transient publ...
+    |                                 ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:222:63
+    |
+222 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication-type"), "window transient publ...
+    |                                                         ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:223:128
+    |
+223 | ...lication.publication, grant).map_err(|reason| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication"),...
+    |                                                  ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:223:139
+    |
+223 | ...ion, grant).map_err(|reason| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication"), reason))
+    |                                            ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:223:163
+    |
+223 | ...eason| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication"), reason))
+    |                                              ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:226:84
+    |
+226 |     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    |                                                                                    ^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:226:101
+    |
+226 |     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    |                                                                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:227:87
+    |
+227 |         let Some(window_id) = self.partitions.keys().next().cloned() else { return Ok(PluginCloseStep::Complete) };
+    |                                                                                       ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:229:66
+    |
+229 | ...   let disposer = partition.disposer.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient....
+    |                                                                ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:229:77
+    |
+229 | ...   let disposer = partition.disposer.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient....
+    |                                                                           ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:229:101
+    |
+229 | ...lse(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.disposer"), "window transient partition lost its exac...
+    |                                              ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:231:20
+    |
+231 |         if step != PluginCloseStep::Complete {
+    |                    ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:235:24
+    |
+235 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.terminal"), "window transient disposer reporte...
+    |                  ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:235:35
+    |
+235 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.terminal"), "window transient disposer reporte...
+    |                             ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:235:59
+    |
+235 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.terminal"), "window transient disposer reporte...
+    |                                                     ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:239:12
+    |
+239 |         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+    |            ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:259:71
+    |
+259 |     pub fn register<O: WindowTransientOwner>(&mut self) -> Result<(), Fault> {
+    |                                                                       ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:261:24
+    |
+261 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient owner id is empty o...
+    |                  ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:261:35
+    |
+261 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient owner id is empty o...
+    |                             ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:261:59
+    |
+261 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient owner id is empty o...
+    |                                                     ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:271:114
+    |
+271 |     pub(crate) fn capture(&mut self, view_state: Option<&ViewModel>) -> Result<Option<WindowTransientAuthority>, Fault> {
+    |                                                                                                                  ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:278:28
+    |
+278 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.window-context"), "target window is absent...
+    |                      ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:278:39
+    |
+278 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.window-context"), "target window is absent...
+    |                                 ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:278:63
+    |
+278 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.window-context"), "target window is absent...
+    |                                                         ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:288:60
+    |
+288 |     ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault> {
+    |                                                            ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:290:24
+    |
+290 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.address"), "window transient emission does not...
+    |                  ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:290:35
+    |
+290 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.address"), "window transient emission does not...
+    |                             ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:290:59
+    |
+290 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.address"), "window transient emission does not...
+    |                                                     ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:294:28
+    |
+294 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient emission has no...
+    |                      ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:294:39
+    |
+294 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient emission has no...
+    |                                 ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:294:63
+    |
+294 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient emission has no...
+    |                                                         ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:302:53
+    |
+302 |     ) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
+    |                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:305:28
+    |
+305 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient publication los...
+    |                      ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:305:39
+    |
+305 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient publication los...
+    |                                 ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:305:63
+    |
+305 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient publication los...
+    |                                                         ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:309:95
+    |
+309 |     pub(crate) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    |                                                                                               ^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:309:112
+    |
+309 |     pub(crate) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    |                                                                                                                ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:310:78
+    |
+310 |         let Some(kind) = self.owners.keys().next().copied() else { return Ok(PluginCloseStep::Complete) };
+    |                                                                              ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:313:20
+    |
+313 |         if step == PluginCloseStep::Complete {
+    |                    ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:315:28
+    |
+315 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner-terminal"), "window transient owner repo...
+    |                  ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:315:39
+    |
+315 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner-terminal"), "window transient owner repo...
+    |                             ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:315:63
+    |
+315 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner-terminal"), "window transient owner repo...
+    |                                                     ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:318:23
+    |
+318 |             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    |                       ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+
+### Compiler Suggestions Applied from runtime761
+
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🧪️tests/🔬️unit/🦀️.rs`
+
+### Native Verification Failure: semio-s-artifact-writer-writer
+
+Error: exact Cargo law build failed: status=101 signal=none artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws/exact-cargo-laws-zm2e8v/00; exit; error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:164:60
+    |
+164 |     ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault>;
+    |                                                            ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:169:53
+    |
+169 |     ) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
+    |                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0425]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:170:84
+    |
+170 |     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+    |                                                                                    ^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+
+Compiler diagnostics: 56 errors, 0 warnings.
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:164:60
+    |
+164 |     ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault>;
+    |                                                            ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:169:53
+    |
+169 |     ) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
+    |                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0425]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:170:84
+    |
+170 |     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+    |                                                                                    ^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:170:101
+    |
+170 |     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+    |                                                                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:200:60
+    |
+200 |     ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault> {
+    |                                                            ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:205:26
+    |
+205 | ...   .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation ...
+    |                    ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:205:37
+    |
+205 | ...   .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation ...
+    |                               ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:205:61
+    |
+205 | ...   .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation ...
+    |                                                       ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:210:33
+    |
+210 |             .map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), rejected.reason))?;
+    |                                 ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:210:44
+    |
+210 |             .map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), rejected.reason))?;
+    |                                            ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:210:68
+    |
+210 |             .map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), rejected.reason))?;
+    |                                                                    ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:218:53
+    |
+218 |     ) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
+    |                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:222:28
+    |
+222 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication-type"), "window transient publ...
+    |                      ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:222:39
+    |
+222 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication-type"), "window transient publ...
+    |                                 ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:222:63
+    |
+222 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication-type"), "window transient publ...
+    |                                                         ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:223:128
+    |
+223 | ...lication.publication, grant).map_err(|reason| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication"),...
+    |                                                  ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:223:139
+    |
+223 | ...ion, grant).map_err(|reason| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication"), reason))
+    |                                            ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:223:163
+    |
+223 | ...eason| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication"), reason))
+    |                                              ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:226:84
+    |
+226 |     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    |                                                                                    ^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:226:101
+    |
+226 |     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    |                                                                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:227:87
+    |
+227 |         let Some(window_id) = self.partitions.keys().next().cloned() else { return Ok(PluginCloseStep::Complete) };
+    |                                                                                       ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:229:66
+    |
+229 | ...   let disposer = partition.disposer.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient....
+    |                                                                ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:229:77
+    |
+229 | ...   let disposer = partition.disposer.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient....
+    |                                                                           ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:229:101
+    |
+229 | ...lse(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.disposer"), "window transient partition lost its exac...
+    |                                              ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:231:20
+    |
+231 |         if step != PluginCloseStep::Complete {
+    |                    ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:235:24
+    |
+235 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.terminal"), "window transient disposer reporte...
+    |                  ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:235:35
+    |
+235 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.terminal"), "window transient disposer reporte...
+    |                             ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:235:59
+    |
+235 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.terminal"), "window transient disposer reporte...
+    |                                                     ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:239:12
+    |
+239 |         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+    |            ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:259:71
+    |
+259 |     pub fn register<O: WindowTransientOwner>(&mut self) -> Result<(), Fault> {
+    |                                                                       ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:261:24
+    |
+261 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient owner id is empty o...
+    |                  ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:261:35
+    |
+261 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient owner id is empty o...
+    |                             ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:261:59
+    |
+261 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient owner id is empty o...
+    |                                                     ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:271:114
+    |
+271 |     pub(crate) fn capture(&mut self, view_state: Option<&ViewModel>) -> Result<Option<WindowTransientAuthority>, Fault> {
+    |                                                                                                                  ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:278:28
+    |
+278 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.window-context"), "target window is absent...
+    |                      ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:278:39
+    |
+278 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.window-context"), "target window is absent...
+    |                                 ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:278:63
+    |
+278 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.window-context"), "target window is absent...
+    |                                                         ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:288:60
+    |
+288 |     ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault> {
+    |                                                            ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:290:24
+    |
+290 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.address"), "window transient emission does not...
+    |                  ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:290:35
+    |
+290 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.address"), "window transient emission does not...
+    |                             ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:290:59
+    |
+290 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.address"), "window transient emission does not...
+    |                                                     ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:294:28
+    |
+294 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient emission has no...
+    |                      ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:294:39
+    |
+294 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient emission has no...
+    |                                 ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:294:63
+    |
+294 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient emission has no...
+    |                                                         ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:302:53
+    |
+302 |     ) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
+    |                                                     ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:305:28
+    |
+305 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient publication los...
+    |                      ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:305:39
+    |
+305 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient publication los...
+    |                                 ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:305:63
+    |
+305 | ...   .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient publication los...
+    |                                                         ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0425]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:309:95
+    |
+309 |     pub(crate) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    |                                                                                               ^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0425]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:309:112
+    |
+309 |     pub(crate) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    |                                                                                                                ^^^^^ not found in this scope
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:310:78
+    |
+310 |         let Some(kind) = self.owners.keys().next().copied() else { return Ok(PluginCloseStep::Complete) };
+    |                                                                              ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:313:20
+    |
+313 |         if step == PluginCloseStep::Complete {
+    |                    ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+error[E0433]: cannot find type `Fault` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:315:28
+    |
+315 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner-terminal"), "window transient owner repo...
+    |                  ^^^^^ use of undeclared type `Fault`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::Fault;
+    |
+  3 + use semio_framework::Fault;
+    |
+  3 + use semio_framework_os_kernel::Fault;
+    |
+
+
+error[E0433]: cannot find type `FaultOrigin` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:315:39
+    |
+315 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner-terminal"), "window transient owner repo...
+    |                             ^^^^^^^^^^^ use of undeclared type `FaultOrigin`
+    |
+help: consider importing one of these enums
+    |
+  3 + use crate::FaultOrigin;
+    |
+  3 + use semio_framework::FaultOrigin;
+    |
+  3 + use semio_framework_os_kernel::FaultOrigin;
+    |
+
+
+error[E0433]: cannot find type `FaultCode` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:315:63
+    |
+315 | ...   return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner-terminal"), "window transient owner repo...
+    |                                                     ^^^^^^^^^ use of undeclared type `FaultCode`
+    |
+help: consider importing one of these structs
+    |
+  3 + use crate::FaultCode;
+    |
+  3 + use semio_framework::FaultCode;
+    |
+  3 + use semio_framework_os_kernel::FaultCode;
+    |
+
+
+error[E0433]: cannot find type `PluginCloseStep` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:318:23
+    |
+318 |             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    |                       ^^^^^^^^^^^^^^^ use of undeclared type `PluginCloseStep`
+    |
+help: consider importing this enum through its public re-export
+    |
+  3 + use crate::PluginCloseStep;
+    |
+
+
+
+### Native Verification Failure: semio-s-artifact-mathematical-equation
+
+Error: exact Cargo law native failed: status=101 signal=none artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws/exact-cargo-laws-5tO5yA/00; native assertion editor::equation::config::component::mutation_vectors::language_neutral_mutations_match_json_oracle_and_restore_base did not pass exactly once; 
+running 1 test
+test editor::equation::config::component::mutation_vectors::language_neutral_mutations_match_json_oracle_and_restore_base ... FAILED
+
+successes:
+
+successes:
+
+failures:
+
+---- editor::equation::config::component::mutation_vectors::language_neutral_mutations_match_json_oracle_and_restore_base stdout ----
+
+thread 'editor::equation::config::component::mutation_vectors::language_neutral_mutations_match_json_oracle_and_restore_base' (4641033) panicked at ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/../.././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️mutation-vectors/🦀️.rs:15:9:
+assertion `left == right` failed
+  left: Object {"camera": Object {"x": Number(4.0), "y": Number(5.0), "zoom": Number(3.0)}}
+ right: Object {"camera": Object {"x": Number(4), "y": Number(5), "zoom": Number(3)}}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    editor::equation::config::component::mutation_vectors::language_neutral_mutations_match_json_oracle_and_restore_base
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 377 filtered out; finished in 0.00s
+
+
+
+Compiler diagnostics: 0 errors, 0 warnings.
+
+
+
+### Native Verification: semio-s-artifact-block-3d
+
+6 exact native assertions passed; executable SHA-256 d025bb2e150e98210a1ec927035e9563eb639c8a34517b0f0135afde9c715876.
+
+- editor::block3d::component::tests::command_ids_are_unique_and_cover_every_row
+- editor::block3d::component::tests::every_command_round_trips_text_and_binary
+- editor::block3d::component::tests::leave_surface_text_and_binary_match_the_command_oracle
+- editor::block3d::component::tests::retained_route_dispositions_are_exact_and_exhaustive
+- editor::block3d::modes::edit::windows::world::transient::component::tests::block3d_world_preview_codecs_and_inverse_match_neutral_vectors
+- editor::block3d::modes::edit::windows::world::transient::component::tests::preview_partition_matches_language_neutral_json_oracle
+
+Compiler diagnostics: 0 errors, 0 warnings.
+
+
+
+### Native Verification Failure: semio-s-artifact-procedural-assembly
+
+Error: exact Cargo law native failed: status=null signal=SIGABRT artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws/exact-cargo-laws-IWsxKl/00; native assertion wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress did not pass exactly once; 
+running 1 test
+test wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress ... 
+thread 'wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress' (4805715) panicked at 🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️.rs:483:13:
+rejected job payload page requires exact source handback
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress' (4805715) panicked at 🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️.rs:663:9:
+RetainedJobPayload requires one-page close to terminal-empty; ordinary Drop intentionally preserves page backing
+stack backtrace:
+   0:        0x10107f09c - <<std[87758e35c17852a5]::sys::backtrace::BacktraceLock>::print::DisplayBacktrace as core[c6c0a6c66382aec3]::fmt::Display>::fmt
+   1:        0x101091310 - core[c6c0a6c66382aec3]::fmt::write
+   2:        0x101082728 - <alloc[659a9e145e4cda22]::vec::Vec<u8> as std[87758e35c17852a5]::io::Write>::write_fmt
+   3:        0x1010661a0 - std[87758e35c17852a5]::panicking::default_hook::{closure#0}
+   4:        0x101078ae4 - std[87758e35c17852a5]::panicking::default_hook
+   5:        0x100eabf40 - test[ee52d9429afbedb2]::test_main_inner::<test[ee52d9429afbedb2]::test_main_static::{closure#0}>::{closure#0}
+   6:        0x101078e9c - std[87758e35c17852a5]::panicking::panic_with_hook
+   7:        0x101066254 - std[87758e35c17852a5]::panicking::panic_handler::{closure#0}
+   8:        0x10105b90c - std[87758e35c17852a5]::sys::backtrace::__rust_end_short_backtrace::<std[87758e35c17852a5]::panicking::panic_handler::{closure#0}, !>
+   9:        0x101066880 - __rustc[feecb8598a58626c]::rust_begin_unwind
+  10:        0x1010a96f0 - core[c6c0a6c66382aec3]::panicking::panic_fmt
+  11:        0x100fce528 - <semio_framework_job[57a20f3acc192f1f]::component::RetainedJobPayload as core[c6c0a6c66382aec3]::ops::drop::Drop>::drop
+  12:        0x100fc6710 - core[c6c0a6c66382aec3]::ptr::drop_glue::<semio_framework_job[57a20f3acc192f1f]::component::RetainedJobPayload>
+  13:        0x100e39df4 - <semio_s_artifact_procedural_assembly[6098e969af5b0e9]::wfc_engine::job::WfcJob<semio_s_artifact_procedural_assembly[6098e969af5b0e9]::wfc_engine::topology::GraphTopology> as semio_framework_job[57a20f3acc192f1f]::component::InteractiveJob>::step
+  14:        0x100dd760c - semio_s_artifact_procedural_assembly[6098e969af5b0e9]::wfc_engine::job::tests::drive
+  15:        0x100dd8ca0 - semio_s_artifact_procedural_assembly[6098e969af5b0e9]::wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress
+  16:        0x100dce7e8 - semio_s_artifact_procedural_assembly[6098e969af5b0e9]::wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress::{closure#0}
+  17:        0x100de8ed8 - <semio_s_artifact_procedural_assembly[6098e969af5b0e9]::wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress::{closure#0} as core[c6c0a6c66382aec3]::ops::function::FnOnce<()>>::call_once
+  18:        0x100ea11ec - test[ee52d9429afbedb2]::__rust_begin_short_backtrace::<core[c6c0a6c66382aec3]::result::Result<(), alloc[659a9e145e4cda22]::string::String>, fn() -> core[c6c0a6c66382aec3]::result::Result<(), alloc[659a9e145e4cda22]::string::String>>
+  19:        0x100eac520 - test[ee52d9429afbedb2]::run_test::{closure#0}
+  20:        0x100ea7400 - std[87758e35c17852a5]::sys::backtrace::__rust_begin_short_backtrace::<test[ee52d9429afbedb2]::run_test::{closure#1}, ()>
+  21:        0x100eae9e8 - <std[87758e35c17852a5]::thread::lifecycle::spawn_unchecked<test[ee52d9429afbedb2]::run_test::{closure#1}, ()>::{closure#1} as core[c6c0a6c66382aec3]::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}
+  22:        0x10107e9f0 - <std[87758e35c17852a5]::sys::thread::unix::Thread>::new::thread_start
+  23:        0x18d21bc58 - __pthread_cond_wait
+
+thread 'wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress' (4805715) panicked at /rustc/c4af71034e89a431eeee91125a31ad001379faac/library/core/src/panicking.rs:233:5:
+panic in a destructor during cleanup
+thread caused non-unwinding panic. aborting.
+
+
+Compiler diagnostics: 0 errors, 0 warnings.
+
+
+
+### Native Verification Failure: semio-s-artifact-writer-writer
+
+Error: exact Cargo law build failed: status=101 signal=none artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws/exact-cargo-laws-9gAK3n/00; exit; error[E0425]: cannot find type `ArtifactDisposal` in crate `semio_framework_plugin`
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:993:65
+    |
+993 |     fn build_config_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutat...
+    |                                                                 ^^^^^^^^^^^^^^^^
+    |
+   ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:797:5
+    |
+797 |     pub trait ArtifactComposer: Sized {
+    |     --------------------------------- similarly named trait `ArtifactComposer` defined here
+    |
+help: a trait with a similar name exists
+    |
+993 -     fn build_config_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+993 +     fn build_config_store_disposer() -> semio_framework_plugin::ArtifactComposer<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+    |
+help: consider importing this type alias
+    |
+ 12 + use semio_framework_plugin::plugin_app_close_prelude::ArtifactDisposal;
+    |
+help: if you import `ArtifactDisposal`, refer to it directly
+    |
+993 -     fn build_config_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+993 +     fn build_config_store_disposer() -> ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+    |
+
+
+error[E0425]: cannot find type `ArtifactDisposal` in crate `semio_framework_plugin`
+    --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1001:68
+     |
+1001 |     fn build_transient_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::TransientStore<Self::Transient, Self::T...
+     |                                                                    ^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:797:5
+     |
+ 797 |     pub trait ArtifactComposer: Sized {
+     |     --------------------------------- similarly named trait `ArtifactComposer` defined here
+     |
+help: a trait with a similar name exists
+     |
+1001 -     fn build_transient_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+1001 +     fn build_transient_store_disposer() -> semio_framework_plugin::ArtifactComposer<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+     |
+help: consider importing this type alias
+     |
+  12 + use semio_framework_plugin::plugin_app_close_prelude::ArtifactDisposal;
+     |
+help: if you import `ArtifactDisposal`, refer to it directly
+     |
+1001 -     fn build_transient_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+1001 +     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+     |
+
+
+error[E0433]: cannot find type `WriterConfig` in this scope
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:456:18
+    |
+456 |     let config = WriterConfig::default();
+    |                  ^^^^^^^^^^^^ use of undeclared type `WriterConfig`
+    |
+help: consider importing one of these structs
+    |
+  1 + use crate::editor::writer::config::WriterConfig;
+    |
+  1 + use crate::editor::writer::config::schema::WriterConfig;
+    |
+
+
+
+Compiler diagnostics: 13 errors, 3 warnings.
+
+error[E0425]: cannot find type `ArtifactDisposal` in crate `semio_framework_plugin`
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:993:65
+    |
+993 |     fn build_config_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutat...
+    |                                                                 ^^^^^^^^^^^^^^^^
+    |
+   ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:797:5
+    |
+797 |     pub trait ArtifactComposer: Sized {
+    |     --------------------------------- similarly named trait `ArtifactComposer` defined here
+    |
+help: a trait with a similar name exists
+    |
+993 -     fn build_config_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+993 +     fn build_config_store_disposer() -> semio_framework_plugin::ArtifactComposer<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+    |
+help: consider importing this type alias
+    |
+ 12 + use semio_framework_plugin::plugin_app_close_prelude::ArtifactDisposal;
+    |
+help: if you import `ArtifactDisposal`, refer to it directly
+    |
+993 -     fn build_config_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+993 +     fn build_config_store_disposer() -> ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+    |
+
+
+error[E0425]: cannot find type `ArtifactDisposal` in crate `semio_framework_plugin`
+    --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1001:68
+     |
+1001 |     fn build_transient_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::TransientStore<Self::Transient, Self::T...
+     |                                                                    ^^^^^^^^^^^^^^^^
+     |
+    ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:797:5
+     |
+ 797 |     pub trait ArtifactComposer: Sized {
+     |     --------------------------------- similarly named trait `ArtifactComposer` defined here
+     |
+help: a trait with a similar name exists
+     |
+1001 -     fn build_transient_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+1001 +     fn build_transient_store_disposer() -> semio_framework_plugin::ArtifactComposer<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+     |
+help: consider importing this type alias
+     |
+  12 + use semio_framework_plugin::plugin_app_close_prelude::ArtifactDisposal;
+     |
+help: if you import `ArtifactDisposal`, refer to it directly
+     |
+1001 -     fn build_transient_store_disposer() -> semio_framework_plugin::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+1001 +     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+     |
+
+
+error[E0433]: cannot find type `WriterConfig` in this scope
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:456:18
+    |
+456 |     let config = WriterConfig::default();
+    |                  ^^^^^^^^^^^^ use of undeclared type `WriterConfig`
+    |
+help: consider importing one of these structs
+    |
+  1 + use crate::editor::writer::config::WriterConfig;
+    |
+  1 + use crate::editor::writer::config::schema::WriterConfig;
+    |
+
+
+error[E0433]: cannot find type `WriterConfig` in this scope
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:473:18
+    |
+473 |     let config = WriterConfig::default();
+    |                  ^^^^^^^^^^^^ use of undeclared type `WriterConfig`
+    |
+help: consider importing one of these structs
+    |
+  1 + use crate::editor::writer::config::WriterConfig;
+    |
+  1 + use crate::editor::writer::config::schema::WriterConfig;
+    |
+
+
+error[E0433]: cannot find type `WriterConfig` in this scope
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:523:18
+    |
+523 |     let config = WriterConfig::default();
+    |                  ^^^^^^^^^^^^ use of undeclared type `WriterConfig`
+    |
+help: consider importing one of these structs
+    |
+  1 + use crate::editor::writer::config::WriterConfig;
+    |
+  1 + use crate::editor::writer::config::schema::WriterConfig;
+    |
+
+
+error[E0425]: cannot find function `writer_store_edit` in this scope
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:906:20
+    |
+906 |         let edit = writer_store_edit("writer-artifact-retained", forward, inverse, self.description.take(), authority);
+    |                    ^^^^^^^^^^^^^^^^^ not found in this scope
+
+
+error[E0609]: no field `config` on type `editor::writer::component::WriterCommandToolJob`
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:176:40
+    |
+176 |         let rejected_config = rejected.config.clone();
+    |                                        ^^^^^^ unknown field
+    |
+    = note: available fields are: `command`, `snapshot`, `text`, `view_state`, `window_config` ... and 11 others
+
+
+error[E0609]: no field `config` on type `editor::writer::component::WriterCommandToolJob`
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:182:38
+    |
+182 |         assert!(Arc::ptr_eq(rejected.config.as_ref().expect("config owner"), rejected_config.as_ref().expect("saved config owner")));
+    |                                      ^^^^^^ unknown field
+    |
+    = note: available fields are: `command`, `snapshot`, `text`, `view_state`, `window_config` ... and 11 others
+
+
+error[E0609]: no field `effects` on type `(Emit<WriterMutation>, EphemeralEmit<EditorApp<WriterPlayApp>>)`
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:197:73
+    |
+197 |     assert_eq!(accepted.emit().expect("bounded open document emission").effects.len(), 1);
+    |                                                                         ^^^^^^^ unknown field
+    |
+    = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_s_artifact_writer_writer-131536a92b2ecea6.long-type-12218058425858706195.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+help: one of the expressions' fields has a field of the same name
+    |
+197 |     assert_eq!(accepted.emit().expect("bounded open document emission").0.effects.len(), 1);
+    |                                                                         ++
+
+
+error[E0609]: no field `config` on type `editor::writer::component::WriterCommandToolJob`
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:207:40
+    |
+207 |         let rejected_config = rejected.config.clone();
+    |                                        ^^^^^^ unknown field
+    |
+    = note: available fields are: `command`, `snapshot`, `text`, `view_state`, `window_config` ... and 11 others
+
+
+error[E0609]: no field `config` on type `editor::writer::component::WriterCommandToolJob`
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:212:38
+    |
+212 |         assert!(Arc::ptr_eq(rejected.config.as_ref().expect("config owner"), rejected_config.as_ref().expect("saved config owner")));
+    |                                      ^^^^^^ unknown field
+    |
+    = note: available fields are: `command`, `snapshot`, `text`, `view_state`, `window_config` ... and 11 others
+
+
+error[E0609]: no field `config` on type `editor::writer::component::WriterCommandToolJob`
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:249:32
+    |
+249 |         let config_owner = job.config.clone();
+    |                                ^^^^^^ unknown field
+    |
+    = note: available fields are: `command`, `snapshot`, `text`, `view_state`, `window_config` ... and 11 others
+
+
+error[E0609]: no field `config` on type `editor::writer::component::WriterCommandToolJob`
+   --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:253:33
+    |
+253 |         assert!(Arc::ptr_eq(job.config.as_ref().expect("config owner"), config_owner.as_ref().expect("saved config owner")));
+    |                                 ^^^^^^ unknown field
+    |
+    = note: available fields are: `command`, `snapshot`, `text`, `view_state`, `window_config` ... and 11 others
+
+
+
+### Native Verification: semio-s-artifact-mathematical-equation
+
+20 exact native assertions passed; executable SHA-256 60c47b51ae010fb9c3170c7f922745c7986063cbe180be66cb80daee0c10c616.
+
+- editor::equation::config::component::mutation_vectors::language_neutral_mutations_match_json_oracle_and_restore_base
+- standards::v1::subsets::graph::schema::mutations::change_graph_directed::tests_keeps_an_already_directed_graph_directed::produces_committed_diff
+- standards::v1::subsets::graph::schema::mutations::change_graph_directed::tests_keeps_an_already_directed_graph_directed::committed_diff_is_canonical
+- standards::v1::subsets::graph::schema::mutations::change_graph_directed::tests_keeps_an_already_directed_graph_directed::committed_diff_applies_to_after
+- standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::tests_restates_the_unset_algorithm_and_its_absent_seed::produces_committed_diff
+- standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::tests_restates_the_unset_algorithm_and_its_absent_seed::committed_diff_is_canonical
+- standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::tests_restates_the_unset_algorithm_and_its_absent_seed::committed_diff_applies_to_after
+- standards::v1::subsets::graph::schema::mutations::replace_graph::tests_replays_the_identical_empty_graph::produces_committed_diff
+- standards::v1::subsets::graph::schema::mutations::replace_graph::tests_replays_the_identical_empty_graph::committed_diff_is_canonical
+- standards::v1::subsets::graph::schema::mutations::replace_graph::tests_replays_the_identical_empty_graph::committed_diff_applies_to_after
+- standards::v1::subsets::geometry::schema::mutations::replace_points::tests_replays_the_identical_empty_point_cloud::produces_committed_diff
+- standards::v1::subsets::geometry::schema::mutations::replace_points::tests_replays_the_identical_empty_point_cloud::committed_diff_is_canonical
+- standards::v1::subsets::geometry::schema::mutations::replace_points::tests_replays_the_identical_empty_point_cloud::committed_diff_applies_to_after
+- standards::v1::subsets::geometry::schema::mutations::insert_point::tests_seeds_the_empty_cloud_with_its_first_point::produces_committed_diff
+- standards::v1::subsets::geometry::schema::mutations::insert_point::tests_seeds_the_empty_cloud_with_its_first_point::committed_diff_is_canonical
+- standards::v1::subsets::geometry::schema::mutations::insert_point::tests_seeds_the_empty_cloud_with_its_first_point::committed_diff_applies_to_after
+- standards::v1::subsets::equation::schema::mutations::change_coefficient::tests_raises_the_leading_coefficient_to_three_halves::produces_committed_diff
+- standards::v1::subsets::equation::schema::mutations::change_coefficient::tests_raises_the_leading_coefficient_to_three_halves::committed_diff_is_canonical
+- standards::v1::subsets::equation::schema::mutations::change_coefficient::tests_raises_the_leading_coefficient_to_three_halves::committed_diff_applies_to_after
+- standards::v1::subsets::equation::schema::mutations::change_coefficient::tests_raises_the_leading_coefficient_to_three_halves::the_composed_child_triple_is_never_re_minted
+
+Compiler diagnostics: 0 errors, 0 warnings.
+
+
+
+### Compiler Suggestions Applied from runtime774
+
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🧪️tests/🔬️semio-protocol-conformance/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs`
+
+### Native Verification Failure: semio-s-artifact-writer-writer
+
+Error: exact Cargo law build failed: status=101 signal=none artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws/exact-cargo-laws-NKfWer/00; exit; error[E0433]: cannot find module or crate `pack` in this scope
+ --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:8:47
+  |
+8 |     let base_config: WriterMainWindowConfig = pack::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
+  |                                               ^^^^ use of unresolved module or unlinked crate `pack`
+  |
+  = help: if you wanted to use a crate named `pack`, use `cargo add pack` to add it to your `Cargo.toml`
+
+
+error[E0433]: cannot find module or crate `pack` in this scope
+ --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:9:53
+  |
+9 |     let base_transient: WriterMainWindowTransient = pack::from_json_str(&fixture["baseTransient"].to_string()).unwrap();
+  |                                                     ^^^^ use of unresolved module or unlinked crate `pack`
+  |
+  = help: if you wanted to use a crate named `pack`, use `cargo add pack` to add it to your `Cargo.toml`
+
+
+error[E0433]: cannot find module or crate `pack` in this scope
+  --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:16:60
+   |
+16 |             let mutation: WriterMainWindowConfigMutation = pack::from_json_str(&step["mutation"].to_string()).unwrap();
+   |                                                            ^^^^ use of unresolved module or unlinked crate `pack`
+   |
+   = help: if you wanted to use a crate named `pack`, use `cargo add pack` to add it to your `Cargo.toml`
+
+
+
+Compiler diagnostics: 6 errors, 0 warnings.
+
+error[E0433]: cannot find module or crate `pack` in this scope
+ --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:8:47
+  |
+8 |     let base_config: WriterMainWindowConfig = pack::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
+  |                                               ^^^^ use of unresolved module or unlinked crate `pack`
+  |
+  = help: if you wanted to use a crate named `pack`, use `cargo add pack` to add it to your `Cargo.toml`
+
+
+error[E0433]: cannot find module or crate `pack` in this scope
+ --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:9:53
+  |
+9 |     let base_transient: WriterMainWindowTransient = pack::from_json_str(&fixture["baseTransient"].to_string()).unwrap();
+  |                                                     ^^^^ use of unresolved module or unlinked crate `pack`
+  |
+  = help: if you wanted to use a crate named `pack`, use `cargo add pack` to add it to your `Cargo.toml`
+
+
+error[E0433]: cannot find module or crate `pack` in this scope
+  --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:16:60
+   |
+16 |             let mutation: WriterMainWindowConfigMutation = pack::from_json_str(&step["mutation"].to_string()).unwrap();
+   |                                                            ^^^^ use of unresolved module or unlinked crate `pack`
+   |
+   = help: if you wanted to use a crate named `pack`, use `cargo add pack` to add it to your `Cargo.toml`
+
+
+error[E0433]: cannot find module or crate `pack` in this scope
+  --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:25:63
+   |
+25 |             let mutation: WriterMainWindowTransientMutation = pack::from_json_str(&step["mutation"].to_string()).unwrap();
+   |                                                               ^^^^ use of unresolved module or unlinked crate `pack`
+   |
+   = help: if you wanted to use a crate named `pack`, use `cargo add pack` to add it to your `Cargo.toml`
+
+
+error[E0433]: cannot find module or crate `pack` in this scope
+  --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:36:63
+   |
+36 |         assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&state)).unwrap(), fixture["expectedConfigs"][id]);
+   |                                                               ^^^^ use of unresolved module or unlinked crate `pack`
+   |
+   = help: if you wanted to use a crate named `pack`, use `cargo add pack` to add it to your `Cargo.toml`
+
+
+error[E0433]: cannot find module or crate `pack` in this scope
+  --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:39:63
+   |
+39 | ...   assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&state)).unwrap(), fixture["expectedTransients"][id]);
+   |                                                             ^^^^ use of unresolved module or unlinked crate `pack`
+   |
+   = help: if you wanted to use a crate named `pack`, use `cargo add pack` to add it to your `Cargo.toml`
+
+
+
+### Native Verification Failure: semio-s-artifact-procedural-assembly
+
+Error: exact Cargo law native failed: status=null signal=SIGABRT artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws/exact-cargo-laws-blD1jG/00; native assertion wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress did not pass exactly once; 
+running 1 test
+test wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress ... 
+thread 'wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress' (5363051) has overflowed its stack
+fatal runtime error: stack overflow, aborting
+
+
+Compiler diagnostics: 0 errors, 0 warnings.
+
+
+
+### Native Verification Failure: semio-s-artifact-writer-writer
+
+Error: exact Cargo law build failed: status=101 signal=none artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws/exact-cargo-laws-uXv9Zv/00; exit; error[E0425]: cannot find function `decode_fixture_scene` in module `testkit`
+  --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:17:18
+   |
+17 |         testkit::decode_fixture_scene::<semio_framework_plugin::TextEditorScene>(&json).map_err(str::to_string)
+   |                  ^^^^^^^^^^^^^^^^^^^^ not found in `testkit`
+
+
+
+Compiler diagnostics: 1 errors, 0 warnings.
+
+error[E0425]: cannot find function `decode_fixture_scene` in module `testkit`
+  --> ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🦀️.rs:17:18
+   |
+17 |         testkit::decode_fixture_scene::<semio_framework_plugin::TextEditorScene>(&json).map_err(str::to_string)
+   |                  ^^^^^^^^^^^^^^^^^^^^ not found in `testkit`
+
+
+
+### Native Verification Failure: semio-s-artifact-writer-writer
+
+Error: exact Cargo law list failed: status=0 signal=none artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws/exact-cargo-laws-Rs8V0A/00; expected exactly one writer_presence_contract_vectors_match_the_json_oracle, selected=0
+
+Compiler diagnostics: 0 errors, 0 warnings.
+
+
+
+### Native Verification: semio-s-artifact-procedural-assembly
+
+35 exact native assertions passed; executable SHA-256 0fee5ecadabf06fb0755bdcb4ece9bebca47de50c376ce7a19b94d4f699d2fa1.
+
+- wfc_engine::ids::tests::id_index_roundtrip
+- wfc_engine::ids::tests::id_serde_roundtrip
+- wfc_engine::domain::tests::new_full_has_all_patterns_and_correct_sums
+- wfc_engine::domain::tests::restrict_reduces_and_updates_caches
+- wfc_engine::weights::tests::sum_over_matches_manual
+- wfc_engine::model::tests::assembly_cursor_compiler_matches_canonical_builder
+- wfc_engine::topology::tests::assembly_cursor_compiler_matches_canonical_csr_order_and_multiplicity
+- wfc_engine::job::tests::checkpoint_resume_preserves_rng_trail_and_progress
+- wfc_engine::job::tests::checkpoint_restore_rejects_foreign_operation_and_topology
+- wfc_engine::job::tests::checkpoint_resume_preserves_preview_sequence
+- wfc_engine::job::tests::cancellation_interrupts_checkpoint_and_commit_materialization_without_progress
+- wfc_engine::job::tests::minimum_checkpoint_is_exactly_the_fixed_header_and_restores
+- wfc_engine::job::tests::checkpoint_restore_rejects_size_arithmetic_overflow
+- wfc_engine::grid2d::tests::node_at_and_coords_roundtrip
+- wfc_engine::grid3d::tests::node_at_and_coords_roundtrip
+- wfc_engine::grid3d::tests::custom_stencil_validation_matches_neutral_vectors
+- wfc_engine::sparse3d::tests::from_coords_dedups_and_assigns_stable_first_seen_ids
+- wfc_engine::symmetry::tests::custom_half_turn_groups_match_neutral_offset_vectors
+- wfc_engine::symmetry::tests::cube_rotation_group_has_exactly_24_elements
+- wfc_engine::symmetry::tests::cube_full_symmetry_group_has_exactly_48_elements
+- wfc_engine::search::tests::budget_exceeded_reports_partial_state
+- wfc_engine::search::tests::cancellation_stops_search_and_reports_partial
+- wfc_engine::search::tests::restart_only_never_proves_unsat_on_unsatisfiable_instance
+- wfc_engine::soft::tests::best_of_n_keeps_the_highest_scoring_attempt
+- wfc_engine::soft::tests::best_of_n_keeps_the_lowest_scoring_attempt
+- wfc_engine::soft::tests::weight_field_identity_is_all_ones
+- wfc_engine::solver_grid2d::tests::grid_domain_constraints_enumeration_and_cancellation_match_neutral_oracle
+- wfc_engine::solver_grid3d::tests::grid_domain_constraints_enumeration_and_cancellation_match_neutral_oracle
+- wfc_engine::constraints_card::tests::tagged_and_explicit_selectors_respect_neutral_scoped_cardinality
+- wfc_engine::extract::tests::periodic_sample_solves_on_a_same_size_wrapped_grid
+- wfc_engine::topology::tests::graph_view_conversion_preserves_neutral_directed_and_undirected_arcs
+- wfc_engine::job::publication::tests::retained_publication_matches_neutral_pages_and_preserves_both_commit_streams
+- wfc_engine::job::publication::tests::retained_publication_retries_exact_rejected_source_and_honors_zero_fuel
+- wfc_engine::job::publication::tests::retained_publication_cancellation_closes_finished_and_partial_streams_incrementally
+- wfc_engine::job::tests::first_preview_and_continuous_gap_include_bounded_publication
+
+Compiler diagnostics: 0 errors, 0 warnings.
+
+

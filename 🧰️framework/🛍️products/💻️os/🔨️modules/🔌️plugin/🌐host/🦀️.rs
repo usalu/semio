@@ -1049,7 +1049,7 @@ pub async fn now_ms() -> i64 {
         crate::component::wasip2::semio::framework::pure::now_ms()
     }
     #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|elapsed| elapsed.as_millis() as i64).unwrap_or(0)
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis() as i64)
 }
 
 /// 📏️ Synchronous — wraps the `pure` WIT import `trace-span`.

@@ -18,10 +18,10 @@
 //! - Colors are written as `uchar` `red`/`green`/`blue`[/`alpha`] (`round(channel * 255)`,
 //!   clamped `[0,255]`) — the near-universal real-world PLY color convention.
 
-use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
-use semio_s_artifact_stdio_ply::PlySnapshot;
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
+use semio_s_artifact_stdio_ply::PlySnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId::ANY };

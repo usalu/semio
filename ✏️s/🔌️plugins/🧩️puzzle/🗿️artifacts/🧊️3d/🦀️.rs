@@ -18,6 +18,11 @@ pub use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 #[path = "../../🎮️commands/🧵️retained/🦀️.rs"]
 pub mod retained_command;
 
+#[cfg(all(test, feature = "component-app-assembly"))]
+fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'static str], &'static str) {
+    ("puzzle3d", "puzzle.3d.fixture", editor::puzzle3d::PUZZLE3D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json"))
+}
+
 //#region ⚠️ Errors
 /// 🧯️ Puzzle 3d precompute session errors — JSON (de)serialization and brush/fill session state
 /// failures. `Json` wraps `dsl::ValueError` (not `serde_json::Error`) since every production
@@ -1705,6 +1710,13 @@ pub mod editor {
 
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
             pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod window {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs"]
+            mod component;
+            pub use component::*;
         }
 
         #[path = "."]

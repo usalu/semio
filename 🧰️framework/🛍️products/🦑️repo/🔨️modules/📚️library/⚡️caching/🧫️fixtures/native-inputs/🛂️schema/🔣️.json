@@ -1,11 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": [
-    "files",
-    "included",
-    "excluded"
-  ],
+  "required": ["files", "included", "excluded", "commandRouter"],
   "additionalProperties": false,
   "properties": {
     "files": {
@@ -24,6 +20,40 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "commandRouter": {
+      "type": "object",
+      "required": ["entry", "cwd", "command", "files", "included", "excluded"],
+      "additionalProperties": false,
+      "properties": {
+        "entry": {
+          "type": "string"
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "included": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excluded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   }

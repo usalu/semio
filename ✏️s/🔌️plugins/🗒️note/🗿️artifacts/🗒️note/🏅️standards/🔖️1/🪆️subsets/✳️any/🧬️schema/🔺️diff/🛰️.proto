@@ -17,12 +17,11 @@ message NoteDiff {
   optional DoubleNullable eraser_radius = 13;
   optional NoteAssetsDelta assets = 14;
   optional NoteStringList selected_block_ids = 15;
-  optional string active_utility_id = 16;
+  reserved 16;
   optional string engagement_input = 17;
   optional double camera_x = 18;
   optional double camera_y = 19;
   optional double camera_zoom = 20;
-  optional StringNullable hovered_block_id = 22;
 }
 
 message StringNullable { optional string value = 1; }

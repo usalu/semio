@@ -1,16 +1,16 @@
 //! 🎥️ Shooting play app — the 3D scene window: the editable studio viewport (assets + lighting).
 
-use crate::standards::v1::subsets::any::schema::is_transparent_shooting_background;
-use crate::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::modes::edit::windows::scene::options;
 use crate::editor::shooting::terminology::ShootingLabels;
-use semio_framework_plugin::{
-    world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
-    WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions, World3dScene, WorldSunConfig,
-};
+use crate::standards::v1::subsets::any::schema::is_transparent_shooting_background;
+use crate::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
 use dsl::json;
 use dsl::os_pack::json::{parse, Value};
+use semio_framework_plugin::{
+    world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
+    WindowKindDefinition, WindowMeasure, WindowOptions, World3dScene, WorldSunConfig,
+};
 use std::collections::HashSet;
 
 fn vec3(v: [f64; 3]) -> Value {
@@ -90,10 +90,7 @@ pub fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, labels: 
                     id: format!("shooting.camera.{}", saved.id),
                     label: saved.label.clone(),
                     detail: Some(labels.load_camera.into()),
-                    action: Some(crate::editor::shooting::shooting_window_action(
-                        "loadSavedCamera",
-                        Some(dsl::DslValue::object([("id".into(), dsl::DslValue::String(saved.id.clone()))])),
-                    )),
+                    action: Some(crate::editor::shooting::shooting_window_action("loadSavedCamera", Some(dsl::DslValue::object([("id".into(), dsl::DslValue::String(saved.id.clone()))])))),
                 })
                 .collect(),
         ),

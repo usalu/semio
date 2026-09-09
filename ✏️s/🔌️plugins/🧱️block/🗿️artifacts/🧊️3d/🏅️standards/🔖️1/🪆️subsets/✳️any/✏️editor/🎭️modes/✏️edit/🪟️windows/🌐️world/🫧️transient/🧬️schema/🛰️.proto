@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+message Block3dWorldWindowTransient {
+  Block3dBrushPreview brush_preview = 1;
+}
+
+message Block3dBrushPreview {
+  repeated double position = 1;
+  repeated double direction = 2;
+}
+
+message SetBrushPreview {
+  Block3dBrushPreview preview = 1;
+}

@@ -1,9 +1,8 @@
 //! ↔️ `change-page-width` — sets a page's `width` scalar.
 
-
-use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -33,7 +32,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageWidth {
 }
 //#endregion ↔️ChangePageWidth
 
-
 //#region ↔️ChangePageWidth
 pub fn diff_change_page_width(payload: &ChangePageWidth, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
@@ -48,7 +46,6 @@ pub fn diff_change_page_width(payload: &ChangePageWidth, base: &LayoutSnapshot) 
     })
 }
 //#endregion ↔️ChangePageWidth
-
 
 //#region ↔️ChangePageWidth
 pub fn inverse_change_page_width(payload: &ChangePageWidth, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

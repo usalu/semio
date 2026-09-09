@@ -14,39 +14,6 @@ type CadArtifact {
   energyGeometry: CadGeometry @state(class: ARTIFACT)
   structureClassicGeometry: CadGeometry @state(class: ARTIFACT)
   activeModelDefinitionId: String! @state(class: ARTIFACT)
-  selectedObjectIds: [String!]! @state(class: PRESENCE)
-  selectedNodeIds: [String!]! @state(class: PRESENCE)
-  activeObjectId: String @state(class: PRESENCE)
-  componentSelection: CadComponentSelection! @state(class: PRESENCE)
-  selectedReferenceModelDefinitionId: String @state(class: PRESENCE)
-  selectedReferenceId: String @state(class: PRESENCE)
-  selectedPrimitiveId: String @state(class: PRESENCE)
-  selectedPrimitiveKind: String @state(class: PRESENCE)
-  activeExampleId: String @state(class: PRESENCE)
-  selectionMethod: String! @state(class: CONFIG)
-  engagementInput: String! @state(class: CONFIG)
-  engagementStep: String! @state(class: CONFIG)
-  engagementPane: String @state(class: CONFIG)
-  engagementSessionJson: String @state(class: CONFIG)
-  lastFinalizedInteractionId: String @state(class: CONFIG)
-  sunEnabled: Boolean! @state(class: CONFIG)
-  sunAzimuth: Float! @state(class: CONFIG)
-  sunElevation: Float! @state(class: CONFIG)
-  sunIntensity: Float! @state(class: CONFIG)
-  sunColor: String! @state(class: CONFIG)
-  camera: CadCamera! @state(class: CONFIG)
-  cameraBuilding: CadCamera! @state(class: CONFIG)
-  cameraEnergy: CadCamera! @state(class: CONFIG)
-  cameraStructureClassic: CadCamera! @state(class: CONFIG)
-  dislocateShape: CadDislocateOptions! @state(class: CONFIG)
-  dislocateBuilding: CadDislocateOptions! @state(class: CONFIG)
-  dislocateEnergy: CadDislocateOptions! @state(class: CONFIG)
-  dislocateStructureClassic: CadDislocateOptions! @state(class: CONFIG)
-  contributionsJson: String! @state(class: CONFIG)
-  hoveredObjectId: String @state(class: ARTIFACT)
-  hoveredTargetObjectId: String @state(class: ARTIFACT)
-  hoveredTargetMode: String @state(class: ARTIFACT)
-  hoveredTargetId: Int @state(class: ARTIFACT)
 }
 
 type CadObject { id: String! }
@@ -55,9 +22,3 @@ type CadReferenceList { values: [String!]! }
 type CadReferenceListEntry { key: String! value: CadReferenceList! }
 type CadGeometry { anchorsJson: String }
 type CadCamera { zoom: Float }
-type CadComponentSelection { mode: String! }
-type CadDislocateOptions { moveEnabled: Boolean! rotateEnabled: Boolean! }
-
-type CadStringList {
-  values: [String!]!
-}

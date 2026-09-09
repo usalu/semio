@@ -11,15 +11,5 @@
   "camera3d": null,
   "meta": {
     "description": "Reviewed during the fixture pass."
-  },
-  "selectedIds": null,
-  "activeRepresentationId": null,
-  "wantedTags": null,
-  "windows": null,
-  "brushVortexKindId": null,
-  "brushRadius": null,
-  "brushFlip": null,
-  "brushPreview": null,
-  "camera": null,
-  "hoveredVortexFullId": null
+  }
 }

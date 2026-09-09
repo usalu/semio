@@ -1,9 +1,9 @@
 //! 🧱️ 🧱️ Note play app commands command — `delete-block`.
 
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::schema::mutations::delete_block as delete_block_mutation;
 use crate::NoteSnapshot;
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

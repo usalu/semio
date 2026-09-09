@@ -2,8 +2,7 @@
   "base": {
     "cameraX": 0.25,
     "cameraY": 0.75,
-    "cameraZoom": 1.5,
-    "activeUtilityId": "selectDirect"
+    "cameraZoom": 1.5
   },
   "cases": [
     {
@@ -13,16 +12,14 @@
           "presence": {
             "cameraX": 2.5,
             "cameraY": -3.25,
-            "cameraZoom": 1.75,
-            "activeUtilityId": "pencil"
+            "cameraZoom": 1.75
           }
         }
       },
       "expected": {
         "cameraX": 2.5,
         "cameraY": -3.25,
-        "cameraZoom": 1.75,
-        "activeUtilityId": "pencil"
+        "cameraZoom": 1.75
       }
     }
   ]

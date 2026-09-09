@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::generation2d::Generation2dCommand;
 use crate::editor::generation2d::commands::enter_generate;
 use crate::editor::generation2d::testkit::{app, dispatch};
+use crate::editor::generation2d::Generation2dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn add_generation_records_an_undoable_generation_operation() {

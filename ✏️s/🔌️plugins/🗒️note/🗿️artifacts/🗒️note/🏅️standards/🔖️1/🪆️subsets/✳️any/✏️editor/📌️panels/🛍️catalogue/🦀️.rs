@@ -2,8 +2,8 @@
 
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::editor::note::ui_label;
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use semio_framework_ui_contract::{Buildable, HasBase};
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult, UiFixedList, PanelTreeBuilder, PluginAssemblyError, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const NOTE_PLAY_BODY_CATALOGUE: &str = "note.play.catalogue";
@@ -25,7 +25,11 @@ pub fn definition() -> PanelTabDefinition {
 pub fn render(labels: &NotePlayLabels) -> UiAssemblyResult<BuiltNode> {
     let mut children = UiFixedList::default();
     for (index, label) in [labels.catalogue_text, labels.catalogue_image, labels.catalogue_table, labels.catalogue_math, labels.catalogue_ink, labels.catalogue_group].into_iter().enumerate() {
-        let child = semio_framework_ui_contract::text(ui_label(label.as_str())?).try_id(format!("note-catalogue.kind.{index}")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note catalogue key admission failed"))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note catalogue text admission failed"))?;
+        let child = semio_framework_ui_contract::text(ui_label(label.as_str())?)
+            .try_id(format!("note-catalogue.kind.{index}"))
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note catalogue key admission failed"))?
+            .try_build()
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note catalogue text admission failed"))?;
         children.try_push(child).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note catalogue child admission failed"))?;
     }
     PanelTreeBuilder::new("note-catalogue")?.section("note-catalogue.section", Some(ui_label(labels.catalogue_title.as_str())?), true, children)?.build()

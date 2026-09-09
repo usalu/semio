@@ -1,8 +1,6 @@
 //! 🗣️ Generation2d play app — the single `app_labels!` block plus the locale resolver every taxonomy
 //! node reaches for. Deliberately ONE block for the whole app.
 
-use crate::editor::generation2d::config::Generation2dConfig;
-
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the 2D flow app; one field per label makes every locale combination compile-checked.
@@ -36,7 +34,7 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ Resolves the active label set from the config-carried locale; falls back to native English.
+/// 🗣️ Resolves the active label set from the shared view model.
 pub fn generation2d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Generation2dLabels {
     semio_framework_plugin::resolve_labels::<Generation2dLabels>(view_state)
 }

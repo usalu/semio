@@ -95,7 +95,7 @@ async fn declared_outcome_holds() {
     assert_eq!(declared[0].get("code").and_then(pack::JsonValue::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
 }
 
-/// 🔺️ A no-op emits the artifact's `Default` diff — all eight slots `null` — proving the guard
+/// 🔺️ A no-op emits the artifact's `Default` diff — all four artifact slots `null` — proving the guard
 /// fires before `equation_children_from_state` is ever reached.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
@@ -103,7 +103,10 @@ async fn produces_committed_diff() {
     assert_eq!(outcome.diff(), &EquationDiff::default(), "a no-op update-graph-algorithm must carry the empty diff, never a re-minted child triple");
     let produced_value = pack::json_from_dsl_value(&(outcome.diff()).to_value());
     let committed = pack::parse_json(DIFF).expect("committed diff decodes");
-    assert!(pack::json::value_eq_ignoring_object_order(&produced_value, &committed), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: produced diff differs from the committed 🔺️diff/🔣️.json ({produced_value:?} vs {committed:?})");
+    assert!(
+        pack::json::value_eq_ignoring_object_order(&produced_value, &committed),
+        "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: produced diff differs from the committed 🔺️diff/🔣️.json ({produced_value:?} vs {committed:?})"
+    );
 }
 
 /// 🔣️ The committed diff is canonical and decodes to `EquationDiff`.

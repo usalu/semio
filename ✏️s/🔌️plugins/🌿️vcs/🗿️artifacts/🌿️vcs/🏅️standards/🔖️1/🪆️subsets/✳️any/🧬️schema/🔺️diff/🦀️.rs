@@ -24,8 +24,6 @@ pub struct VcsDiff {
     pub status: Option<String>,
     #[state(artifact)]
     pub tags: Option<VcsTagsDelta>,
-    #[state(presence)]
-    pub selected_checkpoint_ids: Option<VcsStringList>,
 }
 //#endregion 🔖️Diff
 

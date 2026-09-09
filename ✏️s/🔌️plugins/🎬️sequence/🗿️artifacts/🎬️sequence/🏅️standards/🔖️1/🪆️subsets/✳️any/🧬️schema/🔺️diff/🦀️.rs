@@ -1,6 +1,6 @@
 //! 🧬️ Sequence diff schema — sparse field delta over the artifact.
 
-use crate::{SequenceCamera, SequenceContentChild};
+use crate::SequenceContentChild;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -19,11 +19,5 @@ pub struct SequenceDiff {
     pub schema: Option<String>,
     #[state(artifact)]
     pub content: Option<SequenceContentChild>,
-    #[state(config)]
-    pub last_run_json: Option<String>,
-    #[state(config)]
-    pub orientation: Option<String>,
-    #[state(config)]
-    pub camera: Option<SequenceCamera>,
 }
 //#endregion 🔖️Diff

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::testkit::sample_scene;
 
@@ -18,9 +17,9 @@ async fn cad_scene_round_trips_through_pack() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::mutations::create_shape_model::CreateShapeModel;
     use crate::op::CadMutation;
-    use crate::{CAD_DOCUMENT_SCHEMA, empty_cad_snapshot, testkit::sample_model_child};
+    use crate::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, ArtifactStore, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<CadSnapshot, CadMutation> = ArtifactStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad-demo", empty_cad_snapshot(), None)).await.expect("valid artifact store fixture");
     let sample = sample_model_child("command-envelope-1");

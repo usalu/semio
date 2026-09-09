@@ -14,7 +14,7 @@ pub use crate::schema::diff::*;
 
 //#region 🔖️Apply
 impl EquationDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document fields onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &EquationArtifact) -> protocol::MutationApplyResult<EquationArtifact> {
         Ok({
             let mut next = artifact.clone();
@@ -29,15 +29,6 @@ impl EquationDiff {
             }
             if let Some(equation) = &self.equation {
                 next.equation = equation.clone();
-            }
-            if let Some(value) = self.camera_x {
-                next.camera_x = value;
-            }
-            if let Some(value) = self.camera_y {
-                next.camera_y = value;
-            }
-            if let Some(value) = self.camera_zoom {
-                next.camera_zoom = value;
             }
             next
         })
@@ -75,15 +66,6 @@ impl MutationDiff<EquationSnapshot> for EquationDiff {
         }
         if other.equation.is_some() {
             self.equation = other.equation;
-        }
-        if other.camera_x.is_some() {
-            self.camera_x = other.camera_x;
-        }
-        if other.camera_y.is_some() {
-            self.camera_y = other.camera_y;
-        }
-        if other.camera_zoom.is_some() {
-            self.camera_zoom = other.camera_zoom;
         }
     }
 }

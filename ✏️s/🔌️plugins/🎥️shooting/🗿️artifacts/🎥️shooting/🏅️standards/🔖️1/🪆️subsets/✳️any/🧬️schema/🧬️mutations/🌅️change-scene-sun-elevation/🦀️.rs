@@ -1,8 +1,8 @@
 //! 🌅️ Shooting mutation payload — `ChangeSceneSunElevation`. One of the scene's independently-settable fields.
 
-use crate::ShootingSnapshot;
 use crate::diff::ShootingDiff;
 use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

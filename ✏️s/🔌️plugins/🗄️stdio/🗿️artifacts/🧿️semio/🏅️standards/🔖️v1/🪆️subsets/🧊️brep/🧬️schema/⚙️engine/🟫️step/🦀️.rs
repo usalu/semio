@@ -13,7 +13,6 @@
 /// 🪢 Degree, control-point identifiers, multiplicities, and knots.
 pub type BsplineCurveAttributes = (usize, Vec<u64>, Vec<u32>, Vec<f64>);
 
-
 use std::collections::HashMap;
 use std::fmt::Write as _;
 

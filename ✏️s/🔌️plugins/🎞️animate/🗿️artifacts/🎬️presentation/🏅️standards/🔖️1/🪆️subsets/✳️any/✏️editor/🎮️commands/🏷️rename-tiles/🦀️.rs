@@ -2,11 +2,11 @@
 
 #![allow(clippy::result_large_err)]
 
+use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
+use crate::editor::animate::{valid_tile_ids, PresentationDispatchCtx};
 use crate::mutations::rename_tile::RenameTile;
 use crate::op::PresentationMutation;
 use crate::PresentationSnapshot;
-use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{valid_tile_ids, PresentationDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

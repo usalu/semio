@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::GIS_MAP_SCHEMA;
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data};
 use crate::schema::{default_document, empty_gis_map_snapshot};
+use crate::GIS_MAP_SCHEMA;
 use serde_json::json;
 
 fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
@@ -46,9 +45,11 @@ async fn gis_map_document_text_round_trips_through_store() {
     let initial = empty_gis_map_snapshot();
     let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
     let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    store.install_member_store_owners_exact(gis_map_document_store_owners());
     store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], description: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    close_gis_map_candidate(store);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -120,7 +121,23 @@ fn gis_map_store_initializer_cancel_and_stale_generation_return_every_owner_term
     drop(cancelled);
 
     let mut stale = empty_gis_map_initializer(operation, generation);
-    assert!(matches!(drive_gis_map_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1)), semio_framework_job::StepOutcome::Fault(_)));
+    let mut outcome = drive_gis_map_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1));
+    assert!(matches!(&outcome, semio_framework_job::StepOutcome::Fault(_)));
+    assert!(matches!(outcome.close_step(0, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+    for _ in 0..=semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES {
+        if outcome.terminal_is_empty() {
+            break;
+        }
+        match outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            semio_framework_job::JobPayloadCloseStep::Complete => {}
+        }
+    }
+    assert!(outcome.terminal_is_empty());
+    drop(outcome);
     assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
     drop(stale);
 }

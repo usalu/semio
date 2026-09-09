@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::En1997Snapshot;
 use crate::mutations::change_v_ed_kn;
+use crate::En1997Snapshot;
 
 fn sample_mutation() -> En1997Mutation {
     En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 })

@@ -20,7 +20,7 @@ export const BLOCK_DSL_PREAMBLE = "semio block.block5d.dsl ";
 /** 🐍️ `camelCase` json key → the `kebab-case` name the DSL grammar prints for it. The two
  * exceptions are the members whose Rust field name carries a digit-led segment (`radius_2d`,
  * `part_2d`) that `rename_all = "camelCase"` collapses but the DSL keeps hyphenated. */
-const DSL_NAME_OVERRIDES: Readonly<Record<string, string>> = { radius2d: "radius-2d", radius3d: "radius-3d", "2d": "part-2d", "3d": "part-3d" };
+const DSL_NAME_OVERRIDES: Readonly<Record<string, string>> = { radius2d: "radius-2d", radius3d: "radius-3d", part2d: "part-2d", part3d: "part-3d" };
 
 function dslName(key: string): string {
   return DSL_NAME_OVERRIDES[key] ?? key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);

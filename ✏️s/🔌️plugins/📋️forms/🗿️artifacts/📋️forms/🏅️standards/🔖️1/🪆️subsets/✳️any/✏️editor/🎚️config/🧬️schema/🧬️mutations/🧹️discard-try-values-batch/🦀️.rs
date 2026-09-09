@@ -16,7 +16,13 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for DiscardTryValu
         discard_staged_try_values_batch(&self.staging_id);
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, _base: &FormsConfig) -> Vec<FormsConfigMutation> { Vec::new() }
-    fn label(&self) -> String { "Discard Try Values Batch".into() }
-    fn target(&self) -> Vec<String> { vec!["try-values".into()] }
+    fn inverse(&self, _base: &FormsConfig) -> Vec<FormsConfigMutation> {
+        Vec::new()
+    }
+    fn label(&self) -> String {
+        "Discard Try Values Batch".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["try-values".into()]
+    }
 }

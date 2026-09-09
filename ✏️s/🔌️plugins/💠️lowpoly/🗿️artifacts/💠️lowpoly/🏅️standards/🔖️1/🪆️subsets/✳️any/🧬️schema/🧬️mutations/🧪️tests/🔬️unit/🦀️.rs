@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{LowpolyObject, schema::default_snapshot};
+use crate::{schema::default_snapshot, LowpolyObject};
 use protocol::{Mutation, MutationDiff};
 
 fn tiny_object(id: &str, name: &str) -> LowpolyObject {

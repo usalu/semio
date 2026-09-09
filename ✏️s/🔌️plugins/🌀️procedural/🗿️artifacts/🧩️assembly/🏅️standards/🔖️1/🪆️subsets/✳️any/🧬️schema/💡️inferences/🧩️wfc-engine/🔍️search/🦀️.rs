@@ -276,6 +276,9 @@ fn drive<T: Topology>(
 ) -> StepOutcome {
     let mut local_remaining = local_backtrack_budget;
     loop {
+        if cancel.is_some_and(CancelToken::is_cancelled) {
+            return StepOutcome::Cancelled;
+        }
         if domains.all_singleton() {
             if constraints_accept(domains, constraints) {
                 return StepOutcome::Solved;
@@ -307,11 +310,6 @@ fn drive<T: Topology>(
             if start.elapsed().as_millis() as u64 >= max_ms {
                 sink.emit(Event::BudgetExceeded);
                 return StepOutcome::BudgetExceeded;
-            }
-        }
-        if let Some(c) = cancel {
-            if c.is_cancelled() {
-                return StepOutcome::Cancelled;
             }
         }
         metrics.observations += 1;

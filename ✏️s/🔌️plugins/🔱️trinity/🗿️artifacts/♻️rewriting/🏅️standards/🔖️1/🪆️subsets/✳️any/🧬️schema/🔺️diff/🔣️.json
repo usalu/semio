@@ -4,73 +4,82 @@
   "title": "RewritingDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
-    "artifact": {
-      "title": "RewritingArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
     "beforeFixtureJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
+      "type": [
+        "string",
+        "null"
+      ],
       "x-semio-state": "artifact"
     },
     "lhsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
+      "type": [
+        "string",
+        "null"
+      ],
       "x-semio-state": "artifact"
     },
     "rhsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
+      "type": [
+        "string",
+        "null"
+      ],
       "x-semio-state": "artifact"
     },
     "parameterBindings": {
-      "type": "object",
-      "additionalProperties": {
-        "oneOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/PropertyValue"
-          }
-        ]
-      },
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/framework/replication/mutation/map/schema.json"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "ruleLayout": {
-      "type": "object",
-      "additionalProperties": {
-        "oneOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/LayoutPoint"
-          }
-        ]
-      },
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "https://semio.tech/schema/framework/replication/mutation/map/schema.json"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "operation": {
+                        "if": {
+                          "properties": {
+                            "kind": {
+                              "const": "set"
+                            }
+                          }
+                        },
+                        "then": {
+                          "properties": {
+                            "value": {
+                              "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/LayoutPoint"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
       "x-semio-state": "artifact"
-    },
-    "lodModeByWindow": {
-      "type": "object",
-      "additionalProperties": {
-        "oneOf": [
-          {
-            "type": "null"
-          },
-          {
-            "type": "string"
-          }
-        ]
-      },
-      "x-semio-state": "config"
-    },
-    "beforePaneCamera": {
-      "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/Camera",
-      "x-semio-state": "config"
     }
   }
 }

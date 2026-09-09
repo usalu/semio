@@ -1,20 +1,10 @@
 syntax = "proto3";
 package semio.s.reasoning.wires.artifact;
-
-// 🧬️ Wires artifact schema.
-
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message WiresArtifact {
-  // @state artifact
-  DslValue wires_fixture = 1;
-  // @state artifact
-  DslValue board_fixture = 2;
-  // @state artifact
-  optional string drag_node_id = 3;
-  // @state artifact
-  double drag_last_x = 4;
-  // @state artifact
-  double drag_last_y = 5;
-  // @state config
+  semio.framework.value.DslValue wires_fixture = 1;
+  semio.os.store.ArtifactChild content = 2;
+  semio.framework.value.DslValue camera = 3;
+  semio.framework.value.DslValue meta = 4;
 }
-
-message DslValue {}

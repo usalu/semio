@@ -3,11 +3,11 @@
 #[path = "📡️protocol.rs"]
 pub mod protocol;
 
-use crate::{SequenceFixture, SlotRef};
 use crate::editor::sequence::SequenceHost;
+use crate::{SequenceFixture, SlotRef};
 use infinite_board_port_directed_dag::DagLayoutOptions;
 use protocol::{SequenceBridge, SequenceDomain, SequenceFailure, SequencePayloadReader};
-use semio_framework::abi::{AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget, decode_abi_message, encode_abi_message};
+use semio_framework::abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
 
 //#region 🔖️DomainAdapter
 
@@ -183,8 +183,8 @@ impl SequenceDomainAdapter {
     }
 
     fn world_from_screen(&self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        use infinite_canvas::camera::{screen_to_world, Camera, Viewport};
         use infinite_canvas::Point;
-        use infinite_canvas::camera::{Camera, Viewport, screen_to_world};
         let (sx, sy) = point(payload)?;
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let camera = Camera { x: self.host.dag.fixture.camera.x, y: self.host.dag.fixture.camera.y, zoom: self.host.dag.fixture.camera.zoom };
@@ -232,7 +232,7 @@ impl SequenceDomainAdapter {
     }
 
     fn wheel(&mut self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
-        use infinite_canvas::camera::{Camera, Viewport, wheel_screen};
+        use infinite_canvas::camera::{wheel_screen, Camera, Viewport};
         let mut reader = SequencePayloadReader::new(payload);
         let sx = reader.f64().map_err(abi_failure)?;
         let sy = reader.f64().map_err(abi_failure)?;

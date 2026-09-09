@@ -298,7 +298,6 @@ impl Default for En1993Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-
 //#region 🌉️ExternalCodecBridge
 /// 📤️ The canonical JSON projection of a [`En1993Snapshot`] — the surface
 /// `../../../../../🧪️tests/🔩️mutate-en1993-1` is compared through under `ordered-json-v1`.

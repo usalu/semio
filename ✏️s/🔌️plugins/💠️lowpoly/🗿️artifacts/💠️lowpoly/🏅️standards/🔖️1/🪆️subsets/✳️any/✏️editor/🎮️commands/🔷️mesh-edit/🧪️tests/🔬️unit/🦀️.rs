@@ -1,6 +1,5 @@
-
-use crate::editor::lowpoly::LowpolyCommand;
 use crate::editor::lowpoly::testkit::{app, app_with_registry, dispatch, select_face};
+use crate::editor::lowpoly::LowpolyCommand;
 use semio_framework_plugin::PluginApp;
 
 /// 🧪️ Rewritten (round 2 of ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law

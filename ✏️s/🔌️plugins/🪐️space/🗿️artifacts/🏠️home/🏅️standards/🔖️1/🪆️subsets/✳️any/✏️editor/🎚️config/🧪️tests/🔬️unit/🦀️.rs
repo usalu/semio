@@ -1,7 +1,5 @@
-
 use super::*;
 use protocol::Mutation;
-
 
 #[semio_framework_async_macros::async_test]
 async fn home_config_dsl_text_round_trips() {
@@ -81,8 +79,9 @@ async fn set_client_updates_identity_fields() {
 #[semio_framework_async_macros::async_test]
 async fn home_config_operation_round_trips_via_apply_and_backwards() {
     let config = HomeConfig::default();
+    let operation = HomeConfigMutation::SetActivePanelTab { tab_id: "documents".into() };
     let next = operation.diff(&config).diff().clone();
-    assert_eq!(next.locale, "de");
+    assert_eq!(next.active_panel_tab, "documents");
     let backwards = operation.inverse(&config);
     let restored = backwards[0].diff(&next).diff().clone();
     assert_eq!(restored, config);

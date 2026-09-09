@@ -11,8 +11,10 @@ import ts from "typescript";
 import { loadTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import browserAuthorityFixture from "../../🎯️targets/🧊️wgpu/🧪️tests/🔣️browser-entry-authority.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json";
-import { assertPinnedBunVersion, decodeAstralEscapes, renderBrowserEntry, renderFrameWorker } from "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script";
-import { decodeInvocationPayloads, pluginHandleForBridge, reconcileRetainedWindowPatch, type WgpuPluginHandle } from "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
+import { renderFrameWorker } from "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script";
+import { assertPinnedBunVersion, decodeAstralEscapes, renderBrowserEntry } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";
+import { decodeInvocationPayloads, pluginHandleForBridge, reconcileRetainedWindowPatch, retireWgpuOwnedUiInstanceLifecycle, WgpuOwnedUiInstanceRoute, type WgpuPluginHandle } from "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
+import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts";
 
 function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle {
   return {
@@ -25,7 +27,7 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     render: async () => ({ type: "text", value: "hello" }),
     renderDocument: async () => "document",
     contextMenu: async () => [],
-    dispose: () => {},
+    dispose: async () => {},
     ...overrides,
   };
 }
@@ -63,6 +65,114 @@ describe("framework renderer wgpu plugin bridge", () => {
     const bridge = pluginHandleForBridge(fakeHandle());
     const result = await bridge.render(1, "window", "body", JSON.stringify({}));
     expect(JSON.parse(result)).toEqual({ type: "text", value: "hello" });
+  });
+
+  it("retains exact turn identity and private receipt bytes for the WGPU owner route", () => {
+    const lifecycleReceipt = Uint8Array.of(1, 2, 3);
+    const uiPatchReceipt = Uint8Array.of(4, 5, 6);
+    const raw = { lifecycleReceipt, uiPatchReceipt, uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" }, coldPairIngress: { tag: "idle" } };
+    const decoded = coerceTurnResult(raw);
+    expect(decoded.original).toBe(raw);
+    expect(decoded.lifecycleReceipt).toBe(lifecycleReceipt);
+    expect(decoded.uiPatchReceipt).toBe(uiPatchReceipt);
+    expect(decoded.status).toEqual({ tag: "idle" });
+    for (const invalid of [[1, 2], "AQI=", { bytes: [1, 2] }]) {
+      expect(() => coerceTurnResult({ ...raw, lifecycleReceipt: invalid })).toThrow("actor-lifecycle.receipt-bytes");
+      expect(() => coerceTurnResult({ ...raw, uiPatchReceipt: invalid })).toThrow("actor-ui-patch.receipt-bytes");
+    }
+  });
+
+  it("composes one nonempty WGPU surface through exact patch acknowledgement and terminal owner retirement", async () => {
+    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+    const { default: equal } = await import("fast-deep-equal");
+    const { encodePackValue } = await import("@semio-tech/framework-os");
+    const { OwnedResidentLedger } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
+    const { ShardClient } = await import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts");
+    const { DEFAULT_SHARD_BUDGET } = await import("../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts");
+    const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+    const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts");
+    const validate = new Ajv({ strict: true }).addSchema(rendererSchema).getSchema(`${rendererSchema.$id}#/$defs/PluginRuntimeLifecycleSchedulerV1`)!;
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const sent: string[] = [];
+    const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" }, coldPairIngress: { tag: "idle" } };
+    const node = { id: 0, key: "root", component: { type: "text", value: "owned", emphasize: null, dataAttributes: null }, layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false, transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [] };
+    let lifetime: { readonly activationGeneration: bigint; readonly instanceId: number; readonly guestLifetime: bigint } | null = null;
+    const worker = {
+      onmessage: null as ((event: { readonly data: unknown }) => void) | null,
+      onerror: null as ((event: unknown) => void) | null,
+      postMessage(raw: unknown) {
+        const message = raw as { readonly kind: string; readonly requestId?: string; readonly events?: readonly { readonly kind: string; readonly payload?: unknown }[] };
+        if (message.kind === "dispose") { sent.push("dispose"); return; }
+        if (!message.requestId) return;
+        let value: unknown = undefined;
+        if (message.kind === "turn") {
+          const first = message.events?.[0];
+          if (first) sent.push(first.kind);
+          if (first?.kind === "instance-open") {
+            const payload = first.payload as { readonly instance: number; readonly activationGeneration: bigint; readonly requestSequence: number };
+            lifetime = { activationGeneration: payload.activationGeneration, instanceId: payload.instance, guestLifetime: BigInt(fixture.guestLifetime) };
+            value = {
+              ...plain,
+              lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "captured", lifetime, requestSequence: payload.requestSequence }),
+              uiPatchReceipt: encodeActorUiPatchReceipt({ lifetime, patchSequence: BigInt(fixture.uiAcknowledgement.patchSequence) }),
+              uiPatches: [{ surface: { instance: payload.instance, surface: fixture.runtimeUiComposition.surface }, revision: 1n, baseRevision: 0n, ops: [{ tag: "upsert", val: { node: encodePackValue(node) } }, { tag: "set-root", val: 0n }] }],
+            };
+          } else if (first?.kind === "instance-close") {
+            const payload = first.payload as { readonly requestSequence: number };
+            value = { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "accepted", lifetime: lifetime!, requestSequence: payload.requestSequence, closeGeneration: BigInt(fixture.closeGeneration) }) };
+          } else if (first?.kind === "instance-lifecycle-ack") {
+            const receipt = (first.payload as { readonly receipt: { readonly kind: string; readonly requestSequence: number } }).receipt;
+            value = receipt.kind === "accepted" ? { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "retired", lifetime: lifetime!, requestSequence: receipt.requestSequence, closeGeneration: BigInt(fixture.closeGeneration) }) } : plain;
+          } else value = plain;
+        }
+        queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId: message.requestId, ok: true, value } }));
+      },
+      terminate() {},
+    };
+    const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1_048_576, slots: 4_096, owners: 4_096, control: { bytes: 65_536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+    const actorId = "wgpu-owned-ui#1";
+    await client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET);
+    const lifecycle = client.captureInstanceLifecycle(actorId, 1);
+    const execute = <T>(work: () => Promise<T>): Promise<T> => work();
+    const opened = coerceTurnResult(await lifecycle.open({ appId: "fixture", actor: "local", config: [], assets: [], capabilities: [], quotas: [] }, DEFAULT_SHARD_BUDGET));
+    const route = new WgpuOwnedUiInstanceRoute(lifecycle);
+    await route.accept(opened, execute);
+    const captured = lifecycle.pendingReceipt;
+    if (!captured || captured.kind !== "captured") throw new Error("fixture captured receipt missing");
+    await lifecycle.acknowledge(captured, DEFAULT_SHARD_BUDGET);
+    expect(lifecycle.progress().kind).toBe("open");
+    const projected = await route.project(fixture.runtimeUiComposition.surface);
+    expect(projected?.node).toMatchObject({ key: "root", component: { type: "text", value: "owned" }, children: [] });
+    expect(projected?.document).toMatchObject({ surface: fixture.runtimeUiComposition.surface, revision: 1, root: 0, nodes: [{ id: 0, key: "root" }] });
+    expect(sent).toEqual(fixture.runtimeUiComposition.openEvents);
+    expect(equal(sent, fixture.runtimeUiComposition.openEvents)).toBe(true);
+    const beforeClose = sent.length;
+    lifecycle.beginClose();
+    await lifecycle.close(DEFAULT_SHARD_BUDGET);
+    const accepted = lifecycle.pendingReceipt;
+    if (!accepted || accepted.kind !== "accepted") throw new Error("fixture accepted receipt missing");
+    await lifecycle.acknowledge(accepted, DEFAULT_SHARD_BUDGET);
+    const retired = lifecycle.pendingReceipt;
+    if (!retired || retired.kind !== "retired") throw new Error("fixture retired receipt missing");
+    const witness = await route.retire();
+    await lifecycle.acknowledge(retired, DEFAULT_SHARD_BUDGET, witness);
+    lifecycle.dispose();
+    expect(route.terminalIsEmpty).toBe(true);
+    expect(lifecycle.progress().kind).toBe("complete");
+    expect(sent.slice(beforeClose)).toEqual(fixture.runtimeUiComposition.closeEvents);
+    expect(equal(sent.slice(beforeClose), fixture.runtimeUiComposition.closeEvents)).toBe(true);
+
+    const cancelledActorId = "wgpu-owned-ui-cancelled#2";
+    await client.activate(cancelledActorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET);
+    const cancelledLifecycle = client.captureInstanceLifecycle(cancelledActorId, 2);
+    const cancelledOpen = coerceTurnResult(await cancelledLifecycle.open({ appId: "fixture", actor: "local", config: [], assets: [], capabilities: [], quotas: [] }, DEFAULT_SHARD_BUDGET));
+    const cancelledRoute = new WgpuOwnedUiInstanceRoute(cancelledLifecycle);
+    await cancelledRoute.accept(cancelledOpen, execute);
+    expect(cancelledLifecycle.pendingReceipt?.kind).toBe("captured");
+    await retireWgpuOwnedUiInstanceLifecycle(cancelledLifecycle, cancelledRoute, execute);
+    expect(cancelledLifecycle.progress().kind).toBe("complete");
+    expect(cancelledRoute.terminalIsEmpty).toBe(true);
+    client.disposeAll();
   });
 });
 
@@ -199,21 +309,27 @@ describe("framework renderer wgpu generated worker", () => {
     expect(createHash("sha256").update(first.content).digest("hex")).toBe(subtle);
   });
 
-  it("derives devcontainer and native Bun provisioning from the single packageManager pin", () => {
+  it("aligns digest-verified devcontainer and native Bun provisioning with the packageManager pin", () => {
     let repoRoot = dirname(fileURLToPath(import.meta.url));
     while (!existsSync(join(repoRoot, "nx.json"))) repoRoot = dirname(repoRoot);
     const dockerfile = readFileSync(join(repoRoot, ".devcontainer/Dockerfile"), "utf8");
-    const postCreatePath = join(repoRoot, ".devcontainer/post-create.sh");
+    const packageManager = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")).packageManager;
+    const pinnedVersion = /^bun@(\d+\.\d+\.\d+)$/u.exec(packageManager)?.[1];
+    const configuration = ts.parseConfigFileTextToJson("devcontainer.json", readFileSync(join(repoRoot, ".devcontainer/devcontainer.json"), "utf8"));
     const nativeBootstrapPath = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh");
-    const postCreate = readFileSync(postCreatePath, "utf8");
     const nativeBootstrap = readFileSync(nativeBootstrapPath, "utf8");
+    expect(pinnedVersion).toBe(Bun.version);
+    expect(/^ARG BUN_VERSION=(\d+\.\d+\.\d+)$/mu.exec(dockerfile)?.[1]).toBe(pinnedVersion);
+    expect(configuration.error).toBeUndefined();
+    expect(configuration.config.postCreateCommand).toEqual(["bun", "nx", "run", "workspace:deps-javascript"]);
     expect(dockerfile).not.toContain("bun.sh/install");
-    expect(postCreate).toContain(".packageManager");
-    expect(postCreate).toContain('bash -s "bun-v$required_bun_version"');
+    expect(dockerfile).toContain("sha256sum -c -");
+    expect([...dockerfile.matchAll(/bun_sha="([0-9a-f]{64})"/gu)]).toHaveLength(2);
+    expect(dockerfile).toContain('test "$(bun --version)" = "$BUN_VERSION"');
+    expect(nativeBootstrap).toContain('"packageManager"');
     expect(nativeBootstrap).toContain('bash -s "bun-v$required_version"');
-    expect(`${dockerfile}\n${postCreate}\n${nativeBootstrap}`).not.toContain(Bun.version);
+    expect(nativeBootstrap).not.toContain(Bun.version);
     if (process.platform !== "win32") {
-      execFileSync("bash", ["-n", postCreatePath]);
       execFileSync("bash", ["-n", nativeBootstrapPath]);
     }
   });

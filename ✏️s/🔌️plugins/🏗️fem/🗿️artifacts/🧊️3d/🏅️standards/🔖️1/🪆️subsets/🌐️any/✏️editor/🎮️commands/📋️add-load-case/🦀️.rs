@@ -1,9 +1,9 @@
 //! 🏋️ 🏋️ FEM 3D app commands command — `add-load-case`.
 
+use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::create_load_case;
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::{Fem3dSnapshot, FemLoadCase};
-use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

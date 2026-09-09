@@ -24,7 +24,13 @@ impl protocol::MutationKind<RemodelingConfig, RemodelingConfigMutation> for SetL
         }
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &RemodelingConfig) -> Vec<RemodelingConfigMutation> { vec![RemodelingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Set Layer Visibility".into() }
-    fn target(&self) -> Vec<String> { vec!["layer".into()] }
+    fn inverse(&self, base: &RemodelingConfig) -> Vec<RemodelingConfigMutation> {
+        vec![RemodelingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Layer Visibility".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["layer".into()]
+    }
 }

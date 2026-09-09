@@ -85,9 +85,6 @@ impl En1996Diff {
             if let Some(value) = &self.t_ef_mm {
                 next.t_ef_mm = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -203,7 +200,6 @@ impl MutationDiff<En1996Snapshot> for En1996Diff {
         take!(storeys);
         take!(h_ef_mm);
         take!(t_ef_mm);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

@@ -4,17 +4,60 @@
   "title": "NxCachePolicy",
   "$defs": {
     "NxCoordinatorFixture": {
-      "type": "object", "additionalProperties": false, "required": ["cases"],
-      "properties": { "cases": { "type": "array", "minItems": 4, "items": {
-        "type": "object", "additionalProperties": false, "required": ["name", "platform", "stdout", "environment", "expectedExit"],
-        "properties": {
-          "name": { "type": "string", "minLength": 1 },
-          "platform": { "enum": ["win32", "linux", "darwin"] },
-          "stdout": { "type": "string" },
-          "environment": { "type": "object", "additionalProperties": false, "properties": { "NX_WORKSPACE_DATA_DIRECTORY": { "type": "string", "minLength": 1 } } },
-          "expectedExit": { "type": "integer" }, "throws": { "type": "boolean" }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "platform",
+              "stdout",
+              "environment",
+              "expectedExit"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "platform": {
+                "enum": [
+                  "win32",
+                  "linux",
+                  "darwin"
+                ]
+              },
+              "stdout": {
+                "type": "string"
+              },
+              "environment": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "NX_WORKSPACE_DATA_DIRECTORY": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "expectedExit": {
+                "type": "integer"
+              },
+              "throws": {
+                "type": "boolean"
+              }
+            }
+          }
         }
-      } } }
+      }
     }
   },
   "type": "object",
@@ -24,7 +67,8 @@
     "uncached",
     "continuous",
     "generatedDirectories",
-    "toolchains"
+    "toolchains",
+    "generatorInputs"
   ],
   "properties": {
     "$schema": {
@@ -90,6 +134,28 @@
       "type": "object",
       "additionalProperties": {
         "type": "object"
+      }
+    },
+    "generatorInputs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "output"
+        ],
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^\\S+:\\S+$"
+          },
+          "output": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(/|$))(?!.*[\\\\:*?{}\\[\\]\\u0000]).+$"
+          }
+        }
       }
     }
   }

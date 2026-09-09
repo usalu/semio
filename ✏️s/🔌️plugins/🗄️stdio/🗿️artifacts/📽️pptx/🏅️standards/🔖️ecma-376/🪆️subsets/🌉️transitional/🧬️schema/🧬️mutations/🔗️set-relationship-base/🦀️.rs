@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetRelationshipBase {
-        pub(crate) base: String,
-    }
+    pub(crate) base: String,
+}
 
 impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for SetRelationshipBase {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relationship-base", kind: "set-relationship-base", record: "SetRelationshipBase" };

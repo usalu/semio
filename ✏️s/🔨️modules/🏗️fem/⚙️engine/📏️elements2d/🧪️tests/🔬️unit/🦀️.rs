@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn assert_mounted_stiffness_cells_match_batch(element: &dyn Element, context: &ElementContext, tolerance: f64) {
@@ -28,7 +27,7 @@ fn p6h_mounted_element_fixed_schema_cells_match_batch_and_reject_maximum_plus_on
     assert_mounted_stiffness_cells_match_batch(&triangle, &triangle_context, 1e-12);
     assert_eq!(triangle.mounted_stiffness_cell(&triangle_context, 6, 0), None);
 }
-use crate::model::{Model, NodalLoad, Node, Support, solve_linear_static};
+use crate::model::{solve_linear_static, Model, NodalLoad, Node, Support};
 
 /// 🪢️ Headless (no document layer) axial elongation check: δ = FL/EA, N = F.
 #[test]

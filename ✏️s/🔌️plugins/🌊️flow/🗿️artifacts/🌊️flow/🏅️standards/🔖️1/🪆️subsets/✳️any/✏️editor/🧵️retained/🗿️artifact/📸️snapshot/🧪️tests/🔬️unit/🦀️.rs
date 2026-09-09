@@ -3,8 +3,6 @@ mod tests {
     use crate::{FlowSnapshot, FlowWorkingScene};
     use std::sync::Arc;
 
-    use super::*;
-
     #[semio_framework_async_macros::async_test]
     async fn flow_store_owners_retire_all_durable_lanes_with_neutral_byte_grants() {
         use semio_framework_plugin::{ArtifactApp, EditorApp, PluginCloseStep};

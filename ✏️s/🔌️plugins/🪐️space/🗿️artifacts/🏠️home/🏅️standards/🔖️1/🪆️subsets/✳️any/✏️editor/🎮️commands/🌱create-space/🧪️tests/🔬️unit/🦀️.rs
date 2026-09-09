@@ -11,7 +11,7 @@ async fn empty_name_opens_the_dialog_instead_of_relaying() {
     let doc_snapshot = SHomeSnapshot::default();
     let doc = view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&CreateSpace { name: String::new(), kind: "atelier".into(), visibility: "private".into() }, &doc, &cfg).expect("handle");
     assert!(matches!(emit.effects.as_slice(), [Effect::OpenDialog { dialog_id, args: None, .. }] if dialog_id == "createSpace"), "empty name must open the dialog, not relay: {:?}", emit.effects);
 }
@@ -22,7 +22,7 @@ async fn valid_name_emits_the_replay_shell_command_with_the_right_action_id_and_
     let doc_snapshot = SHomeSnapshot::default();
     let doc = view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&CreateSpace { name: "Atelier".into(), kind: "atelier".into(), visibility: "private".into() }, &doc, &cfg).expect("handle");
     let (action_id, args) = emit
         .effects
@@ -45,7 +45,7 @@ async fn blank_kind_and_visibility_default_to_atelier_and_private() {
     let doc_snapshot = SHomeSnapshot::default();
     let doc = view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&CreateSpace { name: "Studio".into(), kind: String::new(), visibility: String::new() }, &doc, &cfg).expect("handle");
     let args = emit
         .effects

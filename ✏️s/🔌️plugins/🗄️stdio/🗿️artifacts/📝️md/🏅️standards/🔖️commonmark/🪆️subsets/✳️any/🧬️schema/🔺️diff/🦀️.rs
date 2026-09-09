@@ -11,9 +11,9 @@
 
 use crate::schema::snapshot::{MdBlock, MdInline};
 use crate::MdSnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.md`.
@@ -1354,13 +1354,9 @@ pub(crate) fn enc_block_diff(d: &MdBlockDiff) -> String {
             format!("Q[{},{}]", encode_option(level, |v| v.to_string()), encode_option(inlines, |v| enc_inline_list(v)))
         }
         MdBlockDiff::Paragraph { inlines } => format!("R[{}]", encode_option(inlines, |v| enc_inline_list(v))),
-        MdBlockDiff::List { ordered, start, tight, items } => format!(
-            "S[{},{},{},{}]",
-            encode_option(ordered, |v| enc_bool(*v).to_string()),
-            encode_option(start, |v| encode_option(v, |x| x.to_string())),
-            encode_option(tight, |v| enc_bool(*v).to_string()),
-            encode_option(items, enc_list_items_diff),
-        ),
+        MdBlockDiff::List { ordered, start, tight, items } => {
+            format!("S[{},{},{},{}]", encode_option(ordered, |v| enc_bool(*v).to_string()), encode_option(start, |v| encode_option(v, |x| x.to_string())), encode_option(tight, |v| enc_bool(*v).to_string()), encode_option(items, enc_list_items_diff),)
+        }
         MdBlockDiff::CodeBlock { info, literal } => format!("T[{},{}]", encode_option(info, |v| encode_option(v, |x| enc_str(x))), encode_option(literal, |v| enc_str(v)),),
         MdBlockDiff::BlockQuote { blocks } => format!("U[{}]", encode_option(blocks, enc_blocks_diff)),
         MdBlockDiff::ThematicBreak => "V[]".to_string(),

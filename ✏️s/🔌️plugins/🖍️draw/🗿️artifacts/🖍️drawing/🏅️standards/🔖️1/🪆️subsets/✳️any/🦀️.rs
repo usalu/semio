@@ -3,10 +3,10 @@
 //! `✏️editor`/`📚️examples` children — `crate::editor::drawing`/`crate::viewer::drawing` stay mounted at
 //! the plugin's top-level `editor`/`viewer` modules (recipe §5 gotcha 1), not here.
 
-use crate::standards::v1::subsets::any::{io, schema};
-use crate::DRAWING_DIALECT;
 use crate::editor::drawing as editor;
+use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::drawing as viewer;
+use crate::DRAWING_DIALECT;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;

@@ -12,10 +12,10 @@
 //! frame -- `animation` carries no pixel/palette data at all (see the deserializer's own doc
 //! comment), so this never fabricates image content, only real, honest frame TIMING.
 
-use semio_s_artifact_stdio_gif::schema::snapshot::GifFrame;
-use semio_s_artifact_stdio_gif::GifSnapshot;
 use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_gif::schema::snapshot::GifFrame;
+use semio_s_artifact_stdio_gif::GifSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") };

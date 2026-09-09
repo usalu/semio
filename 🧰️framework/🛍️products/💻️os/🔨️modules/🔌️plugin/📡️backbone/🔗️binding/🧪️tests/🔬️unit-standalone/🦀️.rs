@@ -27,6 +27,11 @@ fn document_backbone_op_binary_is_exact_canonical_and_bounded() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_backbone_binding_reducer_preserves_generation_and_live_owner() {
+    let zero_wire = DocumentBackboneBindingWireV1 { schema: DOCUMENT_BACKBONE_BINDING_SCHEMA_V1.into(), operation: "bind".into(), instance_id: 0, binding_generation: 1, uri: "actor://v1:0:3:space-amap".into() };
+    let zero_payload = store::pack_rt::encode_wire_value(&zero_wire.to_value());
+    let zero = decode_document_backbone_binding_command_v1(&zero_payload).expect("canonical instance zero command decodes").expect("binding command recognized");
+    assert_eq!(zero.instance_id, 0);
+    assert_eq!(DocumentBackboneBindingReceiptV1::bound(&zero).instance_id, 0);
     let uri = "actor://v1:7:3:space-amap";
     let (port, owner) = store::ActorBackboneChannelOwner::pair(uri);
     let message = BackboneMessage::Ack { op_ids: Vec::new() }.encode_op().expect("hot backbone acknowledgment encodes");

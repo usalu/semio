@@ -36,33 +36,6 @@ impl WriterDiff {
             if let Some(document) = &self.document {
                 next.document = document.clone();
             }
-            if let Some(selection) = &self.editor_selection {
-                next.editor_selection = selection.clone();
-            }
-            if let Some(settings) = &self.editor_settings {
-                next.editor_settings = settings.clone();
-            }
-            if let Some(value) = self.format_signal {
-                next.format_signal = value;
-            }
-            if let Some(value) = self.lint_signal {
-                next.lint_signal = value;
-            }
-            if let Some(value) = self.revision {
-                next.revision = value;
-            }
-            if let Some(value) = &self.engagement_input {
-                next.engagement_input = value.clone();
-            }
-            if let Some(value) = self.camera_x {
-                next.camera_x = value;
-            }
-            if let Some(value) = self.camera_y {
-                next.camera_y = value;
-            }
-            if let Some(value) = self.camera_zoom {
-                next.camera_zoom = value;
-            }
             next
         })
     }
@@ -112,33 +85,6 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
         }
         if other.document.is_some() {
             self.document = other.document;
-        }
-        if other.editor_selection.is_some() {
-            self.editor_selection = other.editor_selection;
-        }
-        if other.editor_settings.is_some() {
-            self.editor_settings = other.editor_settings;
-        }
-        if other.format_signal.is_some() {
-            self.format_signal = other.format_signal;
-        }
-        if other.lint_signal.is_some() {
-            self.lint_signal = other.lint_signal;
-        }
-        if other.revision.is_some() {
-            self.revision = other.revision;
-        }
-        if other.engagement_input.is_some() {
-            self.engagement_input = other.engagement_input;
-        }
-        if other.camera_x.is_some() {
-            self.camera_x = other.camera_x;
-        }
-        if other.camera_y.is_some() {
-            self.camera_y = other.camera_y;
-        }
-        if other.camera_zoom.is_some() {
-            self.camera_zoom = other.camera_zoom;
         }
     }
 }

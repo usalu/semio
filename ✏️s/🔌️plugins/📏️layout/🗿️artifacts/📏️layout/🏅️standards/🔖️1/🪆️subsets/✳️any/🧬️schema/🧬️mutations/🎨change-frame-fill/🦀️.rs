@@ -1,10 +1,9 @@
 //! 🎨 `change-frame-fill` — sets a `Frame::Rect`'s `fill` color (`None` clears it). A no-op on
 //! non-rect frames, matching the pre-migration `PatchFrame`'s `fill` handling.
 
-
-use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -35,7 +34,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameFill {
 }
 //#endregion 🎨ChangeFrameFill
 
-
 //#region 🎨ChangeFrameFill
 pub fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
@@ -61,7 +59,6 @@ pub fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) 
     })
 }
 //#endregion 🎨ChangeFrameFill
-
 
 //#region 🎨ChangeFrameFill
 pub fn inverse_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

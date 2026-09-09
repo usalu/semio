@@ -10,13 +10,7 @@ message ProcedureArtifact {
   ProcedurePath path = 2;
   // @state artifact
   map<string, string> seed = 3;
-  // @state presence
-  repeated string selected_step_ids = 4;
   // @state config
-  // @state config
-  string contributions_json = 6;
-  // @state transient
-  string run_output_json = 7;
 }
 
 message ProcedurePath {

@@ -15,7 +15,6 @@
     "worldCameraPosition",
     "worldCameraTarget",
     "worldCameraFov",
-    "activeUtilityId",
     "paintUtility"
   ],
   "properties": {
@@ -91,10 +90,6 @@
     },
     "worldCameraFov": {
       "type": "number",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "paintUtility": {

@@ -1,8 +1,8 @@
 //! 📚️ 📚️ FEM 3D app commands command — `set-active-example`.
 
+use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::Fem3dSnapshot;
-use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -24,7 +24,8 @@ pub struct SetActiveExample {
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem3d::reset_document_effect`
 /// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-    let document = if payload.example_id == crate::examples::demo::ID { <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).unwrap_or_default() } else { Fem3dSnapshot::default() };
+    let document =
+        if payload.example_id == crate::examples::demo::ID { <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).unwrap_or_default() } else { Fem3dSnapshot::default() };
     eprintln!("[DEBUG] fem3d setActiveExample id={} nodes={} elements={} solids={}", payload.example_id, document.nodes.len(), document.elements.len(), document.solids.len());
     let defaults = Fem3dConfig::default();
     Ok(Emit {

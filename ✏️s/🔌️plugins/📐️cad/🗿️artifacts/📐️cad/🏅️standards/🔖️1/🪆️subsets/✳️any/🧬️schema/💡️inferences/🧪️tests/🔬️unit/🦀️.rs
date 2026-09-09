@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{empty_cad_snapshot, testkit::sample_model_child};
 use protocol::Inference;

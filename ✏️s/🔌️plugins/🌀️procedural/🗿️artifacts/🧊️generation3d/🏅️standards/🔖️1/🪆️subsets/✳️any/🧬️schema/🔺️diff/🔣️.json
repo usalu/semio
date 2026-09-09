@@ -17,68 +17,6 @@
     "generation": {
       "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/GenerationPlayState",
       "x-semio-state": "artifact"
-    },
-    "selectedNodeIds": {
-      "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/Generation3dStringList",
-      "x-semio-state": "presence"
-    },
-    "lodMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "showMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "hoveredNodeId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "graphCamera": {
-      "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/CameraJson",
-      "x-semio-state": "config"
-    },
-    "previewCamera": {
-      "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/Generation3dPreviewCamera",
-      "x-semio-state": "config"
-    },
-    "sunJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "selectedGenerationId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "presence"
-    },
-    "generationPreviewText": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {
@@ -88,14 +26,7 @@
       "additionalProperties": false,
       "required": [
         "fixture",
-        "generation",
-        "selectedNodeIds",
-        "lodMode",
-        "showMode",
-        "selectionMethod",
-        "graphCamera",
-        "previewCamera",
-        "sunJson"
+        "generation"
       ],
       "properties": {
         "fixture": {
@@ -103,40 +34,6 @@
         },
         "generation": {
           "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/GenerationPlayState"
-        },
-        "selectedNodeIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "lodMode": {
-          "type": "string"
-        },
-        "showMode": {
-          "type": "string"
-        },
-        "selectionMethod": {
-          "type": "string"
-        },
-        "hoveredNodeId": {
-          "type": "string"
-        },
-        "graphCamera": {
-          "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/CameraJson"
-        },
-        "previewCamera": {
-          "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/Generation3dPreviewCamera"
-        },
-        "sunJson": {
-          "type": "string",
-          "contentMediaType": "application/json"
-        },
-        "selectedGenerationId": {
-          "type": "string"
-        },
-        "generationPreviewText": {
-          "type": "string"
         }
       }
     }

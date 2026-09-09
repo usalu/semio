@@ -1,11 +1,11 @@
 //! 🖱️ 🖱️ Drawing play app commands command — `canvas-pointer-move`.
 
-use crate::op::DrawingMutation;
-use crate::DrawingSnapshot;
 use crate::editor::drawing::commands::canvas_pointer_down::{canvas_point_to_world, drawing_gesture, DrawingSession, DRAWING_MARQUEE_THRESHOLD_PX};
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use crate::op::DrawingMutation;
+use crate::DrawingSnapshot;
 use dsl::{FromValue, ToValue};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "canvas-pointer-move")]

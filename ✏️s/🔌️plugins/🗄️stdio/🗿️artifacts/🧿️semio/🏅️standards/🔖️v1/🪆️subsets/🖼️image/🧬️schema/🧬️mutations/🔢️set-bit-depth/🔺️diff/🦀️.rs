@@ -1,8 +1,8 @@
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::set_bit_depth;
 use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
-use crate::standards::v1::subsets::image::schema::mutations::set_bit_depth;
 
 /// 🔺️ Diff helper for set-bit-depth — a root-scoped singleton field; `bit_depth` already equal to
 /// `base.bit_depth` is `mutation.no-op` (Warning, empty diff). No `mutation.invariant` check: `0`

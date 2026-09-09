@@ -1,8 +1,7 @@
-
 use super::*;
 use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere, make_torus};
-use crate::standards::v1::subsets::brep::schema::snapshot::topology::EntityCounts;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::EntityCounts;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn counts(body: &Body) -> EntityCounts {

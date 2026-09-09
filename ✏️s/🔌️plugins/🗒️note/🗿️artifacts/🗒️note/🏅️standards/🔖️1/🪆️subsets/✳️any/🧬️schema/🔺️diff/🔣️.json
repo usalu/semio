@@ -131,44 +131,6 @@
     "assets": {
       "$ref": "#/$defs/NoteAssetsDelta",
       "x-semio-state": "artifact"
-    },
-    "selectedBlockIds": {
-      "$ref": "#/$defs/NoteStringList",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "cameraX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "cameraZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "hoveredBlockId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {

@@ -16,10 +16,6 @@
 //! body-key → node, `🔖️Io`/`🔌️Registration` regions below, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
-use crate::mutations::create_tile::CreateTile;
-use crate::op::PresentationMutation;
-use crate::standards::v1::subsets::any::schema::build_tile_morph_prompt;
-use crate::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use crate::editor::animate::commands::{
     add_tile, canvas_pointer_down, clear_tiles, copy_prompt, delete_selection, delete_tile, engagement_input, engagement_submit, export_video_from_deck, no_operation, patch_tile_crops, rename_tiles, reset_grid, seed_grid, set_active_example,
     set_frame, set_source,
@@ -29,15 +25,19 @@ use crate::editor::animate::modes::main;
 use crate::editor::animate::modes::main::windows::tile_editor;
 use crate::editor::animate::panels::{artifact, catalogue, inspection};
 use crate::editor::animate::terminology::animate_presentation_labels;
+use crate::mutations::create_tile::CreateTile;
+use crate::op::PresentationMutation;
+use crate::standards::v1::subsets::any::schema::build_tile_morph_prompt;
+use crate::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
 // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
 // `.workflow(...)` on this builder (see `🔖️Manifest` below for what got dropped, not silently).
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
-    ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Effect, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
+    ActionArgDef, ActionArgOption, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,
+    ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Effect, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaError,
+    MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
 };
 use std::collections::HashSet;
 use store::EngineHandles;
@@ -107,10 +107,7 @@ pub struct PresentationDispatchCtx {
 /// 🕹️ JSON-encodes `ids` as the `Vec<InteractionTarget>` string the framework's `interactionSelect`
 /// action requires in its `targets` arg — every hit id shares the domain's one granularity.
 fn interaction_targets_json(ids: &[String]) -> String {
-    let targets = ids
-        .iter()
-        .map(|id| dsl::os_pack::json::object([("granularity".to_string(), dsl::os_pack::json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)), ("id".to_string(), dsl::os_pack::json::Value::from(id.clone()))]))
-        .collect();
+    let targets = ids.iter().map(|id| dsl::os_pack::json::object([("granularity".to_string(), dsl::os_pack::json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)), ("id".to_string(), dsl::os_pack::json::Value::from(id.clone()))])).collect();
     dsl::os_pack::json::to_string(&dsl::os_pack::json::Value::Array(targets))
 }
 
@@ -298,7 +295,7 @@ fn animate_presentation_retained_reduce(
     operation: &AppOperationContext,
 ) -> Result<Emit<PresentationMutation, PresentationConfigMutation, NoDraftMutation>, Fault> {
     let document = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let config = ConfigView { snapshot: config };
+    let config = ConfigView { snapshot: config, window: None };
     let mut context = PresentationDispatchCtx { selected_ids: Vec::new() };
     match command {
         PresentationCommand::SetActiveExample(payload) if payload.example_id.len() <= ANIMATE_PRESENTATION_RETAINED_RAW_BYTES => set_active_example::handle(payload, &document, &config, &mut context),
@@ -322,10 +319,18 @@ impl ToolJobFactory for AnimatePresentationRetainedCommandJobFactory {
     type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<AnimatePresentationPlayApp>>;
     type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<AnimatePresentationPlayApp>>;
 
-    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
-    fn payload_schema_id(&self) -> &str { ANIMATE_PRESENTATION_RETAINED_PAYLOAD_SCHEMA }
-    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { animate_presentation_retained_contract() }
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        ANIMATE_PRESENTATION_RETAINED_PAYLOAD_SCHEMA
+    }
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        animate_presentation_retained_contract()
+    }
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
         Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
     }
@@ -374,25 +379,46 @@ struct AnimatePresentationConfigPreparation {
 fn animate_presentation_config_edit(forward: PresentationConfigMutation, inverse: PresentationConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<PresentationConfigMutation> {
     let id = format!("animate-presentation-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
     protocol::Edit {
-        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse: vec![inverse],
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse: vec![inverse],
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
         }],
-        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
     }
 }
 
-struct AnimatePresentationConfigByteCounter { bytes: usize }
+struct AnimatePresentationConfigByteCounter {
+    bytes: usize,
+}
 
 impl std::io::Write for AnimatePresentationConfigByteCounter {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-        if self.bytes.saturating_add(bytes.len()) > ANIMATE_PRESENTATION_CONFIG_STEP_BYTES { return Err(std::io::Error::from(std::io::ErrorKind::InvalidData)); }
+        if self.bytes.saturating_add(bytes.len()) > ANIMATE_PRESENTATION_CONFIG_STEP_BYTES {
+            return Err(std::io::Error::from(std::io::ErrorKind::InvalidData));
+        }
         self.bytes += bytes.len();
         Ok(bytes.len())
     }
-    fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
 }
 
 fn animate_presentation_config_edit_bytes(edit: &protocol::Edit<PresentationConfigMutation>) -> Result<usize, String> {
@@ -413,28 +439,53 @@ impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, Presentat
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 3, retained_bytes: ANIMATE_PRESENTATION_CONFIG_STEP_BYTES })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation>> {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation>> {
         let mutation_bytes = match &request.mutation {
             PresentationConfigMutation::SetEngagementInput(payload) => payload.value.len(),
         };
-        if request.lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+        if request.lane != store::HistoryLane::Document
+            || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES
+            || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES)
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
             return Err(request);
         }
         Ok(Box::new(AnimatePresentationConfigPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            candidate: None,
+            sealed_candidate: None,
+            serialized_bytes: None,
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
         }))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || grant.maximum_bytes < ANIMATE_PRESENTATION_CONFIG_STEP_BYTES || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if !grant.permits_one() || grant.maximum_bytes < ANIMATE_PRESENTATION_CONFIG_STEP_BYTES || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
         if self.candidate.is_none() && self.sealed_candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "Animate Presentation config preparation lost its exact base root".to_string())?.get();
             let base_bytes = base.engagement_input.len();
-            if base_bytes > ANIMATE_PRESENTATION_CONFIG_BASE_BYTES { return Err("Animate Presentation config base exceeds retained byte capacity".into()); }
+            if base_bytes > ANIMATE_PRESENTATION_CONFIG_BASE_BYTES {
+                return Err("Animate Presentation config base exceeds retained byte capacity".into());
+            }
             let mutation = self.mutation.take().ok_or_else(|| "Animate Presentation config preparation lost its mutation owner".to_string())?;
             let mut post = base.clone();
             let inverse = match &mutation {
@@ -470,28 +521,50 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<PresentationConfig, PresentationConfigMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<PresentationConfig, PresentationConfigMutation>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<PresentationConfig, PresentationConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<PresentationConfig, PresentationConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-        if (self.prepared.is_some() || self.sealed_candidate.is_some() || self.candidate.is_some() || self.mutation.is_some() || self.description.is_some()) && grant.maximum_bytes < ANIMATE_PRESENTATION_CONFIG_STEP_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
-        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: ANIMATE_PRESENTATION_CONFIG_STEP_BYTES }); }
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if (self.prepared.is_some() || self.sealed_candidate.is_some() || self.candidate.is_some() || self.mutation.is_some() || self.description.is_some()) && grant.maximum_bytes < ANIMATE_PRESENTATION_CONFIG_STEP_BYTES {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: ANIMATE_PRESENTATION_CONFIG_STEP_BYTES });
+        }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("Animate Presentation config preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() {
+                return Err("Animate Presentation config preparation could not return its exact base root".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
             let bytes = authority.actor().len();
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.authority = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         Ok(store::SnapshotRetirementStep::Complete)
     }
-    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none() }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none()
+    }
 }
 //#endregion 📬️ConfigStorePreparation
 
@@ -559,7 +632,17 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: None,
+                operation: operation_context,
+                completion: request.completion,
+            },
             PresentationCommand::command_id,
             ANIMATE_PRESENTATION_RETAINED_RAW_BYTES,
             ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS,
@@ -615,7 +698,8 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         command: &PresentationCommand,
         doc: &ArtifactView<'_, PresentationSnapshot>,
         cfg: &ConfigView<'_, PresentationConfig>,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<PresentationMutation, PresentationConfigMutation, Self::DraftMutation>, Fault> {
@@ -629,9 +713,8 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// `config.selected_ids` are gone from `inspection::render`; the client renders the tile-selected
     /// canvas highlight itself from the framework's own interaction state now (matches `🖍️draw`'s
     /// canvas render, same reason).
-    fn render(body_key: &str, doc: &ArtifactView<'_, PresentationSnapshot>, cfg: &ConfigView<'_, PresentationConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         let deck = doc.snapshot;
-        let config = cfg.snapshot;
         let labels = animate_presentation_labels(view_state);
         (match body_key {
             PRESENTATION_PLAY_BODY_MAIN => tile_editor::render(deck),
@@ -639,7 +722,8 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             PRESENTATION_PLAY_BODY_CATALOGUE => catalogue::render(deck, labels),
             PRESENTATION_PLAY_BODY_DETAILS => inspection::render(deck, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
-        }).map(semio_framework_plugin::built_to_component_tree)
+        })
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️AnimatePresentationPlayApp
@@ -669,18 +753,18 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .mutation("patchTileCrops", LocalizedLabel::native("Patch Tile Crops", "Kachelzuschnitte aktualisieren"))
             .mutation("setSource", LocalizedLabel::native("Set Source", "Quelle festlegen"))
             .mutation("setFrame", LocalizedLabel::native("Set Frame", "Rahmen festlegen"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .mutation("clearTiles", LocalizedLabel::native("Clear Tiles", "Kacheln leeren"))
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             // 🐚️ Host side-effect — exports the generated tile-morph prompt to the user (no document mutation).
-            .shell_action("copyPrompt", LocalizedLabel::native("Copy Prompt", "Prompt kopieren"))
-            .shell_action("exportVideoFromDeck", LocalizedLabel::native("Export Video From Deck", "Video aus Deck exportieren"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("copyPrompt", LocalizedLabel::native("Copy Prompt", "Prompt kopieren"), ActionKind::Shell, "copy"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("exportVideoFromDeck", LocalizedLabel::native("Export Video From Deck", "Video aus Deck exportieren"), ActionKind::Shell, "download"))
             // 👁️ Ephemeral view state — engagement draft, locale. Selection/hover are framework-owned
             // now (see `.interaction(...)` below): interactionSelect/interactionHover/clearSelection/
             // selectAll/setSelectionMode/setInteractionGranularity auto-inject, never declared here
             // (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-            .view_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"))
-            .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
             .view_action("noMutation", LocalizedLabel::native("No Operation", "Keine Aktion"))
             // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
             .action_args("seedGrid", vec![

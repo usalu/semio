@@ -14,8 +14,6 @@ message Generation3dConfig {
   // @state config
   optional string selected_generation_id = 6;
   // @state config
-  optional string generation_preview_text = 7;
-  // @state config
   optional string preview_eval_text = 10;
 }
 message CameraJson {

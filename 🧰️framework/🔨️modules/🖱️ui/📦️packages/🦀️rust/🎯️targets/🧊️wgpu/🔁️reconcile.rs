@@ -40,6 +40,7 @@ use ui_contract::UiDocumentNodePage;
 
 //#region 📄️DocumentPageReconcile
 impl UiDocumentTree {
+    #[expect(clippy::result_large_err, reason = "Fixed-capacity node admission returns the exact rejected node or page without allocating on refusal.")]
     pub fn try_push_page(&mut self, page: UiDocumentNodePage, expected_index: usize) -> Result<(), UiDocumentPageRejection> {
         let generation = page.generation();
         let revision = page.revision();
@@ -179,7 +180,7 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
         activate: None,
         drop_action: tree_node.drop_action.clone(),
         drop_overlay: None,
-        children: section.items.iter().map(|item| tree_item_row(tree_node, item)).collect(),
+        children: section.items.iter().map(tree_item_row).collect(),
         menu: None,
     })
 }
@@ -196,7 +197,7 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
 /// MECHANISM W3a: `hover_action`/`unhover_action` are deleted — hover is now framework-owned per
 /// `UiTreeNode.interaction_domain`, never a per-item action.
 #[cfg(any(test, feature = "testkit"))]
-fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
+fn tree_item_row(item: &UiTreeItemNode) -> UiNode {
     let mut children: Vec<UiNode> = Vec::new();
     if let Some(control) = &item.control {
         children.push(ui_control_to_node(control.clone()));
@@ -208,7 +209,7 @@ fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
         children.push(tree_item_action_row(action));
     }
     for nested in item.items.iter().flatten() {
-        children.push(tree_item_row(tree_node, nested));
+        children.push(tree_item_row(nested));
     }
     UiNode::Stack(UiStackNode {
         direction: "vertical".into(),
@@ -231,7 +232,7 @@ fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
 /// fixed action set, matching every other id-less synthesized/leaf child in this module.
 #[cfg(any(test, feature = "testkit"))]
 fn tree_item_action_row(action: &UiTreeItemAction) -> UiNode {
-    UiNode::Button(UiButtonNode { id: None, icon_id: action.icon_id.clone(), label: action.label.clone().unwrap_or_else(|| Label::data("")), action: action.action.clone(), style: None, presence: UiPresence::default(), menu: None })
+    UiNode::Button(UiButtonNode { id: None, icon_id: action.icon_id, label: action.label.clone().unwrap_or_else(|| Label::data("")), action: action.action.clone(), style: None, presence: UiPresence::default(), menu: None })
 }
 //#endregion 🔖️CompositeExpansion
 

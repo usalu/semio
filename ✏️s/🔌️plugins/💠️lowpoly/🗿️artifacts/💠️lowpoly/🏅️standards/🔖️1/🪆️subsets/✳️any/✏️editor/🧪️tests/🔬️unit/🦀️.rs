@@ -1,14 +1,26 @@
-
 use super::*;
-use crate::editor::lowpoly::testkit::{LowpolyApp, app, app_with_registry};
-use semio_framework_plugin::{EditorApp, PluginApp, testkit};
+use crate::editor::lowpoly::testkit::{app, app_with_registry, LowpolyApp};
+use semio_framework_plugin::{testkit, EditorApp, PluginApp};
 
 fn retained_operation() -> AppOperationContext {
     AppOperationContext { app_instance_id: 7, parent_document_id: "lowpoly-retained-test".into(), operation_id: 11, generation: 13, canonical_base_revision: [17; 32] }
 }
 
 fn retained_context(transient: LowpolyTransient, transient_generation: u64) -> std::sync::Arc<ArtifactOwnedToolJobContext<EditorApp<LowpolyPlayApp>>> {
-    std::sync::Arc::new(ArtifactOwnedToolJobContext::new(7, None, [17; 32], 0, transient_generation, std::sync::Arc::new(semio_framework_plugin::ChildContentView::EMPTY), std::sync::Arc::new(NoDraft::default()), std::sync::Arc::new(transient)))
+    std::sync::Arc::new(ArtifactOwnedToolJobContext::new(
+        7,
+        None,
+        [17; 32],
+        0,
+        transient_generation,
+        semio_framework_plugin::app::ArtifactOwnedToolJobSnapshots {
+            children: std::sync::Arc::new(semio_framework_plugin::ChildContentView::EMPTY),
+            draft: std::sync::Arc::new(NoDraft::default()),
+            transient: std::sync::Arc::new(transient),
+            window_config: None,
+            window_transient: None,
+        },
+    ))
 }
 
 #[test]
@@ -95,26 +107,22 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     ));
     let drifted = AppOperationContext { generation: operation.generation + 1, ..operation.clone() };
     let mut rejected = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
-    assert!(
-        rejected
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted })
-            .is_err()
-    );
+    assert!(rejected
+        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted })
+        .is_err());
     let drifted_context = retained_context(LowpolyTransient::default(), 20);
-    assert!(
-        rejected
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-                command: &command,
-                snapshot: &snapshot,
-                config: &config,
-                history: &history,
-                interaction: &interaction,
-                hover: &hover,
-                context: Some(&drifted_context),
-                operation: &operation
-            })
-            .is_err()
-    );
+    assert!(rejected
+        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
+            command: &command,
+            snapshot: &snapshot,
+            config: &config,
+            history: &history,
+            interaction: &interaction,
+            hover: &hover,
+            context: Some(&drifted_context),
+            operation: &operation
+        })
+        .is_err());
     assert!(matches!(
         rejected
             .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {

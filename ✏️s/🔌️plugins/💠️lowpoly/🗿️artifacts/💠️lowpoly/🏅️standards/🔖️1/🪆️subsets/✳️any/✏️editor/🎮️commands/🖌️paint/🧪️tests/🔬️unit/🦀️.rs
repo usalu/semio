@@ -1,7 +1,6 @@
-
-use crate::editor::lowpoly::LowpolyCommand;
 use crate::editor::lowpoly::testkit::{app, dispatch};
-use semio_framework_plugin::{PluginApp, testkit};
+use crate::editor::lowpoly::LowpolyCommand;
+use semio_framework_plugin::{testkit, PluginApp};
 
 #[semio_framework_async_macros::async_test]
 async fn add_paint_layer_emits_operation() {

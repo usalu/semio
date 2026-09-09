@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::wfc_engine::bitset::PatternSet;
 use crate::wfc_engine::ids::RelationId;

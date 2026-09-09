@@ -1,9 +1,0 @@
-type EquationCamera {
-  x: Float!
-  y: Float!
-  zoom: Float!
-}
-
-type EquationConfig {
-  camera: EquationCamera! @state(class: CONFIG)
-}

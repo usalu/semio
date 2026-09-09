@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.framework.io;
+message ArtifactDialect { string artifact_kind = 1; string standard = 2; string subset = 3; }
+message ArtifactRef { string artifact_id = 1; ArtifactDialect dialect = 2; }

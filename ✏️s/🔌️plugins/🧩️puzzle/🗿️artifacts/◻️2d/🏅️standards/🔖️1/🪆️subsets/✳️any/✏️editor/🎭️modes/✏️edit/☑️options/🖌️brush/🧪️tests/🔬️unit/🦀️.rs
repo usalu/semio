@@ -1,5 +1,4 @@
 use super::*;
-use crate::editor::puzzle2d::config::Puzzle2dConfig;
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::default_empty_fixture;
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
@@ -10,7 +9,7 @@ use crate::editor::puzzle2d::testkit::*;
 
 #[test]
 fn brush_params_are_tagged_utility_options_not_engagement_controls() {
-    let labels = puzzle2d_labels(&Puzzle2dConfig::default()).expect("default puzzle2d locale and terminology axes are explicit");
+    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::default());
     let host = puzzle_board_host();
     let group_tag = |measures: &[WindowMeasure], id: &str| {
         measures.iter().find_map(|measure| match measure {

@@ -5,8 +5,8 @@ fn row(name: &str, payload: Value) -> BoardEventRow {
     BoardEventRow { name: name.to_string(), payload }
 }
 
-fn typed_kind(name: &str) -> puzzle::editor::puzzle2d::engine::BoardEventKind {
-    use puzzle::editor::puzzle2d::engine::BoardEventKind;
+fn typed_kind(name: &str) -> infinite_canvas::BoardEventKind {
+    use infinite_canvas::BoardEventKind;
     match name {
         "camera" => BoardEventKind::Camera,
         "nodeMove" => BoardEventKind::NodeMove,
@@ -25,11 +25,11 @@ fn typed_kind(name: &str) -> puzzle::editor::puzzle2d::engine::BoardEventKind {
 }
 
 fn typed_coalesce(rows: &[BoardEventRow]) -> CoalescedBoardEvents {
-    let mut queue = puzzle::editor::puzzle2d::engine::BoardEventQueue::default();
+    let mut queue = infinite_canvas::BoardEventQueue::default();
     for row in rows {
         let payload = serde_json::to_string(&row.payload).unwrap();
         let key = (row.name == "nodeMove").then(|| row.payload.get("id").and_then(Value::as_str)).flatten();
-        queue.push(puzzle::editor::puzzle2d::engine::BoardOwnedEvent::from_payload(typed_kind(&row.name), &payload, key).unwrap()).unwrap();
+        queue.push(infinite_canvas::BoardOwnedEvent::from_payload(typed_kind(&row.name), &payload, key).unwrap()).unwrap();
     }
     coalesce_owned_board_events(&queue).unwrap()
 }

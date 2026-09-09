@@ -1,6 +1,5 @@
 //! ⚙️ `change-fy-mpa` — sets the En 1994 steel yield strength f_y [MPa] scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

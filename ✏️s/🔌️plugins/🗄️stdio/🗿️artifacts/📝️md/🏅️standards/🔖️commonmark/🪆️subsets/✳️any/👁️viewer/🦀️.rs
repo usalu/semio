@@ -6,9 +6,9 @@
 
 use crate::standards::v_commonmark::subsets::any::schema::mutations::MdMutation;
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
-use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
 use crate::viewer::md::modes::view;
 use crate::viewer::md::modes::view::windows::main;
+use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

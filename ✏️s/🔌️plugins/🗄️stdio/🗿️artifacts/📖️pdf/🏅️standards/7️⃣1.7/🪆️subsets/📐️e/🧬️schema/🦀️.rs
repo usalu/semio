@@ -202,15 +202,9 @@ pub mod derived_analysis {
                 continue;
             }
             let direct = d.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref()).is_some_and(|r| descriptor_has_embedded_file(objects, r));
-            let via_descendants = d
-                .iter()
-                .find(|e| e.key == "DescendantFonts")
-                .and_then(|e| e.value.as_array())
-                .is_some_and(|arr| {
-                    arr.iter().any(|item| {
-                        resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).is_some_and(|r| descriptor_has_embedded_file(objects, r))
-                    })
-                });
+            let via_descendants = d.iter().find(|e| e.key == "DescendantFonts").and_then(|e| e.value.as_array()).is_some_and(|arr| {
+                arr.iter().any(|item| resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).is_some_and(|r| descriptor_has_embedded_file(objects, r)))
+            });
             if !direct && !via_descendants {
                 out.push(o.id);
             }

@@ -7,7 +7,6 @@ type En1990Artifact {
   consequenceClass: Int! @state(class: ARTIFACT)
   annex: String! @state(class: ARTIFACT)
   seismicAEdKn: Float! @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type En1990QkEntry {

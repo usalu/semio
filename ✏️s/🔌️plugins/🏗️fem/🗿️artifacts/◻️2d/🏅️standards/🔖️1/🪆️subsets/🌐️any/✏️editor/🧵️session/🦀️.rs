@@ -1,15 +1,15 @@
 //! 🧵️ Mounted Fem2d revision job: fixed session arena, retained worker step and live visual lease.
 
 use crate::analyses::{AnalysisModel, AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, FemJobGraph, FemJobStage, FemStagePlan};
-use crate::{Fem2dSnapshot, FemElement, FemLoad};
 use crate::editor::fem2d::modes::edit::windows::model::{Fem2dLiveVisual, Fem2dMountedVisualLease, Fem2dVisualFreshness, Fem2dVisualJob, FemVisualState, RegionVisualQuality};
 use crate::mesh::{MeshJob, MeshOpts, PlanarDomain, TriMesh2};
 use crate::model::Element;
 use crate::sparse::{PcgJob, PcgJobConstruction};
+use crate::{Fem2dSnapshot, FemElement, FemLoad};
 use semio_framework::kernel::{Effect, JobPlacement};
 #[cfg(test)]
 use semio_framework_job::CommitValidation;
-use semio_framework_job::{ InteractiveJob, Operation, OperationId, RetainedJobPayload, StepBudget, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, Operation, OperationId, RetainedJobPayload, StepBudget, StepContext, StepOutcome};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
 use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
 use std::cell::RefCell;

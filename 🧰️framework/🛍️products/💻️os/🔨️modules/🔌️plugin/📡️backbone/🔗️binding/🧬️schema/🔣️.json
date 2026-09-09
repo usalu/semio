@@ -9,7 +9,7 @@
     },
     "InstanceId": {
       "type": "integer",
-      "minimum": 1,
+      "minimum": 0,
       "maximum": 4294967295
     },
     "Uri": {
@@ -133,8 +133,8 @@
         },
         "hostile": {
           "type": "array",
-          "minItems": 8,
-          "maxItems": 8,
+          "minItems": 7,
+          "maxItems": 7,
           "items": {
             "type": "object",
             "additionalProperties": false,

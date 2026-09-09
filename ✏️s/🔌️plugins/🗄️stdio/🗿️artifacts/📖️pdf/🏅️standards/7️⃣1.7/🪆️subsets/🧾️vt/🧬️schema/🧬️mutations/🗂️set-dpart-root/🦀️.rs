@@ -2,9 +2,9 @@
 
 use super::remove_dpart_root::RemoveDpartRoot;
 use super::PdfVtMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
 #[cfg(test)]
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 

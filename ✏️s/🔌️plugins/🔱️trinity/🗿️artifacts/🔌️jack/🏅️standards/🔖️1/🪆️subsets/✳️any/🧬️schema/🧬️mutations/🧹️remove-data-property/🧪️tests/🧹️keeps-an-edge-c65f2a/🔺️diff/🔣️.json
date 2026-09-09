@@ -5,9 +5,5 @@
   "manifest": null,
   "camera": null,
   "content": null,
-  "rootNodeId": null,
-  "jackQuery": null,
-  "lodModeByWindow": null,
-  "viewportCamera": null,
-  "editorSelection": null
+  "rootNodeId": null
 }

@@ -2,11 +2,11 @@
 //! node reaches for. Deliberately ONE block for the whole app (never split per window/panel): the
 //! macro's value is that every locale×terminology combination is compile-checked in one place.
 
-use semio_framework_plugin::{AppLabels, Locale, Terminology};
+use semio_framework_plugin::Locale;
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
-    /// 🗣️ Complete UI label set for the animate presentation tile-play app; one field per label makes every locale×terminology combination compile-checked. `PresentationConfig` carries no terminology axis, so `reuse_*` mirrors `native_*` throughout.
+    /// 🗣️ Complete UI label set for the animate presentation tile-play app; one field per label makes every locale×terminology combination compile-checked.
     pub struct AnimatePresentationLabels {
         tiles_section: native_en "Tiles", native_de "Kacheln", reuse_en "Tiles", reuse_de "Kacheln";
         no_tiles: native_en "(no tiles — seed a grid)", native_de "(keine Kacheln — Raster erzeugen)", reuse_en "(no tiles — seed a grid)", reuse_de "(keine Kacheln — Raster erzeugen)";
@@ -28,8 +28,7 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-/// unknown/absent locales fall back to native English. `PresentationConfig` carries no terminology axis,
-/// so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
+/// 🗣️ Returns the locale from the shared OS-owned view context.
 pub fn animate_presentation_locale(view_state: &semio_framework_plugin::ViewModel) -> Locale {
     view_state.locale
 }

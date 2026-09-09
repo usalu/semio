@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::playbook::PLAYBOOK_PLAY_BODY_BUILDER as BODY_BUILDER;
 use crate::editor::playbook::testkit::playbook_app;
+use crate::editor::playbook::PLAYBOOK_PLAY_BODY_BUILDER as BODY_BUILDER;
 use semio_framework_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]

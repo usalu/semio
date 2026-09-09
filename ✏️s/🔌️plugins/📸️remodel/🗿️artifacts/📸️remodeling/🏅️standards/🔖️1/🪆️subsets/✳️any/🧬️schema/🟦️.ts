@@ -40,33 +40,6 @@ import {
 export * from "./📸️snapshot/🟦️.ts";
 
 //#region 🔖️UiHelpers
-/** 🎥️ Artifact-owned orbit camera (mirror of app config camera). */
-export interface RemodelingUiCamera {
-  position: Vec3;
-  target: Vec3;
-  fov: number;
-}
-
-/** 🖱️ Artifact-owned selection (mirror of app config selection). */
-export interface RemodelingUiSelection {
-  mode: string;
-  ids: string[];
-}
-
-/** 👁️ Artifact-owned layer visibility (mirror of app config layers). */
-export interface RemodelingUiLayers {
-  mesh: boolean;
-  dense: boolean;
-  sparse: boolean;
-  cameras: boolean;
-  gcps: boolean;
-}
-
-/** 🎞️ Artifact-owned frame cursor (mirror of app config frame cursor). */
-export interface RemodelingUiFrameCursor {
-  streamId: string | null;
-  frameIndex: number;
-}
 //#endregion 🔖️UiHelpers
 
 //#region 🔖️Artifact
@@ -92,18 +65,6 @@ export interface RemodelingArtifact {
   job: ReconstructionJob;
   /** @state artifact */
   results: ReconstructionResults;
-  /** @state presence */
-  selection: RemodelingUiSelection;
-  /** @state presence */
-  /** @state presence */
-  reportTable: string;
-  /** @state presence */
-  frameCursor: RemodelingUiFrameCursor;
-  /** @state config */
-  camera: RemodelingUiCamera;
-  /** @state config */
-  layers: RemodelingUiLayers;
-  /** @state config */
 }
 //#endregion 🔖️Artifact
 
@@ -119,30 +80,6 @@ const map = (of: ValueSpec): ValueSpec => ({ k: "map", of });
 const rec = (of: () => RecordSpec): ValueSpec => ({ k: "rec", of });
 const tuple3 = { k: "tuple", len: 3, w: 64 } as const;
 
-export const REMODELING_UI_CAMERA_SPEC: RecordSpec = {
-  title: "RemodelingUiCamera",
-  serdeDefault: true,
-  fields: [f("position", tuple3, () => [4, -4, 3]), f("target", tuple3, () => [0, 0, 0]), f("fov", f64, () => 45)],
-};
-
-export const REMODELING_UI_SELECTION_SPEC: RecordSpec = {
-  title: "RemodelingUiSelection",
-  serdeDefault: true,
-  fields: [f("mode", text, () => ""), f("ids", list(text), () => [])],
-};
-
-export const REMODELING_UI_LAYERS_SPEC: RecordSpec = {
-  title: "RemodelingUiLayers",
-  serdeDefault: true,
-  fields: [f("mesh", bool, () => true), f("dense", bool, () => true), f("sparse", bool, () => true), f("cameras", bool, () => true), f("gcps", bool, () => true)],
-};
-
-export const REMODELING_UI_FRAME_CURSOR_SPEC: RecordSpec = {
-  title: "RemodelingUiFrameCursor",
-  serdeDefault: true,
-  fields: [f("stream_id", opt(text), () => null), f("frame_index", uint, () => 0)],
-};
-
 export const REMODELING_ARTIFACT_SPEC: RecordSpec = {
   title: "RemodelingArtifact",
   serdeDefault: false,
@@ -157,11 +94,6 @@ export const REMODELING_ARTIFACT_SPEC: RecordSpec = {
     f("gcps", list(rec(() => GROUND_CONTROL_POINT_SPEC)), () => []),
     f("job", rec(() => RECONSTRUCTION_JOB_SPEC), () => defaultsOf(RECONSTRUCTION_JOB_SPEC)),
     f("results", rec(() => RECONSTRUCTION_RESULTS_SPEC), () => defaultsOf(RECONSTRUCTION_RESULTS_SPEC)),
-    f("selection", rec(() => REMODELING_UI_SELECTION_SPEC), () => defaultsOf(REMODELING_UI_SELECTION_SPEC)),
-    f("report_table", text, () => "frames"),
-    f("frame_cursor", rec(() => REMODELING_UI_FRAME_CURSOR_SPEC), () => defaultsOf(REMODELING_UI_FRAME_CURSOR_SPEC)),
-    f("camera", rec(() => REMODELING_UI_CAMERA_SPEC), () => defaultsOf(REMODELING_UI_CAMERA_SPEC)),
-    f("layers", rec(() => REMODELING_UI_LAYERS_SPEC), () => defaultsOf(REMODELING_UI_LAYERS_SPEC)),
     f("locale", text, () => "en-US"),
   ],
 };
@@ -250,11 +182,6 @@ export function parseRemodelingArtifact(value: unknown, at = "$"): RemodelingArt
     gcps: remodelRemodelingArtifactGuardArray(row["gcps"], `${at}.gcps`).map((item, index) => parseGroundControlPoint(item, `${at}.gcps[${index}]`)),
     job: parseReconstructionJob(row["job"], `${at}.job`),
     results: parseReconstructionResults(row["results"], `${at}.results`),
-    selection: parseRemodelingUiSelection(row["selection"], `${at}.selection`),
-    reportTable: remodelRemodelingArtifactGuardString(row["reportTable"], `${at}.reportTable`),
-    frameCursor: parseRemodelingUiFrameCursor(row["frameCursor"], `${at}.frameCursor`),
-    camera: parseRemodelingUiCamera(row["camera"], `${at}.camera`),
-    layers: parseRemodelingUiLayers(row["layers"], `${at}.layers`),
   };
 }
 
@@ -593,34 +520,6 @@ export function parseRemodelingMeshChild(value: unknown, at = "$"): RemodelingMe
   return {
     childId: remodelRemodelingArtifactGuardString(row["childId"], `${at}.childId`),
     target: parseArtifactRef(row["target"], `${at}.target`),
-  };
-}
-
-export function parseRemodelingUiCamera(value: unknown, at = "$"): RemodelingUiCamera {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    position: remodelRemodelingArtifactGuardArray(row["position"], `${at}.position`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.position[${index}]`)),
-    target: remodelRemodelingArtifactGuardArray(row["target"], `${at}.target`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.target[${index}]`)),
-    fov: remodelRemodelingArtifactGuardNumber(row["fov"], `${at}.fov`),
-  };
-}
-
-export function parseRemodelingUiLayers(value: unknown, at = "$"): RemodelingUiLayers {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    mesh: remodelRemodelingArtifactGuardBoolean(row["mesh"], `${at}.mesh`),
-    dense: remodelRemodelingArtifactGuardBoolean(row["dense"], `${at}.dense`),
-    sparse: remodelRemodelingArtifactGuardBoolean(row["sparse"], `${at}.sparse`),
-    cameras: remodelRemodelingArtifactGuardBoolean(row["cameras"], `${at}.cameras`),
-    gcps: remodelRemodelingArtifactGuardBoolean(row["gcps"], `${at}.gcps`),
-  };
-}
-
-export function parseRemodelingUiSelection(value: unknown, at = "$"): RemodelingUiSelection {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    mode: remodelRemodelingArtifactGuardString(row["mode"], `${at}.mode`),
-    ids: remodelRemodelingArtifactGuardArray(row["ids"], `${at}.ids`).map((item, index) => remodelRemodelingArtifactGuardString(item, `${at}.ids[${index}]`)),
   };
 }
 

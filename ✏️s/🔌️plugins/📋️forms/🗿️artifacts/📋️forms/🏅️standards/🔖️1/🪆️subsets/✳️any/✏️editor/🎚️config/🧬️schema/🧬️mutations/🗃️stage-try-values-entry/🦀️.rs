@@ -17,10 +17,18 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for StageTryValues
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "stage", entity: "try-values", kind: "stage-try-values-entry", record: "StageTryValuesEntry" };
     fn diff(&self, base: &FormsConfig) -> protocol::MutationOutcome<FormsConfig> {
         let next = base.clone();
-        if let Err(error) = stage_try_values_batch_entry(&self.staging_id, &self.key, &self.value_staging_id, &self.content_id, self.chunk_count, &base.try_values) { return protocol::MutationOutcome::new(next).absorb_messages([error.message()]); }
+        if let Err(error) = stage_try_values_batch_entry(&self.staging_id, &self.key, &self.value_staging_id, &self.content_id, self.chunk_count, &base.try_values) {
+            return protocol::MutationOutcome::new(next).absorb_messages([error.message()]);
+        }
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, _base: &FormsConfig) -> Vec<FormsConfigMutation> { vec![FormsConfigMutation::DiscardTryValuesBatch(DiscardTryValuesBatch { staging_id: self.staging_id.clone() })] }
-    fn label(&self) -> String { "Stage Try Values Entry".into() }
-    fn target(&self) -> Vec<String> { vec!["try-values".into()] }
+    fn inverse(&self, _base: &FormsConfig) -> Vec<FormsConfigMutation> {
+        vec![FormsConfigMutation::DiscardTryValuesBatch(DiscardTryValuesBatch { staging_id: self.staging_id.clone() })]
+    }
+    fn label(&self) -> String {
+        "Stage Try Values Entry".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["try-values".into()]
+    }
 }

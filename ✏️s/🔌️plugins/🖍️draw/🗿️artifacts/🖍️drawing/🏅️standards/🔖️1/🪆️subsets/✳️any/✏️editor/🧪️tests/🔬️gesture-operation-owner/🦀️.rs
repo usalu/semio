@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_job::InteractiveJob as _;
 
@@ -71,11 +70,11 @@ fn drain(registry: &mut semio_framework_job::FixedOperationRegistry<DrawingGestu
 fn drawing_gesture_maximum_plus_one_returns_the_exact_owner() {
     let mut registry = semio_framework_job::FixedOperationRegistry::<DrawingGestureOperationOwner, 64>::new(64 * DRAWING_GESTURE_RETAINED_BYTES);
     for operation in 0..64 {
-        if registry.admit(key(operation, 0), DrawingGestureOperationOwner::new()).is_err() {
+        if registry.admit(key(operation, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_err() {
             panic!("every distinct fixed slot must admit through the declared maximum");
         }
     }
-    let rejected = match registry.admit(key(64, 0), DrawingGestureOperationOwner::new()) {
+    let rejected = match registry.admit(key(64, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)) {
         Ok(()) => panic!("maximum plus one must return its exact owner"),
         Err(rejected) => rejected,
     };
@@ -92,7 +91,7 @@ fn drawing_gesture_maximum_plus_one_returns_the_exact_owner() {
 #[test]
 fn drawing_gesture_stale_generation_and_aba_are_exact() {
     let mut registry = semio_framework_job::FixedOperationRegistry::<DrawingGestureOperationOwner, 64>::new(DRAWING_GESTURE_RETAINED_BYTES);
-    assert!(registry.admit(key(7, 1), DrawingGestureOperationOwner::new()).is_ok());
+    assert!(registry.admit(key(7, 1), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_ok());
     for _ in 0..64 {
         if registry.cancel_stale_step(semio_framework_job::OperationId(7), semio_framework_job::Generation(2)) {
             break;
@@ -105,7 +104,7 @@ fn drawing_gesture_stale_generation_and_aba_are_exact() {
         let _ = registry.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
     }
     assert!(registry.is_empty());
-    assert!(registry.admit(key(7, 2), DrawingGestureOperationOwner::new()).is_ok(), "the new generation owns the retired slot");
+    assert!(registry.admit(key(7, 2), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_ok(), "the new generation owns the retired slot");
     registry.cancel(key(7, 2));
     for _ in 0..128 {
         if registry.is_empty() {
@@ -118,7 +117,7 @@ fn drawing_gesture_stale_generation_and_aba_are_exact() {
 
 #[test]
 fn drawing_gesture_interrupted_and_repeated_close_is_terminal_empty() {
-    let mut owner = DrawingGestureOperationOwner::new();
+    let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY);
     owner.cancel();
     owner.begin_close();
     assert_eq!(owner.close_step(0, DRAWING_GESTURE_RETAINED_BYTES), semio_framework_job::InteractiveJobCloseStep::Blocked);
@@ -141,7 +140,7 @@ fn drawing_retained_decoder_is_incremental_exact_and_fail_closed() {
 fn drawing_preview_rejects_a_stale_revision_and_cancels_the_owner() {
     let mut owner = DrawingInstanceOperationOwner::new();
     let operation = key(9, 4);
-    assert!(owner.operations.admit(operation, DrawingGestureOperationOwner::new()).is_ok());
+    assert!(owner.operations.admit(operation, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_ok());
     owner.active = Some((operation, [1; 32]));
     assert!(owner.preview_projection([2; 32], "selectDirect").is_none());
     assert!(owner.active.is_none());

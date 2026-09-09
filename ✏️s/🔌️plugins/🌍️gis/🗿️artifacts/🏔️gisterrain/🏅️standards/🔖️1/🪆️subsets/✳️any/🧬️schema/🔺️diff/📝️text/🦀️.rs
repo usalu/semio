@@ -11,7 +11,7 @@ use protocol::MutationDiff;
 
 //#region 🔹Apply
 impl GisTerrainDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> protocol::MutationApplyResult<GisTerrainArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -23,9 +23,6 @@ impl GisTerrainDiff {
             }
             if let Some(value) = &self.imported_features_json {
                 next.imported_features_json = value.clone();
-            }
-            if let Some(value) = &self.camera_json {
-                next.camera_json = value.clone();
             }
             next
         })
@@ -65,7 +62,6 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
         }
         take!(exaggeration);
         take!(imported_features_json);
-        take!(camera_json);
     }
 }
 //#endregion 🔹Apply

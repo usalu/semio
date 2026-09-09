@@ -27,10 +27,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveEncryptionDictionary {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfVtMutation> {
-        support::encryption_dictionary_with(base, self.version, self.revision)
-            .map(|_| PdfVtMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: self.version, revision: self.revision }))
-            .into_iter()
-            .collect()
+        support::encryption_dictionary_with(base, self.version, self.revision).map(|_| PdfVtMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: self.version, revision: self.revision })).into_iter().collect()
     }
 
     fn label(&self) -> String {

@@ -50,5 +50,4 @@ type En1998Artifact {
   wallSoilGammaKnM3: Float! @state(class: ARTIFACT)
   wallR: Float! @state(class: ARTIFACT)
   wallHRdKn: Float! @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }

@@ -560,13 +560,7 @@ pub fn test_implied_independencies<T: CiTest>(
 // #region 🔖️CiTest
 /// 🔬️ A conditional-independence test on tabular data, indexed by table/DAG column.
 pub trait CiTest {
-    fn test(
-        &self,
-        data: &crate::standards::v1::subsets::table::schema::tabular_internals::Table,
-        x: usize,
-        y: usize,
-        z: &[usize],
-    ) -> Result<crate::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError>;
+    fn test(&self, data: &crate::standards::v1::subsets::table::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<crate::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError>;
 }
 
 /// 🔬️ Fisher-z partial-correlation test for continuous data, precomputing the correlation matrix
@@ -587,13 +581,7 @@ impl FisherZ {
 }
 
 impl CiTest for FisherZ {
-    fn test(
-        &self,
-        _data: &crate::standards::v1::subsets::table::schema::tabular_internals::Table,
-        x: usize,
-        y: usize,
-        z: &[usize],
-    ) -> Result<crate::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError> {
+    fn test(&self, _data: &crate::standards::v1::subsets::table::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<crate::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError> {
         Ok(crate::standards::v1::subsets::table::schema::statistics_internals::fisher_z_test(&self.corr, x, y, z, self.n)?)
     }
 }
@@ -602,13 +590,7 @@ impl CiTest for FisherZ {
 pub struct GSquared;
 
 impl CiTest for GSquared {
-    fn test(
-        &self,
-        data: &crate::standards::v1::subsets::table::schema::tabular_internals::Table,
-        x: usize,
-        y: usize,
-        z: &[usize],
-    ) -> Result<crate::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError> {
+    fn test(&self, data: &crate::standards::v1::subsets::table::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<crate::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError> {
         let cat_x = data.categorical(x)?;
         let cat_y = data.categorical(y)?;
         let given_cols: Vec<&crate::standards::v1::subsets::table::schema::tabular_internals::CategoricalColumn> = z.iter().map(|&zi| data.categorical(zi)).collect::<Result<_, _>>()?;

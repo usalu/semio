@@ -101,11 +101,11 @@ pub fn fem2d_identity_report_json(dsl_text: &str) -> Result<String, String> {
     let packed = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <Fem2dSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
     let report = dsl::DslValue::object([
-    ("parsed".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&parsed))),
-    ("reparsed".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&reparsed))),
-    ("packDecoded".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&unpacked))),
-    ("canonicalText".to_string(), dsl::ToValue::to_value(&canonical)),
-    ("canonicalTextAgain".to_string(), dsl::ToValue::to_value(&canonical_again)),
+        ("parsed".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&parsed))),
+        ("reparsed".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&reparsed))),
+        ("packDecoded".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&unpacked))),
+        ("canonicalText".to_string(), dsl::ToValue::to_value(&canonical)),
+        ("canonicalTextAgain".to_string(), dsl::ToValue::to_value(&canonical_again)),
     ]);
     Ok(dsl::json::to_json_string(&report))
 }

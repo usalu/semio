@@ -1,11 +1,11 @@
 //! 📋️ Imperative play app — the main window: a table of the document's top-level steps plus, once `run`
 //! has been dispatched, the resulting scope.
 
-use crate::{ProcedureSnapshot, Step};
 use crate::editor::procedure::terminology::ImperativeLabels;
+use crate::{ProcedureSnapshot, Step};
+use dsl::os_pack::json::Value;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
-use dsl::os_pack::json::Value;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_WINDOW_MAIN: &str = "imperative-main";

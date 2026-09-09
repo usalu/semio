@@ -53,7 +53,11 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(messages.len(), 1, "delete-load-case/dead-in-combos-e73167: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-referenced", "delete-load-case/dead-in-combos-e73167: the refusal is reported as mutation.target-referenced");
     assert_eq!(messages[0].level, protocol::Severity::Error, "delete-load-case/dead-in-combos-e73167: a live referrer is an Error, the same level a missed target raises — the request is answerable, just not now");
-    assert_eq!(messages[0].target, vec!["dead".to_string(), "uls_str".to_string(), "sls_char".to_string(), "sls_qp_spare".to_string()], "delete-load-case/dead-in-combos-e73167: the diagnostic addresses exactly \"dead\", \"uls_str\", \"sls_char\", \"sls_qp_spare\"");
+    assert_eq!(
+        messages[0].target,
+        vec!["dead".to_string(), "uls_str".to_string(), "sls_char".to_string(), "sls_qp_spare".to_string()],
+        "delete-load-case/dead-in-combos-e73167: the diagnostic addresses exactly \"dead\", \"uls_str\", \"sls_char\", \"sls_qp_spare\""
+    );
 }
 
 /// ↩️ The inverse is computed from `before` and the mutation payload alone, never from the verdict,
@@ -95,5 +99,9 @@ fn committed_json_is_canonical() {
 #[test]
 fn semantics_bind_the_declared_kind() {
     let semantics = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "load-case", "delete-load-case", "DeletedLoadCase"), "delete-load-case/dead-in-combos-e73167: the fixture must be bound to delete-load-case's own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("delete", "load-case", "delete-load-case", "DeletedLoadCase"),
+        "delete-load-case/dead-in-combos-e73167: the fixture must be bound to delete-load-case's own descriptor"
+    );
 }

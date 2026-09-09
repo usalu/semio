@@ -13,7 +13,7 @@
   "snowAltitudeM": null,
   "enSKKnM2": null,
   "windZone": null,
-  "enVBMS": 30.0,
+  "enVBMS": 30,
   "deltaTK": null,
   "constructionActivity": null,
   "accidentalMassT": null,
@@ -31,6 +31,5 @@
   "siloMu": null,
   "siloK": null,
   "cS": null,
-  "cD": null,
-  "selectedCheckIndex": null
+  "cD": null
 }

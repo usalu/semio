@@ -6,10 +6,10 @@
 //! 8-byte buffer and nothing else. The per-frame diff sets `rgba8` and leaves `delay_ms` at `None`
 //! — the mirror image of `set-frame-delay`.
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::set_frame_pixels;
 use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-use crate::standards::v1::subsets::image::schema::mutations::set_frame_pixels;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/

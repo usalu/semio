@@ -1,2 +1,2 @@
-import { runArtifactRustPackageMain } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/📜️script.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-framework-artifact-infinite-dag");

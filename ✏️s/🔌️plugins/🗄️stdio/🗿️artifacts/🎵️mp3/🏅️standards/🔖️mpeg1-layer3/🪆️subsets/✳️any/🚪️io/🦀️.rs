@@ -46,9 +46,8 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<Mp3Snapshot, crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(
-            crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA,
-        )).expect("static Stdio registration must be available and conflict-free");
+        store::register_document_codec(store::ArtifactCodec::of::<Mp3Snapshot, crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA))
+            .expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
 

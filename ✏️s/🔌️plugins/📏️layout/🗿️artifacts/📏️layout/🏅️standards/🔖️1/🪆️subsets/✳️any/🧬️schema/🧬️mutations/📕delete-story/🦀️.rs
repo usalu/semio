@@ -1,9 +1,8 @@
 //! 🗑️ `delete-story` — removes a {@link TextStory} by id; inverse recreates it via `create-story`.
 
-
-use crate::{LayoutDiff, LayoutSnapshot};
-use crate::mutations::{LayoutMutation, create_story};
+use crate::mutations::{create_story, LayoutMutation};
 use crate::standards::v1::subsets::any::schema::diff::LayoutStoriesDelta;
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -32,7 +31,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteStory {
 }
 //#endregion 🗑️DeleteStory
 
-
 //#region 🗑️DeleteStory
 pub fn diff_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if !base.stories.iter().any(|story| story.id == payload.id) {
@@ -41,7 +39,6 @@ pub fn diff_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> protoc
     protocol::MutationOutcome::new(LayoutDiff { stories: Some(LayoutStoriesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🗑️DeleteStory
-
 
 //#region 🗑️DeleteStory
 pub fn inverse_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

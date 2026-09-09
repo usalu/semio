@@ -19,7 +19,6 @@ pub type ParametricEdge = (EdgeId, bool, Option<Curve2Id>, (f64, f64));
 /// 🚶 Ordered vertices and oriented edges around a loop.
 pub type LoopWalk = (Vec<VertexId>, Vec<(EdgeId, bool)>);
 
-
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};

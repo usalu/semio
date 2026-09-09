@@ -4,7 +4,7 @@ use crate::En1998Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full EN 1998 artifact state (persisted document + shared UI).
+/// 🧬️ EN 1998 document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -109,8 +109,6 @@ pub struct En1998Artifact {
     pub wall_r: f64,
     #[state(artifact)]
     pub wall_h_rd_kn: f64,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -233,7 +231,6 @@ impl En1998Artifact {
             wall_soil_gamma_kn_m3: snapshot.wall_soil_gamma_kn_m3,
             wall_r: snapshot.wall_r,
             wall_h_rd_kn: snapshot.wall_h_rd_kn,
-            selected_check_index: None,
         }
     }
 
@@ -295,13 +292,7 @@ impl En1998Artifact {
 pub fn en1998_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1998",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

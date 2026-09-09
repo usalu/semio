@@ -113,7 +113,11 @@ pub mod derived_analysis {
     pub fn check_pdf_a_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         if snapshot.first_page_text().trim().is_empty() {
-            out.push(soft(CODE_TEXT_EMPTY, "page 1 shows no extractable text -- read off the first page of the document's page tree, the page ISO 19005-1's readable-content axis is checked on here; a very weak signal, but a real one given PageDoc has no other checkable field".into()));
+            out.push(soft(
+                CODE_TEXT_EMPTY,
+                "page 1 shows no extractable text -- read off the first page of the document's page tree, the page ISO 19005-1's readable-content axis is checked on here; a very weak signal, but a real one given PageDoc has no other checkable field"
+                    .into(),
+            ));
         }
         out.push(soft(
             CODE_SCHEMA_GAP,

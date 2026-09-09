@@ -50,6 +50,7 @@ pub fn dispatch(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, windo
             | "copy"
             | "cut"
             | "paste"
+            | "setActiveUtility"
             | "interactionSelect"
             | "interactionHover"
             | "clearSelection"

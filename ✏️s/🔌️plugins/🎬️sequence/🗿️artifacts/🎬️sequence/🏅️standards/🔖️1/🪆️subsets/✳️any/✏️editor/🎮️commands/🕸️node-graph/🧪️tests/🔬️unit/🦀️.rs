@@ -1,7 +1,6 @@
-
-use crate::SequenceCamera;
-use crate::editor::sequence::SequenceCommand;
 use crate::editor::sequence::testkit::{dispatch, new_app, new_app_with_registry_wired, select_steps};
+use crate::editor::sequence::SequenceCommand;
+use crate::SequenceCamera;
 use semio_framework_plugin::{PluginApp, ViewModel};
 
 use super::set_viewport::SetViewport;

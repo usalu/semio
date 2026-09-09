@@ -143,27 +143,5 @@ message ProgramArtifact {
   repeated TraceLink traces = 69;
   // @state artifact
   Governance governance = 70;
-  // @state presence
-  repeated string selected_ids = 71;
-  // @state presence
-  string active_register = 72;
-  // @state presence
-  optional AdjacencyKind adjacency_kind_filter = 73;
-  // @state presence
-  string active_report_json = 74;
-  // @state config
-  string search_query = 75;
-  // @state config
-  string search_history_json = 76;
-  // @state config
-  string last_result_json = 77;
-  // @state config
-  string last_analysis_json = 78;
-  // @state config
-  double graph_camera_x = 79;
-  // @state config
-  double graph_camera_y = 80;
-  // @state config
-  double graph_camera_zoom = 81;
 }
 

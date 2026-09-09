@@ -65,23 +65,23 @@ use crate::XmlSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Mutations
+#[path = "📜declare-doctype/🦀️.rs"]
+pub mod declare_doctype;
+#[path = "🏷️declare-entity/🦀️.rs"]
+pub mod declare_entity;
+#[path = "🌳rename-document-element/🦀️.rs"]
+pub mod rename_document_element;
+#[path = "🔗set-external-subset/🦀️.rs"]
+pub mod set_external_subset;
+#[path = "📚set-internal-subset/🦀️.rs"]
+pub mod set_internal_subset;
 /// 📐️ Typed content mutation for `stdio.xml` 1.0/✳️valid. The snapshot type is the `✳️any` subset's
 /// own `XmlSnapshot` verbatim; only the vocabulary is this subset's.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "📜declare-doctype/🦀️.rs"]
-pub mod declare_doctype;
-#[path = "🌳rename-document-element/🦀️.rs"]
-pub mod rename_document_element;
-#[path = "🔗set-external-subset/🦀️.rs"]
-pub mod set_external_subset;
 #[path = "🏳️set-standalone/🦀️.rs"]
 pub mod set_standalone;
-#[path = "🏷️declare-entity/🦀️.rs"]
-pub mod declare_entity;
-#[path = "📚set-internal-subset/🦀️.rs"]
-pub mod set_internal_subset;
 #[path = "✍️set-text/🦀️.rs"]
 pub mod set_text;
 //#endregion 🔖️Leaves

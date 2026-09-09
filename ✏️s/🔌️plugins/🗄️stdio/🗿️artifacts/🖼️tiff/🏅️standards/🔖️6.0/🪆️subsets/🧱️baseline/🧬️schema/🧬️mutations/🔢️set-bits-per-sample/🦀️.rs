@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetBitsPerSample {
-        pub(crate) bits: Vec<u16>,
-    }
+    pub(crate) bits: Vec<u16>,
+}
 
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetBitsPerSample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "bits-per-sample", kind: "set-bits-per-sample", record: "SetBitsPerSample" };

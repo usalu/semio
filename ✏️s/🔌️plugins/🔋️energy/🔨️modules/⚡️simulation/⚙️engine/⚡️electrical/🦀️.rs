@@ -1,8 +1,8 @@
 //! ⚡️ Electrical systems: loads, PV, wind, generators, inverters, batteries, transformers, grid.
 
 use crate::units::deg_to_rad;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️EndUse
 /// 💡️ Generic electrical end-use load.

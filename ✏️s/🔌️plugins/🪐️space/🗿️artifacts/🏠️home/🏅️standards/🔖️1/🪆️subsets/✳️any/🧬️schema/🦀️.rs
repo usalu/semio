@@ -12,15 +12,13 @@ pub struct SHomeArtifact {
     pub schema: String,
     #[state(artifact)]
     pub catalog_generation: u64,
-    #[state(config)]
-    pub active_panel_tab: String,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for SHomeArtifact {
     fn default() -> Self {
-        Self { schema: crate::S_HOME_DOCUMENT_SCHEMA.into(), catalog_generation: 0, active_panel_tab: String::new() }
+        Self { schema: crate::S_HOME_DOCUMENT_SCHEMA.into(), catalog_generation: 0 }
     }
 }
 
@@ -30,7 +28,7 @@ impl SHomeArtifact {
         crate::SHomeSnapshot { schema: self.schema.clone(), catalog_generation: self.catalog_generation }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::SHomeSnapshot) -> Self {
         Self { schema: snapshot.schema, catalog_generation: snapshot.catalog_generation, ..Self::default() }
     }

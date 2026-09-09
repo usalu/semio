@@ -1,9 +1,8 @@
 //! 🐷 `change-wall-soil-gamma-kn-m3` payload — changes the En1998 document's `wall_soil_gamma_kn_m3` (wall backfill unit weight [kN/m3]).
 
-
-use crate::En1998Snapshot;
 use crate::diff::En1998Diff;
 use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 //#region 🔖️ChangeWallSoilGammaKnM3
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::flow::terminology::flow_play_labels;
 use crate::schema::FLOW_DEFAULT_PROXIMITY_DISTANCE;

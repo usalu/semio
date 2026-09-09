@@ -28,6 +28,10 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
+#[path = "🪪️session-authority-v1/🦀️.rs"]
+pub mod session_authority;
+pub use session_authority::{DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, DirectorySessionAuthorityV1, DirectorySessionKindV1};
+
 #[path = "🌱️space-artifact-creation-v1/🦀️.rs"]
 pub mod space_artifact_creation;
 
@@ -38,7 +42,7 @@ pub use document_index::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
 #[path = "🌐️browser-actor/🦀️.rs"]
 pub mod browser_actor;
 pub use browser_actor::{
-    DocumentBrowserActorByteLengthV1, DocumentBrowserActorErrorV1, DocumentBrowserActorSourceV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1, DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES,
+    DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DocumentBrowserActorByteLengthV1, DocumentBrowserActorErrorV1, DocumentBrowserActorSourceV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1,
 };
 
 /// 🔐️ Domain prefix for the one canonical descriptor digest encoding.
@@ -371,7 +375,7 @@ pub enum DirectoryCommand {
     RemoveMember { space_id: String, user_id: String },
     CreateInvite { space_id: String, role: DirectorySpaceRole, ttl_secs: u64 },
     RevokeInvite { space_id: String, invite_id: String },
-    AnnounceDocument { descriptor: DocumentDescriptor },
+    AnnounceDocument { descriptor: Box<DocumentDescriptor> },
 }
 //#endregion 🔖️Command
 
@@ -2021,6 +2025,10 @@ pub enum GisMapInferenceProposalStateV1 {
     Cancelled,
 }
 
+fn valid_gis_map_inference_hex(value: &str, length: usize) -> bool {
+    value.len() == length && value.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+}
+
 /// 🧾 The closed receipt one accepted submit returns.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -2029,10 +2037,21 @@ pub struct GisMapInferenceJobReceiptV1 {
     pub job_id: String,
     pub state: GisMapInferenceJobStateV1,
     pub proposal_state: GisMapInferenceProposalStateV1,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(required)]
     pub proposal_hash: Option<String>,
     pub cursor: u64,
     pub expires_at_ms: u64,
+}
+
+impl GisMapInferenceJobReceiptV1 {
+    /// 🛡️ Refuses malformed, substituted, or unbounded Hub receipt coordinates.
+    pub fn validate(&self) -> bool {
+        self.schema == "semio.hub.inference-job-receipt/v1"
+            && valid_gis_map_inference_hex(&self.job_id, 32)
+            && self.proposal_hash.as_deref().is_none_or(|value| valid_gis_map_inference_hex(value, 64))
+            && self.cursor <= GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR
+            && (1..=DOCUMENT_OPEN_MAX_SAFE_INTEGER).contains(&self.expires_at_ms)
+    }
 }
 
 /// 📈 One owner-private progress row.
@@ -2065,13 +2084,65 @@ pub struct GisMapInferenceEventPageV1 {
     pub proposal_state: GisMapInferenceProposalStateV1,
     pub cancel_requested: bool,
     pub stale: bool,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(required)]
     pub proposal_hash: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub preview: Option<GisMapInferencePreviewV1>,
     pub events: Vec<GisMapInferenceEventV1>,
     pub progress: Vec<GisMapInferenceProgressV1>,
     pub next_cursor: u64,
+}
+
+impl GisMapInferenceEventPageV1 {
+    /// 🛡️ Refuses substituted owner coordinates and non-monotone bounded pages.
+    pub fn validate(&self, expected_job_id: &str) -> bool {
+        if self.schema != "semio.hub.inference-job-events/v1"
+            || self.job_id != expected_job_id
+            || !valid_gis_map_inference_hex(&self.job_id, 32)
+            || !self.proposal_hash.as_deref().is_none_or(|value| valid_gis_map_inference_hex(value, 64))
+            || self.events.len() > GIS_MAP_INFERENCE_EVENT_PAGE_MAX_ITEMS
+            || self.progress.len() > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR as usize
+            || self.next_cursor > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR
+        {
+            return false;
+        }
+        let mut ordinal = 0;
+        if self.events.iter().any(|event| {
+            let invalid = event.ordinal <= ordinal || event.ordinal > DOCUMENT_OPEN_MAX_SAFE_INTEGER || event.at_ms == 0 || event.at_ms > DOCUMENT_OPEN_MAX_SAFE_INTEGER;
+            ordinal = event.ordinal;
+            invalid
+        }) {
+            return false;
+        }
+        let mut cursor = 0;
+        let mut completed = 0;
+        if self.progress.iter().any(|progress| {
+            let invalid = progress.cursor <= cursor
+                || progress.cursor > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR
+                || progress.run_epoch > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+                || progress.completed < completed
+                || progress.completed > progress.total
+                || progress.completed > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+                || progress.total == 0
+                || progress.total > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+                || progress.at_ms == 0
+                || progress.at_ms > DOCUMENT_OPEN_MAX_SAFE_INTEGER;
+            cursor = progress.cursor;
+            completed = progress.completed;
+            invalid
+        }) {
+            return false;
+        }
+        self.preview.as_ref().is_none_or(|preview| {
+            preview.validate()
+                && preview.job_id == self.job_id
+                && self.proposal_hash.as_deref() == Some(preview.proposal_hash.as_str())
+                && self.state == GisMapInferenceJobStateV1::Succeeded
+                && self.proposal_state == GisMapInferenceProposalStateV1::Offered
+                && !self.cancel_requested
+                && !self.stale
+        })
+    }
 }
 
 /// 🗺 The bounded Hub-validated geometry an owner may inspect before approving a proposal.
@@ -2085,6 +2156,29 @@ pub struct GisMapInferencePreviewV1 {
     pub ring: [[f64; 2]; 5],
 }
 
+impl GisMapInferencePreviewV1 {
+    /// 🛡️ Refuses any noncanonical rectangular preview or substituted owner.
+    pub fn validate(&self) -> bool {
+        if self.schema != "semio.hub.gis-map-inference-preview/v1"
+            || !valid_gis_map_inference_hex(&self.job_id, 32)
+            || !valid_gis_map_inference_hex(&self.proposal_hash, 64)
+            || self.region_id != format!("inference-{}", self.job_id)
+            || self.ring.iter().flatten().any(|coordinate| !coordinate.is_finite())
+        {
+            return false;
+        }
+        let [lon_min, lat_min] = self.ring[0];
+        let [lon_max, lat_max] = self.ring[2];
+        (-180.0..=180.0).contains(&lon_min)
+            && (-180.0..=180.0).contains(&lon_max)
+            && (-90.0..=90.0).contains(&lat_min)
+            && (-90.0..=90.0).contains(&lat_max)
+            && lon_min <= lon_max
+            && lat_min <= lat_max
+            && self.ring == [[lon_min, lat_min], [lon_max, lat_min], [lon_max, lat_max], [lon_min, lat_max], [lon_min, lat_min]]
+    }
+}
+
 /// ✅ The closed approval outcome; `applied` is true only after a real committed-WAL witness.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -2096,6 +2190,22 @@ pub struct GisMapInferenceApprovalReceiptV1 {
     pub proposal_hash: String,
     pub applied: bool,
     pub undo: GisMapApprovalUndoHandleV1,
+}
+
+impl GisMapInferenceApprovalReceiptV1 {
+    /// 🛡️ Refuses an uncommitted or substituted approval outcome.
+    pub fn validate(&self, expected_job_id: &str, expected_proposal_hash: &str) -> bool {
+        self.schema == "semio.hub.inference-approval-receipt/v1"
+            && self.job_id == expected_job_id
+            && self.proposal_hash == expected_proposal_hash
+            && valid_gis_map_inference_hex(&self.job_id, 32)
+            && valid_gis_map_inference_hex(&self.mutation_id, 32)
+            && valid_gis_map_inference_hex(&self.command_hash, 64)
+            && valid_gis_map_inference_hex(&self.proposal_hash, 64)
+            && self.applied
+            && valid_gis_map_inference_hex(&self.undo.target_id, 32)
+            && self.undo.expected_current.validate()
+    }
 }
 
 /// ↩️ Owner-bound durable undo locator minted only from a committed GIS approval witness.
@@ -2152,18 +2262,31 @@ pub struct GisMapApprovalUndoReceiptV1 {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "kebab-case")]
 pub enum GisMapInferencePortCodeV1 {
+    #[value(rename = "inference.unavailable")]
     Unavailable,
+    #[value(rename = "inference.denied")]
     Denied,
+    #[value(rename = "inference.not-found")]
     NotFound,
+    #[value(rename = "inference.invalid")]
     Invalid,
+    #[value(rename = "inference.bounds")]
     Bounds,
+    #[value(rename = "inference.conflict")]
     Conflict,
+    #[value(rename = "inference.capacity")]
     Capacity,
+    #[value(rename = "inference.expired")]
     Expired,
+    #[value(rename = "inference.cancelled")]
     Cancelled,
+    #[value(rename = "approval.commit-unavailable")]
     CommitUnavailable,
+    #[value(rename = "inference.storage")]
     Storage,
+    #[value(rename = "inference.transport")]
     Transport,
+    #[value(rename = "inference.lease-unverified")]
     LeaseUnverified,
 }
 
@@ -2227,8 +2350,8 @@ impl GisMapInferencePortCodeV1 {
             (Self::CommitUnavailable, DocumentExecutionTargetLocaleV1::De) => "Der freigegebene Vorschlag konnte nicht übernommen werden und wurde nicht angewendet.",
             (Self::Storage, DocumentExecutionTargetLocaleV1::En) => "The proposal service is temporarily unavailable.",
             (Self::Storage, DocumentExecutionTargetLocaleV1::De) => "Der Vorschlagsdienst ist vorübergehend nicht verfügbar.",
-            (Self::Transport, DocumentExecutionTargetLocaleV1::En) => "The outcome is unknown. Reopen the document before retrying.",
-            (Self::Transport, DocumentExecutionTargetLocaleV1::De) => "Das Ergebnis ist unbekannt. Öffnen Sie das Dokument erneut, bevor Sie es wiederholen.",
+            (Self::Transport, DocumentExecutionTargetLocaleV1::En) => "The outcome is unknown. Close retries checking the original request without submitting another.",
+            (Self::Transport, DocumentExecutionTargetLocaleV1::De) => "Das Ergebnis ist unbekannt. Schließen prüft die ursprüngliche Anfrage erneut, ohne eine weitere zu senden.",
             (Self::LeaseUnverified, DocumentExecutionTargetLocaleV1::En) => "This document has no verified execution target, so no proposal can start.",
             (Self::LeaseUnverified, DocumentExecutionTargetLocaleV1::De) => "Dieses Dokument hat kein verifiziertes Ausführungsziel, daher kann kein Vorschlag starten.",
         }
@@ -2246,6 +2369,7 @@ pub enum GisMapInferencePortPhaseV1 {
     Running,
     Offered,
     Approving,
+    Indeterminate,
     Applied,
     Cancelled,
     Stale,
@@ -2260,11 +2384,7 @@ impl GisMapInferencePortPhaseV1 {
 
     /// 🔊 Work in flight announces politely; every terminal asserts.
     pub const fn aria_role(self) -> &'static str {
-        if self.terminal() {
-            "alert"
-        } else {
-            "status"
-        }
+        if self.terminal() { "alert" } else { "status" }
     }
 
     /// 🗣 Explicit English and German text; there is no default language.
@@ -2280,6 +2400,8 @@ impl GisMapInferencePortPhaseV1 {
             (Self::Offered, DocumentExecutionTargetLocaleV1::De) => "Ein Begrenzungsvorschlag liegt zur Prüfung bereit.",
             (Self::Approving, DocumentExecutionTargetLocaleV1::En) => "Waiting for the server to commit the approved proposal…",
             (Self::Approving, DocumentExecutionTargetLocaleV1::De) => "Warten auf die Freigabe des Vorschlags durch den Server…",
+            (Self::Indeterminate, DocumentExecutionTargetLocaleV1::En) => "The outcome is unknown. The original request is retained while its server state is checked.",
+            (Self::Indeterminate, DocumentExecutionTargetLocaleV1::De) => "Das Ergebnis ist unbekannt. Die ursprüngliche Anfrage bleibt erhalten, während ihr Serverstatus geprüft wird.",
             (Self::Applied, DocumentExecutionTargetLocaleV1::En) => "The approved proposal was committed to the document.",
             (Self::Applied, DocumentExecutionTargetLocaleV1::De) => "Der freigegebene Vorschlag wurde im Dokument übernommen.",
             (Self::Cancelled, DocumentExecutionTargetLocaleV1::En) => "The proposal was cancelled.",
@@ -2355,6 +2477,7 @@ pub enum GisMapInferencePortEventV1 {
     Approve,
     Approval(GisMapInferenceApprovalReceiptV1),
     Cancel,
+    Indeterminate(GisMapInferencePortCodeV1),
     Failed(GisMapInferencePortCodeV1),
     Clear,
 }
@@ -2405,12 +2528,13 @@ pub fn reduce_gis_map_inference_port_v1(current: &GisMapInferencePortStatusV1, e
             }
         }
         GisMapInferencePortEventV1::Receipt(receipt) => {
-            if current.phase == GisMapInferencePortPhaseV1::Submitting {
+            if current.phase == GisMapInferencePortPhaseV1::Submitting || (current.phase == GisMapInferencePortPhaseV1::Indeterminate && current.job_id.is_none()) {
                 next.phase = gis_map_inference_server_phase_v1(receipt.state, receipt.proposal_state, false);
                 next.job_id = Some(receipt.job_id.clone());
                 next.cursor = receipt.cursor;
                 next.proposal_hash = receipt.proposal_hash.clone();
                 next.preview = None;
+                next.code = None;
             }
         }
         GisMapInferencePortEventV1::Page(page) => {
@@ -2426,9 +2550,7 @@ pub fn reduce_gis_map_inference_port_v1(current: &GisMapInferencePortStatusV1, e
                 next.proposal_hash = page.proposal_hash.clone();
                 next.preview = if matches!(phase, GisMapInferencePortPhaseV1::Offered | GisMapInferencePortPhaseV1::Approving) { page.preview.clone() } else { None };
                 next.cancel_requested = current.cancel_requested || page.cancel_requested;
-                if phase == GisMapInferencePortPhaseV1::Failed && next.code.is_none() {
-                    next.code = Some(GisMapInferencePortCodeV1::Storage);
-                }
+                next.code = if phase == GisMapInferencePortPhaseV1::Failed { Some(GisMapInferencePortCodeV1::Storage) } else { None };
             }
         }
         GisMapInferencePortEventV1::Approve => {
@@ -2438,9 +2560,13 @@ pub fn reduce_gis_map_inference_port_v1(current: &GisMapInferencePortStatusV1, e
             }
         }
         GisMapInferencePortEventV1::Approval(receipt) => {
-            if current.phase == GisMapInferencePortPhaseV1::Approving && current.job_id.as_deref() == Some(receipt.job_id.as_str()) && current.proposal_hash.as_deref() == Some(receipt.proposal_hash.as_str()) {
+            if matches!(current.phase, GisMapInferencePortPhaseV1::Approving | GisMapInferencePortPhaseV1::Indeterminate)
+                && current.job_id.as_deref() == Some(receipt.job_id.as_str())
+                && current.proposal_hash.as_deref() == Some(receipt.proposal_hash.as_str())
+            {
                 if receipt.applied {
                     next.phase = GisMapInferencePortPhaseV1::Applied;
+                    next.code = None;
                 } else {
                     next.phase = GisMapInferencePortPhaseV1::Failed;
                     next.code = Some(GisMapInferencePortCodeV1::CommitUnavailable);
@@ -2452,6 +2578,11 @@ pub fn reduce_gis_map_inference_port_v1(current: &GisMapInferencePortStatusV1, e
             if current.phase != GisMapInferencePortPhaseV1::Idle {
                 next.cancel_requested = true;
             }
+        }
+        GisMapInferencePortEventV1::Indeterminate(code) => {
+            next.phase = GisMapInferencePortPhaseV1::Indeterminate;
+            next.preview = None;
+            next.code = Some(*code);
         }
         GisMapInferencePortEventV1::Failed(code) => {
             next.phase = if *code == GisMapInferencePortCodeV1::Cancelled { GisMapInferencePortPhaseV1::Cancelled } else { GisMapInferencePortPhaseV1::Failed };

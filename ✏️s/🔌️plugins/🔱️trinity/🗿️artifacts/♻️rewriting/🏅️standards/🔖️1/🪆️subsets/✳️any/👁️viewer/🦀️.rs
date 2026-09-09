@@ -6,9 +6,9 @@
 //! (`policyViewerPurityBreaches`).
 
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
-use crate::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use crate::viewer::rewriting::modes::view;
 use crate::viewer::rewriting::modes::view::windows::rule;
+use crate::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

@@ -19,15 +19,5 @@
       }
     ],
     "selectedGenerationId": "gen-2"
-  },
-  "selectedNodeIds": null,
-  "lodMode": null,
-  "showMode": null,
-  "selectionMethod": null,
-  "hoveredNodeId": null,
-  "graphCamera": null,
-  "previewCamera": null,
-  "sunJson": null,
-  "selectedGenerationId": null,
-  "generationPreviewText": null
+  }
 }

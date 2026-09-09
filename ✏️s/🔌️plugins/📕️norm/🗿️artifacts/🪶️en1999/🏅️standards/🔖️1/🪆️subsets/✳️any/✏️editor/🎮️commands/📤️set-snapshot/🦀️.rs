@@ -8,9 +8,9 @@
 //! payload decomposes into one `change-<field>` mutation per persistent field via
 //! `En1999Mutation::from_snapshot`, bundled into a single atomic edit.
 
+use crate::config::{NormConfig, NormConfigMutation};
 use crate::op::En1999Mutation;
 use crate::En1999Snapshot;
-use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

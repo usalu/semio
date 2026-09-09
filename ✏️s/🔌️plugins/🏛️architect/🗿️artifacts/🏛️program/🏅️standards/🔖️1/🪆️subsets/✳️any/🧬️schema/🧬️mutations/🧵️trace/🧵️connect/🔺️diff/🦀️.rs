@@ -18,10 +18,7 @@ pub fn diff(payload: &ConnectTrace, base: &ProgramSnapshot) -> protocol::Mutatio
                 return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This trace already matches the requested value.").at([existing.id.0.clone()])]);
             }
             let patch = existing.diff_patch(&payload.trace).expect("diff_patch always produces a full patch");
-            protocol::MutationOutcome::new(ProgramDiff {
-                traces: Some(ProgramTracesDelta { patched: vec![crate::diff::ProgramTracesPatchEntry { id: payload.trace.id.0.clone(), patch }], ..Default::default() }),
-                ..Default::default()
-            })
+            protocol::MutationOutcome::new(ProgramDiff { traces: Some(ProgramTracesDelta { patched: vec![crate::diff::ProgramTracesPatchEntry { id: payload.trace.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
         }
         None => protocol::MutationOutcome::new(ProgramDiff { traces: Some(ProgramTracesDelta { added: vec![payload.trace.clone()], ..Default::default() }), ..Default::default() }),
     }

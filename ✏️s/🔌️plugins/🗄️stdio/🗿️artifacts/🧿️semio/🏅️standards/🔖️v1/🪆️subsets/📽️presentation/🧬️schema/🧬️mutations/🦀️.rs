@@ -17,6 +17,30 @@ use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresent
 use protocol::{Mutation, OpBinary, OpText};
 
 //#region 🔖️Mutations
+#[path = "🧩insert-layout/🦀️.rs"]
+pub mod insert_layout;
+#[path = "🎓insert-master/🦀️.rs"]
+pub mod insert_master;
+#[path = "🔷insert-shape/🦀️.rs"]
+pub mod insert_shape;
+#[path = "🎬insert-slide/🦀️.rs"]
+pub mod insert_slide;
+#[path = "🧹️remove-layout/🦀️.rs"]
+pub mod remove_layout;
+#[path = "🚫️remove-master/🦀️.rs"]
+pub mod remove_master;
+#[path = "🔶remove-shape/🦀️.rs"]
+pub mod remove_shape;
+#[path = "📤️remove-slide/🦀️.rs"]
+pub mod remove_slide;
+#[path = "🔧set-layout-master/🦀️.rs"]
+pub mod set_layout_master;
+#[path = "🪟set-shape-frame/🦀️.rs"]
+pub mod set_shape_frame;
+#[path = "🧭set-slide-layout/🦀️.rs"]
+pub mod set_slide_layout;
+#[path = "🧾set-slide-notes/🦀️.rs"]
+pub mod set_slide_notes;
 /// 📐️ Typed content mutation for `stdio.semio.presentation`. Addresses slides by INDEX (`index`,
 /// presentation order), shapes on a slide by `(slide_index, shape_index)` — no recursive path type
 /// needed (unlike docx's nested-table `DocxBlockPath`) since a shape tree here is exactly two
@@ -24,32 +48,8 @@ use protocol::{Mutation, OpBinary, OpText};
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🎬insert-slide/🦀️.rs"]
-pub mod insert_slide;
-#[path = "📤️remove-slide/🦀️.rs"]
-pub mod remove_slide;
-#[path = "🧭set-slide-layout/🦀️.rs"]
-pub mod set_slide_layout;
-#[path = "🧾set-slide-notes/🦀️.rs"]
-pub mod set_slide_notes;
-#[path = "🔷insert-shape/🦀️.rs"]
-pub mod insert_shape;
-#[path = "🔶remove-shape/🦀️.rs"]
-pub mod remove_shape;
-#[path = "🪟set-shape-frame/🦀️.rs"]
-pub mod set_shape_frame;
 #[path = "✍️set-text-box-blocks/🦀️.rs"]
 pub mod set_textbox_blocks;
-#[path = "🎓insert-master/🦀️.rs"]
-pub mod insert_master;
-#[path = "🚫️remove-master/🦀️.rs"]
-pub mod remove_master;
-#[path = "🧩insert-layout/🦀️.rs"]
-pub mod insert_layout;
-#[path = "🧹️remove-layout/🦀️.rs"]
-pub mod remove_layout;
-#[path = "🔧set-layout-master/🦀️.rs"]
-pub mod set_layout_master;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
@@ -235,7 +235,9 @@ fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
         SemioPresentationMutation::InsertShape(insert_shape::InsertShape { slide_index, shape_index, shape }) => format!("insert-shape slide-index={slide_index} shape-index={shape_index} shape={}", enc_shape(shape)),
         SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => format!("remove-shape slide-index={slide_index} shape-index={shape_index}"),
         SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index, shape_index, frame }) => format!("set-shape-frame slide-index={slide_index} shape-index={shape_index} frame={}", enc_frame(frame)),
-        SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, blocks }) => format!("set-textbox-blocks slide-index={slide_index} shape-index={shape_index} blocks={}", enc_list(blocks, enc_block)),
+        SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, blocks }) => {
+            format!("set-textbox-blocks slide-index={slide_index} shape-index={shape_index} blocks={}", enc_list(blocks, enc_block))
+        }
         SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master }) => format!("insert-master master={}", enc_master(master)),
         SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id }) => format!("remove-master id={}", enc_str(id)),
         SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout }) => format!("insert-layout layout={}", enc_layout(layout)),

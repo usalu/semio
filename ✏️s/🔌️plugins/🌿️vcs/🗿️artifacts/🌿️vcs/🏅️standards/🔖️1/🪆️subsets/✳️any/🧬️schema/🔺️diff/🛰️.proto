@@ -18,8 +18,6 @@ message VcsDiff {
   optional string status = 6;
   // @state artifact
   optional VcsTagsDelta tags = 7;
-  // @state presence
-  optional VcsStringList selected_checkpoint_ids = 8;
   // @state config
 }
 
@@ -39,5 +37,4 @@ message VcsArtifact {
   string notes = 4;
   string status = 5;
   repeated string tags = 6;
-  repeated string selected_checkpoint_ids = 7;
 }

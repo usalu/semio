@@ -263,8 +263,8 @@ fn witness(record: Option<&OwnedSchemaRecordCursor>) -> Option<RecordWitness> {
 }
 
 enum Subject {
-    Registered { rejected: ArtifactEnvelopeDecodeRejected<(), ()>, registry: Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>, ticket: ArtifactEnvelopeFieldDecoderTicket },
-    Unadmitted(ArtifactEnvelopeUnadmittedDecodeRejected<(), ()>),
+    Registered { rejected: Box<ArtifactEnvelopeDecodeRejected<(), ()>>, registry: Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>, ticket: ArtifactEnvelopeFieldDecoderTicket },
+    Unadmitted(Box<ArtifactEnvelopeUnadmittedDecodeRejected<(), ()>>),
 }
 
 fn detach_and_close(registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>, expected_ticket: Option<ArtifactEnvelopeFieldDecoderTicket>, expected_field: Option<usize>, failures: &mut Vec<String>) {
@@ -297,7 +297,7 @@ fn detach_and_close(registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>
 impl Subject {
     fn new(registered: bool, record: OwnedSchemaRecordCursor, fields: Box<CountedField>, failures: &mut Vec<String>) -> Option<Self> {
         if !registered {
-            return Some(Self::Unadmitted(ArtifactEnvelopeUnadmittedDecodeRejected::new(record, fields)));
+            return Some(Self::Unadmitted(Box::new(ArtifactEnvelopeUnadmittedDecodeRejected::new(record, fields))));
         }
         let registry = ArtifactEnvelopeFieldDecoderRegistry::new();
         let authority = match ArtifactEnvelopeDecodeAuthority::<(), ()>::try_new(record, &registry, fields) {
@@ -319,7 +319,7 @@ impl Subject {
         let ticket = authority.field_ticket;
         let diagnostic = OwnedSchemaDecodeDiagnostic { code: "test.rejected-page-close", offset: 0, line: 1, column: 1, path: OwnedSchemaPath::ROOT };
         match authority.reject(diagnostic) {
-            Ok(rejected) => Some(Self::Registered { rejected, registry, ticket }),
+            Ok(rejected) => Some(Self::Registered { rejected: Box::new(rejected), registry, ticket }),
             Err(mut authority) => {
                 failures.push("unstarted public reject refused setup".into());
                 let close_bound = authority_close_bound(authority.record.as_ref().map_or(0, |record| record.tokens.pages.page_count()));

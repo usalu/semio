@@ -1,12 +1,12 @@
 //! 🔍️ Note play app panel — the document-wide properties summary (schema, block count, active
 //! utility, snap status).
 
-use crate::schema::flatten_blocks;
-use crate::NoteSnapshot;
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::editor::note::ui_label;
+use crate::schema::flatten_blocks;
+use crate::NoteSnapshot;
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult, PluginAssemblyError, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const NOTE_PLAY_BODY_PROPERTIES: &str = "note.play.properties";
@@ -37,8 +37,15 @@ pub fn render(document: &NoteSnapshot, active_utility_id: &str, labels: &NotePla
         format!("{}: {}", labels.summary_blocks.as_str(), flatten_blocks(&document.blocks).len()),
         format!("{}: {active_utility_id}", labels.summary_utility.as_str()),
         format!("{}: {}", labels.summary_snap.as_str(), if document.snap_enabled.unwrap_or(false) { format!("{}px", document.snap_grid_spacing.unwrap_or(8.0)) } else { labels.summary_off.as_str().into() }),
-    ].into_iter().enumerate() {
-        let child = semio_framework_ui_contract::text(ui_label(value)?).try_id(format!("note-inspector.summary.{index}")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note summary key admission failed"))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note summary text admission failed"))?;
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let child = semio_framework_ui_contract::text(ui_label(value)?)
+            .try_id(format!("note-inspector.summary.{index}"))
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note summary key admission failed"))?
+            .try_build()
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note summary text admission failed"))?;
         section = section.try_child(child).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note inspector child admission failed"))?;
     }
     section.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note inspector node admission failed"))

@@ -47,8 +47,6 @@ export interface En1994Diff {
   nCyclesStud?: number;
   /** @state artifact */
   deltaTauStudMpa?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 
 export interface En1994Artifact {
@@ -74,5 +72,4 @@ export interface En1994Artifact {
   fYMpa: number;
   nCyclesStud: number;
   deltaTauStudMpa: number;
-  selectedCheckIndex?: number | null;
 }

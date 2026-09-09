@@ -46,9 +46,8 @@ pub mod derived_composition {
     pub async fn register() {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor());
         register_artifact_inferences().await;
-        store::register_document_codec(store::ArtifactCodec::of::<Mp4Snapshot, crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(
-            crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA,
-        )).expect("static Stdio registration must be available and conflict-free");
+        store::register_document_codec(store::ArtifactCodec::of::<Mp4Snapshot, crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA))
+            .expect("static Stdio registration must be available and conflict-free");
     }
 
     /// 💡️ Registers `s.stdio.mp4.inference`'s facet leaves into the OS-wide inference
@@ -76,9 +75,7 @@ pub use derived_composition::*;
 // The schema retains named ISO-BMFF concepts and semantic encoded sample payloads only. Native
 // box syntax is parsed at import and deterministically rebuilt at export.
 
-use crate::standards::isobmff::subsets::any::schema::snapshot::{
-    Mp4Bitrate, Mp4Codec, Mp4Color, Mp4Edit, Mp4Ftyp, Mp4Movie, Mp4PixelAspectRatio, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata, Mp4VisualSampleEntry, STDIO_MP4_DOCUMENT_SCHEMA,
-};
+use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Bitrate, Mp4Codec, Mp4Color, Mp4Edit, Mp4Ftyp, Mp4Movie, Mp4PixelAspectRatio, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata, Mp4VisualSampleEntry, STDIO_MP4_DOCUMENT_SCHEMA};
 
 #[path = "📦️boxes/🦀️.rs"]
 pub mod boxes;

@@ -37,6 +37,7 @@ impl PageAllocation for ExactAllocation {
 #[path = "🧪️tests/🔬️counter/🦀️.rs"]
 mod counter_tests;
 
+#[cfg_attr(target_pointer_width = "64", expect(clippy::large_enum_variant, reason = "Each fixed-fanout branch is one admitted metadata allocation; boxing its children would allocate outside that grant."))]
 enum Page<T> {
     Branch([Vec<Page<T>>; FANOUT]),
     Leaf { items: Vec<T>, slots: usize },

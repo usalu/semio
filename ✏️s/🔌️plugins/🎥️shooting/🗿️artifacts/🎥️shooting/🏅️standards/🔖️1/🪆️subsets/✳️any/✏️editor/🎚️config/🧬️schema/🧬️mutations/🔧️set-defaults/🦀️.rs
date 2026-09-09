@@ -21,7 +21,13 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetDefau
         next.default_asset_format = self.asset_format.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> { vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Set Defaults".into() }
-    fn target(&self) -> Vec<String> { vec!["default_shot_format".into(), "default_shot_shape".into(), "default_asset_format".into()] }
+    fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> {
+        vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Defaults".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["default_shot_format".into(), "default_shot_shape".into(), "default_asset_format".into()]
+    }
 }

@@ -2,8 +2,7 @@
 //!
 //! 🧵️ The session lives inside one retained tool job: [`Puzzle2dFillSessionWork`] owns the capture
 //! ingress, the `BoardFillJob` search and the placement-apply cursor for the lifetime of that job,
-//! and publishes exactly one `Emit` (every accepted placement plus the terminal
-//! [`Puzzle2dConfigMutation::Fill`] runtime). There is no process-global session registry, no worker
+//! and publishes exactly one `Emit` with every accepted placement. There is no process-global session registry, no worker
 //! pool and no self-dispatched continuation effect: an `ArtifactApp` is a set of associated fns with
 //! no live instance, so a session keyed by `app_instance_id` in a `static` slot table could never be
 //! reached from a retained work — and a retained work never sees the `ArtifactView` such a key comes
@@ -11,8 +10,9 @@
 //! `Puzzle2dFillRuntime` in `Config` (count, seed, accepted count, lifecycle) plus the placements
 //! already committed to the document, which is exactly what `brushFillSessionStep` resumes from.
 
-use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dFillLifecycle, Puzzle2dFillRuntime, Puzzle2dFillText};
+use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dFillLifecycle, Puzzle2dFillRuntime, Puzzle2dFillText};
 use crate::editor::puzzle2d::modes::edit::tools::fill;
+use crate::editor::puzzle2d::window::{self, Puzzle2dWindowConfig};
 use crate::editor::puzzle2d::Puzzle2dPlayApp;
 use crate::standards::v1::subsets::any::schema::mutations::text::{Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use semio_framework::kernel::UiDirtyScope;
@@ -209,8 +209,8 @@ impl ArtifactFillCaptureCursor {
 }
 
 struct FillPlacementApplyCursor {
-    placement: Option<infinite_canvas::BoardFillPlacement>,
-    handles: [Option<FillPlacementHandleOwner>; infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY],
+    placement: Option<crate::editor::puzzle2d::engine::BoardFillPlacement>,
+    handles: [Option<FillPlacementHandleOwner>; crate::editor::puzzle2d::engine::BOARD_FILL_KIND_HANDLE_CAPACITY],
     handle: Option<FillPlacementHandleOwner>,
     node: Option<FillPlacementNodeOwner>,
     edge: Option<FillPlacementEdgeOwner>,
@@ -221,31 +221,31 @@ struct FillPlacementApplyCursor {
 
 #[derive(Clone, Copy)]
 struct FillPlacementHandleOwner {
-    id: infinite_canvas::BoardFillText,
-    handle_kind: infinite_canvas::BoardFillText,
+    id: crate::editor::puzzle2d::engine::BoardFillText,
+    handle_kind: crate::editor::puzzle2d::engine::BoardFillText,
     angle: f64,
     radius: Option<f64>,
 }
 
 #[derive(Clone, Copy)]
 struct FillPlacementNodeOwner {
-    id: infinite_canvas::BoardFillText,
-    node_kind: infinite_canvas::BoardFillText,
-    shape: infinite_canvas::BoardFillCommitShape,
+    id: crate::editor::puzzle2d::engine::BoardFillText,
+    node_kind: crate::editor::puzzle2d::engine::BoardFillText,
+    shape: crate::editor::puzzle2d::engine::BoardFillCommitShape,
     x: f64,
     y: f64,
     radius: f64,
     width: f64,
     height: f64,
-    icon_kind: Option<infinite_canvas::BoardFillText>,
+    icon_kind: Option<crate::editor::puzzle2d::engine::BoardFillText>,
 }
 
 #[derive(Clone, Copy)]
 struct FillPlacementEdgeOwner {
-    id: infinite_canvas::BoardFillText,
-    source: infinite_canvas::BoardFillText,
-    target: infinite_canvas::BoardFillText,
-    edge_kind: infinite_canvas::BoardFillText,
+    id: crate::editor::puzzle2d::engine::BoardFillText,
+    source: crate::editor::puzzle2d::engine::BoardFillText,
+    target: crate::editor::puzzle2d::engine::BoardFillText,
+    edge_kind: crate::editor::puzzle2d::engine::BoardFillText,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -283,7 +283,7 @@ enum FillPlacementApplyStep {
     Complete,
 }
 
-fn copy_fill_text_one(source: &infinite_canvas::BoardFillText, destination: &mut infinite_canvas::BoardFillText, byte: &mut usize) -> Result<bool, &'static str> {
+fn copy_fill_text_one(source: &crate::editor::puzzle2d::engine::BoardFillText, destination: &mut crate::editor::puzzle2d::engine::BoardFillText, byte: &mut usize) -> Result<bool, &'static str> {
     let source = source.as_str().as_bytes();
     let Some(value) = source.get(*byte).copied() else {
         *byte = 0;
@@ -305,36 +305,36 @@ fn try_document_str(text: &str) -> Result<String, &'static str> {
     Ok(output)
 }
 
-fn try_document_text(text: infinite_canvas::BoardFillText) -> Result<String, &'static str> {
+fn try_document_text(text: crate::editor::puzzle2d::engine::BoardFillText) -> Result<String, &'static str> {
     try_document_str(text.as_str())
 }
 
 #[derive(Clone, Copy)]
 enum FillPlacementPublishHandles<'a> {
-    Commit(&'a [Option<infinite_canvas::BoardFillCommitHandle>; infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY]),
-    Cursor(&'a [Option<FillPlacementHandleOwner>; infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY]),
+    Commit(&'a [Option<crate::editor::puzzle2d::engine::BoardFillCommitHandle>; crate::editor::puzzle2d::engine::BOARD_FILL_KIND_HANDLE_CAPACITY]),
+    Cursor(&'a [Option<FillPlacementHandleOwner>; crate::editor::puzzle2d::engine::BOARD_FILL_KIND_HANDLE_CAPACITY]),
 }
 
 struct FillPlacementPublishView<'a> {
-    node_id: &'a infinite_canvas::BoardFillText,
-    edge_id: &'a infinite_canvas::BoardFillText,
-    edge_kind: &'a infinite_canvas::BoardFillText,
-    node_kind: &'a infinite_canvas::BoardFillText,
-    source_handle_id: &'a infinite_canvas::BoardFillText,
-    target_handle_id: &'a infinite_canvas::BoardFillText,
+    node_id: &'a crate::editor::puzzle2d::engine::BoardFillText,
+    edge_id: &'a crate::editor::puzzle2d::engine::BoardFillText,
+    edge_kind: &'a crate::editor::puzzle2d::engine::BoardFillText,
+    node_kind: &'a crate::editor::puzzle2d::engine::BoardFillText,
+    source_handle_id: &'a crate::editor::puzzle2d::engine::BoardFillText,
+    target_handle_id: &'a crate::editor::puzzle2d::engine::BoardFillText,
     x: f64,
     y: f64,
-    shape: infinite_canvas::BoardFillCommitShape,
+    shape: crate::editor::puzzle2d::engine::BoardFillCommitShape,
     radius: f64,
     width: f64,
     height: f64,
-    icon_kind: Option<&'a infinite_canvas::BoardFillText>,
+    icon_kind: Option<&'a crate::editor::puzzle2d::engine::BoardFillText>,
     handles: FillPlacementPublishHandles<'a>,
     handle_count: usize,
 }
 
 impl<'a> FillPlacementPublishView<'a> {
-    fn from_commit(placement: &'a infinite_canvas::BoardFillCommitPlacement) -> Self {
+    fn from_commit(placement: &'a crate::editor::puzzle2d::engine::BoardFillCommitPlacement) -> Self {
         Self {
             node_id: &placement.node_id,
             edge_id: &placement.edge_id,
@@ -354,7 +354,7 @@ impl<'a> FillPlacementPublishView<'a> {
         }
     }
 
-    fn from_cursor(node: &'a FillPlacementNodeOwner, edge: &'a FillPlacementEdgeOwner, handles: &'a [Option<FillPlacementHandleOwner>; infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY], handle_count: usize) -> Self {
+    fn from_cursor(node: &'a FillPlacementNodeOwner, edge: &'a FillPlacementEdgeOwner, handles: &'a [Option<FillPlacementHandleOwner>; crate::editor::puzzle2d::engine::BOARD_FILL_KIND_HANDLE_CAPACITY], handle_count: usize) -> Self {
         Self {
             node_id: &node.id,
             edge_id: &edge.id,
@@ -374,22 +374,22 @@ impl<'a> FillPlacementPublishView<'a> {
         }
     }
 
-    fn handle(&self, index: usize) -> Option<infinite_canvas::BoardFillCommitHandle> {
+    fn handle(&self, index: usize) -> Option<crate::editor::puzzle2d::engine::BoardFillCommitHandle> {
         match self.handles {
             FillPlacementPublishHandles::Commit(handles) => *handles.get(index)?,
-            FillPlacementPublishHandles::Cursor(handles) => handles.get(index)?.map(|handle| infinite_canvas::BoardFillCommitHandle { id: handle.id, handle_kind: handle.handle_kind, angle: handle.angle, radius: handle.radius }),
+            FillPlacementPublishHandles::Cursor(handles) => handles.get(index)?.map(|handle| crate::editor::puzzle2d::engine::BoardFillCommitHandle { id: handle.id, handle_kind: handle.handle_kind, angle: handle.angle, radius: handle.radius }),
         }
     }
 }
 
 /// 📤️ Pre-credits the final event destination before materializing the fixed terminal owner.
 fn publish_fixed_placement(placement: &FillPlacementPublishView<'_>, mutations: &mut Vec<Puzzle2dMutation>) -> Result<(), &'static str> {
-    if placement.handle_count > infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY {
+    if placement.handle_count > crate::editor::puzzle2d::engine::BOARD_FILL_KIND_HANDLE_CAPACITY {
         return Err("puzzle2d-fill-apply-handle-capacity");
     }
     let shape = match placement.shape {
-        infinite_canvas::BoardFillCommitShape::Circle => "circle",
-        infinite_canvas::BoardFillCommitShape::Rectangle => "rectangle",
+        crate::editor::puzzle2d::engine::BoardFillCommitShape::Circle => "circle",
+        crate::editor::puzzle2d::engine::BoardFillCommitShape::Rectangle => "rectangle",
     };
     let mut required_bytes = size_of::<Puzzle2dMutation>()
         .checked_mul(2)
@@ -423,9 +423,9 @@ fn publish_fixed_placement(placement: &FillPlacementPublishView<'_>, mutations: 
         shape: Some(try_document_str(shape)?),
         x: placement.x,
         y: placement.y,
-        radius: matches!(placement.shape, infinite_canvas::BoardFillCommitShape::Circle).then_some(placement.radius),
-        width: matches!(placement.shape, infinite_canvas::BoardFillCommitShape::Rectangle).then_some(placement.width),
-        height: matches!(placement.shape, infinite_canvas::BoardFillCommitShape::Rectangle).then_some(placement.height),
+        radius: matches!(placement.shape, crate::editor::puzzle2d::engine::BoardFillCommitShape::Circle).then_some(placement.radius),
+        width: matches!(placement.shape, crate::editor::puzzle2d::engine::BoardFillCommitShape::Rectangle).then_some(placement.width),
+        height: matches!(placement.shape, crate::editor::puzzle2d::engine::BoardFillCommitShape::Rectangle).then_some(placement.height),
         text: Some(try_document_text(*placement.node_id)?),
         icon_kind: placement.icon_kind.copied().map(try_document_text).transpose()?,
         anchor: crate::Puzzle2dNodeAnchor::Fixed,
@@ -453,8 +453,8 @@ fn publish_fixed_placement(placement: &FillPlacementPublishView<'_>, mutations: 
     Ok(())
 }
 
-fn publish_commit_candidate(candidate: &semio_framework_job::CommitCandidate, mutations: &mut Vec<Puzzle2dMutation>) -> Option<Result<infinite_canvas::BoardFillResult, &'static str>> {
-    let candidate = infinite_canvas::BoardFillCommitCandidate::from_commit_candidate(candidate)?;
+fn publish_commit_candidate(candidate: &semio_framework_job::CommitCandidate, mutations: &mut Vec<Puzzle2dMutation>) -> Option<Result<crate::editor::puzzle2d::engine::BoardFillResult, &'static str>> {
+    let candidate = crate::editor::puzzle2d::engine::BoardFillCommitCandidate::from_commit_candidate(candidate)?;
     if let Some(placement) = candidate.placement.as_ref() {
         if let Err(code) = publish_fixed_placement(&FillPlacementPublishView::from_commit(placement), mutations) {
             return Some(Err(code));
@@ -464,7 +464,7 @@ fn publish_commit_candidate(candidate: &semio_framework_job::CommitCandidate, mu
 }
 
 impl FillPlacementApplyCursor {
-    fn new(placement: infinite_canvas::BoardFillPlacement) -> Self {
+    fn new(placement: crate::editor::puzzle2d::engine::BoardFillPlacement) -> Self {
         Self { placement: Some(placement), handles: std::array::from_fn(|_| None), handle: None, node: None, edge: None, handle_cursor: 0, text_byte: 0, stage: FillPlacementApplyStage::BeginHandle }
     }
 
@@ -473,7 +473,7 @@ impl FillPlacementApplyCursor {
         match self.stage {
             FillPlacementApplyStage::BeginHandle => {
                 if self.handle_cursor < placement.handle_count() {
-                    self.handle = Some(FillPlacementHandleOwner { id: infinite_canvas::BoardFillText::empty(), handle_kind: infinite_canvas::BoardFillText::empty(), angle: 0.0, radius: None });
+                    self.handle = Some(FillPlacementHandleOwner { id: crate::editor::puzzle2d::engine::BoardFillText::empty(), handle_kind: crate::editor::puzzle2d::engine::BoardFillText::empty(), angle: 0.0, radius: None });
                     self.stage = FillPlacementApplyStage::HandleId;
                 } else {
                     self.stage = FillPlacementApplyStage::NodeBegin;
@@ -514,9 +514,9 @@ impl FillPlacementApplyCursor {
             }
             FillPlacementApplyStage::NodeBegin => {
                 self.node = Some(FillPlacementNodeOwner {
-                    id: infinite_canvas::BoardFillText::empty(),
-                    node_kind: infinite_canvas::BoardFillText::empty(),
-                    shape: infinite_canvas::BoardFillCommitShape::Circle,
+                    id: crate::editor::puzzle2d::engine::BoardFillText::empty(),
+                    node_kind: crate::editor::puzzle2d::engine::BoardFillText::empty(),
+                    shape: crate::editor::puzzle2d::engine::BoardFillCommitShape::Circle,
                     x: 0.0,
                     y: 0.0,
                     radius: 0.0,
@@ -543,8 +543,8 @@ impl FillPlacementApplyCursor {
             }
             FillPlacementApplyStage::NodeShape => {
                 self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.shape = match placement.shape {
-                    "circle" => infinite_canvas::BoardFillCommitShape::Circle,
-                    "rectangle" => infinite_canvas::BoardFillCommitShape::Rectangle,
+                    "circle" => crate::editor::puzzle2d::engine::BoardFillCommitShape::Circle,
+                    "rectangle" => crate::editor::puzzle2d::engine::BoardFillCommitShape::Rectangle,
                     _ => return Err("puzzle2d-fill-node-shape"),
                 };
                 self.stage = FillPlacementApplyStage::NodeX;
@@ -579,7 +579,7 @@ impl FillPlacementApplyCursor {
             }
             FillPlacementApplyStage::NodeIconBegin => {
                 if placement.icon_kind.as_ref().is_some() {
-                    self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.icon_kind = Some(infinite_canvas::BoardFillText::empty());
+                    self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.icon_kind = Some(crate::editor::puzzle2d::engine::BoardFillText::empty());
                     self.stage = FillPlacementApplyStage::NodeIcon;
                 } else {
                     self.stage = FillPlacementApplyStage::EdgeBegin;
@@ -593,8 +593,12 @@ impl FillPlacementApplyCursor {
                 }
             }
             FillPlacementApplyStage::EdgeBegin => {
-                self.edge =
-                    Some(FillPlacementEdgeOwner { id: infinite_canvas::BoardFillText::empty(), source: infinite_canvas::BoardFillText::empty(), target: infinite_canvas::BoardFillText::empty(), edge_kind: infinite_canvas::BoardFillText::empty() });
+                self.edge = Some(FillPlacementEdgeOwner {
+                    id: crate::editor::puzzle2d::engine::BoardFillText::empty(),
+                    source: crate::editor::puzzle2d::engine::BoardFillText::empty(),
+                    target: crate::editor::puzzle2d::engine::BoardFillText::empty(),
+                    edge_kind: crate::editor::puzzle2d::engine::BoardFillText::empty(),
+                });
                 self.stage = FillPlacementApplyStage::EdgeId;
             }
             FillPlacementApplyStage::EdgeId => {
@@ -675,19 +679,19 @@ impl Drop for FillPlacementApplyCursor {
     }
 }
 
-fn capture_fault_code(fault: infinite_canvas::BoardFillCaptureFault) -> &'static str {
+fn capture_fault_code(fault: crate::editor::puzzle2d::engine::BoardFillCaptureFault) -> &'static str {
     match fault {
-        infinite_canvas::BoardFillCaptureFault::TextCapacity => "puzzle2d-fill-capture-text-capacity",
-        infinite_canvas::BoardFillCaptureFault::NodeCapacity => "puzzle2d-fill-capture-node-capacity",
-        infinite_canvas::BoardFillCaptureFault::HandleCapacity => "puzzle2d-fill-capture-handle-capacity",
-        infinite_canvas::BoardFillCaptureFault::KindCapacity => "puzzle2d-fill-capture-kind-capacity",
-        infinite_canvas::BoardFillCaptureFault::KindHandleCapacity => "puzzle2d-fill-capture-kind-handle-capacity",
-        infinite_canvas::BoardFillCaptureFault::RuleCapacity => "puzzle2d-fill-capture-rule-capacity",
-        infinite_canvas::BoardFillCaptureFault::StaleNode => "puzzle2d-fill-capture-stale-node",
-        infinite_canvas::BoardFillCaptureFault::StaleHandle => "puzzle2d-fill-capture-stale-handle",
-        infinite_canvas::BoardFillCaptureFault::StaleKind => "puzzle2d-fill-capture-stale-kind",
-        infinite_canvas::BoardFillCaptureFault::StaleRule => "puzzle2d-fill-capture-stale-rule",
-        infinite_canvas::BoardFillCaptureFault::GenerationExhausted => "puzzle2d-fill-capture-generation-exhausted",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::TextCapacity => "puzzle2d-fill-capture-text-capacity",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::NodeCapacity => "puzzle2d-fill-capture-node-capacity",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::HandleCapacity => "puzzle2d-fill-capture-handle-capacity",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::KindCapacity => "puzzle2d-fill-capture-kind-capacity",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::KindHandleCapacity => "puzzle2d-fill-capture-kind-handle-capacity",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::RuleCapacity => "puzzle2d-fill-capture-rule-capacity",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::StaleNode => "puzzle2d-fill-capture-stale-node",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::StaleHandle => "puzzle2d-fill-capture-stale-handle",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::StaleKind => "puzzle2d-fill-capture-stale-kind",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::StaleRule => "puzzle2d-fill-capture-stale-rule",
+        crate::editor::puzzle2d::engine::BoardFillCaptureFault::GenerationExhausted => "puzzle2d-fill-capture-generation-exhausted",
     }
 }
 
@@ -719,15 +723,17 @@ pub struct Puzzle2dFillSessionWork {
     search_chunks: usize,
     apply_chunks: usize,
     suggestion_offset: f64,
-    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,
-    search: Option<infinite_canvas::BoardFillJob>,
-    closing_search: Option<infinite_canvas::BoardFillJob>,
-    checkpoint: Option<infinite_canvas::BoardFillCheckpoint>,
+    ingress: Option<crate::editor::puzzle2d::engine::BoardFillSnapshotIngress>,
+    search: Option<crate::editor::puzzle2d::engine::BoardFillJob>,
+    closing_search: Option<crate::editor::puzzle2d::engine::BoardFillJob>,
+    checkpoint: Option<crate::editor::puzzle2d::engine::BoardFillCheckpoint>,
     apply: Option<FillPlacementApplyCursor>,
     outcome: Option<semio_framework_job::StepOutcome>,
     runtime: Option<Puzzle2dFillRuntime>,
     mutations: Vec<Puzzle2dMutation>,
     effects: Vec<Effect>,
+    view_state: Option<semio_framework_plugin::ViewModel>,
+    window_config: Puzzle2dWindowConfig,
     closing: bool,
 }
 
@@ -755,6 +761,8 @@ impl Puzzle2dFillSessionWork {
             runtime: None,
             mutations: Vec::new(),
             effects: Vec::new(),
+            view_state: None,
+            window_config: Puzzle2dWindowConfig::default(),
             closing: false,
         }
     }
@@ -782,14 +790,14 @@ impl Puzzle2dFillSessionWork {
         Ok(())
     }
 
-    fn begin_search(&mut self, config: &Puzzle2dConfig, count: u32, seed: u64) -> Result<(), Fault> {
+    fn begin_search(&mut self, count: u32, seed: u64) -> Result<(), Fault> {
         if count > fill::PUZZLE2D_FILL_COUNT_MAX {
             return self.fault("puzzle2d-fill-count-capacity");
         }
         self.maximum_count = count;
         self.operation = semio_framework_job::Operation::new(self.operation.operation, self.operation.base_revision, self.operation.generation, seed);
-        self.suggestion_offset = config.suggestion_offset;
-        self.ingress = Some(infinite_canvas::BoardFillSnapshotIngress::new(config.suggestion_offset));
+        self.suggestion_offset = self.window_config.suggestion_offset;
+        self.ingress = Some(crate::editor::puzzle2d::engine::BoardFillSnapshotIngress::new(self.window_config.suggestion_offset));
         self.capture = ArtifactFillCaptureCursor::new();
         let stage = Self::text("capture")?;
         let operation = self.operation;
@@ -808,7 +816,7 @@ impl Puzzle2dFillSessionWork {
         Ok(())
     }
 
-    fn publish_preview(&mut self, preview: infinite_canvas::BoardFillPreview) -> Result<(), Fault> {
+    fn publish_preview(&mut self, preview: crate::editor::puzzle2d::engine::BoardFillPreview) -> Result<(), Fault> {
         let Some(stage) = Puzzle2dFillText::try_from_str(preview.stage.id()) else {
             return self.fault("puzzle2d-fill-stage-capacity");
         };
@@ -847,13 +855,13 @@ impl Puzzle2dFillSessionWork {
     fn absorb_outcome(&mut self, outcome: semio_framework_job::StepOutcome) -> Result<(), Fault> {
         match &outcome {
             semio_framework_job::StepOutcome::PreviewReady(_) => {
-                let preview = self.search.as_mut().and_then(infinite_canvas::BoardFillJob::take_preview);
+                let preview = self.search.as_mut().and_then(crate::editor::puzzle2d::engine::BoardFillJob::take_preview);
                 if let Some(preview) = preview {
                     self.publish_preview(preview)?;
                 }
             }
             semio_framework_job::StepOutcome::CheckpointReady(_) => {
-                let taken = self.search.as_mut().and_then(infinite_canvas::BoardFillJob::take_checkpoint);
+                let taken = self.search.as_mut().and_then(crate::editor::puzzle2d::engine::BoardFillJob::take_checkpoint);
                 match taken {
                     Some(checkpoint) => {
                         let accepted = checkpoint.accepted_count();
@@ -886,7 +894,7 @@ impl Puzzle2dFillSessionWork {
                 self.stage = Puzzle2dFillStage::Complete;
             }
             semio_framework_job::StepOutcome::Fault(_) => {
-                let code = self.search.as_mut().and_then(infinite_canvas::BoardFillJob::take_fault).unwrap_or("puzzle2d-fill-worker-fault");
+                let code = self.search.as_mut().and_then(crate::editor::puzzle2d::engine::BoardFillJob::take_fault).unwrap_or("puzzle2d-fill-worker-fault");
                 self.fault(code)?;
             }
             semio_framework_job::StepOutcome::Yield => {}
@@ -913,7 +921,7 @@ impl Puzzle2dFillSessionWork {
 
     fn apply_one(&mut self) -> Result<(), Fault> {
         if self.apply.is_none() {
-            let placement = self.checkpoint.as_mut().and_then(infinite_canvas::BoardFillCheckpoint::take_pending_placement);
+            let placement = self.checkpoint.as_mut().and_then(crate::editor::puzzle2d::engine::BoardFillCheckpoint::take_pending_placement);
             match placement {
                 Some(placement) => {
                     self.apply = Some(FillPlacementApplyCursor::new(placement));
@@ -939,13 +947,15 @@ impl Puzzle2dFillSessionWork {
 
     /// 🏁️ The one publication a session makes: every accepted placement, plus the runtime the next
     /// verb resumes from, plus the tool activation `setFillCount` requests.
-    fn complete(&mut self, config: &Puzzle2dConfig) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn complete(&mut self) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
         let runtime = self.runtime.take().ok_or_else(|| Fault::from("puzzle2d-fill-runtime-owner"))?;
-        let config_mutations = if runtime.differs_from(config) { vec![Puzzle2dConfigMutation::Fill { runtime }] } else { Vec::new() };
+        let mut next_window_config = self.window_config.clone();
+        next_window_config.fill_count = runtime.fill_count;
+        let window_config_mutations = if next_window_config != self.window_config { vec![window::addressed_config(self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle2d-fill-window-context"))?, next_window_config)?] } else { Vec::new() };
         let artifact_mutations = std::mem::take(&mut self.mutations);
         let effects = std::mem::take(&mut self.effects);
         self.stage = Puzzle2dFillStage::Complete;
-        Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations, config_mutations, coalesce_key: None, effects, ui_scope: UiDirtyScope::Full, ..Default::default() }))
+        Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations, window_config_mutations, coalesce_key: None, effects, ui_scope: UiDirtyScope::Full, ..Default::default() }))
     }
 
     /// 🚰️ Releases one engine owner per call, innermost first: the checkpoint hands its state back
@@ -1000,7 +1010,7 @@ impl Puzzle2dFillSessionWork {
         self.runtime.take().is_some()
     }
 
-    fn close_job_slot(slot: &mut Option<infinite_canvas::BoardFillJob>) {
+    fn close_job_slot(slot: &mut Option<crate::editor::puzzle2d::engine::BoardFillJob>) {
         let Some(job) = slot.as_mut() else { return };
         semio_framework_job::InteractiveJob::begin_close(job);
         if matches!(semio_framework_job::InteractiveJob::close_step(job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && semio_framework_job::InteractiveJob::terminal_is_empty(job) {
@@ -1139,7 +1149,7 @@ impl Puzzle2dFillSessionWork {
             ArtifactHandleCaptureField::Id => {
                 let value = handle.get("id").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-handle-id")?;
                 if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_handle_text_byte(infinite_canvas::BoardFillIngressHandleText::Id, byte).map_err(capture_fault_code)?;
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_handle_text_byte(crate::editor::puzzle2d::engine::BoardFillIngressHandleText::Id, byte).map_err(capture_fault_code)?;
                     self.capture.byte += 1;
                 } else {
                     self.capture.byte = 0;
@@ -1160,10 +1170,10 @@ impl Puzzle2dFillSessionWork {
             }
             ArtifactHandleCaptureField::NodeKind | ArtifactHandleCaptureField::HandleKind | ArtifactHandleCaptureField::WireKind | ArtifactHandleCaptureField::EdgeKind => {
                 let (value, field, next) = match self.capture.handle_field {
-                    ArtifactHandleCaptureField::NodeKind => (node.get("nodeKind").and_then(Value::as_str).unwrap_or(""), infinite_canvas::BoardFillIngressHandleText::NodeKind, ArtifactHandleCaptureField::HandleKind),
-                    ArtifactHandleCaptureField::HandleKind => (handle.get("handleKind").and_then(Value::as_str).unwrap_or("port"), infinite_canvas::BoardFillIngressHandleText::HandleKind, ArtifactHandleCaptureField::WireKind),
-                    ArtifactHandleCaptureField::WireKind => (handle.get("wireKind").and_then(Value::as_str).unwrap_or("wire.link"), infinite_canvas::BoardFillIngressHandleText::WireKind, ArtifactHandleCaptureField::EdgeKind),
-                    ArtifactHandleCaptureField::EdgeKind => (handle.get("edgeKind").and_then(Value::as_str).unwrap_or(""), infinite_canvas::BoardFillIngressHandleText::EdgeKind, ArtifactHandleCaptureField::X),
+                    ArtifactHandleCaptureField::NodeKind => (node.get("nodeKind").and_then(Value::as_str).unwrap_or(""), crate::editor::puzzle2d::engine::BoardFillIngressHandleText::NodeKind, ArtifactHandleCaptureField::HandleKind),
+                    ArtifactHandleCaptureField::HandleKind => (handle.get("handleKind").and_then(Value::as_str).unwrap_or("port"), crate::editor::puzzle2d::engine::BoardFillIngressHandleText::HandleKind, ArtifactHandleCaptureField::WireKind),
+                    ArtifactHandleCaptureField::WireKind => (handle.get("wireKind").and_then(Value::as_str).unwrap_or("wire.link"), crate::editor::puzzle2d::engine::BoardFillIngressHandleText::WireKind, ArtifactHandleCaptureField::EdgeKind),
+                    ArtifactHandleCaptureField::EdgeKind => (handle.get("edgeKind").and_then(Value::as_str).unwrap_or(""), crate::editor::puzzle2d::engine::BoardFillIngressHandleText::EdgeKind, ArtifactHandleCaptureField::X),
                     _ => return Err("puzzle2d-fill-capture-handle-field"),
                 };
                 if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
@@ -1263,7 +1273,7 @@ impl Puzzle2dFillSessionWork {
             ArtifactKindCaptureField::Id => {
                 let value = kind.get("id").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-kind-id")?;
                 if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_kind_text_byte(infinite_canvas::BoardFillIngressKindText::Id, byte).map_err(capture_fault_code)?;
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_kind_text_byte(crate::editor::puzzle2d::engine::BoardFillIngressKindText::Id, byte).map_err(capture_fault_code)?;
                     self.capture.byte += 1;
                 } else {
                     self.capture.byte = 0;
@@ -1302,7 +1312,7 @@ impl Puzzle2dFillSessionWork {
             ArtifactKindCaptureField::Icon => {
                 let value = kind.get("icon").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-kind-icon")?;
                 if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_kind_text_byte(infinite_canvas::BoardFillIngressKindText::Icon, byte).map_err(capture_fault_code)?;
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_kind_text_byte(crate::editor::puzzle2d::engine::BoardFillIngressKindText::Icon, byte).map_err(capture_fault_code)?;
                     self.capture.byte += 1;
                 } else {
                     self.capture.byte = 0;
@@ -1325,10 +1335,12 @@ impl Puzzle2dFillSessionWork {
                 let template = template.ok_or("puzzle2d-fill-capture-stale-template")?;
                 let (value, field, next) = match self.capture.kind_field {
                     ArtifactKindCaptureField::TemplateHandleKind => {
-                        (template.get("handleKind").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-template-kind")?, infinite_canvas::BoardFillIngressTemplateText::HandleKind, ArtifactKindCaptureField::TemplateWireKind)
+                        (template.get("handleKind").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-template-kind")?, crate::editor::puzzle2d::engine::BoardFillIngressTemplateText::HandleKind, ArtifactKindCaptureField::TemplateWireKind)
                     }
-                    ArtifactKindCaptureField::TemplateWireKind => (template.get("wireKind").and_then(Value::as_str).unwrap_or("wire.link"), infinite_canvas::BoardFillIngressTemplateText::WireKind, ArtifactKindCaptureField::TemplateEdgeKind),
-                    ArtifactKindCaptureField::TemplateEdgeKind => (template.get("edgeKind").and_then(Value::as_str).unwrap_or(""), infinite_canvas::BoardFillIngressTemplateText::EdgeKind, ArtifactKindCaptureField::TemplateAngle),
+                    ArtifactKindCaptureField::TemplateWireKind => {
+                        (template.get("wireKind").and_then(Value::as_str).unwrap_or("wire.link"), crate::editor::puzzle2d::engine::BoardFillIngressTemplateText::WireKind, ArtifactKindCaptureField::TemplateEdgeKind)
+                    }
+                    ArtifactKindCaptureField::TemplateEdgeKind => (template.get("edgeKind").and_then(Value::as_str).unwrap_or(""), crate::editor::puzzle2d::engine::BoardFillIngressTemplateText::EdgeKind, ArtifactKindCaptureField::TemplateAngle),
                     _ => return Err("puzzle2d-fill-capture-template-field"),
                 };
                 if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
@@ -1392,8 +1404,10 @@ impl Puzzle2dFillSessionWork {
             }
             ArtifactRuleCaptureField::Source | ArtifactRuleCaptureField::Target => {
                 let (value, field, next) = match self.capture.rule_field {
-                    ArtifactRuleCaptureField::Source => (rule.get("source").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-rule-source")?, infinite_canvas::BoardFillIngressRuleText::Source, ArtifactRuleCaptureField::Target),
-                    ArtifactRuleCaptureField::Target => (rule.get("target").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-rule-target")?, infinite_canvas::BoardFillIngressRuleText::Target, ArtifactRuleCaptureField::Bidirectional),
+                    ArtifactRuleCaptureField::Source => (rule.get("source").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-rule-source")?, crate::editor::puzzle2d::engine::BoardFillIngressRuleText::Source, ArtifactRuleCaptureField::Target),
+                    ArtifactRuleCaptureField::Target => {
+                        (rule.get("target").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-rule-target")?, crate::editor::puzzle2d::engine::BoardFillIngressRuleText::Target, ArtifactRuleCaptureField::Bidirectional)
+                    }
                     _ => return Err("puzzle2d-fill-capture-rule-field"),
                 };
                 if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
@@ -1430,9 +1444,9 @@ impl Puzzle2dFillSessionWork {
             ArtifactFillCaptureStage::Kinds => self.capture_kind_one(document),
             ArtifactFillCaptureStage::Rules => self.capture_rule_one(document),
             ArtifactFillCaptureStage::Complete => {
-                let snapshot = self.ingress.as_mut().and_then(infinite_canvas::BoardFillSnapshotIngress::take_snapshot).ok_or("puzzle2d-fill-capture-snapshot")?;
+                let snapshot = self.ingress.as_mut().and_then(crate::editor::puzzle2d::engine::BoardFillSnapshotIngress::take_snapshot).ok_or("puzzle2d-fill-capture-snapshot")?;
                 self.ingress = None;
-                self.search = Some(infinite_canvas::BoardFillJob::with_operation(snapshot, self.maximum_count, self.operation));
+                self.search = Some(crate::editor::puzzle2d::engine::BoardFillJob::with_operation(snapshot, self.maximum_count, self.operation));
                 Ok(())
             }
         }
@@ -1449,6 +1463,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
     /// operation_id, generation)` key the removed process-global slot table used.
     fn bind_operation(&mut self, operation: semio_framework_job::Operation) {
         self.operation = operation;
+    }
+
+    fn bind_view_state(&mut self, view_state: Option<semio_framework_plugin::ViewModel>) {
+        self.view_state = view_state;
+    }
+
+    fn bind_window_owners(&mut self, config: Option<semio_framework_plugin::WindowConfigSnapshot>, _transient: Option<semio_framework_plugin::WindowTransientSnapshot>) {
+        self.window_config = window::config_from_snapshot(config.as_ref());
     }
 
     /// 📐️ A control verb costs its four runtime-transition steps. A search verb declares the exact
@@ -1475,12 +1497,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         &mut self,
         command: &crate::editor::puzzle2d::Puzzle2dCommand,
         snapshot: &Puzzle2dPlaySnapshot,
-        config: &Puzzle2dConfig,
+        _config: &Puzzle2dConfig,
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
         if self.runtime.is_none() {
-            self.runtime = Some(Puzzle2dFillRuntime::from_config(config));
+            self.runtime = Some(Puzzle2dFillRuntime::for_count(self.window_config.fill_count));
         }
         match self.stage {
             Puzzle2dFillStage::Control => {
@@ -1492,23 +1514,23 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                 self.effects = effects;
                 match outcome {
                     Ok(Some((count, seed))) => {
-                        self.begin_search(config, count, seed)?;
+                        self.begin_search(count, seed)?;
                         if self.stage == Puzzle2dFillStage::Complete {
-                            return self.complete(config);
+                            return self.complete();
                         }
                         Ok(Self::progress("puzzle2d-fill-capture", "Capturing board for fill", "Board wird für Füllung erfasst"))
                     }
-                    Ok(None) => self.complete(config),
+                    Ok(None) => self.complete(),
                     Err(code) => {
                         self.fault(code)?;
-                        self.complete(config)
+                        self.complete()
                     }
                 }
             }
             Puzzle2dFillStage::Capture => {
                 if self.capture_chunks >= PUZZLE2D_FILL_CAPTURE_CHUNKS {
                     self.fault("puzzle2d-fill-capture-budget")?;
-                    return self.complete(config);
+                    return self.complete();
                 }
                 self.capture_chunks = self.capture_chunks.saturating_add(1);
                 for _ in 0..PUZZLE2D_FILL_CAPTURE_UNITS_PER_STEP {
@@ -1517,7 +1539,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     }
                     if let Err(code) = self.capture_one(&snapshot.0) {
                         self.fault(code)?;
-                        return self.complete(config);
+                        return self.complete();
                     }
                 }
                 if self.search.is_some() {
@@ -1529,7 +1551,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             Puzzle2dFillStage::Search => {
                 if self.search_chunks >= PUZZLE2D_FILL_SEARCH_CHUNKS {
                     self.runtime_mut()?.fill_job_lifecycle = Puzzle2dFillLifecycle::CheckpointReady;
-                    return self.complete(config);
+                    return self.complete();
                 }
                 self.search_chunks = self.search_chunks.saturating_add(1);
                 for _ in 0..PUZZLE2D_FILL_SEARCH_UNITS_PER_STEP {
@@ -1543,14 +1565,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     self.absorb_outcome(outcome)?;
                 }
                 if self.stage == Puzzle2dFillStage::Complete {
-                    return self.complete(config);
+                    return self.complete();
                 }
                 Ok(Self::progress("puzzle2d-fill-search", "Searching a fill placement", "Füllplatzierung wird gesucht"))
             }
             Puzzle2dFillStage::Apply => {
                 if self.apply_chunks >= PUZZLE2D_FILL_APPLY_CHUNKS {
                     self.fault("puzzle2d-fill-apply-budget")?;
-                    return self.complete(config);
+                    return self.complete();
                 }
                 self.apply_chunks = self.apply_chunks.saturating_add(1);
                 for _ in 0..PUZZLE2D_FILL_APPLY_UNITS_PER_STEP {
@@ -1560,7 +1582,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     self.apply_one()?;
                 }
                 if self.stage == Puzzle2dFillStage::Complete {
-                    return self.complete(config);
+                    return self.complete();
                 }
                 Ok(Self::progress("puzzle2d-fill-apply", "Applying a fill placement", "Füllplatzierung wird angewendet"))
             }
@@ -1619,8 +1641,8 @@ fn discard_runtime(runtime: &mut Puzzle2dFillRuntime) {
     runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Discarded;
 }
 
-/// 🧰️ Cancels whatever fill the runtime describes — the one call `setActiveUtility` makes when the
-/// operator leaves the fill utility. There is no live session to reach any more: discarding the
+/// 🧰️ Cancels whatever fill the runtime describes when the operator leaves the fill utility. There
+/// is no live session to reach any more: discarding the
 /// runtime IS discarding the session, because the runtime is the only thing a later verb resumes
 /// from.
 pub fn discard_fill_session(runtime: &mut Puzzle2dFillRuntime) {

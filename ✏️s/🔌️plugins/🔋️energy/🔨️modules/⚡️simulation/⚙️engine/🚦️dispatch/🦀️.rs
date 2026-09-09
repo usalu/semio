@@ -1,7 +1,7 @@
 //! 🎛️ Plant and equipment dispatch strategies.
 
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️Dispatch
 /// 🎛️ Equipment dispatch scheme.
@@ -173,7 +173,6 @@ impl DispatchBuilder {
     pub(crate) fn finish(self) -> Result<Vec<DispatchResult>, DispatchFault> {
         self.fault.map_or(Ok(self.results), Err)
     }
-
 }
 // #endregion 🔖️Dispatcher
 

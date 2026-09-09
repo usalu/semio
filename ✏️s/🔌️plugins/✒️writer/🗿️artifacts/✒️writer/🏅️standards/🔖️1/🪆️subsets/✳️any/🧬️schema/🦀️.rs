@@ -1,10 +1,10 @@
 //! 🧬️ Writer artifact schema — every field with its state class.
 
 use crate::{document_child_handle_with_text, WriterDocumentChild, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
+use semio_s_artifact_trinity_jack::lexer::{lex_spanned, SpannedToken, Token};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use semio_s_artifact_trinity_jack::lexer::{lex_spanned, SpannedToken, Token};
 //#region 🔖️Artifact
 /// 🧬️ Full writer artifact across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, dsl::ToValue, dsl::FromValue)]
@@ -22,24 +22,6 @@ pub struct WriterArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.document")]
     pub document: WriterDocumentChild,
-    #[state(presence)]
-    pub editor_selection: Option<WriterEditorSelection>,
-    #[state(presence)]
-    pub editor_settings: WriterEditorSettings,
-    #[state(config)]
-    pub format_signal: u32,
-    #[state(config)]
-    pub lint_signal: u32,
-    #[state(config)]
-    pub revision: u32,
-    #[state(config)]
-    pub engagement_input: String,
-    #[state(config)]
-    pub camera_x: f64,
-    #[state(config)]
-    pub camera_y: f64,
-    #[state(config)]
-    pub camera_zoom: f64,
 }
 //#endregion 🔖️Artifact
 
@@ -62,22 +44,7 @@ impl WriterArtifact {
     }
 
     fn default_ui() -> Self {
-        Self {
-            schema: WRITER_DOCUMENT_SCHEMA.into(),
-            id: String::new(),
-            language_id: "plaintext".into(),
-            uri: crate::default_uri(),
-            document: document_child_handle_with_text("", "", "plaintext"),
-            editor_selection: None,
-            editor_settings: WriterEditorSettings::default(),
-            format_signal: 0,
-            lint_signal: 0,
-            revision: 0,
-            engagement_input: String::new(),
-            camera_x: 0.0,
-            camera_y: 0.0,
-            camera_zoom: 1.0,
-        }
+        Self { schema: WRITER_DOCUMENT_SCHEMA.into(), id: String::new(), language_id: "plaintext".into(), uri: crate::default_uri(), document: document_child_handle_with_text("", "", "plaintext") }
     }
 
     /// 🔄 Writes persistent fields from a snapshot.
@@ -93,31 +60,25 @@ impl WriterArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.writer.writer` — twenty handcrafted schema leaves.
-pub fn writer_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn writer_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.writer.writer",
-        artifact: schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
-        snapshot: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🕸️.graphql"),
@@ -767,9 +728,3 @@ pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-
-//#region 🔁️Re-exports
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::WriterEditorSelection;
-pub use crate::WriterEditorSettings;
-//#endregion 🔁️Re-exports

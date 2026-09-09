@@ -10,8 +10,6 @@
 //! `.window_kind(..)` calls stay inline — fem3d builds neither a `ModeDefinition` nor a
 //! `WindowKindDefinition` object anywhere, see `modes::edit`'s and the window nodes' own doc comments).
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
-use crate::Fem3dSnapshot;
 use crate::editor::fem3d::commands::{
     add_area_load, add_bar, add_combination, add_frame, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_section, add_solid, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera,
     set_result_display, set_self_weight,
@@ -20,14 +18,16 @@ use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::editor::fem3d::modes::edit;
 use crate::editor::fem3d::modes::edit::windows::{model as window_model, results as window_results};
 use crate::model::{Dof, ElementResult};
+use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::Fem3dSnapshot;
+use dsl::json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppDefinition, AppIo, AppOperationContext, AppRenderOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
-    ArtifactToolPublicationLane,
-    ArtifactView, ConfigSpec, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
+    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppDefinition, AppIo, AppOperationContext, AppRenderOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
+    ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    NoDraft, NoDraftMutation, PluginCloseStep,
 };
-use dsl::json::Value;
 use std::collections::HashMap;
 use store::EngineHandles;
 
@@ -162,16 +162,7 @@ fn fem3d_retained_extent(command: &Fem3dCommand, snapshot: &Fem3dSnapshot, _inte
     if !FEM3D_RETAINED_TOOL_IDS.contains(&command.command_id()) || fem3d_retained_config_value_bytes(command) > FEM3D_CONFIG_VALUE_BYTES {
         return None;
     }
-    let collections = [
-        snapshot.nodes.len(),
-        snapshot.elements.len(),
-        snapshot.materials.len(),
-        snapshot.sections.len(),
-        snapshot.solids.len(),
-        snapshot.supports.len(),
-        snapshot.load_cases.len(),
-        snapshot.combinations.len(),
-    ];
+    let collections = [snapshot.nodes.len(), snapshot.elements.len(), snapshot.materials.len(), snapshot.sections.len(), snapshot.solids.len(), snapshot.supports.len(), snapshot.load_cases.len(), snapshot.combinations.len()];
     let items = collections.into_iter().try_fold(1usize, |total, count| total.checked_add(count))?;
     (items <= FEM3D_RETAINED_WORK_ITEMS).then_some(1)
 }
@@ -189,7 +180,7 @@ fn fem3d_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 struct Fem3dRetainedCommandJobFactory {
@@ -271,13 +262,28 @@ fn admit_fem3d_artifact_mutation(mutation: &Fem3dMutation) -> Result<store::Arti
 fn fem3d_artifact_edit(forward: Fem3dMutation, inverse: Vec<Fem3dMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Fem3dMutation> {
     let id = format!("fem3d-artifact-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
     protocol::Edit {
-        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse,
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
         }],
-        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
     }
 }
 
@@ -321,8 +327,15 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem3dSnapshot, Fem3dMutation>
             return Err(request);
         }
         Ok(Box::new(Fem3dArtifactPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            retained_bytes,
+            cancelled: false,
+            closing: false,
         }))
     }
 }
@@ -348,11 +361,21 @@ impl store::ArtifactStoreOneItemPreparation<Fem3dSnapshot, Fem3dMutation> for Fe
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem3dSnapshot, Fem3dMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem3dSnapshot, Fem3dMutation>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem3dSnapshot, Fem3dMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem3dSnapshot, Fem3dMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
         if !self.closing || grant.maximum_items == 0 {
@@ -406,25 +429,46 @@ fn fem3d_config_retained_bytes(config: &Fem3dConfig) -> usize {
 fn fem3d_config_edit(forward: Fem3dConfigMutation, inverse: Fem3dConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Fem3dConfigMutation> {
     let id = format!("fem3d-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
     protocol::Edit {
-        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse: vec![inverse],
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse: vec![inverse],
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
         }],
-        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
     }
 }
 
-struct Fem3dConfigByteCounter { bytes: usize }
+struct Fem3dConfigByteCounter {
+    bytes: usize,
+}
 
 impl std::io::Write for Fem3dConfigByteCounter {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-        if self.bytes.saturating_add(bytes.len()) > FEM3D_CONFIG_STEP_BYTES { return Err(std::io::Error::from(std::io::ErrorKind::InvalidData)); }
+        if self.bytes.saturating_add(bytes.len()) > FEM3D_CONFIG_STEP_BYTES {
+            return Err(std::io::Error::from(std::io::ErrorKind::InvalidData));
+        }
         self.bytes += bytes.len();
         Ok(bytes.len())
     }
-    fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
 }
 
 fn fem3d_config_edit_bytes(edit: &protocol::Edit<Fem3dConfigMutation>) -> Result<usize, String> {
@@ -447,29 +491,54 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem3dConfig, Fem3dConfigMutat
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 3, retained_bytes: FEM3D_CONFIG_STEP_BYTES })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Fem3dConfig, Fem3dConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Fem3dConfig, Fem3dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Fem3dConfig, Fem3dConfigMutation>> {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Fem3dConfig, Fem3dConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Fem3dConfig, Fem3dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Fem3dConfig, Fem3dConfigMutation>> {
         let mutation_bytes = match &request.mutation {
             Fem3dConfigMutation::SetCamera { camera } => camera.json.len(),
             Fem3dConfigMutation::SetResultDisplay { source_id, mode, .. } => source_id.as_ref().map_or(0, String::len).saturating_add(mode.len()),
             Fem3dConfigMutation::Snapshot { .. } => return Err(request),
         };
-        if request.lane != store::HistoryLane::Document || mutation_bytes > FEM3D_CONFIG_VALUE_BYTES || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+        if request.lane != store::HistoryLane::Document
+            || mutation_bytes > FEM3D_CONFIG_VALUE_BYTES
+            || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES)
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
             return Err(request);
         }
         Ok(Box::new(Fem3dConfigPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            candidate: None,
+            sealed_candidate: None,
+            serialized_bytes: None,
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
         }))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<Fem3dConfig, Fem3dConfigMutation> for Fem3dConfigPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || grant.maximum_bytes < FEM3D_CONFIG_STEP_BYTES || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if !grant.permits_one() || grant.maximum_bytes < FEM3D_CONFIG_STEP_BYTES || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
         if self.candidate.is_none() && self.sealed_candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "FEM3d config preparation lost its exact base root".to_string())?.get();
-            if fem3d_config_retained_bytes(base) > FEM3D_CONFIG_BASE_BYTES { return Err("FEM3d config base exceeds retained byte capacity".into()); }
+            if fem3d_config_retained_bytes(base) > FEM3D_CONFIG_BASE_BYTES {
+                return Err("FEM3d config base exceeds retained byte capacity".into());
+            }
             let mutation = self.mutation.take().ok_or_else(|| "FEM3d config preparation lost its mutation owner".to_string())?;
             let mut post = base.clone();
             let inverse = match &mutation {
@@ -508,28 +577,50 @@ impl store::ArtifactStoreOneItemPreparation<Fem3dConfig, Fem3dConfigMutation> fo
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem3dConfig, Fem3dConfigMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem3dConfig, Fem3dConfigMutation>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem3dConfig, Fem3dConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem3dConfig, Fem3dConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-        if (self.prepared.is_some() || self.sealed_candidate.is_some() || self.candidate.is_some() || self.mutation.is_some() || self.description.is_some()) && grant.maximum_bytes < FEM3D_CONFIG_STEP_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
-        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: FEM3D_CONFIG_STEP_BYTES }); }
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if (self.prepared.is_some() || self.sealed_candidate.is_some() || self.candidate.is_some() || self.mutation.is_some() || self.description.is_some()) && grant.maximum_bytes < FEM3D_CONFIG_STEP_BYTES {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: FEM3D_CONFIG_STEP_BYTES });
+        }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("FEM3d config preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() {
+                return Err("FEM3d config preparation could not return its exact base root".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
             let bytes = authority.actor().len();
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.authority = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         Ok(store::SnapshotRetirementStep::Complete)
     }
-    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none() }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none()
+    }
 }
 //#endregion 📬️ConfigStorePreparation
 
@@ -822,10 +913,7 @@ fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
 /// model window and every results view (static/modal/buckling).
 #[cfg(test)]
 pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
-    let mut meshes = dsl::json::parse(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()]))
-        .ok()
-        .and_then(|value| value.as_array().cloned())
-        .unwrap_or_default();
+    let mut meshes = dsl::json::parse(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()])).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
     let mut instances = fem3d_structural_instances(doc, displacements, deform_scale);
     let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress);
     meshes.extend(solid_meshes);
@@ -940,7 +1028,17 @@ impl ArtifactEditor for Fem3dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: None,
+                operation: operation_context,
+                completion: request.completion,
+            },
             Fem3dCommand::command_id,
             FEM3D_RETAINED_RAW_BYTES,
             FEM3D_RETAINED_WORK_ITEMS,
@@ -956,14 +1054,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// the same geometry. See `crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
         let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
-        eprintln!(
-            "[DEBUG] fem3d editor boot snapshot: nodes={} elements={} solids={} materials={} loadCases={}",
-            snapshot.nodes.len(),
-            snapshot.elements.len(),
-            snapshot.solids.len(),
-            snapshot.materials.len(),
-            snapshot.load_cases.len()
-        );
+        eprintln!("[DEBUG] fem3d editor boot snapshot: nodes={} elements={} solids={} materials={} loadCases={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len(), snapshot.materials.len(), snapshot.load_cases.len());
         snapshot
     }
 
@@ -1069,7 +1160,8 @@ impl ArtifactEditor for Fem3dPlayApp {
         command: &Fem3dCommand,
         doc: &ArtifactView<'_, Fem3dSnapshot>,
         cfg: &ConfigView<'_, Fem3dConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -1080,7 +1172,7 @@ impl ArtifactEditor for Fem3dPlayApp {
         crate::live_visual::reconcile(doc)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, Fem3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, Fem3dConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let camera = &cfg.snapshot.camera;
         match body_key {
             window_model::FEM3D_BODY_MODEL => crate::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(camera, visual)),
@@ -1189,8 +1281,8 @@ pub fn create_fem3d_app() -> AppDefinition {
                 ActionArgDef::number("deformationScale", LocalizedLabel::native("Deformation Scale", "Verformungsmaßstab")),
             ])
             .mutation("removeSelection", LocalizedLabel::native("Remove Selection", "Auswahl entfernen"))
-            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::demo::ID, LocalizedLabel::native("Default", "Standard"))]).default_value(&crate::examples::demo::ID),
             ])

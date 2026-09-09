@@ -1,4 +1,3 @@
-
 //! 🧪️ Contract §2.5's two cross-surface guarantees (`assert_viewer_never_mutates`,
 //! `assert_editor_and_viewer_share_dialect`), landed for real in `semio_framework_plugin::testkit`
 //! per `📓️w0-f-report.md` gap 2 — used directly, no local stand-ins.

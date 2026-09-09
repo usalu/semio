@@ -168,10 +168,5 @@
   "params": null,
   "gcps": null,
   "job": null,
-  "results": null,
-  "selection": null,
-  "reportTable": null,
-  "frameCursor": null,
-  "camera": null,
-  "layers": null
+  "results": null
 }

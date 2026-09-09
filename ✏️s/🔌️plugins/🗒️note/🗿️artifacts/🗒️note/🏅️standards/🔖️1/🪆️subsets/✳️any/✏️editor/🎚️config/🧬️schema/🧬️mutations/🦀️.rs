@@ -7,9 +7,6 @@ pub use set_engagement_input::SetEngagementInput;
 #[path = "📷️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
-#[path = "🧰️set-active-utility/🦀️.rs"]
-mod set_active_utility;
-pub use set_active_utility::SetActiveUtility;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = NoteConfig, diff = NoteConfig, schema = "note.config")]
@@ -18,8 +15,6 @@ pub enum NoteConfigMutation {
     SetEngagementInput(SetEngagementInput),
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),
-    #[dsl(key = "set-active-utility")]
-    SetActiveUtility(SetActiveUtility),
 }
 
 impl protocol::OpText for NoteConfigMutation {
@@ -41,6 +36,10 @@ impl protocol::OpText for NoteConfigMutation {
 }
 
 impl protocol::OpBinary for NoteConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
 }

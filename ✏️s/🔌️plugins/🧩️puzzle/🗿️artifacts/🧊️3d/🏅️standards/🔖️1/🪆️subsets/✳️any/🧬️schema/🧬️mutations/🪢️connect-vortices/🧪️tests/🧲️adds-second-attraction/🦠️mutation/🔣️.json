@@ -3,12 +3,12 @@
   "id": "attraction-2",
   "attracting": "object-a:vortex-spare",
   "attracted": "object-b:vortex-2",
-  "gap": 0,
+  "gap": 0.0,
   "shift": 0.5,
-  "rise": 0,
-  "rotation": 0,
-  "turn": 0,
-  "tilt": 0,
-  "x": 1,
-  "y": 2
+  "rise": 0.0,
+  "rotation": 0.0,
+  "turn": 0.0,
+  "tilt": 0.0,
+  "x": 1.0,
+  "y": 2.0
 }

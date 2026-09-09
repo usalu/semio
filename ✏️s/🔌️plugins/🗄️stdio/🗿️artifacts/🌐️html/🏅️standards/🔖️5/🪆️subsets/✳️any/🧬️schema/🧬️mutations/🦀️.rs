@@ -18,6 +18,20 @@ use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
 //#region 🔖️Mutations
+#[path = "➕insert-node/🦀️.rs"]
+pub mod insert_node;
+#[path = "➖remove-node/🦀️.rs"]
+pub mod remove_node;
+#[path = "🔖set-attribute/🦀️.rs"]
+pub mod set_attribute;
+#[path = "💬set-comment/🦀️.rs"]
+pub mod set_comment;
+#[path = "📜set-doctype/🦀️.rs"]
+pub mod set_doctype;
+#[path = "🏷️set-element-name/🦀️.rs"]
+pub mod set_element_name;
+#[path = "⌨️set-raw-text/🦀️.rs"]
+pub mod set_raw_text;
 /// 📐️ Typed content mutation for `stdio.html`. Beyond the baseline `SetSnapshot`, this addresses
 /// nodes in the persisted `HtmlSnapshot.root` tree by `NodePath` (child-index chain from the root
 /// element). `InsertNode`/`RemoveNode`'s `parent` addresses the PARENT element (`index` is the
@@ -26,22 +40,8 @@ use protocol::{Mutation, OpText};
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "📜set-doctype/🦀️.rs"]
-pub mod set_doctype;
-#[path = "➕insert-node/🦀️.rs"]
-pub mod insert_node;
-#[path = "➖remove-node/🦀️.rs"]
-pub mod remove_node;
-#[path = "🏷️set-element-name/🦀️.rs"]
-pub mod set_element_name;
-#[path = "🔖set-attribute/🦀️.rs"]
-pub mod set_attribute;
 #[path = "✍️set-text/🦀️.rs"]
 pub mod set_text;
-#[path = "💬set-comment/🦀️.rs"]
-pub mod set_comment;
-#[path = "⌨️set-raw-text/🦀️.rs"]
-pub mod set_raw_text;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]

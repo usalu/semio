@@ -1,4 +1,3 @@
-
 /// 🧵️ Framework-neutral summary exposed by the owned oracle boundary.
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct NormRetainedDispositionSummary {
@@ -35,7 +34,7 @@ impl NormRetainedDispositionOracle for SerdeJsonNormRetainedDispositionOracle {
         }
         let apps = value["apps"].as_array().ok_or("apps must be an array")?;
         let publication_contracts = value["publicationContracts"].as_array().ok_or("publicationContracts must be an array")?;
-        let declared = super::NORM_PUBLICATION_CONTRACTS.iter().map(|contract| serde_json::json!({ "toolId": contract.tool_id, "lanes": contract.lanes.iter().map(|lane| format!("{lane:?}")).collect::<Vec<_>>() })).collect::<Vec<_>>();
+        let declared = super::NORM_PUBLICATION_CONTRACTS.iter().map(|contract| serde_json::json!({ "toolId": contract.tool_id, "lanes": contract.lanes.iter().copied().map(super::publication_lane_id).collect::<Vec<_>>() })).collect::<Vec<_>>();
         if publication_contracts != &declared {
             return Err("publication contracts do not match the live factory declaration".into());
         }

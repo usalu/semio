@@ -34,9 +34,6 @@ impl En1990Diff {
             if let Some(value) = &self.seismic_a_ed_kn {
                 next.seismic_a_ed_kn = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -81,7 +78,6 @@ impl MutationDiff<En1990Snapshot> for En1990Diff {
         take!(consequence_class);
         take!(annex);
         take!(seismic_a_ed_kn);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

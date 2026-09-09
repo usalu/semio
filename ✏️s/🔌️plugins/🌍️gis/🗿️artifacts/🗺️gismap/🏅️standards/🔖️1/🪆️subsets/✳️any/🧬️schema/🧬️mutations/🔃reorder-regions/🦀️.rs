@@ -1,13 +1,13 @@
 //! 🔀️ `reorder-regions` mutation payload — repositions a region feature within `regions`
 //! by id (id-keyed collection, so addressing is `id`+`to_index`, not a bare index pair).
 
-use crate::GisMapSnapshot;
 use crate::diff::GisMapDiff;
 use crate::mutations::GisMapMutation;
+use crate::GisMapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔹Payload
 /// 🔀️ Moves the `regions` entry addressed by `id` to `to_index`. Diff/inverse delegate to the

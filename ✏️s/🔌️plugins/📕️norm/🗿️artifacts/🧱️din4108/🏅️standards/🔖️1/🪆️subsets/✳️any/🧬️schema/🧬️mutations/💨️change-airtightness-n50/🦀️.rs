@@ -1,6 +1,5 @@
 //! 💨 `change-airtightness-n50` — sets the DIN 4108 `airtightness_n50` scalar.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

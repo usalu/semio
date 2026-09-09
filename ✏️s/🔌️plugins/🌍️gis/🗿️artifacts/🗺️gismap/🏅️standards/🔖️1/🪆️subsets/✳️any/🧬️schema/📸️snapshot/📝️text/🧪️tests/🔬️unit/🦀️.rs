@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::MapFeature;
 use serde_json::json;

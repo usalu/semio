@@ -133,8 +133,7 @@ impl Surface {
                 SurfaceDerivatives { point: self.eval(u, v), du, dv, duu, duv, dvv }
             }
             Surface::Nurbs { u_knots, v_knots, controls, weights } => {
-                let controls_h: Vec<Vec<Vec<f64>>> =
-                    controls.iter().zip(weights).map(|(row, wrow)| row.iter().zip(wrow).map(|(p, &w)| vec![p.x * w, p.y * w, p.z * w, w]).collect()).collect();
+                let controls_h: Vec<Vec<Vec<f64>>> = controls.iter().zip(weights).map(|(row, wrow)| row.iter().zip(wrow).map(|(p, &w)| vec![p.x * w, p.y * w, p.z * w, w]).collect()).collect();
                 let s = surface_derivatives_rational(u_knots, v_knots, &controls_h, u, v, 2);
                 let vec_of = |k: usize, l: usize| Vec3::new(s[k][l][0], s[k][l][1], s[k][l][2]);
                 let p0 = vec_of(0, 0);
@@ -355,12 +354,9 @@ impl Surface {
                 let z = x.cross(y);
                 Surface::Plane { frame: Frame3 { origin: map.apply_point(frame.origin), x, y, z } }
             }
-            Surface::Nurbs { u_knots, v_knots, controls, weights } => Surface::Nurbs {
-                u_knots: u_knots.clone(),
-                v_knots: v_knots.clone(),
-                controls: controls.iter().map(|row| row.iter().map(|p| map.apply_point(*p)).collect()).collect(),
-                weights: weights.clone(),
-            },
+            Surface::Nurbs { u_knots, v_knots, controls, weights } => {
+                Surface::Nurbs { u_knots: u_knots.clone(), v_knots: v_knots.clone(), controls: controls.iter().map(|row| row.iter().map(|p| map.apply_point(*p)).collect()).collect(), weights: weights.clone() }
+            }
             Surface::Cylinder { frame, radius } => match map.is_similarity() {
                 Some((_, scale, _)) => Surface::Cylinder { frame: axial_frame_transformed(frame, map, scale), radius: radius * scale },
                 None => {
@@ -390,16 +386,14 @@ impl Surface {
                 None => {
                     // 🧭️ Both directions are angle-parametrized (`u` AND `v`), so both need
                     // [`refined_max_span`], not just the shared `u`-sweep inside `revolve_to_nurbs`.
-                    let (knots, profile, weights) =
-                        circular_profile_with_span((0.0, 0.0), *radius, (-std::f64::consts::FRAC_PI_2, std::f64::consts::FRAC_PI_2), refined_max_span(*radius));
+                    let (knots, profile, weights) = circular_profile_with_span((0.0, 0.0), *radius, (-std::f64::consts::FRAC_PI_2, std::f64::consts::FRAC_PI_2), refined_max_span(*radius));
                     revolve_to_nurbs(frame, map, knots, &profile, &weights, *radius)
                 }
             },
             Surface::Torus { frame, major_radius, minor_radius } => match map.is_similarity() {
                 Some((_, scale, _)) => Surface::Torus { frame: frame.transformed(map, scale), major_radius: major_radius * scale, minor_radius: minor_radius * scale },
                 None => {
-                    let (knots, profile, weights) =
-                        circular_profile_with_span((*major_radius, 0.0), *minor_radius, (0.0, std::f64::consts::TAU), refined_max_span(*minor_radius));
+                    let (knots, profile, weights) = circular_profile_with_span((*major_radius, 0.0), *minor_radius, (0.0, std::f64::consts::TAU), refined_max_span(*minor_radius));
                     revolve_to_nurbs(frame, map, knots, &profile, &weights, major_radius + minor_radius)
                 }
             },

@@ -84,7 +84,7 @@ else {
 }
 `);
   }
-  const env = { ...process.env, NX_WORKSPACE_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_DAEMON: "false", NX_TUI: "false", NX_NATIVE_COMMAND_RUNNER: "false", NX_NO_CLOUD: "true", NODE_OPTIONS: "" };
+  const env = { ...process.env, NX_WORKSPACE_ROOT_PATH: root, REPO_ROOT: root, NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NX_WORKSPACE_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_DAEMON: "false", NX_TUI: "false", NX_NATIVE_COMMAND_RUNNER: "false", NX_NO_CLOUD: "true", NODE_OPTIONS: "" };
   for (const key of Object.keys(env)) if (key.startsWith("NX_TASK_") || ["NX_INVOCATION_ROOT_PID", "NX_SOCKET_DIR", "NX_DAEMON_SOCKET_DIR", "npm_lifecycle_event", "npm_lifecycle_script"].includes(key)) delete env[key];
   const children: ReturnType<typeof Bun.spawn>[] = [], runs: Promise<number>[] = [], outcomes = new Map<string, number>();
   const events = () => existsSync(join(root, "state/events.jsonl")) ? readFileSync(join(root, "state/events.jsonl"), "utf8").trim().split("\n").filter(Boolean).map(line => JSON.parse(line)) : [];

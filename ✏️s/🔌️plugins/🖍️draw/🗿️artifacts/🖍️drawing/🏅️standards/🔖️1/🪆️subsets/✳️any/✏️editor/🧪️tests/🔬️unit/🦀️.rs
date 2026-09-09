@@ -1,10 +1,9 @@
-
 use super::*;
-use crate::DrawingLayerNode;
 use crate::schema::{default_drawing_document, layer_id, semio_drawing_example_json};
+use crate::DrawingLayerNode;
 use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::{PluginApp, SET_ACTIVE_UTILITY_ACTION_ID, ViewModel, testkit as fw_testkit};
-use testkit::{DrawingApp, drawing_app, set_utility};
+use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
+use testkit::{drawing_app, meta_with_utility, DrawingApp};
 
 fn canvas_scene(tree: semio_framework_plugin::ComponentTree) -> semio_framework_plugin::Canvas2dScene {
     let decoded = match &tree.root.component {
@@ -260,9 +259,9 @@ async fn patch_layer_name_emits_op_and_changes_projection() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
+async fn host_utility_change_clears_scratch_and_emits_no_history_entry() {
     let mut app = drawing_app().await;
-    set_utility(&mut app, "shapeRect").await;
+    let shape_meta = meta_with_utility("shapeRect");
     app.dispatch_typed(
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 10.0,
@@ -277,15 +276,17 @@ async fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
             checkpoint_pending_work: None,
             ..Default::default()
         }),
-        &fw_testkit::meta("local"),
+        &shape_meta,
     )
     .await
     .expect("down");
     let before = app.snapshot().unwrap();
-    let result = app.dispatch_typed(DrawingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pen".into() }), &fw_testkit::meta("local")).await.expect("switch utility");
-    assert!(result.mutations.is_empty(), "utility switching never emits document operations");
+    let pen_meta = meta_with_utility("pen");
+    let pen_view = pen_meta.view_state.as_ref().expect("host view");
+    let tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, pen_view).await.expect("render after utility change");
+    fw_testkit::project_and_retire_fixture_tree(tree).expect("retire render tree");
     assert_eq!(app.snapshot().unwrap(), before, "utility switching does not mutate the document");
-    let up = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).await.expect("up");
+    let up = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &pen_meta).await.expect("up");
     assert!(up.mutations.is_empty(), "the in-progress shape draft was cleared on utility switch");
 }
 
@@ -311,7 +312,7 @@ async fn canvas_point_to_world_matches_host_formula() {
 #[semio_framework_async_macros::async_test]
 async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
     let mut app = drawing_app().await;
-    set_utility(&mut app, "shapeRect").await;
+    let utility_meta = meta_with_utility("shapeRect");
     app.dispatch_typed(
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 500.0,
@@ -326,12 +327,12 @@ async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
             checkpoint_pending_work: None,
             ..Default::default()
         }),
-        &fw_testkit::meta("local"),
+        &utility_meta,
     )
     .await
     .expect("down");
-    app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0 }), &fw_testkit::meta("local")).await.expect("move");
-    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).await.expect("up");
+    app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0 }), &utility_meta).await.expect("move");
+    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &utility_meta).await.expect("up");
     assert_eq!(result.mutations.len(), 1, "a shape drag commits as one edit adding exactly the layer");
     let projection = app.snapshot().unwrap();
     assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Shape(shape) if shape.shape_kind == "rect")));
@@ -347,7 +348,7 @@ async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
 #[semio_framework_async_macros::async_test]
 async fn pen_draft_commits_path_layer_on_enter() {
     let mut app = drawing_app().await;
-    set_utility(&mut app, "pen").await;
+    let utility_meta = meta_with_utility("pen");
     app.dispatch_typed(
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 400.0,
@@ -362,7 +363,7 @@ async fn pen_draft_commits_path_layer_on_enter() {
             checkpoint_pending_work: None,
             ..Default::default()
         }),
-        &fw_testkit::meta("local"),
+        &utility_meta,
     )
     .await
     .expect("p1");
@@ -380,11 +381,11 @@ async fn pen_draft_commits_path_layer_on_enter() {
             checkpoint_pending_work: None,
             ..Default::default()
         }),
-        &fw_testkit::meta("local"),
+        &utility_meta,
     )
     .await
     .expect("p2");
-    let result = app.dispatch_typed(DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}), &fw_testkit::meta("local")).await.expect("commit");
+    let result = app.dispatch_typed(DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}), &utility_meta).await.expect("commit");
     assert_eq!(result.mutations.len(), 1, "the draft commits as exactly one AddLayer edit");
     let projection = app.snapshot().unwrap();
     assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Path(path) if !path.segments.is_empty())));
@@ -395,7 +396,7 @@ async fn pen_draft_commits_path_layer_on_enter() {
 async fn canvas_escape_cancels_draft_without_committing() {
     let mut app = drawing_app().await;
     let before = app.snapshot().unwrap().layers.len();
-    set_utility(&mut app, "pen").await;
+    let utility_meta = meta_with_utility("pen");
     app.dispatch_typed(
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 400.0,
@@ -410,11 +411,11 @@ async fn canvas_escape_cancels_draft_without_committing() {
             checkpoint_pending_work: None,
             ..Default::default()
         }),
-        &fw_testkit::meta("local"),
+        &utility_meta,
     )
     .await
     .expect("p1");
-    let result = app.dispatch_typed(DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &fw_testkit::meta("local")).await.expect("escape");
+    let result = app.dispatch_typed(DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &utility_meta).await.expect("escape");
     assert!(result.mutations.is_empty());
     assert_eq!(app.snapshot().unwrap().layers.len(), before);
 }
@@ -426,7 +427,7 @@ async fn marquee_select_covers_contained_layer_only() {
     // `🧬️mutations/🦀️.rs`'s module doc); this exercises the same real semantic
     // `create-layer`/`update-layer-transform` mutations a live editor session would emit.
     let mut app = drawing_app().await;
-    set_utility(&mut app, "selectMarquee").await;
+    let utility_meta = meta_with_utility("selectMarquee");
     let initial_id = layer_id(&app.snapshot().unwrap().layers[0]).to_string();
     app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &fw_testkit::meta("local")).await.expect("clear default layer");
 
@@ -457,12 +458,12 @@ async fn marquee_select_covers_contained_layer_only() {
             checkpoint_pending_work: None,
             ..Default::default()
         }),
-        &fw_testkit::meta("local"),
+        &utility_meta,
     )
     .await
     .expect("down");
-    app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }), &fw_testkit::meta("local")).await.expect("move");
-    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).await.expect("up");
+    app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }), &utility_meta).await.expect("move");
+    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &utility_meta).await.expect("up");
     // 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
     // the marquee hit-test requests `interactionSelect` for exactly the contained rect via a
     // `Effect::ReplayShellCommand`, instead of writing a `DrawingConfigMutation::SetSelection`.
@@ -532,7 +533,6 @@ async fn canvas_pointer_up_direct_pick_requests_interaction_select() {
     app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add rect");
     let rect_id = last_layer_id(&app);
     app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("camera");
-    set_utility(&mut app, "selectDirect").await;
     // 🎯️ Default `shape:rect` geometry is world (0,0)-(128,96); screen (110,110) on a 200x200
     // viewport with the identity camera above maps to world (10,10) — inside the rect.
     let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).await.expect("pick");
@@ -564,13 +564,13 @@ async fn drawing_labels_resolve_native_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn drawing_labels_translate_panels_in_german() {
     let mut app = drawing_app().await;
-    app.dispatch_typed(DrawingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &fw_testkit::meta("local")).await.expect("set locale");
-    let layers_node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).await.expect("render");
+    let view_state = ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let layers_node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &view_state).await.expect("render");
     let layers_json = fw_testkit::project_and_retire_fixture_tree(layers_node).expect("retire layers tree");
     assert!(layers_json.contains("Pfad hinzufügen"));
     assert!(layers_json.contains("Rechteck hinzufügen"));
     assert!(!layers_json.contains("Add Path"));
-    let catalogue_node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).await.expect("render");
+    let catalogue_node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &view_state).await.expect("render");
     let catalogue_json = fw_testkit::project_and_retire_fixture_tree(catalogue_node).expect("retire catalogue tree");
     assert!(catalogue_json.contains("\"Ellipse\""));
     assert!(catalogue_json.contains("Nachzeichnung"));
@@ -602,7 +602,7 @@ async fn gesture_preview_is_none_while_idle() {
 async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
     let mut session = DrawingSession::default();
     let document = default_drawing_document("empty", None);
-    let config = DrawingConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
+    let config = DrawingConfig::default();
 
     let down = session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [10.0, 10.0], shift: false, ctrl: false, meta: false }, &document, &config);
     assert!(down.artifact_mutations.is_empty(), "pointer-down starts a scratch drag, not a document operation");
@@ -626,7 +626,7 @@ async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
 async fn gesture_preview_is_a_pure_read_never_mutating_gesture_context() {
     let mut session = DrawingSession::default();
     let document = default_drawing_document("empty", None);
-    let config = DrawingConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
+    let config = DrawingConfig::default();
     session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [1.0, 2.0], shift: false, ctrl: false, meta: false }, &document, &config);
     let context_before = session.gesture.context.clone();
     let _ = session.preview();
@@ -656,11 +656,9 @@ fn every_command() -> Vec<DrawingCommand> {
         DrawingCommand::CombineBoolean(combine_boolean::CombineBoolean { operation: "union".into(), ids: vec!["a".into(), "b".into()] }),
         DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: "layer-1".into(), field: "opacity".into(), value: "0.4".into() }),
         DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec!["a".into(), "b".into()], field: "blendMode".into(), value: "\"multiply\"".into() }),
-        DrawingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pen".into() }),
         DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
         DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 2.0 }),
         DrawingCommand::EngagementInput(engagement_input::EngagementInput { value: "typing".into() }),
-        DrawingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 1.0,
             y: 2.0,
@@ -735,11 +733,9 @@ async fn every_command_row_prints_starting_with_its_wire_keyword() {
         "combine-boolean",
         "patch-layer",
         "patch-layers",
-        "active-utility",
         "camera",
         "camera-zoom",
         "engagement-input",
-        "locale",
         "canvas-pointer-down",
         "canvas-pointer-move",
         "canvas-pointer-up",
@@ -764,7 +760,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory as _;
 
     assert_eq!(DRAWING_GESTURE_TOOL_IDS.len(), 6);
-    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 20);
+    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 18);
     let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).copied().collect::<Vec<_>>();
     routes.sort_unstable();
     let mut declared = every_command().into_iter().map(|command| command.command_id()).collect::<Vec<_>>();
@@ -808,7 +804,7 @@ async fn set_active_example_resolves_the_registered_catalogue() {
     let history = semio_framework_plugin::HistoryView::empty();
     let config = DrawingConfig::default();
     let view = ArtifactView::new(&doc, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let mut session = DrawingSession::default();
     for source in examples {
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: source.id().into() }, &view, &cfg, &mut session).expect("a registered example id loads its document");

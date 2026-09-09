@@ -12,11 +12,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &PlySnapshot) -> Result<LowpolySnapshot, store::TextError> {
     let prefix = crate::io::export::serializers::artifacts::ply::v1_0::any::LOWPOLY_DSL_COMMENT_PREFIX;
-    let hex = from
-        .comments
-        .iter()
-        .find_map(|c| c.strip_prefix(prefix))
-        .ok_or_else(|| store::TextError::new("ply->lowpoly: missing embedded lowpoly DSL comment", dsl::TextSpan::at(1, 1)))?;
+    let hex = from.comments.iter().find_map(|c| c.strip_prefix(prefix)).ok_or_else(|| store::TextError::new("ply->lowpoly: missing embedded lowpoly DSL comment", dsl::TextSpan::at(1, 1)))?;
     let text = dec_str(hex).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
     parse_dsl(&text)
 }

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::document::ClimateZoneDe;
 use crate::standards::v1::subsets::any::schema::{from_building, reference_wall_layers};

@@ -7,11 +7,11 @@
       "mediaKind": "image"
     },
     "origin": [
-      0,
-      0,
-      3
+      0.0,
+      0.0,
+      3.0
     ],
-    "widthWorld": 6,
+    "widthWorld": 6.0,
     "locked": false,
     "hidden": false
   },

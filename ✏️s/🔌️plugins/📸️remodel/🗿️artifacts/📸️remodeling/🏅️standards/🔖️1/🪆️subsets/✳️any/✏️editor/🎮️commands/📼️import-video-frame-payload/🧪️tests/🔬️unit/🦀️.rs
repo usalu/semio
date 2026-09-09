@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::remodeling::RemodelingCommand;
 use crate::editor::remodeling::commands::{add_stream, import_video_bytes_payload, import_video_done, remove_stream, set_stream_sync};
 use crate::editor::remodeling::testkit::{app, dispatch};
+use crate::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn import_frame_payload_creates_a_stream_and_asset() {

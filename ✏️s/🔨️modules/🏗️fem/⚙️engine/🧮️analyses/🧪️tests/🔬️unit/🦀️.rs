@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::elements2d::{Bar2, BeamEb2};
-use crate::model::{AxialSpring, Model, solve_linear_static};
+use crate::model::{solve_linear_static, AxialSpring, Model};
 use crate::numerical_testkit::payload_bytes;
 
 fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {

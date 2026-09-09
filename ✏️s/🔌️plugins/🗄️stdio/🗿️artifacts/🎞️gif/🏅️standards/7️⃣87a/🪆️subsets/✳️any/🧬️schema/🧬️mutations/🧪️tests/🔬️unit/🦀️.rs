@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 

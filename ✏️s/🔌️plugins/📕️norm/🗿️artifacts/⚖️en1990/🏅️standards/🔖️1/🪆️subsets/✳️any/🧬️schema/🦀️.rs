@@ -28,8 +28,6 @@ pub struct En1990Artifact {
     pub annex: AnnexChoice,
     #[state(artifact)]
     pub seismic_a_ed_kn: f64,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -40,15 +38,13 @@ impl En1990Artifact {
         crate::En1990Snapshot { g_k: self.g_k, q_k: self.q_k.clone(), resistance_kn: self.resistance_kn, consequence_class: self.consequence_class, annex: self.annex, seismic_a_ed_kn: self.seismic_a_ed_kn }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::En1990Snapshot) -> Self {
-        Self { g_k: snapshot.g_k, q_k: snapshot.q_k, resistance_kn: snapshot.resistance_kn, consequence_class: snapshot.consequence_class, annex: snapshot.annex, seismic_a_ed_kn: snapshot.seismic_a_ed_kn, selected_check_index: None }
+        Self { g_k: snapshot.g_k, q_k: snapshot.q_k, resistance_kn: snapshot.resistance_kn, consequence_class: snapshot.consequence_class, annex: snapshot.annex, seismic_a_ed_kn: snapshot.seismic_a_ed_kn }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
     pub fn set_snapshot(&mut self, snapshot: crate::En1990Snapshot) {
-        let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
-        self.selected_check_index = selected;
     }
 }
 
@@ -59,13 +55,7 @@ impl En1990Artifact {
 pub fn en1990_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1990",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),

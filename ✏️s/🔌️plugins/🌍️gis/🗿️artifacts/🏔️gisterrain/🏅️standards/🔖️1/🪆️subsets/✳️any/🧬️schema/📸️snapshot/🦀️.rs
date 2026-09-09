@@ -9,8 +9,8 @@
 //! slot table for the top-level facets.
 
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
-use dsl::{FromValue, ToValue};
 use ::semio_framework_schema::ArtifactSchema;
+use dsl::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 

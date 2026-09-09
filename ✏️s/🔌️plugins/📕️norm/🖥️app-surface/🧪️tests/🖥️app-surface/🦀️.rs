@@ -154,7 +154,7 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
     assert_eq!(fixture.publication_contracts.len(), semio_s_artifact_norm_contract::app_surface::NORM_PUBLICATION_CONTRACTS.len());
     for (row, declared) in fixture.publication_contracts.iter().zip(semio_s_artifact_norm_contract::app_surface::NORM_PUBLICATION_CONTRACTS) {
         assert_eq!(row.tool_id, declared.tool_id);
-        assert_eq!(row.lanes, declared.lanes.iter().map(|lane| format!("{lane:?}")).collect::<Vec<_>>());
+        assert_eq!(row.lanes, declared.lanes.iter().copied().map(semio_s_artifact_norm_contract::app_surface::publication_lane_id).collect::<Vec<_>>());
     }
     for (route, contract) in fixture.routes.iter().zip(&fixture.publication_contracts) {
         assert_eq!(route.admission, "migrated");

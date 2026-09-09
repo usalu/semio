@@ -5,9 +5,9 @@ use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{
     change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, register_trinity_graph_mutation_descriptors, remove_data_property, rename_node, CreateEdge, DeleteNode, RenameNode,
 };
-use crate::{EntityRef, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
 #[cfg(test)]
 use crate::{Edge, Node, Port};
+use crate::{EntityRef, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
 use protocol::Mutation;
 use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
 

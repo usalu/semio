@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::generation2d::Generation2dCommand;
 use crate::editor::generation2d::testkit::{app, dispatch};
+use crate::editor::generation2d::Generation2dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn add_widget_emits_op_and_grows_document() {

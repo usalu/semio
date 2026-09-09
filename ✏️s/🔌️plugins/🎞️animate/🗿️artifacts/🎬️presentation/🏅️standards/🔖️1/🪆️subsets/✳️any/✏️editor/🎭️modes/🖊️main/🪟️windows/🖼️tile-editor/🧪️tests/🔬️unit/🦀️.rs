@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::animate::PresentationCommand;
 use crate::editor::animate::testkit::{presentation_app, render as render_body};
+use crate::editor::animate::PresentationCommand;
 use dsl::os_pack::json::Value;
 use semio_framework_plugin::testkit::meta;
 

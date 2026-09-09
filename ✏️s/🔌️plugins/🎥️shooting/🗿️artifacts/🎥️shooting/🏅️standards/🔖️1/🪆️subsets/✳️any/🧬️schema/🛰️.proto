@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.shooting.shooting.artifact;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Shooting artifact schema — every field with its state class.
 
@@ -18,25 +19,8 @@ message ShootingArtifact {
   string active_shot_id = 6;
   // @state artifact
   string active_asset_id = 7;
-  // @state presence
-  repeated string selected_shot_ids = 8;
-  // @state presence
-  string active_utility_id = 10;
-  // @state config
-  string default_shot_format = 11;
-  // @state config
-  string default_shot_shape = 12;
-  // @state config
-  string default_asset_format = 13;
-  // @state config
-  bool center_model = 15;
-  // @state config
-  uint32 fit_revision = 16;
-  // @state config
-  string camera_draft_label = 17;
-  // @state config
-  ShootingCamera camera = 18;
-  // @state config
+  // @state artifact
+  optional semio.os.store.ArtifactChild emblem = 8;
 }
 
 message ShootingCamera {

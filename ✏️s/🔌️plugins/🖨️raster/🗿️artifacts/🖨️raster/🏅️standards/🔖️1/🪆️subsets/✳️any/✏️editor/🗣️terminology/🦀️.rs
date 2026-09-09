@@ -1,8 +1,6 @@
 //! 🗣️ Raster app — locale/terminology (constitutional: general). One `app_labels!` block, never split
 //! (TEMPLATE.md §4).
 
-use crate::editor::raster::config::RasterConfig;
-
 //#region 🔖️Terminology
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the raster app; one field per label makes every locale combination

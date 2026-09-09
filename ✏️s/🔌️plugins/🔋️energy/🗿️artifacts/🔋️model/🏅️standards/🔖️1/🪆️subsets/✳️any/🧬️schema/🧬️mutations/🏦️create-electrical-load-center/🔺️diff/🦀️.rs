@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateElectricalLoadCenter` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateElectricalLoadCenter, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -19,7 +19,9 @@ pub fn diff(payload: &super::CreateElectricalLoadCenter, base: &EnergyModelSnaps
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Battery {} does not exist.", missing.0), [missing.0.to_string()]);
     }
     let mut model = base.model.clone();
-    model.electrical_load_centers.insert(payload.index as usize, crate::model::ElectricalLoadCenter { id: payload.id, name: payload.name.clone(), generator_ids: payload.generator_ids.clone(), pv_ids: payload.pv_ids.clone(), battery_ids: payload.battery_ids.clone() });
+    model
+        .electrical_load_centers
+        .insert(payload.index as usize, crate::model::ElectricalLoadCenter { id: payload.id, name: payload.name.clone(), generator_ids: payload.generator_ids.clone(), pv_ids: payload.pv_ids.clone(), battery_ids: payload.battery_ids.clone() });
     protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

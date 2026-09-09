@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::equation::EquationCommand;
 use crate::editor::equation::testkit::{dispatch, math_app};
+use crate::editor::equation::EquationCommand;
 use crate::{EquationGeometry, EquationPoint};
 
 #[semio_framework_async_macros::async_test]

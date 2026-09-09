@@ -5,20 +5,41 @@
   "additionalProperties": false,
   "required": [
     "server",
-    "hmr"
+    "hmr",
+    "storage"
   ],
   "properties": {
     "hmr": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["clientPath", "protocol", "connected", "update", "changedFile", "contents"],
+      "required": [
+        "clientPath",
+        "protocol",
+        "connected",
+        "update",
+        "changedFile",
+        "contents"
+      ],
       "properties": {
-        "clientPath": { "const": "/@vite/client" },
-        "protocol": { "const": "vite-hmr" },
-        "connected": { "const": "connected" },
-        "update": { "const": "full-reload" },
-        "changedFile": { "const": "index.html" },
-        "contents": { "type": "string", "minLength": 1 }
+        "clientPath": {
+          "const": "/@vite/client"
+        },
+        "protocol": {
+          "const": "vite-hmr"
+        },
+        "connected": {
+          "const": "connected"
+        },
+        "update": {
+          "const": "full-reload"
+        },
+        "changedFile": {
+          "const": "index.html"
+        },
+        "contents": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "server": {
@@ -41,6 +62,33 @@
         "expected": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "modules",
+        "config",
+        "optimizer"
+      ],
+      "properties": {
+        "package": {
+          "const": {
+            "private": true,
+            "type": "module"
+          }
+        },
+        "modules": {
+          "const": "node_modules"
+        },
+        "config": {
+          "const": "node_modules/.vite-temp"
+        },
+        "optimizer": {
+          "const": "node_modules/.vite"
         }
       }
     }

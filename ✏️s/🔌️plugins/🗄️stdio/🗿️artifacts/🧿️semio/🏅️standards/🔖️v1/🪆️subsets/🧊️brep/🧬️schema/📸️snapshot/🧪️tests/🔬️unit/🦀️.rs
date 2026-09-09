@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧱️ A small but fully-populated, self-referentially-consistent b-rep: one triangular face

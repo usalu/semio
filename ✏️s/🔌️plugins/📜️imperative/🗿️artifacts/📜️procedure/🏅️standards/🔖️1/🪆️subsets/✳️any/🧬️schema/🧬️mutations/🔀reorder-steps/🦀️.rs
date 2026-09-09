@@ -2,7 +2,7 @@
 //! step list (never spatial — see `📓️taxonomy.md`'s `reorder` row).
 use crate::diff::ProcedureDiff;
 use crate::mutations::ProcedureMutation;
-use crate::{ProcedureSnapshot, PathRef};
+use crate::{PathRef, ProcedureSnapshot};
 
 //#region 🔖️Mutation
 /// 🔀 `reorder-steps` payload — FINAL-state target index for `id` within its sibling list.

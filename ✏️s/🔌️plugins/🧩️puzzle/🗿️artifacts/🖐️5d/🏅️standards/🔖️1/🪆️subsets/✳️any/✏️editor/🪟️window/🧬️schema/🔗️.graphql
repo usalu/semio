@@ -1,0 +1,38 @@
+type Puzzle5dCamera2d {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type Puzzle5dCamera3d {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+}
+
+type Puzzle5dWorldSunConfig {
+  enabled: Boolean!
+  azimuth: Float!
+  elevation: Float!
+  intensity: Float!
+  color: String!
+}
+
+type Puzzle5dBoardWindowConfig {
+  camera2d: Puzzle5dCamera2d!
+  fillCount: Int!
+  lodMode: String!
+  suggestionOffset: Float!
+  gridSnapEnabled: Boolean!
+  gridFactor: Float!
+}
+
+type Puzzle5dWorldWindowConfig {
+  camera3d: Puzzle5dCamera3d!
+  sun: Puzzle5dWorldSunConfig!
+}
+
+type Puzzle5dWindowTransient {
+  engagementInput: String!
+  brushCandidateIndex: Int!
+}

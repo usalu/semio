@@ -54,7 +54,7 @@ mod app_commands_tests {
         let config = ();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let cfg = ConfigView { snapshot: &config };
+        let cfg = ConfigView { snapshot: &config, window: None };
 
         let emit: Emit<String, NoConfigMutation> = TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).dispatch(&doc, &cfg).expect("dispatch add-widget");
         assert_eq!(emit.artifact_mutations, vec!["add:inputSlider:1.5".to_string()]);
@@ -125,7 +125,7 @@ mod app_commands_tests {
         let config = ();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let cfg = ConfigView { snapshot: &config };
+        let cfg = ConfigView { snapshot: &config, window: None };
         let mut ctx = 41u32;
         let emit: Emit<String, NoConfigMutation> = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "neuron".into() }).dispatch(&doc, &cfg, &mut ctx).expect("dispatch");
         assert_eq!(emit.artifact_mutations, vec!["add:neuron:42".to_string()]);

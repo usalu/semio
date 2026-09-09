@@ -419,8 +419,8 @@ pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: 
 fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     for command in commands {
         match command {
-            ui_wgpu::wgpu::UiCommand::App { action, .. } => {
-                if let Err(fault) = publish_retained_action(input, action) {
+            ui_wgpu::wgpu::UiCommand::App { window_id, action } => {
+                if let Err(fault) = publish_retained_action(input, window_id, action) {
                     input.record_action_fault(fault);
                     return;
                 }
@@ -446,11 +446,17 @@ fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu:
     drive_scene_interaction_step(input);
 }
 
-fn publish_retained_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, action: &ActionDescriptor) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn publish_retained_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, window_id: &str, action: &ActionDescriptor) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let mut reservation = input.reserve_action(&action.controller_id, &action.action, ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
-    if let Some(args) = action.args.as_ref() {
-        reservation.builder().value(None, args)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    if let Some(semio_framework::DslValue::Object(entries)) = action.args.as_ref() {
+        for (key, value) in entries {
+            if key != "windowId" { builder.value(Some(key), value)?; }
+        }
     }
+    builder.string(Some("windowId"), window_id)?;
+    builder.end_container()?;
     reservation.publish()
 }
 
@@ -476,14 +482,15 @@ fn apply_drop_committed(window_id: &str, target: NodeId, payload: &DragPayload, 
     builder.begin_object(None)?;
     if let Some(semio_framework::DslValue::Object(entries)) = action.args.as_ref() {
         for (key, value) in entries {
-            if !patch.contains_key(key) {
+            if key != "windowId" && !patch.contains_key(key) {
                 builder.value(Some(key), value)?;
             }
         }
     }
     for (key, value) in &patch {
-        write_json_action_value(builder, Some(key), value)?;
+        if key != "windowId" { write_json_action_value(builder, Some(key), value)?; }
     }
+    builder.string(Some("windowId"), window_id)?;
     builder.end_container()?;
     reservation.publish()
 }
@@ -1049,7 +1056,7 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
         match cursor.bind(slot.node) {
             Ok(true) => {}
             Ok(false) => return ui_wgpu::wgpu::ScenePaintStep::Pending,
-            Err(()) => return ui_wgpu::wgpu::ScenePaintStep::Fault,
+            Err(_) => return ui_wgpu::wgpu::ScenePaintStep::Fault,
         }
         let mut ctx = framework_widget_context(draw, None, atlas, icons, self.input, self.theme, self.scroll_offsets, self.collapsed_sections, self.open_selects, None);
         match &slot.content {
@@ -1177,7 +1184,7 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                     collapsed_sections: ctx.collapsed_sections,
                     open_selects: ctx.open_selects,
                 };
-                match engine.frame_into_step(window_id, viewport_w, viewport_h, bounds.x, bounds.y, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw) {
+                match engine.frame_into_step(window_id, ui_wgpu::wgpu::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h }, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw) {
                     ui_wgpu::wgpu::UiFrameStep::Ready | ui_wgpu::wgpu::UiFrameStep::Missing => cursor.phase = UiDocumentFramePhase::Complete,
                     ui_wgpu::wgpu::UiFrameStep::Pending => {}
                     ui_wgpu::wgpu::UiFrameStep::Fault => cursor.phase = UiDocumentFramePhase::Fault,

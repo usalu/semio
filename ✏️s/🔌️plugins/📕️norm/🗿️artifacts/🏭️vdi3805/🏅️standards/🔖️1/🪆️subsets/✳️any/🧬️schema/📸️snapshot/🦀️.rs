@@ -48,7 +48,6 @@ impl Default for Vdi3805Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-
 //#region 🌉️ExternalCodecBridge
 /// 📤️ The canonical JSON projection of a [`Vdi3805Snapshot`] — the surface
 /// `../../../../../🧪️tests/🏭️mutate-vdi3805-1` is compared through under `ordered-json-v1`.

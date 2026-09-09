@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::shooting::testkit::{render as render_body, shooting_app};
 

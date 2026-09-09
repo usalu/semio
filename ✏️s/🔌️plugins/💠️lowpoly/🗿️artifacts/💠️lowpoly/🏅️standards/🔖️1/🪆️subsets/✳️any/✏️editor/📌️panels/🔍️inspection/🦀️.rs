@@ -1,10 +1,10 @@
 //! 🔍️ Lowpoly play app panel — the active object's inspector (name, smooth shading, selection summary,
 //! transform utility, staged utility-param sliders).
 
-use crate::LOWPOLY_DOCUMENT_SCHEMA;
-use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{active_object, utility_params_value, LowpolyView};
+use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
+use crate::LOWPOLY_DOCUMENT_SCHEMA;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_ui_contract as ui;
@@ -69,10 +69,7 @@ pub fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabel
         return ui::column()
             .try_id("lowpoly-play-inspector.empty")
             .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly inspector empty id admission failed"))?
-            .try_children([
-                ui::text(ui_label(format!("Schema: {LOWPOLY_DOCUMENT_SCHEMA}"))?),
-                ui::text(ui_label("No active object")?),
-            ])
+            .try_children([ui::text(ui_label(format!("Schema: {LOWPOLY_DOCUMENT_SCHEMA}"))?), ui::text(ui_label("No active object")?)])
             .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly inspector empty children admission failed"))?
             .try_build()
             .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly inspector empty build failed"));

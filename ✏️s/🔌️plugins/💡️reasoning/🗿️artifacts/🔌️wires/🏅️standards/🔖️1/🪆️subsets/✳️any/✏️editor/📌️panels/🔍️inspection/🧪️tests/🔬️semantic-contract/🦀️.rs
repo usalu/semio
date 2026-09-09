@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn project(node: BuiltNode) -> serde_json::Value {
@@ -11,7 +10,10 @@ fn wires_semantic_panels_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
     let document = crate::empty_wires_snapshot();
     for row in vectors["cases"].as_array().expect("locales") {
-        let labels = semio_framework_plugin::resolve_labels::<crate::editor::wires::terminology::WiresLabels>(&semio_framework_plugin::ViewModel { locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")), ..Default::default() });
+        let labels = semio_framework_plugin::resolve_labels::<crate::editor::wires::terminology::WiresLabels>(&semio_framework_plugin::ViewModel {
+            locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")),
+            ..Default::default()
+        });
         let tree = project(crate::editor::wires::panels::document::render(&document, labels).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["identities"]);
         assert_eq!(tree["children"][1]["component"]["label"], row["relationships"]);

@@ -2,15 +2,15 @@
 use crate::schema::diff::SvgDiff;
 use crate::SvgSnapshot;
 
-pub use super::set_declaration::{SetDeclarationMutation, SetDeclarationPayload};
-pub use super::set_doctype::{SetDoctypeMutation, SetDoctypePayload};
 pub use super::insert_element::{InsertElementMutation, InsertElementPayload};
 pub use super::remove_element::{RemoveElementMutation, RemoveElementPayload};
-pub use super::set_element_name::{SetElementNameMutation, SetElementNamePayload};
 pub use super::set_attribute::{SetAttributeMutation, SetAttributePayload};
+pub use super::set_declaration::{SetDeclarationMutation, SetDeclarationPayload};
+pub use super::set_doctype::{SetDoctypeMutation, SetDoctypePayload};
+pub use super::set_element_name::{SetElementNameMutation, SetElementNamePayload};
 pub use super::set_text::{SetTextMutation, SetTextPayload};
-pub use super::set_view_box::{SetViewBoxMutation, SetViewBoxPayload};
 pub use super::set_transform::{SetTransformMutation, SetTransformPayload};
+pub use super::set_view_box::{SetViewBoxMutation, SetViewBoxPayload};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
@@ -29,7 +29,9 @@ pub enum SvgMutation {
 
 pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) -> protocol::MutationOutcome<SvgDiff> {
     let outcome = <SvgMutation as protocol::Mutation<SvgSnapshot>>::diff(mutation, snapshot);
-    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), snapshot) { *snapshot = next; }
+    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        *snapshot = next;
+    }
     outcome
 }
 

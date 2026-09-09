@@ -2,7 +2,6 @@
 //! reaches for. Deliberately ONE block for the whole app (never split per window/panel): the macro's
 //! value is that every locale combination is compile-checked in one place.
 
-
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the forms app; one field per label makes every locale combination compile-checked.

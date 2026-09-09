@@ -1,4 +1,3 @@
-
 #[derive(value_derive::FromValue)]
 struct Value {
     min: [f64; 3],

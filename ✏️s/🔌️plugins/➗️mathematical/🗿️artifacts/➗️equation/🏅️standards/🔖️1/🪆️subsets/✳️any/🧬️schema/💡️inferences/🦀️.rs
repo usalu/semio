@@ -10,9 +10,9 @@ use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
-use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use super::roots::{compute_equation_roots, EquationRoot};
-use super::topology::{compute_equation_topology};
+use super::topology::compute_equation_topology;
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a equation snapshot. One field per named inference under
 /// `💡️inferences/` (`topology`, backed by `🧭topology/`; `roots`, backed by `🌱roots/`).
@@ -77,13 +77,7 @@ impl ArtifactInferrer for EquationInferrer {
 pub fn equation_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.mathematical.equation.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

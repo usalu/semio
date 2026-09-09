@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/window-ownership.json",
+  "title": "Puzzle3dWindowOwnership",
+  "definitions": {
+    "Puzzle3dSelectableKinds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objects", "vortices", "attractions"],
+      "properties": {
+        "objects": { "type": "boolean" },
+        "vortices": { "type": "boolean" },
+        "attractions": { "type": "boolean" }
+      }
+    },
+    "WorldSunConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "azimuth", "elevation", "intensity", "color"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "azimuth": { "type": "number" },
+        "elevation": { "type": "number" },
+        "intensity": { "type": "number" },
+        "color": { "type": "string" }
+      }
+    },
+    "WorldProjectionConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "orthographicView", "axonometricVariant", "axonometricAngleA", "axonometricAngleB", "axonometricQuadrant", "obliqueVariant", "obliqueAngle", "obliqueDepth", "onePointAxis", "fov", "twoPointShift", "curvilinearFov", "curvilinearStrength", "curvilinearMapping"],
+      "properties": {
+        "kind": { "type": "string" },
+        "orthographicView": { "type": "string" },
+        "axonometricVariant": { "type": "string" },
+        "axonometricAngleA": { "type": "number" },
+        "axonometricAngleB": { "type": "number" },
+        "axonometricQuadrant": { "type": "string" },
+        "obliqueVariant": { "type": "string" },
+        "obliqueAngle": { "type": "number" },
+        "obliqueDepth": { "type": "number" },
+        "onePointAxis": { "type": "string" },
+        "fov": { "type": "number" },
+        "twoPointShift": { "type": "number" },
+        "curvilinearFov": { "type": "number" },
+        "curvilinearStrength": { "type": "number" },
+        "curvilinearMapping": { "type": "string" }
+      }
+    },
+    "Puzzle3dCamera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["position", "target", "zoom", "projection"],
+      "properties": {
+        "position": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+        "target": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+        "zoom": { "type": "number", "exclusiveMinimum": 0 },
+        "up": {
+          "anyOf": [
+            { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+            { "type": "null" }
+          ]
+        },
+        "projection": { "$ref": "#/definitions/WorldProjectionConfig" }
+      }
+    },
+    "Puzzle3dSuggestionMenu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "windowId", "vortexFullId"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "windowId": { "type": "string" },
+        "vortexFullId": { "type": "string" }
+      }
+    },
+    "Puzzle3dWindowConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lodAutomatic", "lodDepthVariable", "gridVisible", "lodManual", "gridSnapEnabled", "gridSpacing", "selectableKinds", "proximityRadius", "chunkSize", "voxelDims", "transformMove", "transformRotate", "vortexShow", "vortexDirection", "sun", "camera"],
+      "properties": {
+        "lodAutomatic": { "type": "boolean" },
+        "lodDepthVariable": { "type": "boolean" },
+        "gridVisible": { "type": "boolean" },
+        "lodManual": { "type": "number" },
+        "gridSnapEnabled": { "type": "boolean" },
+        "gridSpacing": { "type": "number", "exclusiveMinimum": 0 },
+        "selectableKinds": { "$ref": "#/definitions/Puzzle3dSelectableKinds" },
+        "proximityRadius": { "type": "number", "minimum": 0 },
+        "chunkSize": { "type": "number", "exclusiveMinimum": 0 },
+        "voxelDims": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "integer", "minimum": 0 } },
+        "transformMove": { "type": "boolean" },
+        "transformRotate": { "type": "boolean" },
+        "vortexShow": { "type": "string" },
+        "vortexDirection": { "type": "string" },
+        "sun": { "$ref": "#/definitions/WorldSunConfig" },
+        "camera": { "$ref": "#/definitions/Puzzle3dCamera" }
+      }
+    },
+    "Puzzle3dWindowTransient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engagementInput", "brushCandidateIndex"],
+      "properties": {
+        "suggestionMenu": {
+          "anyOf": [
+            { "$ref": "#/definitions/Puzzle3dSuggestionMenu" },
+            { "type": "null" }
+          ]
+        },
+        "engagementInput": { "type": "string" },
+        "brushCandidateIndex": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/definitions/Puzzle3dWindowConfig" },
+    { "$ref": "#/definitions/Puzzle3dWindowTransient" }
+  ]
+}

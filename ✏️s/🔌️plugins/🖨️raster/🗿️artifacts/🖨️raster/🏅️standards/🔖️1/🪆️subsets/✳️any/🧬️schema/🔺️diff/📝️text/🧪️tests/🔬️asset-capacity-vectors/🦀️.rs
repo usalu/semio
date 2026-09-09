@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::RasterImageAsset;
 use crate::standards::v1::subsets::any::schema::mutations::binary::test_support::retire_raster_snapshot;
+use crate::RasterImageAsset;
 
 #[test]
 fn raster_asset_capacity_matches_the_json_oracle() {

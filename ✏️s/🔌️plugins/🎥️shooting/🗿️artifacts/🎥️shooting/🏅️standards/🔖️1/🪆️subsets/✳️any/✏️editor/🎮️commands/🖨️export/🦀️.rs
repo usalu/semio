@@ -6,11 +6,11 @@
 //! `crate::editor::shooting::ShootingPlayApp::command_id`'s override, since `app_commands!`'s generated
 //! `command_id()` is a static 1:1 row→literal mapping with no payload-conditional escape hatch.
 
+use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::editor::shooting::ShootingDispatchCtx;
 use crate::op::ShootingMutation;
 use crate::standards::v1::subsets::any::schema::shooting_icon_render_request_json;
 use crate::{ShootingShot, ShootingSnapshot};
-use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, DslValue, Effect, Emit, Fault, IconRenderExportItem};
 use semio_framework_value_derive::{FromValue, ToValue};
 

@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
 use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
@@ -6,11 +5,15 @@ use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArt
 pub type Generation2dApp = VcsArtifactApp<EditorApp<Generation2dPlayApp>>;
 
 pub async fn app() -> Generation2dApp {
-    new_app::<EditorApp<Generation2dPlayApp>>().await
+    let mut app = new_app::<EditorApp<Generation2dPlayApp>>().await;
+    app.bind_instance_id(1).await;
+    app
 }
 
 pub async fn app_with_registry() -> Generation2dApp {
-    new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_testkit).await
+    let mut app = new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_testkit).await;
+    app.bind_instance_id(1).await;
+    app
 }
 
 pub async fn dispatch(app: &mut Generation2dApp, command: Generation2dCommand) -> InvocationResult {

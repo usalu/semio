@@ -5,7 +5,6 @@ exampleId=demo
 steps=[
   setActiveExample exampleId=demo
   setCompositeViewport width=1024 height=1024
-  setActiveUtility utilityId=paintBrush
   setBrushSize value=24
   setBrushOpacity value=0.85
 ]

@@ -14,11 +14,10 @@
   "loadDuration": null,
   "mCritKnm": null,
   "fEdKn": null,
-  "aEfMm2": 16000.0,
+  "aEfMm2": 16000,
   "fVK": null,
   "fireDurationMin": null,
   "sectionDepthMm": null,
   "aVertMS2": null,
-  "nCyclesBridge": null,
-  "selectedCheckIndex": null
+  "nCyclesBridge": null
 }

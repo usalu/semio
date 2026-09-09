@@ -9,15 +9,15 @@ pub use crate::schema::mutations::EquationMutation;
 // their real owning subset (ticket
 // 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION),
 // so they are no longer reachable through `✳️any::schema::mutations::<name>`.
+use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 use crate::standards::v1::subsets::{
     equation::schema::mutations::change_coefficient::ChangeCoefficient,
     geometry::schema::mutations::{insert_point::InsertPoint, move_point::MovePoint, remove_point::RemovePoint, replace_points::ReplacePoints},
     graph::schema::mutations::{
-        change_graph_directed::ChangeGraphDirected, change_node_label::ChangeNodeLabel, connect_nodes::ConnectNodes, create_node::CreateNode, delete_node::DeleteNode,
-        delete_nodes::DeleteNodes, disconnect_nodes::DisconnectNodes, move_node::MoveNode, replace_graph::ReplaceGraph, update_graph_algorithm::UpdateGraphAlgorithm,
+        change_graph_directed::ChangeGraphDirected, change_node_label::ChangeNodeLabel, connect_nodes::ConnectNodes, create_node::CreateNode, delete_node::DeleteNode, delete_nodes::DeleteNodes, disconnect_nodes::DisconnectNodes, move_node::MoveNode,
+        replace_graph::ReplaceGraph, update_graph_algorithm::UpdateGraphAlgorithm,
     },
 };
-use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 use crate::{EquationGraph, EquationPoint};
 
 //#region 📖️SemioGrammar

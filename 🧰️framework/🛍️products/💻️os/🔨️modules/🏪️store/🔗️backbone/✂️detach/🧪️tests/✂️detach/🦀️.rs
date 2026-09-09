@@ -36,7 +36,7 @@ async fn observe_refusal(case_id: &str) {
     }));
     let refused = matches!(attempt, Ok(true));
     let panicked = attempt.is_err();
-    let descriptor_preserved = serde_json::Value::from(store.envelope.backbone.to_value()) == before_descriptor;
+    let descriptor_preserved = store.envelope.backbone.to_value() == before_descriptor;
     let generation_preserved = store.generation == before_generation;
     let revision_preserved = store.content_revision == before_revision;
     let backbone_preserved = matches!(store.backbone.as_ref(), Some(Backbones::Memory(local)) if Arc::as_ptr(local.outbox.as_ref().unwrap()) == original_outbox);

@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest, getWorkspaceRoot } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts";
 import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../🟦️typescript/🟦️.ts";
 import { SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery.ts";
 
@@ -710,8 +711,7 @@ export function generateStylingArtifacts(): void {
     for (const name of readdirSync(root)) if (!expected.has(join(root, name))) rmSync(join(root, name), { recursive: true, force: true });
   }
   for (const artifact of artifacts) {
-    mkdirSync(dirname(artifact.path), { recursive: true });
-    writeFileSync(artifact.path, artifact.content, "utf8");
+    writeGeneratedFileIfChanged(artifact.path, artifact.content);
   }
   validatePremadeThemes();
 }

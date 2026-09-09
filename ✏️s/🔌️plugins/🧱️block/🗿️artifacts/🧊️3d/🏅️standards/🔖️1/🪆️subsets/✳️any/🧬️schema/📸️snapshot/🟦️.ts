@@ -2,17 +2,7 @@
 
 import type { BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation } from "../../../../../../../../🟦️";
 import type { Block3dVortexKindExtra, Block3dVortexTemplate } from "../../../../../../🟦️";
-
-/** 🗂️ Dialect coordinate a child artifact is claimed against. */
-export interface ArtifactDialect { artifactKind: string; standard: string; subset: string; }
-
-/** 🎯️ What a child handle points at — verified against the real fixture
- * `…/🙅remove-author/🧪️tests/✏️uncredits-ada/📸️snapshot/⬅️before/🔣️.json`'s `catalog.target`
- * (NOT a plain string, unlike some sibling plugins' unverified `ArtifactChildHandle` stubs). */
-export interface ArtifactChildTarget { artifactId: string; dialect: ArtifactDialect; }
-
-/** 🧒️ `store::ArtifactChild<T>` wire handle — child artifact id plus its kind claim. */
-export interface ArtifactChildHandle { childId: string; target: ArtifactChildTarget; }
+import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
 export interface Block3dSnapshot {
   /** @state artifact */
@@ -22,7 +12,7 @@ export interface Block3dSnapshot {
   /** @state artifact */
   representations: BlockRepresentation[];
   /** @state artifact @child kind=s.stdio.semio.kit */
-  catalog: ArtifactChildHandle;
+  catalog: ArtifactChild;
   /** @state artifact */
   vortexKindExtra: Block3dVortexKindExtra[];
   /** @state artifact */

@@ -61,6 +61,5 @@
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": 0.0625,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": 0.0625
 }

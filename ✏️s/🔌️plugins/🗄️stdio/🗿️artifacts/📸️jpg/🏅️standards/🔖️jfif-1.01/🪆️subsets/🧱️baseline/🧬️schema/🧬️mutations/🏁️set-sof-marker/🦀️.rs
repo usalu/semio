@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSofMarker {
-        pub(crate) marker: u8,
-    }
+    pub(crate) marker: u8,
+}
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSofMarker {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sof-marker", kind: "set-sof-marker", record: "SetSofMarker" };

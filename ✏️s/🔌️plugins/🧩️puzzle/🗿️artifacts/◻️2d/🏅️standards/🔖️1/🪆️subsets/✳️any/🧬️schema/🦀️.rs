@@ -4,7 +4,7 @@ use crate::Puzzle2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full puzzle2d artifact state across the artifact, presence and config lanes.
+/// 🧬️ puzzle2d document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle2d")]
@@ -19,46 +19,6 @@ pub struct Puzzle2dArtifact {
     pub edges: Vec<Puzzle2dEdge>,
     #[state(artifact)]
     pub meta: Puzzle2dMeta,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
-    #[state(presence)]
-    pub active_utility_id: String,
-    #[state(config)]
-    pub camera_x: f64,
-    #[state(config)]
-    pub camera_y: f64,
-    #[state(config)]
-    pub camera_zoom: f64,
-    #[state(config)]
-    pub selection_method: String,
-    #[state(config)]
-    pub grid_snap_enabled: bool,
-    #[state(config)]
-    pub grid_factor: f64,
-    #[state(config)]
-    pub suggestion_offset: f64,
-    #[state(config)]
-    pub fill_count: u32,
-    #[state(config)]
-    pub brush_candidate_index: u32,
-    #[state(config)]
-    pub brush_candidate_source_handle_id: String,
-    #[state(config)]
-    pub lod_mode_by_pane_json: String,
-    #[state(config)]
-    pub engagement_input_by_pane_json: String,
-    #[state(config)]
-    pub brush_candidates_json: String,
-    #[state(config)]
-    pub node_kind_weights_json: String,
-    #[state(config)]
-    pub handle_kind_weights_json: String,
-    #[state(config)]
-    pub active_utility_by_window_id_json: String,
-    #[state(artifact)]
-    pub hovered_node_id: Option<String>,
-    #[state(artifact)]
-    pub preview_seq: i64,
 }
 //#endregion 🔖️Artifact
 
@@ -75,35 +35,9 @@ impl Puzzle2dArtifact {
         Puzzle2dSnapshot { schema: self.schema.clone(), camera: self.camera.clone(), nodes: self.nodes.clone(), edges: self.edges.clone(), meta: self.meta.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Puzzle2dSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            camera: snapshot.camera,
-            nodes: snapshot.nodes,
-            edges: snapshot.edges,
-            meta: snapshot.meta,
-            selected_ids: Vec::new(),
-            active_utility_id: "select".into(),
-            camera_x: 0.0,
-            camera_y: 0.0,
-            camera_zoom: 1.0,
-            selection_method: "rectangle".into(),
-            grid_snap_enabled: false,
-            grid_factor: 1.0,
-            suggestion_offset: 80.0,
-            fill_count: 0,
-            brush_candidate_index: 0,
-            brush_candidate_source_handle_id: String::new(),
-            lod_mode_by_pane_json: "{}".into(),
-            engagement_input_by_pane_json: "{}".into(),
-            brush_candidates_json: "{}".into(),
-            node_kind_weights_json: "{}".into(),
-            handle_kind_weights_json: "{}".into(),
-            active_utility_by_window_id_json: "{}".into(),
-            hovered_node_id: None,
-            preview_seq: 0,
-        }
+        Self { schema: snapshot.schema, camera: snapshot.camera, nodes: snapshot.nodes, edges: snapshot.edges, meta: snapshot.meta }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

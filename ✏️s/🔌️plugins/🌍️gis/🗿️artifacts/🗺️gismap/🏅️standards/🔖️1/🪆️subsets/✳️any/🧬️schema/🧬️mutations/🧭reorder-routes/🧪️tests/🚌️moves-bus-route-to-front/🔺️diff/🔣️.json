@@ -11,11 +11,5 @@
       "route-tram"
     ]
   },
-  "regions": null,
-  "layerVisibility": null,
-  "layerStrokeScale": null,
-  "cameraJson": null,
-  "renderMode": null,
-  "vectorStyle": null,
-  "lodMode": null
+  "regions": null
 }

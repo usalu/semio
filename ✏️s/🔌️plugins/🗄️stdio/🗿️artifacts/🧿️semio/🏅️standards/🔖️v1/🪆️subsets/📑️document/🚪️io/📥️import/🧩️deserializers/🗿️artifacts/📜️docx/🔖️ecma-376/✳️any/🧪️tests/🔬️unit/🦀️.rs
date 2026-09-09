@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_s_artifact_stdio_docx::schema::snapshot::{DocxDocument, DocxStyle, DocxTableCell, DocxTableRow};
 use semio_s_artifact_stdio_zip::opc::OpcPackage;

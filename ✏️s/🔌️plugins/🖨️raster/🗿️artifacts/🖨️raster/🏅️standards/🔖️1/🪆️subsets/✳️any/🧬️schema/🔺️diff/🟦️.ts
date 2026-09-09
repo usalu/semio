@@ -1,4 +1,12 @@
 /** 🧬️ Raster diff schema — sparse field delta over the artifact. */
+import {
+  parseRasterArtifact,
+  parseRasterImageAsset,
+  parseRasterLayerNode,
+  type RasterArtifact,
+  type RasterImageAsset,
+  type RasterLayerNode,
+} from "../🟦️.ts";
 
 export interface RasterDiff {
   /** @state artifact */
@@ -13,39 +21,10 @@ export interface RasterDiff {
   layers?: RasterLayersDelta;
   /** @state artifact */
   assets?: RasterAssetsDelta;
-  /** @state presence */
-  selectedIds?: RasterStringList;
-  /** @state presence */
-  /** @state config */
-  brushSize?: number;
-  /** @state config */
-  brushOpacity?: number;
-  /** @state config */
-  compositeViewport?: RasterViewportSize | null;
-  /** @state config */
-  cameraX?: number;
-  /** @state config */
-  cameraY?: number;
-  /** @state config */
-  cameraZoom?: number;
-  /** @state config */
-  /** @state artifact */
-  hoveredId?: string | null;
 }
-
-export interface RasterArtifact { [key: string]: unknown; }
 
 export interface RasterAssetsDelta {
   entries: Record<string, RasterImageAsset | null>;
-}
-
-export interface RasterImageAsset {
-  mime: string;
-  data: string;
-}
-
-export interface RasterStringList {
-  values: string[];
 }
 
 export interface RasterLayersDelta {
@@ -82,13 +61,6 @@ export interface RasterLayerPatch {
   width?: number;
   height?: number;
   adjustmentKind?: string;
-}
-
-export interface RasterLayerNode { [key: string]: unknown; }
-
-export interface RasterViewportSize {
-  width: number;
-  height: number;
 }
 
 //#region 🚪️Parsers
@@ -141,7 +113,72 @@ export const rasterRasterDiffGuardConstant = <T extends string | number | boolea
 export function parseRasterDiff(value: unknown, at = "$"): RasterDiff {
   const row = rasterRasterDiffGuardObject(value, at);
   return {
-    schema: row["schema"] === undefined ? undefined : rasterRasterDiffGuardString(row["schema"], `${at}.schema`),
-    value: row["value"] === undefined ? undefined : rasterRasterDiffGuardString(row["value"], `${at}.value`),
+    ...(Object.hasOwn(row, "artifact") ? { artifact: row["artifact"] == null ? undefined : parseRasterArtifact(row["artifact"], `${at}.artifact`) } : {}),
+    ...(Object.hasOwn(row, "schema") ? { schema: row["schema"] == null ? undefined : rasterRasterDiffGuardString(row["schema"], `${at}.schema`) } : {}),
+    ...(Object.hasOwn(row, "id") ? { id: row["id"] == null ? undefined : rasterRasterDiffGuardString(row["id"], `${at}.id`) } : {}),
+    ...(Object.hasOwn(row, "title") ? { title: row["title"] == null ? null : rasterRasterDiffGuardString(row["title"], `${at}.title`) } : {}),
+    ...(Object.hasOwn(row, "layers") ? { layers: row["layers"] == null ? undefined : parseRasterLayersDelta(row["layers"], `${at}.layers`) } : {}),
+    ...(Object.hasOwn(row, "assets") ? { assets: row["assets"] == null ? undefined : parseRasterAssetsDelta(row["assets"], `${at}.assets`) } : {}),
+  };
+}
+
+export function parseRasterAssetsDelta(value: unknown, at = "$"): RasterAssetsDelta {
+  const row = rasterRasterDiffGuardObject(value, at);
+  return {
+    entries: Object.fromEntries(
+      Object.entries(rasterRasterDiffGuardObject(row["entries"], `${at}.entries`))
+        .map(([key, item]) => [key, item == null ? null : parseRasterImageAsset(item, `${at}.entries.${key}`)]),
+    ),
+  };
+}
+
+export function parseRasterLayersDelta(value: unknown, at = "$"): RasterLayersDelta {
+  const row = rasterRasterDiffGuardObject(value, at);
+  return {
+    added: rasterRasterDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseRasterLayerInsertion(item, `${at}.added[${index}]`)),
+    removed: rasterRasterDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => rasterRasterDiffGuardString(item, `${at}.removed[${index}]`)),
+    patched: rasterRasterDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseRasterLayerPatchEntry(item, `${at}.patched[${index}]`)),
+    moved: rasterRasterDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseRasterLayerMove(item, `${at}.moved[${index}]`)),
+  };
+}
+
+export function parseRasterLayerInsertion(value: unknown, at = "$"): RasterLayerInsertion {
+  const row = rasterRasterDiffGuardObject(value, at);
+  return {
+    parentId: row["parentId"] == null ? undefined : rasterRasterDiffGuardString(row["parentId"], `${at}.parentId`),
+    index: rasterRasterDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
+    layer: parseRasterLayerNode(row["layer"], `${at}.layer`),
+  };
+}
+
+export function parseRasterLayerMove(value: unknown, at = "$"): RasterLayerMove {
+  const row = rasterRasterDiffGuardObject(value, at);
+  return {
+    id: rasterRasterDiffGuardString(row["id"], `${at}.id`),
+    parentId: row["parentId"] == null ? undefined : rasterRasterDiffGuardString(row["parentId"], `${at}.parentId`),
+    index: rasterRasterDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
+  };
+}
+
+export function parseRasterLayerPatchEntry(value: unknown, at = "$"): RasterLayerPatchEntry {
+  const row = rasterRasterDiffGuardObject(value, at);
+  return {
+    id: rasterRasterDiffGuardString(row["id"], `${at}.id`),
+    patch: parseRasterLayerPatch(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseRasterLayerPatch(value: unknown, at = "$"): RasterLayerPatch {
+  const row = rasterRasterDiffGuardObject(value, at);
+  return {
+    name: row["name"] == null ? undefined : rasterRasterDiffGuardString(row["name"], `${at}.name`),
+    visible: row["visible"] == null ? undefined : rasterRasterDiffGuardBoolean(row["visible"], `${at}.visible`),
+    opacity: row["opacity"] == null ? undefined : rasterRasterDiffGuardNumber(row["opacity"], `${at}.opacity`),
+    blendMode: row["blendMode"] == null ? undefined : rasterRasterDiffGuardString(row["blendMode"], `${at}.blendMode`),
+    transformX: row["transformX"] == null ? undefined : rasterRasterDiffGuardNumber(row["transformX"], `${at}.transformX`),
+    transformY: row["transformY"] == null ? undefined : rasterRasterDiffGuardNumber(row["transformY"], `${at}.transformY`),
+    width: row["width"] == null ? undefined : rasterRasterDiffGuardInteger(row["width"], `${at}.width`, { minimum: 0 }),
+    height: row["height"] == null ? undefined : rasterRasterDiffGuardInteger(row["height"], `${at}.height`, { minimum: 0 }),
+    adjustmentKind: row["adjustmentKind"] == null ? undefined : rasterRasterDiffGuardString(row["adjustmentKind"], `${at}.adjustmentKind`),
   };
 }

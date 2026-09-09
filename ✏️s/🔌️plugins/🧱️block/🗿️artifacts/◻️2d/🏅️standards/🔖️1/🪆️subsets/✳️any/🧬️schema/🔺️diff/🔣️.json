@@ -50,10 +50,6 @@
     "meta": {
       "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockMeta",
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "$ref": "#/$defs/Block2dStringList",
-      "x-semio-state": "presence"
     }
   },
   "$defs": {

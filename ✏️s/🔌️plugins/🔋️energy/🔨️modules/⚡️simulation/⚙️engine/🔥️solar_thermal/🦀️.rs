@@ -1,8 +1,8 @@
 //! ☀️ Solar thermal collectors: flat-plate, ICS, unglazed transpired, PVT.
 
 use crate::units::{CP_DRY_AIR, RHO_AIR_REF, STEFAN_BOLTZMANN};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️CollectorKind
 /// ☀️ Solar thermal collector technology.

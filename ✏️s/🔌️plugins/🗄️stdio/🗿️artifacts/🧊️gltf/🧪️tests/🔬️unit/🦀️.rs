@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::{ArtifactInferenceExecutionRequest, ArtifactInferenceServiceRegistry, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 
@@ -31,7 +30,7 @@ async fn one_leaf_service_returns_its_id_bound_generic_envelope() {
     };
     let service = gltf_inference_services().into_iter().find(|service| service.metadata().inference_schema == "s.stdio.gltf.inference.overall-size.v1").unwrap();
     let execution = service.infer(&request).unwrap();
-    let envelope = crate::io::inferences::binary::decode_gltf_inference_leaf_binary(&execution.canonical_payload).unwrap();
+    let envelope = io::inferences::binary::decode_gltf_inference_leaf_binary(&execution.canonical_payload).unwrap();
     assert_eq!(envelope.id, "s.stdio.gltf.inference.overall-size.v1");
     assert!(envelope.cache_key.contains(":p"));
     assert_eq!(envelope.dependency_hashes.len(), 1);

@@ -1,9 +1,8 @@
-
 use super::*;
 
 use crate::{
-    Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine, empty_process3d_snapshot,
-    process_working_scene_to_snapshot,
+    empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop,
+    WorkshopMachine,
 };
 
 fn cut_step(id: &str) -> ProcessStep {

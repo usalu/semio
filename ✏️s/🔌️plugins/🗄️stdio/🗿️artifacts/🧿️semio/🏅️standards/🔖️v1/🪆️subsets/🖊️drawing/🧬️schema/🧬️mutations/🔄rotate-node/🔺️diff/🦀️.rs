@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `RotateNode`.
 
-use crate::standards::v1::subsets::drawing::schema::diff::{SemioDrawingDiff, diff_rotate_node, node_at};
+use crate::standards::v1::subsets::drawing::schema::diff::{diff_rotate_node, node_at, SemioDrawingDiff};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Diff

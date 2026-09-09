@@ -97,15 +97,8 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
             shells: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepShell>,
             solids: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepSolid>,
         }
-        pack::to_json_string(&DepInput {
-            vertices: snapshot.vertices.clone(),
-            edges: snapshot.edges.clone(),
-            loops: snapshot.loops.clone(),
-            faces: snapshot.faces.clone(),
-            shells: snapshot.shells.clone(),
-            solids: snapshot.solids.clone(),
-        })
-        .into_bytes()
+        pack::to_json_string(&DepInput { vertices: snapshot.vertices.clone(), edges: snapshot.edges.clone(), loops: snapshot.loops.clone(), faces: snapshot.faces.clone(), shells: snapshot.shells.clone(), solids: snapshot.solids.clone() })
+            .into_bytes()
     }
 
     fn compute(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {

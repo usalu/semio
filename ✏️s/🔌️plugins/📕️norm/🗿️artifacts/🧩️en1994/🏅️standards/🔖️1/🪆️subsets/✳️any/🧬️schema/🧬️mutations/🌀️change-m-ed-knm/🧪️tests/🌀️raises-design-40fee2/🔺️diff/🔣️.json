@@ -1,7 +1,7 @@
 {
   "artifact": null,
   "annex": null,
-  "mEdKnm": 320.0,
+  "mEdKnm": 320,
   "vEdKn": null,
   "mPla": null,
   "mPlRd": null,
@@ -21,6 +21,5 @@
   "spanM": null,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

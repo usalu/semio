@@ -26,7 +26,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::{Dictionary, ProcedureSnapshot, Path, Step};
+use crate::{Dictionary, Path, ProcedureSnapshot, Step};
 use neural_engine::{Atom, Value};
 use std::collections::BTreeMap;
 

@@ -16,7 +16,7 @@
 //! `polynomial::algebraic` machinery (irrational/complex roots, symbolic closed forms) is future
 //! work once the mutation/inference table grows past this vertical slice.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{EquationNode, EquationNodeKind, EquationExprSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::{EquationExprSnapshot, EquationNode, EquationNodeKind};
 use crate::EquationSnapshot;
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.

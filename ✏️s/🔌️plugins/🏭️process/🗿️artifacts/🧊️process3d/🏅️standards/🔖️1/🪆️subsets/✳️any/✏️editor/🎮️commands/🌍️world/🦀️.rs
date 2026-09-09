@@ -1,13 +1,13 @@
 //! 🌍️ Process 3d play app commands — 3D viewport interactions: click-to-place, push/pull face drag,
 //! and face picking.
 
-use crate::schema::inferences::capability_for_measure_kind;
-use crate::schema::{insert_step_mutations, next_step_id};
-use crate::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid};
 use crate::editor::process3d::axis_angle_from_up_to;
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::set_active_utility_effect;
 use crate::editor::process3d::terminology::{process3d_labels, Process3dLabels};
+use crate::schema::inferences::capability_for_measure_kind;
+use crate::schema::{insert_step_mutations, next_step_id};
+use crate::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -52,7 +52,7 @@ pub mod world_pointer_down {
     pub fn handle(
         payload: &WorldPointerDown,
         doc: &ArtifactView<'_, Process3dSnapshot>,
-        cfg: &ConfigView<'_, Process3dConfig>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
         ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
@@ -91,11 +91,10 @@ pub mod world_face_drag_end {
     pub fn handle(
         payload: &WorldFaceDragEnd,
         doc: &ArtifactView<'_, Process3dSnapshot>,
-        cfg: &ConfigView<'_, Process3dConfig>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
         ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
-        let config = cfg.snapshot;
         if ctx.active_utility()? != "select" {
             return Ok(Emit::default());
         }

@@ -34,11 +34,11 @@
 //!
 //! `model.spatial` is always empty from this bridge (BCF has no spatial-structure concept).
 
-use semio_s_artifact_stdio_bcf::schema::snapshot::{BcfComponents, BcfTopic};
-use semio_s_artifact_stdio_bcf::BcfSnapshot;
 use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
 use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_bcf::schema::snapshot::{BcfComponents, BcfTopic};
+use semio_s_artifact_stdio_bcf::BcfSnapshot;
 
 //#region 🔖️Deserializer
 pub struct SemioModelFromBcf;

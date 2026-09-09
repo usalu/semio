@@ -85,9 +85,6 @@ impl En1994Diff {
             if let Some(value) = &self.delta_tau_stud_mpa {
                 next.delta_tau_stud_mpa = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -203,7 +200,6 @@ impl MutationDiff<En1994Snapshot> for En1994Diff {
         take!(f_y_mpa);
         take!(n_cycles_stud);
         take!(delta_tau_stud_mpa);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

@@ -4,9 +4,9 @@
 //! normalization, and the `setResultDisplay` ephemeral view-state plumbing.
 
 use crate::model::Dof;
+use dsl::DslValue;
 use semio_framework_plugin::{ActionArgDef, ActionArgOption, BuiltNode, LocalizedLabel};
 use semio_framework_ui_contract::{Buildable, HasBase};
-use dsl::DslValue;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -113,11 +113,7 @@ pub enum DisplayMode {
 /// args into a `ResultDisplay` — unknown/missing `mode` falls back to `Static`.
 pub fn parse_result_display(args: Option<&DslValue>) -> ResultDisplay {
     let source_id = args.and_then(|v| v.get("sourceId")).and_then(DslValue::as_str).map(str::to_string);
-    let mode_index = args
-        .and_then(|v| v.get("modeIndex"))
-        .and_then(DslValue::as_f64)
-        .filter(|value| value.is_finite() && *value >= 0.0 && value.fract() == 0.0 && *value <= usize::MAX as f64)
-        .map_or(0, |value| value as usize);
+    let mode_index = args.and_then(|v| v.get("modeIndex")).and_then(DslValue::as_f64).filter(|value| value.is_finite() && *value >= 0.0 && value.fract() == 0.0 && *value <= usize::MAX as f64).map_or(0, |value| value as usize);
     let mode = match args.and_then(|v| v.get("mode")).and_then(DslValue::as_str) {
         Some("modal") => DisplayMode::Modal(mode_index),
         Some("buckling") => DisplayMode::Buckling(mode_index),

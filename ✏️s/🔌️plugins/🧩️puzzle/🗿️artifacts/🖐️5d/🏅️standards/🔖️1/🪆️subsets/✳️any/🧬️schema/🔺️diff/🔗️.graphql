@@ -7,34 +7,10 @@ type Puzzle5dDiff {
   label: String @state(class: ARTIFACT)
   meta: Puzzle5dMeta @state(class: ARTIFACT)
   kindCatalogs: Puzzle5dKindCatalogs @state(class: ARTIFACT)
+  kindCatalogsExtra: Puzzle5dKindCatalogsExtra @state(class: ARTIFACT)
   kindCompatibility: Puzzle5dKindCompatibilityList @state(class: ARTIFACT)
   parts: Puzzle5dPartsDelta @state(class: ARTIFACT)
   fasteners: Puzzle5dFastenersDelta @state(class: ARTIFACT)
-  selectedPartIds: Puzzle5dStringList @state(class: PRESENCE)
-  selectedGripIds: Puzzle5dStringList @state(class: PRESENCE)
-  selectedFastenerIds: Puzzle5dStringList @state(class: PRESENCE)
-  activeUtilityId: String @state(class: PRESENCE)
-  camera2dX: Float @state(class: CONFIG)
-  camera2dY: Float @state(class: CONFIG)
-  camera2dZoom: Float @state(class: CONFIG)
-  camera3dPositionX: Float @state(class: CONFIG)
-  camera3dPositionY: Float @state(class: CONFIG)
-  camera3dPositionZ: Float @state(class: CONFIG)
-  camera3dTargetX: Float @state(class: CONFIG)
-  camera3dTargetY: Float @state(class: CONFIG)
-  camera3dTargetZ: Float @state(class: CONFIG)
-  camera3dZoom: Float @state(class: CONFIG)
-  selectionMethod: String @state(class: CONFIG)
-  gridSnapEnabled: Boolean @state(class: CONFIG)
-  gridFactor: Float @state(class: CONFIG)
-  suggestionOffset: Float @state(class: CONFIG)
-  overlapBudget: Float @state(class: CONFIG)
-  fillCount: Int @state(class: CONFIG)
-  brushCandidateIndex: Int @state(class: CONFIG)
-  lodMode: String @state(class: CONFIG)
-  runtimeExtrasJson: String @state(class: CONFIG)
-  hoveredPartId: String @state(class: ARTIFACT)
-  previewSeq: Int @state(class: ARTIFACT)
 }
 
 type Puzzle5dStringList { values: [String!]! }
@@ -50,6 +26,7 @@ type Puzzle5dKindCompatibility { source: String target: String bidirectional: Bo
 type Puzzle5dArtifact { schema: String! }
 type Puzzle5dMeta { _placeholder: Boolean }
 type Puzzle5dKindCatalogs { _placeholder: Boolean }
+type Puzzle5dKindCatalogsExtra { _placeholder: Boolean }
 
 type Puzzle5dKindCompatibilityList { values: [Puzzle5dKindCompatibility!]! }
 

@@ -1,7 +1,6 @@
-
 use super::*;
+use crate::editor::fem3d::testkit::{dispatch, fem3d_app, fem3d_empty_app, render as render_body, Fem3dApp};
 use crate::editor::fem3d::Fem3dCommand;
-use crate::editor::fem3d::testkit::{Fem3dApp, dispatch, fem3d_app, fem3d_empty_app, render as render_body};
 
 async fn app_with_example() -> Fem3dApp {
     let mut app = fem3d_app();

@@ -1,8 +1,8 @@
 //! 🧬️ schema leaf
 use ::semio_framework_schema::ArtifactSchema;
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]

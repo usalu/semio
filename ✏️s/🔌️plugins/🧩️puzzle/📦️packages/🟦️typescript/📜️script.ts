@@ -16,7 +16,7 @@ const variant = (value: string): string => value.split("-").map((part) => `${par
 
 type PublicationGroup = {
   status: "migrated" | "batch-only-pending-rewrite";
-  lanes: ("artifact" | "config" | "draft" | "presence" | "transient" | "child" | "host-only")[];
+  lanes: ("artifact" | "config" | "draft" | "presence" | "transient" | "window-config" | "window-transient" | "child" | "interaction" | "host-only")[];
   routes: string[];
   blocker?: string;
 };
@@ -39,7 +39,7 @@ function retainedIds(source: string, owner: PublicationOwner["owner"]): string[]
 }
 
 function manifestPairs(source: string): Map<string, string> {
-  return new Map([...source.matchAll(/\.action_interactive_job\((?:"([^"]+)"|set_fill_count::STEP_ACTION_ID),\s*(?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => [match[1] ?? "setFillCountStep", match[2]!]));
+  return new Map([...source.matchAll(/\.action_interactive_job\("([^"]+)",\s*(?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => [match[1]!, match[2]!]));
 }
 
 function exactArray(left: string[], right: string[]): boolean {
@@ -49,7 +49,7 @@ function exactArray(left: string[], right: string[]): boolean {
 function publicationContracts(source: string): Map<string, string[]> {
   return new Map([...source.matchAll(/ArtifactToolPublicationContract\s*\{\s*tool_id:\s*"([^"]+)",\s*lanes:\s*&\[([^\]]*)\]/g)].map((match) => [
     match[1]!,
-    [...match[2]!.matchAll(/ArtifactToolPublicationLane::(Artifact|Config|Draft|Presence|Transient|Child|HostOnly)/g)].map((lane) => lane[1]!),
+    [...match[2]!.matchAll(/ArtifactToolPublicationLane::(Artifact|Config|Draft|Presence|Transient|WindowConfig|WindowTransient|Child|Interaction|HostOnly)/g)].map((lane) => lane[1]!),
   ]));
 }
 
@@ -74,6 +74,73 @@ function fixtureOracle(fixture: PublicationFixture): boolean {
       && (!group.lanes.includes("host-only") || group.lanes.length === 1),
     );
   });
+}
+
+type WindowOwnershipCase = { definition: string; value: Record<string, unknown>; keys: string[] };
+
+async function validateWindowOwnershipSchemas(puzzleRoot: string): Promise<number> {
+  const projection = {
+    kind: "threePoint",
+    orthographicView: "top",
+    axonometricVariant: "isometric",
+    axonometricAngleA: 15,
+    axonometricAngleB: 12,
+    axonometricQuadrant: "ne",
+    obliqueVariant: "cavalier",
+    obliqueAngle: 45,
+    obliqueDepth: 1,
+    onePointAxis: "y",
+    fov: 50,
+    twoPointShift: 0,
+    curvilinearFov: 120,
+    curvilinearStrength: 1,
+    curvilinearMapping: "fisheye",
+  };
+  const sun = { enabled: false, azimuth: 45, elevation: 35, intensity: 0.85, color: "#ffffff" };
+  const schemas: { path: string; cases: WindowOwnershipCase[] }[] = [
+    {
+      path: "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧬️schema/🔣️.json",
+      cases: [
+        { definition: "Puzzle2dWindowConfig", value: { cameraX: 0, cameraY: 0, cameraZoom: 1, lodMode: "automatic", fillCount: 0, gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 80 }, keys: ["cameraX", "cameraY", "cameraZoom", "lodMode", "fillCount", "gridSnapEnabled", "gridFactor", "suggestionOffset"] },
+        { definition: "Puzzle2dWindowTransient", value: { engagementInput: "", brushCandidateIndex: 0, brushCandidates: [], brushCandidateSourceHandleId: "" }, keys: ["engagementInput", "brushCandidateIndex", "brushCandidates", "brushCandidateSourceHandleId"] },
+      ],
+    },
+    {
+      path: "🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧬️schema/🔣️.json",
+      cases: [
+        {
+          definition: "Puzzle3dWindowConfig",
+          value: { lodAutomatic: true, lodDepthVariable: false, gridVisible: true, lodManual: 100, gridSnapEnabled: false, gridSpacing: 10, selectableKinds: { objects: true, vortices: true, attractions: true }, proximityRadius: 0.75, chunkSize: 256, voxelDims: [1, 1, 1], transformMove: true, transformRotate: true, vortexShow: "selected", vortexDirection: "outwards", sun, camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1, up: null, projection } },
+          keys: ["lodAutomatic", "lodDepthVariable", "gridVisible", "lodManual", "gridSnapEnabled", "gridSpacing", "selectableKinds", "proximityRadius", "chunkSize", "voxelDims", "transformMove", "transformRotate", "vortexShow", "vortexDirection", "sun", "camera"],
+        },
+        { definition: "Puzzle3dWindowTransient", value: { suggestionMenu: null, engagementInput: "", brushCandidateIndex: 0 }, keys: ["suggestionMenu", "engagementInput", "brushCandidateIndex"] },
+      ],
+    },
+    {
+      path: "🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧬️schema/🔣️.json",
+      cases: [
+        { definition: "Puzzle5dBoardWindowConfig", value: { camera2d: { x: 0, y: 0, zoom: 1 }, fillCount: 0, lodMode: "automatic", suggestionOffset: 80, gridSnapEnabled: true, gridFactor: 1 }, keys: ["camera2d", "fillCount", "lodMode", "suggestionOffset", "gridSnapEnabled", "gridFactor"] },
+        { definition: "Puzzle5dWorldWindowConfig", value: { camera3d: { position: [8, -8, 8], target: [0, 0, 0], zoom: 1 }, sun }, keys: ["camera3d", "sun"] },
+        { definition: "Puzzle5dWindowTransient", value: { engagementInput: "", brushCandidateIndex: 0 }, keys: ["engagementInput", "brushCandidateIndex"] },
+      ],
+    },
+  ];
+  let count = 0;
+  for (const entry of schemas) {
+    const schema = await Bun.file(resolve(puzzleRoot, entry.path)).json() as { $id: string };
+    const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
+    ajv.addSchema(schema);
+    for (const testCase of entry.cases) {
+      const validate = ajv.getSchema(`${schema.$id}#/definitions/${testCase.definition}`);
+      if (!validate || !validate(testCase.value)) throw new Error(`${testCase.definition} neutral fixture failed Ajv validation: ${JSON.stringify(validate?.errors)}`);
+      const actualKeys = Object.keys(testCase.value).sort();
+      if (!exactArray(actualKeys, testCase.keys)) throw new Error(`${testCase.definition} failed the independent exact-record oracle`);
+      if (validate({ ...testCase.value, appConfigLeak: true })) throw new Error(`${testCase.definition} accepted an app-config ownership leak`);
+      count += 1;
+    }
+  }
+  return count;
 }
 
 /** @emoji 🧩️ Whether `production` implements `traitName` for `typeName`, regardless of how the trait
@@ -103,8 +170,8 @@ function puzzle3dHostileSources(source: string): Map<string, string> {
     ["missing Config Store preparation", source.replace("Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))", "None")],
     ["missing Artifact Store preparation", source.replace("Some(std::sync::Arc::new(Puzzle3dArtifactStorePreparationFactory))", "None")],
     ["widened Config mutation envelope", source.replace(
-      "        Puzzle3dConfigMutation::Snapshot { config } => puzzle3d_config_store_bounded_bytes(config).ok(),\n        _ => None,\n",
-      "        _ => Some(0),\n",
+      "    (encoded <= PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES).then_some(encoded)\n",
+      "    Some(0)\n",
     )],
     ["stale publication authority", source.replaceAll("            || request.generation != request.authority.generation()\n", "")],
     ["unbounded preparation progress", source.replaceAll("ArtifactStoreOneItemPreparationStep::Progress", "ArtifactStoreOneItemPreparationStep::Prepared")],
@@ -148,7 +215,12 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       && production.includes("fn build_config_store_one_item_preparation_factory()")
       && production.includes("Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))")
       && production.includes("PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 32_768")
-      && production.includes("Puzzle3dConfigMutation::Snapshot { config } => puzzle3d_config_store_bounded_bytes(config).ok(),")
+      // 📏️ Every `Puzzle3dConfigMutation` variant is admissible, at its own encoded payload size, under
+      // the one fixed Config-store envelope. The former allowlist (`Snapshot` only, `_ => None`) made the
+      // entire `Puzzle3dScalarConfigWork` family publish nothing — 📓️2026-09-09-wave-D §P3.
+      && production.includes("fn puzzle3d_config_store_mutation_bytes(mutation: &Puzzle3dConfigMutation) -> Option<usize> {")
+      && production.includes("(encoded <= PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES).then_some(encoded)")
+      && !production.includes("_ => None,\n    }\n}\n\nfn puzzle3d_config_store_edit(")
       && production.includes('return Err("Puzzle3d Config preparation rejected its exact mutation envelope".into());')
       && production.includes("request.operation != request.authority.operation()")
       && production.includes("request.generation != request.authority.generation()")
@@ -189,8 +261,8 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       // 🎬️ The one dispatch pipeline `handle` and every generic retained reduce share — a second,
       // divergent copy of the scene/host/delta body is exactly what this audit exists to refuse.
       && production.includes("fn puzzle2d_dispatch_emit(")
-      && production.includes("Ok(puzzle2d_dispatch_emit(command, &snapshot.0, config, &selection, None))")
-      && production.includes("Ok(puzzle2d_dispatch_emit(command, &doc.snapshot.0, config, interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned()))")
+      && production.includes("puzzle2d_dispatch_emit(command, &snapshot.0, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, None)?")
+      && production.includes("puzzle2d_dispatch_emit(command, &doc.snapshot.0, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned())")
       && production.includes("PUZZLE2D_SELECTION_BATCH_LIMIT: usize = 1_024")
       && production.includes("(addressed <= PUZZLE2D_SELECTION_BATCH_LIMIT).then_some(addressed.max(1))");
   }
@@ -219,6 +291,7 @@ class PublicationAuthorityAuditScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const onlyOwner = segments[0];
     const puzzleRoot = resolve(this.root, "../..");
+    const windowOwnershipCases = await validateWindowOwnershipSchemas(puzzleRoot);
     const fixture = await Bun.file(resolve(puzzleRoot, "🔏️publication-authority/🔣️.json")).json() as PublicationFixture;
     const module = await Bun.file(resolve(puzzleRoot, "🧬️schema/🔣️.json")).json() as { $id: string };
     const ajv = new Ajv({ allErrors: true, strict: true });
@@ -243,7 +316,7 @@ class PublicationAuthorityAuditScript extends BundleScript {
         if (hostile === source) throw new Error(`${owner.owner} hostile activation mutation did not apply for ${blocked}`);
         if (ownerOracle(owner, hostile)) throw new Error(`${owner.owner} accepted hostile activation before decode/preparation for ${blocked}`);
       }
-      const missingContract = source.replace(/\s*ArtifactToolPublicationContract \{ tool_id: "(?:openAddObjectDialog|setCamera|canvasPointerDown)", lanes: &\[ArtifactToolPublicationLane::(?:HostOnly|Config)\] \},/, "");
+      const missingContract = source.replace(/\s*ArtifactToolPublicationContract \{ tool_id: "(?:openAddObjectDialog|setCamera|canvasPointerDown)", lanes: &\[ArtifactToolPublicationLane::(?:HostOnly|WindowConfig)\] \},/, "");
       if (missingContract !== source && ownerOracle(owner, missingContract)) throw new Error(`${owner.owner} accepted a missing publication contract`);
       if (owner.owner === "Puzzle3dPlayApp") {
         for (const [invariant, hostile] of puzzle3dHostileSources(source)) {
@@ -269,7 +342,7 @@ class PublicationAuthorityAuditScript extends BundleScript {
     ];
     if (hostileFixtures.some((hostile) => Boolean(validate(hostile)) || fixtureOracle(hostile))) throw new Error("Puzzle publication fixture accepted a hostile schema/oracle mutation");
     const admitted = auditedOwners.flatMap((owner) => owner.groups.filter((group) => group.status === "migrated").flatMap((group) => group.routes));
-    console.error(`validated Puzzle publication authority; owners=${auditedOwners.map((owner) => owner.owner).join(",")}; admitted=${admitted.join(",")}; schema=Ajv; oracle=independent`);
+    console.error(`validated Puzzle publication authority; owners=${auditedOwners.map((owner) => owner.owner).join(",")}; admitted=${admitted.join(",")}; windowOwnershipCases=${windowOwnershipCases}; schema=Ajv; oracle=independent`);
   }
 }
 

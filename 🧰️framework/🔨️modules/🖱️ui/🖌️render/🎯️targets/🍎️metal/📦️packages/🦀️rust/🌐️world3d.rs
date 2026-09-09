@@ -38,15 +38,10 @@ use ui_render::SurfacePass;
 
 /// 🌐️ The globals ring buffer every `SurfacePass` writes its `view_proj`/`light_dir` into at a
 /// `WORLD_GLOBALS_SLOT_SIZE`-strided offset. Mirrors `WorldGlobalsRing`.
+#[derive(Default)]
 pub struct WorldGlobalsRing {
     buffer: Option<Owned<MetalBuffer>>,
     capacity_slots: u32,
-}
-
-impl Default for WorldGlobalsRing {
-    fn default() -> Self {
-        Self { buffer: None, capacity_slots: 0 }
-    }
 }
 
 impl WorldGlobalsRing {

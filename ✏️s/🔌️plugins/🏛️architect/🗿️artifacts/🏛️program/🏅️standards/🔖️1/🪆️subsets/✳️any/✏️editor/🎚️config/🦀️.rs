@@ -7,9 +7,9 @@
 use crate::registers::AdjacencyKind;
 use crate::standards::v1::subsets::any::schema::inferences::ProgramReport;
 use crate::standards::v1::subsets::any::schema::inferences::SearchQuery;
-use protocol::MutationDiff;
 #[cfg(test)]
 use protocol::Mutation;
+use protocol::MutationDiff;
 
 //#region 🔖️Config
 /// @emoji 🧮️ B1: `ArchitectPlayApp`'s `ArtifactEditor::Config` — the pure replacement for the pre-B1

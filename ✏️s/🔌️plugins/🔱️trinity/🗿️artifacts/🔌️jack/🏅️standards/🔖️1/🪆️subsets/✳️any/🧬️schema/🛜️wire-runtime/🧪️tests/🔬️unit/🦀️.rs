@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::TRINITY_GRAPH_SCHEMA;
 
@@ -116,6 +115,76 @@ fn jack_nested_mutation_and_child_snapshot_retire_one_exact_owner_per_grant() {
         }
     }
     panic!("nested Jack mutation retirement did not reach terminal")
+}
+
+fn drive_snapshot_clone(source: &JackSnapshot) -> JackSnapshot {
+    let mut clone = JackSnapshotCloneAuthority::new();
+    for _ in 0..100_000 {
+        match clone.advance(source, JACK_OWNED_FIELD_BYTES).expect("bounded Jack snapshot clone") {
+            JackSnapshotCloneStep::Pending { copied_bytes } => assert!(copied_bytes <= JACK_OWNED_FIELD_BYTES),
+            JackSnapshotCloneStep::Complete => {
+                let value = clone.take_value().expect("completed clone transfers its exact snapshot");
+                assert!(clone.terminal_is_empty());
+                drop(clone);
+                return value;
+            }
+        }
+    }
+    panic!("Jack snapshot clone did not reach its bounded terminal")
+}
+
+fn drive_snapshot_retirement(value: JackSnapshot) -> usize {
+    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackSnapshotRetirementFactory, value);
+    let mut steps = 0;
+    for _ in 0..100_000 {
+        steps += 1;
+        match retirement.close_step(1, JACK_OWNED_FIELD_BYTES).expect("bounded Jack snapshot retirement") {
+            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= JACK_OWNED_FIELD_BYTES);
+            }
+            store::SnapshotRetirementStep::Complete => {
+                assert!(retirement.terminal_is_empty());
+                drop(retirement);
+                return steps;
+            }
+            store::SnapshotRetirementStep::Blocked => panic!("materialized Jack snapshot retirement cannot wait for a live peer owner"),
+        }
+    }
+    panic!("Jack snapshot retirement did not reach its bounded terminal")
+}
+
+#[test]
+fn query_ownership_shared_scene_clone_retires_while_source_remains_live() {
+    let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document();
+    crate::materialize_jack_content(&mut source.content, vec![Node { id: "live".into(), kind: "Apartment".into(), name: "Live".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() }], Vec::new());
+    let source_owner = source.content.local_owner::<crate::JackWorkingScene>().expect("source scene owner");
+    let clone = drive_snapshot_clone(&source);
+    let clone_owner = clone.content.local_owner::<crate::JackWorkingScene>().expect("clone scene owner");
+    assert!(std::sync::Arc::ptr_eq(&source_owner, &clone_owner));
+    drop(source_owner);
+    drop(clone_owner);
+    let steps = drive_snapshot_retirement(clone);
+    assert_eq!(source.content.local_owner::<crate::JackWorkingScene>().expect("live source owner remains").nodes[0].id, "live");
+    assert!(steps > 1);
+    eprintln!("[DEBUG] shared Jack query snapshot retired in {steps} bounded steps while its source remained live");
+    drive_snapshot_retirement(source);
+}
+
+#[test]
+fn query_ownership_unique_scene_retirement_drains_entities_one_owner_per_grant() {
+    let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document();
+    crate::materialize_jack_content(
+        &mut source.content,
+        vec![
+            Node { id: "one".into(), kind: "Apartment".into(), name: "One".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() },
+            Node { id: "two".into(), kind: "Apartment".into(), name: "Two".into(), x: 1.0, y: 1.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() },
+        ],
+        vec![Edge { id: "edge".into(), kind: "Connection".into(), source: "one@out".into(), target: "two@in".into(), properties: PropertyBag::new() }],
+    );
+    let steps = drive_snapshot_retirement(source);
+    assert!(steps > 3, "the last scene owner must retire nodes and edges separately");
+    eprintln!("[DEBUG] unique Jack query scene retired its nodes and edge in {steps} bounded steps");
 }
 
 #[semio_framework_async_macros::async_test]

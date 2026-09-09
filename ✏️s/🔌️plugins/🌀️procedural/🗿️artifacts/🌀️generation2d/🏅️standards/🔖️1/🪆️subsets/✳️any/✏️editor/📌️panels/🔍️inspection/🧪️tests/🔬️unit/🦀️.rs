@@ -1,7 +1,5 @@
-
 use super::*;
-use crate::editor::generation2d::Generation2dCommand;
-use crate::editor::generation2d::testkit::{app, dispatch, render as render_body};
+use crate::editor::generation2d::testkit::{app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn generation2d_labels_translate_catalogue_and_inspector_in_german() {

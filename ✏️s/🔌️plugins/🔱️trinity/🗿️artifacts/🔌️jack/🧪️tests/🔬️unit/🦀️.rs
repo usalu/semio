@@ -1,4 +1,3 @@
-
 use super::*;
 
 trait JackChildOwnerOracle {
@@ -26,8 +25,8 @@ async fn working_scene_belongs_to_the_exact_content_child() {
 
     assert_eq!(observed, SerdeJsonJackChildOwnerOracle::expected());
 }
-use crate::standards::v1::subsets::any::schema::mutations::{create_edge, create_node};
 use crate::standards::v1::subsets::any::schema::mutations::text::{dispatch_trinity_graph_mutations, validate_trinity_graph_operation};
+use crate::standards::v1::subsets::any::schema::mutations::{create_edge, create_node};
 use store::ArtifactCommand;
 
 fn mini_fixture() -> JackSnapshot {

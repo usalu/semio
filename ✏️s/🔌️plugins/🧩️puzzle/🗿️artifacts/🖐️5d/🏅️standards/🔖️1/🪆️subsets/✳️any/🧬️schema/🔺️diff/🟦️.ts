@@ -22,62 +22,13 @@ export interface Puzzle5dDiff {
   /** @state artifact */
   kindCatalogs?: Puzzle5dKindCatalogs | null;
   /** @state artifact */
+  kindCatalogsExtra?: Puzzle5dKindCatalogsExtra | null;
+  /** @state artifact */
   kindCompatibility?: Puzzle5dKindCompatibilityList;
   /** @state artifact */
   parts?: Puzzle5dPartsDelta;
   /** @state artifact */
   fasteners?: Puzzle5dFastenersDelta;
-  /** @state presence */
-  selectedPartIds?: Puzzle5dStringList;
-  /** @state presence */
-  selectedGripIds?: Puzzle5dStringList;
-  /** @state presence */
-  selectedFastenerIds?: Puzzle5dStringList;
-  /** @state presence */
-  activeUtilityId?: string;
-  /** @state config */
-  camera2dX?: number;
-  /** @state config */
-  camera2dY?: number;
-  /** @state config */
-  camera2dZoom?: number;
-  /** @state config */
-  camera3dPositionX?: number;
-  /** @state config */
-  camera3dPositionY?: number;
-  /** @state config */
-  camera3dPositionZ?: number;
-  /** @state config */
-  camera3dTargetX?: number;
-  /** @state config */
-  camera3dTargetY?: number;
-  /** @state config */
-  camera3dTargetZ?: number;
-  /** @state config */
-  camera3dZoom?: number;
-  /** @state config */
-  selectionMethod?: string;
-  /** @state config */
-  gridSnapEnabled?: boolean;
-  /** @state config */
-  gridFactor?: number;
-  /** @state config */
-  suggestionOffset?: number;
-  /** @state config */
-  overlapBudget?: number;
-  /** @state config */
-  fillCount?: number;
-  /** @state config */
-  brushCandidateIndex?: number;
-  /** @state config */
-  lodMode?: string;
-  /** @state config */
-  /** @state config */
-  runtimeExtrasJson?: string;
-  /** @state artifact */
-  hoveredPartId?: string | null;
-  /** @state artifact */
-  previewSeq?: number;
 }
 
 export interface Puzzle5dStringList { values: string[]; }
@@ -93,6 +44,7 @@ export interface Puzzle5dKindCompatibility { source?: string; target?: string; b
 export interface Puzzle5dArtifact { [key: string]: unknown; }
 export interface Puzzle5dMeta { [key: string]: unknown; }
 export interface Puzzle5dKindCatalogs { [key: string]: unknown; }
+export interface Puzzle5dKindCatalogsExtra { [key: string]: unknown; }
 
 export interface Puzzle5dKindCompatibilityList { values: Puzzle5dKindCompatibility[]; }
 

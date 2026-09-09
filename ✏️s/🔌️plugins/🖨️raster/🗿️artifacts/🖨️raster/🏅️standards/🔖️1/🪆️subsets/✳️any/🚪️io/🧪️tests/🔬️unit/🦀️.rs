@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -88,7 +87,7 @@ async fn png_export_writes_a_real_png_signature() {
 const BMP_PARITY_FIXTURES: &[&str] = &[include_str!("../🧫️fixtures/🪟️solid-3x2.json"), include_str!("../🧫️fixtures/🌈️gradient-5x3.json")];
 
 fn parity_fixture(text: &str) -> (u32, u32, Vec<u8>, String) {
-    use semio_s_artifact_stdio_json::schema::snapshot::{JsonValue, parse_json_text};
+    use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonValue};
     let JsonValue::Object { members } = parse_json_text(text).expect("parity fixture is valid json") else { panic!("parity fixture root must be an object") };
     let member = |key: &str| members.iter().find(|entry| entry.key == key).map(|entry| entry.value.clone()).unwrap_or_else(|| panic!("parity fixture has no {key:?} member"));
     let number = |value: &JsonValue| match value {

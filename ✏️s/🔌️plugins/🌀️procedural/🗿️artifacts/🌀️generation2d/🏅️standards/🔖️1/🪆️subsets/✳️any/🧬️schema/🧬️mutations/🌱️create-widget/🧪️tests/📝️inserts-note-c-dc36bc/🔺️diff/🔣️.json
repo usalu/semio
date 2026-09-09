@@ -40,10 +40,5 @@
       }
     }
   },
-  "generation": null,
-  "selectedIds": null,
-  "graphCamera": null,
-  "showMode": null,
-  "selectedGenerationId": null,
-  "generationPreviewText": null
+  "generation": null
 }

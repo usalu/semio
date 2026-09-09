@@ -22,10 +22,10 @@
 
 use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, XlsxDiff, XlsxOpcContentTypesDiff, XlsxOpcCtEntriesDiff, XlsxOpcDiff, XlsxOpcPartDiff, XlsxOpcPartsDiff, XlsxOpcRelationshipsDiff};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPart};
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPart};
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional SpreadsheetML main namespace.
@@ -45,19 +45,19 @@ pub const RELATIONSHIP_NAMESPACES: [&str; 2] = [TRANSITIONAL_REL, STRICT_REL];
 //#endregion 🔖️Dialect
 
 //#region 🔖️Mutations
+#[path = "🚫️remove-conformance-attribute/🦀️.rs"]
+pub mod remove_conformance_attribute;
+#[path = "✅️set-conformance-attribute/🦀️.rs"]
+pub mod set_conformance_attribute;
+#[path = "🌐️set-main-namespace/🦀️.rs"]
+pub mod set_main_namespace;
+#[path = "🔗️set-relationships-namespace/🦀️.rs"]
+pub mod set_relationships_namespace;
 /// 📐️ Typed conformance-class mutation for `stdio.xlsx` under ISO/IEC 29500-4
 /// Transitional. Every variant addresses ONE axis of the class; none addresses document content.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🌐️set-main-namespace/🦀️.rs"]
-pub mod set_main_namespace;
-#[path = "🔗️set-relationships-namespace/🦀️.rs"]
-pub mod set_relationships_namespace;
-#[path = "✅️set-conformance-attribute/🦀️.rs"]
-pub mod set_conformance_attribute;
-#[path = "🚫️remove-conformance-attribute/🦀️.rs"]
-pub mod remove_conformance_attribute;
 #[path = "🏷️set-worksheet-content-type/🦀️.rs"]
 pub mod set_worksheet_content_type;
 //#endregion 🔖️Leaves
@@ -153,9 +153,7 @@ fn declares_namespace(node: &XmlNode, value: &str) -> bool {
 /// 🔎️ Which member of a `[transitional, strict]` pair the package actually declares.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_pair_member(base: &XlsxSnapshot, pair: [&str; 2]) -> Option<String> {
-    pair.into_iter()
-        .find(|candidate| base.opc.parts.iter().filter(|part| is_xml_part(&part.path)).filter_map(parse_part).any(|document| document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate))))
-        .map(str::to_string)
+    pair.into_iter().find(|candidate| base.opc.parts.iter().filter(|part| is_xml_part(&part.path)).filter_map(parse_part).any(|document| document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate)))).map(str::to_string)
 }
 
 /// 🔎️ The relationship-type base the package's own relationships are built on.
@@ -308,42 +306,42 @@ fn diff_set_content_type(base: &XlsxSnapshot, path: &str, content_type: &str) ->
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &XlsxTransitionalMutation, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        protocol::MutationOutcome::new(match this {
-            XlsxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(base, snapshot),
-            XlsxTransitionalMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
-            XlsxTransitionalMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace }) => diff_retarget_namespace(base, RELATIONSHIP_NAMESPACES, namespace),
-            XlsxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
-            XlsxTransitionalMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
-            XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path, content_type }) => diff_set_content_type(base, path, content_type),
-        })
-    }
+    protocol::MutationOutcome::new(match this {
+        XlsxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(base, snapshot),
+        XlsxTransitionalMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
+        XlsxTransitionalMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace }) => diff_retarget_namespace(base, RELATIONSHIP_NAMESPACES, namespace),
+        XlsxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
+        XlsxTransitionalMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
+        XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path, content_type }) => diff_set_content_type(base, path, content_type),
+    })
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &XlsxTransitionalMutation, base: &XlsxSnapshot) -> Vec<XlsxTransitionalMutation> {
-        vec![match this {
-            XlsxTransitionalMutation::SetSnapshot(_) => XlsxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            XlsxTransitionalMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
-                Some(namespace) => XlsxTransitionalMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
-                None => return Vec::new(),
-            },
-            XlsxTransitionalMutation::SetRelationshipsNamespace(_) => match declared_pair_member(base, RELATIONSHIP_NAMESPACES) {
-                Some(namespace) => XlsxTransitionalMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace }),
-                None => return Vec::new(),
-            },
-            XlsxTransitionalMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
-                Some(value) => XlsxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-                None => XlsxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-            },
-            XlsxTransitionalMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
-                Some(value) => XlsxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-                None => return Vec::new(),
-            },
-            XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path, .. }) => match resolved_content_type(base, path) {
-                Some(content_type) => XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: path.clone(), content_type }),
-                None => return Vec::new(),
-            },
-        }]
-    }
+    vec![match this {
+        XlsxTransitionalMutation::SetSnapshot(_) => XlsxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        XlsxTransitionalMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
+            Some(namespace) => XlsxTransitionalMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
+            None => return Vec::new(),
+        },
+        XlsxTransitionalMutation::SetRelationshipsNamespace(_) => match declared_pair_member(base, RELATIONSHIP_NAMESPACES) {
+            Some(namespace) => XlsxTransitionalMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace }),
+            None => return Vec::new(),
+        },
+        XlsxTransitionalMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
+            Some(value) => XlsxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
+            None => XlsxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
+        },
+        XlsxTransitionalMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
+            Some(value) => XlsxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
+            None => return Vec::new(),
+        },
+        XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path, .. }) => match resolved_content_type(base, path) {
+            Some(content_type) => XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: path.clone(), content_type }),
+            None => return Vec::new(),
+        },
+    }]
+}
 //#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests

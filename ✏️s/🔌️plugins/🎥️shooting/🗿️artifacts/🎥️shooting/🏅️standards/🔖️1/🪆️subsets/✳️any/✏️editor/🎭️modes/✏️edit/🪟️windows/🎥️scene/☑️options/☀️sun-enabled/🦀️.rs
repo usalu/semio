@@ -1,8 +1,8 @@
 //! ☀️ Scene-window option — the sun-enabled toggle.
 //! Its command handler lives in `🎮️commands/☀️scene::toggle_sun`.
 
-use crate::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
+use crate::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

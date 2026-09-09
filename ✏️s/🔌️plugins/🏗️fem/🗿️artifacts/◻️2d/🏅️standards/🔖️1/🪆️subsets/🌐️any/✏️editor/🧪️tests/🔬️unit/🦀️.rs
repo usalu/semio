@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::fem2d::testkit::{fem2d_app, render};
 use semio_framework_plugin::{ArtifactEditor, EditorApp, PluginApp};
@@ -131,7 +130,7 @@ async fn every_route_declares_the_lane_its_handler_emits() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = Fem2dConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     for command in every_command() {
         let tool_id = command.command_id();
         let emit = command.dispatch(&doc, &cfg).unwrap_or_else(|error| panic!("{tool_id} dispatches: {error:?}"));

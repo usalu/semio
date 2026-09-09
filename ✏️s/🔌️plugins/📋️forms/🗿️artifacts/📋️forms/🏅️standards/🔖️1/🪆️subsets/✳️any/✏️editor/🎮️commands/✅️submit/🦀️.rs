@@ -1,7 +1,7 @@
 //! 🧪️ 🧪️ Forms play app commands command — `submit`.
 
-use crate::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::{op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

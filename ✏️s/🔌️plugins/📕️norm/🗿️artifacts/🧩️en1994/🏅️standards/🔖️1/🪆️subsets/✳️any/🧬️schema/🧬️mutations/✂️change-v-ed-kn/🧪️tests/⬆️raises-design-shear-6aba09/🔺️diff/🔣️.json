@@ -2,7 +2,7 @@
   "artifact": null,
   "annex": null,
   "mEdKnm": null,
-  "vEdKn": 225.0,
+  "vEdKn": 225,
   "mPla": null,
   "mPlRd": null,
   "eta": null,
@@ -21,6 +21,5 @@
   "spanM": null,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

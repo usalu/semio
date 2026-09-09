@@ -11,16 +11,7 @@
     "scene",
     "shots",
     "activeShotId",
-    "activeAssetId",
-    "selectedShotIds",
-    "activeUtilityId",
-    "defaultShotFormat",
-    "defaultShotShape",
-    "defaultAssetFormat",
-    "centerModel",
-    "fitRevision",
-    "cameraDraftLabel",
-    "camera"
+    "activeAssetId"
   ],
   "properties": {
     "schema": {
@@ -60,46 +51,10 @@
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "selectedShotIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "defaultShotFormat": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "defaultShotShape": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "defaultAssetFormat": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "centerModel": {
-      "type": "boolean",
-      "x-semio-state": "config"
-    },
-    "fitRevision": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "cameraDraftLabel": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "camera": {
-      "$ref": "#/$defs/ShootingCamera",
-      "x-semio-state": "config"
+    "emblem": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio.image"
     }
   },
   "$defs": {

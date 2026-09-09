@@ -379,7 +379,16 @@ function documentBackboneBindingOracle(repoRoot: string): number {
   for (const marker of ["DocumentBackboneBindingStateV1", "binding-noncanonical", "binding-live", "stale-generation"]) assert(binding.includes(marker), marker);
   for (const marker of ["ActorBackboneChannelOwner", "attach_hot_backbone", "decode_hot_backbone_message_exact", "hot backbone transport refuses snapshots"]) assert(store.includes(marker), marker);
   for (const marker of ["decode_document_backbone_envelopes_exact_with_limits", "nonminimal-varint", "DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES"]) assert(causal.includes(marker), marker);
-  for (const marker of ["ArtifactActorMsg::DocumentBackbone", "ArtifactEvent::DocumentBackbone", "DocumentBackboneRetentionV1", "decode_document_backbone_message_exact"]) assert(sync.includes(marker), marker);
+  for (const marker of ["ArtifactActorMsg::DocumentBackbone", "ArtifactEvent::DocumentBackbone", "DocumentBackboneRetentionV1", "decode_document_backbone_message_exact", "semio_framework_async::oneshot::channel", "pool.submit_at(pool.now_ms(), semio_framework_async::Lane::Io, admission_job)"]) assert(sync.includes(marker), marker);
+  for (const marker of ["tokio::runtime::Handle::try_current()", "self.io_reactor.as_ref().map(tokio::runtime::Handle::enter)"]) assert(sync.includes(marker), marker);
+  for (const marker of ["struct ArtifactReadinessWake", "connection.read.poll_next_unpin(&mut context)", "future.as_mut().poll(&mut context)"]) assert(sync.includes(marker), marker);
+  for (const marker of ["readiness_requested.store(true", "self.readiness_requested.swap(false", "self.drive_phase = ArtifactDrivePhase::ConnectResult", "if self.semio_hub.is_some() {\n                            self.drive_phase = ArtifactDrivePhase::Hub", "self.drive_phase = ArtifactDrivePhase::Hub;\n                        self.on_hub_message(message).await"]) assert(sync.includes(marker), marker);
+  assert(sync.includes("self.semio_hub.is_some() || self.connect_future.is_some() || self.reconnect_at.is_some_and"), "connect admission must retain live sockets and respect backoff");
+  const handoff = sync.slice(sync.indexOf("fn release_scheduled_after_turn_with"), sync.indexOf("fn arm_deadline"));
+  assert(handoff.indexOf("self.scheduled.store(false") < handoff.indexOf("self.wake_requested.swap(false"), "readiness handoff must release scheduled ownership before consuming a concurrent wake");
+  const cancellation = sync.slice(sync.indexOf("fn cancel(self: &Arc<Self>)"), sync.indexOf("fn request_close"));
+  assert(!cancellation.includes("scheduled.store(false"), "cancellation must not steal scheduled ownership from an inflight turn");
+  assert(!sync.includes("tokio::task::spawn_blocking"), "native actor must not depend on an ambient Tokio runtime for socket admission");
   for (const marker of ["plugin_handle_document_backbone_binding", "plugin_receive_document_backbone", "plugin_drain_document_backbones"]) assert(reactor.includes(marker), marker);
   const retireBranch = component.slice(component.indexOf("DocumentBackboneBindingDecisionV1::Retire(receipt)"), component.indexOf("pub async fn plugin_receive_document_backbone"));
   assert(retireBranch.indexOf("owner.begin_retire()") < retireBranch.indexOf("plugin_detach_backbone(runtime, command.instance_id).await"), "retire must synchronously close ingress before detach awaits");
@@ -412,6 +421,8 @@ class DocumentBackboneBindingCheckScript extends BundleScript {
           laws: [
             "os_store::sync::tests::document_backbone_mailbox_and_retention_are_exact_bounded_and_terminal",
             "os_store::sync::tests::actor_tests::raw_document_backbone_reaches_hub_once_and_returns_one_canonical_event",
+            "os_store::sync::native_actor::retained_turn_fixtures::retained_readiness_wake_after_turn_release_is_observed_once",
+            "os_store::sync::native_actor::retained_turn_fixtures::cancellation_cannot_complete_before_an_inflight_turn_returns_its_exact_owner",
           ],
         },
         {

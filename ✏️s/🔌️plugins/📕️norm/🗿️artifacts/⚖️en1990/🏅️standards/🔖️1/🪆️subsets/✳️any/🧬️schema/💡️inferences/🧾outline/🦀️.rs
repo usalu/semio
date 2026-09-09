@@ -1,8 +1,8 @@
 //! 🧾 `outline` — one named inference: this document's own field/section structure plus a clause
 //! summary from headless EN 1990 norm computation (`schema::inferences::evaluate`).
 
-use crate::En1990Snapshot;
 use crate::document::CheckStatus;
+use crate::En1990Snapshot;
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &["g_k", "q_k", "resistance_kn", "consequence_class", "annex", "seismic_a_ed_kn"];
@@ -32,10 +32,8 @@ impl En1990Outline {
         let check_count = report.checks.len() as u32;
         let pass_count = report.checks.iter().filter(|check| check.status == CheckStatus::Pass).count() as u32;
         let all_pass = report.all_pass();
-        let governing = report
-            .checks
-            .iter()
-            .max_by(|left, right| left.utilization.partial_cmp(&right.utilization).unwrap_or(std::cmp::Ordering::Equal)).map_or_else(|| ("EN 1990 §6.4 6.10".into(), 0.0), |check| (check.clause.to_string(), check.utilization));
+        let governing =
+            report.checks.iter().max_by(|left, right| left.utilization.partial_cmp(&right.utilization).unwrap_or(std::cmp::Ordering::Equal)).map_or_else(|| ("EN 1990 §6.4 6.10".into(), 0.0), |check| (check.clause.to_string(), check.utilization));
         Self { section_outline, field_count, entry_count, check_count, pass_count, all_pass, governing_clause: governing.0, governing_utilization: governing.1 }
     }
 }

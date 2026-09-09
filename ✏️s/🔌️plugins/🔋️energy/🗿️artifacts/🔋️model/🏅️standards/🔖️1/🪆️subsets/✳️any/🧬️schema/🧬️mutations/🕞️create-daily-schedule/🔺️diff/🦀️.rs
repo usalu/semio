@@ -1,12 +1,17 @@
 //! 🔺️ Sparse diff builder for `CreateDailySchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::EnergyModelSnapshot;
 use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateDailySchedule, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-    if base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.id) || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.id) || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.id) || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.id) || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.id) {
+    if base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.id)
+        || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.id)
+        || base.model.schedules.weekly.iter().any(|schedule| schedule.id == payload.id)
+        || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.id)
+        || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.id)
+    {
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Schedule {} is already defined.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.schedules.daily.len() {
@@ -27,7 +32,22 @@ pub fn diff(payload: &super::CreateDailySchedule, base: &EnergyModelSnapshot) ->
         }
     }
     let mut model = base.model.clone();
-    model.schedules.daily.insert(payload.index as usize, crate::schedule::DailySchedule { id: payload.id, hourly_values: { let mut values = [0.0f64; 24]; values.copy_from_slice(&payload.hourly_values); values }, interpolation: payload.interpolation, limits: match (payload.limits_min, payload.limits_max) { (Some(min), Some(max)) => Some(crate::schedule::ScheduleLimits { min, max }), _ => None } });
+    model.schedules.daily.insert(
+        payload.index as usize,
+        crate::schedule::DailySchedule {
+            id: payload.id,
+            hourly_values: {
+                let mut values = [0.0f64; 24];
+                values.copy_from_slice(&payload.hourly_values);
+                values
+            },
+            interpolation: payload.interpolation,
+            limits: match (payload.limits_min, payload.limits_max) {
+                (Some(min), Some(max)) => Some(crate::schedule::ScheduleLimits { min, max }),
+                _ => None,
+            },
+        },
+    );
     protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

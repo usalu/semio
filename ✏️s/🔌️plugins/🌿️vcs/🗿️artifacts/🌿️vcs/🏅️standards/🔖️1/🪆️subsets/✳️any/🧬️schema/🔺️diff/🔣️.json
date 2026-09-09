@@ -35,10 +35,6 @@
     "tags": {
       "$ref": "#/$defs/VcsTagsDelta",
       "x-semio-state": "artifact"
-    },
-    "selectedCheckpointIds": {
-      "$ref": "#/$defs/VcsStringList",
-      "x-semio-state": "presence"
     }
   },
   "$defs": {

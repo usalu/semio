@@ -11,6 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "set-layer-stroke-scale")]
 pub struct SetLayerStrokeScale {
     pub layer_id: String,
+    #[value(required)]
     pub value: Option<f64>,
 }
 //#endregion 🧬️Payload
@@ -19,7 +20,9 @@ pub struct SetLayerStrokeScale {
 impl MutationKind<Gis2dConfig, Gis2dConfigMutation> for SetLayerStrokeScale {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "layer-stroke-scale", kind: "set-layer-stroke-scale", record: "SetLayerStrokeScale" };
     fn diff(&self, base: &Gis2dConfig) -> MutationOutcome<Gis2dConfigDiff> {
-        if self.value.is_some_and(|value| !value.is_finite()) { return MutationOutcome::fatal("mutation.invalid-number", "Layer stroke scale must be finite.", ["layerStrokeScale", self.layer_id.as_str()]); }
+        if self.value.is_some_and(|value| !value.is_finite()) {
+            return MutationOutcome::fatal("mutation.invalid-number", "Layer stroke scale must be finite.", ["layerStrokeScale", self.layer_id.as_str()]);
+        }
         if base.layer_stroke_scale.get(&self.layer_id).copied() == self.value {
             return MutationOutcome::empty().warn("mutation.no-op", "Layer stroke scale override is already at the requested value.");
         }
@@ -28,8 +31,12 @@ impl MutationKind<Gis2dConfig, Gis2dConfigMutation> for SetLayerStrokeScale {
     fn inverse(&self, base: &Gis2dConfig) -> Vec<Gis2dConfigMutation> {
         vec![Self { layer_id: self.layer_id.clone(), value: base.layer_stroke_scale.get(&self.layer_id).copied() }.into()]
     }
-    fn label(&self) -> String { format!("Set layer stroke scale {}", self.layer_id) }
-    fn target(&self) -> Vec<String> { vec!["layerStrokeScale".into(), self.layer_id.clone()] }
+    fn label(&self) -> String {
+        format!("Set layer stroke scale {}", self.layer_id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["layerStrokeScale".into(), self.layer_id.clone()]
+    }
 }
 //#endregion ⚙️Behavior
 

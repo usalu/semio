@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::standards::v1::subsets::value::schema::snapshot::{STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, SemioValueEntry, SemioValueNode, ValueId};
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValueEntry, SemioValueNode, ValueId, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 
 /// 🌱 A hand-built, non-empty graph: a 3-deep map/list root (Map -> List -> Str, depth 3) plus
 /// one backing node holding a 2-deep value (Map -> Bool, depth 2) — exercises every variant and

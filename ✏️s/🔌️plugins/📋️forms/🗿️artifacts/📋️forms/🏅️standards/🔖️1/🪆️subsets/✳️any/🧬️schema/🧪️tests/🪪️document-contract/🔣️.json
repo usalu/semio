@@ -1,0 +1,59 @@
+{
+  "document": {
+    "schema": "forms.form",
+    "id": "site-survey",
+    "version": "1",
+    "title": "Site Survey",
+    "structure": {
+      "childId": "forms-structure",
+      "target": {
+        "artifactId": "forms-value",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "value"
+        }
+      }
+    },
+    "results": {
+      "childId": "forms-results",
+      "target": {
+        "artifactId": "forms-table",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "table"
+        }
+      }
+    }
+  },
+  "invalidDocumentFields": {
+    "steps": [],
+    "currentStepIndex": 2,
+    "tryValues": {
+      "answer": "draft"
+    },
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "value": "opaque"
+  },
+  "invalidChildren": [
+    null,
+    {
+      "childId": "missing-target"
+    },
+    {
+      "childId": "x",
+      "target": {
+        "artifactId": "x",
+        "dialect": {
+          "artifactKind": "x",
+          "standard": "1"
+        }
+      }
+    }
+  ]
+}

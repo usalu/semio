@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn encode(value: Value<'_>, bytes: &mut Vec<u8>) {

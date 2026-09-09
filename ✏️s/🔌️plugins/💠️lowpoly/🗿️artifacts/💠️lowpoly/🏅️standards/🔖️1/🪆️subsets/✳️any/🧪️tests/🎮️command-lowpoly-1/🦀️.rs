@@ -84,7 +84,7 @@ mod subject {
         let history = HistoryView::empty();
         let document = ArtifactView::new(&snapshot, &history);
         let config = LowpolyConfig::default();
-        let config_view = ConfigView { snapshot: &config };
+        let config_view = ConfigView { snapshot: &config, window: None };
         let mut scratch = LowpolyScratch::default();
         let emit = patch_object::handle(
             &patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some("\"Renamed\"".into()) },

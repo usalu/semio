@@ -1,5 +1,4 @@
-
-use super::super::{InsertLineMutation, TxtMutation, apply_txt_mutation};
+use super::super::{apply_txt_mutation, InsertLineMutation, TxtMutation};
 use super::*;
 use crate::schema::snapshot::LineEnding;
 use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};

@@ -20,7 +20,7 @@
 //! of, exactly as it is for a genuine move.
 
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::{materialize_forms_steps, forms_steps, FormQuestion, FormStep, FormsDiff, FormsSnapshot};
+use crate::{forms_steps, materialize_forms_steps, FormQuestion, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

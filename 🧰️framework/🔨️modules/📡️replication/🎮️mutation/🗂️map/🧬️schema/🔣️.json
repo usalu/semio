@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/replication/mutation/map/schema.json",
+  "title": "MapDelta",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entries"
+  ],
+  "properties": {
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/MapEntryDelta"
+      }
+    }
+  },
+  "$defs": {
+    "MapEntryDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "precondition",
+        "operation"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "precondition": {
+          "enum": [
+            "any",
+            "present",
+            "absent",
+            "never"
+          ]
+        },
+        "operation": {
+          "$ref": "#/$defs/MapEntryOperation"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "precondition": {
+                "const": "never"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "operation": {
+                "properties": {
+                  "kind": {
+                    "const": "reject"
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "operation": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "set",
+                      "remove"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "MapEntryOperation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/DslValue"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "remove"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reject"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

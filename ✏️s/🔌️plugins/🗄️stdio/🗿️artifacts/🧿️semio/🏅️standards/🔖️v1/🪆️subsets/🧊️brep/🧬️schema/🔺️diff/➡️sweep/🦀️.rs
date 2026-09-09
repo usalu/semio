@@ -13,12 +13,12 @@
 
 #[path = "🧮️core/🦀️.rs"]
 mod core;
-#[path = "🌀️revolve/🦀️.rs"]
-mod revolve;
-#[path = "🥞️loft/🦀️.rs"]
-mod loft;
 #[path = "🐍️frame/🦀️.rs"]
 mod frame;
+#[path = "🥞️loft/🦀️.rs"]
+mod loft;
+#[path = "🌀️revolve/🦀️.rs"]
+mod revolve;
 
 use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_planar_face_from_wire, Wire};
 use crate::standards::v1::subsets::brep::schema::diff::transform::transform_face;
@@ -124,7 +124,13 @@ pub fn pipe(body: &mut Body, profile: FaceId, path: &Wire, guide: Option<&Wire>,
         }
     }
     let frames = frame::frame_stations(body, path, guide, 4, 32)?;
-    let profile_frame = { let f = body.faces.get(profile).ok_or_else(|| KernelError::MissingEntity("profile".into()))?; match body.surfaces.get(f.surface) { Some(Surface::Plane { frame }) => *frame, _ => return Err(KernelError::InvalidInput("sweep profile face must be planar".into())) } };
+    let profile_frame = {
+        let f = body.faces.get(profile).ok_or_else(|| KernelError::MissingEntity("profile".into()))?;
+        match body.surfaces.get(f.surface) {
+            Some(Surface::Plane { frame }) => *frame,
+            _ => return Err(KernelError::InvalidInput("sweep profile face must be planar".into())),
+        }
+    };
     let align = core::frame_to_affine(&frames[0]).compose(&core::frame_to_affine(&profile_frame).inverse().ok_or_else(|| KernelError::Operation("sweep: singular profile placement".into()))?);
     let profile_label = body.faces.get(profile).unwrap().label;
     let aligned = transform_face(body, profile, &align, rec)?;
@@ -178,7 +184,13 @@ pub fn helical_sweep(body: &mut Body, profile: FaceId, (axis_origin, axis_dir): 
         stations.push(frame::Station { point, tangent });
     }
     let frames = frame::stations_to_frames(&stations);
-    let profile_frame = { let f = body.faces.get(profile).ok_or_else(|| KernelError::MissingEntity("profile".into()))?; match body.surfaces.get(f.surface) { Some(Surface::Plane { frame }) => *frame, _ => return Err(KernelError::InvalidInput("helical_sweep profile face must be planar".into())) } };
+    let profile_frame = {
+        let f = body.faces.get(profile).ok_or_else(|| KernelError::MissingEntity("profile".into()))?;
+        match body.surfaces.get(f.surface) {
+            Some(Surface::Plane { frame }) => *frame,
+            _ => return Err(KernelError::InvalidInput("helical_sweep profile face must be planar".into())),
+        }
+    };
     let align = core::frame_to_affine(&frames[0]).compose(&core::frame_to_affine(&profile_frame).inverse().ok_or_else(|| KernelError::Operation("helical_sweep: singular profile placement".into()))?);
     let profile_label = body.faces.get(profile).unwrap().label;
     let aligned = transform_face(body, profile, &align, rec)?;

@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::fem3d::Fem3dCommand;
 use crate::editor::fem3d::testkit::{dispatch, fem3d_empty_app};
+use crate::editor::fem3d::Fem3dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn remove_selection_covers_solids_3d() {

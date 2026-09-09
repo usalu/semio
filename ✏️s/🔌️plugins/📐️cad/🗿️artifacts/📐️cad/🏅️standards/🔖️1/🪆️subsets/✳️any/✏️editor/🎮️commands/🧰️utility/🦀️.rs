@@ -1,11 +1,11 @@
 //! 🧰️ CAD play app commands — per-pane options for the window-scoped Dislocate utility.
 
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::CadDispatchCtx;
+use crate::editor::cad::{cad_pane_id_from_suffix, cad_window_id_for_pane, runtime_of, snapshot_of};
 use crate::op::CadMutation;
 use crate::CadPaneId;
 use crate::CadSnapshot;
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_pane_id_from_suffix, cad_window_id_for_pane, preview_transition_snapshot_of, runtime_of, snapshot_of};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

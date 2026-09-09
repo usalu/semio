@@ -1,12 +1,7 @@
-# 🧬️ Wires snapshot schema — every field with its state class.
-
-scalar DslValue
-
 type WiresSnapshot {
-  wiresFixture: DslValue! @state(class: ARTIFACT)
-  boardFixture: DslValue! @state(class: ARTIFACT)
+  wiresFixture: DslValue @state(class: ARTIFACT)
+  content: ArtifactChild! @state(class: ARTIFACT)
+  camera: DslValue @state(class: ARTIFACT)
+  meta: DslValue @state(class: ARTIFACT)
 }
-
-type WiresStringList {
-  values: [String!]!
-}
+type WiresStringList { values: [String!]! }

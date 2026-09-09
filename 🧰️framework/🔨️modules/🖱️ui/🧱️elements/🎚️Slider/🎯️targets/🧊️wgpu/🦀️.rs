@@ -34,7 +34,7 @@ pub(crate) fn render_slider<E: Clone>(id: &str, value: f64, min: f64, max: f64, 
         let dx = ctx.input.drag.current_x - ctx.input.drag.start_x;
         t = (t as f32 + dx / bounds.w.max(1.0)).clamp(0.0, 1.0) as f64;
     }
-    let selectable_max = ready.map(|extent| extent.clamp(min, max)).unwrap_or(max);
+    let selectable_max = ready.map_or(max, |extent| extent.clamp(min, max));
     let live = quantize_step(min + t * range, step, min).clamp(min, selectable_max);
     if !disabled {
         if let Some(maps) = ctx.interaction_maps.as_deref_mut() {

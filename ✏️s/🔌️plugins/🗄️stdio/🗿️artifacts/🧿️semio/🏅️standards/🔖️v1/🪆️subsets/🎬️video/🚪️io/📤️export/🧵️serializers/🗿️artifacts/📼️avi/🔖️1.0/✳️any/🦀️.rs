@@ -9,10 +9,10 @@
 //! has exactly one global header per file, `video` has per-stream dimensions, a genuine cardinality
 //! mismatch when there is more than one stream).
 
-use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamFormat, AviStreamHeader};
-use semio_s_artifact_stdio_avi::AviSnapshot;
 use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamFormat, AviStreamHeader};
+use semio_s_artifact_stdio_avi::AviSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standard: StandardId("1.0"), subset: SubsetId("*") };

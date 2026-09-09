@@ -3,11 +3,11 @@
 //! Emits the frozen `set-pixel-region` action onto the artifact's own frame/image pixel-index replace mutation (index fixed at 0 — a genuine per-region patch is not declared in this format's schema).
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
+use crate::editor::gif_87a::modes::edit;
+use crate::editor::gif_87a::modes::edit::windows::main;
 use crate::standards::v87a::subsets::any::schema::mutations::{set_image_pixels, GifMutation};
 use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::{GIF_87A_DIALECT, STDIO_GIF_DOCUMENT_SCHEMA};
-use crate::editor::gif_87a::modes::edit;
-use crate::editor::gif_87a::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;
 

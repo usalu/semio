@@ -1,9 +1,8 @@
 //! 🧹 `change-bm` payload — changes the En1997 document's `b_m` (footing width B [m]).
 
-
-use crate::En1997Snapshot;
 use crate::diff::En1997Diff;
 use crate::mutations::En1997Mutation;
+use crate::En1997Snapshot;
 //#region 🔖️ChangeBM
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

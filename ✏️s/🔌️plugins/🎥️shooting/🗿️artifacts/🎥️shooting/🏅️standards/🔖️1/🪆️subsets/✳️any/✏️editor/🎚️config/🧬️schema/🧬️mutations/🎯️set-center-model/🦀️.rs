@@ -17,7 +17,13 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetCente
         next.center_model = self.value;
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> { vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Set Center Model".into() }
-    fn target(&self) -> Vec<String> { vec!["center_model".into()] }
+    fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> {
+        vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Center Model".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["center_model".into()]
+    }
 }

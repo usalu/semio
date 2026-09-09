@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_job::InteractiveJobCloseStep as Step;
 use semio_framework_plugin::retained_command::ArtifactCommandWork;
@@ -23,8 +22,7 @@ fn config_copy_and_targeted_inverse_obey_maximum_text_fixture() {
             }
         }
         let post = copy.take().unwrap();
-        assert_eq!(post.catalogue_sections_json, text);
-        assert_eq!(post.locale, base.locale);
+        assert_eq!(post, FlowConfig { catalogue_sections_json: text, ..base.clone() });
         assert_eq!(copied, super::super::flow_config_text_bytes(&post));
         let source = ConfigSource::base(&base);
         let mut undo = ConfigCopy::new(&source, inverse_field(&mutation));

@@ -7,18 +7,7 @@
   "required": [
     "positions",
     "routes",
-    "regions",
-    "selectedIds",
-    "featureSelectionJson",
-    "layerVisibility",
-    "layerStrokeScale",
-    "cameraJson",
-    "renderMode",
-    "vectorStyle",
-    "lodMode",
-    "hoverJson",
-    "selectionMethod",
-    "selectionMode"
+    "regions"
   ],
   "properties": {
     "positions": {
@@ -41,63 +30,6 @@
         "$ref": "#/$defs/GisMapFeature"
       },
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "featureSelectionJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "presence"
-    },
-    "layerVisibility": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "boolean"
-      },
-      "x-semio-state": "presence"
-    },
-    "layerStrokeScale": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "number",
-        "format": "double"
-      },
-      "x-semio-state": "presence"
-    },
-    "cameraJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "renderMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "vectorStyle": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "lodMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "hoverJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectionMode": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

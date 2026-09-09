@@ -15,7 +15,6 @@ type Din18599Diff {
   annualLimitKwh: Float @state(class: ARTIFACT)
   energyCarrier: String @state(class: ARTIFACT)
   referenceQPKwh: Float @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type Din18599Artifact {
@@ -32,5 +31,4 @@ type Din18599Artifact {
   annualLimitKwh: Float
   energyCarrier: String
   referenceQPKwh: Float
-  selectedCheckIndex: Int
 }

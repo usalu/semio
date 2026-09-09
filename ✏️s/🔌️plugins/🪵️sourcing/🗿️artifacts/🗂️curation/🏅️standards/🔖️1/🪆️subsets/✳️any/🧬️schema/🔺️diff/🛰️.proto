@@ -117,8 +117,4 @@ message CurationDiff {
   // @state artifact
   optional CurationCuratedDelta curated = 4;
   // @state config
-  optional Filters filters = 5;
-  // @state config
-  // @state config
-  optional string contributions_json = 8;
 }

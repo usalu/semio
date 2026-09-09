@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::process3d::testkit;
 
@@ -21,7 +20,7 @@ async fn document_panel_lists_stock_and_steps() {
 /// record since wave 4, not the unresolvable `steps` child handle.
 #[semio_framework_async_macros::async_test]
 async fn document_panel_lists_every_step_payload_in_order() {
-    use crate::{ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop, process_working_scene_to_snapshot};
+    use crate::{process_working_scene_to_snapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop};
     let scene = ProcessWorkingScene {
         stock: Stock::default(),
         steps: vec![
@@ -31,7 +30,7 @@ async fn document_panel_lists_every_step_payload_in_order() {
         ],
     };
     let fixture = process_working_scene_to_snapshot(&scene, Workshop::default(), None);
-    let labels = crate::editor::process3d::terminology::process3d_labels(&crate::editor::process3d::config::Process3dConfig::default());
+    let labels = crate::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::default());
     let node = render(&fixture, labels).expect("document tree renders");
     let rendered = serde_json::to_string(&node).expect("render json");
     let rip_index = rendered.find("step-rip").expect("step-rip present");

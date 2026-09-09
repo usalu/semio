@@ -241,9 +241,6 @@ impl En1993Diff {
             if let Some(value) = &self.crane_t_w_mm {
                 next.crane_t_w_mm = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -567,7 +564,6 @@ impl MutationDiff<En1993Snapshot> for En1993Diff {
         take!(crane_wheel_contact_length_mm);
         take!(crane_dispersion_mm);
         take!(crane_t_w_mm);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

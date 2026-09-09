@@ -540,7 +540,7 @@ mod native {
                     return;
                 }
                 winit::event::WindowEvent::Resized(size) => {
-                    let scale_factor = self.window.as_ref().map(|window| window.scale_factor()).unwrap_or(1.0);
+                    let scale_factor = self.window.as_ref().map_or(1.0, |window| window.scale_factor());
                     self.delegate.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor: scale_factor as f32 });
                 }
                 winit::event::WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
@@ -937,19 +937,19 @@ mod browser {
             }
             if let Some((event, dispatch)) = self.pending_dispatch.take() {
                 self.delegate.handle_event(dispatch);
-                self.acknowledge_event(event)?;
+                self.acknowledge_event(&event)?;
                 return Ok(BrowserHostStep::Event);
             }
             if self.pending_frame.is_some() && self.latest_metrics.is_some() {
                 let (event, metrics) = self.latest_metrics.take().expect("checked");
                 self.delegate.handle_metrics(metrics);
-                self.acknowledge_event(event)?;
+                self.acknowledge_event(&event)?;
                 return Ok(BrowserHostStep::Event);
             }
             if self.pending_frame.is_some() && self.latest_pointer.is_some() {
                 let (event, dispatch) = self.latest_pointer.take().expect("checked");
                 self.delegate.handle_event(dispatch);
-                self.acknowledge_event(event)?;
+                self.acknowledge_event(&event)?;
                 return Ok(BrowserHostStep::Event);
             }
             if let Some((event, frame)) = self.pending_frame.take() {
@@ -961,7 +961,7 @@ mod browser {
                         self.pending_cursor = Some(outcome.cursor);
                     }
                 }
-                self.acknowledge_event(event)?;
+                self.acknowledge_event(&event)?;
                 return Ok(BrowserHostStep::Frame(frame));
             }
             if let Some(pending) = self.pending_event.as_mut() {
@@ -978,11 +978,11 @@ mod browser {
                 AbiPortPoll::Pending => {
                     if let Some((event, metrics)) = self.latest_metrics.take() {
                         self.delegate.handle_metrics(metrics);
-                        self.acknowledge_event(event)?;
+                        self.acknowledge_event(&event)?;
                         Ok(BrowserHostStep::Event)
                     } else if let Some((event, dispatch)) = self.latest_pointer.take() {
                         self.delegate.handle_event(dispatch);
-                        self.acknowledge_event(event)?;
+                        self.acknowledge_event(&event)?;
                         Ok(BrowserHostStep::Event)
                     } else {
                         Ok(BrowserHostStep::AwaitingHost)
@@ -1065,12 +1065,12 @@ mod browser {
             match decode_browser_host_event(&event, self.canvas, listener)? {
                 BrowserHostEvent::Metrics(metrics) => {
                     if let Some((replaced, _)) = self.latest_metrics.replace((event, WindowMetrics { physical: PhysicalSize::new(metrics.width, metrics.height), scale_factor: metrics.scale_factor })) {
-                        self.acknowledge_event(replaced)?;
+                        self.acknowledge_event(&replaced)?;
                     }
                 }
                 BrowserHostEvent::Visibility { visible } => {
                     self.delegate.scheduler_mut().set_visible(visible);
-                    self.acknowledge_event(event)?;
+                    self.acknowledge_event(&event)?;
                 }
                 BrowserHostEvent::Frame { timestamp_ms } => {
                     self.pending_frame = Some((event, FrameSchedulerEnvelope { canvas: self.canvas, generation: self.generation, timestamp_ms }));
@@ -1078,7 +1078,7 @@ mod browser {
                 BrowserHostEvent::Dispatch(dispatch) => {
                     if matches!(dispatch, DispatchEvent::PointerMove { .. }) {
                         if let Some((replaced, _)) = self.latest_pointer.replace((event, dispatch)) {
-                            self.acknowledge_event(replaced)?;
+                            self.acknowledge_event(&replaced)?;
                         }
                     } else {
                         self.pending_dispatch = Some((event, dispatch));
@@ -1089,7 +1089,7 @@ mod browser {
             Ok(())
         }
 
-        fn acknowledge_event(&mut self, event: AbiEvent) -> Result<(), BrowserHostError> {
+        fn acknowledge_event(&mut self, event: &AbiEvent) -> Result<(), BrowserHostError> {
             if self.outbound.is_some() {
                 return Err(BrowserHostError::Busy);
             }
@@ -1182,7 +1182,7 @@ mod browser {
                     return Ok(progress(pending.inspected_bytes as u32, total as u32));
                 }
                 let event = self.pending_event.take().expect("checked").event;
-                self.acknowledge_event(event)?;
+                self.acknowledge_event(&event)?;
                 return Ok(progress(total as u32, total as u32));
             }
             if let Some(pending) = self.pending_page.as_mut() {
@@ -1197,19 +1197,19 @@ mod browser {
                 return Ok(progress(total as u32, total as u32));
             }
             if let Some((event, _)) = self.pending_dispatch.take() {
-                self.acknowledge_event(event)?;
+                self.acknowledge_event(&event)?;
                 return Ok(progress(1, 1));
             }
             if let Some((event, _)) = self.latest_metrics.take() {
-                self.acknowledge_event(event)?;
+                self.acknowledge_event(&event)?;
                 return Ok(progress(1, 1));
             }
             if let Some((event, _)) = self.latest_pointer.take() {
-                self.acknowledge_event(event)?;
+                self.acknowledge_event(&event)?;
                 return Ok(progress(1, 1));
             }
             if let Some((event, _)) = self.pending_frame.take() {
-                self.acknowledge_event(event)?;
+                self.acknowledge_event(&event)?;
                 return Ok(progress(1, 1));
             }
             if let Some(listener) = self.listener.take() {

@@ -15,8 +15,8 @@
 //! 🌳 The committed equation is `2·x² + 7` with `EquationNodeLabel`s 0..6 and `nextLabel` 7; the
 //! payload retargets the label-2 leading coefficient from the integer `2` to the rational `3/2`.
 
-use crate::standards::v1::subsets::equation::schema::mutations::change_coefficient::ChangeCoefficient;
 use crate::snapshot::schema::{EquationNodeKind, EquationNodeLabel};
+use crate::standards::v1::subsets::equation::schema::mutations::change_coefficient::ChangeCoefficient;
 use crate::{EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
@@ -66,7 +66,8 @@ async fn the_composed_child_triple_is_never_re_minted() {
     let diff = emitted.diff();
     assert!(diff.equation.is_some(), "change-coefficient fills the equation slot");
     assert!(diff.notation.is_none() && diff.results.is_none() && diff.computed.is_none(), "change-coefficient must leave every composed-child slot of the diff empty");
-    assert!(diff.camera_x.is_none() && diff.camera_y.is_none() && diff.camera_zoom.is_none() && diff.locale.is_none(), "change-coefficient is artifact-lane only — it never writes a config-lane slot");
+    let encoded: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(diff)).expect("third-party diff decoder");
+    assert_eq!(encoded.as_object().unwrap().keys().map(String::as_str).collect::<std::collections::BTreeSet<_>>(), std::collections::BTreeSet::from(["notation", "results", "computed", "equation"]));
 }
 
 /// ↩️ The undo is reconstructed from BASE's own value at that label and collapses back to the
@@ -75,11 +76,7 @@ async fn the_composed_child_triple_is_never_re_minted() {
 async fn inverse_restores_before() {
     let base = before();
     let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base);
-    assert_eq!(
-        inverse,
-        vec![EquationMutation::ChangeCoefficient(ChangeCoefficient { label: COEFFICIENT, numer: "2".to_string(), denom: "1".to_string() })],
-        "change-coefficient inverts to BASE's own numer/denom at the same label, got {inverse:?}"
-    );
+    assert_eq!(inverse, vec![EquationMutation::ChangeCoefficient(ChangeCoefficient { label: COEFFICIENT, numer: "2".to_string(), denom: "1".to_string() })], "change-coefficient inverts to BASE's own numer/denom at the same label, got {inverse:?}");
     let mut snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
         let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &snapshot);
@@ -124,15 +121,15 @@ async fn produces_committed_diff() {
     assert!(pack::json::value_eq_ignoring_object_order(&produced_value, &committed), "change-coefficient/raises-the-leading-coefficient-to-three-halves: produced diff differs from the committed 🔺️diff/🔣️.json ({produced_value:?} vs {committed:?})");
 }
 
-/// 🔣️ The committed diff is canonical and decodes to `EquationDiff`, whose container
-/// `#[serde(default)]` carries no per-field `skip_serializing_if` — all eight slots are present.
+/// 🔣️ The committed diff is canonical and decodes to `EquationDiff`, whose owned codec
+/// emits all four artifact slots, including null values.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: EquationDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = pack::json_from_dsl_value(&decoded.to_value());
     let original = pack::parse_json(DIFF).expect("committed diff reparses");
     assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
-    assert_eq!(original.as_object().expect("the diff is a JSON object").len(), 8, "EquationDiff emits all eight slots, `null` for the untouched ones");
+    assert_eq!(original.as_object().expect("the diff is a JSON object").len(), 4, "EquationDiff emits all four artifact slots, `null` for the untouched ones");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a

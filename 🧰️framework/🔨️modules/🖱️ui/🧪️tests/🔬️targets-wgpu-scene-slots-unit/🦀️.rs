@@ -127,7 +127,7 @@ fn scene_paint_cursor_rejects_stale_node_without_consuming_owner() {
     let Some(second) = children.next() else { panic!("second scene child") };
     let mut cursor = ScenePaintCursor::default();
     assert_eq!(cursor.bind(first), Ok(false));
-    assert_eq!(cursor.bind(second), Err(()));
+    assert_eq!(cursor.bind(second), Err(ScenePaintCursorError::NodeMismatch));
     assert_eq!(cursor.bind(first), Ok(true));
     assert!(!cursor.terminal_is_empty());
 }

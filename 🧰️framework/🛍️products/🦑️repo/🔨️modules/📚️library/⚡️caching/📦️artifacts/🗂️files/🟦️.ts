@@ -1,5 +1,18 @@
 import { lstat, readdir } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+
+/** 🪶️ Writes generated text only when its bytes changed, preserving no-op prerequisite mtimes. */
+export function writeGeneratedFileIfChanged(path: string, content: string): boolean {
+  if (existsSync(path)) {
+    const metadata = lstatSync(path);
+    if (!metadata.isFile() || metadata.isSymbolicLink()) throw new Error(`Invalid generated file: ${path}`);
+    if (readFileSync(path, "utf8") === content) return false;
+  }
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, content, "utf8");
+  return true;
+}
 
 /** 🗂️ Collects regular staged files without following links or retaining compiler directory state. */
 export async function collectArtifactFiles(root: string, signal?: AbortSignal): Promise<ReadonlyMap<string, string>> {

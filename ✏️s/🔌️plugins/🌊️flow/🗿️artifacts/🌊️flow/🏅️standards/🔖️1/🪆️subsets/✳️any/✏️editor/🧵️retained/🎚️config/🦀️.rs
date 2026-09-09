@@ -1,10 +1,10 @@
 //! 🎚️ Typed canonical Config mutation traversal, without JSON staging.
 
 use super::super::{FlowConfig, FlowConfigMutation};
-use store::{ArtifactCanonicalJson, ArtifactCanonicalJsonNode as Json};
-use super::{ConfigCopy, ConfigSource, Owner, Retirement};
 use super::bytes::{edit_id_byte, edit_id_length, TextCopy};
+use super::{ConfigCopy, ConfigSource, Owner, Retirement};
 use std::sync::Arc;
+use store::{ArtifactCanonicalJson, ArtifactCanonicalJsonNode as Json};
 
 //#region 📬️Preparation
 pub(in super::super) struct PreparationFactory;
@@ -17,19 +17,42 @@ impl store::ArtifactStoreOneItemPreparationFactory<FlowConfig, FlowConfigMutatio
         super::super::admit_flow_config_mutation(mutation)
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<FlowConfig, FlowConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<FlowConfig, FlowConfigMutation>> {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<FlowConfig, FlowConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<FlowConfig, FlowConfigMutation>> {
         if matches!(request.mutation, FlowConfigMutation::CancelDuplicateWidget { .. }) {
             return store::ArtifactStoreOneItemPreparationFactory::begin(&super::super::FlowStoreOneItemPreparationFactory::new(store::HistoryLane::Document, super::super::admit_flow_config_mutation, super::super::prepare_flow_config), request);
         }
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
             return Err(request);
         }
         Ok(Box::new(Preparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority),
-            phase: 0, admission_item: 0, admission_bytes: 0, copy: None, post: None, inverse: None,
-            author: None, meta_author: None, text_copy: None, ids: [None, None], sealer: None, authority_retirement: None, checkpoint: Default::default(), retirement: Retirement::default(), cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            phase: 0,
+            admission_item: 0,
+            admission_bytes: 0,
+            copy: None,
+            post: None,
+            inverse: None,
+            author: None,
+            meta_author: None,
+            text_copy: None,
+            ids: [None, None],
+            sealer: None,
+            authority_retirement: None,
+            checkpoint: Default::default(),
+            retirement: Retirement::default(),
+            cancelled: false,
+            closing: false,
         }))
     }
 }
@@ -69,7 +92,9 @@ impl Preparation {
 impl store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation> for Preparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
         use store::ArtifactStoreOneItemPreparationStep as Step;
-        if !grant.permits_one() || self.cancelled || self.closing { return Ok(Step::Blocked); }
+        if !grant.permits_one() || self.cancelled || self.closing {
+            return Ok(Step::Blocked);
+        }
         if let Some(sealer) = self.sealer.as_mut() {
             let before = sealer.checkpoint().completed_bytes;
             let result = sealer.advance(grant)?;
@@ -86,32 +111,51 @@ impl store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation> for 
         let mut bytes = 0;
         match self.phase {
             0 => {
-                if base.preview_off_node_ids.len() > super::super::FLOW_STORE_MAX_SCENE_ITEMS { return Err("Flow config base exceeds its item envelope".into()); }
+                if base.preview_off_node_ids.len() > super::super::FLOW_STORE_MAX_SCENE_ITEMS {
+                    return Err("Flow config base exceeds its item envelope".into());
+                }
                 let source = ConfigSource::base(base);
-                let length = if self.admission_item < source.preview.len() { source.preview[self.admission_item].len() }
-                    else if let Some(text) = source.text.get(self.admission_item - source.preview.len()) { text.len() }
-                    else { self.phase = 1; 0 };
+                let length = if self.admission_item < source.preview.len() {
+                    source.preview[self.admission_item].len()
+                } else if let Some(text) = source.text.get(self.admission_item - source.preview.len()) {
+                    text.len()
+                } else {
+                    self.phase = 1;
+                    0
+                };
                 self.admission_bytes = self.admission_bytes.checked_add(length).ok_or_else(|| "Flow config byte count overflow".to_owned())?;
-                if self.admission_bytes > super::super::FLOW_STORE_MAX_TEXT_BYTES { return Err("Flow config base exceeds its text envelope".into()); }
+                if self.admission_bytes > super::super::FLOW_STORE_MAX_TEXT_BYTES {
+                    return Err("Flow config base exceeds its text envelope".into());
+                }
                 self.admission_item += 1;
             }
             1 => {
-                if matches!(mutation, FlowConfigMutation::SetContributions { .. }) { return Err("Flow contribution publication requires post-ACK host synchronization".into()); }
+                if matches!(mutation, FlowConfigMutation::SetContributions { .. }) {
+                    return Err("Flow contribution publication requires post-ACK host synchronization".into());
+                }
                 self.copy = Some(ConfigCopy::new(&ConfigSource::post(base, mutation, false), None));
                 self.phase = 2;
             }
             2 => {
                 let copy = self.copy.as_mut().unwrap();
                 bytes = copy.step(&ConfigSource::post(base, mutation, false), grant.maximum_bytes)?;
-                if copy.complete() { self.post = copy.take(); self.copy = None; self.phase = 3; }
+                if copy.complete() {
+                    self.post = copy.take();
+                    self.copy = None;
+                    self.phase = 3;
+                }
             }
-            3 => { self.copy = Some(ConfigCopy::new(&ConfigSource::base(base), super::inverse_field(mutation))); self.phase = 4; }
+            3 => {
+                self.copy = Some(ConfigCopy::new(&ConfigSource::base(base), super::inverse_field(mutation)));
+                self.phase = 4;
+            }
             4 => {
                 let copy = self.copy.as_mut().unwrap();
                 bytes = copy.step(&ConfigSource::base(base), grant.maximum_bytes)?;
                 if copy.complete() {
                     self.inverse = Some(super::inverse(mutation, copy.take().unwrap()));
-                    self.copy = None; self.phase = 5;
+                    self.copy = None;
+                    self.phase = 5;
                 }
             }
             5 | 7 => {
@@ -123,7 +167,11 @@ impl store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation> for 
                 bytes = copy.advance(self.authority.as_ref().unwrap().actor(), grant.maximum_bytes)?.unwrap_or(0);
                 if copy.complete() {
                     let value = copy.take().unwrap();
-                    if self.phase == 6 { self.author = Some(value); } else { self.meta_author = Some(value); }
+                    if self.phase == 6 {
+                        self.author = Some(value);
+                    } else {
+                        self.meta_author = Some(value);
+                    }
                     self.text_copy = None;
                     self.phase += 1;
                 }
@@ -133,18 +181,37 @@ impl store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation> for 
                 let metadata = self.phase == 10;
                 let copy = self.text_copy.get_or_insert_with(TextCopy::default);
                 bytes = copy.advance_ascii(edit_id_length(sequence, metadata), |index| edit_id_byte(sequence, index, metadata), grant.maximum_bytes)?.unwrap_or(0);
-                if copy.complete() { self.ids[usize::from(metadata)] = copy.take(); self.text_copy = None; self.phase += 1; }
+                if copy.complete() {
+                    self.ids[usize::from(metadata)] = copy.take();
+                    self.text_copy = None;
+                    self.phase += 1;
+                }
             }
             11 => {
                 let authority = self.authority.as_ref().unwrap();
                 let edit = protocol::Edit {
                     mutation_meta: vec![protocol::MutationMeta {
-                        mutation_id: self.ids[1].take().map(protocol::MutationId), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-                        author_id: self.meta_author.take().map(protocol::ActorId), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                        payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+                        mutation_id: self.ids[1].take().map(protocol::MutationId),
+                        dependencies: Vec::new(),
+                        base_version: authority.base_applied_edit_count() as u64,
+                        author_id: self.meta_author.take().map(protocol::ActorId),
+                        timestamp: authority.next_clock(),
+                        undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                        payload_hash: None,
+                        semantic_kind: None,
+                        label: None,
+                        group_id: None,
+                        origin: Default::default(),
                     }],
-                    id: self.ids[0].take().unwrap(), actor: self.author.take(), forwards: vec![self.mutation.take().unwrap()], inverse: vec![self.inverse.take().unwrap()],
-                    description: self.description.take(), coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+                    id: self.ids[0].take().unwrap(),
+                    actor: self.author.take(),
+                    forwards: vec![self.mutation.take().unwrap()],
+                    inverse: vec![self.inverse.take().unwrap()],
+                    description: self.description.take(),
+                    coalesce_key: None,
+                    sequence_number: authority.next_sequence_number(),
+                    started_at: String::new(),
+                    finished_at: None,
                 };
                 self.sealer = Some(authority.begin_one_item_seal(edit, Arc::new(self.post.take().unwrap()), Arc::new(RetirementFactory), Arc::new(RetirementFactory)));
                 self.authority = None;
@@ -155,20 +222,42 @@ impl store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation> for 
         Ok(self.progress(bytes))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<FlowConfig, FlowConfigMutation>> { self.sealer.as_ref().and_then(|owner| owner.prepared()) }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<FlowConfig, FlowConfigMutation>> { self.sealer.as_mut().and_then(|owner| owner.take_prepared()) }
-    fn cancel(&mut self) { self.cancelled = true; if let Some(sealer) = self.sealer.as_mut() { sealer.cancel(); } }
-    fn begin_close(&mut self) { self.closing = true; if let Some(sealer) = self.sealer.as_mut() { sealer.begin_close(); } }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<FlowConfig, FlowConfigMutation>> {
+        self.sealer.as_ref().and_then(|owner| owner.prepared())
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<FlowConfig, FlowConfigMutation>> {
+        self.sealer.as_mut().and_then(|owner| owner.take_prepared())
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+        if let Some(sealer) = self.sealer.as_mut() {
+            sealer.cancel();
+        }
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(sealer) = self.sealer.as_mut() {
+            sealer.begin_close();
+        }
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
         use store::SnapshotRetirementStep as Step;
-        if !self.closing || !grant.permits_one() { return Ok(Step::Blocked); }
-        if !self.retirement.is_empty() { return store::ErasedSnapshotRetirement::close_step(&mut self.retirement, grant.maximum_items, grant.maximum_bytes); }
+        if !self.closing || !grant.permits_one() {
+            return Ok(Step::Blocked);
+        }
+        if !self.retirement.is_empty() {
+            return store::ErasedSnapshotRetirement::close_step(&mut self.retirement, grant.maximum_items, grant.maximum_bytes);
+        }
         if let Some(owner) = self.authority_retirement.as_mut() {
             let step = owner.close_step(grant.maximum_items, grant.maximum_bytes)?;
             if step == Step::Complete {
-                if !owner.terminal_is_empty() { return Err("Flow authority retirement closed with live owners".into()); }
+                if !owner.terminal_is_empty() {
+                    return Err("Flow authority retirement closed with live owners".into());
+                }
                 self.authority_retirement = None;
                 return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
             }
@@ -177,29 +266,53 @@ impl store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation> for 
         if let Some(sealer) = self.sealer.as_mut() {
             let step = sealer.close_step(grant)?;
             if matches!(step, Step::Complete) {
-                if !sealer.terminal_is_empty() { return Err("Flow config sealer closed with retained owners".into()); }
+                if !sealer.terminal_is_empty() {
+                    return Err("Flow config sealer closed with retained owners".into());
+                }
                 self.sealer = None;
             }
             return Ok(if matches!(step, Step::Complete) { Step::Pending { released_items: 1, released_bytes: 0 } } else { step });
         }
-        if let Some(copy) = self.text_copy.take() { copy.retire(&mut self.retirement); }
-        else if let Some(value) = self.ids.iter_mut().find_map(Option::take) { self.retirement.push(Owner::Bytes(value.into_bytes())); }
-        else if let Some(copy) = self.copy.take() { copy.retire(&mut self.retirement); }
-        else if let Some(value) = self.post.take() { self.retirement.push(Owner::Config(value)); }
-        else if let Some(value) = self.mutation.take().or_else(|| self.inverse.take()) { self.retirement.push(Owner::ConfigMutation(value)); }
-        else if let Some(value) = self.description.take().or_else(|| self.author.take()).or_else(|| self.meta_author.take()) { self.retirement.push(Owner::Bytes(value.into_bytes())); }
-        else if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("Flow config preparation could not return its exact base".into()); }
+        if let Some(copy) = self.text_copy.take() {
+            copy.retire(&mut self.retirement);
+        } else if let Some(value) = self.ids.iter_mut().find_map(Option::take) {
+            self.retirement.push(Owner::Bytes(value.into_bytes()));
+        } else if let Some(copy) = self.copy.take() {
+            copy.retire(&mut self.retirement);
+        } else if let Some(value) = self.post.take() {
+            self.retirement.push(Owner::Config(value));
+        } else if let Some(value) = self.mutation.take().or_else(|| self.inverse.take()) {
+            self.retirement.push(Owner::ConfigMutation(value));
+        } else if let Some(value) = self.description.take().or_else(|| self.author.take()).or_else(|| self.meta_author.take()) {
+            self.retirement.push(Owner::Bytes(value.into_bytes()));
+        } else if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Flow config preparation could not return its exact base".into());
+            }
+        } else if let Some(authority) = self.authority.take() {
+            self.authority_retirement = Some(authority.retire());
+        } else {
+            return Ok(Step::Complete);
         }
-        else if let Some(authority) = self.authority.take() { self.authority_retirement = Some(authority.retire()); }
-        else { return Ok(Step::Complete); }
         Ok(Step::Pending { released_items: 1, released_bytes: 0 })
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.retirement.is_empty() && self.sealer.is_none() && self.copy.is_none() && self.text_copy.is_none() && self.ids.iter().all(Option::is_none) && self.post.is_none()
-            && self.mutation.is_none() && self.inverse.is_none() && self.description.is_none() && self.author.is_none() && self.meta_author.is_none()
-            && self.base.is_none() && self.authority.is_none() && self.authority_retirement.is_none()
+        self.closing
+            && self.retirement.is_empty()
+            && self.sealer.is_none()
+            && self.copy.is_none()
+            && self.text_copy.is_none()
+            && self.ids.iter().all(Option::is_none)
+            && self.post.is_none()
+            && self.mutation.is_none()
+            && self.inverse.is_none()
+            && self.description.is_none()
+            && self.author.is_none()
+            && self.meta_author.is_none()
+            && self.base.is_none()
+            && self.authority.is_none()
+            && self.authority_retirement.is_none()
     }
 }
 
@@ -229,10 +342,7 @@ impl store::SnapshotRetirementFactory<FlowConfig> for RetirementFactory {
 
 /// 🎛️ Exact config ownership catalog with paged string and collection retirement.
 pub(in super::super) fn store_owners() -> store::MemberStoreOwners<FlowConfig, FlowConfigMutation> {
-    store::MemberStoreOwners::new(
-        Arc::new(RetirementFactory), Arc::new(RetirementFactory), Arc::new(RetirementFactory),
-        Box::new(store::ArtifactStoreCursorDisposer::<FlowConfig, FlowConfigMutation>::new()),
-    )
+    store::MemberStoreOwners::new(Arc::new(RetirementFactory), Arc::new(RetirementFactory), Arc::new(RetirementFactory), Box::new(store::ArtifactStoreCursorDisposer::<FlowConfig, FlowConfigMutation>::new()))
 }
 
 struct SnapshotRetirement {
@@ -242,14 +352,20 @@ struct SnapshotRetirement {
 
 impl store::ErasedSnapshotRetirement for SnapshotRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
         if let Some(snapshot) = self.snapshot.take() {
-            if let Some(value) = Arc::into_inner(snapshot) { self.retirement.push(Owner::Config(value)); }
+            if let Some(value) = Arc::into_inner(snapshot) {
+                self.retirement.push(Owner::Config(value));
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         store::ErasedSnapshotRetirement::close_step(&mut self.retirement, maximum_items, maximum_bytes)
     }
-    fn terminal_is_empty(&self) -> bool { self.snapshot.is_none() && self.retirement.is_empty() }
+    fn terminal_is_empty(&self) -> bool {
+        self.snapshot.is_none() && self.retirement.is_empty()
+    }
 }
 //#endregion 📬️Preparation
 
@@ -265,7 +381,9 @@ enum Node<'a> {
 
 impl<'a> Node<'a> {
     fn resolve(mut self, path: &[usize]) -> Result<Self, String> {
-        for &index in path { self = self.child(index)?; }
+        for &index in path {
+            self = self.child(index)?;
+        }
         Ok(self)
     }
 
@@ -297,7 +415,9 @@ impl<'a> Node<'a> {
                 _ => return Err("Flow canonical config index outside fields".into()),
             },
             Self::Camera(value) => Self::Scalar(Json::F64(match index {
-                0 => value.x, 1 => value.y, 2 => value.zoom,
+                0 => value.x,
+                1 => value.y,
+                2 => value.zoom,
                 _ => return Err("Flow canonical camera index outside fields".into()),
             })),
             Self::Strings(values) => Self::Scalar(Json::String(values.get(index).ok_or_else(|| "Flow canonical preview index outside values".to_owned())?)),
@@ -309,8 +429,10 @@ impl<'a> Node<'a> {
                 FlowConfigMutation::SetLodMode { value } => Self::Scalar(Json::String(value)),
                 FlowConfigMutation::SetProximityDistance { value } | FlowConfigMutation::SetGridFactor { value } => Self::Scalar(Json::F64(*value)),
                 FlowConfigMutation::SetGridVisible { value } | FlowConfigMutation::SetGridSnapEnabled { value } => Self::Scalar(Json::Bool(*value)),
-                FlowConfigMutation::SetContributions { json } | FlowConfigMutation::SetAutomationEnabled { json }
-                | FlowConfigMutation::SetGeneration { json } | FlowConfigMutation::SetDuplicateWidgetProgress { json }
+                FlowConfigMutation::SetContributions { json }
+                | FlowConfigMutation::SetAutomationEnabled { json }
+                | FlowConfigMutation::SetGeneration { json }
+                | FlowConfigMutation::SetDuplicateWidgetProgress { json }
                 | FlowConfigMutation::SetCatalogueSections { sections_json: json } => Self::Scalar(Json::String(json)),
                 FlowConfigMutation::CancelDuplicateWidget { generation } => Self::Scalar(Json::U64(*generation)),
             },
@@ -320,7 +442,11 @@ impl<'a> Node<'a> {
 
     fn key(self, index: usize) -> Result<&'static str, String> {
         let key = match self {
-            Self::Config(_) => ["previewOffNodeIds", "camera", "lodMode", "proximityDistance", "gridVisible", "gridSnapEnabled", "gridFactor", "catalogueSectionsJson", "automationEnabledJson", "contributionsJson", "generationJson", "duplicateWidgetProgressJson"].get(index).copied(),
+            Self::Config(_) => {
+                ["previewOffNodeIds", "camera", "lodMode", "proximityDistance", "gridVisible", "gridSnapEnabled", "gridFactor", "catalogueSectionsJson", "automationEnabledJson", "contributionsJson", "generationJson", "duplicateWidgetProgressJson"]
+                    .get(index)
+                    .copied()
+            }
             Self::Camera(_) => ["x", "y", "zoom"].get(index).copied(),
             Self::Mutation(value) if index == 0 => Some(match value {
                 FlowConfigMutation::SetContributions { .. } => "SetContributions",
@@ -344,8 +470,7 @@ impl<'a> Node<'a> {
                 FlowConfigMutation::SetCamera { .. } => "camera",
                 FlowConfigMutation::SetCatalogueSections { .. } => "sections_json",
                 FlowConfigMutation::CancelDuplicateWidget { .. } => "generation",
-                FlowConfigMutation::SetContributions { .. } | FlowConfigMutation::SetAutomationEnabled { .. }
-                | FlowConfigMutation::SetGeneration { .. } | FlowConfigMutation::SetDuplicateWidgetProgress { .. } => "json",
+                FlowConfigMutation::SetContributions { .. } | FlowConfigMutation::SetAutomationEnabled { .. } | FlowConfigMutation::SetGeneration { .. } | FlowConfigMutation::SetDuplicateWidgetProgress { .. } => "json",
                 _ => "value",
             }),
             _ => None,

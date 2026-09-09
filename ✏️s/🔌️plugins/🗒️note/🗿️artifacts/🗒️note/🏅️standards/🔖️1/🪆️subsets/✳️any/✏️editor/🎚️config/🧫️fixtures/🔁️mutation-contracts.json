@@ -5,8 +5,7 @@
       "x": 0.25,
       "y": -0.75,
       "zoom": 1.5
-    },
-    "activeUtilityId": "selectDirect"
+    }
   },
   "cases": [
     {
@@ -22,8 +21,7 @@
           "x": 0.25,
           "y": -0.75,
           "zoom": 1.5
-        },
-        "activeUtilityId": "selectDirect"
+        }
       }
     },
     {
@@ -43,25 +41,7 @@
           "x": 2.5,
           "y": -3.25,
           "zoom": 1.75
-        },
-        "activeUtilityId": "selectDirect"
-      }
-    },
-    {
-      "kind": "set-active-utility",
-      "mutation": {
-        "SetActiveUtility": {
-          "utilityId": "pencil"
         }
-      },
-      "expected": {
-        "engagementInput": "Before",
-        "camera": {
-          "x": 0.25,
-          "y": -0.75,
-          "zoom": 1.5
-        },
-        "activeUtilityId": "pencil"
       }
     }
   ]

@@ -7,8 +7,7 @@
   "required": [
     "brushSize",
     "brushOpacity",
-    "camera",
-    "activeUtilityId"
+    "camera"
   ],
   "properties": {
     "brushSize": {
@@ -23,10 +22,6 @@
     },
     "camera": {
       "$ref": "#/$defs/RasterCamera",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     }
   },

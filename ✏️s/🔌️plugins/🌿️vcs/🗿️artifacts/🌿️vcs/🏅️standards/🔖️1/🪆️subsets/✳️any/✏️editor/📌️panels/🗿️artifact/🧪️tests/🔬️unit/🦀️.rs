@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::vcs::testkit::{app, render as render_body};
 

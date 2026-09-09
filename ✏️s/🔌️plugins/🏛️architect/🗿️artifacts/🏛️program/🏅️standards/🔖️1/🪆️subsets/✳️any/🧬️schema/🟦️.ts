@@ -1840,28 +1840,6 @@ export interface ProgramArtifact {
   traces: TraceLink[];
   /** @state artifact */
   governance: Governance;
-  /** @state presence */
-  selectedIds: string[];
-  /** @state presence */
-  activeRegister: string;
-  /** @state presence */
-  adjacencyKindFilter?: AdjacencyKind;
-  /** @state presence */
-  activeReportJson: string;
-  /** @state config */
-  searchQuery: string;
-  /** @state config */
-  searchHistoryJson: string;
-  /** @state config */
-  lastResultJson: string;
-  /** @state config */
-  lastAnalysisJson: string;
-  /** @state config */
-  graphCameraX: number;
-  /** @state config */
-  graphCameraY: number;
-  /** @state config */
-  graphCameraZoom: number;
 }
 
 //#region 🚪️Parsers
@@ -1984,17 +1962,6 @@ export function parseProgramArtifact(value: unknown, at = "$"): ProgramArtifact 
     benchmarks: architectProgramArtifactGuardArray(row["benchmarks"], `${at}.benchmarks`).map((item, index) => parseBenchmarkRecord(item, `${at}.benchmarks[${index}]`)),
     traces: architectProgramArtifactGuardArray(row["traces"], `${at}.traces`).map((item, index) => parseTraceLink(item, `${at}.traces[${index}]`)),
     governance: parseGovernance(row["governance"], `${at}.governance`),
-    selectedIds: architectProgramArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => architectProgramArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    activeRegister: architectProgramArtifactGuardString(row["activeRegister"], `${at}.activeRegister`),
-    adjacencyKindFilter: row["adjacencyKindFilter"] === undefined ? undefined : parseAdjacencyKind(row["adjacencyKindFilter"], `${at}.adjacencyKindFilter`),
-    activeReportJson: architectProgramArtifactGuardString(row["activeReportJson"], `${at}.activeReportJson`),
-    searchQuery: architectProgramArtifactGuardString(row["searchQuery"], `${at}.searchQuery`),
-    searchHistoryJson: architectProgramArtifactGuardString(row["searchHistoryJson"], `${at}.searchHistoryJson`),
-    lastResultJson: architectProgramArtifactGuardString(row["lastResultJson"], `${at}.lastResultJson`),
-    lastAnalysisJson: architectProgramArtifactGuardString(row["lastAnalysisJson"], `${at}.lastAnalysisJson`),
-    graphCameraX: architectProgramArtifactGuardNumber(row["graphCameraX"], `${at}.graphCameraX`),
-    graphCameraY: architectProgramArtifactGuardNumber(row["graphCameraY"], `${at}.graphCameraY`),
-    graphCameraZoom: architectProgramArtifactGuardNumber(row["graphCameraZoom"], `${at}.graphCameraZoom`),
   };
 }
 

@@ -6,9 +6,9 @@
 
 use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
-use crate::{MP3_DIALECT, STDIO_MP3_DOCUMENT_SCHEMA};
 use crate::viewer::mp3::modes::view;
 use crate::viewer::mp3::modes::view::windows::main;
+use crate::{MP3_DIALECT, STDIO_MP3_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

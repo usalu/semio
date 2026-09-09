@@ -1,6 +1,5 @@
 //! ✅ `change-bb2-details-conform` — sets the DIN 4108 `bb2_details_conform` scalar.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

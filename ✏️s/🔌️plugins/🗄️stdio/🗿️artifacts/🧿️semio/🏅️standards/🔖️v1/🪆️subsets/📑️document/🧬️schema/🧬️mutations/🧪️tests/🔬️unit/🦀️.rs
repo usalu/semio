@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::standards::v1::subsets::document::schema::diff::DocBlockDiff as TestDocBlockDiff;
 use crate::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow};
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioDocumentSnapshot {

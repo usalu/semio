@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::LayoutPoint;
 use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
-use semio_s_artifact_trinity_jack::PropertyValue;
+use semio_framework_graph::manifest::PropertyValue;
 
 use std::collections::BTreeMap;
 

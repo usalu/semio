@@ -4,7 +4,7 @@ use protocol::Mutation;
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of lowpoly view state (selection, hover, camera, active utility).
+/// 👥️ Shareable live subset of lowpoly camera and paint state.
 #[derive(Clone, Debug, PartialEq, dsl::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "lowpoly.presence")]
@@ -13,13 +13,12 @@ pub struct LowpolyPresence {
     pub world_camera_position: [f64; 3],
     pub world_camera_target: [f64; 3],
     pub world_camera_fov: f64,
-    pub active_utility_id: String,
     pub paint_utility: String,
 }
 
 impl Default for LowpolyPresence {
     fn default() -> Self {
-        Self { world_camera_position: [2.5, 2.0, 2.5], world_camera_target: [0.0, 0.0, 0.0], world_camera_fov: 50.0, active_utility_id: String::new(), paint_utility: "brush".into() }
+        Self { world_camera_position: [2.5, 2.0, 2.5], world_camera_target: [0.0, 0.0, 0.0], world_camera_fov: 50.0, paint_utility: "brush".into() }
     }
 }
 
@@ -95,9 +94,22 @@ impl Mutation<LowpolyPresence> for LowpolyPresenceMutation {
     /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate — one
     /// entry for the sole `Snapshot` variant, mirroring `generation2d`'s identical precedent for its
     /// own hand-written presence aggregate.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "👥️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-snapshot",
+        semantic_kind: "set-snapshot",
+        display_name: "Set Snapshot",
+        emoji: "👥️",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {

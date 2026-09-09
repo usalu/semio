@@ -3,12 +3,12 @@
 use crate::mutations::delete_node;
 use crate::op::DagMutation;
 use crate::{DagContentChild, DagNodeKind, DagNodePatch, DagPreviewContent, DagSnapshot, IoPortSpec};
-use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle};
 use framework_schema::ArtifactSchema;
+use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle};
 use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 //#region 🔖️Artifact
-/// 🧬️ Full DAG artifact state across the artifact, presence and config lanes.
+/// 🧬️ DAG document artifact state.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag")]
@@ -18,11 +18,6 @@ pub struct DagArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.graph")]
     pub content: DagContentChild,
-    #[state(presence)]
-    #[value(default)]
-    pub selected_node_ids: Vec<String>,
-    #[state(config)]
-    pub camera: DagCamera,
 }
 //#endregion 🔖️Artifact
 
@@ -39,9 +34,9 @@ impl DagArtifact {
         DagSnapshot { schema: self.schema.clone(), content: self.content.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: DagSnapshot) -> Self {
-        Self { schema: snapshot.schema, content: snapshot.content, selected_node_ids: Vec::new(), camera: DagCamera::default() }
+        Self { schema: snapshot.schema, content: snapshot.content }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -65,13 +60,7 @@ impl DagArtifact {
 pub fn dag_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {
         id: "s.dag.dag",
-        artifact: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -297,8 +286,8 @@ mod document_helpers_tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
+pub use crate::DagCamera;
+pub use crate::DagFixtureEdge;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::DagNodeSpec;
-pub use crate::DagFixtureEdge;
-pub use crate::DagCamera;
 //#endregion 🔁️Re-exports

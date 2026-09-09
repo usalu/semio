@@ -57,6 +57,4 @@ message En1999Diff {
   optional double sigma_ed_shell_mpa = 26;
   // @state artifact
   optional double annex = 27;
-  // @state presence
-  optional uint32 selected_check_index = 28;
 }

@@ -17,7 +17,13 @@ impl protocol::MutationKind<LayoutConfig, LayoutConfigMutation> for SetActivePag
         next.active_page_id = self.page_id.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &LayoutConfig) -> Vec<LayoutConfigMutation> { vec![LayoutConfigMutation::SetActivePage(Self { page_id: base.active_page_id.clone() })] }
-    fn label(&self) -> String { "Set Active Page".into() }
-    fn target(&self) -> Vec<String> { vec!["active_page_id".into()] }
+    fn inverse(&self, base: &LayoutConfig) -> Vec<LayoutConfigMutation> {
+        vec![LayoutConfigMutation::SetActivePage(Self { page_id: base.active_page_id.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Active Page".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["active_page_id".into()]
+    }
 }

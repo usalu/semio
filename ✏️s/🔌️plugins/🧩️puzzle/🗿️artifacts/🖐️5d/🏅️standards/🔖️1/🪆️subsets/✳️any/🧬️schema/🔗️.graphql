@@ -6,34 +6,10 @@ type Puzzle5dArtifact {
   label: String @state(class: ARTIFACT)
   meta: Puzzle5dMeta! @state(class: ARTIFACT)
   kindCatalogs: Puzzle5dKindCatalogs @state(class: ARTIFACT)
+  kindCatalogsExtra: Puzzle5dKindCatalogsExtra @state(class: ARTIFACT)
   kindCompatibility: [Puzzle5dKindCompatibility!]! @state(class: ARTIFACT)
   parts: [Puzzle5dPart!]! @state(class: ARTIFACT)
   fasteners: [Puzzle5dFastener!]! @state(class: ARTIFACT)
-  selectedPartIds: [String!]! @state(class: PRESENCE)
-  selectedGripIds: [String!]! @state(class: PRESENCE)
-  selectedFastenerIds: [String!]! @state(class: PRESENCE)
-  activeUtilityId: String! @state(class: PRESENCE)
-  camera2dX: Float! @state(class: CONFIG)
-  camera2dY: Float! @state(class: CONFIG)
-  camera2dZoom: Float! @state(class: CONFIG)
-  camera3dPositionX: Float! @state(class: CONFIG)
-  camera3dPositionY: Float! @state(class: CONFIG)
-  camera3dPositionZ: Float! @state(class: CONFIG)
-  camera3dTargetX: Float! @state(class: CONFIG)
-  camera3dTargetY: Float! @state(class: CONFIG)
-  camera3dTargetZ: Float! @state(class: CONFIG)
-  camera3dZoom: Float! @state(class: CONFIG)
-  selectionMethod: String! @state(class: CONFIG)
-  gridSnapEnabled: Boolean! @state(class: CONFIG)
-  gridFactor: Float! @state(class: CONFIG)
-  suggestionOffset: Float! @state(class: CONFIG)
-  overlapBudget: Float! @state(class: CONFIG)
-  fillCount: Int! @state(class: CONFIG)
-  brushCandidateIndex: Int! @state(class: CONFIG)
-  lodMode: String! @state(class: CONFIG)
-  runtimeExtrasJson: String! @state(class: CONFIG)
-  hoveredPartId: String @state(class: ARTIFACT)
-  previewSeq: Int! @state(class: ARTIFACT)
 }
 
 
@@ -86,6 +62,12 @@ type Puzzle5dCatalogGripKind {
 type Puzzle5dCatalogFastenerKind { id: String! name: String label: String }
 type Puzzle5dCatalogRopeKind { id: String! name: String label: String defaultFastenerKind: String }
 type Puzzle5dKindCatalogs {
+  parts: [Puzzle5dCatalogPartKind!]
+  grips: [Puzzle5dCatalogGripKind!]
+  fasteners: [Puzzle5dCatalogFastenerKind!]
+  ropes: [Puzzle5dCatalogRopeKind!]
+}
+type Puzzle5dKindCatalogsExtra {
   parts: [Puzzle5dCatalogPartKind!]
   grips: [Puzzle5dCatalogGripKind!]
   fasteners: [Puzzle5dCatalogFastenerKind!]

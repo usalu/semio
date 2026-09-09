@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️Apply
 impl LowpolyDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &LowpolyArtifact) -> protocol::MutationApplyResult<LowpolyArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -25,105 +25,6 @@ impl LowpolyDiff {
             }
             if let Some(delta) = &self.objects {
                 next.objects = apply_objects_delta(&next.objects, delta).map_err(|error| error.under(["objects"]))?;
-            }
-            if let Some(value) = &self.active_object_id {
-                next.active_object_id = value.clone();
-            }
-            if let Some(value) = &self.selection {
-                next.selection = value.clone();
-            }
-            if let Some(list) = &self.selected_object_ids {
-                next.selected_object_ids = list.values.clone();
-            }
-            if let Some(value) = &self.paint_utility {
-                next.paint_utility = value.clone();
-            }
-            if let Some(value) = self.active_paint_layer {
-                next.active_paint_layer = value;
-            }
-            if let Some(value) = self.show_edges {
-                next.show_edges = value;
-            }
-            if let Some(value) = self.sun_enabled {
-                next.sun_enabled = value;
-            }
-            if let Some(value) = self.sun_azimuth {
-                next.sun_azimuth = value;
-            }
-            if let Some(value) = self.sun_elevation {
-                next.sun_elevation = value;
-            }
-            if let Some(value) = self.sun_intensity {
-                next.sun_intensity = value;
-            }
-            if let Some(value) = &self.sun_color {
-                next.sun_color = value.clone();
-            }
-            if let Some(value) = self.world_camera_position_x {
-                next.world_camera_position_x = value;
-            }
-            if let Some(value) = self.world_camera_position_y {
-                next.world_camera_position_y = value;
-            }
-            if let Some(value) = self.world_camera_position_z {
-                next.world_camera_position_z = value;
-            }
-            if let Some(value) = self.world_camera_target_x {
-                next.world_camera_target_x = value;
-            }
-            if let Some(value) = self.world_camera_target_y {
-                next.world_camera_target_y = value;
-            }
-            if let Some(value) = self.world_camera_target_z {
-                next.world_camera_target_z = value;
-            }
-            if let Some(value) = self.world_camera_fov {
-                next.world_camera_fov = value;
-            }
-            if let Some(value) = &self.utility_params_json {
-                next.utility_params_json = value.clone();
-            }
-            if let Some(value) = self.paint_color_r {
-                next.paint_color_r = value;
-            }
-            if let Some(value) = self.paint_color_g {
-                next.paint_color_g = value;
-            }
-            if let Some(value) = self.paint_color_b {
-                next.paint_color_b = value;
-            }
-            if let Some(value) = self.paint_color_a {
-                next.paint_color_a = value;
-            }
-            if let Some(value) = &self.selection_method {
-                next.selection_method = value.clone();
-            }
-            if let Some(value) = &self.selection_mode_default {
-                next.selection_mode_default = value.clone();
-            }
-            if let Some(value) = &self.engagement_input {
-                next.engagement_input = value.clone();
-            }
-            if let Some(value) = &self.hovered_object_id {
-                next.hovered_object_id = value.clone();
-            }
-            if let Some(value) = &self.hovered_target_object_id {
-                next.hovered_target_object_id = value.clone();
-            }
-            if let Some(value) = &self.hovered_target_mode {
-                next.hovered_target_mode = value.clone();
-            }
-            if let Some(value) = &self.hovered_target_id {
-                next.hovered_target_id = *value;
-            }
-            if let Some(value) = self.stroke_drag_active {
-                next.stroke_drag_active = value;
-            }
-            if let Some(value) = self.transform_drag_active {
-                next.transform_drag_active = value;
-            }
-            if let Some(value) = self.preview_seq {
-                next.preview_seq = value;
             }
             next
         })
@@ -220,39 +121,6 @@ impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
             };
         }
         take!(schema);
-        take!(active_object_id);
-        take!(selection);
-        take!(selected_object_ids);
-        take!(paint_utility);
-        take!(active_paint_layer);
-        take!(show_edges);
-        take!(sun_enabled);
-        take!(sun_azimuth);
-        take!(sun_elevation);
-        take!(sun_intensity);
-        take!(sun_color);
-        take!(world_camera_position_x);
-        take!(world_camera_position_y);
-        take!(world_camera_position_z);
-        take!(world_camera_target_x);
-        take!(world_camera_target_y);
-        take!(world_camera_target_z);
-        take!(world_camera_fov);
-        take!(utility_params_json);
-        take!(paint_color_r);
-        take!(paint_color_g);
-        take!(paint_color_b);
-        take!(paint_color_a);
-        take!(selection_method);
-        take!(selection_mode_default);
-        take!(engagement_input);
-        take!(hovered_object_id);
-        take!(hovered_target_object_id);
-        take!(hovered_target_mode);
-        take!(hovered_target_id);
-        take!(stroke_drag_active);
-        take!(transform_drag_active);
-        take!(preview_seq);
         match (&mut self.objects, other.objects) {
             (Some(dst), Some(src)) => {
                 dst.added.extend(src.added);

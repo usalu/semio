@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.mutation.set_node_root;
+
+message SetNodeRoot {
+  string node_id = 1;
+  bool new_root = 2;
+}

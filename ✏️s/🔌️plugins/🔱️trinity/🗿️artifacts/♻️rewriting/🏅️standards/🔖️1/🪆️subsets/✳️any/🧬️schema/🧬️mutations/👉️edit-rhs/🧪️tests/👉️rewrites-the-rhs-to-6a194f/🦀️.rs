@@ -117,7 +117,7 @@ async fn produces_committed_diff() {
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own `RewritingDiff`.
 /// `RewritingDiff` carries a container-level `#[serde(default)]` and NO per-field
-/// `skip_serializing_if`, so all nine sparse slots — including the presence/config-lane ones
+/// `skip_serializing_if`, so all five document slots, including those
 /// `edit-rhs` never touches — must be present as `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
@@ -127,7 +127,7 @@ async fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "edit-rhs/rewrites-the-rhs-to-set-a-second-property: committed diff JSON is not canonical");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     let slots = committed.as_object().expect("the committed diff is a JSON object");
-    assert_eq!(slots.len(), 9, "RewritingDiff emits all nine sparse slots, got {slots:?}");
+    assert_eq!(slots.len(), 5, "RewritingDiff emits all five document slots, got {slots:?}");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a

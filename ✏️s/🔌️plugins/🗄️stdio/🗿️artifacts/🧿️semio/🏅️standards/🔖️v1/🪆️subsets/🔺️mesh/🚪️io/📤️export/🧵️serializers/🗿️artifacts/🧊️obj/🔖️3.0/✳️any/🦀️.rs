@@ -13,10 +13,10 @@
 //! structure to re-emit); `material_id`/`colors` are dropped (OBJ's `usemtl` is a bare name with
 //! no PBR value/color model to round-trip against `SemioMaterial`).
 
-use semio_s_artifact_stdio_obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjNormal, ObjObject, ObjTexCoord, ObjVertex};
-use semio_s_artifact_stdio_obj::ObjSnapshot;
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjNormal, ObjObject, ObjTexCoord, ObjVertex};
+use semio_s_artifact_stdio_obj::ObjSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId::ANY };

@@ -2,40 +2,40 @@
 //! position, never spatial — the coordinator's explicit ruling; spatial reposition is `move-layer`).
 
 pub mod mutation {
-use crate::diff::RasterDiff;
-use crate::mutations::RasterMutation;
-use crate::RasterSnapshot;
+    use crate::diff::RasterDiff;
+    use crate::mutations::RasterMutation;
+    use crate::RasterSnapshot;
 
-//#region 🔖️ReorderLayers
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
-#[value(rename_all = "camelCase")]
-pub struct ReorderLayers {
-    pub layer_id: String,
-    pub parent_id: Option<String>,
-    pub index: usize,
-}
-
-impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ReorderLayers {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "layer", kind: "reorder-layers", record: "ReorderedLayers" };
-
-    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-        super::super::diff::diff(self, base)
+    //#region 🔖️ReorderLayers
+    #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+    #[mutation_leaf(contract = ::protocol)]
+    #[value(rename_all = "camelCase")]
+    pub struct ReorderLayers {
+        pub layer_id: String,
+        pub parent_id: Option<String>,
+        pub index: usize,
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
-        super::super::inverse::inverse(self, base)
-    }
+    impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ReorderLayers {
+        const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "layer", kind: "reorder-layers", record: "ReorderedLayers" };
 
-    fn label(&self) -> String {
-        format!("Reorder layer {}", self.layer_id)
-    }
+        fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+            super::super::diff::diff(self, base)
+        }
 
-    fn target(&self) -> Vec<String> {
-        vec![self.layer_id.clone()]
+        fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+            super::super::inverse::inverse(self, base)
+        }
+
+        fn label(&self) -> String {
+            format!("Reorder layer {}", self.layer_id)
+        }
+
+        fn target(&self) -> Vec<String> {
+            vec![self.layer_id.clone()]
+        }
     }
-}
-//#endregion 🔖️ReorderLayers
+    //#endregion 🔖️ReorderLayers
 }
 
 pub use mutation::ReorderLayers;

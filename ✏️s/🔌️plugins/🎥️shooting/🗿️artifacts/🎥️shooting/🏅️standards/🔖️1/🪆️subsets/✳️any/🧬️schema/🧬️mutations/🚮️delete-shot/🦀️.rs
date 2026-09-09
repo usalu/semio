@@ -1,8 +1,8 @@
 //! 🚮 Shooting mutation payload — `DeleteShot`. Removes a shot by id; inverse recreates it.
 
-use crate::ShootingSnapshot;
 use crate::diff::ShootingDiff;
 use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

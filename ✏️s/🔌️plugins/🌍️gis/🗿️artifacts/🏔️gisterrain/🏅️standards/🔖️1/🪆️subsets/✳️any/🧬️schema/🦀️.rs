@@ -2,13 +2,13 @@
 
 use crate::document_dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
-use semio_framework_surface::terrain::tiles;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_framework_surface::terrain::tiles;
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Artifact
-/// 🧬️ Full GIS terrain artifact state across the artifact, presence and config lanes.
+/// 🧬️ GIS terrain document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gisterrain")]
@@ -23,20 +23,13 @@ pub struct GisTerrainArtifact {
     #[child(kind = "s.stdio.semio.mesh")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
-    #[state(config)]
-    pub camera_json: String,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for GisTerrainArtifact {
     fn default() -> Self {
-        Self {
-            exaggeration: 0.0,
-            imported_features_json: String::new(),
-            mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(0.0, ""))),
-            camera_json: serde_json::json!({ "position": [800.0, -800.0, 600.0], "target": [0.0, 0.0, 0.0], "up": [0.0, 0.0, 1.0], "fov": 45.0 }).to_string(),
-        }
+        Self { exaggeration: 0.0, imported_features_json: String::new(), mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(0.0, ""))) }
     }
 }
 
@@ -47,7 +40,7 @@ impl GisTerrainArtifact {
         GisTerrainSnapshot { exaggeration: self.exaggeration, imported_features_json: self.imported_features_json.clone(), mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(self.exaggeration, &self.imported_features_json))) }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: GisTerrainSnapshot) -> Self {
         Self { exaggeration: snapshot.exaggeration, imported_features_json: snapshot.imported_features_json, mesh: snapshot.mesh, ..Self::default() }
     }
@@ -67,11 +60,7 @@ pub fn gisterrain_artifact_schema_descriptor() -> ::semio_framework_schema::Arti
     ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.gis.gisterrain",
         artifact: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),

@@ -3,7 +3,9 @@
 use crate::RewritingSnapshot;
 
 pub use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-pub use crate::standards::v1::subsets::any::schema::operations::{apply_rewrite_rule_mutation, create_rewrite_rule_envelope, dispatch_rewrite_rule_mutations, inverse_rewrite_rule_mutation, rewriting_snapshot_mutations, RewriteRuleEnvelope, RewriteRuleStore};
+pub use crate::standards::v1::subsets::any::schema::operations::{
+    apply_rewrite_rule_mutation, create_rewrite_rule_envelope, dispatch_rewrite_rule_mutations, inverse_rewrite_rule_mutation, rewriting_snapshot_mutations, RewriteRuleEnvelope, RewriteRuleStore,
+};
 
 //#region 🧾️DerivedRegistry
 /// 🧾️ Direct-owner text opcodes in aggregate declaration order.

@@ -8,8 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔖️Mutation
 /// 📝️ Sets a step's `description` scalar (a `None` clears it).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[derive(dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeStepDescription {
     pub id: String,

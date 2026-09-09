@@ -1,10 +1,9 @@
-
 use super::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::document::schema::snapshot::DocRun;
 use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 
 /// 🧪️ kinds_match_the_enum_and_the_catalog — the honesty check the test platform cannot make
 /// for itself, because the framework reads a DECLARED list and never parses Rust. Two claims:

@@ -1,0 +1,6 @@
+type WriterMainWindowTransient {
+  editorSelection: WriterEditorSelection @state(class: TRANSIENT)
+  lintGeneration: Int! @state(class: TRANSIENT)
+  engagementInput: String! @state(class: TRANSIENT)
+}
+type WriterEditorSelection { start: Int! end: Int! }

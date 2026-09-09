@@ -72,17 +72,6 @@ type ProgramDiff {
   benchmarks: ProgramBenchmarksDelta @state(class: ARTIFACT)
   traces: ProgramTracesDelta @state(class: ARTIFACT)
   governance: Governance @state(class: ARTIFACT)
-  selectedIds: String @state(class: PRESENCE)
-  activeRegister: String @state(class: PRESENCE)
-  adjacencyKindFilter: AdjacencyKind @state(class: PRESENCE)
-  activeReportJson: String @state(class: PRESENCE)
-  searchQuery: String @state(class: CONFIG)
-  searchHistoryJson: String @state(class: CONFIG)
-  lastResultJson: String @state(class: CONFIG)
-  lastAnalysisJson: String @state(class: CONFIG)
-  graphCameraX: Float @state(class: CONFIG)
-  graphCameraY: Float @state(class: CONFIG)
-  graphCameraZoom: Float @state(class: CONFIG)
 }
 
 type ProgramStakeholdersDelta {

@@ -5,14 +5,6 @@
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/<window>`. This file dispatches and stitches.
 
-use dsl::json;
-use crate::op::CadMutation;
-use crate::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
-use crate::standards::v1::subsets::any::schema::inferences::{
-    cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE,
-    CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
-};
-use crate::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
 use crate::editor::cad::commands::camera::{set_camera, set_projection, set_projection_param};
 use crate::editor::cad::commands::contribution::set_contributions;
 use crate::editor::cad::commands::engagement::{engagement_abort, engagement_input, engagement_possible_select, engagement_repeat_last, engagement_submit, world_pointer_down, world_pointer_move};
@@ -30,15 +22,22 @@ use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::panels::{catalogue, document, inspection};
 use crate::editor::cad::terminology::{cad_is_de_locale, cad_labels};
-use semio_framework::kernel::Effect;
-use semio_framework_plugin::{
-    tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory,
-    ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView,
-    EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiText, UiValue, UtilityCategory,
-    UtilityDefinition, ViewModel, WindowEngagement, WindowMeasure, WorldSunConfig,
+use crate::op::CadMutation;
+use crate::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
+use crate::standards::v1::subsets::any::schema::inferences::{
+    cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE,
+    CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
 };
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use crate::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
+use dsl::json;
+use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::{
+    tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
+    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiText, UiValue, UtilityCategory, UtilityDefinition, ViewModel, WindowEngagement, WindowMeasure, WorldSunConfig,
+};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
 // 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
 // in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs:17858`)
@@ -316,9 +315,7 @@ pub fn cad_window_action(action: &str, args: Option<protocol::DslValue>) -> Acti
 
 /// 🧱️ Admits one fixed CAD UI text value.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
-    UiText::try_from_str(value.as_ref())
-        .map(UiValue::Text)
-        .ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI text admission failed"))
+    UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI text admission failed"))
 }
 
 /// 🔘️ Admits one CAD boolean action value.
@@ -345,9 +342,7 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -
 }
 
 /// 🌳️ Admits fallibly assembled CAD nodes into fixed storage.
-pub fn ui_node_list(
-    values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         nodes.try_push(value?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI node admission failed"))?;
@@ -390,12 +385,7 @@ pub fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
 /// 🌳️ Cad's tree items carry an icon rather than the SDK `tree_item_with_action`'s description slot, so
 /// this stays a thin app-specific wrapper — built on the SDK's bare `tree_item` rather than hand-rolling
 /// the full `UiTreeItemNode` struct literal.
-pub fn cad_tree_item(
-    id: impl Into<String>,
-    label: impl AsRef<str>,
-    icon_id: Option<&str>,
-    action: (semio_framework_plugin::ActionId, Option<UiValue>),
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn cad_tree_item(id: impl Into<String>, label: impl AsRef<str>, icon_id: Option<&str>, action: (semio_framework_plugin::ActionId, Option<UiValue>)) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut item = tree_item_with_action(id.into(), ui_label(label)?, None, action)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = match icon_id {
@@ -441,8 +431,7 @@ pub fn preview_transition_snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig
         if base.engagement_preview_generation < 0 {
             return Err(Fault::from("cad.preview.invalid: engagement preview generation is negative"));
         }
-        config.engagement_preview_generation =
-            base.engagement_preview_generation.checked_add(1).ok_or_else(|| Fault::from("cad.preview.conflict: engagement preview generation exhausted"))?;
+        config.engagement_preview_generation = base.engagement_preview_generation.checked_add(1).ok_or_else(|| Fault::from("cad.preview.conflict: engagement preview generation exhausted"))?;
         config.engagement_preview_operation_json = Some(json_string_of(operation));
     }
     Ok(CadConfigMutation::Snapshot { config })
@@ -521,23 +510,15 @@ pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> protocol::DslV
         "selected" => {
             let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
             let model = empty_model();
-            let model_space = object(vec![
-                ("schema", text("spatial.modelspace")),
-                ("revision", protocol::DslValue::uint(1)),
-                ("models", protocol::DslValue::Array(vec![object(vec![("id", text(pane.model_definition_id())), ("model", model.clone())])])),
-            ]);
+            let model_space =
+                object(vec![("schema", text("spatial.modelspace")), ("revision", protocol::DslValue::uint(1)), ("models", protocol::DslValue::Array(vec![object(vec![("id", text(pane.model_definition_id())), ("model", model.clone())])]))]);
             object(vec![("model", model), ("modelSpace", model_space), ("activeModelDefinitionId", text(pane.model_definition_id()))])
         }
         "current" => {
             let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
             object(vec![("schema", text("spatial.model")), ("revision", protocol::DslValue::uint(1)), ("modelDefinitionId", text(pane.model_definition_id())), ("objects", protocol::DslValue::Array(Vec::new()))])
         }
-        _ => object(vec![
-            ("schema", text("spatial.modelspace")),
-            ("revision", protocol::DslValue::uint(1)),
-            ("activeModelDefinitionId", text(&envelope.document.active_model_definition_id)),
-            ("models", protocol::DslValue::Array(models)),
-        ]),
+        _ => object(vec![("schema", text("spatial.modelspace")), ("revision", protocol::DslValue::uint(1)), ("activeModelDefinitionId", text(&envelope.document.active_model_definition_id)), ("models", protocol::DslValue::Array(models))]),
     }
 }
 
@@ -1132,14 +1113,10 @@ fn cad_retained_reduce(
     operation: &AppOperationContext,
 ) -> Result<Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let cfg = ConfigView { snapshot: config };
+    let cfg = ConfigView { snapshot: config, window: None };
     let selection = interaction.selection.get(CAD_INTERACTION_DOMAIN).cloned().unwrap_or_default();
     let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id };
-    let mut ctx = CadDispatchCtx {
-        interaction: retained_interaction,
-        preview_operation: Some(CadPreviewOperationIdentity::from(operation)),
-        view_state: context.and_then(|context| context.view_state.clone()),
-    };
+    let mut ctx = CadDispatchCtx { interaction: retained_interaction, preview_operation: Some(CadPreviewOperationIdentity::from(operation)), view_state: context.and_then(|context| context.view_state.clone()) };
     if CAD_RETAINED_ARTIFACT_TOOL_IDS.contains(&command.command_id()) {
         admit_cad_snapshot(snapshot).map_err(Fault::from)?;
         return command.dispatch(&doc, &cfg, &mut ctx);
@@ -1225,7 +1202,9 @@ struct CadConfigStorePreparation {
 }
 
 fn cad_projection_retained_bytes(projection: &crate::CadProjectionDsl) -> usize {
-    projection.kind.len()
+    projection
+        .kind
+        .len()
         .saturating_add(projection.orthographic_view.len())
         .saturating_add(projection.axonometric_variant.len())
         .saturating_add(projection.axonometric_quadrant.len())
@@ -1252,7 +1231,10 @@ fn cad_config_retained_bytes(config: &CadConfig) -> usize {
     .into_iter()
     .flatten()
     .fold(0usize, |bytes, value| bytes.saturating_add(value.len()));
-    config.selected_node_ids.iter().fold(0usize, |bytes, value| bytes.saturating_add(value.len()))
+    config
+        .selected_node_ids
+        .iter()
+        .fold(0usize, |bytes, value| bytes.saturating_add(value.len()))
         .saturating_add(option_bytes)
         .saturating_add(config.engagement_input.len())
         .saturating_add(config.engagement_step.len())
@@ -1328,7 +1310,10 @@ impl store::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation>
         admit_cad_config_mutation(mutation)
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation>> {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation>> {
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
@@ -1369,15 +1354,25 @@ impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for Ca
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.prepared.as_ref() }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> {
+        self.prepared.as_ref()
+    }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.prepared.take() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> {
+        self.prepared.take()
+    }
 
-    fn cancel(&mut self) { self.cancelled = true; }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
 
-    fn begin_close(&mut self) { self.closing = true; }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
         if !self.closing || grant.maximum_items == 0 {
@@ -1441,20 +1436,10 @@ fn cad_snapshot_retained_bytes(snapshot: &CadSnapshot) -> usize {
     .fold(0usize, usize::saturating_add);
     let drawing_bytes = snapshot.drawings.iter().map(cad_child_retained_bytes).fold(0usize, usize::saturating_add);
     let reference_bytes = snapshot.references_by_model_definition_id.iter().fold(0usize, |bytes, (model_definition_id, references)| {
-        references.iter().fold(bytes.saturating_add(model_definition_id.len()), |bytes, reference| {
-            bytes.saturating_add(reference.id.len()).saturating_add(reference.source_url.len()).saturating_add(reference.media_kind.len())
-        })
+        references.iter().fold(bytes.saturating_add(model_definition_id.len()), |bytes, reference| bytes.saturating_add(reference.id.len()).saturating_add(reference.source_url.len()).saturating_add(reference.media_kind.len()))
     });
     let node_bytes = snapshot.nodes.iter().fold(0usize, |bytes, node| bytes.saturating_add(node.id.len()).saturating_add(node.label.len()).saturating_add(node.kind.len()));
-    snapshot
-        .schema
-        .len()
-        .saturating_add(snapshot.id.len())
-        .saturating_add(snapshot.active_model_definition_id.len())
-        .saturating_add(fixed_children)
-        .saturating_add(drawing_bytes)
-        .saturating_add(reference_bytes)
-        .saturating_add(node_bytes)
+    snapshot.schema.len().saturating_add(snapshot.id.len()).saturating_add(snapshot.active_model_definition_id.len()).saturating_add(fixed_children).saturating_add(drawing_bytes).saturating_add(reference_bytes).saturating_add(node_bytes)
 }
 
 fn cad_snapshot_items(snapshot: &CadSnapshot) -> usize {
@@ -1532,7 +1517,10 @@ impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for
         admit_cad_artifact_mutation(mutation)
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation>>, store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation>> {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation>>, store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation>> {
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
@@ -1573,15 +1561,25 @@ impl store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArt
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.prepared.as_ref() }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> {
+        self.prepared.as_ref()
+    }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.prepared.take() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> {
+        self.prepared.take()
+    }
 
-    fn cancel(&mut self) { self.cancelled = true; }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
 
-    fn begin_close(&mut self) { self.closing = true; }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
         if !self.closing || grant.maximum_items == 0 {
@@ -1756,7 +1754,17 @@ impl ArtifactEditor for CadPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             CadCommand::command_id,
             CAD_RETAINED_RAW_BYTES,
             CAD_RETAINED_WORK_ITEMS,
@@ -1854,9 +1862,7 @@ impl ArtifactEditor for CadPlayApp {
     }
 
     fn host_configuration_mutation(action: &str, args: Option<&protocol::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok((action == "setContributions").then(|| CadConfigMutation::SetContributions {
-            json: args.and_then(|value| value.get("json")).and_then(protocol::DslValue::as_str).unwrap_or("[]").to_string(),
-        }))
+        Ok((action == "setContributions").then(|| CadConfigMutation::SetContributions { json: args.and_then(|value| value.get("json")).and_then(protocol::DslValue::as_str).unwrap_or("[]").to_string() }))
     }
 
     fn handle(
@@ -1870,11 +1876,7 @@ impl ArtifactEditor for CadPlayApp {
     ) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
         let selection = interaction.selection(CAD_INTERACTION_DOMAIN);
         let snapshot = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id.clone() };
-        let mut ctx = CadDispatchCtx {
-            interaction: snapshot,
-            preview_operation: Some(CadPreviewOperationIdentity::from(doc.operation()?)),
-            view_state: view_state.cloned(),
-        };
+        let mut ctx = CadDispatchCtx { interaction: snapshot, preview_operation: Some(CadPreviewOperationIdentity::from(doc.operation()?)), view_state: view_state.cloned() };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
@@ -2012,24 +2014,24 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .mutation("importCadFile", LocalizedLabel::native("Import CAD File", "CAD-Datei importieren"))
             .action_with(ActionDefinition::bounded_catalog("patchCadPlayReference", LocalizedLabel::native("Patch Reference", "Referenz aktualisieren"), ActionKind::Mutation).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation).in_palette(false))
-            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-            .view_action("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"))
-            .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
+            .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
+            .action_with(ActionDefinition::new("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"), ActionKind::View, "scan"))
+            .action_with(ActionDefinition::new("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"), ActionKind::View, "scan"))
             .mutation("focusModelDefinition", LocalizedLabel::native("Focus Model Definition", "Modelldefinition fokussieren"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_with(ActionDefinition::bounded_catalog("setNodeSelection", LocalizedLabel::native("Set Node Selection", "Knotenauswahl festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("setReferenceSelection", LocalizedLabel::native("Set Reference Selection", "Referenzauswahl festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("referenceHover", LocalizedLabel::native("Reference Hover", "Überfahren (Referenz)"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::bounded_catalog("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand").in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("engagementPossibleSelect", LocalizedLabel::native("Engagement Possible Select", "Eingabeoption auswählen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::bounded_catalog("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::bounded_catalog("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand").in_palette(false))
+            .action_with(ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View, "mouse-pointer").in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"), ActionKind::View).in_palette(false))
-            .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
-            .view_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
-            .view_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
-            .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
+            .action_with(ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::new("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View, "sun"))
             .action_with(ActionDefinition::bounded_catalog("setDislocateOption", LocalizedLabel::native("Set Dislocate Option", "Versetzen-Option festlegen"), ActionKind::View).in_palette(false))
             .shell_action("saveSelected", LocalizedLabel::native("Save Selected", "Auswahl speichern"))
             .shell_action("saveInPlay", LocalizedLabel::native("Save In Play", "Im Play speichern"))

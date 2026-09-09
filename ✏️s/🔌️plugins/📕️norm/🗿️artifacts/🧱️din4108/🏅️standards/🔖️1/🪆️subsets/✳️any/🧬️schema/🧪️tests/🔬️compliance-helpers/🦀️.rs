@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn sample_wall() -> Vec<part_2::Layer> {

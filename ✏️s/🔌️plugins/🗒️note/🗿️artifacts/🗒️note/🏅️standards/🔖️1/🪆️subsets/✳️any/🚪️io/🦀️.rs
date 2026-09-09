@@ -175,8 +175,7 @@ fn draw_node_from_note_block(block: &NoteBlockNode, document: &NoteSnapshot, sty
 pub fn note_document_to_drawing_snapshot(document: &NoteSnapshot) -> SemioDrawingSnapshot {
     let (width, height) = note_document_bounds(document);
     let mut styles = Vec::new();
-    let children: Vec<DrawNode> =
-        crate::schema::flatten_blocks(&document.blocks).into_iter().filter(|block| crate::schema::block_visible(block)).filter_map(|block| draw_node_from_note_block(block, document, &mut styles)).collect();
+    let children: Vec<DrawNode> = crate::schema::flatten_blocks(&document.blocks).into_iter().filter(|block| crate::schema::block_visible(block)).filter_map(|block| draw_node_from_note_block(block, document, &mut styles)).collect();
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas { width: width as f64, height: height as f64, background: None },
@@ -431,7 +430,6 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     }
 }
 //#endregion 🔖️IoDeclaration
-
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️pdf-page-contract/🦀️.rs"]

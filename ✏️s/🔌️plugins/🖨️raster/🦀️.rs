@@ -25,7 +25,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// mounts and tests its three `demo-session` leaves but registers only the artifact-level fixtures in
 /// its subsets' `examples()`; `🧱️block` ships no editor-level session example at all.
 fn examples() -> Vec<ExampleSource> {
-    vec![crate::examples::art_raster_demo::source()]
+    vec![semio_s_artifact_raster_raster::examples::art_raster_demo::source()]
 }
 //#endregion 📚️Examples
 

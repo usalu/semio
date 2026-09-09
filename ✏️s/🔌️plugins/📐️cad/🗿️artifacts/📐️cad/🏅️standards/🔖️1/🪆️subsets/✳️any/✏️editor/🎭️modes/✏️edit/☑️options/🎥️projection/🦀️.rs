@@ -5,9 +5,9 @@
 //! pane, rather than each window carrying four byte-identical copies — so the `☑️options` nodes sit
 //! at the mode level. See the plugin's migration ticket for the taxonomy note.
 
+use crate::editor::cad::{cad_pane_camera_runtime, cad_window_action, CadPlayRuntime};
 use crate::standards::v1::subsets::any::schema::inferences::cad_camera_projection_config;
 use crate::CadPaneId;
-use crate::editor::cad::{cad_pane_camera_runtime, cad_window_action, CadPlayRuntime};
 use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
 
 pub fn measure(runtime: &CadPlayRuntime, pane: CadPaneId) -> WindowMeasure {

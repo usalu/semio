@@ -1,8 +1,8 @@
 //! Deserialize stdio.pdf from stdio.binary.
 
-use semio_s_artifact_stdio_binary::BinarySnapshot;
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use crate::STDIO_PDF_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}

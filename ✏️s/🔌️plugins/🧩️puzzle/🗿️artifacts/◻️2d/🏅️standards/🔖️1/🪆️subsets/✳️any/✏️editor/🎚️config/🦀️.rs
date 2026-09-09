@@ -1,10 +1,8 @@
-//! 🎛️ Puzzle 2d play app — its `ArtifactApp::Config`: every piece of view state the app owns but the
-//! document must never carry (camera, selection, per-pane LOD/engagement input, brush scratch, grid
-//! settings, active utility, locale/terminology), plus typed `ConfigMutation` authorities that
-//! patch it.
+//! 🎛️ Puzzle 2D shared app preferences and the internal runtime assembled with one exact window.
 //!
-//! 🎥️ The camera lives here, not on the document: moving it is an `ActionKind::View` action and must
-//! never create a VCS edit (see `setCamera`'s arm in `🎮️commands/📷️set-camera`).
+//! 🪟️ `Puzzle2dConfig` contains only shared generator weights. Camera, LOD, grid, fill controls,
+//! engagement input, and brush candidates belong to `🪟️window`; document cameras only seed a new
+//! exact window and never receive live view updates.
 
 use std::collections::BTreeMap;
 
@@ -134,52 +132,28 @@ pub struct Puzzle2dFillRuntime {
 }
 
 impl Puzzle2dFillRuntime {
-    pub fn from_config(config: &Puzzle2dConfig) -> Self {
+    pub fn for_count(fill_count: u32) -> Self {
         Self {
-            fill_count: config.fill_count,
-            fill_job_operation: config.fill_job_operation,
-            fill_job_generation: config.fill_job_generation,
-            fill_job_seed: config.fill_job_seed,
-            fill_job_base_revision: config.fill_job_base_revision,
-            fill_job_checkpoint_sequence: config.fill_job_checkpoint_sequence,
-            fill_job_accepted_count: config.fill_job_accepted_count,
-            fill_job_search_count: config.fill_job_search_count,
-            fill_job_stage: config.fill_job_stage,
-            fill_job_lifecycle: config.fill_job_lifecycle,
-            fill_job_fault_code: config.fill_job_fault_code,
+            fill_count,
+            fill_job_operation: 0,
+            fill_job_generation: 0,
+            fill_job_seed: 1,
+            fill_job_base_revision: 0,
+            fill_job_checkpoint_sequence: 0,
+            fill_job_accepted_count: 0,
+            fill_job_search_count: 0,
+            fill_job_stage: Puzzle2dFillText::default(),
+            fill_job_lifecycle: Puzzle2dFillLifecycle::Idle,
+            fill_job_fault_code: None,
         }
-    }
-
-    pub fn apply_to(self, config: &mut Puzzle2dConfig) {
-        config.fill_count = self.fill_count;
-        config.fill_job_operation = self.fill_job_operation;
-        config.fill_job_generation = self.fill_job_generation;
-        config.fill_job_seed = self.fill_job_seed;
-        config.fill_job_base_revision = self.fill_job_base_revision;
-        config.fill_job_checkpoint_sequence = self.fill_job_checkpoint_sequence;
-        config.fill_job_accepted_count = self.fill_job_accepted_count;
-        config.fill_job_search_count = self.fill_job_search_count;
-        config.fill_job_stage = self.fill_job_stage;
-        config.fill_job_lifecycle = self.fill_job_lifecycle;
-        config.fill_job_fault_code = self.fill_job_fault_code;
-    }
-
-    pub fn differs_from(&self, config: &Puzzle2dConfig) -> bool {
-        self != &Self::from_config(config)
     }
 }
 //#endregion 🧵️FillLifecycle
 
 //#region 🔖️Config
-/// 🧮️ B1: puzzle2d's real `ArtifactApp::Config`. `Puzzle2dConfig` is an alias for it (not a new
-/// type), mirroring `Puzzle3dConfig = Puzzle3dRuntime`, so every helper taking a
-/// `&Puzzle2dPlayRuntime` keeps working unchanged; every read comes from `cfg.snapshot`, every
-/// write flows out as a `Puzzle2dConfigMutation` in the returned `Emit`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct Puzzle2dConfig {
-    /// 🎥️ The canvas camera (pan/zoom) — session-only view state, never a document/fixture field
-    /// (see `setCamera`'s `ActionKind::View`): moving the camera must never create a VCS edit.
+pub struct Puzzle2dPlayRuntime {
     #[value(default)]
     pub camera_x: f64,
     #[value(default)]
@@ -228,18 +202,9 @@ pub struct Puzzle2dConfig {
     pub node_kind_weights: BTreeMap<String, f64>,
     #[value(default)]
     pub handle_kind_weights: BTreeMap<String, f64>,
-    /// 🧰️ B1: host-owned active utility per pane — was host-pushed `view_state.active_utility_by_window_id`;
-    /// now the app itself persists it (see `🎮️commands/🧰️set-active-utility`, the only writer).
-    #[value(default)]
-    pub active_utility_by_window_id: BTreeMap<String, String>,
-    #[value(default)]
-    pub example_load_generation: u64,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub example_load_id: Option<String>,
 }
 
-/// ⚠️ Explicit impl (not `#[derive(Default)]`) so Rust construction matches the serde field defaults above.
-impl Default for Puzzle2dConfig {
+impl Default for Puzzle2dPlayRuntime {
     fn default() -> Self {
         Self {
             camera_x: 0.0,
@@ -266,15 +231,18 @@ impl Default for Puzzle2dConfig {
             suggestion_offset: default_suggestion_offset(),
             node_kind_weights: BTreeMap::new(),
             handle_kind_weights: BTreeMap::new(),
-            active_utility_by_window_id: BTreeMap::new(),
-            example_load_generation: 0,
-            example_load_id: None,
         }
     }
 }
 
-/// 🏷️ Alias kept for call sites that still name the runtime.
-pub type Puzzle2dPlayRuntime = Puzzle2dConfig;
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Puzzle2dConfig {
+    #[value(default)]
+    pub node_kind_weights: BTreeMap<String, f64>,
+    #[value(default)]
+    pub handle_kind_weights: BTreeMap<String, f64>,
+}
 
 impl store::ArtifactDsl for Puzzle2dConfig {
     const EXTENSION: &'static str = "puzzle2dcfg";
@@ -303,11 +271,9 @@ store::impl_whole_record_config!(Puzzle2dConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation
-/// 🧮️ Carries ordinary config snapshots or the fixed fill-only runtime projection.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Puzzle2dConfigMutation {
     Snapshot { config: Puzzle2dConfig },
-    Fill { runtime: Puzzle2dFillRuntime },
 }
 
 impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
@@ -316,64 +282,37 @@ impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
     /// 🧷️ Hand-written (no `dsl::Mutations` derive on this enum). ⚠️ PROVISIONAL: neither
     /// `owner` leaf directory below exists on disk yet — these are metadata placeholders to
     /// satisfy `protocol::Mutation`, not real registrations.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
-            owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
-            semantic_kind: "snapshot",
-            display_name: "Snapshot",
-            emoji: "📄",
-            aggregate_variant: "Snapshot",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
-            owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧵fill",
-            semantic_kind: "fill",
-            display_name: "Fill",
-            emoji: "🧵",
-            aggregate_variant: "Fill",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
+        semantic_kind: "snapshot",
+        display_name: "Snapshot",
+        emoji: "📄",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
             Puzzle2dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            Puzzle2dConfigMutation::Fill { .. } => &Self::DESCRIPTORS[1],
         }
     }
 
-    fn diff(&self, base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfig> {
+    fn diff(&self, _base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfig> {
         protocol::MutationOutcome::new(match self {
             Puzzle2dConfigMutation::Snapshot { config } => config.clone(),
-            Puzzle2dConfigMutation::Fill { runtime } => {
-                let mut config = base.clone();
-                runtime.apply_to(&mut config);
-                config
-            }
         })
     }
 
     fn inverse(&self, base: &Puzzle2dConfig) -> Vec<Self> {
-        match self {
-            Puzzle2dConfigMutation::Snapshot { .. } => vec![Puzzle2dConfigMutation::Snapshot { config: base.clone() }],
-            Puzzle2dConfigMutation::Fill { .. } => vec![Puzzle2dConfigMutation::Fill { runtime: Puzzle2dFillRuntime::from_config(base) }],
-        }
+        vec![Puzzle2dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 

@@ -13,9 +13,9 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
 use crate::IfcSnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexTransport
 /// 📐️ Own local copy (per the recipe's "hand-duplicated, macro-free" convention — never shared

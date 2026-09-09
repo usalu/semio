@@ -1,5 +1,4 @@
-
-use super::{RASTER_OWNED_FIELD_BYTES, RasterSnapshot, RasterSnapshotRetirementFactory};
+use super::{RasterSnapshot, RasterSnapshotRetirementFactory, RASTER_OWNED_FIELD_BYTES};
 
 pub(crate) fn retire_raster_snapshot(snapshot: RasterSnapshot) {
     let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, snapshot);

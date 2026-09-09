@@ -29,7 +29,6 @@ fn to_json<T: dsl::ToValue>(value: &T) -> serde_json::Value {
     dsl::ToValue::to_value(value).into()
 }
 
-
 fn before() -> LowpolySnapshot {
     from_json(BEFORE)
 }

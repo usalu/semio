@@ -5,21 +5,149 @@
   "description": "Scope authority for OS preferences and host controls consumed by artifact surfaces.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["owner", "fields", "commands"],
+  "required": [
+    "owner",
+    "fields",
+    "commands"
+  ],
   "properties": {
-    "owner": { "enum": ["os", "surface", "artifact"] },
-    "fields": { "type": "array", "items": { "type": "string" } },
-    "commands": { "type": "array", "items": { "type": "string" } }
+    "owner": {
+      "enum": [
+        "os",
+        "surface",
+        "artifact"
+      ]
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
-  "allOf": [{
-    "if": { "properties": { "owner": { "const": "surface" } }, "required": ["owner"] },
-    "then": { "properties": {
-      "fields": { "type": "array", "items": { "not": { "$ref": "#/$defs/OsField" } } },
-      "commands": { "type": "array", "items": { "not": { "$ref": "#/$defs/OsCommand" } } }
-    } }
-  }],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "owner": {
+            "const": "surface"
+          }
+        },
+        "required": [
+          "owner"
+        ]
+      },
+      "then": {
+        "properties": {
+          "fields": {
+            "type": "array",
+            "items": {
+              "not": {
+                "$ref": "#/$defs/OsField"
+              }
+            }
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "not": {
+                "$ref": "#/$defs/OsCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "owner": {
+            "const": "artifact"
+          }
+        },
+        "required": [
+          "owner"
+        ]
+      },
+      "then": {
+        "properties": {
+          "fields": {
+            "type": "array",
+            "items": {
+              "not": {
+                "$ref": "#/$defs/ArtifactExcludedField"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
-    "OsField": { "enum": ["locale", "uiLocale", "terminology", "uiTerminology", "uiAppearance", "uiLayout", "uiDriverId", "uiCustomDrivers", "uiDriverDraft", "uiThemeId", "uiCustomThemes", "uiThemeDraft", "uiKeybindingOverrides", "activeUtility", "activeUtilityId"] },
-    "OsCommand": { "enum": ["set-locale", "set-ui-locale", "set-terminology", "set-appearance", "set-theme-id", "set-layout", "set-driver", "set-keybinding-override", "set-active-utility"] }
+    "OsField": {
+      "enum": [
+        "locale",
+        "uiLocale",
+        "terminology",
+        "uiTerminology",
+        "uiAppearance",
+        "uiLayout",
+        "uiDriverId",
+        "uiCustomDrivers",
+        "uiDriverDraft",
+        "uiThemeId",
+        "uiCustomThemes",
+        "uiThemeDraft",
+        "uiKeybindingOverrides",
+        "activeUtility",
+        "activeUtilityId"
+      ]
+    },
+    "OsCommand": {
+      "enum": [
+        "set-locale",
+        "set-ui-locale",
+        "set-terminology",
+        "set-appearance",
+        "set-theme-id",
+        "set-layout",
+        "set-driver",
+        "set-keybinding-override",
+        "set-active-utility"
+      ]
+    },
+    "ArtifactExcludedField": {
+      "enum": [
+        "hoveredId",
+        "hoveredNodeId",
+        "hoveredObjectId",
+        "hoveredTargetObjectId",
+        "hoveredTargetMode",
+        "hoveredTargetId",
+        "hoveredPartId",
+        "hoveredBlockId",
+        "hoveredVortexFullId",
+        "hoveredKindId",
+        "strokeDragActive",
+        "transformDragActive",
+        "previewSeq",
+        "generationPreviewText",
+        "brushPreview",
+        "solverResultsJson",
+        "meshPreviewJson",
+        "dragNodeId",
+        "dragLastX",
+        "dragLastY",
+        "drag_node_id",
+        "drag_last_x",
+        "drag_last_y"
+      ]
+    }
   }
 }

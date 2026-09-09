@@ -3,10 +3,10 @@ use crate::schema::diff::{diff_at_path, SvgDiff, SvgElementDiff, SvgNodeDiff};
 use crate::schema::snapshot::NodePath;
 use crate::SvgSnapshot;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -19,7 +19,10 @@ pub struct SetElementNamePayload {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum SetElementNameMutation { Apply(SetElementNamePayload), Restore(SvgDiff) }
+pub enum SetElementNameMutation {
+    Apply(SetElementNamePayload),
+    Restore(SvgDiff),
+}
 
 impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetElementNameMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "element-name", kind: "set-element-name", record: "SetElementName" };
@@ -33,13 +36,19 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetElementNameM
 
     fn inverse(&self, base: &SvgSnapshot) -> Vec<super::SvgMutation> {
         let outcome = <Self as protocol::MutationKind<SvgSnapshot, super::SvgMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::is_empty(outcome.diff()) { return Vec::new(); }
+        if !outcome.messages().is_empty() || <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::is_empty(outcome.diff()) {
+            return Vec::new();
+        }
         let inverse = <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::inverse(outcome.diff(), base);
         vec![super::SvgMutation::SetElementName(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String { "Set Element Name".to_string() }
-    fn target(&self) -> Vec<String> { vec!["set-element-name".to_string()] }
+    fn label(&self) -> String {
+        "Set Element Name".to_string()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-element-name".to_string()]
+    }
 }
 
 #[cfg(test)]

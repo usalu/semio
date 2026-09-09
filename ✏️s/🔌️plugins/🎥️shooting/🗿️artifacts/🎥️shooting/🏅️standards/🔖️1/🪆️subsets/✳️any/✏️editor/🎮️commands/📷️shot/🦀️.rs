@@ -1,5 +1,7 @@
 //! 📷️ Shooting play app commands — shot selection, labeling, sticky defaults and bulk field patches.
 
+use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::editor::shooting::ShootingDispatchCtx;
 use crate::mutations::change_shot_format::ChangeShotFormat;
 use crate::mutations::change_shot_height::ChangeShotHeight;
 use crate::mutations::change_shot_shape::ChangeShotShape;
@@ -9,11 +11,9 @@ use crate::mutations::rename_shot::RenameShot;
 use crate::mutations::set_active_shot::SetActiveShot as SetActiveShotMutation;
 use crate::op::ShootingMutation;
 use crate::ShootingShot;
-use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use dsl::json;
 use dsl::os_pack::json::Value;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🩹️ Builds the single-field `ShootingMutation` for a `patchShot`/`patchShots`/`setActiveShot*`
@@ -48,12 +48,7 @@ pub mod set_active_shot {
         pub shot_id: Option<String>,
     }
 
-    pub fn handle(
-        payload: &SetActiveShot,
-        _doc: &ArtifactView<'_, crate::ShootingSnapshot>,
-        _cfg: &ConfigView<'_, ShootingConfig>,
-        _ctx: &mut ShootingDispatchCtx,
-    ) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveShot, _doc: &ArtifactView<'_, crate::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match payload.shot_id.as_deref().filter(|id| !id.is_empty()) {
             Some(id) => Ok(Emit::mutations(vec![ShootingMutation::SetActiveShot(SetActiveShotMutation { shot_id: Some(id.into()) })])),
             None => Ok(Emit::default()),
@@ -72,12 +67,7 @@ pub mod set_active_shot_label {
         pub value: String,
     }
 
-    pub fn handle(
-        payload: &SetActiveShotLabel,
-        doc: &ArtifactView<'_, crate::ShootingSnapshot>,
-        _cfg: &ConfigView<'_, ShootingConfig>,
-        _ctx: &mut ShootingDispatchCtx,
-    ) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveShotLabel, doc: &ArtifactView<'_, crate::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match active_shot_id(doc.snapshot) {
             Some(shot_id) => Ok(Emit::mutations(vec![ShootingMutation::RenameShot(RenameShot { id: shot_id, new_label: payload.value.clone() })])),
             None => Ok(Emit::default()),
@@ -96,12 +86,7 @@ pub mod set_active_shot_format {
         pub value: String,
     }
 
-    pub fn handle(
-        payload: &SetActiveShotFormat,
-        doc: &ArtifactView<'_, crate::ShootingSnapshot>,
-        _cfg: &ConfigView<'_, ShootingConfig>,
-        _ctx: &mut ShootingDispatchCtx,
-    ) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveShotFormat, doc: &ArtifactView<'_, crate::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match active_shot_id(doc.snapshot).and_then(|shot_id| shot_mutation_for_field(shot_id, "format", &json!(payload.value))) {
             Some(mutation) => Ok(Emit::mutations(vec![mutation])),
             None => Ok(Emit::default()),
@@ -120,12 +105,7 @@ pub mod set_active_shot_shape {
         pub value: String,
     }
 
-    pub fn handle(
-        payload: &SetActiveShotShape,
-        doc: &ArtifactView<'_, crate::ShootingSnapshot>,
-        _cfg: &ConfigView<'_, ShootingConfig>,
-        _ctx: &mut ShootingDispatchCtx,
-    ) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveShotShape, doc: &ArtifactView<'_, crate::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match active_shot_id(doc.snapshot).and_then(|shot_id| shot_mutation_for_field(shot_id, "shape", &json!(payload.value))) {
             Some(mutation) => Ok(Emit::mutations(vec![mutation])),
             None => Ok(Emit::default()),
@@ -146,12 +126,7 @@ pub mod patch_shots {
         pub value: String,
     }
 
-    pub fn handle(
-        payload: &PatchShots,
-        _doc: &ArtifactView<'_, crate::ShootingSnapshot>,
-        _cfg: &ConfigView<'_, ShootingConfig>,
-        _ctx: &mut ShootingDispatchCtx,
-    ) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchShots, _doc: &ArtifactView<'_, crate::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         if payload.shot_ids.is_empty() {
             return Ok(Emit::default());
         }

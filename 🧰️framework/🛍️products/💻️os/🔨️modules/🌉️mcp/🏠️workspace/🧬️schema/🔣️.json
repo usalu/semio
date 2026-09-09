@@ -155,7 +155,7 @@
           "type": "object",
           "additionalProperties": false,
           "required": ["appChannelVersion"],
-          "properties": { "appChannelVersion": { "const": 14 } }
+          "properties": { "appChannelVersion": { "const": 15 } }
         }
       }
     },

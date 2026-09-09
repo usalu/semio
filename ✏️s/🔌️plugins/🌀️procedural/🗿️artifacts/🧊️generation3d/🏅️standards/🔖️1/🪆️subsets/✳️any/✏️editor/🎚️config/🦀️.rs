@@ -2,11 +2,11 @@
 //! (`Generation3dConfigMutation`).
 //!
 //! This is APP state, not document state: selection, cameras, sun/LOD/show-mode display options, and
-//! the derived generation preview live here rather than under `🗿️artifacts/`, since none of it survives
+//! generation selection lives here rather than under `🗿️artifacts/`, since it does not survive
 //! into the `.generation3d` document.
 
-use semio_framework_artifact_flow_flow::CameraJson;
 use protocol::Mutation;
+use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️PreviewCamera
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -56,7 +56,7 @@ pub fn default_sun_json() -> String {
 //#region 🔖️Config
 /// 🧮️ `Generation3dPlayApp`'s real `ArtifactApp::Config` — the pure-trait config artifact. Absorbs
 /// LOD/show display options, flow-graph + preview cameras, sun display options, active generation
-/// selection/preview, the active transform-gumball utility, and locale — session-only view state
+/// selection — app-local view state
 /// round-trips through the config `ArtifactStore` exactly like document content, with a real
 /// `backwards` per [`Generation3dConfigMutation`]. Selection/hover moved to the framework's own
 /// `graph` interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
@@ -82,9 +82,6 @@ pub struct Generation3dConfig {
     pub sun_json: String,
     /// 🧬️ The selected generation id.
     pub selected_generation_id: Option<String>,
-    /// 🧬️ The evaluated preview text for the selected generation.
-    pub generation_preview_text: Option<String>,
-    /// 🗣️ BCP-47 locale tag.
     /// 🧮️ The edit-mode 3D preview's persisted flow-graph evaluation output (`FlowEvalSession::eval_json`) —
     /// `flowEvalTick` writes it every tick since the session itself is reconstructed fresh per dispatch
     /// (`ArtifactEditor::handle`/`render` take no `&self`), so this config field is the ONLY place the
@@ -145,7 +142,6 @@ impl Default for Generation3dConfig {
             preview_camera: Generation3dPreviewCamera::default(),
             sun_json: default_sun_json(),
             selected_generation_id: None,
-            generation_preview_text: None,
             preview_eval_text: None,
         }
     }
@@ -191,8 +187,8 @@ pub enum Generation3dConfigMutation {
     },
     #[dsl(key = "sun")]
     SetSun { json: String },
-    #[dsl(key = "generation")]
-    SetGeneration { selected_generation_id: Option<String>, generation_preview_text: Option<String> },
+    #[dsl(key = "selected-generation")]
+    SetSelectedGeneration { selected_generation_id: Option<String> },
     #[dsl(key = "preview-eval")]
     SetPreviewEval { eval_text: Option<String> },
 }
@@ -259,14 +255,134 @@ impl Mutation<Generation3dConfig> for Generation3dConfigMutation {
     /// authored leaf directory on disk yet, so every `owner` names a path that does not exist —
     /// the same precedent puzzle3d's own config/presence aggregates set.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-lod-mode", semantic_kind: "set-lod-mode", display_name: "Set Lod Mode", emoji: "⚙️", aggregate_variant: "SetLodMode", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-mode", semantic_kind: "set-show-mode", display_name: "Set Show Mode", emoji: "⚙️", aggregate_variant: "SetShowMode", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "⚙️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-preview-camera", semantic_kind: "set-preview-camera", display_name: "Set Preview Camera", emoji: "⚙️", aggregate_variant: "SetPreviewCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-sun", semantic_kind: "set-sun", display_name: "Set Sun", emoji: "⚙️", aggregate_variant: "SetSun", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-generation", semantic_kind: "set-generation", display_name: "Set Generation", emoji: "⚙️", aggregate_variant: "SetGeneration", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-preview-eval", semantic_kind: "set-preview-eval", display_name: "Set Preview Eval", emoji: "⚙️", aggregate_variant: "SetPreviewEval", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot",
+            semantic_kind: "set-snapshot",
+            display_name: "Set Snapshot",
+            emoji: "⚙️",
+            aggregate_variant: "Snapshot",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-lod-mode",
+            semantic_kind: "set-lod-mode",
+            display_name: "Set Lod Mode",
+            emoji: "⚙️",
+            aggregate_variant: "SetLodMode",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-mode",
+            semantic_kind: "set-show-mode",
+            display_name: "Set Show Mode",
+            emoji: "⚙️",
+            aggregate_variant: "SetShowMode",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-camera",
+            semantic_kind: "set-camera",
+            display_name: "Set Camera",
+            emoji: "⚙️",
+            aggregate_variant: "SetCamera",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-preview-camera",
+            semantic_kind: "set-preview-camera",
+            display_name: "Set Preview Camera",
+            emoji: "⚙️",
+            aggregate_variant: "SetPreviewCamera",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-sun",
+            semantic_kind: "set-sun",
+            display_name: "Set Sun",
+            emoji: "⚙️",
+            aggregate_variant: "SetSun",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-selected-generation",
+            semantic_kind: "set-selected-generation",
+            display_name: "Set Selected Generation",
+            emoji: "⚙️",
+            aggregate_variant: "SetSelectedGeneration",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-preview-eval",
+            semantic_kind: "set-preview-eval",
+            display_name: "Set Preview Eval",
+            emoji: "⚙️",
+            aggregate_variant: "SetPreviewEval",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -277,7 +393,7 @@ impl Mutation<Generation3dConfig> for Generation3dConfigMutation {
             Generation3dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[3],
             Generation3dConfigMutation::SetPreviewCamera { .. } => &Self::DESCRIPTORS[4],
             Generation3dConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[5],
-            Generation3dConfigMutation::SetGeneration { .. } => &Self::DESCRIPTORS[6],
+            Generation3dConfigMutation::SetSelectedGeneration { .. } => &Self::DESCRIPTORS[6],
             Generation3dConfigMutation::SetPreviewEval { .. } => &Self::DESCRIPTORS[7],
         }
     }
@@ -293,10 +409,7 @@ impl Mutation<Generation3dConfig> for Generation3dConfigMutation {
             Generation3dConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             Generation3dConfigMutation::SetPreviewCamera { camera } => next.preview_camera = camera.clone(),
             Generation3dConfigMutation::SetSun { json } => next.sun_json = json.clone(),
-            Generation3dConfigMutation::SetGeneration { selected_generation_id, generation_preview_text } => {
-                next.selected_generation_id = selected_generation_id.clone();
-                next.generation_preview_text = generation_preview_text.clone();
-            }
+            Generation3dConfigMutation::SetSelectedGeneration { selected_generation_id } => next.selected_generation_id = selected_generation_id.clone(),
             Generation3dConfigMutation::SetPreviewEval { eval_text } => next.preview_eval_text = eval_text.clone(),
         }
         protocol::MutationOutcome::new(next)

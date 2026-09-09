@@ -14,6 +14,34 @@ use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
 //#region 🔖️Mutations
+#[path = "🧱add-block/🦀️.rs"]
+pub mod add_block;
+#[path = "🧩add-block-entity/🦀️.rs"]
+pub mod add_block_entity;
+#[path = "🔷add-entity/🦀️.rs"]
+pub mod add_entity;
+#[path = "🗂️add-layer/🦀️.rs"]
+pub mod add_layer;
+#[path = "🚫remove-block/🦀️.rs"]
+pub mod remove_block;
+#[path = "✂️remove-block-entity/🦀️.rs"]
+pub mod remove_block_entity;
+#[path = "🗑️remove-entity/🦀️.rs"]
+pub mod remove_entity;
+#[path = "🧹remove-layer/🦀️.rs"]
+pub mod remove_layer;
+#[path = "📍set-block-base-point/🦀️.rs"]
+pub mod set_block_base_point;
+#[path = "🔺set-block-entity-geometry/🦀️.rs"]
+pub mod set_block_entity_geometry;
+#[path = "🧷️set-block-entity-layer/🦀️.rs"]
+pub mod set_block_entity_layer;
+#[path = "📐set-entity-geometry/🦀️.rs"]
+pub mod set_entity_geometry;
+#[path = "🏳️set-entity-layer/🦀️.rs"]
+pub mod set_entity_layer;
+#[path = "🎚️set-layer/🦀️.rs"]
+pub mod set_layer;
 /// 📐️ Typed document mutation for `stdio.semio.cad`. Every variant addresses one facet of the CAD
 /// document; `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap
 /// exactly one leaf payload and a unit variant wraps none (same consequence tiff's baseline
@@ -21,34 +49,6 @@ use protocol::{Mutation, OpText};
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🗂️add-layer/🦀️.rs"]
-pub mod add_layer;
-#[path = "🧹remove-layer/🦀️.rs"]
-pub mod remove_layer;
-#[path = "🎚️set-layer/🦀️.rs"]
-pub mod set_layer;
-#[path = "🧱add-block/🦀️.rs"]
-pub mod add_block;
-#[path = "🚫remove-block/🦀️.rs"]
-pub mod remove_block;
-#[path = "📍set-block-base-point/🦀️.rs"]
-pub mod set_block_base_point;
-#[path = "🔷add-entity/🦀️.rs"]
-pub mod add_entity;
-#[path = "🗑️remove-entity/🦀️.rs"]
-pub mod remove_entity;
-#[path = "🏳️set-entity-layer/🦀️.rs"]
-pub mod set_entity_layer;
-#[path = "📐set-entity-geometry/🦀️.rs"]
-pub mod set_entity_geometry;
-#[path = "🧩add-block-entity/🦀️.rs"]
-pub mod add_block_entity;
-#[path = "✂️remove-block-entity/🦀️.rs"]
-pub mod remove_block_entity;
-#[path = "🧷️set-block-entity-layer/🦀️.rs"]
-pub mod set_block_entity_layer;
-#[path = "🔺set-block-entity-geometry/🦀️.rs"]
-pub mod set_block_entity_geometry;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
@@ -141,8 +141,12 @@ pub(crate) fn agg_diff(this: &SemioCadMutation, base: &SemioCadSnapshot) -> prot
         SemioCadMutation::RemoveEntity(remove_entity::RemoveEntity { handle }) => SemioCadDiff { layers: None, blocks: None, entities: Some(NamedTripleDiff { removed: vec![handle.clone()], modified: Vec::new(), added: Vec::new() }) },
         SemioCadMutation::SetEntityLayer(set_entity_layer::SetEntityLayer { handle, layer }) => wrap_entity_diff(handle, CadEntityRecordDiff { layer: Some(layer.clone()), entity: None }),
         SemioCadMutation::SetEntityGeometry(set_entity_geometry::SetEntityGeometry { handle, entity }) => wrap_entity_diff(handle, CadEntityRecordDiff { layer: None, entity: Some(entity.clone()) }),
-        SemioCadMutation::AddBlockEntity(add_block_entity::AddBlockEntity { block_name, entity }) => wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![entity.clone()] }) }),
-        SemioCadMutation::RemoveBlockEntity(remove_block_entity::RemoveBlockEntity { block_name, handle }) => wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: vec![handle.clone()], modified: Vec::new(), added: Vec::new() }) }),
+        SemioCadMutation::AddBlockEntity(add_block_entity::AddBlockEntity { block_name, entity }) => {
+            wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![entity.clone()] }) })
+        }
+        SemioCadMutation::RemoveBlockEntity(remove_block_entity::RemoveBlockEntity { block_name, handle }) => {
+            wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: vec![handle.clone()], modified: Vec::new(), added: Vec::new() }) })
+        }
         SemioCadMutation::SetBlockEntityLayer(set_block_entity_layer::SetBlockEntityLayer { block_name, handle, layer }) => wrap_block_entity_diff(block_name, handle, CadEntityRecordDiff { layer: Some(layer.clone()), entity: None }),
         SemioCadMutation::SetBlockEntityGeometry(set_block_entity_geometry::SetBlockEntityGeometry { block_name, handle, entity }) => wrap_block_entity_diff(block_name, handle, CadEntityRecordDiff { layer: None, entity: Some(entity.clone()) }),
     })
@@ -158,7 +162,12 @@ pub(crate) fn agg_inverse(this: &SemioCadMutation, base: &SemioCadSnapshot) -> V
             None => Vec::new(),
         },
         SemioCadMutation::SetLayer(set_layer::SetLayer { name, color_index, line_type, visible }) => match find_layer(base, name) {
-            Some(l) => vec![SemioCadMutation::SetLayer(set_layer::SetLayer { name: name.clone(), color_index: color_index.as_ref().map(|_| l.color_index), line_type: line_type.as_ref().map(|_| l.line_type.clone()), visible: visible.as_ref().map(|_| l.visible) })],
+            Some(l) => vec![SemioCadMutation::SetLayer(set_layer::SetLayer {
+                name: name.clone(),
+                color_index: color_index.as_ref().map(|_| l.color_index),
+                line_type: line_type.as_ref().map(|_| l.line_type.clone()),
+                visible: visible.as_ref().map(|_| l.visible),
+            })],
             None => Vec::new(),
         },
         SemioCadMutation::AddBlock(add_block::AddBlock { block }) => vec![SemioCadMutation::RemoveBlock(remove_block::RemoveBlock { name: block.name.clone() })],
@@ -256,7 +265,9 @@ fn print_cad_mutation(m: &SemioCadMutation) -> String {
         SemioCadMutation::AddBlockEntity(add_block_entity::AddBlockEntity { block_name, entity }) => format!("add-block-entity block-name={} entity={}", enc_str(block_name), enc_entity_record(entity)),
         SemioCadMutation::RemoveBlockEntity(remove_block_entity::RemoveBlockEntity { block_name, handle }) => format!("remove-block-entity block-name={} handle={}", enc_str(block_name), enc_str(handle)),
         SemioCadMutation::SetBlockEntityLayer(set_block_entity_layer::SetBlockEntityLayer { block_name, handle, layer }) => format!("set-block-entity-layer block-name={} handle={} layer={}", enc_str(block_name), enc_str(handle), enc_str(layer)),
-        SemioCadMutation::SetBlockEntityGeometry(set_block_entity_geometry::SetBlockEntityGeometry { block_name, handle, entity }) => format!("set-block-entity-geometry block-name={} handle={} entity={}", enc_str(block_name), enc_str(handle), enc_entity(entity)),
+        SemioCadMutation::SetBlockEntityGeometry(set_block_entity_geometry::SetBlockEntityGeometry { block_name, handle, entity }) => {
+            format!("set-block-entity-geometry block-name={} handle={} entity={}", enc_str(block_name), enc_str(handle), enc_entity(entity))
+        }
     }
 }
 
@@ -285,7 +296,9 @@ fn parse_cad_mutation(line: &str) -> Result<SemioCadMutation, String> {
         "add-block-entity" => Ok(SemioCadMutation::AddBlockEntity(add_block_entity::AddBlockEntity { block_name: dec_str(arg("block-name")?)?, entity: dec_entity_record(arg("entity")?)? })),
         "remove-block-entity" => Ok(SemioCadMutation::RemoveBlockEntity(remove_block_entity::RemoveBlockEntity { block_name: dec_str(arg("block-name")?)?, handle: dec_str(arg("handle")?)? })),
         "set-block-entity-layer" => Ok(SemioCadMutation::SetBlockEntityLayer(set_block_entity_layer::SetBlockEntityLayer { block_name: dec_str(arg("block-name")?)?, handle: dec_str(arg("handle")?)?, layer: dec_str(arg("layer")?)? })),
-        "set-block-entity-geometry" => Ok(SemioCadMutation::SetBlockEntityGeometry(set_block_entity_geometry::SetBlockEntityGeometry { block_name: dec_str(arg("block-name")?)?, handle: dec_str(arg("handle")?)?, entity: dec_entity(arg("entity")?)? })),
+        "set-block-entity-geometry" => {
+            Ok(SemioCadMutation::SetBlockEntityGeometry(set_block_entity_geometry::SetBlockEntityGeometry { block_name: dec_str(arg("block-name")?)?, handle: dec_str(arg("handle")?)?, entity: dec_entity(arg("entity")?)? }))
+        }
         other => Err(format!("cad mutation: unknown keyword {other:?}")),
     }
 }
@@ -394,14 +407,21 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
         SemioCadMutation::AddEntity(add_entity::AddEntity { entity: CadEntityRecord { handle: "h2".into(), layer: "0".into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 1.0, y: 1.0 }, radius: 2.0 } } }),
         SemioCadMutation::RemoveEntity(remove_entity::RemoveEntity { handle: "h1".into() }),
         SemioCadMutation::SetEntityLayer(set_entity_layer::SetEntityLayer { handle: "h1".into(), layer: "dim".into() }),
-        SemioCadMutation::SetEntityGeometry(set_entity_geometry::SetEntityGeometry { handle: "h1".into(), entity: CadEntity::Ellipse { center: SemioPoint2 { x: 0.0, y: 0.0 }, major_axis_end: SemioPoint2 { x: 1.0, y: 0.0 }, ratio: 0.5, start_param: 0.0, end_param: 6.28 } }),
+        SemioCadMutation::SetEntityGeometry(set_entity_geometry::SetEntityGeometry {
+            handle: "h1".into(),
+            entity: CadEntity::Ellipse { center: SemioPoint2 { x: 0.0, y: 0.0 }, major_axis_end: SemioPoint2 { x: 1.0, y: 0.0 }, ratio: 0.5, start_param: 0.0, end_param: 6.28 },
+        }),
         SemioCadMutation::AddBlockEntity(add_block_entity::AddBlockEntity {
             block_name: "door".into(),
             entity: CadEntityRecord { handle: "be2".into(), layer: "0".into(), entity: CadEntity::Text { position: SemioPoint2 { x: 0.0, y: 0.0 }, height: 2.5, rotation: 0.0, content: "label".into() } },
         }),
         SemioCadMutation::RemoveBlockEntity(remove_block_entity::RemoveBlockEntity { block_name: "door".into(), handle: "be1".into() }),
         SemioCadMutation::SetBlockEntityLayer(set_block_entity_layer::SetBlockEntityLayer { block_name: "door".into(), handle: "be1".into(), layer: "dim".into() }),
-        SemioCadMutation::SetBlockEntityGeometry(set_block_entity_geometry::SetBlockEntityGeometry { block_name: "door".into(), handle: "be1".into(), entity: CadEntity::Arc { center: SemioPoint2 { x: 0.0, y: 0.0 }, radius: 1.0, start_angle: 0.0, end_angle: 90.0 } }),
+        SemioCadMutation::SetBlockEntityGeometry(set_block_entity_geometry::SetBlockEntityGeometry {
+            block_name: "door".into(),
+            handle: "be1".into(),
+            entity: CadEntity::Arc { center: SemioPoint2 { x: 0.0, y: 0.0 }, radius: 1.0, start_angle: 0.0, end_angle: 90.0 },
+        }),
     ]
 }
 //#endregion 🔖️Demo

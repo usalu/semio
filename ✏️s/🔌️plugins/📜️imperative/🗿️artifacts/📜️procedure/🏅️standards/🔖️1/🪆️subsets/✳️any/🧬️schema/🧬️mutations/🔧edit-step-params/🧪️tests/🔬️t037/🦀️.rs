@@ -15,7 +15,7 @@
 
 use crate::diff::ProcedureDiff;
 use crate::mutations::ProcedureMutation;
-use crate::{Dictionary, ProcedureSnapshot, Path, Step};
+use crate::{Dictionary, Path, ProcedureSnapshot, Step};
 use neural_engine::{Atom, Value};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

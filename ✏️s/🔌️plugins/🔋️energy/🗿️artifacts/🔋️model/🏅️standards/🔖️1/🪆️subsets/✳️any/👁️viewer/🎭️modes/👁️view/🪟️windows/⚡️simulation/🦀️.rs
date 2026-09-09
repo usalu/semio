@@ -49,25 +49,18 @@ fn leaf(id: impl Into<String>, label: String) -> TreeNodeView {
 /// carries, so a reader can tell which period the numbers belong to without opening the editor.
 pub fn render(projection: Option<&EnergySimulationProjection>, model: &crate::model::Model) -> BuiltNode {
     let run_period = &model.run_period;
-    let period = leaf(
-        "energy-viewer-run-period",
-        format!("Run period / Simulationszeitraum: {:02}-{:02} → {:02}-{:02}", run_period.start_month, run_period.start_day, run_period.end_month, run_period.end_day),
-    );
+    let period = leaf("energy-viewer-run-period", format!("Run period / Simulationszeitraum: {:02}-{:02} → {:02}-{:02}", run_period.start_month, run_period.start_day, run_period.end_month, run_period.end_day));
     let roots = match projection {
         Some(projection) => {
             let tiers = TIER_LABELS
                 .iter()
                 .enumerate()
                 .map(|(index, (_, label))| {
-                    let value = projection.tiers[index]
-                        .map_or_else(|| format!("{label}: —"), |tier| format!("{label}: {} / {} · {:.3} kWh", tier.timestep, tier.total_timesteps, tier.facility_electricity_kwh));
+                    let value = projection.tiers[index].map_or_else(|| format!("{label}: —"), |tier| format!("{label}: {} / {} · {:.3} kWh", tier.timestep, tier.total_timesteps, tier.facility_electricity_kwh));
                     leaf(format!("energy-viewer-tier-{index}"), value)
                 })
                 .collect();
-            vec![
-                TreeNodeView { id: "energy-viewer-result-status".into(), label: "role=status · aria-live=polite · Adopted final result / Übernommenes Endergebnis".into(), children: tiers },
-                period,
-            ]
+            vec![TreeNodeView { id: "energy-viewer-result-status".into(), label: "role=status · aria-live=polite · Adopted final result / Übernommenes Endergebnis".into(), children: tiers }, period]
         }
         None => vec![
             TreeNodeView { id: "energy-viewer-result-status".into(), label: "role=status · aria-live=polite · No adopted final result · Kein übernommenes Endergebnis".into(), children: Vec::new() },

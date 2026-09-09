@@ -18,7 +18,13 @@ impl protocol::MutationKind<PresentationConfig, PresentationConfigMutation> for 
         next.engagement_input = self.value.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &PresentationConfig) -> Vec<PresentationConfigMutation> { vec![PresentationConfigMutation::SetEngagementInput(Self { value: base.engagement_input.clone() })] }
-    fn label(&self) -> String { "Set Engagement Input".into() }
-    fn target(&self) -> Vec<String> { vec!["engagementInput".into()] }
+    fn inverse(&self, base: &PresentationConfig) -> Vec<PresentationConfigMutation> {
+        vec![PresentationConfigMutation::SetEngagementInput(Self { value: base.engagement_input.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Engagement Input".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["engagementInput".into()]
+    }
 }

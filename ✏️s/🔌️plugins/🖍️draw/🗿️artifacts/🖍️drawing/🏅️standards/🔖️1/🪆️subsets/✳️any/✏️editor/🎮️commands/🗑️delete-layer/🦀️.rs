@@ -1,12 +1,12 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `delete-layer`.
 
+use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
+use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use crate::op::DrawingMutation;
 use crate::schema::find_drawing_layer;
 use crate::DrawingSnapshot;
-use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use dsl::{FromValue, ToValue};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "delete-layer")]

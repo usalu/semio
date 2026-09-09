@@ -4,18 +4,11 @@
   "title": "EquationSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "graph",
-    "geometry"
-  ],
+  "required": ["notation", "results", "computed", "equation"],
   "properties": {
-    "graph": {
-      "$ref": "https://semio.tech/schema/s/equation/equation/artifact.json#/$defs/EquationGraph",
-      "x-semio-state": "artifact"
-    },
-    "geometry": {
-      "$ref": "https://semio.tech/schema/s/equation/equation/artifact.json#/$defs/EquationGeometry",
-      "x-semio-state": "artifact"
-    }
+    "notation": { "$ref": "https://semio.tech/schema/os/store/child.json", "x-semio-state": "artifact" },
+    "results": { "$ref": "https://semio.tech/schema/os/store/child.json", "x-semio-state": "artifact" },
+    "computed": { "$ref": "https://semio.tech/schema/os/store/child.json", "x-semio-state": "artifact" },
+    "equation": { "$ref": "https://semio.tech/schema/framework/value/schema.json", "x-semio-state": "artifact" }
   }
 }

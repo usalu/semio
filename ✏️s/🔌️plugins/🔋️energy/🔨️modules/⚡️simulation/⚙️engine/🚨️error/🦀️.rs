@@ -1,7 +1,7 @@
 //! ⚠️ Simulation and model error taxonomy.
 
-use std::fmt;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use std::fmt;
 
 // #region 🔖️Severity
 /// 🚨️ Diagnostic severity aligned with BEM engine conventions.

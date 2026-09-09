@@ -4,10 +4,10 @@
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
+use super::bounds::{object_count, scene_bounds, vertex_count};
 use crate::CadSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use super::bounds::{object_count, scene_bounds, vertex_count};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a cad snapshot. Today: object/brep-vertex counts and the 3d
 /// bounding box across every pane's object origins and vertex positions (see
@@ -61,13 +61,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets:
 pub fn cad_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.cad.cad.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

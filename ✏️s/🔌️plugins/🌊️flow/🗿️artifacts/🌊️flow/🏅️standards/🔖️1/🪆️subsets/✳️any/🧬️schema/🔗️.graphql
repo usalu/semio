@@ -6,19 +6,6 @@ type FlowArtifact {
   widgets: [Widget!]! @state(class: ARTIFACT)
   synapses: [SynapseSpec!]! @state(class: ARTIFACT)
   layout: [WidgetLayoutEntry!]! @state(class: ARTIFACT)
-  selectedNodeIds: [String!]! @state(class: PRESENCE)
-  selectedEdgeIds: [String!]! @state(class: PRESENCE)
-  selectedHandleIds: [String!]! @state(class: PRESENCE)
-  previewOffNodeIds: [String!]! @state(class: PRESENCE)
-  lodMode: String! @state(class: CONFIG)
-  proximityDistance: Float! @state(class: CONFIG)
-  gridVisible: Boolean! @state(class: CONFIG)
-  gridSnapEnabled: Boolean! @state(class: CONFIG)
-  gridFactor: Float! @state(class: CONFIG)
-  catalogueSectionsJson: String! @state(class: CONFIG)
-  automationEnabledJson: String! @state(class: CONFIG)
-  contributionsJson: String! @state(class: CONFIG)
-  generationJson: String! @state(class: CONFIG)
 }
 
 type CameraJson {

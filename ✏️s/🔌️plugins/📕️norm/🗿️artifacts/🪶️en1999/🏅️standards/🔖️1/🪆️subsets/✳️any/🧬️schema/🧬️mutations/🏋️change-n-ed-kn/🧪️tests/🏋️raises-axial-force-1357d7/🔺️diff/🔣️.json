@@ -1,6 +1,6 @@
 {
   "artifact": null,
-  "nEdKn": 180.0,
+  "nEdKn": 180,
   "mEdKnm": null,
   "aMm2": null,
   "wElMm3": null,
@@ -25,6 +25,5 @@
   "shellTMm": null,
   "shellRMm": null,
   "sigmaEdShellMpa": null,
-  "annex": null,
-  "selectedCheckIndex": null
+  "annex": null
 }

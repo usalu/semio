@@ -59,10 +59,7 @@ fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> protocol::DslVal
 pub fn render(_document: &CadSnapshot) -> UiAssemblyResult<BuiltNode> {
     let camera = CadCamera::default();
     let camera_json = world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(&camera));
-    let fallback_mesh = vec![protocol::DslValue::object([
-        ("id".to_string(), protocol::DslValue::String(CAD_VIEW_FALLBACK_MESH_KIND.to_string())),
-        ("data".to_string(), mesh_data_to_dsl(&mesh_from_kind(CAD_VIEW_FALLBACK_MESH_KIND))),
-    ])];
+    let fallback_mesh = vec![protocol::DslValue::object([("id".to_string(), protocol::DslValue::String(CAD_VIEW_FALLBACK_MESH_KIND.to_string())), ("data".to_string(), mesh_data_to_dsl(&mesh_from_kind(CAD_VIEW_FALLBACK_MESH_KIND)))])];
     let meshes_json = protocol::json::to_json_string(&fallback_mesh);
     let instances_json = "[]".to_string();
     let selection_json = world3d_selection_json("rectangle", &[], None);

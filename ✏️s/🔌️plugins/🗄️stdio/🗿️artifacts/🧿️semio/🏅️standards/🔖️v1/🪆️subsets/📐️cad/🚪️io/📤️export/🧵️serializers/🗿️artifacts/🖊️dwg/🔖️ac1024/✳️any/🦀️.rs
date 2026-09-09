@@ -2,9 +2,9 @@
 //! topology model has a complete mapping to the logical DWG entity model; it never retains or
 //! fabricates source bytes.
 
-use semio_s_artifact_stdio_dwg::DwgSnapshot;
 use crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_dwg::DwgSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };

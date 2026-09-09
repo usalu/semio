@@ -36,7 +36,11 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Replac
     }
 
     fn label(&self) -> String {
-        if self.present { format!("Replace airflow network with {} zone nodes", self.zone_ids.len()) } else { "Detach the airflow network".to_string() }
+        if self.present {
+            format!("Replace airflow network with {} zone nodes", self.zone_ids.len())
+        } else {
+            "Detach the airflow network".to_string()
+        }
     }
 }
 //#endregion 🔖️Mutation

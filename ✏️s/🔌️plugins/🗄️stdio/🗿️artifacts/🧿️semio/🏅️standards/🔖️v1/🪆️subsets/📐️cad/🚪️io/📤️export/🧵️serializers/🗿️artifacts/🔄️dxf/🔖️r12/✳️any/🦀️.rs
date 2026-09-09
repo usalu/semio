@@ -5,13 +5,13 @@
 //! (`$ACADVER AC1009`) plus a `LAYER` table built from `layers` — `print_dxf_document` (dxf's own
 //! writer) needs no MORE than that for a structurally valid file.
 
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, SemioCadSnapshot};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_dxf::{
     schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
     DxfSnapshot,
 };
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, SemioCadSnapshot};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId::ANY };

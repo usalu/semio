@@ -13,9 +13,9 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::StepSnapshot;
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
@@ -1431,11 +1431,11 @@ mod handcrafted_diff_codec_tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::schema::snapshot::StepValue;
 pub use crate::schema::snapshot::StepComplexType;
 pub use crate::schema::snapshot::StepEntity;
 pub use crate::schema::snapshot::StepFileDescription;
 pub use crate::schema::snapshot::StepFileName;
 pub use crate::schema::snapshot::StepFileSchema;
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::schema::snapshot::StepValue;
 //#endregion 🔁️Re-exports

@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetRelationshipsNamespace {
-        pub(crate) namespace: String,
-    }
+    pub(crate) namespace: String,
+}
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetRelationshipsNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relationships-namespace", kind: "set-relationships-namespace", record: "SetRelationshipsNamespace" };

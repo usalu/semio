@@ -11,7 +11,7 @@ async fn a_space_id_relays_the_shell_administration_effect_without_a_local_mutat
     let doc_snapshot = SHomeSnapshot::default();
     let doc = doc_view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&ManageSpace { space_id: "space-a".into() }, &doc, &cfg).expect("manage space relays");
     let (action_id, args) = emit
         .effects
@@ -32,6 +32,6 @@ async fn an_empty_space_id_is_a_fault_not_a_blank_pane() {
     let doc_snapshot = SHomeSnapshot::default();
     let doc = doc_view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     assert!(handle(&ManageSpace { space_id: "  ".into() }, &doc, &cfg).is_err());
 }

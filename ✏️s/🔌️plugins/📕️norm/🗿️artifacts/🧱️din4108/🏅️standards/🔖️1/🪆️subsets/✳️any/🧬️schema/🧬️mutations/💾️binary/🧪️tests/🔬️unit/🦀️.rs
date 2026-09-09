@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::Din4108Snapshot;
 use crate::document_schema::mutations::change_airtightness_n50::ChangeAirtightnessN50;
+use crate::Din4108Snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {

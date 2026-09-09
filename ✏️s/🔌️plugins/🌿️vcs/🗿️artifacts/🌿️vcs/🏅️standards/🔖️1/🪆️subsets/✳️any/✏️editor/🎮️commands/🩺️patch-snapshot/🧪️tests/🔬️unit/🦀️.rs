@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::vcs::VcsCommand;
 use crate::editor::vcs::commands::{edit, text_edit};
 use crate::editor::vcs::testkit::{app, dispatch};
+use crate::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn vcs_demo_command_op_text_round_trips() {

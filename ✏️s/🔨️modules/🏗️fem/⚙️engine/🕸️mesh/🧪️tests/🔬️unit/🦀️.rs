@@ -1,6 +1,5 @@
-
 use super::*;
-use semio_framework_job::{Generation, OperationId, RevisionId, StepBudget, root_cancel_token};
+use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
 use std::collections::HashSet;
 use std::time::{Duration, Instant};
 

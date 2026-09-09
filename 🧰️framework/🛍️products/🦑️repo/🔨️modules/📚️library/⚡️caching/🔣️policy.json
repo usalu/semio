@@ -201,7 +201,7 @@
         "TRUNK_BUILD_PUBLIC_URL"
       ],
       "commands": [
-        "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts\" toolchain wasm"
+        "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts\" fingerprint"
       ]
     }
   },
@@ -415,6 +415,12 @@
       ],
       "outputs": [],
       "cache": true
+    }
+  },
+  "generatorInputs": {
+    "registry-catalog": {
+      "target": "repo:generator-inputs",
+      "output": ".🧬semio/🦑️repo/⚡️cache/🔏️generator-inputs/📇️registry/🔣️.json"
     }
   }
 }

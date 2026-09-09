@@ -1,4 +1,3 @@
-
 use super::*;
 #[test]
 fn json_artifact_round_trip_preserves_the_language_neutral_snapshot() {

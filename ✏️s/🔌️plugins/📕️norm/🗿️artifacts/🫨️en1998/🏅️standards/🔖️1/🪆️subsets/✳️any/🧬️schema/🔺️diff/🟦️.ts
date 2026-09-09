@@ -103,6 +103,4 @@ export interface En1998Diff {
   wallR?: number;
   /** @state artifact */
   wallHRdKn?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

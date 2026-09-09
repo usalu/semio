@@ -12,30 +12,27 @@
 //! are `run_command`/`stop_command`, so naming the owning module `run` too would trip clippy's
 //! `module_inception`. The directory keeps its taxonomy name (🏃️run); only the Rust identifier differs.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-#[cfg(test)]
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as schema;
-extern crate infinite_canvas as infinite_board_port_directed_dag;
-
 //#region 🗿️Artifacts
-mod artifacts { pub use semio_s_artifact_sequence_sequence as sequence; }
+mod artifacts {
+    pub use semio_s_artifact_sequence_sequence as sequence;
+}
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_sequence_sequence::editor::*; }
+mod editor {
+    pub use semio_s_artifact_sequence_sequence::editor::*;
+}
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_sequence_sequence::viewer::*; }
+mod viewer {
+    pub use semio_s_artifact_sequence_sequence::viewer::*;
+}
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::SequenceApps);
-
 
 //#endregion 🔖️Plugin

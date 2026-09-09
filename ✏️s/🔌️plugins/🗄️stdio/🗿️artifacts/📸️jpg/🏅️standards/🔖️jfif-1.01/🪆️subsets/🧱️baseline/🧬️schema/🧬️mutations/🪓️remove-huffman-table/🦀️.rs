@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveHuffmanTable {
-        pub(crate) key: JpgHuffmanTableKey,
-    }
+    pub(crate) key: JpgHuffmanTableKey,
+}
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for RemoveHuffmanTable {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "huffman-table", kind: "remove-huffman-table", record: "RemoveHuffmanTable" };

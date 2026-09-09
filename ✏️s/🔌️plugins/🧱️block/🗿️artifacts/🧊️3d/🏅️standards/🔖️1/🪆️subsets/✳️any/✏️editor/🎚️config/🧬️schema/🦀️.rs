@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::{Block3dBrushPreview, Block3dWindowView};
+use crate::Block3dWindowView;
 use crate::BlockCamera3d;
 use ::semio_framework_schema::ArtifactSchema;
 
@@ -21,8 +21,6 @@ pub struct Block3dConfig {
     pub brush_radius: f64,
     #[state(config)]
     pub brush_flip: bool,
-    #[state(config)]
-    pub brush_preview: Option<Block3dBrushPreview>,
     #[state(config)]
     pub camera: Option<BlockCamera3d>,
 }

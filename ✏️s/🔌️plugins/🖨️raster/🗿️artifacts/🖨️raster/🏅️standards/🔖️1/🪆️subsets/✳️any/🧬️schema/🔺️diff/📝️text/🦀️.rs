@@ -178,7 +178,7 @@ pub fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str, patc
 
 //#region 🔖️Apply
 impl RasterDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &RasterArtifact) -> protocol::MutationApplyResult<RasterArtifact> {
         if !artifact.assets.is_empty() {
             return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "populated Raster maps require the retained initialization authority"));
@@ -215,30 +215,6 @@ impl RasterDiff {
                         None => unreachable!("Raster asset removal was rejected before snapshot ownership was cloned"),
                     }
                 }
-            }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
-            }
-            if let Some(value) = self.brush_size {
-                next.brush_size = value;
-            }
-            if let Some(value) = self.brush_opacity {
-                next.brush_opacity = value;
-            }
-            if let Some(value) = &self.composite_viewport {
-                next.composite_viewport = value.clone();
-            }
-            if let Some(value) = self.camera_x {
-                next.camera_x = value;
-            }
-            if let Some(value) = self.camera_y {
-                next.camera_y = value;
-            }
-            if let Some(value) = self.camera_zoom {
-                next.camera_zoom = value;
-            }
-            if let Some(value) = &self.hovered_id {
-                next.hovered_id = value.clone();
             }
             next
         })
@@ -385,14 +361,6 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
         take!(schema);
         take!(id);
         take!(title);
-        take!(selected_ids);
-        take!(brush_size);
-        take!(brush_opacity);
-        take!(composite_viewport);
-        take!(camera_x);
-        take!(camera_y);
-        take!(camera_zoom);
-        take!(hovered_id);
         match (&mut self.layers, other.layers) {
             (Some(dst), Some(src)) => {
                 dst.added.extend(src.added);

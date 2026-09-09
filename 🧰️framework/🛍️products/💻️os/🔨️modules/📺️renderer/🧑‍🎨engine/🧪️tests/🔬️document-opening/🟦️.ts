@@ -6,6 +6,42 @@ import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "j
 import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, runDocumentOpeningAttemptV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 
 describe("Shell document opening", () => {
+  it("publishes direct document readiness only for the exact acknowledged mounted actor", async () => {
+    const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧫️fixtures/🖥️mounted/🔣️.json");
+    const { browserDocumentMountIsCurrentV1 } = await import("../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts");
+    const validate = new Ajv({ strict: true }).addSchema(rendererSchema).compile({ $ref: `${rendererSchema.$id}#/$defs/BrowserDocumentMountFixtureV1` });
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const observed: string[] = [];
+    let mounted!: () => void, attaching!: () => void;
+    const ready = new Promise<void>(resolve => { mounted = resolve; });
+    const started = new Promise<void>(resolve => { attaching = resolve; });
+    const opening = runDocumentOpeningAttemptV1({
+      deadlineMs: 1000,
+      current: () => true,
+      socket: async () => { observed.push("socket"); },
+      attach: async () => { observed.push("attach"); attaching(); await ready; },
+      commit: () => { observed.push("commit"); },
+      close: () => { observed.push("close"); },
+      detach: async () => { observed.push("detach"); },
+      retire: () => { observed.push("retire"); },
+    });
+    try {
+      await started;
+      for (const changed of [{ clientInstanceId: "foreign" }, { scope: { spaceId: "foreign", documentId: "map-a" } }, { scope: { spaceId: "space-a", documentId: "foreign" } }, { activationGeneration: "42" }, { verifiedSurfaceId: "foreign" }, { instanceId: 1 }, { revision: 4 }]) expect(browserDocumentMountIsCurrentV1(fixture.opening, fixture.retained, { ...fixture.receipt, ...changed })).toBe(false);
+      expect(browserDocumentMountIsCurrentV1({ ...fixture.opening, instanceId: 8 }, fixture.retained, fixture.receipt)).toBe(false);
+      expect(browserDocumentMountIsCurrentV1(fixture.opening, { ...fixture.retained, scope: { spaceId: "foreign", documentId: "map-a" } }, fixture.receipt)).toBe(false);
+      expect(observed).toEqual(["socket", "attach"]);
+      expect(browserDocumentMountIsCurrentV1(fixture.opening, fixture.retained, fixture.receipt)).toBe(true);
+      observed.push("mounted");
+      mounted();
+      expect(await opening).toBe(true);
+      expect(deepEqual(observed, fixture.sequence)).toBe(true);
+    } finally {
+      mounted();
+      await opening;
+    }
+  });
+
   it("coalesces paused cold pairs and binds only the latest retained pair", async () => {
     const sequence: string[] = [];
     const queue = new LatestDocumentReplacementV1<string>();

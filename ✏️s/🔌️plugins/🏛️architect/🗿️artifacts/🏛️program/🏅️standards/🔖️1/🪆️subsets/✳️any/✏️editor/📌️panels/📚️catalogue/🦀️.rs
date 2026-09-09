@@ -1,11 +1,9 @@
 //! 📚️ Architect catalogue panel — the action shortcuts and the register index.
 
 use crate::editor::architect::catalog::REGISTER_IDS;
-use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
 use crate::editor::architect::ui_label;
-use semio_framework_plugin::{
-    tree_item_with_action,  LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-};
+use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
+use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_CATALOGUE: &str = "architect.catalogue";
@@ -43,8 +41,7 @@ pub fn render() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plug
         let item = tree_item_with_action(id, ui_label(label)?, None, architect_action(action, args)?)?;
         actions.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect catalogue action admission failed"))?;
     }
-    let mut tree = PanelTreeBuilder::new("architect-catalogue")?
-        .section("architect-catalogue.actions", Some(ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, actions)?;
+    let mut tree = PanelTreeBuilder::new("architect-catalogue")?.section("architect-catalogue.actions", Some(ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, actions)?;
     for (page, registers) in REGISTER_IDS.chunks(semio_framework_ui_contract::UI_FIXED_LIST_ITEMS).enumerate() {
         let mut items = UiFixedList::default();
         for register in registers {

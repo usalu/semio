@@ -30,6 +30,4 @@ message Din18599Artifact {
   string energy_carrier = 12;
   // @state artifact
   double reference_q_p_kwh = 13;
-  // @state presence
-  optional uint32 selected_check_index = 14;
 }

@@ -226,14 +226,14 @@
         {
           "operation": "setLayerStrokeScale",
           "layerId": "roads",
-          "value": 1
+          "value": 1.0
         }
       ],
       "inverseReplayOrder": [
         {
           "operation": "setLayerStrokeScale",
           "layerId": "roads",
-          "value": 1
+          "value": 1.0
         },
         {
           "operation": "setLayerVisibility",
@@ -246,7 +246,7 @@
           "roads": true
         },
         "layerStrokeScale": {
-          "roads": 1
+          "roads": 1.0
         }
       }
     },

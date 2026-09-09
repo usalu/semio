@@ -1,12 +1,12 @@
-
 use super::*;
 use crate::editor::gis2d::terminology::gis2d_labels;
-use crate::editor::gis2d::testkit::{app, main_window_measures, render as render_body};
+use crate::editor::gis2d::testkit::{app, close, main_window_measures, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_gis_map_scene() {
     let mut app = app().await;
     assert!(render_body(&mut app, GIS2D_PLAY_BODY_COMPOSITE).await.contains("tiled-map"));
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -17,6 +17,8 @@ async fn render_canvas_uses_absolute_tile_urls_when_env_set() {
     assert!(json.contains("http://127.0.0.1:6141/osm/{z}/{x}/{y}.png"));
     assert!(json.contains("http://127.0.0.1:6141/vt/{z}/{x}/{y}.pbf"));
     unsafe { std::env::remove_var("SEMIO_ASSET_BASE_URL") };
+    drop(json);
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -26,6 +28,7 @@ async fn the_window_collects_every_option_node_exactly_once() {
     assert_eq!(measures.len(), 5, "3 selects + the layers and layer-weights groups");
     let mut app = app().await;
     assert_eq!(main_window_measures(&mut app).await.len(), measures.len(), "the app routes the same set under the window id");
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

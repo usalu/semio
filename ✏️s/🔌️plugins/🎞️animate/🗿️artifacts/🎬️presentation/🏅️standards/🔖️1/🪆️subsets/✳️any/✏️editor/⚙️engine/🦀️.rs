@@ -15,9 +15,9 @@
 pub mod compiler {
     //! 🌐️ Headless static-site compiler for animate presentation decks.
 
-    use crate::PresentationSnapshot;
     use crate::editor::animate::engine::config::config::{AnimateConfig, QualityPreset};
     use crate::editor::animate::engine::video::{render_scene, scene_for_hash, OutputFormat};
+    use crate::PresentationSnapshot;
     use std::fs;
     use std::path::{Path, PathBuf};
 
@@ -250,8 +250,8 @@ pub mod compiler {
 pub mod slide {
     //! 🎭️ Scene-based presentation document types for slide/section timelines.
 
-    use crate::PresentationSnapshot;
     use crate::editor::animate::engine::scene::section::Section;
+    use crate::PresentationSnapshot;
 
     pub const PRESENTATION_SCENE_SCHEMA: &str = "animate.presentation.scene";
 

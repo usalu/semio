@@ -7,22 +7,20 @@
 //! `ImperativeCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
-use crate::mutations::ProcedureMutation;
-use crate::schema::default_snapshot;
-use crate::{ProcedureSnapshot, Step, PROCEDURE_DOCUMENT_SCHEMA};
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
 use crate::editor::procedure::engine::imperative_io;
 use crate::editor::procedure::modes::edit;
 use crate::editor::procedure::modes::edit::windows::{main, script};
 use crate::editor::procedure::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::procedure::terminology::imperative_labels;
-use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use crate::mutations::ProcedureMutation;
+use crate::schema::default_snapshot;
+use crate::{ProcedureSnapshot, Step, PROCEDURE_DOCUMENT_SCHEMA};
+use semio_framework::InteractiveJobClassification;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
-    CommandDefinition, ComponentTree, ConfigView, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionTopology, Label, LocalizedLabel, Media, MediaClass,
-    MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
+    ActionArgDef, ActionArgOption, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ComponentTree, ConfigView, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
+    InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 // 🚧️ Dialect/StandardId/SubsetId are not yet in the crate-root re-export list (w0-f gap 1 closed
 // ArtifactEditor/Editor/etc but left these three under `app::`, already reachable via
@@ -96,9 +94,9 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
+use crate::editor::procedure::commands::run;
 use crate::editor::procedure::commands::set_contributions;
 use crate::editor::procedure::commands::{add_step, add_step_at, move_step, move_step_at, remove_step, remove_step_at, set_step_params, set_step_params_at};
-use crate::editor::procedure::commands::run;
 //#endregion 🔖️Commands
 
 //#region 🔖️ImperativePlayApp
@@ -146,7 +144,8 @@ impl ArtifactEditor for ImperativePlayApp {
         command: &ImperativeCommand,
         doc: &ArtifactView<'_, ProcedureSnapshot>,
         cfg: &ConfigView<'_, ImperativeConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
@@ -193,7 +192,8 @@ impl ArtifactEditor for ImperativePlayApp {
             IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(document, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),
-        }).map(semio_framework_plugin::built_to_component_tree)
+        })
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️ImperativePlayApp
@@ -232,7 +232,7 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             .mutation("setStepParamsAt", LocalizedLabel::native("Set Step Params At", "Schrittparameter bei Position festlegen"))
             // 👁️ Ephemeral view state / runtime effect — `run` evaluates into config. Step selection/
             // hover are no longer declared here: framework-owned, injected via `.interaction(...)` below.
-            .view_action("run", LocalizedLabel::native("Run", "Ausführen"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View, "play"))
             .action_interactive_job("setContributions", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("addStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("addStepAt", InteractiveJobClassification::BatchOnlyPendingRewrite)

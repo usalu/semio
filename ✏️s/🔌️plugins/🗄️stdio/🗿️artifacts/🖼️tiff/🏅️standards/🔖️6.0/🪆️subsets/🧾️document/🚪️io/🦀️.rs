@@ -593,7 +593,8 @@ fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, Stri
                 entries.push(TiffTag { tag: TAG_ROWS_PER_STRIP, kind: TiffFieldType::Long, values: TiffValues::Long(vec![length]) });
             }
             entries.push(TiffTag { tag: TAG_STRIP_BYTE_COUNTS, kind: TiffFieldType::Long, values: TiffValues::Long(vec![ifd.pixels.len() as u32]) });
-            entries.push(TiffTag { tag: TAG_STRIP_OFFSETS, kind: TiffFieldType::Long, values: TiffValues::Long(vec![0]) }); // placeholder, patched below
+            entries.push(TiffTag { tag: TAG_STRIP_OFFSETS, kind: TiffFieldType::Long, values: TiffValues::Long(vec![0]) });
+            // placeholder, patched below
         }
         entries.sort_by_key(|t| t.tag); // TIFF6 §2: entries "must be sorted in ascending order by Tag".
         entries_per_ifd.push(entries);
@@ -693,8 +694,8 @@ mod tests;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v6_0::subsets::document::schema::TiffComposer as TiffRawAnyComposer;
     use crate::standards::v6_0::subsets::baseline::schema::TiffBaselineComposer;
+    use crate::standards::v6_0::subsets::document::schema::TiffComposer as TiffRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

@@ -54,13 +54,12 @@
   "generationReferenceKwh": null,
   "dataCenterSupplyC": null,
   "hStWK": null,
-  "thetaStC": 55.0,
+  "thetaStC": 55,
   "thetaAmbC": null,
   "storageTH": null,
   "storageAllowanceKwh": null,
   "dhwDeliveryC": null,
   "ductClass": null,
   "ductTestPressurePa": null,
-  "ductLeakageM3SM2": null,
-  "selectedCheckIndex": null
+  "ductLeakageM3SM2": null
 }

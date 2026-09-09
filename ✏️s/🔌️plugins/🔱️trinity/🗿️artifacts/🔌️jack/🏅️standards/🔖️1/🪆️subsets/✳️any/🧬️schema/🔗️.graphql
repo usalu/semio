@@ -9,10 +9,6 @@ type JackArtifact {
   nodes: [Node!]! @state(class: ARTIFACT)
   edges: [Edge!]! @state(class: ARTIFACT)
   rootNodeId: String @state(class: ARTIFACT)
-  jackQuery: String! @state(class: CONFIG)
-  lodModeByWindow: [StringEntry!]! @state(class: CONFIG)
-  viewportCamera: Camera! @state(class: CONFIG)
-  editorSelection: JackEditorSelection @state(class: CONFIG)
 }
 
 type StringEntry {
@@ -20,10 +16,6 @@ type StringEntry {
   value: String!
 }
 
-type JackEditorSelection {
-  start: Int!
-  end: Int!
-}
 
 type Camera {
   x: Float!

@@ -8,7 +8,6 @@ type VcsDiff {
   notes: String @state(class: ARTIFACT)
   status: String @state(class: ARTIFACT)
   tags: VcsTagsDelta @state(class: ARTIFACT)
-  selectedCheckpointIds: VcsStringList @state(class: PRESENCE)
 }
 
 type VcsStringList {

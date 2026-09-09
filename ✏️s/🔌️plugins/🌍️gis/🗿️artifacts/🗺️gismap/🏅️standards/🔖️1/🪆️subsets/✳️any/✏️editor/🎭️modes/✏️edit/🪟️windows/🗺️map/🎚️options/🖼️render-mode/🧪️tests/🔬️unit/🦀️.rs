@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::gis2d::terminology::gis2d_labels;
 

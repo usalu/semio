@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::remodeling::RemodelingCommand;
 use crate::editor::remodeling::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks};
 use crate::editor::remodeling::testkit::{app, dispatch};
+use crate::editor::remodeling::RemodelingCommand;
 use semio_framework_plugin::testkit;
 
 /// 🧩️ `results.mesh.mesh` is a composed CHILD handle now — reads the real vertex count through

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "repositoryId", "runId", "branch"],
+      "properties": {
+        "repository": { "type": "string", "pattern": "^(?!\\.\\.?/)[A-Za-z0-9_.-]+/(?!\\.\\.?$)[A-Za-z0-9_.-]+$" },
+        "repositoryId": { "type": "integer", "minimum": 1 },
+        "runId": { "type": "integer", "minimum": 1 },
+        "branch": { "type": "string", "minLength": 1, "pattern": "^[^\\u0000-\\u001f]+$" }
+      }
+    },
+    "history": {
+      "type": "object", "additionalProperties": false,
+      "required": ["workflowId", "runs", "pages", "issue"],
+      "properties": {
+        "workflowId": { "type": ["integer", "null"], "minimum": 1 },
+        "runs": { "type": "array", "maxItems": 1000 },
+        "pages": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "issue": { "enum": [null, "history-limit", "history-unavailable"] }
+      }
+    }
+  }
+}

@@ -80,7 +80,7 @@ pub fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> proto
 }
 
 impl LayoutDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &LayoutArtifact) -> protocol::MutationApplyResult<LayoutArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -116,39 +116,6 @@ impl LayoutDiff {
             }
             if let Some(value) = &self.referenced_model {
                 next.referenced_model = value.clone();
-            }
-            if let Some(list) = &self.selected_ids {
-                next.selected_ids = list.values.clone();
-            }
-            if let Some(value) = &self.active_page_id {
-                next.active_page_id = value.clone();
-            }
-            if let Some(value) = &self.engagement_input {
-                next.engagement_input = value.clone();
-            }
-            if let Some(value) = self.camera_x {
-                next.camera_x = value;
-            }
-            if let Some(value) = self.camera_y {
-                next.camera_y = value;
-            }
-            if let Some(value) = self.camera_zoom {
-                next.camera_zoom = value;
-            }
-            if let Some(value) = self.preview_camera_x {
-                next.preview_camera_x = value;
-            }
-            if let Some(value) = self.preview_camera_y {
-                next.preview_camera_y = value;
-            }
-            if let Some(value) = self.preview_camera_zoom {
-                next.preview_camera_zoom = value;
-            }
-            if let Some(value) = &self.drop_preview {
-                next.drop_preview = value.clone();
-            }
-            if let Some(value) = &self.hovered_id {
-                next.hovered_id = value.clone();
             }
             next
         })
@@ -256,17 +223,6 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
         take!(data_fields_json);
         take!(background_drawing);
         take!(referenced_model);
-        take!(selected_ids);
-        take!(active_page_id);
-        take!(engagement_input);
-        take!(camera_x);
-        take!(camera_y);
-        take!(camera_zoom);
-        take!(preview_camera_x);
-        take!(preview_camera_y);
-        take!(preview_camera_zoom);
-        take!(drop_preview);
-        take!(hovered_id);
     }
 }
 //#endregion 🔖️Apply

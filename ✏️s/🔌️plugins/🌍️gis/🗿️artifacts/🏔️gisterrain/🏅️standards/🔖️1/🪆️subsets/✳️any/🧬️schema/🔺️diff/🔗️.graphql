@@ -4,15 +4,11 @@ type GisTerrainDiff {
   artifact: GisTerrainArtifact @state(class: ARTIFACT)
   exaggeration: Float @state(class: ARTIFACT)
   importedFeaturesJson: String @state(class: ARTIFACT)
-  selectedIds: GisTerrainStringList @state(class: PRESENCE)
-  cameraJson: String @state(class: CONFIG)
 }
 
 type GisTerrainArtifact {
   exaggeration: Float!
   importedFeaturesJson: String!
-  selectedIds: [String!]!
-  cameraJson: String!
 }
 
 type GisTerrainStringList {

@@ -1,10 +1,10 @@
 //! 🧭️ Shooting play app commands — the transform gumball: translate/rotate/scale the selected assets.
 //! Every drag tick coalesces into one undo step via `Emit::amend`'s coalesce key.
 
-use crate::op::ShootingMutation;
-use crate::ShootingSnapshot;
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
+use crate::op::ShootingMutation;
+use crate::ShootingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

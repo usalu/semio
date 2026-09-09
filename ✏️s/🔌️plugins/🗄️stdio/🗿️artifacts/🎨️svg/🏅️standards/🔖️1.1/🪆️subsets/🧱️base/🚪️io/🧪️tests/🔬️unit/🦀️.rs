@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::schema::{demo_svg_snapshot, empty_svg_snapshot};
-use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SvgSnapshot};
+use crate::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
 
 const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };

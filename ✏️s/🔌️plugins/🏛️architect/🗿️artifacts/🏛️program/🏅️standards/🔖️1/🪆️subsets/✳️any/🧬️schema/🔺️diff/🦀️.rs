@@ -154,28 +154,6 @@ pub struct ProgramDiff {
     pub traces: Option<ProgramTracesDelta>,
     #[state(artifact)]
     pub governance: Option<Governance>,
-    #[state(presence)]
-    pub selected_ids: Option<ProgramStringList>,
-    #[state(presence)]
-    pub active_register: Option<String>,
-    #[state(presence)]
-    pub adjacency_kind_filter: Option<Option<AdjacencyKind>>,
-    #[state(presence)]
-    pub active_report_json: Option<String>,
-    #[state(config)]
-    pub search_query: Option<String>,
-    #[state(config)]
-    pub search_history_json: Option<String>,
-    #[state(config)]
-    pub last_result_json: Option<String>,
-    #[state(config)]
-    pub last_analysis_json: Option<String>,
-    #[state(config)]
-    pub graph_camera_x: Option<f64>,
-    #[state(config)]
-    pub graph_camera_y: Option<f64>,
-    #[state(config)]
-    pub graph_camera_zoom: Option<f64>,
 }
 //#endregion 🔖️Diff
 

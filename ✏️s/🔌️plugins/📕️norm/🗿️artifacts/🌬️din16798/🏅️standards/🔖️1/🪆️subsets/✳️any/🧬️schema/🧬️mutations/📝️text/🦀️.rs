@@ -9,6 +9,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+use crate::document::AnnexChoice;
 pub use crate::document_schema::mutations::Din16798Mutation;
 use crate::document_schema::mutations::{
     change_air_speed_m_s, change_annex, change_bedrooms, change_cellar_area_m2, change_cellar_ventilation_m3_h, change_chiller_type, change_co2_ppm, change_comfort_category, change_cooling_delta_t_h, change_cooling_gains_kwh,
@@ -19,7 +20,6 @@ use crate::document_schema::mutations::{
     change_sfp_required_class, change_sfp_w_m3_s, change_storage_allowance_kwh, change_storage_t_h, change_system_type, change_t_op_c, change_theta_amb_c, change_theta_e_c, change_theta_rm_c, change_theta_set_c, change_theta_st_c,
     change_ventilation_m3_h, change_volume_m3, change_years_since_inspection,
 };
-use crate::document::AnnexChoice;
 use protocol::OpText;
 
 //#region 🔖️OpText
@@ -247,9 +247,7 @@ fn din16798_mutation_from_dsl(mutation: Din16798MutationDsl) -> Din16798Mutation
         Din16798MutationDsl::ChangeThetaSetC { new_theta_set_c } => Din16798Mutation::ChangeThetaSetC(change_theta_set_c::ChangeThetaSetC { new_theta_set_c }),
         Din16798MutationDsl::ChangeCoolingDeltaTH { new_cooling_delta_t_h } => Din16798Mutation::ChangeCoolingDeltaTH(change_cooling_delta_t_h::ChangeCoolingDeltaTH { new_cooling_delta_t_h }),
         Din16798MutationDsl::ChangeCoolingGainsKwh { new_cooling_gains_kwh } => Din16798Mutation::ChangeCoolingGainsKwh(change_cooling_gains_kwh::ChangeCoolingGainsKwh { new_cooling_gains_kwh }),
-        Din16798MutationDsl::ChangeCoolingUtilizationFactor { new_cooling_utilization_factor } => {
-            Din16798Mutation::ChangeCoolingUtilizationFactor(change_cooling_utilization_factor::ChangeCoolingUtilizationFactor { new_cooling_utilization_factor })
-        }
+        Din16798MutationDsl::ChangeCoolingUtilizationFactor { new_cooling_utilization_factor } => Din16798Mutation::ChangeCoolingUtilizationFactor(change_cooling_utilization_factor::ChangeCoolingUtilizationFactor { new_cooling_utilization_factor }),
         Din16798MutationDsl::ChangeCoolingReferenceKwh { new_cooling_reference_kwh } => Din16798Mutation::ChangeCoolingReferenceKwh(change_cooling_reference_kwh::ChangeCoolingReferenceKwh { new_cooling_reference_kwh }),
         Din16798MutationDsl::ChangeChillerType { new_chiller_type } => Din16798Mutation::ChangeChillerType(change_chiller_type::ChangeChillerType { new_chiller_type }),
         Din16798MutationDsl::ChangeEerActual { new_eer_actual } => Din16798Mutation::ChangeEerActual(change_eer_actual::ChangeEerActual { new_eer_actual }),

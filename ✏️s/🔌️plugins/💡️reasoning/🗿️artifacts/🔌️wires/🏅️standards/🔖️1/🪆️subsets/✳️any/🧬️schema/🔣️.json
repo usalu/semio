@@ -6,112 +6,26 @@
   "additionalProperties": false,
   "required": [
     "wiresFixture",
-    "boardFixture",
-    "dragLastX",
-    "dragLastY"
+    "content",
+    "camera",
+    "meta"
   ],
   "properties": {
     "wiresFixture": {
-      "title": "DslValue",
-      "type": "object",
+      "$ref": "https://semio.tech/schema/framework/value/schema.json",
       "x-semio-state": "artifact"
     },
-    "boardFixture": {
-      "title": "DslValue",
-      "type": "object",
+    "content": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
       "x-semio-state": "artifact"
     },
-    "dragNodeId": {
-      "x-semio-state": "artifact",
-      "type": "string"
+    "camera": {
+      "$ref": "https://semio.tech/schema/framework/value/schema.json",
+      "x-semio-state": "artifact"
     },
-    "dragLastX": {
-      "x-semio-state": "artifact",
-      "type": "number",
-      "format": "double"
-    },
-    "dragLastY": {
-      "x-semio-state": "artifact",
-      "type": "number",
-      "format": "double"
-    }
-  },
-  "$defs": {
-    "WiresRetainedCommandRoutes": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema",
-        "maximumRawBytes",
-        "maximumWorkItems",
-        "routes"
-      ],
-      "properties": {
-        "schema": {
-          "const": "reasoning.wires.retained-command-routes.v1"
-        },
-        "maximumRawBytes": {
-          "type": "integer",
-          "const": 8192
-        },
-        "maximumWorkItems": {
-          "type": "integer",
-          "const": 1
-        },
-        "routes": {
-          "allOf": [
-            {
-              "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes"
-            },
-            {
-              "type": "array",
-              "minItems": 10,
-              "maxItems": 10,
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "id",
-                  "disposition",
-                  "lanes",
-                  "reason"
-                ],
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "disposition": {
-                    "enum": [
-                      "migrated",
-                      "batch-only-pending-rewrite"
-                    ]
-                  },
-                  "lanes": {
-                    "type": "array",
-                    "items": {
-                      "enum": [
-                        "artifact",
-                        "config",
-                        "transient",
-                        "host-only"
-                      ]
-                    },
-                    "uniqueItems": true
-                  },
-                  "reason": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
+    "meta": {
+      "$ref": "https://semio.tech/schema/framework/value/schema.json",
+      "x-semio-state": "artifact"
     }
   }
 }

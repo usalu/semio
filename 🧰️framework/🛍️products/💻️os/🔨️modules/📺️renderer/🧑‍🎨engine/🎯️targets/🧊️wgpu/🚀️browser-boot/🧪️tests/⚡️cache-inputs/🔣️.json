@@ -1,0 +1,65 @@
+{
+  "defaultVariant": "s",
+  "ambientVariants": [
+    "fixture-first",
+    "fixture-second"
+  ],
+  "cases": [
+    {
+      "search": "",
+      "expected": {
+        "pluginVariant": "s",
+        "appRole": "editor"
+      }
+    },
+    {
+      "search": "?plugin=note&role=viewer",
+      "expected": {
+        "pluginVariant": "note",
+        "appRole": "viewer"
+      }
+    },
+    {
+      "search": "?plugin=puzzle3d&role=unknown",
+      "expected": {
+        "pluginVariant": "puzzle3d",
+        "appRole": "editor"
+      }
+    },
+    {
+      "search": "?plugin=note&plugin=puzzle3d",
+      "expected": {
+        "pluginVariant": "note",
+        "appRole": "editor"
+      }
+    },
+    {
+      "search": "?hub=https%3A%2F%2Fexample.test&user=Fixture+User&dataDir=fixture",
+      "expected": {
+        "pluginVariant": "s",
+        "appRole": "editor",
+        "hub": {
+          "hubUrl": "https://example.test",
+          "user": "Fixture User",
+          "dataDir": "fixture"
+        }
+      }
+    }
+  ],
+  "generator": {
+    "target": "generate-browser-boot",
+    "output": "{projectRoot}/🟦️typescript/🚀️boot.js",
+    "prerequisites": [
+      "@semio-tech/plugin-registry:generate"
+    ],
+    "consumers": [
+      "wasm",
+      "serve",
+      "dev"
+    ],
+    "inputs": [
+      "browserBootSources"
+    ],
+    "dependencyOutput": "**/🎮️playgrounds.ts"
+  }
+}

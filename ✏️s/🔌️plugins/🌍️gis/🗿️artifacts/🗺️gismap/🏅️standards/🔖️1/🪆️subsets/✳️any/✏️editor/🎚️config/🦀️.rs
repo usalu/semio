@@ -4,10 +4,10 @@
 //! like document content, with a true `backwards` per operation. Nothing here is document state — the
 //! map's positions/routes/regions live in `crate`.
 
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
 /// 🧮️ gis2d's `ArtifactEditor::Config` — per-layer visibility/stroke-weight, camera, and render/vector/LOD
@@ -113,6 +113,16 @@ impl Default for Gis2dConfig {
 
 impl store::ConfigRecord for Gis2dConfig {}
 
+/// ⭕️ Decodes a present nullable field while omission remains an error.
+#[cfg(test)]
+pub fn required_nullable<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    <Option<T> as Deserialize>::deserialize(deserializer)
+}
+
 /// 👁️ Whether a map layer is currently shown; a layer with no explicit entry defaults to visible.
 pub fn layer_visible(cfg: &Gis2dConfig, layer_id: &str) -> bool {
     cfg.layer_visibility.get(layer_id).copied().unwrap_or(true)
@@ -127,12 +137,6 @@ pub use configuration_diff::{Gis2dConfigDelta, Gis2dConfigDiff};
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub use mutations::*;
-
-#[cfg(test)]
-fn required_nullable<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
-where D: serde::Deserializer<'de>, T: Deserialize<'de> {
-    <Option<T> as Deserialize>::deserialize(deserializer)
-}
 
 //#region 🔖️OpCodec
 impl protocol::OpText for Gis2dConfigMutation {
@@ -156,8 +160,12 @@ impl protocol::OpText for Gis2dConfigMutation {
 }
 
 impl protocol::OpBinary for Gis2dConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
 }
 
 //#endregion 🔖️OpCodec

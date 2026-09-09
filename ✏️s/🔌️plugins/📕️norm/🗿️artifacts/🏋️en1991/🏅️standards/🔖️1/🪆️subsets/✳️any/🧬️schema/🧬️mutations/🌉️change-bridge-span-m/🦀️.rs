@@ -1,6 +1,5 @@
 //! 🛣️ `change-bridge-span-m` — sets the En1991 bridge span scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

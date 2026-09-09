@@ -25,7 +25,6 @@ pub type SurfacePatchBounds = (f64, f64, f64, f64, (Pnt3, Pnt3));
 /// 📍 Intersection point with parameters on both surfaces.
 pub type SurfaceIntersectionSample = (Pnt3, f64, f64, f64, f64);
 
-
 use crate::standards::v1::subsets::brep::schema::engine::contract::ParamDomain;
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
 use crate::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
@@ -1001,7 +1000,11 @@ fn march_direction(a: &Surface, dom_a: ((f64, f64), (f64, f64)), b: &Surface, do
         if !ok {
             break;
         }
-        if out_of_domain(nua, dom_a.0 .0, dom_a.0 .1, a.is_u_periodic(), tol) || out_of_domain(nva, dom_a.1 .0, dom_a.1 .1, a.is_v_periodic(), tol) || out_of_domain(nub, dom_b.0 .0, dom_b.0 .1, b.is_u_periodic(), tol) || out_of_domain(nvb, dom_b.1 .0, dom_b.1 .1, b.is_v_periodic(), tol) {
+        if out_of_domain(nua, dom_a.0 .0, dom_a.0 .1, a.is_u_periodic(), tol)
+            || out_of_domain(nva, dom_a.1 .0, dom_a.1 .1, a.is_v_periodic(), tol)
+            || out_of_domain(nub, dom_b.0 .0, dom_b.0 .1, b.is_u_periodic(), tol)
+            || out_of_domain(nvb, dom_b.1 .0, dom_b.1 .1, b.is_v_periodic(), tol)
+        {
             break;
         }
         ua = nua;

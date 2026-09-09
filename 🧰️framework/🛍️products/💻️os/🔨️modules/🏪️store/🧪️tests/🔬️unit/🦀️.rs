@@ -249,7 +249,7 @@ fn one_item_publication_fixture_matches_the_third_party_json_oracle() {
                 case["expected"].as_str().expect("expected freshness")
             ),
             "retry-then-ack" | "retry-plus-one" => {
-                assert_eq!(oracle.retry(case["retryAttempts"].as_u64().expect("retry attempts") as u8, case["acknowledged"].as_bool().expect("acknowledged")), case["expected"].as_str().expect("expected retry outcome"))
+                assert_eq!(oracle.retry(case["retryAttempts"].as_u64().expect("retry attempts") as u8, case["acknowledged"].as_bool().expect("acknowledged")), case["expected"].as_str().expect("expected retry outcome"));
             }
             "cancel-before-publish" | "interrupted-close" => assert_eq!(case["expected"], "complete-empty"),
             unexpected => panic!("unknown one-item lifecycle fixture {unexpected}"),
@@ -1602,6 +1602,55 @@ impl SnapshotRetirementFactory<DemoSnapshot> for DemoSnapshotRetirementFactory {
     }
 }
 
+struct ExactDemoSnapshotRetirement {
+    owner: Option<Arc<DemoSnapshot>>,
+    value: Option<DemoSnapshot>,
+    completed: Arc<std::sync::atomic::AtomicUsize>,
+}
+
+impl ErasedSnapshotRetirement for ExactDemoSnapshotRetirement {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(owner) = self.owner.take() {
+            return match Arc::try_unwrap(owner) {
+                Ok(value) => {
+                    self.value = Some(value);
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                Err(owner) => {
+                    self.owner = Some(owner);
+                    Ok(SnapshotRetirementStep::Blocked)
+                }
+            };
+        }
+        if self.value.take().is_some() {
+            self.completed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.owner.is_none() && self.value.is_none()
+    }
+}
+
+impl Drop for ExactDemoSnapshotRetirement {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "exact demo snapshot retirement reached Drop with a retained root");
+    }
+}
+
+struct ExactDemoSnapshotRetirementFactory(Arc<std::sync::atomic::AtomicUsize>);
+
+impl SnapshotRetirementFactory<DemoSnapshot> for ExactDemoSnapshotRetirementFactory {
+    fn retire(&self, snapshot: Arc<DemoSnapshot>) -> Box<dyn ErasedSnapshotRetirement> {
+        Box::new(ExactDemoSnapshotRetirement { owner: Some(snapshot), value: None, completed: Arc::clone(&self.0) })
+    }
+}
+
 struct DemoInitialSnapshotRetirement(Option<DemoSnapshot>);
 
 impl ErasedSnapshotRetirement for DemoInitialSnapshotRetirement {
@@ -2171,7 +2220,7 @@ impl DemoMemberWirePreparation {
                     return Err("member number overflows i32".into());
                 }
             }
-            2 | 3 | 4 if whitespace => self.state = 4,
+            2..=4 if whitespace => self.state = 4,
             _ => return Err("member wire is not an exact JSON integer".into()),
         }
         Ok(())
@@ -2213,7 +2262,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberW
             self.offset += 1;
             return Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint()));
         }
-        if !matches!(self.state, 2 | 3 | 4) {
+        if !matches!(self.state, 2..=4) {
             return Err("member wire ended without an integer".into());
         }
         let request = self.request.take().ok_or_else(|| "member wire lost its request".to_string())?;
@@ -2789,6 +2838,81 @@ fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutatio
         }
     }
     panic!("demo artifact store did not reach its exact terminal-empty witness");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn apply_undo_redo_transfers_each_snapshot_root_to_one_exact_retirement_owner() {
+    let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "exact-tail-transfer", DemoSnapshot { n: Some(0) }, None)).await;
+    store.install_member_store_owners_exact(MemberStoreOwners::new(
+        Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&completed))),
+        Arc::new(DemoInitialSnapshotRetirementFactory),
+        Arc::new(DemoMutationRetirementFactory),
+        Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()),
+    ));
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+    store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+    assert_eq!(store.snapshot_ref().n, Some(7));
+    close_demo_artifact_store(&mut store);
+    assert_eq!(completed.load(std::sync::atomic::Ordering::SeqCst), 3, "displaced post-apply, retained pre-redo tail, and live post-redo roots each retire exactly once");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn store_close_waits_for_a_live_snapshot_read_then_retires_its_returned_owner() {
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "live-reader-close", DemoSnapshot { n: Some(0) }, None)).await;
+    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], description: None }).await.expect("apply");
+    let read = store.snapshot_read().expect("exact live snapshot read");
+    let mut blocked = false;
+    for _ in 0..4_096 {
+        match SpaceMember::close_owned_step(&mut store, 1, 512).expect("store close advances to the reader boundary") {
+            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 512),
+            SnapshotRetirementStep::Blocked => {
+                blocked = true;
+                break;
+            }
+            SnapshotRetirementStep::Complete => panic!("a live snapshot read must retain its exact root"),
+        }
+    }
+    assert!(blocked, "store close observes the live reader before detaching its current root");
+    drop(read);
+    close_demo_artifact_store(&mut store);
+}
+
+#[test]
+fn returned_snapshot_read_releases_an_alias_before_the_displaced_root_and_retires_a_unique_fallback() {
+    let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let canonical = Arc::new(DemoSnapshot { n: Some(1) });
+    let mut displaced = ExactDemoSnapshotRetirement { owner: Some(Arc::clone(&canonical)), value: None, completed: Arc::clone(&completed) };
+    assert_eq!(displaced.close_step(1, 512).expect("displaced root observes the returned alias"), SnapshotRetirementStep::Blocked);
+    let mut returned = ReturnedSnapshotReadRetirement::new(canonical, Arc::new(DemoInitialSnapshotRetirementFactory));
+    assert_eq!(returned.close_step(1, 512).expect("returned read releases only its alias"), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+    assert!(returned.terminal_is_empty());
+    drop(returned);
+    drive_retirement_terminal(Box::new(displaced));
+    assert_eq!(completed.load(std::sync::atomic::Ordering::SeqCst), 1);
+
+    let mut unique = ReturnedSnapshotReadRetirement::new(Arc::new(DemoSnapshot { n: Some(2) }), Arc::new(DemoInitialSnapshotRetirementFactory));
+    assert_eq!(unique.close_step(1, 512).expect("last returned read transfers its unique value"), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    drive_retirement_terminal(Box::new(unique));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn store_close_releases_a_returned_read_before_its_displaced_root() {
+    let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "returned-before-displaced", DemoSnapshot { n: Some(0) }, None)).await;
+    store.install_member_store_owners_exact(MemberStoreOwners::new(
+        Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&completed))),
+        Arc::new(DemoInitialSnapshotRetirementFactory),
+        Arc::new(DemoMutationRetirementFactory),
+        Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()),
+    ));
+    let read = store.snapshot_read().expect("read captures the pre-edit root");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], description: None }).await.expect("apply displaces the captured root");
+    drop(read);
+    close_demo_artifact_store(&mut store);
+    assert_eq!(completed.load(std::sync::atomic::Ordering::SeqCst), 2, "the displaced and current roots retire exactly once each");
 }
 
 pub(super) fn demo_closable_store_owners() -> MemberStoreOwners<DemoSnapshot, DemoMutation> {

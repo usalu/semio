@@ -1,0 +1,5 @@
+# 🧬️ DeleteNode mutation payload.
+
+type DeleteNode {
+  nodeId: String!
+}

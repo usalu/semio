@@ -1,7 +1,5 @@
 //! 📐 `update-cold-formed-inputs` — atomically updates the cold-formed-inputs facet (cf_b_bar_mm, cf_t_mm, cf_k_sigma, cf_psi, cf_n_ed_kn, cf_gross_resistance_kn are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

@@ -53,7 +53,7 @@ fn absorb_tags_delta(target: &mut Option<VcsTagsDelta>, incoming: Option<VcsTags
 }
 
 impl VcsDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document fields onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &VcsArtifact) -> protocol::MutationApplyResult<VcsArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -77,9 +77,6 @@ impl VcsDiff {
             }
             if let Some(delta) = &self.tags {
                 next.tags = apply_tags_delta(&next.tags, delta).map_err(|error| error.under(["tags"]))?;
-            }
-            if let Some(list) = &self.selected_checkpoint_ids {
-                next.selected_checkpoint_ids = list.values.clone();
             }
             next
         })
@@ -132,7 +129,6 @@ impl MutationDiff<VcsSnapshot> for VcsDiff {
         take!(counter);
         take!(notes);
         take!(status);
-        take!(selected_checkpoint_ids);
     }
 }
 //#endregion 🔖️Apply

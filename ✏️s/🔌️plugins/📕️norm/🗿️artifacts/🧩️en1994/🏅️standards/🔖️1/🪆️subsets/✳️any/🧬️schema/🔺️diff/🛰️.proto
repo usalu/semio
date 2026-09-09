@@ -48,8 +48,6 @@ message En1994Diff {
   optional double n_cycles_stud = 22;
   // @state artifact
   optional double delta_tau_stud_mpa = 23;
-  // @state presence
-  optional uint32 selected_check_index = 24;
 }
 
 message En1994Artifact {
@@ -75,7 +73,6 @@ message En1994Artifact {
   double f_y_mpa = 20;
   double n_cycles_stud = 21;
   double delta_tau_stud_mpa = 22;
-  optional uint32 selected_check_index = 23;
 }
 
 message En1994StringList { repeated string values = 1; }

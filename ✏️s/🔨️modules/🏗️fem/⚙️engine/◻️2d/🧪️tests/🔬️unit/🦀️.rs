@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use crate::model::{Dof, ElementResult};
+use crate::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 
 // #region 🔖️Fixtures
 fn simply_supported_beam_doc() -> Fem2dSnapshot {
@@ -271,7 +270,7 @@ fn unknown_load_case_returns_descriptive_error() {
 #[test]
 fn example_fixture_parses_and_solves() {
     use store::ArtifactDsl;
-    let doc: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(crate::document_dsl::FEM2D_EXAMPLE_TEXT).expect("example fixture parses");
+    let doc: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM2D_EXAMPLE_TEXT).expect("example fixture parses");
     assert_eq!(doc.nodes.len(), 12);
     assert_eq!(doc.elements.len(), 9);
     assert_eq!(doc.regions.len(), 1);

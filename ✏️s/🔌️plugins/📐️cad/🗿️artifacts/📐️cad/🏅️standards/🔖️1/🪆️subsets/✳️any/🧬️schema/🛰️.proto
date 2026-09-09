@@ -31,74 +31,8 @@ message CadArtifact {
   // @state artifact
   string active_model_definition_id = 13;
   // @state presence
-  repeated string selected_object_ids = 14;
-  // @state presence
-  repeated string selected_node_ids = 15;
-  // @state presence
-  optional string active_object_id = 16;
-  // @state presence
-  CadComponentSelection component_selection = 17;
-  // @state presence
-  optional string selected_reference_model_definition_id = 18;
-  // @state presence
-  optional string selected_reference_id = 19;
-  // @state presence
-  optional string selected_primitive_id = 20;
-  // @state presence
-  optional string selected_primitive_kind = 21;
-  // @state presence
-  // @state presence
-  optional string active_example_id = 23;
-  // @state config
-  string selection_method = 24;
-  // @state config
-  string engagement_input = 25;
-  // @state config
-  string engagement_step = 26;
-  // @state config
-  optional string engagement_pane = 27;
-  // @state config
-  optional string engagement_session_json = 28;
-  // @state config
-  optional string last_finalized_interaction_id = 29;
-  // @state config
-  bool sun_enabled = 30;
-  // @state config
-  double sun_azimuth = 31;
-  // @state config
-  double sun_elevation = 32;
-  // @state config
-  double sun_intensity = 33;
-  // @state config
-  string sun_color = 34;
-  // @state config
-  CadCamera camera = 35;
-  // @state config
-  CadCamera camera_building = 36;
-  // @state config
-  CadCamera camera_energy = 37;
-  // @state config
-  CadCamera camera_structure_classic = 38;
-  // @state config
-  CadDislocateOptions dislocate_shape = 39;
-  // @state config
-  CadDislocateOptions dislocate_building = 40;
-  // @state config
-  CadDislocateOptions dislocate_energy = 41;
-  // @state config
-  CadDislocateOptions dislocate_structure_classic = 42;
   // @state config
   // @state config
-  // @state config
-  string contributions_json = 45;
-  // @state artifact
-  optional string hovered_object_id = 46;
-  // @state artifact
-  optional string hovered_target_object_id = 47;
-  // @state artifact
-  optional string hovered_target_mode = 48;
-  // @state artifact
-  optional uint32 hovered_target_id = 49;
 }
 
 message CadObject { string id = 1; }
@@ -106,9 +40,3 @@ message CadNode { string id = 1; }
 message CadReferenceList { repeated string values = 1; }
 message CadGeometry { string anchors_json = 1; }
 message CadCamera { double zoom = 1; }
-message CadComponentSelection { string mode = 1; }
-message CadDislocateOptions { bool move_enabled = 1; bool rotate_enabled = 2; }
-
-message CadStringList {
-  repeated string values = 1;
-}

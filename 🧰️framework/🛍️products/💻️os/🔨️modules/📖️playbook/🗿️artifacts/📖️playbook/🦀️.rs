@@ -243,7 +243,7 @@ pub fn eval_playbook_expr(expr: &PlaybookExpr, values: &PlaybookValues) -> DslVa
 }
 
 pub fn is_block_visible(block: &PlaybookBlock, values: &PlaybookValues) -> bool {
-    block.condition.as_ref().map_or(true, |expr| eval_playbook_expr(expr, values).as_bool().unwrap_or(false))
+    block.condition.as_ref().is_none_or(|expr| eval_playbook_expr(expr, values).as_bool().unwrap_or(false))
 }
 
 pub fn default_value_for_block(block: &PlaybookBlock) -> DslValue {

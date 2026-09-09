@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧪️ `SetSnapshot` is a TOTAL replacement, so `DocxDiff::between(base, next)` applied to

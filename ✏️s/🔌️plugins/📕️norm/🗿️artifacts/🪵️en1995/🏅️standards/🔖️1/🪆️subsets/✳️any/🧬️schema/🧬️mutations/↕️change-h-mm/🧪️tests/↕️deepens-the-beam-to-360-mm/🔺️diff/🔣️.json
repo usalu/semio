@@ -7,7 +7,7 @@
   "wMm3": null,
   "aMm2": null,
   "bMm": null,
-  "hMm": 360.0,
+  "hMm": 360,
   "fMK": null,
   "fC0K": null,
   "serviceClass": null,
@@ -19,6 +19,5 @@
   "fireDurationMin": null,
   "sectionDepthMm": null,
   "aVertMS2": null,
-  "nCyclesBridge": null,
-  "selectedCheckIndex": null
+  "nCyclesBridge": null
 }

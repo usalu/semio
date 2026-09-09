@@ -55,9 +55,9 @@
   "t10SteelSubgrade": null,
   "t10ActualThicknessMm": null,
   "t10TEdC": null,
-  "tensionComponentFUkKn": 400.0,
-  "tensionComponentFKKn": 280.0,
-  "tensionComponentNEdKn": 190.0,
+  "tensionComponentFUkKn": 400,
+  "tensionComponentFKKn": 280,
+  "tensionComponentNEdKn": 190,
   "hssWElMm3": null,
   "hssFYMpa": null,
   "hssSectionClass": null,
@@ -73,6 +73,5 @@
   "craneFZEdKn": null,
   "craneWheelContactLengthMm": null,
   "craneDispersionMm": null,
-  "craneTWMm": null,
-  "selectedCheckIndex": null
+  "craneTWMm": null
 }

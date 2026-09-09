@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::empty_wires_snapshot;
 use crate::standards::v1::subsets::any::schema::inferences::find_board_node;

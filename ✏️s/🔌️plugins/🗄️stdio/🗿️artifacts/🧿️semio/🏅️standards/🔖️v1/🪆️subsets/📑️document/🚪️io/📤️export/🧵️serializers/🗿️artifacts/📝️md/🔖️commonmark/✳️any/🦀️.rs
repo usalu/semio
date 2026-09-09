@@ -14,10 +14,10 @@
 //!   is reused verbatim as the emitted URL (round-trips through THIS pair's own deserializer,
 //!   which reads `MdInline::Image::url` back into `image_id`) so no data is silently invented.
 
-use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
-use semio_s_artifact_stdio_md::MdSnapshot;
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
+use semio_s_artifact_stdio_md::MdSnapshot;
 
 //#region 🔖️FieldMapping
 /// ✍️ One run -> its inline sequence, wrapping in `Strong`/`Emphasis`/`Link` per the run's own

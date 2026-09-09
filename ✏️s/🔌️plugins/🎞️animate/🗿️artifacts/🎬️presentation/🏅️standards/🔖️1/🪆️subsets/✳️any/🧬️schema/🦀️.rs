@@ -4,7 +4,7 @@ use crate::{AnimationChild, PresentationChild, PRESENTATION_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full presentation artifact state across the artifact, presence and config lanes.
+/// 🧬️ presentation document artifact state.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.presentation")]
@@ -17,23 +17,13 @@ pub struct PresentationArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.animation")]
     pub animation: AnimationChild,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
-    #[state(config)]
-    pub engagement_input: String,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for PresentationArtifact {
     fn default() -> Self {
-        Self {
-            schema: PRESENTATION_DOCUMENT_SCHEMA.into(),
-            presentation: crate::presentation_child_handle_and_cache(&crate::default_figure_tile_source(), &[]),
-            animation: crate::animation_child_handle(),
-            selected_ids: Vec::new(),
-            engagement_input: String::new(),
-        }
+        Self { schema: PRESENTATION_DOCUMENT_SCHEMA.into(), presentation: crate::presentation_child_handle_and_cache(&crate::default_figure_tile_source(), &[]), animation: crate::animation_child_handle() }
     }
 }
 
@@ -43,7 +33,7 @@ impl PresentationArtifact {
         crate::PresentationSnapshot { schema: self.schema.clone(), presentation: self.presentation.clone(), animation: self.animation.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::PresentationSnapshot) -> Self {
         Self { schema: snapshot.schema, presentation: snapshot.presentation, animation: snapshot.animation, ..Self::default() }
     }
@@ -62,13 +52,7 @@ impl PresentationArtifact {
 pub fn presentation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.animate.presentation",
-        artifact: schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -77,11 +61,7 @@ pub fn presentation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
         diff: schema::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
+            rust: include_str!("🔺️diff/🦀️.rs"), typescript: include_str!("🔺️diff/🟦️.ts"), graphql: include_str!("🔺️diff/🔗️.graphql"), json_schema: include_str!("🔺️diff/🔣️.json"), proto: include_str!("🔺️diff/🛰️.proto")
         },
         mutations: schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
@@ -237,10 +217,7 @@ pub fn split_figure_grid(spec: SplitFigureGridSpec<'_>) -> Vec<SplitGridCell> {
     let mut cells = Vec::new();
     for row in 0..rows {
         for column in 0..columns {
-            cells.push(SplitGridCell {
-                key: format!("{}-r{row}-c{column}", spec.key_prefix),
-                crop: crate::FigureTileFrame { x: frame.x + column as f64 * crop_width, y: frame.y + row as f64 * crop_height, width: crop_width, height: crop_height },
-            });
+            cells.push(SplitGridCell { key: format!("{}-r{row}-c{column}", spec.key_prefix), crop: crate::FigureTileFrame { x: frame.x + column as f64 * crop_width, y: frame.y + row as f64 * crop_height, width: crop_width, height: crop_height } });
         }
     }
     let _ = (cell_width, cell_height);

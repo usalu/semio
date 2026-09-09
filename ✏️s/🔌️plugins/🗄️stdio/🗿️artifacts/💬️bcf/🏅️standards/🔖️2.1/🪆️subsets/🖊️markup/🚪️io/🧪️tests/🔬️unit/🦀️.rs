@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::schema::diff::BcfDiff;
 use crate::schema::mutations::{
-    BcfMutation, apply_bcf_mutation, insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_snapshot, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components,
-    set_viewpoint_snapshot,
+    apply_bcf_mutation, insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_snapshot, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components, set_viewpoint_snapshot,
+    BcfMutation,
 };
 use crate::standards::v2_1::subsets::any::schema::snapshot::{demo_bcf_snapshot, empty_bcf_snapshot};
 use protocol::command::DiffAlgebra;

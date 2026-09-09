@@ -109,5 +109,9 @@ fn inverse_of_a_total_miss_is_an_empty_plan() {
 fn semantics_bind_this_fixture_to_delete_tiles() {
     let semantics = <PresentationMutation as protocol::SemanticMutation<PresentationSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "tiles", "delete-tiles", "DeletedTiles"), "the fixture must be bound to the plural delete-tiles descriptor");
-    assert_eq!(<PresentationMutation as protocol::SemanticMutation<PresentationSnapshot>>::target(&mutation()), vec!["tiles".to_string(), "t-alpha".to_string(), "t-omega".to_string()], "delete-tiles addresses the collection then every id it was given");
+    assert_eq!(
+        <PresentationMutation as protocol::SemanticMutation<PresentationSnapshot>>::target(&mutation()),
+        vec!["tiles".to_string(), "t-alpha".to_string(), "t-omega".to_string()],
+        "delete-tiles addresses the collection then every id it was given"
+    );
 }

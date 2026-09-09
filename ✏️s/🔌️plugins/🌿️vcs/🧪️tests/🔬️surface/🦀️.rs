@@ -1,4 +1,3 @@
-
 //! 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5 —
 //! `semio_framework_plugin::testkit::{assert_viewer_never_mutates, assert_editor_and_viewer_share_dialect}`
 //! now exist for real (landed by lane 0-F, see `📓️w0-f-report.md`), so this uses them directly

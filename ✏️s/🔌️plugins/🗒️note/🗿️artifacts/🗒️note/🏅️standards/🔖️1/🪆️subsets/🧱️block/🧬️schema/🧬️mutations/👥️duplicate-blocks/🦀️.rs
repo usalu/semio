@@ -1,7 +1,7 @@
 //! 👥 Note mutation — `DuplicateBlocks`: copies several blocks at once (multi-select duplicate).
 
-use crate::{NoteDiff, NoteSnapshot};
 use crate::schema::mutations::NoteMutation;
+use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

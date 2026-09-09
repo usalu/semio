@@ -19,13 +19,13 @@ pub struct Block5dSnapshot {
     #[state(artifact)]
     pub part_kind: BlockKindIdentity,
     #[dsl(block)]
-    #[value(default, rename = "2d")]
-    #[cfg_attr(test, serde(default, rename = "2d"))]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub part_2d: Block5dPart2d,
     #[dsl(block)]
-    #[value(default, rename = "3d")]
-    #[cfg_attr(test, serde(default, rename = "3d"))]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub part_3d: Block5dPart3d,
     #[value(default)]

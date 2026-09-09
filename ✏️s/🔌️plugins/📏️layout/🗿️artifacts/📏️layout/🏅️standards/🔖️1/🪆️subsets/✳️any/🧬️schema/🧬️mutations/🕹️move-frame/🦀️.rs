@@ -1,9 +1,8 @@
 //! 🕹️ `move-frame` — absolute spatial reposition of a frame's `bounds.x`/`bounds.y`.
 
-
-use crate::{FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -35,7 +34,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for MoveFrame {
 }
 //#endregion 🕹️MoveFrame
 
-
 //#region 🕹️MoveFrame
 pub fn diff_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
@@ -59,7 +57,6 @@ pub fn diff_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> protocol::
     })
 }
 //#endregion 🕹️MoveFrame
-
 
 //#region 🕹️MoveFrame
 pub fn inverse_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

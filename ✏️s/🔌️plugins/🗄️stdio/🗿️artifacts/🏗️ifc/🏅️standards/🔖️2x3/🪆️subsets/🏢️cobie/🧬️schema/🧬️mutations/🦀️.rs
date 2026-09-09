@@ -32,9 +32,9 @@
 use crate::standards::v2x3::mvd;
 use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use semio_s_artifact_stdio_step::engine::part21::Part21Value;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
+use semio_s_artifact_stdio_step::engine::part21::Part21Value;
 
 pub use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
 
@@ -85,20 +85,20 @@ pub struct CobieTypeAssignment {
     pub relating_type: u64,
 }
 
-/// 📐️ Typed Basic FM Handover mutation for `stdio.ifc.2x3`.
-//#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "👁️set-view-definition/🦀️.rs"]
-pub mod set_view_definition;
 #[path = "🏢️set-facility-name/🦀️.rs"]
 pub mod set_facility_name;
 #[path = "📏️set-floor-elevation/🦀️.rs"]
 pub mod set_floor_elevation;
+/// 📐️ Typed Basic FM Handover mutation for `stdio.ifc.2x3`.
+//#region 🔖️Leaves
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 #[path = "🚪️set-space/🦀️.rs"]
 pub mod set_space;
 #[path = "🧩️set-type-assignment/🦀️.rs"]
 pub mod set_type_assignment;
+#[path = "👁️set-view-definition/🦀️.rs"]
+pub mod set_view_definition;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -170,14 +170,7 @@ fn space_args(row: &CobieSpaceRow) -> Vec<Part21Value> {
 }
 
 fn type_assignment_args(row: &CobieTypeAssignment) -> Vec<Part21Value> {
-    vec![
-        Part21Value::Str(row.global_id.clone()),
-        mvd::optional(row.owner_history.map(Part21Value::Ref)),
-        Part21Value::Unset,
-        Part21Value::Unset,
-        mvd::reference_list(&row.related_objects),
-        Part21Value::Ref(row.relating_type),
-    ]
+    vec![Part21Value::Str(row.global_id.clone()), mvd::optional(row.owner_history.map(Part21Value::Ref)), Part21Value::Unset, Part21Value::Unset, mvd::reference_list(&row.related_objects), Part21Value::Ref(row.relating_type)]
 }
 
 fn edit(base: &Ifc2x3Snapshot, mutation: &Ifc2x3CobieMutation) -> Result<Ifc2x3Snapshot, String> {
@@ -229,52 +222,48 @@ fn edit(base: &Ifc2x3Snapshot, mutation: &Ifc2x3CobieMutation) -> Result<Ifc2x3S
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &Ifc2x3CobieMutation, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
-        match this {
-            Ifc2x3CobieMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
-                Ok(()) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot)),
-                Err(message) => rejected(message),
-            },
-            _ => match edit(base, this) {
-                Ok(next) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, &next)),
-                Err(message) => rejected(message),
-            },
-        }
+    match this {
+        Ifc2x3CobieMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
+            Ok(()) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot)),
+            Err(message) => rejected(message),
+        },
+        _ => match edit(base, this) {
+            Ok(next) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, &next)),
+            Err(message) => rejected(message),
+        },
     }
+}
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &Ifc2x3CobieMutation, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3CobieMutation> {
-        match this {
-            Ifc2x3CobieMutation::SetSnapshot(_) => vec![Ifc2x3CobieMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-            Ifc2x3CobieMutation::SetViewDefinition(_) => vec![Ifc2x3CobieMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: mvd::view_definition_name(base).unwrap_or_default() })],
-            Ifc2x3CobieMutation::SetFacilityName(set_facility_name::SetFacilityName { building, .. }) => {
-                vec![Ifc2x3CobieMutation::SetFacilityName(set_facility_name::SetFacilityName { building: *building, name: mvd::argument(base, *building, NAME_INDEX).and_then(Part21Value::as_str).map(str::to_string) })]
-            }
-            Ifc2x3CobieMutation::SetFloorElevation(set_floor_elevation::SetFloorElevation { storey, .. }) => {
-                vec![Ifc2x3CobieMutation::SetFloorElevation(set_floor_elevation::SetFloorElevation { storey: *storey, elevation: mvd::argument(base, *storey, STOREY_ELEVATION_INDEX).and_then(Part21Value::as_real) })]
-            }
-            Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id, .. }) => {
-                let space = base.document.instance(*id).filter(|instance| instance.is_type(SPACE)).map(|instance| CobieSpaceRow {
-                    global_id: mvd::argument(base, *id, 0).and_then(Part21Value::as_str).unwrap_or_default().to_string(),
-                    name: mvd::argument(base, *id, NAME_INDEX)
-                        .and_then(Part21Value::as_str)
-                        .or_else(|| mvd::argument(base, *id, SPACE_LONG_NAME_INDEX).and_then(Part21Value::as_str))
-                        .unwrap_or_default()
-                        .to_string(),
-                    placement: mvd::reference_argument(base, instance.id, PRODUCT_PLACEMENT_INDEX).unwrap_or_default(),
-                });
-                vec![Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: *id, space })]
-            }
-            Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id, .. }) => {
-                let assignment = base.document.instance(*id).filter(|instance| instance.is_type(TYPE_ASSIGNMENT)).map(|_| CobieTypeAssignment {
-                    global_id: mvd::argument(base, *id, 0).and_then(Part21Value::as_str).unwrap_or_default().to_string(),
-                    owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
-                    related_objects: mvd::reference_list_ids(mvd::argument(base, *id, RELATED_OBJECTS_INDEX)),
-                    relating_type: mvd::reference_argument(base, *id, RELATING_TYPE_INDEX).unwrap_or_default(),
-                });
-                vec![Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id: *id, assignment })]
-            }
+    match this {
+        Ifc2x3CobieMutation::SetSnapshot(_) => vec![Ifc2x3CobieMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        Ifc2x3CobieMutation::SetViewDefinition(_) => vec![Ifc2x3CobieMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: mvd::view_definition_name(base).unwrap_or_default() })],
+        Ifc2x3CobieMutation::SetFacilityName(set_facility_name::SetFacilityName { building, .. }) => {
+            vec![Ifc2x3CobieMutation::SetFacilityName(set_facility_name::SetFacilityName { building: *building, name: mvd::argument(base, *building, NAME_INDEX).and_then(Part21Value::as_str).map(str::to_string) })]
+        }
+        Ifc2x3CobieMutation::SetFloorElevation(set_floor_elevation::SetFloorElevation { storey, .. }) => {
+            vec![Ifc2x3CobieMutation::SetFloorElevation(set_floor_elevation::SetFloorElevation { storey: *storey, elevation: mvd::argument(base, *storey, STOREY_ELEVATION_INDEX).and_then(Part21Value::as_real) })]
+        }
+        Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id, .. }) => {
+            let space = base.document.instance(*id).filter(|instance| instance.is_type(SPACE)).map(|instance| CobieSpaceRow {
+                global_id: mvd::argument(base, *id, 0).and_then(Part21Value::as_str).unwrap_or_default().to_string(),
+                name: mvd::argument(base, *id, NAME_INDEX).and_then(Part21Value::as_str).or_else(|| mvd::argument(base, *id, SPACE_LONG_NAME_INDEX).and_then(Part21Value::as_str)).unwrap_or_default().to_string(),
+                placement: mvd::reference_argument(base, instance.id, PRODUCT_PLACEMENT_INDEX).unwrap_or_default(),
+            });
+            vec![Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: *id, space })]
+        }
+        Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id, .. }) => {
+            let assignment = base.document.instance(*id).filter(|instance| instance.is_type(TYPE_ASSIGNMENT)).map(|_| CobieTypeAssignment {
+                global_id: mvd::argument(base, *id, 0).and_then(Part21Value::as_str).unwrap_or_default().to_string(),
+                owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
+                related_objects: mvd::reference_list_ids(mvd::argument(base, *id, RELATED_OBJECTS_INDEX)),
+                relating_type: mvd::reference_argument(base, *id, RELATING_TYPE_INDEX).unwrap_or_default(),
+            });
+            vec![Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id: *id, assignment })]
         }
     }
+}
 //#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests

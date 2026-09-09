@@ -5,7 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of process3d view state (selection, hover, face pick, camera, active utility).
+/// 👥️ Shareable live subset of process3d engagement and camera state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "process3d.presence")]
@@ -17,12 +17,11 @@ pub struct Process3dPresence {
     #[dsl(coord)]
     pub camera_target: [f64; 3],
     pub camera_fov: f64,
-    pub active_utility_id: String,
 }
 
 impl Default for Process3dPresence {
     fn default() -> Self {
-        Self { engagement_input: String::new(), camera_position: [3.0, -3.0, 2.0], camera_target: [0.0, 0.0, 0.0], camera_fov: 45.0, active_utility_id: crate::editor::process3d::config::PROCESS3D_DEFAULT_UTILITY.into() }
+        Self { engagement_input: String::new(), camera_position: [3.0, -3.0, 2.0], camera_target: [0.0, 0.0, 0.0], camera_fov: 45.0 }
     }
 }
 
@@ -99,9 +98,22 @@ impl Mutation<Process3dPresence> for Process3dPresenceMutation {
     /// no directory on disk — this enum has no `👥️presence/<slug>` leaf triad of its own, so the
     /// entry is a metadata placeholder to satisfy `protocol::Mutation`, matching `🪵️sourcing`'s
     /// own presence precedent.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot",
+        semantic_kind: "snapshot",
+        display_name: "Snapshot",
+        emoji: "📄",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {

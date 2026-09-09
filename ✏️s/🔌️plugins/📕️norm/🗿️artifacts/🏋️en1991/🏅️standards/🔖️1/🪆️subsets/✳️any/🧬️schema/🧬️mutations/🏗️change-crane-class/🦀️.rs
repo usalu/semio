@@ -1,6 +1,5 @@
 //! 🪝 `change-crane-class` — sets the En1991 crane class scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

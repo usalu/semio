@@ -1,4 +1,3 @@
-
 use super::*;
 
 const VALID: &str = include_str!("../../🧫️fixtures/✅️valid/🔣️.json");

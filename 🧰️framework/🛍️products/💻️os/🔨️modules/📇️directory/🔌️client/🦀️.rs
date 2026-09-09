@@ -19,13 +19,14 @@
 //! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
 
 use super::schema::{
-    lease_fields_from_plan_v1, same_lease_fields_v1, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEvent, DirectoryEventPageV1, DirectorySpaceAdministrationCapabilitiesV1,
-    DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectoryStreamMessage,
-    DocumentBrowserActorSourceV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenBrowserActorV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1,
-    DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1,
-    DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, GisMapInferenceApprovalReceiptV1, GisMapInferenceApprovalRequestV1, GisMapInferenceEventPageV1, GisMapInferenceJobReceiptV1, GisMapInferenceJobRequestV1,
-    GisMapInferencePortCodeV1, MemberSpaceViewV1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES,
-    DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR, GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
+    DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES,
+    DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEvent, DirectoryEventPageV1,
+    DirectorySessionAuthorityV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1,
+    DirectorySpaceListEntryV1, DirectorySpaceRole, DirectoryStreamMessage, DocumentBrowserActorSourceV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1,
+    DocumentOpenBrowserActorV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanV1,
+    DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR, GIS_MAP_INFERENCE_REQUEST_MAX_BYTES,
+    GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, GisMapInferenceApprovalReceiptV1, GisMapInferenceApprovalRequestV1, GisMapInferenceEventPageV1, GisMapInferenceJobReceiptV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, MemberSpaceViewV1,
+    lease_fields_from_plan_v1, same_lease_fields_v1,
 };
 use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_async::OperationContext;
@@ -204,16 +205,8 @@ pub struct CanonicalDirectoryCommandReceiptV1 {
     pub receipt: DirectoryCommandReceiptV1,
 }
 
-/// 🪪️ `GET /auth/sessions/me`'s body (contract §C2, camelCase — this route is NEW this wave).
-#[derive(Clone, Debug, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct SessionView {
-    pub user_id: String,
-    pub email: String,
-    pub display_name: String,
-    #[value(rename = "expiresAt")]
-    pub expires_at_ms: i64,
-}
+/// 🪪️ `GET /auth/sessions/me`'s exact server-bound public authority.
+pub type SessionView = DirectorySessionAuthorityV1;
 
 /// 🎫️ `POST /auth/sessions`'s body. Wire is snake_case (`token`, `user_id`), NOT this contract's
 /// general camelCase convention: this route predates the wave (`🌎️hub/📦️bin.rs`'s
@@ -876,11 +869,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
 
     pub async fn spaces(&self, ctx: &OperationContext) -> Result<Vec<DirectorySpaceListEntryV1>, DirectoryClientError> {
         let spaces: Vec<DirectorySpaceListEntryV1> = self.request_json(ctx, HttpMethod::Get, "/directory/spaces", None).await?;
-        if spaces.iter().all(DirectorySpaceListEntryV1::validate) {
-            Ok(spaces)
-        } else {
-            Err(DirectoryClientError::Decode("directory space list access discriminator mismatch".into()))
-        }
+        if spaces.iter().all(DirectorySpaceListEntryV1::validate) { Ok(spaces) } else { Err(DirectoryClientError::Decode("directory space list access discriminator mismatch".into())) }
     }
 
     /// 🏛️ Fetches one bounded canonical administration page for exactly one space. `cursor`
@@ -962,7 +951,21 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
     }
 
     pub async fn me(&self, ctx: &OperationContext) -> Result<SessionView, DirectoryClientError> {
-        self.request_json(ctx, HttpMethod::Get, "/auth/sessions/me", None).await
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let response = self.transport.http(ctx, HttpMethod::Get, &self.url("/auth/sessions/me"), bearer, None).await?;
+        match response.status {
+            401 => return Err(DirectoryClientError::Unauthorized),
+            200..=299 => {}
+            status => return Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
+        if response.body.len() > DIRECTORY_SESSION_AUTHORITY_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("directory session authority response exceeded 2 KiB".into()));
+        }
+        let source = String::from_utf8(response.body).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
+        DirectorySessionAuthorityV1::parse_canonical_json(&source).ok_or_else(|| DirectoryClientError::Decode("directory session authority response is not canonical".into()))
     }
 
     /// 🪪️ Fetches the authenticated server-selected execution-target manifest for one exact
@@ -1064,7 +1067,8 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
     /// replay can never mint a second job behind the operator's back.
     pub async fn submit_gis_map_inference_job(&self, ctx: &OperationContext, scope: &DocumentScope, request: &GisMapInferenceJobRequestV1) -> Result<GisMapInferenceJobReceiptV1, GisMapInferencePortCodeV1> {
         let body = crate::os_pack::json::to_json_string(request).into_bytes();
-        self.gis_map_inference_call(ctx, HttpMethod::Post, scope, "/jobs", Some(body)).await
+        let receipt: GisMapInferenceJobReceiptV1 = self.gis_map_inference_call(ctx, HttpMethod::Post, scope, "/jobs", Some(body)).await?;
+        receipt.validate().then_some(receipt).ok_or(GisMapInferencePortCodeV1::Invalid)
     }
 
     /// 📃 Reads one bounded owner-private page after an exact progress cursor.
@@ -1072,18 +1076,21 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         if after > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR {
             return Err(GisMapInferencePortCodeV1::Bounds);
         }
-        self.gis_map_inference_call(ctx, HttpMethod::Get, scope, &format!("/jobs/{}/events?after={after}", encode_url_component(job_id)), None).await
+        let page: GisMapInferenceEventPageV1 = self.gis_map_inference_call(ctx, HttpMethod::Get, scope, &format!("/jobs/{}/events?after={after}", encode_url_component(job_id)), None).await?;
+        page.validate(job_id).then_some(page).ok_or(GisMapInferencePortCodeV1::Invalid)
     }
 
     /// 🛑 Requests cancellation and returns the server's own next page; the caller never assumes it.
     pub async fn cancel_gis_map_inference_job(&self, ctx: &OperationContext, scope: &DocumentScope, job_id: &str) -> Result<GisMapInferenceEventPageV1, GisMapInferencePortCodeV1> {
-        self.gis_map_inference_call(ctx, HttpMethod::Post, scope, &format!("/jobs/{}/cancel", encode_url_component(job_id)), None).await
+        let page: GisMapInferenceEventPageV1 = self.gis_map_inference_call(ctx, HttpMethod::Post, scope, &format!("/jobs/{}/cancel", encode_url_component(job_id)), None).await?;
+        page.validate(job_id).then_some(page).ok_or(GisMapInferencePortCodeV1::Invalid)
     }
 
     /// ✅ Approves exactly the offered proposal, echoing back the hash the server itself published.
     pub async fn approve_gis_map_inference_job(&self, ctx: &OperationContext, scope: &DocumentScope, request: &GisMapInferenceApprovalRequestV1) -> Result<GisMapInferenceApprovalReceiptV1, GisMapInferencePortCodeV1> {
         let body = crate::os_pack::json::to_json_string(request).into_bytes();
-        self.gis_map_inference_call(ctx, HttpMethod::Post, scope, &format!("/jobs/{}/approval", encode_url_component(&request.job_id)), Some(body)).await
+        let receipt: GisMapInferenceApprovalReceiptV1 = self.gis_map_inference_call(ctx, HttpMethod::Post, scope, &format!("/jobs/{}/approval", encode_url_component(&request.job_id)), Some(body)).await?;
+        receipt.validate(&request.job_id, &request.proposal_hash).then_some(receipt).ok_or(GisMapInferencePortCodeV1::Invalid)
     }
     //#endregion 💡️InferencePort
 
@@ -1437,7 +1444,7 @@ pub mod native {
     use std::net::{TcpStream, ToSocketAddrs};
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
-    use tokio_tungstenite::tungstenite::{self, client::IntoClientRequest, stream::MaybeTlsStream, Message};
+    use tokio_tungstenite::tungstenite::{self, Message, client::IntoClientRequest, stream::MaybeTlsStream};
 
     const UREQ_HTTP_URL_BYTES: usize = 2_048;
     const UREQ_HTTP_HEADER_ITEMS: usize = 64;
@@ -1800,10 +1807,10 @@ pub mod native {
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub mod browser {
     use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
-    use semio_framework_async::browser::JsFuture;
     use semio_framework_async::OperationContext;
-    use wasm_bindgen::prelude::*;
+    use semio_framework_async::browser::JsFuture;
     use wasm_bindgen::JsCast;
+    use wasm_bindgen::prelude::*;
     use web_sys::{BinaryType, CloseEvent, MessageEvent, RequestInit, Response, WebSocket};
 
     enum BrowserDirectoryFrame {

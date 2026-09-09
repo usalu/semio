@@ -1,8 +1,8 @@
 //! 📄️ Process 3d play app commands — wholesale document swaps (load example / set document).
 
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::schema::{default_document, plate_document};
 use crate::{op::Process3dMutation, Process3dSnapshot};
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

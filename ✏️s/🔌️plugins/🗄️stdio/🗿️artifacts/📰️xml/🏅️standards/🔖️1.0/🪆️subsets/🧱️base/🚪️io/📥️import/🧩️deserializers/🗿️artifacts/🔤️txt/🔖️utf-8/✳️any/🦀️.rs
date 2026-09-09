@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.xml` from stdio.txt.
 
-use semio_s_artifact_stdio_txt::TxtSnapshot;
 use crate::XmlSnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.

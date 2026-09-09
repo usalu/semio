@@ -29,9 +29,6 @@ export interface Block5dDiff {
   camera3d?: BlockCamera3d;
   /** @state artifact */
   meta?: BlockMeta;
-  /** @state presence */
-  selectedIds?: Block5dStringList;
-  /** @state config */
 }
 
 export interface BlockKindIdentity { [key: string]: unknown; }

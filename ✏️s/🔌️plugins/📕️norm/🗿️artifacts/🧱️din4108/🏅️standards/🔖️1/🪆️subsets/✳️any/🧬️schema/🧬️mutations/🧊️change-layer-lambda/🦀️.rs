@@ -1,7 +1,6 @@
 //! 🧮️ `change-layer-lambda` — sets one construction layer's thermal conductivity
 //! `lambda_w_mk`, addressed by BASE-state index.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

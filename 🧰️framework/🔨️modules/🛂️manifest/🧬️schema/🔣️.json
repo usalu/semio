@@ -394,6 +394,29 @@
           }
         }
       }
+    },
+    "AppRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "appId"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        }
+      }
+    },
+    "AppRole": {
+      "type": "string",
+      "enum": [
+        "viewer",
+        "editor"
+      ]
     }
   }
 }

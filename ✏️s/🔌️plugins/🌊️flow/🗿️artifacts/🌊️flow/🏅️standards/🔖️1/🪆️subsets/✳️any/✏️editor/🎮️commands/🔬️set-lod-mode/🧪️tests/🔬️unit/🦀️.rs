@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::editor::flow::testkit::{dispatch, flow_app, render};
-use crate::editor::flow::{FLOW_PLAY_BODY_MAIN, FlowCommand};
+use crate::editor::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
 
 #[semio_framework_async_macros::async_test]
 async fn set_lod_mode_rejects_unknown_and_accepts_known() {

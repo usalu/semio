@@ -2,11 +2,11 @@
 use crate::schema::diff::XmlDiff;
 use crate::XmlSnapshot;
 
-pub use super::set_declaration::{SetDeclarationMutation, SetDeclarationPayload};
-pub use super::set_doctype::{SetDoctypeMutation, SetDoctypePayload};
 pub use super::insert_element::{InsertElementMutation, InsertElementPayload};
 pub use super::remove_element::{RemoveElementMutation, RemoveElementPayload};
 pub use super::set_attribute::{SetAttributeMutation, SetAttributePayload};
+pub use super::set_declaration::{SetDeclarationMutation, SetDeclarationPayload};
+pub use super::set_doctype::{SetDoctypeMutation, SetDoctypePayload};
 pub use super::set_text::{SetTextMutation, SetTextPayload};
 pub use crate::schema::mutation_support::XmlNodePath;
 
@@ -24,7 +24,9 @@ pub enum XmlMutation {
 
 pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) -> protocol::MutationOutcome<XmlDiff> {
     let outcome = <XmlMutation as protocol::Mutation<XmlSnapshot>>::diff(mutation, snapshot);
-    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), snapshot) { *snapshot = next; }
+    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        *snapshot = next;
+    }
     outcome
 }
 

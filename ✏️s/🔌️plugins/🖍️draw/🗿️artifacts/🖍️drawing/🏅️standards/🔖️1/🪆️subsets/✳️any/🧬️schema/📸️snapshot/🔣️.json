@@ -3,13 +3,24 @@
   "$id": "https://semio.tech/schema/s/drawing/drawing/snapshot.json",
   "title": "DrawingSnapshot",
   "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "layers"],
   "properties": {
-    "schema": {
-      "type": "string",
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "id": { "type": "string", "x-semio-state": "artifact" },
+    "title": { "type": "string", "x-semio-state": "artifact" },
+    "layers": {
+      "type": "array",
+      "items": { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode" },
       "x-semio-state": "artifact"
     },
-    "value": {
-      "type": "string",
+    "assets": {
+      "type": "object",
+      "additionalProperties": { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingImageAsset" },
+      "x-semio-state": "artifact"
+    },
+    "artboard": {
+      "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingArtboard",
       "x-semio-state": "artifact"
     }
   }

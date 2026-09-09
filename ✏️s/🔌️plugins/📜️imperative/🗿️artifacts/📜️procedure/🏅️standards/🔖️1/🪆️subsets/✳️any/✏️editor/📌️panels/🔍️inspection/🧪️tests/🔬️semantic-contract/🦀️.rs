@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn project(node: semio_framework_plugin::BuiltNode) -> serde_json::Value {

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::wfc_engine::model::ModelBuilder;
 use crate::wfc_engine::topology::{GraphTopology, GraphTopologyBuilder};
@@ -95,7 +94,13 @@ fn unsatisfiable_child(_node: NodeId, _pattern: PatternId) -> (CompiledModel, Gr
 fn reports_which_node_child_failed_at() {
     let (model, topo) = checkerboard(3);
     let config = SearchConfig::default();
-    let child_model_for = |node: NodeId, pattern: PatternId| -> (CompiledModel, GraphTopology, SearchConfig) { if node == NodeId(1) { unsatisfiable_child(node, pattern) } else { always_satisfiable_child(node, pattern) } };
+    let child_model_for = |node: NodeId, pattern: PatternId| -> (CompiledModel, GraphTopology, SearchConfig) {
+        if node == NodeId(1) {
+            unsatisfiable_child(node, pattern)
+        } else {
+            always_satisfiable_child(node, pattern)
+        }
+    };
 
     let outcome = solve_hierarchy(&model, &topo, &config, 1, child_model_for);
     assert!(matches!(outcome, HierarchyOutcome::ChildFailed { node: NodeId(1) }));

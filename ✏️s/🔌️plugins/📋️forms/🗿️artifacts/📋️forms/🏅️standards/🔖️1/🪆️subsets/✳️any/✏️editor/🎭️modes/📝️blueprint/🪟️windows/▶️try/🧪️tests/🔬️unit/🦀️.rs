@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::forms::FORMS_PLAY_BODY_TRY as BODY_TRY;
 use crate::editor::forms::testkit::{building_component_contributions, building_component_question, forms_app, render as render_body};
+use crate::editor::forms::FORMS_PLAY_BODY_TRY as BODY_TRY;
 
 #[semio_framework_async_macros::async_test]
 async fn renders_try_wizard() {

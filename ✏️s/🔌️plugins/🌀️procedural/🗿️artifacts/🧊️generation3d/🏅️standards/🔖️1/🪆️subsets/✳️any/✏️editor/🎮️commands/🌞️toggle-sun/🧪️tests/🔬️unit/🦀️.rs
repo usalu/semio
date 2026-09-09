@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::generation3d::Generation3dCommand;
 use crate::editor::generation3d::testkit::{app, dispatch};
+use crate::editor::generation3d::Generation3dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn toggle_sun_never_mutates_the_document() {

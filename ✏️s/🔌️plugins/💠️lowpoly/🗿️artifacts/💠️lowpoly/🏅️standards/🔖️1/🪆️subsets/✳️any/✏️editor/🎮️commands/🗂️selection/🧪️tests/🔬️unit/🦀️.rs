@@ -1,6 +1,5 @@
-
-use crate::editor::lowpoly::LowpolyCommand;
 use crate::editor::lowpoly::testkit::{app, dispatch};
+use crate::editor::lowpoly::LowpolyCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_object_is_view_state_and_emits_no_operations() {

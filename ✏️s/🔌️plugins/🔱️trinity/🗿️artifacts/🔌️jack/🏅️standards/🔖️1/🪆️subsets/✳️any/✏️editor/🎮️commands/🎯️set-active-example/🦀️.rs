@@ -1,8 +1,8 @@
 //! 🔎️ 🔎️ Trinity Jack app command — `set-active-example`.
 
+use crate::editor::jack::config::JackConfigMutation;
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::JackSnapshot;
-use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::Emit;
 use store::ArtifactDsl;
 
@@ -25,14 +25,7 @@ pub(crate) fn set_active_example(example_id: &str) -> Emit<TrinityGraphMutation,
     match fixture_dsl_for_preset(example_id).and_then(|dsl| JackSnapshot::parse_dsl(dsl).ok()) {
         Some(next) => {
             let query = preset_query(example_id).to_string();
-            Emit {
-                effects: vec![crate::editor::jack::reset_document_effect(&next)],
-                config_mutations: vec![
-                    JackConfigMutation::SetCamera(crate::editor::jack::config::SetCamera { camera: next.camera }),
-                    JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: query }),
-                ],
-                ..Default::default()
-            }
+            Emit { effects: vec![crate::editor::jack::reset_document_effect(&next)], config_mutations: vec![JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: query })], ..Default::default() }
         }
         None => Emit::default(),
     }

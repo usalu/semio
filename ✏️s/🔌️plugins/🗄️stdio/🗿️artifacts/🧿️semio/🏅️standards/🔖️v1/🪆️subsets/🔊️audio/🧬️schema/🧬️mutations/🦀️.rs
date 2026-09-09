@@ -10,34 +10,34 @@
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use crate::standards::v1::subsets::audio::schema::diff::{
     self, dec_channel, dec_f32_list, dec_format, dec_snapshot, dec_tag, enc_channel, enc_f32_list, enc_format, enc_snapshot, enc_tag, hex_decode_string, hex_encode, parse_u32, parse_usize, SemioAudioChannelDiff, SemioAudioDiff,
 };
 use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
 /// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::{Mutation, OpBinary, OpText};
 
 //#region 🔖️Mutations
+#[path = "🎙️insert-channel/🦀️.rs"]
+pub mod insert_channel;
+#[path = "🏷️insert-tag/🦀️.rs"]
+pub mod insert_tag;
+#[path = "🔇remove-channel/🦀️.rs"]
+pub mod remove_channel;
+#[path = "✂️remove-tag/🦀️.rs"]
+pub mod remove_tag;
+#[path = "🌊set-channel-samples/🦀️.rs"]
+pub mod set_channel_samples;
+#[path = "💽set-format/🦀️.rs"]
+pub mod set_format;
+#[path = "🎚️set-sample-rate/🦀️.rs"]
+pub mod set_sample_rate;
 /// 📐️ Typed content mutation for `s.stdio.semio.audio`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🎚️set-sample-rate/🦀️.rs"]
-pub mod set_sample_rate;
-#[path = "💽set-format/🦀️.rs"]
-pub mod set_format;
-#[path = "🎙️insert-channel/🦀️.rs"]
-pub mod insert_channel;
-#[path = "🔇remove-channel/🦀️.rs"]
-pub mod remove_channel;
-#[path = "🌊set-channel-samples/🦀️.rs"]
-pub mod set_channel_samples;
-#[path = "🏷️insert-tag/🦀️.rs"]
-pub mod insert_tag;
-#[path = "✂️remove-tag/🦀️.rs"]
-pub mod remove_tag;
 #[path = "💬set-tag-value/🦀️.rs"]
 pub mod set_tag_value;
 //#endregion 🔖️Leaves
@@ -99,7 +99,9 @@ pub(crate) fn agg_diff(this: &SemioAudioMutation, base: &SemioAudioSnapshot) -> 
             let d = SemioAudioChannelDiff { samples: Some(samples.clone()) };
             SemioAudioDiff { channels: Some(IndexedTripleDiff { modified: vec![IndexModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
         }
-        SemioAudioMutation::InsertTag(insert_tag::InsertTag { index, tag }) => SemioAudioDiff { tags: Some(IndexedTripleDiff { added: vec![IndexAdded { index: (*index).min(base.tags.len()), item: tag.clone() }], ..Default::default() }), ..Default::default() },
+        SemioAudioMutation::InsertTag(insert_tag::InsertTag { index, tag }) => {
+            SemioAudioDiff { tags: Some(IndexedTripleDiff { added: vec![IndexAdded { index: (*index).min(base.tags.len()), item: tag.clone() }], ..Default::default() }), ..Default::default() }
+        }
         SemioAudioMutation::RemoveTag(remove_tag::RemoveTag { index }) => SemioAudioDiff { tags: Some(IndexedTripleDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
         SemioAudioMutation::SetTagValue(set_tag_value::SetTagValue { index, value }) => match base.tags.get(*index) {
             Some(t) => SemioAudioDiff { tags: Some(IndexedTripleDiff { modified: vec![IndexModified { index: *index, diff: SemioAudioTag { key: t.key.clone(), value: value.clone() } }], ..Default::default() }), ..Default::default() },

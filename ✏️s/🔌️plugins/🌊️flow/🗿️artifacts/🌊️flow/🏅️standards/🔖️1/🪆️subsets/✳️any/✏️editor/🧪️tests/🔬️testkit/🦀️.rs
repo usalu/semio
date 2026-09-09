@@ -1,8 +1,7 @@
-
 use super::*;
 use semio_framework_plugin::testkit::meta;
 use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-use semio_s_artifact_stdio_semio::{SemioMembers, create_semio_member};
+use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers};
 use store::ArtifactPack;
 
 pub type FlowApp = VcsArtifactApp<EditorApp<FlowPlayApp>, SemioMembers>;
@@ -115,7 +114,7 @@ fn saturated_rejected_fixture_tree(pages: usize, capacity: usize) -> semio_frame
 
 #[test]
 fn flow_render_fixture_projection_retires_populated_and_rejected_pages() {
-    use semio_framework_plugin::testkit::{FIXTURE_TREE_MAX_DEPTH, FIXTURE_TREE_MAX_NODES, FIXTURE_TREE_RETIRE_STEPS, project_and_retire_fixture_tree};
+    use semio_framework_plugin::testkit::{project_and_retire_fixture_tree, FIXTURE_TREE_MAX_DEPTH, FIXTURE_TREE_MAX_NODES, FIXTURE_TREE_RETIRE_STEPS};
     let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖼️tree-projection/🔣️.json")).unwrap();
     assert_eq!(fixture["contractId"], "semio.fixture.tree-projection/v1");
     assert_eq!(fixture["maximumDepth"], FIXTURE_TREE_MAX_DEPTH);
@@ -146,7 +145,7 @@ fn flow_render_fixture_projection_retires_populated_and_rejected_pages() {
 }
 
 pub async fn main_window_measures(app: &mut FlowApp) -> Vec<WindowMeasure> {
-    app.window_measures(&semio_framework_plugin::ViewModel::default()).await.get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
+    app.window_measures(&ViewModel::default()).await.get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is the framework's injected

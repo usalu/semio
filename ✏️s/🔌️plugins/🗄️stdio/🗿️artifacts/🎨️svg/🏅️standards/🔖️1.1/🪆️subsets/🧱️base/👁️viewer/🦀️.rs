@@ -6,9 +6,9 @@
 
 use crate::standards::v1_1::subsets::base::schema::mutations::SvgMutation;
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
-use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_ANY_DIALECT};
 use crate::viewer::svg_any::modes::view;
 use crate::viewer::svg_any::modes::view::windows::main;
+use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_ANY_DIALECT};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

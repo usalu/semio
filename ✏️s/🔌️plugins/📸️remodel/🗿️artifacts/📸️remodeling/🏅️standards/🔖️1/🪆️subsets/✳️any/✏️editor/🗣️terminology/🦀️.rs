@@ -1,6 +1,5 @@
 //! 🗣️ Remodeling play app — the complete UI label set. ONE `app_labels!` block, never split (TEMPLATE §4).
 
-use crate::editor::remodeling::config::RemodelingConfig;
 use semio_framework_plugin::app_labels;
 
 app_labels! {

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_planar_face_from_wire, make_rectangle_wire};
 use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;

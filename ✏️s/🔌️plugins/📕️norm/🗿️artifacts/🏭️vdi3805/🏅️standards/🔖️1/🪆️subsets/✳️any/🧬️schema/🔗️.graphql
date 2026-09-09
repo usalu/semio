@@ -10,7 +10,6 @@ type Vdi3805Artifact {
   geometry: [Vdi3805StringMapEntry!]! @state(class: ARTIFACT)
   curves: [Vdi3805StringMapEntry!]! @state(class: ARTIFACT)
   limits: String! @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type Vdi3805StringMapEntry { key: String! value: String! }

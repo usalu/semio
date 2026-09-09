@@ -1,4 +1,5 @@
 [build]
+locked = true
 target = "🌐️.html"
 dist = "../../../../../../../../../../.🧬semio/🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu"
 public_url = "/"
@@ -25,3 +26,8 @@ backend = "http://127.0.0.1:6141/infinite-fixture/"
 
 [[proxy]]
 backend = "http://127.0.0.1:6141/cad-fixture/"
+
+[[hooks]]
+stage = "pre_build"
+command = "bun"
+command_arguments = ["../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts", "native", "cargo", "metadata", "--manifest", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"]

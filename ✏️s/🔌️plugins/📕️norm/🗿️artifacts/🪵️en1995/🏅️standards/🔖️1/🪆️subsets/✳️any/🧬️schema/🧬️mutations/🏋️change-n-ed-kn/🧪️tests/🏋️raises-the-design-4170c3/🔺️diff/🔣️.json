@@ -2,7 +2,7 @@
   "artifact": null,
   "annex": null,
   "mEdKnm": null,
-  "nEdKn": 75.0,
+  "nEdKn": 75,
   "vEdKn": null,
   "wMm3": null,
   "aMm2": null,
@@ -19,6 +19,5 @@
   "fireDurationMin": null,
   "sectionDepthMm": null,
   "aVertMS2": null,
-  "nCyclesBridge": null,
-  "selectedCheckIndex": null
+  "nCyclesBridge": null
 }

@@ -1,9 +1,8 @@
 //! 🔧 `change-rh-percent` payload — changes the Din16798 document's `rh_percent` (relative humidity).
 
-
-use crate::Din16798Snapshot;
 use crate::diff::Din16798Diff;
 use crate::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
 //#region 🔖️ChangeRhPercent
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

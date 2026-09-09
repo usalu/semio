@@ -8,8 +8,8 @@
 //! windows) live in `🎛️apps/🧊️3d/🦀️.rs`.
 
 use crate::analyses;
-use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::fem3d_engine::meshing;
+use crate::Fem3dSnapshot;
 use std::collections::HashMap;
 
 // #region 🔖️Errors

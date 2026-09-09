@@ -1,7 +1,3 @@
-
-use super::*;
-
-
 /// 🌱️ Relocated from the deleted `set-selected-ids` command's test mod (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — exercises the same app-wide label
 /// resolution, unrelated to selection.
@@ -20,8 +16,8 @@ async fn animate_presentation_labels_resolve_native_by_default() {
 
 #[semio_framework_async_macros::async_test]
 async fn animate_presentation_labels_translate_panels_in_german() {
-    use crate::editor::animate::testkit::{dispatch, presentation_app, render};
-    use crate::editor::animate::{PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_DOCUMENT, PresentationCommand};
+    use crate::editor::animate::testkit::{presentation_app, render};
+    use crate::editor::animate::{PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_DOCUMENT};
     let mut app = presentation_app().await;
     let catalogue_json = render(&mut app, PRESENTATION_PLAY_BODY_CATALOGUE).await;
     assert!(catalogue_json.contains("Kachelvorlagen"));

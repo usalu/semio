@@ -1,10 +1,10 @@
 //! 🪟️ 🧩️ Flow play app commands command — `patch-flow-widgets`.
 
+use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::schema::widget_id;
 use crate::{op::FlowMutation, FlowSnapshot};
-use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
-use flow::{FlowEvalSession};
-use semio_framework_artifact_flow_flow::{Widget};
+use flow::FlowEvalSession;
+use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

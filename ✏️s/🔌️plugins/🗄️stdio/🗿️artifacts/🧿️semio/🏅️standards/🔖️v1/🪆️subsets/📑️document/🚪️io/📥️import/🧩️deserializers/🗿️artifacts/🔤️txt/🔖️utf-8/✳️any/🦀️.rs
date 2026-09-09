@@ -7,8 +7,8 @@
 //! oversight).
 
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_txt::TxtSnapshot;
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 //#region 🔖️Deserializer
 pub struct SemioDocumentFromTxt;

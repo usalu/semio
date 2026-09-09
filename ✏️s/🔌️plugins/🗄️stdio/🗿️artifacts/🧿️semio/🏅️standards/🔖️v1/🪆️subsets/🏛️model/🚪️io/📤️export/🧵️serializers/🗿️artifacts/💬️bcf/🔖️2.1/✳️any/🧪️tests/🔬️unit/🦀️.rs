@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::model::io::import::deserializers::artifacts::bcf::v2_1::any::model_from_bcf;
 use semio_s_artifact_stdio_bcf::schema::snapshot::{BcfComment as BcfCommentT, BcfComponents as BcfComponentsT, BcfTopic as BcfTopicT, BcfViewpoint as BcfViewpointT, BcfVisibility as BcfVisibilityT};

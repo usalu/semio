@@ -9,8 +9,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔁️ReplaceBlock
 /// 🔁️ Replaces the block matching `block.id` inside `step_id`'s `blocks` wholesale.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[derive(dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ReplaceBlock {
     pub step_id: String,

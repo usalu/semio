@@ -14,11 +14,11 @@
 //!   in `nodes`, or a reference cycle (a node reachable from itself through one or more `Ref`
 //!   hops), is a hard `PackError` — never silently dropped or truncated.
 
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_json::schema::snapshot::{JsonMember, JsonValue};
 use semio_s_artifact_stdio_json::JsonSnapshot;
 use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Serializer

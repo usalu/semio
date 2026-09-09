@@ -6,7 +6,7 @@ async fn dispatch(payload: DeleteSpace) -> Emit<SHomeMutation, HomeConfigMutatio
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     handle(&payload, &doc, &cfg).expect("handle")
 }
 

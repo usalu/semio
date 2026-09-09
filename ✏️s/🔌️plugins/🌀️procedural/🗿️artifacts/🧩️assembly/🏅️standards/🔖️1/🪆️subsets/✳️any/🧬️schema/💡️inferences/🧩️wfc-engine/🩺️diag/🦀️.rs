@@ -8,7 +8,7 @@ use crate::wfc_engine::outcome::RunReport;
 // #region 🔖️Level
 /// 📊️ How much event detail a solve records, from cheapest to most complete. Ordered
 /// (`Off < Summary < Decisions < Full`) so call sites can gate emission with a single comparison
-/// (`sink.level() >= DiagLevel::Decisions`) instead of matching every variant.
+/// (`level >= DiagLevel::Decisions`) instead of matching every variant.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
 pub enum DiagLevel {
     #[default]
@@ -59,11 +59,6 @@ pub struct EventSink {
 impl EventSink {
     pub fn new(level: DiagLevel) -> Self {
         Self { level, events: Vec::new() }
-    }
-
-    #[inline]
-    pub fn level(&self) -> DiagLevel {
-        self.level
     }
 
     #[inline]

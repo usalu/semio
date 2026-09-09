@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSamplePrecision {
-        pub(crate) precision: u8,
-    }
+    pub(crate) precision: u8,
+}
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSamplePrecision {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sample-precision", kind: "set-sample-precision", record: "SetSamplePrecision" };

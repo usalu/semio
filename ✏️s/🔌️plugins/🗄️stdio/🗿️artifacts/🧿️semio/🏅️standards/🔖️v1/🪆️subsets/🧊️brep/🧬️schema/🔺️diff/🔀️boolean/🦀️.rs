@@ -28,6 +28,7 @@ use std::collections::{HashMap, HashSet};
 use crate::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid, make_edge, make_vertex, split_face_by_edge, split_face_by_interior_curve, split_face_by_seam_crossing};
 use crate::standards::v1::subsets::brep::schema::diff::intersect::{intersect_curve_surface, intersect_surface_surface, IntCurve};
 use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
+use crate::standards::v1::subsets::brep::schema::engine::{MeshTransfer, PointClassification};
 use crate::standards::v1::subsets::brep::schema::inferences::bounding_volume::face_aabb;
 use crate::standards::v1::subsets::brep::schema::inferences::classification::point_in_face_uv;
 use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::{closest_point_on_solid, shell_signed_volume, solid_bounding_box, solid_volume, AxisAlignedBox};
@@ -41,7 +42,6 @@ use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
-use crate::standards::v1::subsets::brep::schema::engine::{MeshTransfer, PointClassification};
 
 // #region 🔖️Api
 
@@ -499,13 +499,7 @@ fn exact_imprint_boolean(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp,
 
     let issues = issues_scoped_to_new_solids(body, &pre_existing_solids, validate_body(body));
     if !issues.is_empty() {
-        return Err(KernelError::Boolean(BooleanError::InvalidResult(format!(
-            "exact boolean result failed validation: {} issue(s), first: {}:{}:{}",
-            issues.len(),
-            issues[0].entity,
-            issues[0].code,
-            issues[0].message
-        ))));
+        return Err(KernelError::Boolean(BooleanError::InvalidResult(format!("exact boolean result failed validation: {} issue(s), first: {}:{}:{}", issues.len(), issues[0].entity, issues[0].code, issues[0].message))));
     }
     Ok(result)
 }
@@ -1091,11 +1085,7 @@ fn surfaces_equal(sa: &Surface, sb: &Surface, tol: f64) -> bool {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn loop_positions(body: &Body, loop_id: LoopId) -> Vec<Pnt3> {
-    body.loop_coedges(loop_id)
-        .into_iter()
-        .filter_map(|c| body.coedge_endpoints(c))
-        .filter_map(|(v, _)| body.vertices.get(v).map(|x| x.position))
-        .collect()
+    body.loop_coedges(loop_id).into_iter().filter_map(|c| body.coedge_endpoints(c)).filter_map(|(v, _)| body.vertices.get(v).map(|x| x.position)).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

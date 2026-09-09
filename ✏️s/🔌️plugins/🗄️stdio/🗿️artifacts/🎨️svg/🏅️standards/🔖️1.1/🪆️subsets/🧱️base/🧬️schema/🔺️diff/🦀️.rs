@@ -9,10 +9,10 @@
 //! embeds xml's *node* model, never xml's *diff* model).
 
 use crate::SvgSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.svg`. No `snapshot: Option<SvgSnapshot>` full-replace slot -- even
@@ -1535,6 +1535,6 @@ mod handcrafted_diff_codec_tests;
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
-pub use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 pub use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
+pub use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 //#endregion 🔁️Re-exports

@@ -14,7 +14,7 @@ pub enum DocumentBackboneBindingOperationV1 {
     Retire,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, FromValue, ToValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct DocumentBackboneBindingWireV1 {
@@ -117,7 +117,7 @@ pub fn decode_document_backbone_binding_command_v1(payload: &[u8]) -> Result<Opt
         "retire" => DocumentBackboneBindingOperationV1::Retire,
         _ => return Err("plugin.document-backbone.binding-operation".into()),
     };
-    if wire.schema != DOCUMENT_BACKBONE_BINDING_SCHEMA_V1 || wire.instance_id == 0 || wire.uri.is_empty() || wire.uri.as_bytes().len() > DOCUMENT_BACKBONE_BINDING_URI_MAXIMUM_BYTES {
+    if wire.schema != DOCUMENT_BACKBONE_BINDING_SCHEMA_V1 || wire.uri.is_empty() || wire.uri.len() > DOCUMENT_BACKBONE_BINDING_URI_MAXIMUM_BYTES {
         return Err("plugin.document-backbone.binding-fields".into());
     }
     Ok(Some(DocumentBackboneBindingCommandV1 { operation, instance_id: wire.instance_id, binding_generation: wire.binding_generation, uri: wire.uri }))

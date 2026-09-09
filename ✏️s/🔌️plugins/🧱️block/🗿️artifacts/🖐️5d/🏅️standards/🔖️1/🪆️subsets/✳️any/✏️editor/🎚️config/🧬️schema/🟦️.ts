@@ -1,8 +1,6 @@
 /** 🧬️ Block5dConfig */
 export interface Block5dConfig {
   /** @state config */
-  selectedIds: string[];
-  /** @state config */
 }
 
 //#region 🚪️Parsers
@@ -53,8 +51,5 @@ export const block5dConfigGuardConstant = <T extends string | number | boolean>(
 //#endregion 🚪️Parsers
 
 export function parseBlock5dConfig(value: unknown, at = "$"): Block5dConfig {
-  const row = block5dConfigGuardObject(value, at);
-  return {
-    selectedIds: block5dConfigGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => block5dConfigGuardString(item, `${at}.selectedIds[${index}]`)),
-  };
+  return block5dConfigGuardObject(value, `${at}`);
 }

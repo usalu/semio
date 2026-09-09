@@ -22,8 +22,6 @@ message Vdi3805Diff {
   optional map<string, string> curves = 9;
   // @state artifact
   optional string limits = 10;
-  // @state presence
-  optional uint32 selected_check_index = 11;
 }
 
 message Vdi3805Artifact {
@@ -36,7 +34,6 @@ message Vdi3805Artifact {
   map<string, string> geometry = 7;
   map<string, string> curves = 8;
   string limits = 9;
-  optional uint32 selected_check_index = 10;
 }
 
 message Vdi3805StringList { repeated string values = 1; }

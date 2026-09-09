@@ -5,9 +5,9 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1::subsets::animation::io::SemioAnimationValidator;
+    use crate::standards::v1::subsets::audio::io::SemioAudioValidator;
     use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
     use crate::standards::v1::subsets::base::schema::SemioAnalyzer;
-    use crate::standards::v1::subsets::audio::io::SemioAudioValidator;
     use crate::standards::v1::subsets::brep::io::SemioBrepValidator;
     use crate::standards::v1::subsets::cad::io::SemioCadValidator;
     use crate::standards::v1::subsets::document::io::SemioDocumentValidator;
@@ -85,12 +85,8 @@ pub mod derived_composition {
             SemioSubsetSnapshot::Image(s) => SemioImageValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot as store::ArtifactPack>::encode_pack(s))).await,
             SemioSubsetSnapshot::Video(s) => SemioVideoValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot as store::ArtifactPack>::encode_pack(s))).await,
             SemioSubsetSnapshot::Audio(s) => SemioAudioValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Animation(s) => {
-                SemioAnimationValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s))).await
-            }
-            SemioSubsetSnapshot::Presentation(s) => {
-                SemioPresentationValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s))).await
-            }
+            SemioSubsetSnapshot::Animation(s) => SemioAnimationValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Presentation(s) => SemioPresentationValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s))).await,
             SemioSubsetSnapshot::Flow(s) => SemioFlowValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s))).await,
             SemioSubsetSnapshot::Text(s) => SemioTextValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot as store::ArtifactPack>::encode_pack(s))).await,
             SemioSubsetSnapshot::Table(s) => SemioTableValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as store::ArtifactPack>::encode_pack(s))).await,
@@ -136,9 +132,8 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::base::schema::semio_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioSnapshot, crate::standards::v1::subsets::base::schema::mutations::SemioMutation>(
-            crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,
-        )).expect("static Stdio registration must be available and conflict-free");
+        store::register_document_codec(store::ArtifactCodec::of::<SemioSnapshot, crate::standards::v1::subsets::base::schema::mutations::SemioMutation>(crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA))
+            .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -166,8 +161,8 @@ pub use derived_composition::*;
 /// (the 13 domain subsets + `text` + this `✉️base` envelope's own), no engine needed.
 pub mod io_registry {
     use crate::standards::v1::subsets::animation::schema::SemioAnimationComposer;
-    use crate::standards::v1::subsets::base::schema::SemioComposer as SemioRawAnyComposer;
     use crate::standards::v1::subsets::audio::schema::SemioAudioComposer;
+    use crate::standards::v1::subsets::base::schema::SemioComposer as SemioRawAnyComposer;
     use crate::standards::v1::subsets::brep::schema::SemioBrepComposer;
     use crate::standards::v1::subsets::cad::schema::SemioCadComposer;
     use crate::standards::v1::subsets::document::schema::SemioDocumentComposer;

@@ -62,34 +62,21 @@ pub fn apply_features_delta(items: &[MapFeature], delta: &GisMapFeaturesDelta) -
     Ok(next)
 }
 
-fn apply_map_delta<V: Clone>(target: &mut std::collections::BTreeMap<String, V>, entries: &std::collections::BTreeMap<String, Option<V>>) -> protocol::MutationApplyResult<()> {
-    for (key, value) in entries {
-        if value.is_none() && !target.contains_key(key) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed map entry does not exist").at([key.as_str()]));
-        }
-    }
-    let mut candidate = target.clone();
-    for (key, value) in entries {
-        match value {
-            Some(value) => {
-                candidate.insert(key.clone(), value.clone());
-            }
-            None => {
-                candidate.remove(key);
-            }
-        }
-    }
-    *target = candidate;
-    Ok(())
-}
-
 fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Option<GisMapFeaturesDelta>) {
     if let Some(src) = incoming {
         match target {
             Some(dst) => {
                 dst.added.extend(src.added);
                 dst.removed.extend(src.removed);
-                dst.patched.extend(src.patched);
+                for entry in src.patched {
+                    if let Some(prior) = dst.patched.iter_mut().find(|prior| prior.id == entry.id) {
+                        if entry.patch.data.is_some() {
+                            prior.patch.data = entry.patch.data;
+                        }
+                    } else {
+                        dst.patched.push(entry);
+                    }
+                }
                 if src.reordered.is_some() {
                     dst.reordered = src.reordered;
                 }
@@ -100,7 +87,7 @@ fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Opt
 }
 
 impl GisMapDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &GisMapArtifact) -> protocol::MutationApplyResult<GisMapArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -115,24 +102,6 @@ impl GisMapDiff {
             }
             if let Some(delta) = &self.regions {
                 next.regions = apply_features_delta(&next.regions, delta).map_err(|error| error.under(["regions"]))?;
-            }
-            if let Some(delta) = &self.layer_visibility {
-                apply_map_delta(&mut next.layer_visibility, &delta.entries).map_err(|error| error.under(["layerVisibility"]))?;
-            }
-            if let Some(delta) = &self.layer_stroke_scale {
-                apply_map_delta(&mut next.layer_stroke_scale, &delta.entries).map_err(|error| error.under(["layerStrokeScale"]))?;
-            }
-            if let Some(value) = &self.camera_json {
-                next.camera_json = value.clone();
-            }
-            if let Some(value) = &self.render_mode {
-                next.render_mode = value.clone();
-            }
-            if let Some(value) = &self.vector_style {
-                next.vector_style = value.clone();
-            }
-            if let Some(value) = &self.lod_mode {
-                next.lod_mode = value.clone();
             }
             next
         })
@@ -169,27 +138,6 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
         absorb_features_delta(&mut self.positions, other.positions);
         absorb_features_delta(&mut self.routes, other.routes);
         absorb_features_delta(&mut self.regions, other.regions);
-        macro_rules! take {
-            ($field:ident) => {
-                if other.$field.is_some() {
-                    self.$field = other.$field;
-                }
-            };
-        }
-        take!(camera_json);
-        take!(render_mode);
-        take!(vector_style);
-        take!(lod_mode);
-        match (&mut self.layer_visibility, other.layer_visibility) {
-            (Some(dst), Some(src)) => dst.entries.extend(src.entries),
-            (None, Some(src)) => self.layer_visibility = Some(src),
-            _ => {}
-        }
-        match (&mut self.layer_stroke_scale, other.layer_stroke_scale) {
-            (Some(dst), Some(src)) => dst.entries.extend(src.entries),
-            (None, Some(src)) => self.layer_stroke_scale = Some(src),
-            _ => {}
-        }
     }
 }
 //#endregion 🔹Apply

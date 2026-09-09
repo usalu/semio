@@ -11,6 +11,21 @@ pub fn inverse(payload: &super::DeleteInfiltration, base: &EnergyModelSnapshot) 
         return Vec::new();
     };
     let existing = &base.model.infiltrations[index];
-    vec![vocabulary::create_infiltration(index as u32, existing.id, existing.zone_id, existing.schedule_id, existing.method, existing.design_flow_ach, existing.flow_per_exterior_area_m3_s_m2, existing.effective_leakage_area_m2, existing.discharge_coefficient, existing.stack_height_m, existing.constant_term_coefficient, existing.temperature_term_coefficient, existing.velocity_term_coefficient, existing.velocity_squared_term_coefficient)]
+    vec![vocabulary::create_infiltration(
+        index as u32,
+        existing.id,
+        existing.zone_id,
+        existing.schedule_id,
+        existing.method,
+        existing.design_flow_ach,
+        existing.flow_per_exterior_area_m3_s_m2,
+        existing.effective_leakage_area_m2,
+        existing.discharge_coefficient,
+        existing.stack_height_m,
+        existing.constant_term_coefficient,
+        existing.temperature_term_coefficient,
+        existing.velocity_term_coefficient,
+        existing.velocity_squared_term_coefficient,
+    )]
 }
 //#endregion 🔖️Inverse

@@ -4,8 +4,6 @@ export interface PresentationDiff {
   /** @state artifact */ schema?: string | null;
   /** @state artifact */ source?: FigureTileSource | null;
   /** @state artifact */ tiles?: PresentationTilesDelta | null;
-  /** @state presence */ selectedIds?: PresentationStringList | null;
-  /** @state config */ engagementInput?: string | null;
 }
 export interface PresentationStringList { values: string[]; }
 export interface PresentationTilesDelta { added: FigureTileDraft[]; removed: string[]; patched: PresentationTilePatchEntry[]; reordered?: string[] | null; }
@@ -18,8 +16,6 @@ export interface PresentationArtifact {
   schema: string;
   source: FigureTileSource;
   tiles: FigureTileDraft[];
-  selectedIds: string[];
-  engagementInput: string;
 }
 
 //#region 🚪️Parsers

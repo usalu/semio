@@ -96,14 +96,12 @@ async fn change_tower_m_rd_knm_produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is canonical and decodes back into `En1998Diff` with `towerMRdKnm` set.
-/// `selected_check_index` stays unset on purpose: it is an `Option<Option<u32>>` whose `None` and
-/// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-tower-m-rd-knm`
-/// never writes it anyway.
+/// 🕹️ Presence selection is absent from the artifact diff encoding.
 #[semio_framework_async_macros::async_test]
 async fn change_tower_m_rd_knm_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-tower-m-rd-knm committed diff decodes");
     assert_eq!(decoded.tower_m_rd_knm, Some(2812.5), "change-tower-m-rd-knm/raises-tower-m-rd-knm-to-2812-5: the committed diff must carry tower_m_rd_knm at 2812.5");
-    assert!(decoded.selected_check_index.is_none(), "change-tower-m-rd-knm/raises-tower-m-rd-knm-to-2812-5: the committed diff must leave the presence-lane selected_check_index unset");
+    assert!(serde_json::to_value(&decoded).expect("diff JSON").get("selectedCheckIndex").is_none(), "change-tower-m-rd-knm/raises-tower-m-rd-knm-to-2812-5: the committed diff must leave the presence-lane selectedCheckIndex absent");
     let reencoded = serde_json::to_value(&decoded).expect("change-tower-m-rd-knm committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-tower-m-rd-knm committed diff reparses");
     assert_eq!(reencoded, original, "change-tower-m-rd-knm/raises-tower-m-rd-knm-to-2812-5: committed diff JSON is not canonical");

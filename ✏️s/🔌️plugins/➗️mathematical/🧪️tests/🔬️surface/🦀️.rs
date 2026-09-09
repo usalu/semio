@@ -1,4 +1,3 @@
-
 //! 🧪️ The editor/viewer pair's own cross-surface guarantees (contract §2.5), using the landed
 //! framework testkit directly: `semio_framework_plugin::testkit::{assert_viewer_never_mutates,
 //! assert_editor_and_viewer_share_dialect, new_viewer}`.

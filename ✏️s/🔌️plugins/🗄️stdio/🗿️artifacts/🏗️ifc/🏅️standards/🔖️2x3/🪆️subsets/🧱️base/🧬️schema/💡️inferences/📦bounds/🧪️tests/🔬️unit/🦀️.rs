@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance};

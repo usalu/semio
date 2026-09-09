@@ -145,25 +145,5 @@
       "edges": [],
       "wires": []
     }
-  },
-  "selectedIds": null,
-  "activeUtilityId": null,
-  "cameraX": null,
-  "cameraY": null,
-  "cameraZoom": null,
-  "selectionMethod": null,
-  "gridSnapEnabled": null,
-  "gridFactor": null,
-  "suggestionOffset": null,
-  "fillCount": null,
-  "brushCandidateIndex": null,
-  "brushCandidateSourceHandleId": null,
-  "lodModeByPaneJson": null,
-  "engagementInputByPaneJson": null,
-  "brushCandidatesJson": null,
-  "nodeKindWeightsJson": null,
-  "handleKindWeightsJson": null,
-  "activeUtilityByWindowIdJson": null,
-  "hoveredNodeId": null,
-  "previewSeq": null
+  }
 }

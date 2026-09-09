@@ -5,17 +5,6 @@ export interface Generation2dArtifact {
   fixture: FlowFixture;
   /** @state artifact */
   generation: GenerationPlayState;
-  /** @state presence */
-  selectedIds: string[];
-  /** @state config */
-  graphCamera: CameraJson;
-  /** @state config */
-  showMode: string;
-  /** @state presence */
-  selectedGenerationId?: string;
-  /** @state artifact */
-  generationPreviewText?: string;
-  /** @state config */
 }
 
 export type CameraJson = { x: number; y: number; zoom: number };
@@ -89,11 +78,6 @@ export function parseGeneration2dArtifact(value: unknown, at = "$"): Generation2
   return {
     fixture: parseFlowFixture(row["fixture"], `${at}.fixture`),
     generation: parseGenerationPlayState(row["generation"], `${at}.generation`),
-    selectedIds: proceduralGeneration2dArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => proceduralGeneration2dArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    graphCamera: parseCameraJson(row["graphCamera"], `${at}.graphCamera`),
-    showMode: proceduralGeneration2dArtifactGuardString(row["showMode"], `${at}.showMode`),
-    selectedGenerationId: row["selectedGenerationId"] === undefined ? undefined : proceduralGeneration2dArtifactGuardString(row["selectedGenerationId"], `${at}.selectedGenerationId`),
-    generationPreviewText: row["generationPreviewText"] === undefined ? undefined : proceduralGeneration2dArtifactGuardString(row["generationPreviewText"], `${at}.generationPreviewText`),
   };
 }
 
@@ -153,7 +137,6 @@ export function parseGenerationPlayState(value: unknown, at = "$"): GenerationPl
   const row = proceduralGeneration2dArtifactGuardObject(value, at);
   return {
     generations: proceduralGeneration2dArtifactGuardArray(row["generations"], `${at}.generations`).map((item, index) => parseFormGeneration(item, `${at}.generations[${index}]`)),
-    selectedGenerationId: row["selectedGenerationId"] === undefined ? undefined : proceduralGeneration2dArtifactGuardString(row["selectedGenerationId"], `${at}.selectedGenerationId`),
     previewText: row["previewText"] === undefined ? undefined : proceduralGeneration2dArtifactGuardString(row["previewText"], `${at}.previewText`),
   };
 }

@@ -1,9 +1,8 @@
 //! 🔧 `change-humidification-required-kg-h` payload — changes the Din16798 document's `humidification_required_kg_h` (required humidification rate).
 
-
-use crate::Din16798Snapshot;
 use crate::diff::Din16798Diff;
 use crate::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
 //#region 🔖️ChangeHumidificationRequiredKgH
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

@@ -3,8 +3,8 @@
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::{catalogue_kinds, forms_action, parse_contributions};
-use semio_framework_plugin::{tree_item_with_action, tree_item_with_action_draggable, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use dsl::os_pack::json::{object, Value};
+use semio_framework_plugin::{tree_item_with_action, tree_item_with_action_draggable, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_BODY_CATALOGUE: &str = "forms.play.catalogue";

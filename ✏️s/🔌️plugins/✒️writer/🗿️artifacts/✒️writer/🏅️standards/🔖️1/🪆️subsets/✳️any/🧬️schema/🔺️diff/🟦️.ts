@@ -1,75 +1,18 @@
-/** 🧬️ Writer diff schema — sparse field delta. */
+/** 🔺️ Writer sparse durable document delta. */
+import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import type { WriterArtifact } from "../🟦️.ts";
 
 export interface WriterDiff {
   /** @state artifact */
-  artifact?: WriterArtifact;
+  artifact: WriterArtifact | null;
   /** @state artifact */
-  schema?: string;
+  schema: string | null;
   /** @state artifact */
-  id?: string;
+  id: string | null;
   /** @state artifact */
-  languageId?: string;
+  languageId: string | null;
   /** @state artifact */
-  uri?: string;
+  uri: string | null;
   /** @state artifact */
-  text?: WriterTextDelta;
-  /** @state presence */
-  editorSelection?: WriterEditorSelection | null;
-  /** @state presence */
-  editorSettings?: WriterEditorSettings;
-  /** @state config */
-  formatSignal?: number;
-  /** @state config */
-  lintSignal?: number;
-  /** @state config */
-  revision?: number;
-  /** @state config */
-  engagementInput?: string;
-  /** @state config */
-  cameraX?: number;
-  /** @state config */
-  cameraY?: number;
-  /** @state config */
-  cameraZoom?: number;
-  /** @state config */
-}
-
-export interface WriterArtifact {
-  schema: string;
-  id: string;
-  languageId: string;
-  uri: string;
-  text: string;
-  editorSelection?: WriterEditorSelection;
-  editorSettings: WriterEditorSettings;
-  formatSignal: number;
-  lintSignal: number;
-  revision: number;
-  engagementInput: string;
-  cameraX: number;
-  cameraY: number;
-  cameraZoom: number;
-}
-
-export interface WriterEditorSelection {
-  start: number;
-  end: number;
-}
-
-export interface WriterEditorSettings {
-  showLineNumbers: boolean;
-  fontPx: number;
-  lineHeight: number;
-  tabSize: number;
-}
-
-export interface WriterTextRangeEdit {
-  start: number;
-  end: number;
-  insert: string;
-}
-
-export interface WriterTextDelta {
-  replacement?: string;
-  edits: WriterTextRangeEdit[];
+  document: ArtifactChild | null;
 }

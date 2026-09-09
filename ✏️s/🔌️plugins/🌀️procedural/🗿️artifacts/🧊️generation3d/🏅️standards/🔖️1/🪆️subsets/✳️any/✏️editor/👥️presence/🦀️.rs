@@ -1,18 +1,18 @@
 //! 👥️ Generation3dPresence — shareable live ephemeral state + mutations.
 //!
-//! Shareable live subset of the 3d procedural surface: cameras, utility, show-mode. Selection/hover
+//! Shareable live subset of the 3d procedural surface: cameras and show mode. Selection/hover
 //! broadcast automatically via the framework's typed `PresenceInteraction` (ticket
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `create_generation3d_app`'s
 //! `.interaction(...)` declaration.
 
 use crate::editor::generation3d::config::Generation3dPreviewCamera;
-use semio_framework_artifact_flow_flow::CameraJson;
 use protocol::Mutation;
+use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of procedural 3d view state (selection, hover, cameras, utility).
+/// 👥️ Shareable live subset of procedural 3d camera and show-mode state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "generation3d.presence")]
@@ -24,15 +24,13 @@ pub struct Generation3dPresence {
     /// 📷️ The 3D preview viewport camera.
     #[dsl(block)]
     pub preview_camera: Generation3dPreviewCamera,
-    /// 🧰 Active utility id.
-    pub active_utility_id: String,
     /// 👁️ Preview shading mode.
     pub show_mode: String,
 }
 
 impl Default for Generation3dPresence {
     fn default() -> Self {
-        Self { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, preview_camera: Generation3dPreviewCamera::default(), active_utility_id: String::new(), show_mode: "shaded".into() }
+        Self { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, preview_camera: Generation3dPreviewCamera::default(), show_mode: "shaded".into() }
     }
 }
 
@@ -108,9 +106,22 @@ impl Mutation<Generation3dPresence> for Generation3dPresenceMutation {
     /// shape. One entry per variant, in declaration order. ⚠️ PROVISIONAL: no variant below has an
     /// authored leaf directory on disk yet, so every `owner` names a path that does not exist —
     /// the same precedent puzzle3d's own config/presence aggregates set.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "👥️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-snapshot",
+        semantic_kind: "set-snapshot",
+        display_name: "Set Snapshot",
+        emoji: "👥️",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {

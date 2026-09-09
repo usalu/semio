@@ -8,8 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🏷️RenameStep
 /// 🏷️ Changes a step's identity `title` field.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[derive(dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RenameStep {
     pub id: String,

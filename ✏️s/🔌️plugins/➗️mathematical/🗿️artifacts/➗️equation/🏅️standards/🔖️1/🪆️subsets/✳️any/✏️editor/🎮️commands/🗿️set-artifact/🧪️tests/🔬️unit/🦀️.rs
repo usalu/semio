@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::EquationGeometry;
-use crate::editor::equation::EquationCommand;
 use crate::editor::equation::testkit::{dispatch, math_app};
+use crate::editor::equation::EquationCommand;
+use crate::EquationGeometry;
 
 #[semio_framework_async_macros::async_test]
 async fn set_artifact_replaces_graph_and_geometry() {

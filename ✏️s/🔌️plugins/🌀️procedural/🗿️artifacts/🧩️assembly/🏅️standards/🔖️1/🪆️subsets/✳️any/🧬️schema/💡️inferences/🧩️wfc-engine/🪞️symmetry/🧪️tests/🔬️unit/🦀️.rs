@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -85,14 +84,14 @@ fn d4_group_has_eight_elements() {
 
 #[test]
 fn cube_rotation_group_has_exactly_24_elements() {
-    let rots = cube_rotations_24();
+    let rots = SymmetryGroup3d::Rot24.elements();
     assert_eq!(rots.len(), 24);
     assert!(rots.iter().all(|t| t.determinant() == 1), "every proper rotation must have determinant +1");
 }
 
 #[test]
 fn cube_full_symmetry_group_has_exactly_48_elements() {
-    let full = cube_symmetries_48();
+    let full = SymmetryGroup3d::Full48.elements();
     assert_eq!(full.len(), 48);
     let proper = full.iter().filter(|t| t.determinant() == 1).count();
     let improper = full.iter().filter(|t| t.determinant() == -1).count();
@@ -102,7 +101,7 @@ fn cube_full_symmetry_group_has_exactly_48_elements() {
 
 #[test]
 fn cube_rotations_are_closed_under_composition() {
-    let rots = cube_rotations_24();
+    let rots = SymmetryGroup3d::Rot24.elements();
     for &a in &rots {
         for &b in &rots {
             let c = a.semio_compose_rs(b);
@@ -113,7 +112,7 @@ fn cube_rotations_are_closed_under_composition() {
 
 #[test]
 fn cube_rotation_inverse_composes_to_identity() {
-    let rots = cube_rotations_24();
+    let rots = SymmetryGroup3d::Rot24.elements();
     let id = Transform3d::identity();
     for &t in &rots {
         assert_eq!(t.semio_compose_rs(t.inverse()), id);
@@ -123,7 +122,7 @@ fn cube_rotation_inverse_composes_to_identity() {
 
 #[test]
 fn cube_offset_transform_preserves_unit_offset_length() {
-    let rots = cube_rotations_24();
+    let rots = SymmetryGroup3d::Rot24.elements();
     for &t in &rots {
         for &axis in &[(1, 0, 0), (0, 1, 0), (0, 0, 1)] {
             let (x, y, z) = t.apply_offset(axis);
@@ -145,4 +144,30 @@ fn z_rot4_is_four_distinct_quarter_turns_returning_to_identity() {
     // A fifth quarter-turn from the last element returns to identity.
     let z90 = elements[1];
     assert_eq!(elements[3].semio_compose_rs(z90), Transform3d::identity());
+}
+
+#[test]
+fn custom_half_turn_groups_match_neutral_offset_vectors() {
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
+    let input2d: (i32, i32) = serde_json::from_value(oracle["halfTurn2d"]["input"].clone()).unwrap();
+    let planar = SymmetryGroup2d::Custom(vec![Transform2d::Identity, Transform2d::Rot180]).elements();
+    let output2d: Vec<_> = planar.iter().map(|t| t.apply_offset(input2d)).collect();
+    assert_eq!(serde_json::to_value(output2d).unwrap(), oracle["halfTurn2d"]["outputs"]);
+    let input3d: (i32, i32, i32) = serde_json::from_value(oracle["halfTurn3d"]["input"].clone()).unwrap();
+    let unchanged: Vec<_> = SymmetryGroup3d::None.elements().iter().map(|t| t.apply_offset(input3d)).collect();
+    assert_eq!(unchanged, vec![input3d]);
+    let half_turn = SymmetryGroup3d::ZRot4.elements()[2];
+    let spatial = SymmetryGroup3d::Custom(vec![Transform3d::identity(), half_turn]).elements();
+    let output3d: Vec<_> = spatial.iter().map(|t| t.apply_offset(input3d)).collect();
+    assert_eq!(serde_json::to_value(output3d).unwrap(), oracle["halfTurn3d"]["outputs"]);
+    for &a in &planar {
+        for &b in &planar {
+            assert!(planar.contains(&a.semio_compose_rs(b)));
+        }
+    }
+    for &a in &spatial {
+        for &b in &spatial {
+            assert!(spatial.contains(&a.semio_compose_rs(b)));
+        }
+    }
 }

@@ -1,7 +1,5 @@
 //! 🧱 `update-plated-inputs` — atomically updates the plated-inputs facet (plated_lambda_p, plated_sigma_ed_mpa are validated together for one EN 1993 check, never one-field-at-a-time).
 
-
-
 use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload

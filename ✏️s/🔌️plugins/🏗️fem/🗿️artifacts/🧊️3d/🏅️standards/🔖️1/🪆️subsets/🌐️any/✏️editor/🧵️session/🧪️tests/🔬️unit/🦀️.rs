@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn freshness(generation: u64) -> Fem3dVisualFreshness {

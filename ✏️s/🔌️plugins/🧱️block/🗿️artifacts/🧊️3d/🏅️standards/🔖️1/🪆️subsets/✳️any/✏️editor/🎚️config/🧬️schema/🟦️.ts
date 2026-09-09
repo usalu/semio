@@ -1,8 +1,6 @@
 /** 🧬️ Block3dConfig */
 export interface Block3dConfig {
   /** @state config */
-  selectedIds: string[];
-  /** @state config */
   activeRepresentationId?: string;
   /** @state config */
   wantedTags: string[];
@@ -16,15 +14,9 @@ export interface Block3dConfig {
   /** @state config */
   brushFlip: boolean;
   /** @state config */
-  brushPreview?: Block3dBrushPreview;
-  /** @state config */
   camera?: BlockCamera3d;
-  /** @state config */
-  hoveredVortexFullId?: string;
 }
 
 export interface Block3dWindowView { [key: string]: unknown; }
-
-export interface Block3dBrushPreview { [key: string]: unknown; }
 
 export interface BlockCamera3d { [key: string]: unknown; }

@@ -1,29 +1,10 @@
 syntax = "proto3";
 package semio.os.config.opening;
-
-message ArtifactDialect {
-  string artifact_kind = 1;
-  string standard = 2;
-  string subset = 3;
-}
-
-enum AppRole {
-  VIEWER = 0;
-  EDITOR = 1;
-}
-
-message AppRef {
-  string plugin_id = 1;
-  string app_id = 2;
-}
-
+import "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🛰️.proto";
 message DefaultApp {
-  ArtifactDialect dialect = 1;
-  AppRole role = 2;
-  AppRef app = 3;
+  semio.framework.io.ArtifactDialect dialect = 1;
+  semio.framework.manifest.AppRole role = 2;
+  semio.framework.manifest.AppRef app = 3;
 }
-
-message OpeningPreferences {
-  // @state config
-  repeated DefaultApp defaults = 1;
-}
+message OpeningPreferences { repeated DefaultApp defaults = 1; }

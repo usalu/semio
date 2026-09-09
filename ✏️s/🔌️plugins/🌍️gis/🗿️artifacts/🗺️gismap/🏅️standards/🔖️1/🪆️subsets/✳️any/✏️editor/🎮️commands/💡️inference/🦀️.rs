@@ -8,9 +8,9 @@
 //! is host-owned. The proposal itself only ever reaches this artifact through the hub's
 //! server-stamped approval command, never through this effect.
 
+use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::op::GisMapMutation;
 use crate::GisMapSnapshot;
-use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use semio_framework_plugin::kernel::{Effect, InferenceProposalKind};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

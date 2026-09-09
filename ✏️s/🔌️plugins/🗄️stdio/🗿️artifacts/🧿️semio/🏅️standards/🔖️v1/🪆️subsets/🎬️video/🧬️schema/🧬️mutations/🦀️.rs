@@ -17,6 +17,18 @@ use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
 //#region 🔖️Mutations
+#[path = "➕️insert-sample/🦀️.rs"]
+pub mod insert_sample;
+#[path = "🎥insert-stream/🦀️.rs"]
+pub mod insert_stream;
+#[path = "🚮remove-sample/🦀️.rs"]
+pub mod remove_sample;
+#[path = "🗑️remove-stream/🦀️.rs"]
+pub mod remove_stream;
+#[path = "📀set-sample-data/🦀️.rs"]
+pub mod set_sample_data;
+#[path = "🚩set-sample-flags/🦀️.rs"]
+pub mod set_sample_flags;
 /// 📐️ Typed content mutation for `stdio.semio.video`. Beyond the baseline `SetSnapshot`, this
 /// addresses `streams` by index and, within a stream, `samples` by index — the same index-only
 /// addressing scheme the diff grammar uses (neither collection carries a spec-mandated key). No
@@ -27,20 +39,8 @@ use protocol::{Mutation, OpText};
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🎥insert-stream/🦀️.rs"]
-pub mod insert_stream;
-#[path = "🗑️remove-stream/🦀️.rs"]
-pub mod remove_stream;
 #[path = "📋set-stream-meta/🦀️.rs"]
 pub mod set_stream_meta;
-#[path = "➕️insert-sample/🦀️.rs"]
-pub mod insert_sample;
-#[path = "🚮remove-sample/🦀️.rs"]
-pub mod remove_sample;
-#[path = "📀set-sample-data/🦀️.rs"]
-pub mod set_sample_data;
-#[path = "🚩set-sample-flags/🦀️.rs"]
-pub mod set_sample_flags;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
@@ -184,7 +184,9 @@ fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
         SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_semio_video_snapshot(snapshot)),
         SemioVideoMutation::InsertStream(insert_stream::InsertStream { index, stream }) => format!("insert-stream index={} stream={}", index, enc_stream(stream)),
         SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index }) => format!("remove-stream index={index}"),
-        SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index, kind, codec, width, height, rate }) => format!("set-stream-meta index={} kind={} codec={} width={} height={} rate={}", index, enc_kind(kind), enc_str(codec), width, height, enc_rational(rate)),
+        SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index, kind, codec, width, height, rate }) => {
+            format!("set-stream-meta index={} kind={} codec={} width={} height={} rate={}", index, enc_kind(kind), enc_str(codec), width, height, enc_rational(rate))
+        }
         SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index, index, sample }) => format!("insert-sample stream-index={} index={} sample={}", stream_index, index, enc_sample(sample)),
         SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index, index }) => format!("remove-sample stream-index={stream_index} index={index}"),
         SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index, index, data }) => format!("set-sample-data stream-index={} index={} data={}", stream_index, index, hex_encode(data)),
@@ -213,7 +215,12 @@ fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, String> 
         "insert-sample" => Ok(SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, sample: dec_sample(arg("sample")?)? })),
         "remove-sample" => Ok(SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index: usize_arg("stream-index")?, index: usize_arg("index")? })),
         "set-sample-data" => Ok(SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, data: hex_decode(arg("data")?)? })),
-        "set-sample-flags" => Ok(SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, pts: arg("pts")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, key: dec_bool(arg("key")?)? })),
+        "set-sample-flags" => Ok(SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags {
+            stream_index: usize_arg("stream-index")?,
+            index: usize_arg("index")?,
+            pts: arg("pts")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
+            key: dec_bool(arg("key")?)?,
+        })),
         other => Err(format!("semio video mutation: unknown keyword {other:?}")),
     }
 }

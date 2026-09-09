@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::default_snapshot;
+use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_deterministic};
 use protocol::Mutation;
 use protocol::SemanticMutation;
-use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_deterministic};
 use store::apply_mutation;
 
 /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog

@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_s_artifact_stdio_pdf::schema::snapshot::PdfPage;
 

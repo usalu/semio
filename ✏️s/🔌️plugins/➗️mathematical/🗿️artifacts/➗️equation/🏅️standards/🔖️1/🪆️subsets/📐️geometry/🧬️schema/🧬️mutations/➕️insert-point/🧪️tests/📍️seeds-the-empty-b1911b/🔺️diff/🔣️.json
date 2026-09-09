@@ -32,9 +32,5 @@
       }
     }
   },
-  "equation": null,
-  "cameraX": null,
-  "cameraY": null,
-  "cameraZoom": null,
-  "locale": null
+  "equation": null
 }

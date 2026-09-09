@@ -309,6 +309,7 @@ impl<T> FixedMeshGpuRegistry<T> {
         self.slots.iter().flatten().find(|entry| entry.version == version && entry.key.matches(key)).map(|entry| &entry.value)
     }
 
+    #[expect(clippy::result_large_err, reason = "GPU admission returns the exact resource and reservation owner without allocating during refusal.")]
     fn insert(&mut self, entry: MeshGpuEntry<T>) -> Result<(), MeshGpuEntry<T>> {
         let Some(slot) = self.slots.iter_mut().find(|slot| slot.is_none()) else { return Err(entry) };
         *slot = Some(entry);
@@ -333,6 +334,7 @@ impl<T> FixedMeshGpuRegistry<T> {
     }
 }
 
+#[derive(Default)]
 pub struct MeshGpuTable {
     meshes: FixedMeshGpuRegistry<GpuMeshBuffers>,
     upload: Option<MeshGpuUploadCursor>,
@@ -352,6 +354,7 @@ struct MeshGpuUploadCursor {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(clippy::large_enum_variant, reason = "The fixed version roster is copied into the existing retirement cursor without an uncredited heap allocation.")]
 enum MeshGpuRetirementSelector {
     Exact { key: MeshGpuKey, version: u64 },
     KeyExcept { key: MeshGpuKey, versions: [u64; MESH_GPU_KEEP_VERSION_CAPACITY], len: u16 },
@@ -377,12 +380,6 @@ struct MeshGpuRetirementCursor {
 struct MeshGpuRetirementOwner {
     vertex_buffer: Option<wgpu::Buffer>,
     index_buffer: Option<wgpu::Buffer>,
-}
-
-impl Default for MeshGpuTable {
-    fn default() -> Self {
-        Self { meshes: FixedMeshGpuRegistry::default(), upload: None, retirement: None, closing: false }
-    }
 }
 
 
@@ -815,6 +812,7 @@ impl<T> FixedRasterTextureRegistry<T> {
         self.slots[index].as_ref()
     }
 
+    #[expect(clippy::result_large_err, reason = "GPU admission returns the exact resource and reservation owner without allocating during refusal.")]
     fn insert(&mut self, entry: RasterTextureEntry<T>) -> Result<Option<RasterTextureEntry<T>>, RasterTextureEntry<T>> {
         let index = match self.locate(entry.key) {
             Ok(Ok(index)) | Ok(Err(index)) => index,
@@ -831,6 +829,7 @@ impl<T> FixedRasterTextureRegistry<T> {
         Ok(previous)
     }
 
+    #[expect(clippy::result_large_err, reason = "GPU admission returns the exact resource and reservation owner without allocating during refusal.")]
     fn insert_vacant(&mut self, index: usize, entry: RasterTextureEntry<T>) -> Result<(), RasterTextureEntry<T>> {
         let Some(slot) = self.slots.get_mut(index) else { return Err(entry) };
         if slot.is_some() {
@@ -866,6 +865,7 @@ pub struct RasterTextureAdmission {
     nonce: u64,
 }
 
+#[expect(clippy::large_enum_variant, reason = "Failed staging returns the exact admitted texture and view without allocating during refusal.")]
 pub enum RasterTextureStageFault {
     Returned { fault: &'static str, admission: RasterTextureAdmission, texture: wgpu::Texture, view: wgpu::TextureView },
     Retained(&'static str),
@@ -998,6 +998,12 @@ impl RasterTextureReservationRetirement {
     }
 }
 
+impl RasterTextureAdmission {
+    fn into_retirement(self) -> RasterTextureReservationRetirement {
+        RasterTextureReservationRetirement::new(RasterTextureReservation { key: self.key, witness: self.witness, width: self.width, height: self.height, bytes: self.bytes, staged_index: self.staged_index, nonce: self.nonce })
+    }
+}
+
 struct RasterTextureReservationCloseCursor {
     reservation_retirement: Option<RasterTextureReservationRetirement>,
     admission_retirement: Option<RasterTextureReservationRetirement>,
@@ -1011,30 +1017,14 @@ impl RasterTextureReservationCloseCursor {
     fn cancelled(reservation: RasterTextureReservation, admission: RasterTextureAdmission) -> Self {
         Self {
             reservation_retirement: Some(RasterTextureReservationRetirement::new(reservation)),
-            admission_retirement: Some(RasterTextureReservationRetirement::new(RasterTextureReservation {
-                key: admission.key,
-                witness: admission.witness,
-                width: admission.width,
-                height: admission.height,
-                bytes: admission.bytes,
-                staged_index: admission.staged_index,
-                nonce: admission.nonce,
-            })),
+            admission_retirement: Some(admission.into_retirement()),
         }
     }
 
     fn rejected(admission: RasterTextureAdmission) -> Self {
         Self {
             reservation_retirement: None,
-            admission_retirement: Some(RasterTextureReservationRetirement::new(RasterTextureReservation {
-                key: admission.key,
-                witness: admission.witness,
-                width: admission.width,
-                height: admission.height,
-                bytes: admission.bytes,
-                staged_index: admission.staged_index,
-                nonce: admission.nonce,
-            })),
+            admission_retirement: Some(admission.into_retirement()),
         }
     }
 
@@ -1155,6 +1145,7 @@ struct RasterTextureUploadCursor {
     allocation_claim: Option<RasterTextureStageClaim>,
 }
 
+#[derive(Clone, Copy)]
 pub(crate) enum RasterUploadPixels<'a> {
     #[cfg(test)]
     Contiguous(&'a [u8]),
@@ -1347,15 +1338,7 @@ impl RasterTextureUploadCloseCursor {
             return RasterTextureCleanupStep::retained();
         }
         if let Some(admission) = self.admission.take() {
-            self.admission_retirement = Some(RasterTextureReservationRetirement::new(RasterTextureReservation {
-                key: admission.key,
-                witness: admission.witness,
-                width: admission.width,
-                height: admission.height,
-                bytes: admission.bytes,
-                staged_index: admission.staged_index,
-                nonce: admission.nonce,
-            }));
+            self.admission_retirement = Some(admission.into_retirement());
             return RasterTextureCleanupStep::retained();
         }
         RasterTextureCleanupStep::Complete
@@ -1547,6 +1530,7 @@ impl RasterTextureTable {
         self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor { admission: Some(admission), row: 0, texture, view, bind_group: None, allocation_claim: None }));
     }
 
+    #[expect(clippy::result_large_err, reason = "GPU admission returns the exact resource and reservation owner without allocating during refusal.")]
     fn stage_claimed_texture(&mut self, admission: RasterTextureAdmission, value: RasterTexture, claim: RasterTextureStageClaim) -> Result<(), (&'static str, RasterTextureAdmission, RasterTexture)> {
         if self.reservation != Some(claim.reservation) || !claim.reservation.matches(&admission) || claim.candidate != admission.witness || claim.staged_index != admission.staged_index || claim.staged_nonce != admission.nonce {
             return Err(("raster allocation claim changed before publication", admission, value));
@@ -1596,10 +1580,7 @@ impl RasterTextureTable {
             self.upload = Some(RasterTextureUploadCursor { admission: Some(admission), row: 0, texture: None, view: None, bind_group: None, allocation_claim: None });
             let allocation_claim = {
                 let admission = self.upload.as_ref().and_then(|cursor| cursor.admission.as_ref()).expect("retained raster texture admission");
-                match self.claim_texture_allocation(admission, expected) {
-                    Ok(claim) => claim,
-                    Err(fault) => return Err(fault),
-                }
+                self.claim_texture_allocation(admission, expected)?
             };
             self.upload.as_mut().expect("retained raster texture claim").allocation_claim = Some(allocation_claim);
             let texture = device.create_texture(&wgpu::TextureDescriptor {
@@ -1615,20 +1596,14 @@ impl RasterTextureTable {
             self.upload.as_mut().expect("retained raster texture upload").texture = Some(texture);
             let allocation_claim = {
                 let admission = self.upload.as_ref().and_then(|cursor| cursor.admission.as_ref()).expect("retained raster view admission");
-                match self.claim_view_allocation(admission, expected) {
-                    Ok(claim) => claim,
-                    Err(fault) => return Err(fault),
-                }
+                self.claim_view_allocation(admission, expected)?
             };
             self.upload.as_mut().expect("retained raster view claim").allocation_claim = Some(allocation_claim);
             let view = self.upload.as_ref().and_then(|cursor| cursor.texture.as_ref()).expect("retained raster texture owner").create_view(&wgpu::TextureViewDescriptor::default());
             self.upload.as_mut().expect("retained raster view upload").view = Some(view);
             let allocation_claim = {
                 let admission = self.upload.as_ref().and_then(|cursor| cursor.admission.as_ref()).expect("retained raster bind-group admission");
-                match self.claim_bind_group_allocation(admission, expected) {
-                    Ok(claim) => claim,
-                    Err(fault) => return Err(fault),
-                }
+                self.claim_bind_group_allocation(admission, expected)?
             };
             self.upload.as_mut().expect("retained raster bind-group claim").allocation_claim = Some(allocation_claim);
             let view = self.upload.as_ref().and_then(|cursor| cursor.view.as_ref()).expect("retained raster view owner");
@@ -1639,7 +1614,7 @@ impl RasterTextureTable {
                     wgpu::BindGroupEntry { binding: 0, resource: globals_buffer.as_entire_binding() },
                     wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(glyph_view) },
                     wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(glyph_sampler) },
-                    wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(&view) },
+                    wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(view) },
                     wgpu::BindGroupEntry { binding: 4, resource: wgpu::BindingResource::Sampler(&self.sampler) },
                 ],
             });
@@ -1700,6 +1675,7 @@ impl RasterTextureTable {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
+    #[expect(clippy::result_large_err, reason = "GPU admission returns the exact resource and reservation owner without allocating during refusal.")]
     pub fn stage_gpu_bind_group(
         &mut self,
         device: &wgpu::Device,

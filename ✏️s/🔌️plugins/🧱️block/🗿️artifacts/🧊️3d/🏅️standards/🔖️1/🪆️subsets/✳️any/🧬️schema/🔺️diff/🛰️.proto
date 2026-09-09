@@ -26,27 +26,7 @@ message Block3dDiff {
   optional BlockCamera3d camera3d = 10;
   // @state artifact
   optional BlockMeta meta = 11;
-  // @state presence
-  optional Block3dStringList selected_ids = 12;
-  // @state presence
-  optional string active_representation_id = 13;
-  // @state presence
-  optional Block3dStringList wanted_tags = 14;
   // @state config
-  // @state config
-  optional Block3dWindowsList windows = 16;
-  // @state config
-  optional string brush_vortex_kind_id = 17;
-  // @state config
-  optional double brush_radius = 18;
-  // @state config
-  optional bool brush_flip = 19;
-  // @state artifact
-  optional Block3dBrushPreview brush_preview = 20;
-  // @state config
-  optional BlockCamera3d camera = 21;
-  // @state artifact
-  optional string hovered_vortex_full_id = 22;
 }
 
 message BlockKindIdentity {
@@ -86,10 +66,6 @@ message BlockMeta {
 }
 
 message Block3dWindowView {
-  bool _placeholder = 1;
-}
-
-message Block3dBrushPreview {
   bool _placeholder = 1;
 }
 

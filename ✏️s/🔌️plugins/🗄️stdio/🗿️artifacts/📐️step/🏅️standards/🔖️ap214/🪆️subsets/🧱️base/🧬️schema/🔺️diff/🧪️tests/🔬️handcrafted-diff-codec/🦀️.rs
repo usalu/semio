@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::STDIO_STEP_DOCUMENT_SCHEMA;
 use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
+use crate::STDIO_STEP_DOCUMENT_SCHEMA;
 use protocol::DiffCodec;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

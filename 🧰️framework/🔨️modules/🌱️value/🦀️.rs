@@ -11,6 +11,9 @@
 pub mod ordered;
 //#endregion 🗂️OrderedOwnership
 
+#[path = "🧬️clone/🦀️.rs"]
+pub mod bounded_clone;
+
 //#region 🔁️Codec
 #[path = "🔁️codec/🦀️.rs"]
 mod codec;

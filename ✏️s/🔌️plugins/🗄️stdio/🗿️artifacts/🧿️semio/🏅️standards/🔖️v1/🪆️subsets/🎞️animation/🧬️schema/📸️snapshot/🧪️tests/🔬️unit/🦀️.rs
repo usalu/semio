@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧪️ codec_retention_law: decode(encode(x)) == x through both the pack (binary) and dsl

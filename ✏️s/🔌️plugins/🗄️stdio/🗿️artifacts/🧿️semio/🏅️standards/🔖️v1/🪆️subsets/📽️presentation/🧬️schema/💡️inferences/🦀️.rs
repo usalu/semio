@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresenta
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::{compute_semio_presentation_outline};
+use super::outline::compute_semio_presentation_outline;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio presentation snapshot. One field per named inference
 /// under `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir).
@@ -69,13 +69,7 @@ impl ArtifactInferrer for crate::standards::v1::subsets::presentation::schema::S
 pub fn semio_presentation_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.presentation.inference",
-        inference: framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

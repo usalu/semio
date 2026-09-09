@@ -13,9 +13,9 @@
 //!   `SemioVideoSample` has no separate decode/presentation timestamp pair.
 //! - `Mp4Snapshot.ftyp` has no video-subset counterpart and is dropped.
 
-use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };

@@ -455,10 +455,29 @@ mod mounted_laws {
 
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
-            crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, GENERATION3D_ENVELOPE_CONTROL_CREDITS),
+            crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_admit_publication_authority(
+                operation,
+                Generation(41),
+                41,
+                40,
+                41,
+                GENERATION3D_ENVELOPE_MAXIMUM_ITEMS,
+                GENERATION3D_ENVELOPE_OUTPUT_CHANNELS,
+                GENERATION3D_ENVELOPE_CONTROL_CREDITS
+            ),
             Err("generation3d-publication.initial-freshness")
         );
-        assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, GENERATION3D_ENVELOPE_CONTROL_CREDITS,).is_ok());
+        assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_admit_publication_authority(
+            operation,
+            Generation(41),
+            41,
+            41,
+            41,
+            GENERATION3D_ENVELOPE_MAXIMUM_ITEMS,
+            GENERATION3D_ENVELOPE_OUTPUT_CHANNELS,
+            GENERATION3D_ENVELOPE_CONTROL_CREDITS,
+        )
+        .is_ok());
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation3d-publication.wrong-operation"));
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation3d-publication.wrong-generation"));
@@ -466,7 +485,17 @@ mod mounted_laws {
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("generation3d-publication.wrong-base"));
         assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_release_publication_authority(operation, Generation(41)));
 
-        assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, GENERATION3D_ENVELOPE_CONTROL_CREDITS,).is_ok());
+        assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_admit_publication_authority(
+            operation,
+            Generation(42),
+            42,
+            42,
+            42,
+            GENERATION3D_ENVELOPE_MAXIMUM_ITEMS,
+            GENERATION3D_ENVELOPE_OUTPUT_CHANNELS,
+            GENERATION3D_ENVELOPE_CONTROL_CREDITS,
+        )
+        .is_ok());
         assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_publication_authority(operation, Generation(41)).is_err());
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));

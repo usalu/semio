@@ -26,11 +26,11 @@
 //! until its own lane migrates it.
 
 use crate::standards::v1::subsets::animation::schema::{mutations::SemioAnimationMutation, snapshot::SemioAnimationSnapshot};
-use crate::standards::v1::subsets::base::schema::diff::SemioDiff;
-use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
-use crate::standards::v1::subsets::audio::schema::{mutations::{SemioAudioMutation}, snapshot::SemioAudioSnapshot};
 #[cfg(test)]
 use crate::standards::v1::subsets::audio::schema::mutations::set_sample_rate;
+use crate::standards::v1::subsets::audio::schema::{mutations::SemioAudioMutation, snapshot::SemioAudioSnapshot};
+use crate::standards::v1::subsets::base::schema::diff::SemioDiff;
+use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
 use crate::standards::v1::subsets::brep::schema::{mutations::SemioBrepMutation, snapshot::SemioBrepSnapshot};
 use crate::standards::v1::subsets::cad::schema::{mutations::SemioCadMutation, snapshot::SemioCadSnapshot};
 use crate::standards::v1::subsets::document::schema::{mutations::SemioDocumentMutation, snapshot::SemioDocumentSnapshot};
@@ -52,6 +52,42 @@ use protocol::OpBinary;
 use protocol::OpText;
 
 //#region 🔖️Mutation
+#[path = "🎞️apply-animation/🦀️.rs"]
+pub mod apply_animation;
+#[path = "🔊apply-audio/🦀️.rs"]
+pub mod apply_audio;
+#[path = "🧱apply-brep/🦀️.rs"]
+pub mod apply_brep;
+#[path = "📐apply-cad/🦀️.rs"]
+pub mod apply_cad;
+#[path = "📃apply-document/🦀️.rs"]
+pub mod apply_document;
+#[path = "🖊️apply-drawing/🦀️.rs"]
+pub mod apply_drawing;
+#[path = "🔀apply-flow/🦀️.rs"]
+pub mod apply_flow;
+#[path = "🌐apply-graph/🦀️.rs"]
+pub mod apply_graph;
+#[path = "🖼️apply-image/🦀️.rs"]
+pub mod apply_image;
+#[path = "🧰apply-kit/🦀️.rs"]
+pub mod apply_kit;
+#[path = "🕸️apply-mesh/🦀️.rs"]
+pub mod apply_mesh;
+#[path = "🏛️apply-model/🦀️.rs"]
+pub mod apply_model;
+#[path = "📦apply-object/🦀️.rs"]
+pub mod apply_object;
+#[path = "📽️apply-presentation/🦀️.rs"]
+pub mod apply_presentation;
+#[path = "🗂️apply-table/🦀️.rs"]
+pub mod apply_table;
+#[path = "🔤apply-text/🦀️.rs"]
+pub mod apply_text;
+#[path = "🔢apply-value/🦀️.rs"]
+pub mod apply_value;
+#[path = "🎬apply-video/🦀️.rs"]
+pub mod apply_video;
 /// 🔧️ Adjacently tagged (`tag = "mutation"`, `content = "payload"`), NOT internally tagged like
 /// every one of the 18 wrapped subset enums' own `#[value(tag = "mutation", ...)]` — an
 /// internally-tagged wrapper here would collide key-for-key with a wrapped variant's OWN
@@ -73,42 +109,6 @@ use protocol::OpText;
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🧱apply-brep/🦀️.rs"]
-pub mod apply_brep;
-#[path = "🕸️apply-mesh/🦀️.rs"]
-pub mod apply_mesh;
-#[path = "🏛️apply-model/🦀️.rs"]
-pub mod apply_model;
-#[path = "🔢apply-value/🦀️.rs"]
-pub mod apply_value;
-#[path = "📃apply-document/🦀️.rs"]
-pub mod apply_document;
-#[path = "📐apply-cad/🦀️.rs"]
-pub mod apply_cad;
-#[path = "🖊️apply-drawing/🦀️.rs"]
-pub mod apply_drawing;
-#[path = "🖼️apply-image/🦀️.rs"]
-pub mod apply_image;
-#[path = "🎬apply-video/🦀️.rs"]
-pub mod apply_video;
-#[path = "🔊apply-audio/🦀️.rs"]
-pub mod apply_audio;
-#[path = "🎞️apply-animation/🦀️.rs"]
-pub mod apply_animation;
-#[path = "📽️apply-presentation/🦀️.rs"]
-pub mod apply_presentation;
-#[path = "🔀apply-flow/🦀️.rs"]
-pub mod apply_flow;
-#[path = "🔤apply-text/🦀️.rs"]
-pub mod apply_text;
-#[path = "🗂️apply-table/🦀️.rs"]
-pub mod apply_table;
-#[path = "🌐apply-graph/🦀️.rs"]
-pub mod apply_graph;
-#[path = "📦apply-object/🦀️.rs"]
-pub mod apply_object;
-#[path = "🧰apply-kit/🦀️.rs"]
-pub mod apply_kit;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -164,27 +164,7 @@ pub enum SemioMutation {
 /// are spelled by their SUBSET name (`brep`, `mesh`, …), which is what the envelope actually routes
 /// on; `kinds_match_the_enum_and_the_catalog` below pins the list with a WILDCARD-FREE match, so a
 /// nineteenth subset cannot be added without extending both it and `KINDS`.
-pub const KINDS: &[&str] = &[
-    "set-snapshot",
-    "brep",
-    "mesh",
-    "model",
-    "value",
-    "document",
-    "cad",
-    "drawing",
-    "image",
-    "video",
-    "audio",
-    "animation",
-    "presentation",
-    "flow",
-    "text",
-    "table",
-    "graph",
-    "object",
-    "kit",
-];
+pub const KINDS: &[&str] = &["set-snapshot", "brep", "mesh", "model", "value", "document", "cad", "drawing", "image", "video", "audio", "animation", "presentation", "flow", "text", "table", "graph", "object", "kit"];
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
@@ -219,12 +199,7 @@ pub fn inverse_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) ->
 /// of them can name this crate's private `protocol` extern-crate alias to ask it directly.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_mutation_refusals<D>(outcome: &protocol::MutationOutcome<D>) -> Vec<String> {
-    outcome
-        .messages()
-        .iter()
-        .filter(|message| message.level >= protocol::Severity::Error)
-        .map(|message| format!("{:?} {:?}: {}", message.level, message.code, message.message))
-        .collect()
+    outcome.messages().iter().filter(|message| message.level >= protocol::Severity::Error).map(|message| format!("{:?} {:?}: {}", message.level, message.code, message.message)).collect()
 }
 
 /// 🚦️ The FAULT CODES of the refusing messages in `outcome`, in order — the same `Error`/`Fatal`
@@ -281,26 +256,60 @@ pub(crate) fn agg_inverse(this: &SemioMutation, base: &SemioSnapshot) -> Vec<Sem
     use SemioSubsetSnapshot as S;
     match (this, &base.subset) {
         (SemioMutation::SetSnapshot(_), _) => vec![SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        (SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation }), S::Brep(b)) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: inner })).collect(),
-        (SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation }), S::Mesh(b)) => <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: inner })).collect(),
-        (SemioMutation::ApplyModel(apply_model::ApplyModel { mutation }), S::Model(b)) => <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: inner })).collect(),
-        (SemioMutation::ApplyValue(apply_value::ApplyValue { mutation }), S::Value(b)) => <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: inner })).collect(),
-        (SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation }), S::Document(b)) => <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: inner })).collect(),
-        (SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation }), S::Cad(b)) => <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: inner })).collect(),
-        (SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation }), S::Drawing(b)) => <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation: inner })).collect(),
-        (SemioMutation::ApplyImage(apply_image::ApplyImage { mutation }), S::Image(b)) => <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: inner })).collect(),
-        (SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation }), S::Video(b)) => <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: inner })).collect(),
-        (SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation }), S::Audio(b)) => <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: inner })).collect(),
-        (SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation }), S::Animation(b)) => <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: inner })).collect(),
+        (SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation }), S::Brep(b)) => {
+            <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation }), S::Mesh(b)) => {
+            <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyModel(apply_model::ApplyModel { mutation }), S::Model(b)) => {
+            <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyValue(apply_value::ApplyValue { mutation }), S::Value(b)) => {
+            <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation }), S::Document(b)) => {
+            <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation }), S::Cad(b)) => {
+            <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation }), S::Drawing(b)) => {
+            <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyImage(apply_image::ApplyImage { mutation }), S::Image(b)) => {
+            <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation }), S::Video(b)) => {
+            <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation }), S::Audio(b)) => {
+            <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation }), S::Animation(b)) => {
+            <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: inner })).collect()
+        }
         (SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation }), S::Presentation(b)) => {
             <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: inner })).collect()
         }
-        (SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation }), S::Flow(b)) => <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: inner })).collect(),
-        (SemioMutation::ApplyText(apply_text::ApplyText { mutation }), S::Text(b)) => <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyText(apply_text::ApplyText { mutation: inner })).collect(),
-        (SemioMutation::ApplyTable(apply_table::ApplyTable { mutation }), S::Table(b)) => <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: inner })).collect(),
-        (SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation }), S::Graph(b)) => <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation: inner })).collect(),
-        (SemioMutation::ApplyObject(apply_object::ApplyObject { mutation }), S::Object(b)) => <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: inner })).collect(),
-        (SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation }), S::Kit(b)) => <SemioKitMutation as Mutation<SemioKitSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: inner })).collect(),
+        (SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation }), S::Flow(b)) => {
+            <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyText(apply_text::ApplyText { mutation }), S::Text(b)) => {
+            <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyText(apply_text::ApplyText { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyTable(apply_table::ApplyTable { mutation }), S::Table(b)) => {
+            <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation }), S::Graph(b)) => {
+            <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyObject(apply_object::ApplyObject { mutation }), S::Object(b)) => {
+            <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: inner })).collect()
+        }
+        (SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation }), S::Kit(b)) => {
+            <SemioKitMutation as Mutation<SemioKitSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: inner })).collect()
+        }
         // 🛡️ Same kind-mismatch fallback as `agg_diff` above; nothing to restore.
         _ => Vec::new(),
     }
@@ -537,23 +546,22 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
         SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::SetSnapshot(crate::standards::v1::subsets::document::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
         SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::SetSnapshot(crate::standards::v1::subsets::cad::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
         SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing {
-            mutation: SemioDrawingMutation::DragNodes(crate::standards::v1::subsets::drawing::schema::mutations::drag_nodes::DragNodes {
-                ats: Vec::new(),
-                offset: crate::standards::v1::subsets::base::schema::geometry::SemioPoint2::default(),
-            }),
+            mutation: SemioDrawingMutation::DragNodes(crate::standards::v1::subsets::drawing::schema::mutations::drag_nodes::DragNodes { ats: Vec::new(), offset: crate::standards::v1::subsets::base::schema::geometry::SemioPoint2::default() }),
         }),
         SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::SetSnapshot(crate::standards::v1::subsets::image::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
         SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::SetSnapshot(crate::standards::v1::subsets::video::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
         SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSnapshot(crate::standards::v1::subsets::audio::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-        SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::SetSnapshot(crate::standards::v1::subsets::animation::schema::mutations::set_snapshot::SetSnapshot { snapshot: SemioAnimationSnapshot::default() }) }),
-        SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::SetSnapshot(crate::standards::v1::subsets::presentation::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+        SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation {
+            mutation: SemioAnimationMutation::SetSnapshot(crate::standards::v1::subsets::animation::schema::mutations::set_snapshot::SetSnapshot { snapshot: SemioAnimationSnapshot::default() }),
+        }),
+        SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation {
+            mutation: SemioPresentationMutation::SetSnapshot(crate::standards::v1::subsets::presentation::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }),
+        }),
         SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::SetSnapshot(crate::standards::v1::subsets::flow::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
         SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::RemoveRun(crate::standards::v1::subsets::text::schema::mutations::remove_run::RemoveRun { index: 99 }) }),
         SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::RemoveRow(crate::standards::v1::subsets::table::schema::mutations::remove_row::RemoveRow { index: 99 }) }),
         SemioMutation::ApplyGraph(apply_graph::ApplyGraph {
-            mutation: SemioGraphMutation::DeleteNode(crate::standards::v1::subsets::graph::schema::mutations::delete_node::DeleteNode {
-                id: crate::standards::v1::subsets::graph::schema::snapshot::GraphNodeId::new("absent"),
-            }),
+            mutation: SemioGraphMutation::DeleteNode(crate::standards::v1::subsets::graph::schema::mutations::delete_node::DeleteNode { id: crate::standards::v1::subsets::graph::schema::snapshot::GraphNodeId::new("absent") }),
         }),
         SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::DeleteBrep(crate::standards::v1::subsets::object::schema::mutations::delete_brep::DeleteBrep {}) }),
         SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::RemoveType(crate::standards::v1::subsets::kit::schema::mutations::remove_type::RemoveType { id: "absent".into() }) }),

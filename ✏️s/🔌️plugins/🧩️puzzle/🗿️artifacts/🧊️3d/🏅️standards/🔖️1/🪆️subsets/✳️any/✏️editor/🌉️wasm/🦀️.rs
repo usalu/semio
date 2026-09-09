@@ -11,6 +11,7 @@ use crate::editor::puzzle3d::Puzzle3dPlayApp;
 use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
+pub use js_sys::{Promise, Uint8Array};
 
 type Puzzle3dApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
 
@@ -53,7 +54,7 @@ pub struct Puzzle3dArtifactVcs {
 
 #[wasm_bindgen]
 impl Puzzle3dArtifactVcs {
-    pub fn create() -> js_sys::Promise {
+    pub fn create() -> Promise {
         semio_framework_async::future_to_promise(async {
             let app = VcsArtifactApp::new(EditorApp::<Puzzle3dPlayApp>::default()).await;
             Ok(Self { app: RefCell::new(app) }.into())
@@ -70,7 +71,7 @@ impl Puzzle3dArtifactVcs {
     }
 
     #[wasm_bindgen(js_name = admitEnvelopePage)]
-    pub fn admit_envelope_page(&self, handle: &Puzzle3dEnvelopeLoadHandle, source: &js_sys::Uint8Array) -> Result<(), JsValue> {
+    pub fn admit_envelope_page(&self, handle: &Puzzle3dEnvelopeLoadHandle, source: &Uint8Array) -> Result<(), JsValue> {
         let len = usize::try_from(source.length()).map_err(js_fault)?;
         if len > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
             return Err(js_fault("puzzle3d-envelope.page-too-large"));

@@ -1,0 +1,17 @@
+type WriterMainWindowConfig {
+  camera: WriterCamera! @state(class: CONFIG)
+  editorSettings: WriterEditorSettings! @state(class: CONFIG)
+}
+
+type WriterCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type WriterEditorSettings {
+  showLineNumbers: Boolean!
+  fontPx: Int!
+  lineHeight: Int!
+  tabSize: Int!
+}

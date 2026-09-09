@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v2x3::engine::{demo_ifc2x3_snapshot, empty_ifc2x3_snapshot};
 use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};

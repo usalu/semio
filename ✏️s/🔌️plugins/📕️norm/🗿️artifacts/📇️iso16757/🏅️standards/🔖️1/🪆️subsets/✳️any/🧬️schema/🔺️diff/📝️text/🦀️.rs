@@ -43,9 +43,6 @@ impl Iso16757Diff {
             if let Some(value) = &self.exchange_process {
                 next.exchange_process = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -105,7 +102,6 @@ impl MutationDiff<Iso16757Snapshot> for Iso16757Diff {
         take!(part_number_inputs);
         take!(script_limits);
         take!(exchange_process);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

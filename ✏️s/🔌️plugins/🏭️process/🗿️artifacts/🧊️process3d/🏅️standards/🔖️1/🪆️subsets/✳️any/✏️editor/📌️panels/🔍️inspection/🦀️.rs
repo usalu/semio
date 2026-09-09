@@ -8,8 +8,8 @@
 //! This panel resolves that id against the document and renders its real fields; an empty selection (or
 //! one that resolves to nothing, e.g. a just-deleted step) still falls back to the empty state.
 
-use crate::{Capability, Pose, ProcessMeasure, ProcessStep, Process3dSnapshot, Stock, WorkingSolid, WorkshopMachine};
 use crate::editor::process3d::terminology::{process3d_measure_label, Process3dLabels};
+use crate::{Capability, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, Stock, WorkingSolid, WorkshopMachine};
 use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
@@ -31,9 +31,7 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Fields
 /// 🧾️ One read-only `"{label}: {value}"` row, admitted into a field list under `id`.
 fn push_field(fields: &mut semio_framework_plugin::UiFixedList<BuiltNode>, id: impl AsRef<str>, label: &str, value: impl std::fmt::Display) -> UiAssemblyResult<()> {
-    fields
-        .try_push(tree_item(id, format!("{label}: {value}"))?)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed inspector field admission failed"))
+    fields.try_push(tree_item(id, format!("{label}: {value}"))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed inspector field admission failed"))
 }
 
 /// 🧱️ A `WorkingSolid`'s kind plus its own variant-specific dimensions.

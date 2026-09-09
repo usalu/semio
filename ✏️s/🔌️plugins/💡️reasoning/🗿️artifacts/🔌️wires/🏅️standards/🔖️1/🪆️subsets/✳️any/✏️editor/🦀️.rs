@@ -16,8 +16,9 @@
 //! `crate::editor::wires::config::WiresConfigMutation`s (real `backwards`, no ad hoc runtime `RefCell`);
 //! every action dispatches through the single typed `WiresCommand` channel via `ArtifactEditor::handle`.
 
-use crate::op::WiresMutation;
-use crate::WiresSnapshot;
+#[path = "🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🦀️.rs"]
+pub mod window_transient;
+
 use crate::editor::wires::commands::add_node;
 use crate::editor::wires::commands::add_relationship;
 use crate::editor::wires::commands::delete_selection;
@@ -27,13 +28,15 @@ use crate::editor::wires::commands::{force_layout, reorganize};
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::modes::edit;
 use crate::editor::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::op::WiresMutation;
+use crate::WiresSnapshot;
 use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect,
-    DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor,
+    EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
     INTERACTION_SELECT_ACTION_ID,
 };
 use serde_json::{json, Value};
@@ -52,7 +55,6 @@ pub fn wires_action(action: &str, args: Option<semio_framework_plugin::UiValue>)
     semio_framework_plugin::ActionFactory::new(WIRES_PLAY_APP_ID).action(action, args)
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
     semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.label-capacity", "wires label exceeds its fixed capacity"))
@@ -60,9 +62,7 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
 
 /// 📝️ Admits text into an action payload.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -75,27 +75,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -105,13 +98,10 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
-
 
 /// 🔁️ Builds a `Effect::LoadDocument` for `document` — the sanctioned non-history "replace the
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
@@ -183,13 +173,12 @@ semio_framework_plugin::app_commands! {
 pub struct ReasoningWiresPlayApp;
 
 //#region 🧵️RetainedCommands
-const WIRES_RETAINED_TOOL_IDS: &[&str] = &["canvasPointerUp", ];
+const WIRES_RETAINED_TOOL_IDS: &[&str] = &["canvasPointerDown", "canvasPointerUp"];
 const WIRES_RETAINED_PAYLOAD_SCHEMA: &str = "reasoning.wires.tool-command.v1";
 const WIRES_RETAINED_RAW_BYTES: usize = 8_192;
-const WIRES_RETAINED_WORK_ITEMS: usize = 1;
-const WIRES_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::Config] },
-];
+const WIRES_RETAINED_WORK_ITEMS: usize = 1_048_576;
+const WIRES_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
+    &[ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::WindowTransient] }, ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::WindowTransient] }];
 
 fn wires_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(WIRES_RETAINED_RAW_BYTES, 16, WIRES_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
@@ -197,24 +186,71 @@ fn wires_retained_contract() -> ToolExecutionContract {
 
 fn wires_retained_extent(command: &WiresCommand, _snapshot: &WiresSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     match command {
-        WiresCommand::CanvasPointerUp(_) => Some(WIRES_RETAINED_WORK_ITEMS),
+        WiresCommand::CanvasPointerUp(_) => Some(1),
+        WiresCommand::CanvasPointerDown(payload) if payload.id.as_ref().is_none_or(|id| id.len() <= 1_024) && payload.x.is_finite() && payload.y.is_finite() => Some(WIRES_RETAINED_WORK_ITEMS),
         _ => None,
     }
 }
 
-fn wires_retained_reduce(
-    command: &WiresCommand,
-    _snapshot: &WiresSnapshot,
-    _config: &WiresConfig,
-    _history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>,
-    _operation: &AppOperationContext,
-) -> Result<Emit<WiresMutation, WiresConfigMutation, NoDraftMutation>, Fault> {
-    match command {
-        WiresCommand::CanvasPointerUp(_) => Ok(Emit::config(vec![WiresConfigMutation::SetDrag(crate::editor::wires::config::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 })])),
-        _ => Err(Fault::from("wires-retained-route-mismatch")),
+struct WiresWindowDragWork {
+    tool_id: &'static str,
+    node_cursor: usize,
+    field_cursor: usize,
+    visited: usize,
+    consumed: bool,
+}
+
+impl WiresWindowDragWork {
+    fn complete(&mut self, window: &semio_framework_plugin::WindowTransientSnapshot, node_id: Option<String>, x: f64, y: f64) -> ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>> {
+        self.consumed = true;
+        let effects = node_id.as_ref().map(|id| vec![wires_select_effect(std::slice::from_ref(id), WIRES_GRANULARITY_NODE, "replace")]).unwrap_or_default();
+        let mutation = semio_framework_plugin::WindowTransientMutation::of::<window_transient::WiresCanvasTransientOwner>(window.window_id(), window_transient::SetDrag { node_id, last_x: x, last_y: y }.into());
+        ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit { effects, ..Default::default() }, ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] } }
+    }
+}
+
+impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &WiresCommand, snapshot: &WiresSnapshot, interaction: &protocol::InteractionState, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>) -> Option<usize> {
+        context?.window_transient.as_ref()?.get::<window_transient::WiresCanvasTransientOwner>()?;
+        (command.command_id() == self.tool_id).then(|| wires_retained_extent(command, snapshot, interaction)).flatten()
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<ReasoningWiresPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>>, Fault> {
+        if self.consumed || self.visited >= WIRES_RETAINED_WORK_ITEMS {
+            return Err(Fault::from("wires-window-drag-work-capacity"));
+        }
+        self.visited += 1;
+        let window = input.context.and_then(|context| context.window_transient.as_ref()).ok_or_else(|| Fault::from("wires-drag-requires-window"))?;
+        window.get::<window_transient::WiresCanvasTransientOwner>().ok_or_else(|| Fault::from("wires-drag-window-kind"))?;
+        match input.command {
+            WiresCommand::CanvasPointerUp(_) => Ok(self.complete(window, None, 0.0, 0.0)),
+            WiresCommand::CanvasPointerDown(payload) => {
+                let Some(id) = payload.id.as_ref() else {
+                    return Ok(self.complete(window, None, 0.0, 0.0));
+                };
+                let scene = input.snapshot.content.local_owner::<crate::WiresWorkingScene>().ok_or_else(|| Fault::from("wires-drag-child-not-materialized"))?;
+                let Some(node) = scene.nodes.get(self.node_cursor) else {
+                    return Ok(self.complete(window, None, 0.0, 0.0));
+                };
+                if let dsl::DslValue::Object(fields) = node {
+                    if let Some((key, value)) = fields.get(self.field_cursor) {
+                        self.field_cursor += 1;
+                        if key == "id" && value.as_str() == Some(id.as_str()) {
+                            return Ok(self.complete(window, Some(id.clone()), payload.x, payload.y));
+                        }
+                        return Ok(ArtifactCommandWorkStep::Progress { stage: "canvas-hit", preview: &[] });
+                    }
+                }
+                self.node_cursor += 1;
+                self.field_cursor = 0;
+                Ok(ArtifactCommandWorkStep::Progress { stage: "canvas-hit", preview: &[] })
+            }
+            _ => Err(Fault::from("wires-window-drag-route")),
+        }
     }
 }
 
@@ -270,6 +306,7 @@ impl ArtifactOwnedToolJobFactory for WiresRetainedCommandJobFactory {
     type Owner = EditorApp<ReasoningWiresPlayApp>;
     const TOOL_IDS: &'static [&'static str] = WIRES_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;
+
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = WIRES_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
@@ -298,13 +335,28 @@ fn wires_config_mutation_bytes(mutation: &WiresConfigMutation) -> usize {
 fn wires_config_edit(forward: WiresConfigMutation, inverse: Vec<WiresConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<WiresConfigMutation> {
     let id = format!("wires-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
     protocol::Edit {
-        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse,
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
         }],
-        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
     }
 }
 
@@ -316,22 +368,46 @@ impl store::ArtifactStoreOneItemPreparationFactory<WiresConfig, WiresConfigMutat
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<WiresConfig, WiresConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<WiresConfig, WiresConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<WiresConfig, WiresConfigMutation>> {
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES || wires_config_mutation_bytes(&request.mutation) > WIRES_RETAINED_RAW_BYTES { return Err(request); }
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<WiresConfig, WiresConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<WiresConfig, WiresConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<WiresConfig, WiresConfigMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || wires_config_mutation_bytes(&request.mutation) > WIRES_RETAINED_RAW_BYTES
+        {
+            return Err(request);
+        }
         Ok(Box::new(WiresConfigPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            candidate: None,
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
         }))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<WiresConfig, WiresConfigMutation> for WiresConfigPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
         if self.candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "Wires config preparation lost its exact base root".to_string())?.get();
-            if base.drag_node_id.as_ref().map_or(0, String::len) > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Wires config base exceeds retained byte capacity".into()); }
+            if base.drag_node_id.as_ref().map_or(0, String::len) > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {
+                return Err("Wires config base exceeds retained byte capacity".into());
+            }
             let mutation = self.mutation.take().ok_or_else(|| "Wires config preparation lost its mutation owner".to_string())?;
             let post = protocol::Mutation::diff(&mutation, base).into_parts().0;
             let inverse = protocol::Mutation::inverse(&mutation, base);
@@ -347,27 +423,47 @@ impl store::ArtifactStoreOneItemPreparation<WiresConfig, WiresConfigMutation> fo
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<WiresConfig, WiresConfigMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<WiresConfig, WiresConfigMutation>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<WiresConfig, WiresConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<WiresConfig, WiresConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("Wires config preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() {
+                return Err("Wires config preparation could not return its exact base root".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
             let bytes = authority.actor().len();
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.authority = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         Ok(store::SnapshotRetirementStep::Complete)
     }
-    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none() }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+    }
 }
 //#endregion 📬️ConfigStorePreparation
 
@@ -378,8 +474,8 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     type ConfigMutation = WiresConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = crate::editor::wires::presence::WiresPresence;
-    type PresenceMutation = crate::editor::wires::presence::WiresPresenceMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
@@ -388,6 +484,50 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     const DIALECT: Dialect = crate::WIRES_DIALECT;
 
     const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;
+
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::schema::retirement::document_store_owners())
+    }
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(store::MemberStoreOwners::new(
+            std::sync::Arc::new(store::retirement::SharedValueRetirementFactory::<Self::Config>::default()),
+            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Config>::default()),
+            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::ConfigMutation>::default()),
+            Box::new(store::ArtifactStoreCursorDisposer::<Self::Config, Self::ConfigMutation>::new()),
+        ))
+    }
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Config, Self::ConfigMutation>::new()))
+    }
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<window_transient::WiresCanvasTransientOwner>()
+    }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(WiresConfigPreparationFactory))
@@ -400,8 +540,8 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         document_schema: "reasoning.wires.fixture",
         factory: "WiresRetainedCommandJobFactory",
         factory_type: WiresRetainedCommandJobFactory,
-        contract: ToolExecutionContract::bounded_first_step(8_192, 16, 1, 16_384, 7_500),
-        tools: ["canvasPointerUp", ]
+        contract: ToolExecutionContract::bounded_first_step(8_192, 16, 1_048_576, 16_384, 7_500),
+        tools: ["canvasPointerDown", "canvasPointerUp"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -419,8 +559,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         if wires_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::from("wires-command-payload-too-large"));
         }
-        let tool_id = request.command.command_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, wires_retained_reduce, wires_retained_extent));
+        let work = Box::new(WiresWindowDragWork { tool_id: request.command.command_id(), node_cursor: 0, field_cursor: 0, visited: 0, consumed: false });
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -429,7 +568,17 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
             WiresCommand::command_id,
             WIRES_RETAINED_RAW_BYTES,
             WIRES_RETAINED_WORK_ITEMS,
@@ -459,7 +608,8 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         command: &WiresCommand,
         doc: &ArtifactView<'_, WiresSnapshot>,
         cfg: &ConfigView<'_, WiresConfig>,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<WiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
@@ -469,7 +619,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let labels = semio_framework_plugin::resolve_labels::<crate::editor::wires::terminology::WiresLabels>(view_state);
         match body_key {
@@ -478,7 +628,8 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_fixture, labels),
             WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires diagnostic admission failed")),
-        }.map(semio_framework_plugin::built_to_component_tree)
+        }
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️ReasoningWiresPlayApp
@@ -506,19 +657,19 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .panel_tab_def(catalogue_panel::definition())
         .panel_tab_def(inspection_panel::definition())
         // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-        .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
         .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
         .mutation("addRelationship", LocalizedLabel::native("Add Relationship", "Beziehung hinzufügen"))
         .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
         .mutation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
-        .mutation("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"))
-        .mutation("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), semio_framework_plugin::ActionKind::Mutation, "rotate-cw"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_framework_plugin::ActionKind::Mutation, "mouse-pointer"))
         // 👁️ Ephemeral view state — in-flight drag. Selection/hover are framework-owned now
         // (domain "graph") — no app-declared verbs; `interactionSelect`/`interactionHover`/
         // `clearSelection`/`selectAll`/`setSelectionMode`/`setInteractionGranularity` auto-inject
         // below via `.interaction(...)`.
-        .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
-        .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
         .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
@@ -527,7 +678,7 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("forceLayout", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("reorganize", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("canvasPointerMove", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("canvasPointerDown", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
         // 🕹️ Domain "graph": identities (node) and relationships (edge) — `Flat` (the mindmap graph
         // has no parent/child structure to build a topology from, see `WIRES_INTERACTION_GRAPH`'s
         // doc comment); single-select, pick-only, replace-only merge (matches the pre-migration

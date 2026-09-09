@@ -5,9 +5,9 @@
 //! gated by a declared `.depends_on("cad", …)` runtime dependency (contract freeze §3/§4).
 
 use pack::json::{self, Value as JsonValue};
+use semio_framework_os_kernel::{pack_rt, DslValue, FromValue, ToValue};
 use semio_framework_plugin::app::ArtifactContribution;
 use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
-use semio_framework_os_kernel::{pack_rt, DslValue, FromValue, ToValue};
 use semio_s_artifact_cad_cad::{CadMutation, CadSnapshot, CAD_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
 
@@ -79,10 +79,7 @@ fn building_layer_typology() -> BTreeMap<&'static str, &'static str> {
 // 🚫️async: E1 pure — struct literal over `building_layer_typology` (sync), zero suspension points —
 // see R9.
 fn computers_manifest() -> JsonValue {
-    json::object([
-        ("modelDefinitionIds".to_string(), json::array([JsonValue::from("aec.building")])),
-        ("importProfiles".to_string(), json::array([building_import_profile("aec.building", false, None)])),
-    ])
+    json::object([("modelDefinitionIds".to_string(), json::array([JsonValue::from("aec.building")])), ("importProfiles".to_string(), json::array([building_import_profile("aec.building", false, None)]))])
 }
 
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a

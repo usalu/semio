@@ -3,11 +3,11 @@
 //! Emits the frozen `replace-text` action: the incoming text is the artifact's own DSL text envelope (`print_dsl`/`parse_dsl`), round-tripped into a whole-document `SetSnapshot`.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
+use crate::editor::html::modes::edit;
+use crate::editor::html::modes::edit::windows::main;
 use crate::standards::v5::subsets::any::schema::mutations::{set_snapshot::SetSnapshot, HtmlMutation};
 use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
-use crate::editor::html::modes::edit;
-use crate::editor::html::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;
 

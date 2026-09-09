@@ -20,33 +20,33 @@ use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutations
+#[path = "🌉️insert-edge/🦀️.rs"]
+pub mod insert_edge;
+#[path = "➕️insert-node/🦀️.rs"]
+pub mod insert_node;
+#[path = "✂️remove-edge/🦀️.rs"]
+pub mod remove_edge;
+#[path = "🗑️remove-node/🦀️.rs"]
+pub mod remove_node;
+#[path = "🧹️remove-node-param/🦀️.rs"]
+pub mod remove_node_param;
+#[path = "🔌️set-edge-endpoints/🦀️.rs"]
+pub mod set_edge_endpoints;
+#[path = "🎨️set-edge-kind/🦀️.rs"]
+pub mod set_edge_kind;
+#[path = "🏷️set-node-kind/🦀️.rs"]
+pub mod set_node_kind;
+#[path = "🔤️set-node-label/🦀️.rs"]
+pub mod set_node_label;
+#[path = "🎛️set-node-param/🦀️.rs"]
+pub mod set_node_param;
+#[path = "📍️set-node-position/🦀️.rs"]
+pub mod set_node_position;
 /// 📐️ Typed content mutation for `s.stdio.semio.flow`. Addresses `nodes`/`edges` by `id` (both
 /// id-keyed collections) and a node's own `params` by `(id, key)`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "➕️insert-node/🦀️.rs"]
-pub mod insert_node;
-#[path = "🗑️remove-node/🦀️.rs"]
-pub mod remove_node;
-#[path = "🏷️set-node-kind/🦀️.rs"]
-pub mod set_node_kind;
-#[path = "🔤️set-node-label/🦀️.rs"]
-pub mod set_node_label;
-#[path = "📍️set-node-position/🦀️.rs"]
-pub mod set_node_position;
-#[path = "🎛️set-node-param/🦀️.rs"]
-pub mod set_node_param;
-#[path = "🧹️remove-node-param/🦀️.rs"]
-pub mod remove_node_param;
-#[path = "🌉️insert-edge/🦀️.rs"]
-pub mod insert_edge;
-#[path = "✂️remove-edge/🦀️.rs"]
-pub mod remove_edge;
-#[path = "🔌️set-edge-endpoints/🦀️.rs"]
-pub mod set_edge_endpoints;
-#[path = "🎨️set-edge-kind/🦀️.rs"]
-pub mod set_edge_kind;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`

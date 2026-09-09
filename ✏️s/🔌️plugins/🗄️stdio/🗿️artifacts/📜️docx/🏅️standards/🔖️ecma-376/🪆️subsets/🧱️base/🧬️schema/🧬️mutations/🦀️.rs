@@ -13,14 +13,32 @@ use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxStyle};
 #[cfg(test)]
 use crate::schema::snapshot::{DocxParagraph, DocxRun, DocxTable, DocxTableCell, DocxTableRow};
 use crate::DocxSnapshot;
+use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
 #[cfg(test)]
 use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
-use protocol::OpBinary;
-use protocol::{Mutation, OpText};
 use std::collections::HashMap;
 
 //#region 🔖️Mutations
+#[path = "➕insert-block/🦀️.rs"]
+pub mod insert_block;
+#[path = "🖌️insert-style/🦀️.rs"]
+pub mod insert_style;
+#[path = "➖remove-block/🦀️.rs"]
+pub mod remove_block;
+#[path = "🗑️remove-part/🦀️.rs"]
+pub mod remove_part;
+#[path = "🧹remove-style/🦀️.rs"]
+pub mod remove_style;
+#[path = "✍️set-block-content/🦀️.rs"]
+pub mod set_block_content;
+#[path = "📦set-part/🦀️.rs"]
+pub mod set_part;
+#[path = "🎨set-run-formatting/🦀️.rs"]
+pub mod set_run_formatting;
+#[path = "🔤set-run-text/🦀️.rs"]
+pub mod set_run_text;
 /// 📐️ Typed content mutation for `stdio.docx`. Beyond the baseline `SetSnapshot`, this addresses
 /// the `document.body` block tree via `DocxBlockPath` (segments navigate through nested `Table`s,
 /// mirrors svg's `NodePath` precedent), named styles by `DocxStyle::id`, and the raw OPC layer by
@@ -39,28 +57,10 @@ use std::collections::HashMap;
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "➕insert-block/🦀️.rs"]
-pub mod insert_block;
-#[path = "➖remove-block/🦀️.rs"]
-pub mod remove_block;
-#[path = "✍️set-block-content/🦀️.rs"]
-pub mod set_block_content;
-#[path = "🔤set-run-text/🦀️.rs"]
-pub mod set_run_text;
-#[path = "🎨set-run-formatting/🦀️.rs"]
-pub mod set_run_formatting;
-#[path = "🖌️insert-style/🦀️.rs"]
-pub mod insert_style;
-#[path = "🧹remove-style/🦀️.rs"]
-pub mod remove_style;
-#[path = "🏷️set-style-name/🦀️.rs"]
-pub mod set_style_name;
 #[path = "🌳️set-style-based-on/🦀️.rs"]
 pub mod set_style_based_on;
-#[path = "📦set-part/🦀️.rs"]
-pub mod set_part;
-#[path = "🗑️remove-part/🦀️.rs"]
-pub mod remove_part;
+#[path = "🏷️set-style-name/🦀️.rs"]
+pub mod set_style_name;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -101,20 +101,7 @@ pub enum DocxMutation {
 /// match entry-for-entry, so `KINDS[i]` is exactly what `print_op()` emits for the enum's `i`-th
 /// variant (via `demo_mutation_cases()`, which already carries one instance per variant in this
 /// same order).
-pub const KINDS: &[&str] = &[
-    "set-snapshot",
-    "insert-block",
-    "remove-block",
-    "set-block-content",
-    "set-run-text",
-    "set-run-formatting",
-    "insert-style",
-    "remove-style",
-    "set-style-name",
-    "set-style-based-on",
-    "set-part",
-    "remove-part",
-];
+pub const KINDS: &[&str] = &["set-snapshot", "insert-block", "remove-block", "set-block-content", "set-run-text", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -364,7 +351,13 @@ fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
         "remove-block" => Ok(DocxMutation::RemoveBlock(remove_block::RemoveBlock { path: dec_block_path(arg("path")?)? })),
         "set-block-content" => Ok(DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? })),
         "set-run-text" => Ok(DocxMutation::SetRunText(set_run_text::SetRunText { path: dec_block_path(arg("path")?)?, run_index: usize_arg("run-index")?, text: dec_str(arg("text")?)? })),
-        "set-run-formatting" => Ok(DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { path: dec_block_path(arg("path")?)?, run_index: usize_arg("run-index")?, bold: dec_bool(arg("bold")?)?, italic: dec_bool(arg("italic")?)?, underline: dec_bool(arg("underline")?)? })),
+        "set-run-formatting" => Ok(DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting {
+            path: dec_block_path(arg("path")?)?,
+            run_index: usize_arg("run-index")?,
+            bold: dec_bool(arg("bold")?)?,
+            italic: dec_bool(arg("italic")?)?,
+            underline: dec_bool(arg("underline")?)?,
+        })),
         "insert-style" => Ok(DocxMutation::InsertStyle(insert_style::InsertStyle { style: dec_style(arg("style")?)? })),
         "remove-style" => Ok(DocxMutation::RemoveStyle(remove_style::RemoveStyle { id: dec_str(arg("id")?)? })),
         "set-style-name" => Ok(DocxMutation::SetStyleName(set_style_name::SetStyleName { id: dec_str(arg("id")?)?, name: dec_str(arg("name")?)? })),

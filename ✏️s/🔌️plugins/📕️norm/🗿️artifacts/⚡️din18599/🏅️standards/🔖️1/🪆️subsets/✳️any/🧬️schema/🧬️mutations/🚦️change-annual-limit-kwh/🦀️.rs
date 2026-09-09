@@ -1,9 +1,8 @@
 //! 🦡 `change-annual-limit-kwh` payload — changes the Din18599 document's `annual_limit_kwh` (annual primary energy limit [kWh]).
 
-
-use crate::Din18599Snapshot;
 use crate::diff::Din18599Diff;
 use crate::mutations::Din18599Mutation;
+use crate::Din18599Snapshot;
 //#region 🔖️ChangeAnnualLimitKwh
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

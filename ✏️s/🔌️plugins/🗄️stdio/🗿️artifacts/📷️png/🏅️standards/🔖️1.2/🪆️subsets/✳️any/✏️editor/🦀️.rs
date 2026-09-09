@@ -3,11 +3,11 @@
 //! Emits the frozen `set-pixel-region` action onto the artifact's own whole-raster replace mutation.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
+use crate::editor::png::modes::edit;
+use crate::editor::png::modes::edit::windows::main;
 use crate::standards::v1_2::subsets::any::schema::mutations::PngMutation;
 use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
 use crate::{PNG_DIALECT, STDIO_PNG_DOCUMENT_SCHEMA};
-use crate::editor::png::modes::edit;
-use crate::editor::png::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;
 

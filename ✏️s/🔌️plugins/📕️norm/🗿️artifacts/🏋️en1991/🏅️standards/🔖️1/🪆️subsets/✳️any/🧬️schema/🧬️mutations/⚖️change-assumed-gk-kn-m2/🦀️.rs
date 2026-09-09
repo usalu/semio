@@ -1,6 +1,5 @@
 //! ⚖️ `change-assumed-gk-kn-m2` — sets the En1991 assumed self-weight load scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

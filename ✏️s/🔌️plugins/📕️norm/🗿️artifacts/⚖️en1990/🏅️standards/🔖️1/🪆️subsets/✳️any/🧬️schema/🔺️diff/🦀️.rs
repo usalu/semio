@@ -30,8 +30,6 @@ pub struct En1990Diff {
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]
     pub seismic_a_ed_kn: Option<f64>,
-    #[state(presence)]
-    pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

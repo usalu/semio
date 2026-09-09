@@ -1,16 +1,16 @@
 //! 🪚️ Process 3d play app — the workpiece window: the 3D world view of the processed stock, plus the
 //! process-timeline engagement (cursor stepper + command-line input).
 
-use crate::schema::inferences::processed_mesh;
-use crate::{Process3dSnapshot, ProcessWorkingScene};
 use crate::editor::process3d::config::Process3dConfig;
 use crate::editor::process3d::modes::edit::windows::workpiece::options;
+use crate::schema::inferences::processed_mesh;
+use crate::{Process3dSnapshot, ProcessWorkingScene};
+use semio_framework_os_kernel::json;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{
-    mesh_from_kind, world3d_camera_json, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus,
-    WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
+    mesh_from_kind, world3d_camera_json, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+    WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
 };
-use semio_framework_os_kernel::json;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_WINDOW_MAIN: &str = "process-workpiece";
@@ -153,12 +153,7 @@ fn processed_volume_cached(fixture: &Process3dSnapshot) -> f64 {
 //#region 🔖️Render
 pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = preview_payload_cached(fixture);
-    MeshWindowKit::render(&MeshView {
-        camera_json: world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov),
-        meshes_json,
-        instances_json,
-        selection_json: process3d_selection_json(active_utility),
-    })
+    MeshWindowKit::render(&MeshView { camera_json: world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov), meshes_json, instances_json, selection_json: process3d_selection_json(active_utility) })
 }
 //#endregion 🔖️Render
 

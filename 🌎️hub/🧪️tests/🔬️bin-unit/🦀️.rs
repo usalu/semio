@@ -1,4 +1,3 @@
-
 use super::*;
 use directory::os_directory::{DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
 use protocol::{ArtifactId as WireArtifactId, Bootstrap};
@@ -120,7 +119,7 @@ async fn artifact_cas_maintenance_checkpoint_reaches_tail_after_sixteen_requests
     assert!(examined > 16);
 }
 use tokio_tungstenite::connect_async;
-use tokio_tungstenite::tungstenite::{Message as WsMessage, client::IntoClientRequest};
+use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message as WsMessage};
 
 /// @emoji 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
 const STUDIO: &str = "default";
@@ -739,7 +738,7 @@ async fn publish_genesis_checkpoint_for_test(
     spr: &[u8],
 ) -> os_directory::ArtifactCheckpoint {
     use semio_hub::artifact_authority::creation::{
-        ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationPreparedV1, artifact_creation_command_digest_v1,
+        artifact_creation_command_digest_v1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationPreparedV1, ARTIFACT_CREATION_DEADLINE_MS,
     };
     let accepted_at_ms = 1;
     let scope = DocumentScope::new(&descriptor.space_id, &descriptor.document_id);
@@ -1391,9 +1390,13 @@ async fn gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancella
     let kinds: Vec<&str> = page["events"].as_array().expect("events").iter().map(|row| row["kind"].as_str().expect("kind")).collect();
     assert_eq!(kinds, vec!["accepted", "running"], "the private stream exposes Running while actual compute is paused");
     let cursors: Vec<u64> = page["progress"].as_array().expect("progress").iter().map(|row| row["cursor"].as_u64().expect("cursor")).collect();
+    assert!(!cursors.is_empty(), "the test-only pause is downstream of one durable progress heartbeat");
     assert!(cursors.windows(2).all(|pair| pair[1] == pair[0] + 1), "the progress cursor is monotonic and dense: {cursors:?}");
     assert!(cursors.len() as u64 <= fixture["limits"]["progressMaxCursor"].as_u64().expect("cursor bound"), "progress is bounded");
     assert_eq!(page["nextCursor"].as_u64().expect("next cursor"), cursors.last().copied().unwrap_or(0));
+    let persisted = page["progress"].as_array().expect("progress").last().expect("persisted progress");
+    assert!(persisted["completed"].as_u64().is_some_and(|value| value > 0));
+    assert!(persisted["total"].as_u64().is_some_and(|total| persisted["completed"].as_u64().is_some_and(|completed| completed <= total)));
     let cancelled: serde_json::Value = serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/cancel")), &headers, &[]).await.body).expect("cancel page");
     checkpoint.release();
     assert_eq!(cancelled["cancelRequested"], true, "cancellation is durably requested before any terminal effect");
@@ -1415,6 +1418,64 @@ async fn gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancella
     let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": "9".repeat(64) }).to_string();
     let denied = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, approval.as_bytes()).await;
     assert_eq!(denied.status, 409, "a cancelled offer can never be approved afterwards");
+}
+
+#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[tokio::test]
+async fn inference_reconciliation_route_is_existing_only_reader_bound_and_body_bounded() {
+    let (bound, author, spectator) = gis_map_inference_fixture("reconcile-owner@example.test", "reconcile-watcher@example.test").await;
+    let (space_id, document_id) = (bound.space_id.clone(), bound.document_id.clone());
+    let runtime = bound.state.inference_runtime.as_ref().expect("GIS inference runtime").clone();
+    let checkpoint = Arc::new(semio_hub::inference::runtime::InferenceCheckpointTestGateV1::new());
+    runtime.install_checkpoint_test_gate(checkpoint.clone()).expect("one actual codec checkpoint gate");
+    let addr = spawn_server(bound.state.clone()).await;
+    let bearer = format!("Bearer {}", author.token);
+    let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
+    let request_id = "15151515151515151515151515151515";
+    let accepted = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent(request_id).as_bytes()).await;
+    assert_eq!(accepted.status, 200, "the fixture Author reaches actual acceptance");
+    let receipt: serde_json::Value = serde_json::from_slice(&accepted.body).expect("closed job receipt");
+    tokio::time::timeout(std::time::Duration::from_secs(5), checkpoint.entered()).await.expect("actual codec pauses after acceptance");
+    let reconcile = |request_id: &str| serde_json::json!({ "schema": "semio.hub.inference-job-reconcile/v1", "version": 1, "requestId": request_id }).to_string();
+
+    let found = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &headers, reconcile(request_id).as_bytes()).await;
+    assert_eq!(found.status, 200, "the original live reader may reconcile");
+    let found: serde_json::Value = serde_json::from_slice(&found.body).expect("closed reconciliation result");
+    assert_eq!(found["schema"], "semio.hub.inference-job-reconcile-result/v1");
+    assert_eq!(found["requestId"], request_id);
+    assert_eq!(found["found"], true);
+    assert_eq!(found["job"]["receipt"]["jobId"], receipt["jobId"]);
+    assert_eq!(found["job"]["page"]["jobId"], receipt["jobId"]);
+    assert_eq!(found["job"]["approval"], serde_json::Value::Null);
+
+    let missing = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &headers, reconcile(&"16".repeat(16)).as_bytes()).await;
+    assert_eq!(missing.status, 200, "an absent exact request is observable without creating work");
+    assert_eq!(
+        serde_json::from_slice::<serde_json::Value>(&missing.body).expect("missing result"),
+        serde_json::json!({ "schema": "semio.hub.inference-job-reconcile-result/v1", "version": 1, "requestId": "16".repeat(16), "found": false, "job": null })
+    );
+    let spectator_bearer = format!("Bearer {}", spectator.token);
+    let spectator_headers = [("Authorization", spectator_bearer.as_str()), ("Content-Type", "application/json")];
+    let denied = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &spectator_headers, reconcile(request_id).as_bytes()).await;
+    assert_eq!(denied.status, 403, "a Spectator cannot reconcile even an absent private prefix");
+    let anonymous = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &[("Content-Type", "application/json")], reconcile(request_id).as_bytes()).await;
+    assert_eq!(anonymous.status, 403, "anonymous reconciliation is denied");
+    let malformed = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &headers, br#"{"schema":"semio.hub.inference-job-reconcile/v1"}"#).await;
+    assert_eq!(malformed.status, 400, "a noncanonical request is rejected");
+    let oversized = vec![b' '; semio_hub::inference::schema::RECONCILE_REQUEST_MAX_BYTES + 1];
+    let oversized = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &headers, &oversized).await;
+    assert_eq!(oversized.status, 413, "the route enforces the schema-owned byte bound before decoding");
+    let other_space = create_space_for_test(&bound.state, &author.user_id, "Other Reconciliation Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+    let cross_scope = raw_http_request(addr, "POST", &inference_route(&other_space, &document_id, "/reconcile"), &headers, reconcile(request_id).as_bytes()).await;
+    assert_eq!(cross_scope.status, 200, "a live Author learns only that its distinct exact scope has no such request");
+    assert_eq!(serde_json::from_slice::<serde_json::Value>(&cross_scope.body).expect("cross-scope result")["found"], false);
+
+    checkpoint.release();
+    let job_id = receipt["jobId"].as_str().expect("job id");
+    let _ = wait_for_inference_state(addr, &space_id, &document_id, job_id, &headers, "succeeded").await;
+    bound.state.directory.revoke_auth_sessions_for_user(&author.user_id, "test-revocation", None, "gis-map-reconciliation-test").await.expect("revoke original session");
+    let revoked = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &headers, reconcile(request_id).as_bytes()).await;
+    assert_eq!(revoked.status, 403, "the exact original reader loses reconciliation after session revocation");
 }
 
 #[cfg(all(feature = "sqlite", feature = "test-support"))]
@@ -3897,7 +3958,19 @@ fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() 
             }
             let events = state.directory.events_since(before, 50).await.expect("admin authority durable events");
             let own_events: Vec<_> = events.iter().filter(|event| event.actor == principal.event_actor()).collect();
-            assert_eq!(own_events.len(), if row["mutated"] == true { if create { 2 } else { 1 } } else { 0 }, "no mutation escapes a revoked principal");
+            assert_eq!(
+                own_events.len(),
+                if row["mutated"] == true {
+                    if create {
+                        2
+                    } else {
+                        1
+                    }
+                } else {
+                    0
+                },
+                "no mutation escapes a revoked principal"
+            );
             let persisted = state.directory.get_space(&target).await.expect("admin target projection");
             assert_eq!(persisted.as_ref().is_some_and(|space| space.name == name), row["mutated"].as_bool().unwrap());
             if row["mutated"] == false {
@@ -4000,7 +4073,13 @@ fn directory_global_socket_delivery_and_revocation_share_one_transient_authority
                 let state = state.clone();
                 let token = if membership { owner.token.clone() } else { recipient.token.clone() };
                 let command = DirectoryCommand::RemoveMember { space_id: space_a.clone(), user_id: recipient.user_id.clone() };
-                async move { if membership { post_directory_command_for_test(addr, &token, "c00102030405060708090a0b0c0d0e0f", command).await.status } else { delete_session_me(bearer_headers(&token), State(state)).await.as_u16() } }
+                async move {
+                    if membership {
+                        post_directory_command_for_test(addr, &token, "c00102030405060708090a0b0c0d0e0f", command).await.status
+                    } else {
+                        delete_session_me(bearer_headers(&token), State(state)).await.as_u16()
+                    }
+                }
             });
             let attempted = if membership { &gate.directory_command_attempted } else { &gate.socket_session_revoke_attempted };
             tokio::time::timeout(std::time::Duration::from_secs(5), attempted.acquire()).await.expect("revocation fence attempt deadline").expect("revocation fence attempt").forget();
@@ -4730,20 +4809,18 @@ async fn retained_short_admin_shutdown_drains_before_bounded_abort_and_receipt_r
         cooperative_cancel_requested: std::sync::atomic::AtomicBool::new(false),
     });
     let drained = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    assert!(
-        owner
-            .spawn("operation:drain".into(), runtime.clone(), {
-                let drained = drained.clone();
-                let runtime = runtime.clone();
-                async move {
-                    while !runtime.progress().cancel_requested {
-                        tokio::task::yield_now().await;
-                    }
-                    drained.store(true, std::sync::atomic::Ordering::Release);
+    assert!(owner
+        .spawn("operation:drain".into(), runtime.clone(), {
+            let drained = drained.clone();
+            let runtime = runtime.clone();
+            async move {
+                while !runtime.progress().cancel_requested {
+                    tokio::task::yield_now().await;
                 }
-            })
-            .is_ok()
-    );
+                drained.store(true, std::sync::atomic::Ordering::Release);
+            }
+        })
+        .is_ok());
     owner.shutdown().await;
     assert!(drained.load(std::sync::atomic::Ordering::Acquire));
     assert_eq!(owner.task_count(), 0);
@@ -4766,14 +4843,12 @@ async fn retained_short_admin_shutdown_drains_before_bounded_abort_and_receipt_r
         cooperative_cancel_requested: std::sync::atomic::AtomicBool::new(false),
     });
     let (dropped_tx, dropped_rx) = tokio::sync::oneshot::channel();
-    assert!(
-        aborting
-            .spawn("operation:bounded-abort".into(), abort_runtime, async move {
-                let _signal = DropSignal(Some(dropped_tx));
-                std::future::pending::<()>().await;
-            })
-            .is_ok()
-    );
+    assert!(aborting
+        .spawn("operation:bounded-abort".into(), abort_runtime, async move {
+            let _signal = DropSignal(Some(dropped_tx));
+            std::future::pending::<()>().await;
+        })
+        .is_ok());
     aborting.shutdown().await;
     tokio::time::timeout(std::time::Duration::from_secs(1), dropped_rx).await.expect("aborted task drop deadline").expect("aborted task dropped");
     assert_eq!(aborting.task_count(), 0);
@@ -6220,6 +6295,10 @@ async fn auth_sessions_me_roundtrip() {
     let me = get_session_me(headers.clone(), State(state.clone())).await.expect("session me");
     assert_eq!(me.0.user_id, session.user_id);
     assert_eq!(me.0.email, "me@example.com");
+    assert_eq!(me.0.schema, "semio.directory.session-authority.v1");
+    assert_eq!(me.0.authorization_generation, 1);
+    assert!(me.0.session_binding_sha256.len() == 64 && me.0.session_binding_sha256.bytes().any(|byte| byte != b'0'));
+    assert_eq!(me.0.canonical_json().as_deref().and_then(os_directory::schema::session_authority::DirectorySessionAuthorityV1::parse_canonical_json), Some(me.0.clone()));
 
     assert_eq!(delete_session_me(headers.clone(), State(state.clone())).await, StatusCode::NO_CONTENT);
     assert_eq!(get_session_me(headers, State(state)).await.err(), Some(StatusCode::UNAUTHORIZED));

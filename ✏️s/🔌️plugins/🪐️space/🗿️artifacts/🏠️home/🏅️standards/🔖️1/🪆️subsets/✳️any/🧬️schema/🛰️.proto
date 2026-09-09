@@ -9,6 +9,4 @@ message SHomeArtifact {
   // @state artifact
   uint64 catalog_generation = 2;
   // @state config
-  string active_panel_tab = 3;
-  // @state config
 }

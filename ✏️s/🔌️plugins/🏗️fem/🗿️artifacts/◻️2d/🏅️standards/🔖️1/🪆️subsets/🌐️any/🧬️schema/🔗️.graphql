@@ -10,12 +10,6 @@ type Fem2dArtifact {
   loadCases: [FemLoadCase!]! @state(class: ARTIFACT)
   combinations: [FemCombination!]! @state(class: ARTIFACT)
   analysis: FemAnalysisSettings! @state(class: ARTIFACT)
-  resultSourceId: String @state(class: PRESENCE)
-  resultMode: String! @state(class: PRESENCE)
-  resultModeIndex: Int! @state(class: PRESENCE)
-  camera: FemCamera! @state(class: CONFIG)
-  solverResultsJson: String! @state(class: ARTIFACT)
-  meshPreviewJson: String! @state(class: ARTIFACT)
 }
 
 type FemCamera {

@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `InsertRun`.
 
-use crate::standards::v1::subsets::text::schema::mutations::{SemioTextMutation, remove_run};
+use crate::standards::v1::subsets::text::schema::mutations::{remove_run, SemioTextMutation};
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Inverse

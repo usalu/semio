@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -19,6 +18,6 @@ async fn renders_the_main_body_key_for_the_default_snapshot() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let _node = <DagViewer as ArtifactViewer>::render(main::BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::default());
 }

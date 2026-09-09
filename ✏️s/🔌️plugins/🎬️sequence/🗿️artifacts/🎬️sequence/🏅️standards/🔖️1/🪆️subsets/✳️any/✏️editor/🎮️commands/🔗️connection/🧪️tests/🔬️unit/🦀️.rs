@@ -1,6 +1,5 @@
-
-use crate::editor::sequence::SequenceCommand;
 use crate::editor::sequence::testkit::{dispatch, new_app};
+use crate::editor::sequence::SequenceCommand;
 
 use super::connect_steps::ConnectSteps;
 use super::disconnect_steps::DisconnectSteps;

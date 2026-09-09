@@ -1,5 +1,5 @@
 {
-  "exaggeration": 1,
+  "exaggeration": 1.0,
   "importedFeaturesJson": "null",
   "mesh": {
     "childId": "gisterrain-mesh-derived",

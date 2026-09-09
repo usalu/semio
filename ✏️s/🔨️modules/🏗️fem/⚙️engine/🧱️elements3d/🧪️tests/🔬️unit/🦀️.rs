@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::model::{Model, NodalLoad, Node, Support, solve_linear_static};
+use crate::model::{solve_linear_static, Model, NodalLoad, Node, Support};
 
 /// ↕️ The y-bending blocks of `local_mass` and `local_geometric_stiffness` must be `S·B·S` of the
 /// z-bending blocks (`S = diag(1, −1, 1, −1)`), the same `θy = −∂w/∂x` flip `local_stiffness` carries.

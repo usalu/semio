@@ -2,8 +2,8 @@
 //! `schema`/`io`/`viewer`/`editor`/`examples` (ticket
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §1/§2).
 
-use crate::standards::v1::subsets::any::{io, schema};
 use crate::editor::wires as editor;
+use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::wires as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::{Dialect, ExampleSource};

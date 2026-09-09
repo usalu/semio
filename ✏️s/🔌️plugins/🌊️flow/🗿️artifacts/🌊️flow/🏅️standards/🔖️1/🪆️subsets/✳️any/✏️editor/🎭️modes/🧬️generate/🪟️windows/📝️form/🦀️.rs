@@ -1,10 +1,9 @@
 //! 📝️ Generate-mode window — the input form for the active generation.
 
-use crate::FlowSnapshot;
 use crate::editor::flow::config::FlowConfig;
-use crate::editor::flow::terminology::flow_play_labels;
 use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};
 use crate::playbook::{default_value_for_block, is_block_visible, selected_generation, PlaybookBlock, PlaybookValues};
+use crate::FlowSnapshot;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
 use semio_framework_plugin::{ActionId, Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PluginAssemblyError, SurfaceKind, Trigger, UiAssemblyResult, UiFixedList, UiText, WindowKindDefinition, WindowOptions};

@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreateEdge`.
 
-use crate::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, delete_edge};
+use crate::standards::v1::subsets::brep::schema::mutations::{delete_edge, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse

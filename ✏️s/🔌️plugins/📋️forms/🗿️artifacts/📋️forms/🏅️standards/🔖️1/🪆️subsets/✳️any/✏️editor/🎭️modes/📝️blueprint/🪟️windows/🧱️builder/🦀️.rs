@@ -1,8 +1,8 @@
 //! 🧱️ Forms play app — the blueprint window: the drag/drop playbook builder authoring the form.
 
-use crate::FormsSnapshot;
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
+use crate::FormsSnapshot;
 use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

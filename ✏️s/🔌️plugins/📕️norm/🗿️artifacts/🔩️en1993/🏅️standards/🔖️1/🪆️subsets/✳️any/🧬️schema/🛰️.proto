@@ -152,6 +152,4 @@ message En1993Artifact {
   double crane_dispersion_mm = 73;
   // @state artifact
   double crane_t_w_mm = 74;
-  // @state presence
-  optional uint32 selected_check_index = 75;
 }

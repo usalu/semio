@@ -8,10 +8,8 @@
 //! `jack_working_scene(base)`, applies its own specific semantics to a clone, and calls
 //! `diff_replace_content`.
 
-use crate::standards::v1::subsets::any::schema::JackEditorSelection;
 use crate::{Camera, JackContentChild};
 use ::semio_framework_schema::ArtifactSchema;
-use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the jack artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -33,13 +31,5 @@ pub struct JackDiff {
     pub content: Option<JackContentChild>,
     #[state(artifact)]
     pub root_node_id: Option<Option<String>>,
-    #[state(config)]
-    pub jack_query: Option<String>,
-    #[state(config)]
-    pub lod_mode_by_window: Option<BTreeMap<String, Option<String>>>,
-    #[state(config)]
-    pub viewport_camera: Option<Camera>,
-    #[state(config)]
-    pub editor_selection: Option<Option<JackEditorSelection>>,
 }
 //#endregion 🔖️Diff

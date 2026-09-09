@@ -430,7 +430,7 @@ async fn resolve_window_actions_explicit_scoping() {
 async fn resolve_window_actions_excludes_history_and_set_active_utility_orphans() {
     let app = app_with(
         vec![
-            ActionDefinition::bounded_catalog("undo", LocalizedLabel::data("Undo"), ActionKind::History),
+            ActionDefinition::new("undo", LocalizedLabel::data("Undo"), ActionKind::History, "undo-2"),
             crate::ui::set_active_utility_action_definition(),
             ActionDefinition::bounded_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation),
         ],
@@ -1442,6 +1442,18 @@ async fn app_ref_canonical_json_round_trips_as_camel_case() {
 //#endregion 🔖️SurfaceTests
 
 //#region 🎯️ActionSemanticsFixture
+#[test]
+fn catalog_icons_depend_only_on_action_kind_and_explicit_icons_stay_owned() {
+    let first = ActionDefinition::new_catalog("domain.alpha", LocalizedLabel::data("Alpha"), ActionKind::Mutation);
+    let second = ActionDefinition::new_catalog("domain.beta", LocalizedLabel::data("Beta"), ActionKind::Mutation);
+    let command = CommandDefinition::new_catalog("domain.command", LocalizedLabel::data("Command"), "domain", ActionKind::Mutation);
+    let owned = ActionDefinition::new("domain.owned", LocalizedLabel::data("Owned"), ActionKind::Mutation, "camera");
+    assert_eq!(first.icon_id, second.icon_id);
+    assert_eq!(first.icon_id, command.icon_id);
+    assert_eq!(first.icon_id.as_str(), "sparkles");
+    assert_eq!(owned.icon_id.as_str(), "camera");
+}
+
 #[test]
 fn action_semantics_defaults_match_language_neutral_fixture() {
     #[derive(serde::Deserialize)]

@@ -1,7 +1,6 @@
-
 use super::*;
+use crate::editor::flow::testkit::{dispatch, flow_app, main_window_measures, FlowApp};
 use crate::editor::flow::FlowCommand;
-use crate::editor::flow::testkit::{FlowApp, dispatch, flow_app, main_window_measures};
 use semio_framework_plugin::WindowMeasure;
 
 async fn grid_children(app: &mut FlowApp) -> Vec<WindowMeasure> {

@@ -18,7 +18,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl Process3dDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &Process3dArtifact) -> protocol::MutationApplyResult<Process3dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -54,60 +54,6 @@ impl Process3dDiff {
             }
             if let Some(value) = &self.resolved_up_to {
                 next.resolved_up_to = *value;
-            }
-            if let Some(value) = &self.selected_id {
-                next.selected_id = value.clone();
-            }
-            if let Some(value) = &self.selected_face_id {
-                next.selected_face_id = *value;
-            }
-            if let Some(value) = &self.selection_method {
-                next.selection_method = value.clone();
-            }
-            if let Some(value) = &self.engagement_input {
-                next.engagement_input = value.clone();
-            }
-            if let Some(value) = self.camera_position_x {
-                next.camera_position_x = value;
-            }
-            if let Some(value) = self.camera_position_y {
-                next.camera_position_y = value;
-            }
-            if let Some(value) = self.camera_position_z {
-                next.camera_position_z = value;
-            }
-            if let Some(value) = self.camera_target_x {
-                next.camera_target_x = value;
-            }
-            if let Some(value) = self.camera_target_y {
-                next.camera_target_y = value;
-            }
-            if let Some(value) = self.camera_target_z {
-                next.camera_target_z = value;
-            }
-            if let Some(value) = self.camera_fov {
-                next.camera_fov = value;
-            }
-            if let Some(value) = self.sun_enabled {
-                next.sun_enabled = value;
-            }
-            if let Some(value) = self.sun_azimuth {
-                next.sun_azimuth = value;
-            }
-            if let Some(value) = self.sun_elevation {
-                next.sun_elevation = value;
-            }
-            if let Some(value) = self.sun_intensity {
-                next.sun_intensity = value;
-            }
-            if let Some(value) = &self.sun_color {
-                next.sun_color = value.clone();
-            }
-            if let Some(value) = &self.contributions_json {
-                next.contributions_json = value.clone();
-            }
-            if let Some(value) = &self.hovered_id {
-                next.hovered_id = value.clone();
             }
             next
         })
@@ -176,24 +122,6 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
         take!(step_payloads);
         take!(tool_solids);
         take!(resolved_up_to);
-        take!(selected_id);
-        take!(selected_face_id);
-        take!(selection_method);
-        take!(engagement_input);
-        take!(camera_position_x);
-        take!(camera_position_y);
-        take!(camera_position_z);
-        take!(camera_target_x);
-        take!(camera_target_y);
-        take!(camera_target_z);
-        take!(camera_fov);
-        take!(sun_enabled);
-        take!(sun_azimuth);
-        take!(sun_elevation);
-        take!(sun_intensity);
-        take!(sun_color);
-        take!(contributions_json);
-        take!(hovered_id);
     }
 }
 //#endregion 🔖️Apply

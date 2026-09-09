@@ -3,7 +3,7 @@
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::app::{ArtifactToolCompletion, ArtifactToolCompletionRejection, EphemeralEmit, InteractionHoverState};
-use semio_framework_plugin::{ArtifactApp, Emit, Fault, ToolJobFactoryError};
+use semio_framework_plugin::{ArtifactApp, Emit, Fault, ToolJobFactoryError, ViewModel, WindowConfigSnapshot, WindowTransientSnapshot};
 use std::sync::Arc;
 
 //#region 🔖️Limits
@@ -12,7 +12,7 @@ pub const PUZZLE_COMMAND_DECODED_ITEMS: usize = 512;
 pub const PUZZLE_COMMAND_WORK_ITEMS: usize = 4_096;
 pub const PUZZLE_COMMAND_OUTPUT_BYTES: usize = 262_144;
 pub const PUZZLE_COMMAND_STEP_MICROS: u32 = 7_500;
-pub const PUZZLE_COMMAND_CHECKPOINT_BYTES: usize = 112;
+pub const PUZZLE_COMMAND_CHECKPOINT_BYTES: usize = 120;
 
 pub fn puzzle_command_contract() -> semio_framework::ToolExecutionContract {
     semio_framework::ToolExecutionContract::resumable(PUZZLE_COMMAND_RAW_BYTES, PUZZLE_COMMAND_DECODED_ITEMS, 1, PUZZLE_COMMAND_OUTPUT_BYTES, PUZZLE_COMMAND_STEP_MICROS, 1, 1)
@@ -26,6 +26,7 @@ pub type PuzzleCommandReducer<A> = fn(
     &<A as ArtifactApp>::Config,
     &protocol::InteractionState,
     &InteractionHoverState,
+    Option<&ViewModel>,
 ) -> Result<Emit<<A as ArtifactApp>::Mutation, <A as ArtifactApp>::ConfigMutation, <A as ArtifactApp>::DraftMutation>, Fault>;
 
 pub type PuzzleCommandExtent<A> = fn(&<A as ArtifactApp>::Command, &<A as ArtifactApp>::Snapshot, &protocol::InteractionState) -> Option<usize>;
@@ -38,6 +39,16 @@ pub enum PuzzleCommandWorkStep<A: ArtifactApp> {
 pub trait PuzzleCommandWork<A: ArtifactApp>: Send {
     fn tool_id(&self) -> &'static str;
     fn bind_operation(&mut self, _operation: Operation) {}
+    /// 🪪️ Document-instance identity of the admission that built this work, bound once per construction
+    /// exactly like [`Self::bind_operation`] — on a fresh admission and on every worker-hop resume, since
+    /// both reach the app through its own `build_tool_job`. Default no-op: a work object that keeps no
+    /// per-instance session simply ignores it.
+    fn bind_instance(&mut self, _app_instance_id: u32, _parent_document_id: &str) {}
+    fn bind_view_state(&mut self, _view_state: Option<ViewModel>) {}
+    fn bind_window_owners(&mut self, _config: Option<WindowConfigSnapshot>, _transient: Option<WindowTransientSnapshot>) {}
+    fn take_ephemeral(&mut self) -> EphemeralEmit<A> {
+        EphemeralEmit::default()
+    }
     fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState) -> Option<usize>;
     fn step(&mut self, command: &A::Command, snapshot: &A::Snapshot, config: &A::Config, interaction: &protocol::InteractionState, hover: &InteractionHoverState) -> Result<PuzzleCommandWorkStep<A>, Fault>;
     fn begin_close(&mut self) {}
@@ -54,11 +65,12 @@ pub struct BoundedFirstStepCommandWork<A: ArtifactApp> {
     reducer: PuzzleCommandReducer<A>,
     extent: PuzzleCommandExtent<A>,
     consumed: bool,
+    view_state: Option<ViewModel>,
 }
 
 impl<A: ArtifactApp> BoundedFirstStepCommandWork<A> {
     pub fn new(tool_id: &'static str, reducer: PuzzleCommandReducer<A>, extent: PuzzleCommandExtent<A>) -> Self {
-        Self { tool_id, reducer, extent, consumed: false }
+        Self { tool_id, reducer, extent, consumed: false, view_state: None }
     }
 }
 
@@ -71,11 +83,15 @@ impl<A: ArtifactApp> PuzzleCommandWork<A> for BoundedFirstStepCommandWork<A> {
         (self.extent)(command, snapshot, interaction)
     }
 
+    fn bind_view_state(&mut self, view_state: Option<ViewModel>) {
+        self.view_state = view_state;
+    }
+
     fn step(&mut self, command: &A::Command, snapshot: &A::Snapshot, config: &A::Config, interaction: &protocol::InteractionState, hover: &InteractionHoverState) -> Result<PuzzleCommandWorkStep<A>, Fault> {
         if self.consumed {
             return Err(Fault::from("puzzle-command-bounded-work-repeated"));
         }
-        let emit = (self.reducer)(command, snapshot, config, interaction, hover)?;
+        let emit = (self.reducer)(command, snapshot, config, interaction, hover, self.view_state.as_ref())?;
         self.consumed = true;
         Ok(PuzzleCommandWorkStep::Complete(emit))
     }
@@ -117,6 +133,9 @@ pub struct RetainedPuzzleCommandPayload<A: ArtifactApp> {
     pub config: Arc<A::Config>,
     pub interaction_state: Arc<protocol::InteractionState>,
     pub interaction_hover: Arc<InteractionHoverState>,
+    pub window_config: Option<WindowConfigSnapshot>,
+    pub window_transient: Option<WindowTransientSnapshot>,
+    pub context_identity: u64,
     pub completion: ArtifactToolCompletion<A>,
     pub command_id: fn(&A::Command) -> &'static str,
     pub work: Box<dyn PuzzleCommandWork<A>>,
@@ -142,6 +161,7 @@ struct PuzzleCommandCheckpointState {
     operation: Operation,
     tool_hash: u64,
     input_hash: u64,
+    context_identity: u64,
     raw_len: usize,
     raw_page_cursor: usize,
     raw_scan_cursor: usize,
@@ -152,7 +172,7 @@ struct PuzzleCommandCheckpointState {
 
 impl PuzzleCommandCheckpointState {
     const MAGIC: [u8; 4] = *b"PZCP";
-    const VERSION: u8 = 1;
+    const VERSION: u8 = 2;
 
     fn encode(self) -> [u8; PUZZLE_COMMAND_CHECKPOINT_BYTES] {
         let mut bytes = [0; PUZZLE_COMMAND_CHECKPOINT_BYTES];
@@ -167,6 +187,7 @@ impl PuzzleCommandCheckpointState {
             self.operation.seed,
             self.tool_hash,
             self.input_hash,
+            self.context_identity,
             self.raw_len as u64,
             self.raw_page_cursor as u64,
             self.raw_scan_cursor as u64,
@@ -207,12 +228,13 @@ impl PuzzleCommandCheckpointState {
             operation: Operation { operation: semio_framework_job::OperationId(read(0)?), base_revision: semio_framework_job::RevisionId(read(1)?), generation: semio_framework_job::Generation(read(2)?), preview_sequence: read(3)?, seed: read(4)? },
             tool_hash: read(5)?,
             input_hash: read(6)?,
-            raw_len: usize_at(7)?,
-            raw_page_cursor: usize_at(8)?,
-            raw_scan_cursor: usize_at(9)?,
-            work_extent: usize_at(10)?,
-            preflight_cursor: usize_at(11)?,
-            work_cursor: usize_at(12)?,
+            context_identity: read(7)?,
+            raw_len: usize_at(8)?,
+            raw_page_cursor: usize_at(9)?,
+            raw_scan_cursor: usize_at(10)?,
+            work_extent: usize_at(11)?,
+            preflight_cursor: usize_at(12)?,
+            work_cursor: usize_at(13)?,
         })
     }
 }
@@ -266,6 +288,7 @@ pub struct RetainedPuzzleCommandJob<A: ArtifactApp> {
     interaction_hover: Option<Arc<InteractionHoverState>>,
     completion: Option<ArtifactToolCompletion<A>>,
     command_id: fn(&A::Command) -> &'static str,
+    context_identity: u64,
     work: Option<Box<dyn PuzzleCommandWork<A>>>,
     raw_input: Option<RetainedToolWireInput>,
     checkpoint_input: Option<RetainedToolWireInput>,
@@ -280,6 +303,7 @@ pub struct RetainedPuzzleCommandJob<A: ArtifactApp> {
     checkpoint_pending: bool,
     restore_target: Option<PuzzleCommandCheckpointState>,
     emit: Option<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>,
+    ephemeral: Option<EphemeralEmit<A>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<A>>,
     phase: PuzzleCommandPhase,
     closing: bool,
@@ -314,7 +338,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                 _ => false,
             };
         let operation_matches = state.operation.operation == operation.operation && state.operation.base_revision == operation.base_revision && state.operation.generation == operation.generation && state.operation.seed == operation.seed;
-        if !operation_matches || state.tool_hash != tool_hash || state.input_hash != input_hash || !phase_is_resumable || !cursors_are_bounded {
+        if !operation_matches || state.tool_hash != tool_hash || state.input_hash != input_hash || state.context_identity != payload.context_identity || !phase_is_resumable || !cursors_are_bounded {
             return Err(ToolJobFactoryError::new("Puzzle retained checkpoint authority or cursor state is stale"));
         }
         Ok(())
@@ -332,6 +356,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
     fn from_payload(operation: Operation, mut payload: RetainedPuzzleCommandPayload<A>, raw_input: Option<RetainedToolWireInput>) -> Self {
         let phase = if raw_input.is_some() { PuzzleCommandPhase::WirePages } else { PuzzleCommandPhase::Preflight };
         payload.work.bind_operation(operation);
+        payload.work.bind_window_owners(payload.window_config.take(), payload.window_transient.take());
         Self {
             operation,
             command: Some(payload.command),
@@ -341,6 +366,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
             interaction_hover: Some(payload.interaction_hover),
             completion: Some(payload.completion),
             command_id: payload.command_id,
+            context_identity: payload.context_identity,
             work: Some(payload.work),
             raw_input,
             checkpoint_input: None,
@@ -355,6 +381,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
             checkpoint_pending: false,
             restore_target: None,
             emit: None,
+            ephemeral: None,
             pending_completion_rejection: None,
             phase,
             closing: false,
@@ -376,6 +403,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
             operation: self.operation,
             tool_hash,
             input_hash,
+            context_identity: self.context_identity,
             raw_len: self.raw_len,
             raw_page_cursor: self.raw_page_cursor,
             raw_scan_cursor: self.raw_scan_cursor,
@@ -523,6 +551,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                     }
                     Ok(PuzzleCommandWorkStep::Complete(emit)) => {
                         self.emit = Some(emit);
+                        self.ephemeral = Some(work.take_ephemeral());
                         self.phase = PuzzleCommandPhase::Publish;
                         self.preview(cx, "Publishing result", "Ergebnis wird veröffentlicht")
                     }
@@ -542,7 +571,8 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                     return self.fault(cx, b"puzzle command completion consumer is absent");
                 }
                 let Some(emit) = self.emit.take() else { return self.fault(cx, b"puzzle command result owner is absent") };
-                if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
+                let Some(ephemeral) = self.ephemeral.take() else { return self.fault(cx, b"puzzle command ephemeral result owner is absent") };
+                if let Err(rejected) = completion.complete(Ok(emit), ephemeral) {
                     self.pending_completion_rejection = Some(rejected);
                     return self.fault(cx, b"puzzle command result publication was rejected");
                 }
@@ -658,6 +688,7 @@ impl<A: ArtifactApp> InteractiveJob for RetainedPuzzleCommandJob<A> {
             };
         }
         retire_one!(emit);
+        retire_one!(ephemeral);
         if let Some(work) = self.work.as_mut() {
             let step = work.close_step(maximum_items.min(1), maximum_bytes);
             if work.terminal_is_empty() {
@@ -695,6 +726,7 @@ impl<A: ArtifactApp> InteractiveJob for RetainedPuzzleCommandJob<A> {
             && self.checkpoint_input.is_none()
             && self.pending_completion_rejection.is_none()
             && self.emit.is_none()
+            && self.ephemeral.is_none()
             && self.work.is_none()
             && self.command.is_none()
             && self.snapshot.is_none()

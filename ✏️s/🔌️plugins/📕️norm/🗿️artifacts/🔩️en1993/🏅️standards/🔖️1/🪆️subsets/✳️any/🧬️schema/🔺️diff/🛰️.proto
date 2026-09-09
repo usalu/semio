@@ -152,8 +152,6 @@ message En1993Diff {
   optional double crane_dispersion_mm = 74;
   // @state artifact
   optional double crane_t_w_mm = 75;
-  // @state presence
-  optional uint32 selected_check_index = 76;
 }
 
 message En1993Artifact {
@@ -231,7 +229,6 @@ message En1993Artifact {
   double crane_wheel_contact_length_mm = 72;
   double crane_dispersion_mm = 73;
   double crane_t_w_mm = 74;
-  optional uint32 selected_check_index = 75;
 }
 
 message En1993StringList { repeated string values = 1; }

@@ -1,7 +1,10 @@
 //! 🔀️ Authoritative PDF mutation payload, diff, inverse, and tests for `move-page`.
 
 use super::PdfMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{
+    diff::{self, PdfDiff},
+    snapshot::PdfSnapshot,
+};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -21,7 +24,11 @@ impl MutationKind<PdfSnapshot, PdfMutation> for MovePage {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
-        if base.pages.get(self.from).is_none() { Vec::new() } else { vec![PdfMutation::MovePage(MovePage { from: self.to.min(base.pages.len().saturating_sub(1)), to: self.from })] }
+        if base.pages.get(self.from).is_none() {
+            Vec::new()
+        } else {
+            vec![PdfMutation::MovePage(MovePage { from: self.to.min(base.pages.len().saturating_sub(1)), to: self.from })]
+        }
     }
 
     fn label(&self) -> String {

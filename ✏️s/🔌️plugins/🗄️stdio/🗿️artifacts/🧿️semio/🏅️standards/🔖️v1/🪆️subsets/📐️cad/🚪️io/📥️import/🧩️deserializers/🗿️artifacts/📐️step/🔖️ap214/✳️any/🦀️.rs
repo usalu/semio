@@ -19,11 +19,11 @@
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::cad::schema::snapshot::{CadEntity, CadEntityRecord, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_step::{
     schema::snapshot::{StepEntity, StepValue},
     StepSnapshot,
 };
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use std::collections::HashMap;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId::ANY };

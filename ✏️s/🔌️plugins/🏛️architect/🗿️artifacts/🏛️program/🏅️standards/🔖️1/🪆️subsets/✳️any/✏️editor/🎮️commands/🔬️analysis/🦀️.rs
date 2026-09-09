@@ -2,13 +2,13 @@
 //! report kinds. Each records its outcome in the document register AND caches it in the config.
 
 pub mod run_validation {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::inferences::validate_plugin;
     use crate::ProgramSnapshot;
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    
+    use semio_framework_value_derive::{FromValue, ToValue};
+
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "run-validation")]
     pub struct RunValidation {}
@@ -22,15 +22,15 @@ pub mod run_validation {
 }
 
 pub mod run_analysis {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use crate::editor::architect::catalog::{analysis_kind_from_str, analysis_record_from};
+    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::inferences::run_analysis;
     use crate::ProgramSnapshot;
-    use crate::editor::architect::catalog::{analysis_kind_from_str, analysis_record_from};
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    
+    use semio_framework_value_derive::{FromValue, ToValue};
+
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "run-analysis")]
     pub struct RunAnalysis {
@@ -51,15 +51,15 @@ pub mod run_analysis {
 }
 
 pub mod run_report {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use crate::editor::architect::catalog::{report_kind_from_str, report_record_from};
+    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::inferences::build_report;
     use crate::ProgramSnapshot;
-    use crate::editor::architect::catalog::{report_kind_from_str, report_record_from};
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    
+    use semio_framework_value_derive::{FromValue, ToValue};
+
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "run-report")]
     pub struct RunReport {

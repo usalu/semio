@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::default_snapshot;
 use protocol::{
-    Mutation,
     os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error},
+    Mutation,
 };
 
 #[semio_framework_async_macros::async_test]

@@ -10,18 +10,6 @@
 pub enum ModelError {
     /// 🚨️ A model was compiled with zero patterns.
     EmptyPatternUniverse,
-    /// 🚨️ A `PatternId`/`TileId`/`RelationId`/`PortId` referenced during building was never added.
-    #[cfg(test)]
-    UnknownPattern(crate::wfc_engine::ids::PatternId),
-    #[cfg(test)]
-    UnknownTile(crate::wfc_engine::ids::TileId),
-    #[cfg(test)]
-    UnknownRelation(crate::wfc_engine::ids::RelationId),
-    #[cfg(test)]
-    UnknownPort(crate::wfc_engine::ids::PortId),
-    /// 🚨️ The same relation name/id was registered twice.
-    #[cfg(test)]
-    DuplicateRelation(crate::wfc_engine::ids::RelationId),
     /// 🚨️ A weight failed validation (`NaN`, infinite, or negative).
     InvalidWeight { pattern_index: usize, value: f64 },
     /// 🚨️ `allowed[r][a].get(b) != allowed[inv(r)][b].get(a)` — the declared inverse relation is
@@ -34,9 +22,6 @@ pub enum ModelError {
     /// 🚨️ A symmetry transform did not close under composition/inverse (generator set is broken).
     #[cfg(test)]
     InvalidSymmetryGroup { reason: &'static str },
-    /// 🚨️ A socket rule referenced a socket label that was never declared compatible with anything.
-    #[cfg(test)]
-    IncompatibleSocketRule { reason: &'static str },
     /// 🚨️ A `SourceModelDoc`'s schema version does not match this build's. No
     /// migration — this crate has no users yet, so an unrecognized version is simply rejected.
     #[cfg(test)]
@@ -47,16 +32,6 @@ impl core::fmt::Display for ModelError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::EmptyPatternUniverse => write!(f, "model has zero patterns"),
-            #[cfg(test)]
-            Self::UnknownPattern(p) => write!(f, "unknown pattern id {p}"),
-            #[cfg(test)]
-            Self::UnknownTile(t) => write!(f, "unknown tile id {t}"),
-            #[cfg(test)]
-            Self::UnknownRelation(r) => write!(f, "unknown relation id {r}"),
-            #[cfg(test)]
-            Self::UnknownPort(p) => write!(f, "unknown port id {p}"),
-            #[cfg(test)]
-            Self::DuplicateRelation(r) => write!(f, "relation {r} registered twice"),
             Self::InvalidWeight { pattern_index, value } => {
                 write!(f, "invalid weight at pattern index {pattern_index}: {value}")
             }
@@ -68,8 +43,6 @@ impl core::fmt::Display for ModelError {
             Self::CapacityOverflow { what } => write!(f, "capacity overflow computing {what}"),
             #[cfg(test)]
             Self::InvalidSymmetryGroup { reason } => write!(f, "invalid symmetry group: {reason}"),
-            #[cfg(test)]
-            Self::IncompatibleSocketRule { reason } => write!(f, "incompatible socket rule: {reason}"),
             #[cfg(test)]
             Self::SchemaVersionMismatch { expected, actual } => {
                 write!(f, "source model schema version mismatch: expected {expected}, found {actual}")
@@ -94,18 +67,11 @@ pub enum TopologyError {
     /// 🚨️ A mask's length did not match `width * height` (`* depth`).
     #[cfg(test)]
     MaskShapeMismatch { expected: usize, actual: usize },
-    /// 🚨️ A referenced `NodeId` is out of range for this topology.
-    #[cfg(test)]
-    UnknownNode(crate::wfc_engine::ids::NodeId),
     /// 🚨️ An arc referenced a node that does not exist (e.g. after `from_graph_view` truncation).
     DanglingArc { from: crate::wfc_engine::ids::NodeId },
     /// 🚨️ A custom stencil declared the same offset twice, or a self-offset without opting in.
     #[cfg(test)]
     InvalidStencil { reason: &'static str },
-    /// 🚨️ A boundary mode is incompatible with the requested grid size (e.g. `Mirror` on a
-    /// size-0 axis) or with another configured boundary on the same axis.
-    #[cfg(test)]
-    BoundaryIncompatible { reason: &'static str },
     /// 🚨️ A node count exceeded `u32::MAX`, the limit `crate::wfc_engine::ids::NodeId` can address.
     #[cfg(test)]
     TooManyNodes { count: u64 },
@@ -122,13 +88,9 @@ impl core::fmt::Display for TopologyError {
             Self::MaskShapeMismatch { expected, actual } => {
                 write!(f, "mask length mismatch: expected {expected}, found {actual}")
             }
-            #[cfg(test)]
-            Self::UnknownNode(n) => write!(f, "unknown node id {n}"),
             Self::DanglingArc { from } => write!(f, "arc references a nonexistent node from {from}"),
             #[cfg(test)]
             Self::InvalidStencil { reason } => write!(f, "invalid stencil: {reason}"),
-            #[cfg(test)]
-            Self::BoundaryIncompatible { reason } => write!(f, "incompatible boundary configuration: {reason}"),
             #[cfg(test)]
             Self::TooManyNodes { count } => write!(f, "{count} nodes exceeds the u32 node-id capacity"),
         }
@@ -144,21 +106,9 @@ impl std::error::Error for TopologyError {}
 #[cfg(test)]
 pub enum ConstraintError {
     /// 🚨️ A cardinality/distance bound was internally inconsistent (e.g. `min > max`).
-    InvalidBounds {
-        reason: &'static str,
-    },
-    /// 🚨️ A referenced region/tag was never declared.
-    UnknownRegion(crate::wfc_engine::ids::RegionId),
-    UnknownTag(u32),
+    InvalidBounds { reason: &'static str },
     /// 🚨️ A tuple-table constraint was given zero tuples.
     EmptyTupleTable,
-    /// 🚨️ A tuple in a tuple-table constraint did not match the declared node-scope arity.
-    ArityMismatch {
-        expected: usize,
-        actual: usize,
-    },
-    /// 🚨️ A constraint referenced a node outside the topology.
-    UnknownNode(crate::wfc_engine::ids::NodeId),
 }
 
 #[cfg(test)]
@@ -166,13 +116,7 @@ impl core::fmt::Display for ConstraintError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::InvalidBounds { reason } => write!(f, "invalid constraint bounds: {reason}"),
-            Self::UnknownRegion(r) => write!(f, "unknown region id {r}"),
-            Self::UnknownTag(t) => write!(f, "unknown tag id {t}"),
             Self::EmptyTupleTable => write!(f, "tuple-table constraint has zero tuples"),
-            Self::ArityMismatch { expected, actual } => {
-                write!(f, "tuple arity mismatch: expected {expected}, found {actual}")
-            }
-            Self::UnknownNode(n) => write!(f, "unknown node id {n}"),
         }
     }
 }

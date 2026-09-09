@@ -1,0 +1,3 @@
+union WriterMainWindowConfigMutation = SetWriterCamera | SetWriterEditorSettings
+type SetWriterCamera { camera: WriterCamera! }
+type SetWriterEditorSettings { settings: WriterEditorSettings! }

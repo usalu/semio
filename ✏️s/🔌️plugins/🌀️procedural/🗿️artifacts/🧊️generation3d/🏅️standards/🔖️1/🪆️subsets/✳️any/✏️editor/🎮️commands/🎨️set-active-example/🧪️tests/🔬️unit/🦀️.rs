@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::generation3d::Generation3dCommand;
 use crate::editor::generation3d::testkit::{app, app_with_registry, dispatch};
+use crate::editor::generation3d::Generation3dCommand;
 use crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_plugin::PluginApp;

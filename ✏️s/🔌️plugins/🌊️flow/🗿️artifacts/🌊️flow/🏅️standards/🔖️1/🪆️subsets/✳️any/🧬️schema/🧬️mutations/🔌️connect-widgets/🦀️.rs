@@ -2,9 +2,9 @@
 //! (taxonomy `derivation-rules.md` §4) rather than generic collection create, since a `SynapseSpec`
 //! is literally an edge between two widget ports.
 
-use crate::FlowSnapshot;
 use crate::schema::diff::text::FlowDiff;
 use crate::schema::mutations::FlowMutation;
+use crate::FlowSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔗️ConnectWidgets

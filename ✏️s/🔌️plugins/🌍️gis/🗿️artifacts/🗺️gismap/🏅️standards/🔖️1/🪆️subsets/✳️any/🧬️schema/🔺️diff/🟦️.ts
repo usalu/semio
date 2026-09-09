@@ -9,46 +9,12 @@ export interface GisMapDiff {
   routes?: GisMapFeaturesDelta;
   /** @state artifact */
   regions?: GisMapFeaturesDelta;
-  /** @state presence */
-  selectedIds?: GisMapStringList;
-  /** @state presence */
-  featureSelectionJson?: string;
-  /** @state presence */
-  layerVisibility?: GisMapBoolMapDelta;
-  /** @state presence */
-  layerStrokeScale?: GisMapNumberMapDelta;
-  /** @state config */
-  cameraJson?: string;
-  /** @state config */
-  renderMode?: string;
-  /** @state config */
-  vectorStyle?: string;
-  /** @state config */
-  lodMode?: string;
-  /** @state config */
-  hoverJson?: string;
-  /** @state config */
-  selectionMethod?: string;
-  /** @state config */
-  selectionMode?: string;
-  /** @state config */
 }
 
 export interface GisMapArtifact {
   positions: GisMapFeature[];
   routes: GisMapFeature[];
   regions: GisMapFeature[];
-  selectedIds: string[];
-  featureSelectionJson: string;
-  layerVisibility: Record<string, boolean>;
-  layerStrokeScale: Record<string, number>;
-  cameraJson: string;
-  renderMode: string;
-  vectorStyle: string;
-  lodMode: string;
-  hoverJson: string;
-  selectionMethod: string;
-  selectionMode: string;
 }
 
 export interface GisMapFeature {
@@ -127,17 +93,6 @@ export function parseGisMapDiff(value: unknown, at = "$"): GisMapDiff {
     positions: row["positions"] === undefined ? undefined : parseGisMapFeaturesDelta(row["positions"], `${at}.positions`),
     routes: row["routes"] === undefined ? undefined : parseGisMapFeaturesDelta(row["routes"], `${at}.routes`),
     regions: row["regions"] === undefined ? undefined : parseGisMapFeaturesDelta(row["regions"], `${at}.regions`),
-    selectedIds: row["selectedIds"] === undefined ? undefined : parseGisMapStringList(row["selectedIds"], `${at}.selectedIds`),
-    featureSelectionJson: row["featureSelectionJson"] === undefined ? undefined : gisGismapDiffGuardString(row["featureSelectionJson"], `${at}.featureSelectionJson`),
-    layerVisibility: row["layerVisibility"] === undefined ? undefined : parseGisMapBoolMapDelta(row["layerVisibility"], `${at}.layerVisibility`),
-    layerStrokeScale: row["layerStrokeScale"] === undefined ? undefined : parseGisMapNumberMapDelta(row["layerStrokeScale"], `${at}.layerStrokeScale`),
-    cameraJson: row["cameraJson"] === undefined ? undefined : gisGismapDiffGuardString(row["cameraJson"], `${at}.cameraJson`),
-    renderMode: row["renderMode"] === undefined ? undefined : gisGismapDiffGuardString(row["renderMode"], `${at}.renderMode`),
-    vectorStyle: row["vectorStyle"] === undefined ? undefined : gisGismapDiffGuardString(row["vectorStyle"], `${at}.vectorStyle`),
-    lodMode: row["lodMode"] === undefined ? undefined : gisGismapDiffGuardString(row["lodMode"], `${at}.lodMode`),
-    hoverJson: row["hoverJson"] === undefined ? undefined : gisGismapDiffGuardString(row["hoverJson"], `${at}.hoverJson`),
-    selectionMethod: row["selectionMethod"] === undefined ? undefined : gisGismapDiffGuardString(row["selectionMethod"], `${at}.selectionMethod`),
-    selectionMode: row["selectionMode"] === undefined ? undefined : gisGismapDiffGuardString(row["selectionMode"], `${at}.selectionMode`),
   };
 }
 

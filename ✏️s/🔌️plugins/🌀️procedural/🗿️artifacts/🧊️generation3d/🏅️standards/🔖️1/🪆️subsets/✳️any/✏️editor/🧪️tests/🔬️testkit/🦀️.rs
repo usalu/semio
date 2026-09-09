@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
 use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
@@ -18,11 +17,15 @@ pub fn generation3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
 }
 
 pub async fn app() -> Generation3dApp {
-    new_app::<EditorApp<Generation3dPlayApp>>().await
+    let mut app = new_app::<EditorApp<Generation3dPlayApp>>().await;
+    app.bind_instance_id(1).await;
+    app
 }
 
 pub async fn app_with_registry() -> Generation3dApp {
-    new_app_with_registry::<EditorApp<Generation3dPlayApp>>(generation3d_app_manifest_for_testkit).await
+    let mut app = new_app_with_registry::<EditorApp<Generation3dPlayApp>>(generation3d_app_manifest_for_testkit).await;
+    app.bind_instance_id(1).await;
+    app
 }
 
 pub async fn dispatch(app: &mut Generation3dApp, command: Generation3dCommand) -> InvocationResult {
@@ -30,7 +33,11 @@ pub async fn dispatch(app: &mut Generation3dApp, command: Generation3dCommand) -
 }
 
 pub async fn render(app: &mut Generation3dApp, body_key: &str) -> String {
-    semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+    render_with_view(app, body_key, &ViewModel::default()).await
+}
+
+pub async fn render_with_view(app: &mut Generation3dApp, body_key: &str, view_state: &ViewModel) -> String {
+    semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render json")
 }
 
 /// 🧵️ A `flowEvalTick` chain self-dispatches via `requestedEffects`, which only the JS renderer

@@ -23,7 +23,15 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 1.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 120.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(3), value: 0.5 });
-    model.lighting.push(crate::model::LightingGain { id: crate::model::EntityId(30), zone_id: crate::model::EntityId(1), schedule_id: crate::model::ScheduleId(1), watts_per_area: 10.0, radiant_fraction: 0.6, visible_fraction: 0.2, return_air_fraction: 0.0 });
+    model.lighting.push(crate::model::LightingGain {
+        id: crate::model::EntityId(30),
+        zone_id: crate::model::EntityId(1),
+        schedule_id: crate::model::ScheduleId(1),
+        watts_per_area: 10.0,
+        radiant_fraction: 0.6,
+        visible_fraction: 0.2,
+        return_air_fraction: 0.0,
+    });
     (snapshot(model), super::change_lighting_gain_return_air_fraction(crate::model::EntityId(30), 0.1))
 }
 

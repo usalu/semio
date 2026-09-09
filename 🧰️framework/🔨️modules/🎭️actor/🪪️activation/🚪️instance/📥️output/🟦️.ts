@@ -208,6 +208,6 @@ export class OwnedActorTurnOutputs {
 //#region 🧪️OutputReservationTests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️ownedactorturnoutput/🟦️.ts");
-  await registerTests1(import.meta.vitest, { OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedResidentLedger, cancelEmpty }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedResidentLedger, cancelEmpty }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️OutputReservationTests

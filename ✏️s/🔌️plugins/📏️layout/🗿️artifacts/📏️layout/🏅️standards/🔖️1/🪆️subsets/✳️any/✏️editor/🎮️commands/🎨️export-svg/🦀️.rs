@@ -1,8 +1,8 @@
 //! 🐚️ 🐚️ Layout play app commands command — `export-svg`.
 
+use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

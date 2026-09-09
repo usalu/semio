@@ -1,7 +1,7 @@
 //! Deserialize stdio.deflate from stdio.binary (zlib-compress payload).
 
-use semio_s_artifact_stdio_binary::BinarySnapshot;
 use crate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 //#region Codec
 /// Register deserializer hooks.

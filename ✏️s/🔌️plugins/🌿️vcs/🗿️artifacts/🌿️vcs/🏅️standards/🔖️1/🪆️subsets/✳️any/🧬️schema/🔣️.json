@@ -10,8 +10,7 @@
     "counter",
     "notes",
     "status",
-    "tags",
-    "selectedCheckpointIds"
+    "tags"
   ],
   "properties": {
     "schema": {
@@ -41,13 +40,6 @@
         "type": "string"
       },
       "x-semio-state": "artifact"
-    },
-    "selectedCheckpointIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
     }
   },
   "$defs": {

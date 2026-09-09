@@ -7,8 +7,8 @@
 
 use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
 use crate::{DrawingArtboard, DrawingCamera, DrawingSnapshot, PathSegment};
-use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use dsl::DslValue;
+use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "drawing-view-canvas";
@@ -53,11 +53,7 @@ pub fn render(document: &DrawingSnapshot) -> UiAssemblyResult<BuiltNode> {
     for node in &scene_nodes {
         records.push(dsl::ToValue::to_value(node));
     }
-    scene_surface(
-        SURFACE_ID,
-        semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None },
-    )
+    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None })
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension

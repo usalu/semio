@@ -1,12 +1,12 @@
-
 use super::*;
-use crate::editor::gis3d::testkit::{app, render as render_body};
+use crate::editor::gis3d::testkit::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_the_world_3d_terrain_scene() {
     let mut app = app().await;
     let json = render_body(&mut app, GIS3D_PLAY_BODY_COMPOSITE).await;
     assert!(json.contains("world-3d"));
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -15,6 +15,7 @@ async fn the_fixture_pins_reach_the_scene_as_world_instances() {
     let json = render_body(&mut app, GIS3D_PLAY_BODY_COMPOSITE).await;
     assert!(json.contains("p_institut_de_botanique_ulg_liege"));
     assert!(json.contains("pin"));
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

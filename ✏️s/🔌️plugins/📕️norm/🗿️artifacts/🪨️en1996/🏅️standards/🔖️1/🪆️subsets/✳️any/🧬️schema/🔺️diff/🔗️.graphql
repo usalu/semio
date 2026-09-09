@@ -24,5 +24,4 @@ type En1996Diff {
   storeys: Int @state(class: ARTIFACT)
   hEfMm: Float @state(class: ARTIFACT)
   tEfMm: Float @state(class: ARTIFACT)
-  selectedCheckIndex: Int @state(class: PRESENCE)
 }

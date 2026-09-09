@@ -1,8 +1,8 @@
 //! 🏔️ GIS 3D play app command — vertical exaggeration, the terrain's one editable document property.
 
+use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
 use crate::op::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
-use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

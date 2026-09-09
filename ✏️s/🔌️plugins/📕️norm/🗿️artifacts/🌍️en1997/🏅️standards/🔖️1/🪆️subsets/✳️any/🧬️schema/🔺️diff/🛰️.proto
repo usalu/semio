@@ -49,6 +49,4 @@ message En1997Diff {
   optional uint32 pile_n_profiles = 22;
   // @state artifact
   optional double z_investigated_m = 23;
-  // @state presence
-  optional uint32 selected_check_index = 24;
 }

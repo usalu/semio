@@ -1,6 +1,5 @@
 //! ⭕ `change-d-mm` — sets the En 1994 shear stud shank diameter d [mm] scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

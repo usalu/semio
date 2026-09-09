@@ -120,7 +120,7 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     let factory = Arc::new(Factory(count.clone()));
     let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(law["value"].as_i64().unwrap() as i32));
     assert!(owner.local_read().is_err());
-    owner.install_local_retirement_factory(factory.clone()).unwrap();
+    owner.install_local_retirement_factory(factory).unwrap();
     let job = CapturedLocalJob { read: Some(owner.local_read().unwrap()), returned: None, closing: false };
     let cancel = semio_framework_job::root_cancel_token();
     let params = semio_framework_job::BatchJobParams {
@@ -171,7 +171,7 @@ fn retained_presence_local_replacements_release_shared_aliases_and_retire_exact_
     let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let factory = Arc::new(Factory(count.clone()));
     let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(23));
-    owner.install_local_retirement_factory(factory.clone()).unwrap();
+    owner.install_local_retirement_factory(factory).unwrap();
     let first = owner.local_read().unwrap();
     owner.apply_one(0, ValueMutation::SetValue(SetValue { n: 31 })).ok().unwrap();
     let second = owner.local_read().unwrap();
@@ -590,7 +590,7 @@ fn retained_presence_store_close_rejects_nonempty_terminal_and_late_commit_witho
     assert!(!owner.retirement_started());
     drop((missing, empty));
     owner.install_local_retirement_factory(factory.clone()).unwrap();
-    owner.install_peer_retirement_factory(factory.clone()).unwrap();
+    owner.install_peer_retirement_factory(factory).unwrap();
     let terminal = Arc::new(Value(9));
     let rejected = owner.begin_retirement(terminal.clone(), |value| value.0 == 0).err().unwrap();
     assert!(Arc::ptr_eq(&terminal, &rejected.1));

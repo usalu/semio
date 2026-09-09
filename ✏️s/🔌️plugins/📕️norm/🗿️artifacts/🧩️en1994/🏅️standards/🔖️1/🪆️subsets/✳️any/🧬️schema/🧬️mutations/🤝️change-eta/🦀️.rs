@@ -1,6 +1,5 @@
 //! 🔗 `change-eta` — sets the En 1994 degree of shear connection η scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

@@ -8,9 +8,5 @@ message GisTerrainArtifact {
   double exaggeration = 1;
   // @state artifact
   string imported_features_json = 2;
-  // @state presence
-  repeated string selected_ids = 3;
-  // @state config
-  string camera_json = 4;
   // @state config
 }

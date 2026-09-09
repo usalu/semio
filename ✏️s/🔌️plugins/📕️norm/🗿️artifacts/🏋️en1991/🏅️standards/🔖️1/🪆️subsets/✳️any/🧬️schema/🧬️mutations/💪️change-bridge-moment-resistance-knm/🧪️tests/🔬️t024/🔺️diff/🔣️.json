@@ -21,7 +21,7 @@
   "bridgeLane": null,
   "bridgeSpanM": null,
   "bridgeLaneWidthM": null,
-  "bridgeMomentResistanceKnm": 4500.0,
+  "bridgeMomentResistanceKnm": 4500,
   "craneClass": null,
   "hoistClass": null,
   "hoistingSpeedMS": null,
@@ -31,6 +31,5 @@
   "siloMu": null,
   "siloK": null,
   "cS": null,
-  "cD": null,
-  "selectedCheckIndex": null
+  "cD": null
 }

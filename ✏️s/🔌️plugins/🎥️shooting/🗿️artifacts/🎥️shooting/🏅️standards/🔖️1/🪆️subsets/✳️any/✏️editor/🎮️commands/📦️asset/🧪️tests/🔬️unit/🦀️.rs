@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::editor::shooting::ShootingCommand;
 use crate::editor::shooting::testkit::{dispatch, shooting_app};
+use crate::editor::shooting::ShootingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_asset_emits_both_a_document_and_a_fit_revision_config_operation() {

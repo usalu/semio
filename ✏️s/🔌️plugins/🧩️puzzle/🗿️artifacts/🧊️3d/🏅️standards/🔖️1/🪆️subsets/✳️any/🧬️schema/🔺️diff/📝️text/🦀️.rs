@@ -108,99 +108,6 @@ impl Puzzle3dDiff {
             if let Some(delta) = &self.references {
                 next.references = apply_references_delta(&next.references, delta).map_err(|error| error.under(["references"]))?;
             }
-            if let Some(list) = &self.selected_object_ids {
-                next.selected_object_ids = list.values.clone();
-            }
-            if let Some(list) = &self.selected_vortex_ids {
-                next.selected_vortex_ids = list.values.clone();
-            }
-            if let Some(list) = &self.selected_attraction_ids {
-                next.selected_attraction_ids = list.values.clone();
-            }
-            if let Some(list) = &self.selected_target_volume_ids {
-                next.selected_target_volume_ids = list.values.clone();
-            }
-            if let Some(list) = &self.selected_reference_ids {
-                next.selected_reference_ids = list.values.clone();
-            }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
-            if let Some(value) = self.camera_position_x {
-                next.camera_position_x = value;
-            }
-            if let Some(value) = self.camera_position_y {
-                next.camera_position_y = value;
-            }
-            if let Some(value) = self.camera_position_z {
-                next.camera_position_z = value;
-            }
-            if let Some(value) = self.camera_target_x {
-                next.camera_target_x = value;
-            }
-            if let Some(value) = self.camera_target_y {
-                next.camera_target_y = value;
-            }
-            if let Some(value) = self.camera_target_z {
-                next.camera_target_z = value;
-            }
-            if let Some(value) = self.camera_zoom {
-                next.camera_zoom = value;
-            }
-            if let Some(value) = &self.selection_method {
-                next.selection_method = value.clone();
-            }
-            if let Some(value) = &self.selection_mode_default {
-                next.selection_mode_default = value.clone();
-            }
-            if let Some(value) = &self.engagement_input {
-                next.engagement_input = value.clone();
-            }
-            if let Some(value) = self.grid_visible {
-                next.grid_visible = value;
-            }
-            if let Some(value) = self.grid_snap_enabled {
-                next.grid_snap_enabled = value;
-            }
-            if let Some(value) = self.grid_spacing {
-                next.grid_spacing = value;
-            }
-            if let Some(value) = self.overlap_budget {
-                next.overlap_budget = value;
-            }
-            if let Some(value) = self.fill_count {
-                next.fill_count = value;
-            }
-            if let Some(value) = self.brush_candidate_index {
-                next.brush_candidate_index = value;
-            }
-            if let Some(value) = self.lod_automatic {
-                next.lod_automatic = value;
-            }
-            if let Some(value) = self.lod_depth_variable {
-                next.lod_depth_variable = value;
-            }
-            if let Some(value) = self.lod_manual {
-                next.lod_manual = value;
-            }
-            if let Some(value) = self.proximity_radius {
-                next.proximity_radius = value;
-            }
-            if let Some(value) = &self.runtime_extras_json {
-                next.runtime_extras_json = value.clone();
-            }
-            if let Some(value) = &self.hovered_object_id {
-                next.hovered_object_id = value.clone();
-            }
-            if let Some(value) = &self.hovered_vortex_full_id {
-                next.hovered_vortex_full_id = value.clone();
-            }
-            if let Some(value) = &self.hovered_kind_id {
-                next.hovered_kind_id = value.clone();
-            }
-            if let Some(value) = self.preview_seq {
-                next.preview_seq = value;
-            }
             next
         })
     }
@@ -252,37 +159,6 @@ impl MutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
         take!(schema);
         take!(domain);
         take!(meta);
-        take!(selected_object_ids);
-        take!(selected_vortex_ids);
-        take!(selected_attraction_ids);
-        take!(selected_target_volume_ids);
-        take!(selected_reference_ids);
-        take!(active_utility_id);
-        take!(camera_position_x);
-        take!(camera_position_y);
-        take!(camera_position_z);
-        take!(camera_target_x);
-        take!(camera_target_y);
-        take!(camera_target_z);
-        take!(camera_zoom);
-        take!(selection_method);
-        take!(selection_mode_default);
-        take!(engagement_input);
-        take!(grid_visible);
-        take!(grid_snap_enabled);
-        take!(grid_spacing);
-        take!(overlap_budget);
-        take!(fill_count);
-        take!(brush_candidate_index);
-        take!(lod_automatic);
-        take!(lod_depth_variable);
-        take!(lod_manual);
-        take!(proximity_radius);
-        take!(runtime_extras_json);
-        take!(hovered_object_id);
-        take!(hovered_vortex_full_id);
-        take!(hovered_kind_id);
-        take!(preview_seq);
         macro_rules! merge_delta {
             ($field:ident) => {
                 if let Some(delta) = other.$field {

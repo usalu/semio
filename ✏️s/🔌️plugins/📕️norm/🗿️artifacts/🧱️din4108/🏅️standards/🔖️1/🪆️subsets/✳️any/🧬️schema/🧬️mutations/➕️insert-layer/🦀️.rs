@@ -1,7 +1,6 @@
 //! ➕️ `insert-layer` — places a new construction layer at a FINAL-state index in the layer
 //! build-up (an intrinsically ordered, anonymous collection — no stable id on `LayerDocument`).
 
-
 use crate::{Din4108Mutation, Din4108Snapshot, LayerDocument};
 
 //#region 🔖️Payload

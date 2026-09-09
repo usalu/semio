@@ -2,6 +2,16 @@
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own Protocol v2 contribution. `6️⃣cc6` is ISO 10303-214 conformance class 6 — advanced B-Rep — and it is the BREP PILOT owner: a real, smallest-semantic subset that already existed, rather than a new artifact invented for the pilot. It carries two oracles on DIFFERENT engine families (`ruststep` for Part-21 structure, `brepjs`/OpenCASCADE for exact geometry), six qualified external probes, one registered-but-unqualified one whose stage therefore gates nothing, and a 24-bundle third-party-generated corpus spanning the spatial-relationship, shape-complexity, robustness, mechanical and failure families.",
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "features": [
+        "oracles"
+      ]
+    }
+  ],
   "oracles": [
     {
       "id": "ruststep-step-ap214-cc6-mutate",

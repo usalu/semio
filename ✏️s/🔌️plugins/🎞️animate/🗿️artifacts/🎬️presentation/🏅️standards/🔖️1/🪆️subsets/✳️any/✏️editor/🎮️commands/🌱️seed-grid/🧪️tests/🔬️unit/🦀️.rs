@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::editor::animate::PresentationCommand;
 use crate::editor::animate::commands::clear_tiles;
 use crate::editor::animate::testkit::{dispatch, presentation_app};
+use crate::editor::animate::PresentationCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn seed_grid_action_adds_tiles() {
@@ -25,7 +24,7 @@ async fn set_active_example_demo_emits_a_reset_effect_after_seed() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&deck, &history);
     let cfg_snapshot = PresentationConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let mut ctx = PresentationDispatchCtx { selected_ids: Vec::new() };
     let emit = crate::editor::animate::commands::set_active_example::handle(&crate::editor::animate::commands::set_active_example::SetActiveExample { example_id: "demo".into() }, &doc, &cfg, &mut ctx).expect("handle");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {

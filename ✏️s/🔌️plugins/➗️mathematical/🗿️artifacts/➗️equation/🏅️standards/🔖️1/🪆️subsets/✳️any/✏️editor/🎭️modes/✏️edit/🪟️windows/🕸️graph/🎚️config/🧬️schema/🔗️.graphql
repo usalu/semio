@@ -1,0 +1,9 @@
+type EquationCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type EquationGraphWindowConfig {
+  camera: EquationCamera! @state(class: CONFIG)
+}

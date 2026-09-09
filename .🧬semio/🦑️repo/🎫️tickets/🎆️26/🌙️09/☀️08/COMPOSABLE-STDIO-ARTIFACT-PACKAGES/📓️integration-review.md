@@ -133,3 +133,99 @@ The current GIS test command selects both leaves and disables default features. 
 ## Read-Only Shared Compiler Cache Snapshot
 
 A read-only `sccache --show-stats` request completed with exit 0 while GIS runtime compilation continued. The shared server reported Rust hit rate 6.99%, 1,624 Rust misses, no cache timeouts/read/write errors, and a 10 GiB cache at its 10 GiB limit. Its average compiler time was 47.738 seconds and average cache-hit read was 0.029 seconds. These are server-wide aggregates spanning concurrent work, not this task's before/after benchmark. No server, cache, limits or shared configuration was changed or reset. Raw receipt: `🗑️generated/native-sccache-snapshot.txt`.
+
+## GIS Default Test Feature Boundary Repair
+
+The attached GIS runtime gate `61527` completed with exit 101. All shared dependencies and selected stdio artifacts compiled; the sole diagnostic was E0425 at the map unit test's unconditional `declaration()` call. The public declaration is intentionally gated by `component-app-assembly`. The test now keeps service metadata, service registration and definition construction in the default gate, and checks declaration construction in a separate feature-gated test. No production feature boundary or rejection check was weakened. The failing receipt is `🗑️generated/gis-default-runtime-7-jobs2.txt`; the fresh locked runtime rerun is `gis-default-runtime-8-jobs2.txt`. Rustfmt completed with exit 0. Native success remains unproven until that rerun finishes.
+
+## Fresh Run Serialization Failure And Repair
+
+The ongoing seven-package Nx matrix advanced to Workflow after Run finished with 18/19 passing, not after a complete Run pass. The failing `run_payload_json_uses_exact_camel_case_and_rejects_unknown_fields` assertion expects `automationRef`/`eventFingerprint`. Current local Value derive documentation and its `variant-field-casing` tests deliberately separate `rename_all` (variant tags) from `rename_all_fields` (named fields). RunTrigger now explicitly requests `rename_all_fields = "camelCase"`; the expected wire keys and rejection assertions were retained. A third neutral package case exercises an automation-trigger start through the existing serde_json encode/decode/output oracle. Rustfmt exited 0. The authoritative red receipt is `framework-seven-final-nx-8-jobs2.txt`; an ordinary Nx Run retry with prerequisites is started in `framework-run-nx-9-casing.txt`. This current failure supersedes the earlier Run19/19 receipt until the retry passes.
+
+## Targeted Enum Field Casing Audit
+
+After the Run failure, a read-only scan of the seven framework artifact roots found seven additional enum candidates with underscore-named fields and a container `rename_all` but no `rename_all_fields`. This scan is a candidate finder, not proof of a wire defect. Flow Widget is correct as written: its current JSON schema and neutral fixture explicitly use `input_ports`/`output_ports`; `neuronKind` is renamed at the field. WidgetDescriptor also explicitly renames `neuronKind`. Those types were not changed. GenerationMutation, WorkflowDiff and RunDiff have no demonstrated contradictory wire expectation in this audit and remain unchanged pending runtime evidence. Collection ArtifactBody and DAG DagNodeKind were assigned to their executor for schema/fixture review, with the same prohibition against blanket casing changes. Raw candidate inventory: `🗑️generated/framework-enum-casing-candidates.json`.
+
+The registry executor completed the Collection/DAG casing review. No pre-existing JSON schema, neutral JSON fixture or consumer required `ArtifactBody::Document` to use `documentId`; its `.collection` example specifies the independent DSL spelling `document-id`. The speculative casing edit and inline assertion were reverted, retaining the actual serde/value `document_id` contract. DAG's neutral fixture explicitly requires snake-case variadic fields and explicit camel-case AppInstance fields, already represented by field attributes. Neither type is changed by this audit.
+
+## Current Host Compiler Process Check
+
+A later sleeping-sccache observation was checked before any cancellation. Cargo52651 had 2h06m elapsed including queue time, but its current Semio/Flow sccache frontends57969/57972 were only 75s old. The real Semio rustc58239 was running at approximately60% CPU beneath the shared sccache server5083, outside Cargo's direct descendant tree. The host log had advanced through XLSX, CSV, JSON, Home, UI WebGPU, Semio and framework Flow. This was active compilation; all processes and queues were retained. Parent/frontend CPU alone is not a stall signal.
+
+## Fresh Full Host Integration Passed
+
+Session64108 completed with exit0. `cargo check --offline -p semio-framework-os -p semio-framework-os-flow -p semio-framework-os-infinite -p semio-s-plugin-space --features semio-framework-os/os-host-full --lib --message-format short --keep-going` finished in127m47s including its shared-cache queue. This is the current graph after the Shell configuration and stdio parent source-mount corrections. The current framework artifacts and Space/Home leaf composition compiled. Space emitted27 unused-alias/unnecessary-qualification warnings; there were no compiler errors. Exact receipt: `framework-host-integration-7-current-jobs2.txt`. No repeat of this successful host gate is required unless a subsequent change affects it.
+
+After the host check released Cargo, the current canonical matrix completed Workflow:37 tests passed,0 failed, followed by successful doc-test completion. The same matrix has advanced to Playbook. Its earlier Run18/19 failure is still retained; the independent corrected Run retry11590 remains pending. Matrix session48948 remains active.
+
+## Corrected Run Retry Passed
+
+Ordinary Nx Run retry11590 completed exit0:19/19 tests,0 failures and successful doc-tests. Cargo finished in79m36s and Nx in79m39s including shared-cache queue time. Both `run_payload_json_uses_exact_camel_case_and_rejects_unknown_fields` and `language_neutral_package_cases_match_serde_json` passed on the explicit RunTrigger field-casing schema and new automation case. Receipt:`framework-run-nx-9-casing.txt`. This resolves the earlier canonical matrix18/19 failure; no further Run-only rerun is required.
+
+The Nx executor also confirmed and corrected the artifact test router's missing test-level behavior. A neutral fixture/independent jsonschema source check was red on raw Cargo invocation, then a fake-Cargo behavioral probe verified the existing Nextest profiles, cumulative higher-level skips, Cargo/libtest argument partitioning, budgets and process exit0. Receipt details are in `📓️nx-execution.md`. The common helper changed, so the PDF proof must establish a new stable baseline after its initial queued build.
+
+## Current Native Continuation
+
+The seven-package canonical matrix now also completed Playbook 14/14 and Flow 37/37, with Flow using the corrected budgeted Nextest router. The matrix continues through DAG, Space and Collection. Its earlier Run failure is superseded by the separately recorded current Run 19/19 pass; the final aggregate exit will still reflect that earlier failure.
+
+The initial native PDF cache baseline exited 1 before output staging because twenty-one diagnostics arose in concurrently edited shared WindowConfig infrastructure. The GIS default matrix, Norm parent retry and artifact matrix independently encountered the same incomplete shared code. Current source inspection now shows all eleven ConfigView.window fields, window config lane dispatch and the local future signature repairs. Our fleet did not implement those external changes. Native PDF retry 42472 and resumed focused native checks are validating current source; no cache or integration pass is inferred from inspection.
+
+The current canonical DAG continuation passed all 56 tests through Nextest (0 skipped). It advanced to Space. This supersedes the earlier separate 55-test plus focused-regression receipts for current native coverage.
+
+GIS retry9 terminated with exit1 after Terrain test encountered eleven duplicate ConfigView.window fields and window config load returning CommandReceipt instead of unit. The external owner removed all duplicate fields before the coordinator patch could run, so that guarded edit aborted without writing. The coordinator repaired only the remaining load return expression: successful store.reset receipts map to unit while preserving errors. Current source inspection confirms one window field in all eleven ConfigView constructors. Fresh native compilation remains required.
+
+PDF retry42472 provides a fresh successful native compilation of the repaired shared framework-plugin. Its enclosing Nx task nevertheless failed during artifact staging because Cargo’s reported unhashed kernel rlib was absent. The native build helper owner is investigating output lifetime and concurrent Cargo transitions with a regression test; current cache acceptance remains open.
+
+## Canonical Matrix Terminal And Focused Retry
+
+Session48948 ended exit1 after188m53s including queue time. Workflow37, Playbook14, framework Flow37, DAG56 and Space4 passed in that matrix. Its earlier Run19 failure is superseded by the separate current19/19 pass. Collection failed before tests in the concurrently incomplete shared channel encode match for LoadWindowConfig/ReadWindowConfigs. The current channel already has both enum variants and encode/decode cases; the coordinator made no protocol edits.
+
+Block parent session5941 ended exit1 after3m47s, before parent tests, with WindowConfigPack and protocol::WindowConfigPackEntry absent from their use sites in its compile snapshot. Current source has the plugin_runtime import and SPR re-export. Focused ordinary Nx session36694 now runs only Collection and Block parent with `--lib`, preserving every passing target. Receipt: `collection-block-native-nx-1.txt`.
+
+### GIS Native SVG Export Regression
+
+The tenth independent Nx matrix compiled Map and discovered 150 tests. Nextest stopped after 13 tests: 11 passed and two existing SVG export tests failed because the drawing bridge snapshot was printed as artifact DSL. The production renderer now calls the standalone SVG snapshot’s native `export_utf8` codec and decodes its UTF-8 bytes. The registry conversion, dimensions, and test assertions remain intact. Runtime validation of this correction is pending; the same matrix continues with Terrain. Evidence: `🗑️generated/gis-independent-default-nx-10.txt`.
+
+### Framework Artifact Runtime Complete
+
+The focused Collection retry passed 4/4 through ordinary Nx and budgeted Nextest. The current seven-package evidence totals 171 passing tests: Run19, Workflow37, Playbook14, Flow37, DAG56, Space4 and Collection4. Receipt: `collection-block-native-nx-1.txt`; its Nx process continues with Block parent acceptance. No further framework artifact retry is pending.
+
+## Coordinator Whitespace Check
+
+The647-path coordinator diff check found six redundant EOF blank lines in concurrently edited Procedural files already touched by this task. Only those extra terminal newline bytes were trimmed; the six-file follow-up passed exit0, preserving all current code. Receipts: `coordinator-owned-diff-check-current.txt` and `coordinator-eof-whitespace-fix.txt`.
+
+## Current Exact Ledger Whitespace Gate
+
+The refreshed union contains 2,612 exact touched source paths: coordinator 647, artifact executor 677 (including five historical touches), registry executor 840, and Nx executor 531; overlapping paths are deduplicated. Nx entries are read only from its explicit Ticket Close Files section. Read-only `git diff --check` ran across every union path in bounded batches and exited 0. This covers the six coordinator EOF fixes and current settled GIS fixture/Store edits without taking ownership of unrelated deletions. Raw receipts: `coordinator-combined-ledger-current.json` and `coordinator-combined-diff-check-current.txt`. Refresh the union after remaining source changes settle.
+
+## Native Compiler Progress Observation
+
+Read-only process inspection distinguished the waiting sccache wrapper children of GIS Cargo 23168 from its real compiler workers under shared sccache server 5083. The Semio artifact worker accumulated CPU time and then exited before a bounded diagnostic sample could attach. The same Cargo process advanced to Wiggle and URL dependencies. This establishes continuing build progress; it is not an exact terminal compile or runtime acceptance receipt. No process was interrupted or cache removed. `native-compiler-progress-current.json` retains the compact owner-scoped observation.
+
+## Retained Native Handle Recovery
+
+Resuming the registry executor after its audit checkpoint did not expose the prior Norm/Store unified session handles. Owner inspection found their underlying queued process chains orphaned with vanished outer controllers. Their runtime passes are not inferred from process survival. The owner was directed to verify and cancel only those queued owned chains, then rerun attached and keep the agent active through exact terminal results. This scheduling pattern will not be repeated. The separately observed PDF exit137 has no established causal explanation; its scoped recovery is recorded in the native PDF report.
+
+## Native Queue Liveness
+
+The coordinator inspected root process descendants and the registry executor sampled the two quiet Nx runs. Norm and Store each retain a full live Nx → Bun → Nextest → Cargo chain; Cargo is waiting on shared build serialization and Nextest is reading its output pipe. No lost child completion or recovery need was found. Root process evidence is `🗑️generated/root-native-process-liveness-current.json`; registry process samples are `norm-surface-nx-node-sample.txt`, `store-ownership-nx-node-sample.txt`, `norm-nextest-list-sample.txt` and `store-nextest-list-sample.txt` beneath the generated directory. These waits are not counted as successful tests.
+
+## Native Recovery And Formatting Incident
+
+The disk-full acceptance attempts are classified separately in `📓️native-validation-space-recovery.md`; affected gates require fresh terminal results. Current shared Store ownership laws both passed by exact execution of the kernel binary produced by the durable GIS route, avoiding a redundant build through the wrong framework package.
+
+The artifact executor reported an accidental `cargo fmt -- <Map testkit path>` invocation. Cargo expanded formatting across workspace package roots and mounted Rust modules before the owned formatter was interrupted (exit 130). Concurrent work had already changed thousands of Rust files, so the executor could not safely distinguish formatter-only edits from concurrent edits and performed no blanket revert. A direct exact-file `rustfmt` invocation was subsequently used for the intended Map fixture. The executor is retaining a dedicated incident report; final diff review must preserve concurrent semantic edits and treat unattributed pure formatting as possible incident churn.
+
+## Fixture Completion Coordinator Review
+
+The coordinator checked the new shared fixture helper against the current `PluginApp` implementation. `has_pending_typed_operations` includes retained operations and effect/event/UI/local-query outboxes. Each result page is selected for the bound receiver, its exact token is acknowledged, and the application rejects tokens for a different live instance. The helper drains the side outboxes and acknowledges local-query page identity/ordinal tokens; it records published lanes and propagates a published fault after retirement. It also checks the one-item/one-page maintenance grant and retains a finite 30-second deadline. No synchronous mutation-count success is fabricated.
+
+Map fixtures bind the registered instance and use the declared window instance in command metadata, render and measure calls. Hot-peer attachment now first compares typed snapshot, generation, serialized initial snapshot, and serialized document identity/history. The checkpoint pump continues through the actual framework reserved action: its current implementation awaits the reserved job and then commits the history route before returning. Terrain fixtures now use the declared `gis3d-main` window instance in both render and command metadata. Existing strict close helpers remain in place. Current-source native suites still determine runtime acceptance.
+
+An attempted additional Terra review was rejected by the app with `agent thread limit reached`; no extra auditor was created or claimed. The existing registry executor resumed its Norm surface process after an explicit handle handoff. This review is coordinator source analysis, separate from the earlier completed Terra package-boundary audit.
+
+## UI Prerequisite Evidence Correction
+
+The coordinator checked the Button lifetime repair against both `IconAtlas::icon_uv(&str)` and `push_icon(&str)`, then requested the exact failing receipt before accepting a second purported lifetime failure. The executor confirmed the retained E0521 diagnostic (`owned-15-component-tests-check-current.txt:17`) came from the original `map(...).unwrap_or(label)` form; it had not compiled the intermediate typed match. An exact-signature rustc probe accepts both the anonymous-reference match and the retained named-lifetime match. The report must not claim the intermediate match was rejected by rustc.
+
+The UI package has `default = []`, and Button is selected by `wgpu-engine`. The coordinator identified that the initially queued default-feature library check could not validate this repair. The executor cancelled only its owned default check and launched an explicit `--features wgpu-engine` check (`ui-button-lifetime-wgpu-check.txt`, session97242). That real feature check remains pending; the isolated compiler probe is separate evidence.

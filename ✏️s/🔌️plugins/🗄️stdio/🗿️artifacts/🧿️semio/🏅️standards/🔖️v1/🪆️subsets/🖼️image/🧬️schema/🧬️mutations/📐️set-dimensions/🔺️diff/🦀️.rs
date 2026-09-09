@@ -1,8 +1,8 @@
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::set_dimensions;
 use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
-use crate::standards::v1::subsets::image::schema::mutations::set_dimensions;
 
 /// 🔺️ Diff helper for set-dimensions — a root-scoped singleton pair; `width`/`height` both
 /// already equal to `base`'s is `mutation.no-op` (Warning, empty diff). No `mutation.invariant`

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::demo_tiff_snapshot;
 use crate::schema::snapshot::{TiffFieldType, TiffValues};
@@ -180,8 +179,8 @@ async fn secondary_ifd_raster_and_its_required_strip_tags_survive_the_codec() {
 /// with the independent `decode_tiff` chain walk, and see the directory actually appear/vanish.
 #[semio_framework_async_macros::async_test]
 async fn insert_ifd_and_remove_ifd_are_observable_through_the_codec() {
-    use crate::TiffMutation;
     use crate::schema::mutations::apply_tiff_mutation;
+    use crate::TiffMutation;
 
     let (w, h) = (2u32, 2u32);
     let rgba = vec![3u8; (w * h * 4) as usize];

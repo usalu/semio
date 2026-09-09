@@ -1,15 +1,28 @@
 //! 🧬️ Direct delete-buffer-view mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::GltfSnapshot;
 use crate::schema::modules::mutation_support::top_level_collections::*;
+use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.delete-buffer-view.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/bufferViews"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)] #[value(rename_all = "camelCase")]
-pub struct GltfDeleteBufferViewPayload { pub index: usize }
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfDeleteBufferViewPayload {
+    pub index: usize,
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn validate(payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.index >= base.document.buffer_views.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/bufferViews", "index must address an item")); }  Ok(()) }
+pub fn validate(payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.buffer_views.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/bufferViews", "index must address an item"));
+    }
+    Ok(())
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); buffer_views_op(&mut next, GltfTopLevelFamily::BufferViews, payload.index, None, None)?;  Ok(next) }
+pub fn apply(payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    buffer_views_op(&mut next, GltfTopLevelFamily::BufferViews, payload.index, None, None)?;
+    Ok(next)
+}
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -25,7 +38,10 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferV
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => { match apply(payload, base) { Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
+            Self::Apply(payload) => match apply(payload, base) {
+                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+                Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
+            },
             Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
                 Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
                 Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),

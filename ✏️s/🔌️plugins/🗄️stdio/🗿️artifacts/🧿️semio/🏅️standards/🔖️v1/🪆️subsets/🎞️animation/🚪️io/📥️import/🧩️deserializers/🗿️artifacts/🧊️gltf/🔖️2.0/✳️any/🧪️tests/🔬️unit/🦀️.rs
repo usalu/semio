@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::ArtifactBuilder;
 use semio_s_artifact_stdio_gltf::engine::{GltfAccessorType, GltfComponentType};

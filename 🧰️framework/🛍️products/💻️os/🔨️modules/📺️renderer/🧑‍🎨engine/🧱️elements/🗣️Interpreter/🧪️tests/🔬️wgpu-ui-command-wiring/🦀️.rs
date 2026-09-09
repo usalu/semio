@@ -5,6 +5,22 @@ fn action(name: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: "ctrl".into(), action: name.into(), args: semio_framework::optional_json_to_dsl(args) }
 }
 
+#[test]
+fn window_action_context_retained_commands_preserve_the_clicked_window() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🔬️window-action-context/🔣️.json")).unwrap();
+    let window_id = fixture["clickedWindowId"].as_str().unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let descriptor = action("setValue", (!case["args"].is_null()).then(|| case["args"].clone()));
+        apply_ui_commands(&[ui_wgpu::wgpu::UiCommand::App { window_id: window_id.into(), action: descriptor }], &mut input);
+        let queued = crate::collect_fixture_actions(&mut input);
+        assert_eq!(queued.len(), 1);
+        let actual: Option<Value> = queued[0].args.as_ref().map(|args| serde_json::from_str(&dsl::json::from_dsl_value(args).to_string()).unwrap());
+        assert_eq!(actual, Some(case["expected"].clone()));
+    }
+    eprintln!("[DEBUG] retained native actions preserved clicked window identity and replaced conflicting descriptor targets");
+}
+
 fn stack_with(id: &str, drop_action: Option<ActionDescriptor>, children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(ui_wgpu::wgpu::UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action, drop_overlay: None, children, menu: None })
 }
@@ -74,7 +90,7 @@ fn apply_drop_committed_queues_the_merged_action_into_input() {
     UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("dz", Some(drop_action), vec![])));
     let target = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
     let mut payload = DragPayload::new();
-    payload.insert("application/x-semio-catalogue-item".into(), "{\"id\":\"abc\"}".into());
+    payload.insert("application/x-semio-catalogue-item".into(), "{\"id\":\"abc\",\"windowId\":\"unrelated-window\"}".into());
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
     apply_drop_committed(window_id, target, &payload, &mut input).expect("fixture drop admission succeeds");
@@ -86,6 +102,7 @@ fn apply_drop_committed_queues_the_merged_action_into_input() {
     let args = queued[0].args.as_ref().expect("merged args");
     assert_eq!(args.get("id").and_then(semio_framework::DslValue::as_str), Some("abc"), "the decoded payload should flow through");
     assert_eq!(args.get("kept").and_then(semio_framework::DslValue::as_bool), Some(true), "the drop_action's own existing args should survive");
+    assert_eq!(args.get("windowId").and_then(semio_framework::DslValue::as_str), Some(window_id), "the drop payload cannot replace its host-owned window target");
 }
 
 #[test]

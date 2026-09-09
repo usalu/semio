@@ -1,4 +1,3 @@
-
 use super::*;
 #[test]
 fn note_semantic_panels_match_the_json_oracle() {

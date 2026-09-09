@@ -1,6 +1,8 @@
 /** 📌️ Authoritative direct TypeScript leaf for pinning one viewer/editor default. */
 
-import type { AppRef, AppRole, ArtifactDialect, OpeningPreferences } from "../../🟦️.ts";
+import type { OpeningPreferences } from "../../🟦️.ts";
+import type { ArtifactDialect } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { AppRole, AppRef } from "../../../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
 import type { OpeningConfigMutation } from "../🟦️.ts";
 import { clearDefaultApp } from "../🧹clear-default-app/🟦️.ts";
 

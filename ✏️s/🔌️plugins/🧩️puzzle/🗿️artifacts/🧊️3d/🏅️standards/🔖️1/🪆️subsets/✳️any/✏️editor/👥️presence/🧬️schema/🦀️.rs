@@ -12,7 +12,5 @@ pub struct Puzzle3dPresence {
     #[state(presence)]
     pub camera_zoom: f64,
     #[state(presence)]
-    pub active_utility_id: String,
-    #[state(presence)]
     pub active_tool_id: Option<String>,
 }

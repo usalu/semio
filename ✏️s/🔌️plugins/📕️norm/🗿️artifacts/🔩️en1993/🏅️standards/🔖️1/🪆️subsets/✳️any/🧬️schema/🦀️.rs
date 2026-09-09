@@ -158,8 +158,6 @@ pub struct En1993Artifact {
     pub crane_dispersion_mm: f64,
     #[state(artifact)]
     pub crane_t_w_mm: f64,
-    #[state(presence)]
-    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -245,7 +243,7 @@ impl En1993Artifact {
         }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::En1993Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
@@ -322,14 +320,11 @@ impl En1993Artifact {
             crane_wheel_contact_length_mm: snapshot.crane_wheel_contact_length_mm,
             crane_dispersion_mm: snapshot.crane_dispersion_mm,
             crane_t_w_mm: snapshot.crane_t_w_mm,
-            selected_check_index: None,
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
     pub fn set_snapshot(&mut self, snapshot: crate::En1993Snapshot) {
-        let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
-        self.selected_check_index = selected;
     }
 }
 

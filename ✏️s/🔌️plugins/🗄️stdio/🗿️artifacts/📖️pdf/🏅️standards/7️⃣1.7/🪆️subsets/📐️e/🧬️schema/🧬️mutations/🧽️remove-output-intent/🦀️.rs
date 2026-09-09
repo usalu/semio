@@ -21,10 +21,7 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveOutputIntent {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfEMutation> {
-        support::output_intent_identifier(base)
-            .map(|identifier| PdfEMutation::SetOutputIntent(SetOutputIntent { identifier }))
-            .into_iter()
-            .collect()
+        support::output_intent_identifier(base).map(|identifier| PdfEMutation::SetOutputIntent(SetOutputIntent { identifier })).into_iter().collect()
     }
 
     fn label(&self) -> String {

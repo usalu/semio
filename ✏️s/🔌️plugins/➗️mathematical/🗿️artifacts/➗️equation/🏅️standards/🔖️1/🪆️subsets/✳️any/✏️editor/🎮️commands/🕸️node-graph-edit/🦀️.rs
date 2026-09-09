@@ -3,9 +3,8 @@
 use crate::op::EquationMutation;
 use crate::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
 use crate::{EquationEdge, EquationNode, EquationSnapshot};
-use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
 use pack::json::Value as JsonValue;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 /// 🎨️ `nodeGraphActions.edit` (`"nodeGraphEdit"`) is the shared renderer-wide action id the generic
@@ -20,7 +19,7 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
+pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
     let edit_operations: Vec<JsonValue> = pack::json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
     let mut graph = crate::equation_graph(doc.snapshot);
     let mut changed = false;

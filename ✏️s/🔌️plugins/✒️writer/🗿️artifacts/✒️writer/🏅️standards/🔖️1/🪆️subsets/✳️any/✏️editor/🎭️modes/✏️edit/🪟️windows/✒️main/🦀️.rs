@@ -1,14 +1,20 @@
 //! ✒️ Writer play app — the main window: the jack/text editor surface (writer's only window kind).
 
+use crate::editor::writer::modes::edit::windows::main::config::WriterMainWindowConfig;
+use crate::editor::writer::modes::edit::windows::main::options;
+use crate::editor::writer::modes::edit::windows::main::transient::WriterMainWindowTransient;
+use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::schema::inferences::{language_diagnostics_json, language_tokens_json};
 use crate::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
 use crate::{writer_text, WriterSnapshot};
-use crate::editor::writer::config::WriterConfig;
-use crate::editor::writer::modes::edit::windows::main::options;
-use crate::editor::writer::terminology::WriterPlayLabels;
 use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind as SemanticSurfaceKind;
 use serde_json::{json, Value};
+
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+#[path = "🫧️transient/🦀️.rs"]
+pub mod transient;
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_WINDOW_KIND: &str = "writer-main";
@@ -43,16 +49,16 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(config: &WriterConfig, labels: &WriterPlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &WriterMainWindowConfig, labels: &WriterPlayLabels) -> Vec<WindowMeasure> {
     vec![options::font_size::measure(config, labels), options::line_height::measure(config, labels), options::tab_size::measure(config, labels), options::line_numbers::measure(config, labels)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &WriterSnapshot, config: &WriterMainWindowConfig, transient: &WriterMainWindowTransient) -> UiAssemblyResult<BuiltNode> {
     let is_jack = document.language_id == "jack";
     let text = writer_text(document);
-    let selection = config.editor_selection.clone().unwrap_or(crate::editor::writer::config::WriterEditorSelection { start: 0, end: 0 });
+    let selection = transient.editor_selection.clone().unwrap_or(crate::WriterEditorSelection { start: 0, end: 0 });
     let cursor = selection.end;
     let selection_json = Some(json!({ "start": selection.start, "end": selection.end }).to_string());
 
@@ -62,7 +68,7 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiAssemblyRes
     eprintln!("[DEBUG] writer.main tokens path language_id={} lsp_tokens={} grammar_fallback={}", document.language_id, lsp_tokens.is_some(), tokens_json.is_some());
     eprintln!("[DEBUG] writer.main tokens_json={}", tokens_json.as_deref().unwrap_or("none"));
 
-    let diagnostics_json = language_diagnostics_json(document, config.lint_signal);
+    let diagnostics_json = language_diagnostics_json(document, transient.lint_generation);
 
     let selectable_spans_json = is_jack.then(|| serde_json::to_string(&selectable_spans_for_jack(&text, &grammar_tokens)).unwrap_or_else(|_| "[]".into()));
     let placeholders_json = is_jack.then(|| serde_json::to_string(&jack_editor_placeholders(&text, cursor)).unwrap_or_else(|_| "[]".into()));
@@ -70,7 +76,7 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiAssemblyRes
 
     // 🕹️ Tree-row/editor hover cross-highlighting DISSOLVED (ticket
     // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the `ast` domain's hover now lives in the
-    // framework's own `InteractionState`/presence broadcast, not in `WriterConfig` — `render` has no
+    // framework's own `InteractionState`/presence broadcast, outside Writer window state — `render` has no
     // `InteractionView` (only `handle`/`copy_fragment`/`cut_operations` do), so this scene no longer
     // computes a server-side `hoverJson`; the client renders `ast` hover highlights itself from live
     // interaction/presence state.

@@ -34,8 +34,6 @@ pub struct Block2dDiff {
     pub camera2d: Option<BlockCamera2d>,
     #[state(artifact)]
     pub meta: Option<BlockMeta>,
-    #[state(presence)]
-    pub selected_ids: Option<Block2dStringList>,
 }
 //#endregion 🔖️Diff
 

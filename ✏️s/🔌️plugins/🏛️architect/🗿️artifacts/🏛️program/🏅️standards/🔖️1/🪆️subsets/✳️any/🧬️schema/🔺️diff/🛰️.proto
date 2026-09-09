@@ -145,28 +145,6 @@ message ProgramDiff {
   optional ProgramTracesDelta traces = 70;
   // @state artifact
   optional Governance governance = 71;
-  // @state presence
-  optional string selected_ids = 72;
-  // @state presence
-  optional string active_register = 73;
-  // @state presence
-  optional AdjacencyKind adjacency_kind_filter = 74;
-  // @state presence
-  optional string active_report_json = 75;
-  // @state config
-  optional string search_query = 76;
-  // @state config
-  optional string search_history_json = 77;
-  // @state config
-  optional string last_result_json = 78;
-  // @state config
-  optional string last_analysis_json = 79;
-  // @state config
-  optional double graph_camera_x = 80;
-  // @state config
-  optional double graph_camera_y = 81;
-  // @state config
-  optional double graph_camera_zoom = 82;
 }
 
 message ProgramStakeholdersDelta {

@@ -1,0 +1,39 @@
+{
+  "opening": {
+    "clientInstanceId": "12345678-1234-4123-8123-123456789abc",
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "map-a"
+    },
+    "instanceId": 7
+  },
+  "retained": {
+    "clientInstanceId": "12345678-1234-4123-8123-123456789abc",
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "map-a"
+    },
+    "activationGeneration": "41",
+    "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
+    "instanceId": 7,
+    "revision": 3
+  },
+  "receipt": {
+    "clientInstanceId": "12345678-1234-4123-8123-123456789abc",
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "map-a"
+    },
+    "activationGeneration": "41",
+    "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
+    "instanceId": 0,
+    "revision": 3
+  },
+  "sequence": [
+    "socket",
+    "attach",
+    "mounted",
+    "commit",
+    "retire"
+  ]
+}

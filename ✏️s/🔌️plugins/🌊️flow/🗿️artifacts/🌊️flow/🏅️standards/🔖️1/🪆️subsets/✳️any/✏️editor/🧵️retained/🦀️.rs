@@ -1,11 +1,11 @@
 //! 🧵️ Flow-owned byte frontiers for retained preparation and retirement.
 
 use super::{FlowConfig, FlowConfigMutation, FlowMutation};
-use flow::{neural};
+use flow::neural;
+use semio_framework_artifact_flow_flow::retained::{FlowOwner, FlowRetirement};
 use semio_framework_artifact_flow_flow::{FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, Widget};
 use std::collections::LinkedList;
 use std::mem::ManuallyDrop;
-use semio_framework_artifact_flow_flow::retained::{FlowOwner, FlowRetirement};
 use store::ErasedSnapshotRetirement;
 
 #[path = "🎚️config/🦀️.rs"]
@@ -48,11 +48,19 @@ pub(super) struct Retirement {
 }
 
 impl Drop for Retirement {
-    fn drop(&mut self) { if !std::thread::panicking() { assert!(self.is_empty(), "Flow app retirement must reach terminal-empty before drop"); } }
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            assert!(self.is_empty(), "Flow app retirement must reach terminal-empty before drop");
+        }
+    }
 }
 
 impl Retirement {
-    fn domain(&mut self, owner: FlowOwner) { let mut retirement = FlowRetirement::default(); retirement.push(owner); self.push(Owner::Domain(retirement)); }
+    fn domain(&mut self, owner: FlowOwner) {
+        let mut retirement = FlowRetirement::default();
+        retirement.push(owner);
+        self.push(Owner::Domain(retirement));
+    }
     pub(super) fn push(&mut self, owner: Owner) {
         self.owners.push_front(owner);
     }
@@ -84,18 +92,24 @@ impl Retirement {
             }
             Owner::Strings(mut values) => {
                 let next = values.pop();
-                if !values.is_empty() { self.push(Owner::Strings(values)); }
-                if let Some(value) = next { self.text(value); }
+                if !values.is_empty() {
+                    self.push(Owner::Strings(values));
+                }
+                if let Some(value) = next {
+                    self.text(value);
+                }
             }
             Owner::Set(value) => self.domain(FlowOwner::Set(value)),
             Owner::Dictionary(value) => self.domain(FlowOwner::Dictionary(value)),
             Owner::Domain(mut owner) => {
                 match owner.close_step(maximum_items, maximum_bytes).expect("typed Flow retirement") {
                     store::SnapshotRetirementStep::Pending { released_bytes: bytes, .. } => released_bytes = bytes,
-                    store::SnapshotRetirementStep::Complete => {},
+                    store::SnapshotRetirementStep::Complete => {}
                     store::SnapshotRetirementStep::Blocked => unreachable!("positive Flow retirement grant"),
                 }
-                if !owner.is_empty() { self.push(Owner::Domain(owner)); }
+                if !owner.is_empty() {
+                    self.push(Owner::Domain(owner));
+                }
             }
             Owner::Widget(widget) => self.widget(widget),
             Owner::Scene(value) => self.push(Owner::Domain(crate::retirement::retire_scene(value))),
@@ -105,17 +119,23 @@ impl Retirement {
             }
             Owner::Neurons(mut values) => {
                 let next = values.pop();
-                if !values.is_empty() { self.push(Owner::Neurons(values)); }
+                if !values.is_empty() {
+                    self.push(Owner::Neurons(values));
+                }
                 if let Some(value) = next {
                     self.text(value.id);
                     self.text(value.kind);
                     self.push(Owner::Dictionary(value.params));
-                    if let Some(tree) = value.tree { self.push(Owner::Tree(*tree)); }
+                    if let Some(tree) = value.tree {
+                        self.push(Owner::Tree(*tree));
+                    }
                 }
             }
             Owner::Synapses(mut values) => {
                 let next = values.pop();
-                if !values.is_empty() { self.push(Owner::Synapses(values)); }
+                if !values.is_empty() {
+                    self.push(Owner::Synapses(values));
+                }
                 if let Some(value) = next {
                     self.text(value.id);
                     self.text(value.from);
@@ -131,7 +151,9 @@ impl Retirement {
             Owner::Nodes(value) => self.domain(FlowOwner::Nodes(value)),
             Owner::Previews(mut values) => {
                 let next = values.pop();
-                if !values.is_empty() { self.push(Owner::Previews(values)); }
+                if !values.is_empty() {
+                    self.push(Owner::Previews(values));
+                }
                 if let Some(value) = next {
                     self.text(value.id);
                     self.text(value.mode);
@@ -145,14 +167,22 @@ impl Retirement {
             }
             Owner::Layout(mut values) => {
                 let next = values.pop();
-                if !values.is_empty() { self.push(Owner::Layout(values)); }
-                if let Some(value) = next { self.text(value.id); }
+                if !values.is_empty() {
+                    self.push(Owner::Layout(values));
+                }
+                if let Some(value) = next {
+                    self.text(value.id);
+                }
             }
             Owner::Mutation(value) => self.push(Owner::Domain(crate::retirement::retire_mutation(value))),
             Owner::Mutations(mut values) => {
                 let next = values.pop();
-                if !values.is_empty() { self.push(Owner::Mutations(values)); }
-                if let Some(value) = next { self.push(Owner::Mutation(value)); }
+                if !values.is_empty() {
+                    self.push(Owner::Mutations(values));
+                }
+                if let Some(value) = next {
+                    self.push(Owner::Mutation(value));
+                }
             }
             Owner::Config(value) => {
                 self.push(Owner::Strings(value.preview_off_node_ids));
@@ -172,9 +202,12 @@ impl Retirement {
                 | FlowConfigMutation::SetGeneration { json }
                 | FlowConfigMutation::SetDuplicateWidgetProgress { json }
                 | FlowConfigMutation::SetCatalogueSections { sections_json: json } => self.text(json),
-                FlowConfigMutation::SetCamera { .. } | FlowConfigMutation::SetProximityDistance { .. }
-                | FlowConfigMutation::SetGridVisible { .. } | FlowConfigMutation::SetGridSnapEnabled { .. }
-                | FlowConfigMutation::SetGridFactor { .. } | FlowConfigMutation::CancelDuplicateWidget { .. } => {}
+                FlowConfigMutation::SetCamera { .. }
+                | FlowConfigMutation::SetProximityDistance { .. }
+                | FlowConfigMutation::SetGridVisible { .. }
+                | FlowConfigMutation::SetGridSnapEnabled { .. }
+                | FlowConfigMutation::SetGridFactor { .. }
+                | FlowConfigMutation::CancelDuplicateWidget { .. } => {}
             },
         }
         Step::Pending { released_items: 1, released_bytes }
@@ -189,17 +222,36 @@ impl Retirement {
                 self.push(Owner::Strings(input_ports));
                 self.push(Owner::Strings(output_ports));
             }
-            Widget::InputSlider { id, label, .. } => { self.text(id); self.text(label); }
-            Widget::InputNote { id, text } => { self.text(id); self.text(text); }
-            Widget::InputImage { id, src } => { self.text(id); self.text(src); }
-            Widget::Variable { id, name, schema } => { self.text(id); self.text(name); self.text(schema); }
+            Widget::InputSlider { id, label, .. } => {
+                self.text(id);
+                self.text(label);
+            }
+            Widget::InputNote { id, text } => {
+                self.text(id);
+                self.text(text);
+            }
+            Widget::InputImage { id, src } => {
+                self.text(id);
+                self.text(src);
+            }
+            Widget::Variable { id, name, schema } => {
+                self.text(id);
+                self.text(name);
+                self.text(schema);
+            }
             Widget::OutputPreview { id, preview, expanded } => {
                 self.text(id);
                 self.push(Owner::Dictionary(preview));
                 self.push(Owner::Set(expanded));
             }
-            Widget::OutputAction { id, action } => { self.text(id); self.text(action); }
-            Widget::OutputExport { id, format } => { self.text(id); self.text(format); }
+            Widget::OutputAction { id, action } => {
+                self.text(id);
+                self.text(action);
+            }
+            Widget::OutputExport { id, format } => {
+                self.text(id);
+                self.text(format);
+            }
             Widget::Cluster { id, name, tree, flow } => {
                 self.text(id);
                 self.text(name);
@@ -208,8 +260,6 @@ impl Retirement {
             }
         }
     }
-
-
 }
 //#endregion 🧹️Retirement
 
@@ -221,7 +271,9 @@ impl ErasedSnapshotRetirement for Retirement {
             semio_framework_job::InteractiveJobCloseStep::Blocked => store::SnapshotRetirementStep::Blocked,
         })
     }
-    fn terminal_is_empty(&self) -> bool { self.is_empty() }
+    fn terminal_is_empty(&self) -> bool {
+        self.is_empty()
+    }
 }
 
 //#region 🎚️ConfigCopy
@@ -287,13 +339,27 @@ impl ConfigCopy {
     pub(super) fn new(source: &ConfigSource<'_>, selected: Option<usize>) -> Self {
         Self {
             target: Some(FlowConfig {
-                preview_off_node_ids: Vec::new(), camera: source.camera.clone(), lod_mode: String::new(), proximity_distance: source.proximity,
-                grid_visible: source.visible, grid_snap_enabled: source.snap, grid_factor: source.factor,
-                catalogue_sections_json: String::new(), automation_enabled_json: String::new(), contributions_json: String::new(),
-                generation_json: String::new(), duplicate_widget_progress_json: String::new(),
+                preview_off_node_ids: Vec::new(),
+                camera: source.camera.clone(),
+                lod_mode: String::new(),
+                proximity_distance: source.proximity,
+                grid_visible: source.visible,
+                grid_snap_enabled: source.snap,
+                grid_factor: source.factor,
+                catalogue_sections_json: String::new(),
+                automation_enabled_json: String::new(),
+                contributions_json: String::new(),
+                generation_json: String::new(),
+                duplicate_widget_progress_json: String::new(),
             }),
-            field: selected.unwrap_or(0), item: 0, bytes: Vec::new(), selected, preview_reserved: false,
-            utf8_remaining: 0, utf8_min: 0x80, utf8_max: 0xbf,
+            field: selected.unwrap_or(0),
+            item: 0,
+            bytes: Vec::new(),
+            selected,
+            preview_reserved: false,
+            utf8_remaining: 0,
+            utf8_min: 0x80,
+            utf8_max: 0xbf,
         }
     }
 
@@ -303,7 +369,9 @@ impl ConfigCopy {
 
     /// 🧬️ Validates each copied UTF-8 byte once, so completed buffers need no whole-string rescan.
     pub(super) fn step(&mut self, source: &ConfigSource<'_>, maximum_bytes: usize) -> Result<usize, String> {
-        if maximum_bytes == 0 || self.complete() { return Ok(0); }
+        if maximum_bytes == 0 || self.complete() {
+            return Ok(0);
+        }
         if self.field == 0 && !self.preview_reserved {
             self.target.as_mut().ok_or("Flow config copy lost target")?.preview_off_node_ids.try_reserve_exact(source.preview.len()).map_err(|_| "Flow preview vector allocation failed")?;
             self.preview_reserved = true;
@@ -312,7 +380,10 @@ impl ConfigCopy {
         let text = if self.field == 0 {
             match source.preview.get(self.item) {
                 Some(value) => value.as_str(),
-                None => { self.next_field(); return Ok(0); }
+                None => {
+                    self.next_field();
+                    return Ok(0);
+                }
             }
         } else {
             source.text[self.field - 1]
@@ -328,11 +399,16 @@ impl ConfigCopy {
         }
         self.bytes.extend_from_slice(&text.as_bytes()[start..start + count]);
         if self.bytes.len() == text.len() {
-            if self.utf8_remaining != 0 { return Err("Flow copy ended inside a UTF-8 scalar".into()); }
+            if self.utf8_remaining != 0 {
+                return Err("Flow copy ended inside a UTF-8 scalar".into());
+            }
             let value = unsafe { String::from_utf8_unchecked(std::mem::take(&mut self.bytes)) };
             let target = self.target.as_mut().ok_or_else(|| "Flow config copy lost its target".to_owned())?;
             match self.field {
-                0 => { target.preview_off_node_ids.push(value); self.item += 1; }
+                0 => {
+                    target.preview_off_node_ids.push(value);
+                    self.item += 1;
+                }
                 1 => target.lod_mode = value,
                 2 => target.catalogue_sections_json = value,
                 3 => target.automation_enabled_json = value,
@@ -341,14 +417,18 @@ impl ConfigCopy {
                 6 => target.duplicate_widget_progress_json = value,
                 _ => unreachable!(),
             }
-            if self.field != 0 { self.next_field(); }
+            if self.field != 0 {
+                self.next_field();
+            }
         }
         Ok(count)
     }
 
     fn validate_utf8(&mut self, byte: u8) -> Result<(), String> {
         if self.utf8_remaining > 0 {
-            if !(self.utf8_min..=self.utf8_max).contains(&byte) { return Err("Flow copy received invalid UTF-8 continuation".into()); }
+            if !(self.utf8_min..=self.utf8_max).contains(&byte) {
+                return Err("Flow copy received invalid UTF-8 continuation".into());
+            }
             self.utf8_remaining -= 1;
             self.utf8_min = 0x80;
             self.utf8_max = 0xbf;
@@ -356,12 +436,24 @@ impl ConfigCopy {
             match byte {
                 0..=0x7f => {}
                 0xc2..=0xdf => self.utf8_remaining = 1,
-                0xe0 => { self.utf8_remaining = 2; self.utf8_min = 0xa0; }
+                0xe0 => {
+                    self.utf8_remaining = 2;
+                    self.utf8_min = 0xa0;
+                }
                 0xe1..=0xec | 0xee..=0xef => self.utf8_remaining = 2,
-                0xed => { self.utf8_remaining = 2; self.utf8_max = 0x9f; }
-                0xf0 => { self.utf8_remaining = 3; self.utf8_min = 0x90; }
+                0xed => {
+                    self.utf8_remaining = 2;
+                    self.utf8_max = 0x9f;
+                }
+                0xf0 => {
+                    self.utf8_remaining = 3;
+                    self.utf8_min = 0x90;
+                }
                 0xf1..=0xf3 => self.utf8_remaining = 3,
-                0xf4 => { self.utf8_remaining = 3; self.utf8_max = 0x8f; }
+                0xf4 => {
+                    self.utf8_remaining = 3;
+                    self.utf8_max = 0x8f;
+                }
                 _ => return Err("Flow copy received invalid UTF-8 lead byte".into()),
             }
         }
@@ -374,11 +466,17 @@ impl ConfigCopy {
     }
 
     pub(super) fn take(&mut self) -> Option<FlowConfig> {
-        if self.complete() { self.target.take() } else { None }
+        if self.complete() {
+            self.target.take()
+        } else {
+            None
+        }
     }
 
     pub(super) fn retire(mut self, retirement: &mut Retirement) {
-        if let Some(target) = self.target.take() { retirement.push(Owner::Config(target)); }
+        if let Some(target) = self.target.take() {
+            retirement.push(Owner::Config(target));
+        }
         retirement.push(Owner::Bytes(std::mem::take(&mut self.bytes)));
     }
 }

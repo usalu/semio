@@ -4,7 +4,7 @@
   "mEdKnm": null,
   "vEdKn": null,
   "mPla": null,
-  "mPlRd": 375.0,
+  "mPlRd": 375,
   "eta": null,
   "vLRd": null,
   "insulationThicknessMm": null,
@@ -21,6 +21,5 @@
   "spanM": null,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

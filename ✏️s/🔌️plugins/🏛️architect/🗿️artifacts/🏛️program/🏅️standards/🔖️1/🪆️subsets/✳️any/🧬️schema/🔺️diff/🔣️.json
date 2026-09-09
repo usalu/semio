@@ -290,64 +290,6 @@
     "governance": {
       "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Governance",
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "$ref": "#/$defs/ProgramStringList",
-      "x-semio-state": "presence"
-    },
-    "activeRegister": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "adjacencyKindFilter": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/AdjacencyKind"
-        }
-      ],
-      "x-semio-state": "presence"
-    },
-    "activeReportJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "presence"
-    },
-    "searchQuery": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "searchHistoryJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "lastResultJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "lastAnalysisJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "graphCameraX": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "graphCameraY": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
-    },
-    "graphCameraZoom": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

@@ -6,9 +6,9 @@
 
 use crate::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
 use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
-use crate::{BMP_DIALECT, STDIO_BMP_DOCUMENT_SCHEMA};
 use crate::viewer::bmp::modes::view;
 use crate::viewer::bmp::modes::view::windows::main;
+use crate::{BMP_DIALECT, STDIO_BMP_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 

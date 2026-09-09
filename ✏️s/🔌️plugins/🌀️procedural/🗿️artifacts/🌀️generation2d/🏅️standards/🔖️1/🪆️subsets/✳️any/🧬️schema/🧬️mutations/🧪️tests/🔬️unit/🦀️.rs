@@ -1,7 +1,7 @@
-
 use super::*;
 use crate::standards::v1::subsets::any::schema::empty_generation2d_snapshot;
 use protocol::{Mutation, MutationDiff, SemanticMutation};
+use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, WidgetLayout};
 use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 use vcs::apply_mutation;

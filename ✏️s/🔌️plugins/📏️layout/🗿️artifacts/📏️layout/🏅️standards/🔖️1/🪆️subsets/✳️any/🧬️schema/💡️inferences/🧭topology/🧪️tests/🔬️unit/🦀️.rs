@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn page(id: &str, spread_id: &str, parent_page_id: Option<&str>) -> Page {

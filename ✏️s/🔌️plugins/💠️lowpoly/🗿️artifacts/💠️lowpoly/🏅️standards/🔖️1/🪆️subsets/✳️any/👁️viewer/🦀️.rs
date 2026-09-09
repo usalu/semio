@@ -5,9 +5,9 @@
 //! mutation. MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
 use crate::schema::default_snapshot;
-use crate::{LowpolySnapshot, LOWPOLY_DIALECT, LOWPOLY_DOCUMENT_SCHEMA};
 use crate::viewer::lowpoly::modes::view;
 use crate::viewer::lowpoly::modes::view::windows::model;
+use crate::{LowpolySnapshot, LOWPOLY_DIALECT, LOWPOLY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::{ArtifactViewer, Dialect, ViewEmit, Viewer};
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;

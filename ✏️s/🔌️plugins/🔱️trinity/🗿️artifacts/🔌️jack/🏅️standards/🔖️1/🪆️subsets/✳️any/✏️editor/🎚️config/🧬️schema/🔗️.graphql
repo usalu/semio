@@ -1,16 +1,3 @@
 type JackConfig {
-  camera: Camera! @state(class: CONFIG)
   jackQuery: String! @state(class: CONFIG)
-  lodModeByWindow: [StringEntry!]! @state(class: CONFIG)
-}
-
-type StringEntry {
-  key: String!
-  value: String!
-}
-
-type Camera {
-  x: Float!
-  y: Float!
-  zoom: Float!
 }

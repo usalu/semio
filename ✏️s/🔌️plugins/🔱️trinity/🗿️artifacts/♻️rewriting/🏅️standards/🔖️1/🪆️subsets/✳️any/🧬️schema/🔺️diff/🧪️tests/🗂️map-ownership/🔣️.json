@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "name": "a null binding remains an existing entry after transport",
+      "before": {},
+      "mutations": [{ "mutation": "changeParameterBinding", "key": "nullable", "newValue": null }],
+      "patches": [{ "op": "add", "path": "/nullable", "value": null }],
+      "after": { "nullable": null }
+    },
+    {
+      "name": "insert then remove composes over an absent base",
+      "before": {},
+      "mutations": [
+        { "mutation": "changeParameterBinding", "key": "temporary", "newValue": "value" },
+        { "mutation": "removeParameterBinding", "key": "temporary" }
+      ],
+      "patches": [{ "op": "add", "path": "/temporary", "value": "value" }, { "op": "remove", "path": "/temporary" }],
+      "after": {}
+    },
+    {
+      "name": "removing an existing null entry is distinct from setting null",
+      "before": { "nullable": null },
+      "mutations": [{ "mutation": "removeParameterBinding", "key": "nullable" }],
+      "patches": [{ "op": "remove", "path": "/nullable" }],
+      "after": {}
+    }
+  ]
+}

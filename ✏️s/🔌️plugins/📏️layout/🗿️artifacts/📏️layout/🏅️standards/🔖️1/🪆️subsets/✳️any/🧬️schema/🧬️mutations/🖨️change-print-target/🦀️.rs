@@ -1,8 +1,7 @@
 //! 🖨️ `change-print-target` — sets the document's `print_target` scalar (`None` clears it).
 
-
-use crate::{LayoutDiff, LayoutSnapshot};
 use crate::mutations::LayoutMutation;
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -31,7 +30,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePrintTarget {
 }
 //#endregion 🖨️ChangePrintTarget
 
-
 //#region 🖨️ChangePrintTarget
 pub fn diff_change_print_target(payload: &ChangePrintTarget, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.print_target == payload.new_print_target {
@@ -40,7 +38,6 @@ pub fn diff_change_print_target(payload: &ChangePrintTarget, base: &LayoutSnapsh
     protocol::MutationOutcome::new(LayoutDiff { print_target: Some(payload.new_print_target.clone()), ..Default::default() })
 }
 //#endregion 🖨️ChangePrintTarget
-
 
 //#region 🖨️ChangePrintTarget
 pub fn inverse_change_print_target(_payload: &ChangePrintTarget, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

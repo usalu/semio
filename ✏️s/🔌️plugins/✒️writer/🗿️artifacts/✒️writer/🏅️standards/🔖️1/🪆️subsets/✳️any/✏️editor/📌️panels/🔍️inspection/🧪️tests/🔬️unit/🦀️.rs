@@ -1,7 +1,5 @@
-
 use super::*;
-use crate::editor::writer::testkit::{dispatch, new_app, render as render_body};
-use crate::editor::writer::WriterCommand;
+use crate::editor::writer::testkit::{new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
@@ -17,4 +15,3 @@ async fn writer_labels_resolve_native_by_default() {
     assert!(inspection.contains("\"Document\""));
     assert!(inspection.contains("\"Camera\""));
 }
-

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::text::{NAKAGIN_EXAMPLE_TEXT, parse_dsl};
+use crate::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, NAKAGIN_EXAMPLE_TEXT};
 
 #[semio_framework_async_macros::async_test]
 async fn nakagin_example_pack_round_trips_and_agrees_with_dsl() {

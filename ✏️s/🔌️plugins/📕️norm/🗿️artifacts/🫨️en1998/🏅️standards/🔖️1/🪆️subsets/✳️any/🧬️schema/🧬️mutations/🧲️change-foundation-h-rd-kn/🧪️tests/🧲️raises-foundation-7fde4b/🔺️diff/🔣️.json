@@ -41,13 +41,12 @@
   "foundationAreaM2": null,
   "foundationPRdKpa": null,
   "foundationHEdKn": null,
-  "foundationHRdKn": 475.0,
+  "foundationHRdKn": 475,
   "kFoundation": null,
   "kSoil": null,
   "wallHeightM": null,
   "wallPhiDeg": null,
   "wallSoilGammaKnM3": null,
   "wallR": null,
-  "wallHRdKn": null,
-  "selectedCheckIndex": null
+  "wallHRdKn": null
 }

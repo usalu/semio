@@ -1,4 +1,3 @@
-
 use super::*;
 use flow_extension_sdk::{build_manifest_json, evaluate_invoke_json, evaluate_json, flow_extension_topic_contribution};
 
@@ -139,7 +138,7 @@ async fn schema_component_round_trips_wall() {
 
 #[semio_framework_async_macros::async_test]
 async fn extension_bundle_extends_flow_and_evaluates() {
-    use semio_framework_plugin::{ExtensionBundle, extension_activate, extension_invoke, extension_manifest, install_extension_bundle};
+    use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
     let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
     let flow_topic = flow_extension_topic_contribution("flow-play", "bim", "Bim", "bim", &manifest_json);

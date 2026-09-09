@@ -9,7 +9,7 @@
 // #region 🔌️Adapters
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
-import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, runDocumentOpeningAttemptV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, runDocumentOpeningAttemptV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { runArtifactCreationReadyOpeningV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "./🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import React, {
@@ -138,6 +138,8 @@ import {
   type BrowserBrokerPortRequestV1,
   type BrowserBrokerPortResponseV1,
   type BrowserActorUiMountedV1,
+  artifactFrontierIsEditedForV1,
+  artifactFrontierIsGenesisForV1,
   buildFileBackboneUri,
   buildFolderBackboneUri,
   buildFrameworkSyncUtilities,
@@ -152,6 +154,7 @@ import {
   encodePackValue,
   FRAMEWORK_SYNC_CONTROLLER_ID,
   parseBrowserBrokerPortResponseV1,
+  parseDirectorySessionAuthorityJsonV1,
   type PersistenceBinding,
   DirectoryHttpError,
   type DirectoryAdministrationPhaseV1,
@@ -163,6 +166,7 @@ import {
   type DirectorySpaceAdministrationPageV1,
   parseDirectorySpaceAdministrationPageV1,
   type DocumentScope,
+  type ArtifactFrontier,
   type DirectoryStreamMessage,
   documentRuntimeKeyV1,
   type GisMapApprovalHistoryStatusV1,
@@ -585,7 +589,11 @@ import {
   useNamedLayoutHost,
 } from "../📌️ChromePanels/🟦️.tsx";
 import { PluginBootShardLostError, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
-import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../🔌️PluginRuntime/📡️backbone/🟦️.ts";
+import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
+import { BrowserActorActionMailboxV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
+import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
+import { publishBrowserActorHostEffectsV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
+import { InferencePortOpeningMailboxV1 } from "../../../../💡️inference/🚪️opening/🟦️.ts";
 import { isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
@@ -665,6 +673,9 @@ export type MountedGisMapProbeV1 = Readonly<{
   componentSha256: string;
   descriptorSha256: string;
   browserActorSha256: string;
+  activeCheckpointId: string;
+  descriptorDigestV1: string;
+  frontier: ArtifactFrontier;
   uiRevision: number;
   rootKind: "tiled-map";
   regionIds: readonly string[];
@@ -675,7 +686,14 @@ export type MountedGisMapProbeV1 = Readonly<{
 export function mountedGisMapProbeV1(source: MountedBrowserActorUiV1 | null): MountedGisMapProbeV1 | null {
   if (source === null) return null;
   const state = source.store.getState();
-  if (state.revision < 1 || state.revision !== source.uiRevision || state.root === null) return null;
+  if (
+    state.revision < 1 ||
+    state.revision !== source.uiRevision ||
+    state.root === null ||
+    !/^[0-9a-f]{64}$/u.test(source.activeCheckpointId) ||
+    !/^[0-9a-f]{64}$/u.test(source.descriptorDigestV1) ||
+    (!(artifactFrontierIsGenesisForV1(source.scope, source.frontier) || artifactFrontierIsEditedForV1(source.scope, source.frontier)) || source.frontier.lastCommitSeq > source.frontier.headEditOrdinal)
+  ) return null;
   const root = state.nodes.get(state.root);
   if (root?.component.type !== "surface" || root.component.kind !== "tiled-map") return null;
   let decoded: unknown;
@@ -703,6 +721,9 @@ export function mountedGisMapProbeV1(source: MountedBrowserActorUiV1 | null): Mo
     componentSha256: source.componentSha256,
     descriptorSha256: source.descriptorSha256,
     browserActorSha256: source.browserActorSha256,
+    activeCheckpointId: source.activeCheckpointId,
+    descriptorDigestV1: source.descriptorDigestV1,
+    frontier: Object.freeze({ ...source.frontier, chainHash: Object.freeze([...source.frontier.chainHash]) }),
     uiRevision: state.revision,
     rootKind: "tiled-map",
     regionIds: Object.freeze(regionIds),
@@ -806,16 +827,16 @@ export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<
 }
 
 /** 🪟️ Builds the sole action wire shape from the exact target window instance and its owner chain. */
-function encodeWindowActionInvocation(
+function windowActionInvocation(
   session: ActiveSession,
   action: ActionDescriptor,
   extraInstances: readonly ExtraWindowInstance[] = [],
   requestedWindowId?: string,
-): string {
+): ActionInvocation {
   const instances = sessionWindowInstances(session.app, extraInstances);
   const windowInstanceId = requestedWindowId ?? session.viewState.windowId ?? session.viewState.activeWindowKindId ?? instances[0]?.id ?? session.app.windowKinds[0]?.id ?? "";
   const windowKindId = instances.find((instance) => instance.id === windowInstanceId)?.windowKindId ?? session.app.windowKinds.find((kind) => kind.id === windowInstanceId)?.id ?? session.app.windowKinds[0]?.id ?? "";
-  const invocation: ActionInvocation = {
+  return {
     address: {
       pluginId: session.pluginId,
       appId: session.app.id,
@@ -829,7 +850,11 @@ function encodeWindowActionInvocation(
       windowId: windowInstanceId,
     },
   };
-  return JSON.stringify(invocation);
+}
+
+/** 🧩️ Serializes the exact action invocation used by the retained actor and ordinary plugin routes. */
+function encodeWindowActionInvocation(session: ActiveSession, action: ActionDescriptor, extraInstances: readonly ExtraWindowInstance[] = [], requestedWindowId?: string): string {
+  return JSON.stringify(windowActionInvocation(session, action, extraInstances, requestedWindowId));
 }
 
 /** 🎛️ Builds an app-owned command wire without pretending host catalogue state is a window action. */
@@ -1994,6 +2019,7 @@ function FrameworkOsShellInner({
   const inferencePortEpochRef = useRef(0);
   /** 🗂️ Exact scope and runtime owner for the current inference epoch. */
   const inferencePortOwnerRef = useRef<InferencePortOwnerV1 | null>(null);
+  const inferencePortOpeningRef = useRef<{ readonly owner: InferencePortOwnerV1; readonly clientInstanceId: string; readonly sessionInstanceId: number; readonly mailbox: InferencePortOpeningMailboxV1 } | null>(null);
   type MountedInferenceHistoryV1 = Readonly<{ historyEpoch: number; clientInstanceId: string; scope: DocumentScope; sessionInstanceId: number; status: GisMapApprovalHistoryStatusV1; order: number }>;
   const [inferenceHistoryByRuntimeKey, setInferenceHistoryByRuntimeKey] = useState<Readonly<Record<string, MountedInferenceHistoryV1>>>({});
   const inferenceHistoryByRuntimeKeyRef = useRef<Readonly<Record<string, MountedInferenceHistoryV1>>>({});
@@ -2137,8 +2163,13 @@ function FrameworkOsShellInner({
     if (origin === null || !isCurrentDialogOrigin(origin) || !active?.app.dialogs?.some((entry) => entry.id === dialogId)) return null;
     return { openingId: ++dialogOpeningRef.current, dialogId, origin, ...(seedArgs === undefined ? {} : { seedArgs }) };
   }, [isCurrentDialogOrigin]);
-  const browserActorUiByRuntimeKeyRef = useRef(new Map<string, { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly scope: DocumentScope; readonly sessionInstanceId: number; readonly windowKindId: string; readonly store: UiDocumentStore; readonly identity: BrowserActorUiMountedV1 | null }>());
+  type RetainedBrowserActorUiV1 = { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly scope: DocumentScope; readonly sessionInstanceId: number; readonly windowKindId: string; readonly store: UiDocumentStore; readonly identity: BrowserActorUiMountedV1 | null; readonly actions: BrowserActorActionMailboxV1 };
+  const browserActorUiByRuntimeKeyRef = useRef(new Map<string, RetainedBrowserActorUiV1>());
   const [browserActorUiVersion, setBrowserActorUiVersion] = useState(0);
+  const retireBrowserActorUi = useCallback((runtimeKey: string, reason: string) => {
+    browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.actions.close(reason);
+    if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
+  }, []);
   const directoryScopedOwnersRef = useRef<Map<string, DocumentScope>>(new Map());
   const socketActorReadyRef = useRef<Map<string, { readonly clientInstanceId: string; resolve(actorId: string): void; reject(error: Error): void }>>(new Map());
   const [bootstrapUiByDocument, setBootstrapUiByDocument] = useState<BootstrapUiState>({});
@@ -2180,12 +2211,21 @@ function FrameworkOsShellInner({
     }
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
+      if (message.kind === "browser-actor-action-result") {
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...message.scope });
+        const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+        const entry = openDocumentSessionsRef.current.get(runtimeKey);
+        if (retained === undefined || entry === undefined || retained.clientInstanceId !== message.clientInstanceId || entry.clientInstanceId !== message.clientInstanceId || retained.sessionInstanceId !== entry.session.instanceId) return;
+        const { clientInstanceId: _clientInstanceId, ...result } = message;
+        retained.actions.settle(result);
+        return;
+      }
       if (message.kind === "browser-actor-ui-patch") {
         const runtimeKey = documentRuntimeKeyV1({ kind: "hub", spaceId: message.scope.spaceId, documentId: message.scope.documentId });
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         const expectedSurfaceId = entry?.scope !== undefined && entry.session.app.dialect ? canonicalSurfaceId(entry.session.app.dialect, entry.session.app.role) : null;
         const windowKind = entry?.session.app.windowKinds.find((candidate) => candidate.id === message.patch.surface);
-        if (entry === undefined || entry.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId || expectedSurfaceId !== message.verifiedSurfaceId || windowKind === undefined) return;
+        if (entry === undefined || entry.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId || expectedSurfaceId !== message.verifiedSurfaceId || windowKind === undefined || message.instanceId !== 0) return;
         const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
         if (retained !== undefined && (retained.clientInstanceId !== message.clientInstanceId || retained.activationGeneration !== message.activationGeneration || retained.verifiedSurfaceId !== message.verifiedSurfaceId || retained.sessionInstanceId !== entry.session.instanceId || retained.windowKindId !== windowKind.id)) return;
         if (retained === undefined && message.patch.baseRevision !== 0) return;
@@ -2194,7 +2234,8 @@ function FrameworkOsShellInner({
         const revision = store.getRevisionSnapshot();
         if (applied.ok) {
           if (retained === undefined) {
-            browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windowKindId: windowKind.id, store, identity: null });
+            const actions = new BrowserActorActionMailboxV1((request) => worker.postMessage({ wire: encodeBackboneWorkerRequest({ ...request, clientInstanceId: entry.clientInstanceId }) }));
+            browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windowKindId: windowKind.id, store, identity: null, actions });
             setBrowserActorUiVersion((current) => current + 1);
           }
           worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "acknowledged", revision }) });
@@ -2208,20 +2249,19 @@ function FrameworkOsShellInner({
         const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...message.scope });
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
-        if (
-          entry === undefined
-          || retained === undefined
-          || entry.clientInstanceId !== message.clientInstanceId
-          || entry.scope?.spaceId !== message.scope.spaceId
-          || entry.scope.documentId !== message.scope.documentId
-          || retained.clientInstanceId !== message.clientInstanceId
-          || retained.activationGeneration !== message.activationGeneration
-          || retained.verifiedSurfaceId !== message.verifiedSurfaceId
-          || retained.sessionInstanceId !== entry.session.instanceId
-          || retained.store.getRevisionSnapshot() !== message.uiRevision
-          || message.instanceId !== 0
-        ) return;
+        if (entry === undefined || retained === undefined || !browserDocumentMountIsCurrentV1(
+          { clientInstanceId: entry.clientInstanceId, scope: entry.scope, instanceId: entry.session.instanceId },
+          { clientInstanceId: retained.clientInstanceId, scope: retained.scope, instanceId: retained.sessionInstanceId, activationGeneration: retained.activationGeneration, verifiedSurfaceId: retained.verifiedSurfaceId, revision: retained.store.getRevisionSnapshot() },
+          { ...message, revision: message.uiRevision },
+        )) return;
         browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { ...retained, identity: message });
+        entry.resolveReady();
+        const discarded = rebootstrapDiscardedSessionsRef.current.get(runtimeKey);
+        if (discarded !== undefined) {
+          rebootstrapDiscardedSessionsRef.current.delete(runtimeKey);
+          dispatch({ type: "SET_SESSION", value: (current) => current ?? discarded });
+        }
+        setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "snapshot-replaced", documentId: message.scope.documentId, scope: message.scope }));
         setBrowserActorUiVersion((current) => current + 1);
         return;
       }
@@ -2233,6 +2273,17 @@ function FrameworkOsShellInner({
         if (entry?.clientInstanceId !== message.clientInstanceId || waiter?.clientInstanceId !== message.clientInstanceId) return;
         waiter.resolve(message.actorId);
         if (socketActorReadyRef.current.get(runtimeKey)?.clientInstanceId === message.clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
+        return;
+      }
+      if (message.kind === "inference-port-opened") {
+        inferencePortOpeningRef.current?.mailbox.settle(message);
+        return;
+      }
+      if (message.kind === "inference-port-closed") {
+        const owner = inferencePortOwnerRef.current;
+        if (owner === null || owner.operationEpoch !== message.operationEpoch || owner.scope.spaceId !== message.scope.spaceId || owner.scope.documentId !== message.scope.documentId) return;
+        inferencePortOwnerRef.current = null;
+        dispatch({ type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey: owner.runtimeKey });
         return;
       }
       if (message.kind === "inference-port-status") {
@@ -2337,7 +2388,7 @@ function FrameworkOsShellInner({
         setSpaceArtifactCreationCatalogUi((status) => status?.spaceId === message.scope.spaceId ? null : status);
         const entry = openDocumentSessionsRef.current.get(key);
         if (entry !== undefined) closeDocumentRef.current(key, entry.clientInstanceId);
-        if (browserActorUiByRuntimeKeyRef.current.delete(key)) setBrowserActorUiVersion((current) => current + 1);
+        retireBrowserActorUi(key, "browser-actor-action: scope revoked");
         rebootstrapDiscardedSessionsRef.current.delete(key);
         setInferenceHistoryByRuntimeKey((current) => {
           if (!(key in current)) return current;
@@ -2410,6 +2461,7 @@ function FrameworkOsShellInner({
         if (!entry || entry.clientInstanceId !== message.clientInstanceId) return;
         setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, message));
         if (message.kind === "artifact-bootstrap-failed") {
+          retireBrowserActorUi(runtimeKey, "browser-actor-action: bootstrap failed");
           entry.replacements.invalidate();
           entry.rejectReady(new Error(message.message));
           const retirement = entry.port?.retire();
@@ -2426,7 +2478,7 @@ function FrameworkOsShellInner({
           entry.pending = [];
           entry.pendingBytes = 0;
           cancelSpaceArtifactCreationsForRuntime(runtimeKey, worker);
-          if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
+          retireBrowserActorUi(runtimeKey, "browser-actor-action: rebootstrap required");
           const active = sessionRef.current;
           if (shellDialogSessionIsCurrentV1(active, entry.session)) {
             rebootstrapDiscardedSessionsRef.current.set(runtimeKey, entry.session);
@@ -2515,9 +2567,14 @@ function FrameworkOsShellInner({
         console.warn("[os-shell] sync conflict", message.documentId, event.message);
       }
     };
+    const failBrowserActorActions = () => {
+      for (const retained of browserActorUiByRuntimeKeyRef.current.values()) retained.actions.close("browser-actor-action: worker completion unconfirmed");
+    };
+    worker.addEventListener("error", failBrowserActorActions);
+    worker.addEventListener("messageerror", failBrowserActorActions);
     backboneWorkerRef.current = worker;
     return worker;
-  }, [cancelSpaceArtifactCreationsForRuntime, failDocumentBackbone, hubEnv, loadDocumentPair, receiveDocumentBackbone]);
+  }, [cancelSpaceArtifactCreationsForRuntime, failDocumentBackbone, hubEnv, loadDocumentPair, receiveDocumentBackbone, retireBrowserActorUi]);
 
   handleDirectoryEventPageRef.current = (message) => {
     const owner = directoryHomeOwnerRef.current;
@@ -2591,7 +2648,7 @@ function FrameworkOsShellInner({
 
   /** 💡️ Relays one operator intent to the worker-owned port. Nothing is applied locally: `cancel`
    * and `approve` only ask, and the phase moves solely on the worker's own next status. `close`
-   * retires the port on both sides at once. */
+   * waits for the worker's exact server-confirmed retirement. */
   const dispatchInferencePortIntent = useCallback((runtimeKey: string, action: InferencePortUiAction) => {
     const worker = backboneWorkerRef.current;
     const operationEpoch = inferencePortEpochRef.current;
@@ -2610,13 +2667,11 @@ function FrameworkOsShellInner({
       return;
     }
     worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-close", operationEpoch }) });
-    inferencePortOwnerRef.current = null;
-    inferencePortEpochRef.current = operationEpoch + 1;
-    dispatch({ type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey });
   }, []);
 
-  /** 💡️ An identity change retires the port on both sides before it can be remounted. */
+  /** 💡️ An identity change clears presentation while worker-private cleanup retains uncertain work. */
   useEffect(() => () => {
+    inferencePortOpeningRef.current?.mailbox.close("inference-opening: identity retired");
     const worker = backboneWorkerRef.current;
     const operationEpoch = inferencePortEpochRef.current;
     if (worker) worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-close", operationEpoch }) });
@@ -2682,7 +2737,7 @@ function FrameworkOsShellInner({
         if (!broker) throw new Error("local browser broker unavailable");
         const response = await broker.me(identityWaitAbort.signal);
         if (response.status === 200) {
-          const me = JSON.parse(response.body) as { userId: string; email: string; displayName: string };
+          const me = parseDirectorySessionAuthorityJsonV1(response.body);
           resolved = { userId: me.userId, email: me.email, displayName: me.displayName, hubBaseUrl: hubEnv.hubBaseUrl, issuedAtMs: cachedIdentity?.issuedAtMs ?? Date.now() };
         } else {
           throw new DirectoryHttpError(401, "local authorization required");
@@ -3123,7 +3178,7 @@ function FrameworkOsShellInner({
     if (!pluginEntry) return;
     try {
       const wire = encodeWindowActionInvocation(active, { controllerId: active.app.controllerId, action, args }, extraWindowInstancesRef.current);
-      await pluginEntry.handle.handleAction(active.instanceId, wire, active.viewState);
+      await pluginEntry.handle.handleAction(active.instanceId, wire, { ...active.viewState, locale: uiLocaleRef.current, terminology: uiTerminologyRef.current });
       console.log("[DEBUG] space extension ledger op dispatched", { action, args });
     } catch (error) {
       console.warn("[DEBUG] space extension ledger op skipped", action, error instanceof Error ? error.message : String(error));
@@ -3619,6 +3674,8 @@ function FrameworkOsShellInner({
       }
       spaceArtifactCreationOwnersRef.current.clear();
       for (const [runtimeKey, entry] of openDocumentSessionsRef.current) closeDocumentRef.current(runtimeKey, entry.clientInstanceId);
+      for (const retained of browserActorUiByRuntimeKeyRef.current.values()) retained.actions.close("browser-actor-action: Shell unmounted");
+      browserActorUiByRuntimeKeyRef.current.clear();
       worker?.terminate();
       backboneWorkerRef.current = null;
     };
@@ -4228,6 +4285,73 @@ function FrameworkOsShellInner({
    * backbone-write block is gone entirely: document content sync now flows through
    * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-operation JS mirror.
    */
+  const requestInferenceProposal = useCallback(async (baseSession: ActiveSession, admit: () => boolean) => {
+    if (!admit()) throw new Error("inference-opening: owner retired");
+    if (inferencePortOwnerRef.current !== null || inferencePortOpeningRef.current !== null) throw new Error("inference.capacity");
+    const owners = [...openDocumentSessionsRef.current.entries()].filter(([, entry]) => entry.session.pluginId === baseSession.pluginId && entry.session.instanceId === baseSession.instanceId && entry.scope !== undefined);
+    const owner = owners.length === 1 ? owners[0] : undefined;
+    const scope = owner?.[1].scope;
+    if (!owner || !scope) throw new Error("inference-proposal: exact document owner required");
+    if (!identityRef.current) throw new Error("inference-proposal: authenticated identity required");
+    if (inferencePortEpochRef.current === Number.MAX_SAFE_INTEGER) throw new Error("inference-proposal: epoch exhausted");
+    const worker = ensureBackboneWorker();
+    const operationEpoch = ++inferencePortEpochRef.current;
+    const [runtimeKey] = owner;
+    const mailbox = new InferencePortOpeningMailboxV1((request) => worker.postMessage({ wire: encodeBackboneWorkerRequest(request) }));
+    const opening = { owner: { operationEpoch, runtimeKey, scope }, clientInstanceId: owner[1].clientInstanceId, sessionInstanceId: baseSession.instanceId, mailbox };
+    inferencePortOpeningRef.current = opening;
+    try {
+      await mailbox.open({ kind: "inference-open", operationEpoch, scope });
+      const entry = openDocumentSessionsRef.current.get(runtimeKey);
+      if (inferencePortOpeningRef.current !== opening || entry?.clientInstanceId !== opening.clientInstanceId || entry.session.instanceId !== opening.sessionInstanceId || !identityRef.current || !admit()) throw new Error("inference-opening: owner retired");
+      inferencePortOwnerRef.current = opening.owner;
+      dispatch({ type: "OPEN_INFERENCE_PORT", runtimeKey, operationEpoch });
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-propose", operationEpoch, requestId: mintDirectoryCommandRequestId() }) });
+    } catch (error) {
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-close", operationEpoch }) });
+      throw error;
+    } finally {
+      if (inferencePortOpeningRef.current === opening) inferencePortOpeningRef.current = null;
+      mailbox.close("inference-opening: settled");
+    }
+  }, [ensureBackboneWorker]);
+
+  const directBrowserActorForSession = useCallback((baseSession: ActiveSession) => {
+    const matches = [...browserActorUiByRuntimeKeyRef.current.entries()].flatMap(([runtimeKey, retained]) => {
+      const entry = openDocumentSessionsRef.current.get(runtimeKey);
+      return retained.identity !== null && entry?.clientInstanceId === retained.clientInstanceId && entry.session.pluginId === baseSession.pluginId && entry.session.instanceId === baseSession.instanceId && retained.sessionInstanceId === baseSession.instanceId && shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session)
+        ? [{ runtimeKey, retained, entry, identity: retained.identity }]
+        : [];
+    });
+    if (matches.length > 1) throw new Error("browser-actor-action: ambiguous document owner");
+    return matches[0] ?? null;
+  }, []);
+
+  const dispatchDirectBrowserActorCommand = useCallback(async (
+    owned: NonNullable<ReturnType<typeof directBrowserActorForSession>>,
+    invocation: ActionInvocation | CommandInvocation,
+    viewState: ViewModel,
+  ): Promise<void> => {
+    const { runtimeKey, retained, entry, identity } = owned;
+    const current = (): boolean => {
+      const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+      return live?.actions === retained.actions && live.identity === identity && openDocumentSessionsRef.current.get(runtimeKey) === entry && shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session);
+    };
+    if (!current()) throw new Error("browser-actor-action: owner retired");
+    const result = await retained.actions.dispatchCommand({
+      scope: retained.scope,
+      verifiedSurfaceId: retained.verifiedSurfaceId,
+      activationGeneration: retained.activationGeneration,
+      appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
+      instanceId: identity.instanceId,
+      surfaceRevision: retained.store.getRevisionSnapshot(),
+    }, invocation, viewState);
+    await publishBrowserActorHostEffectsV1(result.hostEffects, current, async (effect) => {
+      if ("requestInferenceProposal" in effect) await requestInferenceProposal(entry.session, current);
+      else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
+    });
+  }, [directBrowserActorForSession, requestInferenceProposal]);
+
   const applyHostEffects = useCallback(
     async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>) => {
       const effectOrigin = effectOwner.presentation;
@@ -4351,29 +4475,7 @@ function FrameworkOsShellInner({
           continue;
         }
         if ("requestInferenceProposal" in effect) {
-          // 💡️ Slice D — the host-owned ephemeral inference port. The program named only an intent;
-          // this shell resolves the document scope it already owns, mints the idempotency key, and
-          // opens exactly one worker-side port. The worker refuses to start unless that document's
-          // verified execution-target lease is live, and that refusal comes back as a localized
-          // terminal state, never as a silent no-op. Nothing here writes the document.
-          const owners = [...openDocumentSessionsRef.current.entries()].filter(([, entry]) => entry.session.pluginId === baseSession.pluginId && entry.session.instanceId === baseSession.instanceId && entry.scope !== undefined);
-          const owner = owners.length === 1 ? owners[0] : undefined;
-          const ownerScope = owner?.[1].scope;
-          if (!owner || !ownerScope) {
-            console.warn("[os-shell] requestInferenceProposal: session must resolve to exactly one hub-scoped document");
-          } else if (!identityRef.current) {
-            console.warn("[os-shell] requestInferenceProposal: dropped, no signed-in identity");
-          } else {
-            const worker = ensureBackboneWorker();
-            const operationEpoch = inferencePortEpochRef.current + 1;
-            inferencePortEpochRef.current = operationEpoch;
-            const [runtimeKey] = owner;
-            const scope = ownerScope;
-            inferencePortOwnerRef.current = { operationEpoch, runtimeKey, scope };
-            dispatch({ type: "OPEN_INFERENCE_PORT", runtimeKey, operationEpoch });
-            worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-open", operationEpoch, scope }) });
-            worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-propose", operationEpoch, requestId: mintDirectoryCommandRequestId() }) });
-          }
+          await requestInferenceProposal(baseSession, () => isCurrentEffectOwner(effectOwner));
           continue;
         }
         if ("replayShellCommand" in effect) {
@@ -4580,7 +4682,7 @@ function FrameworkOsShellInner({
         await refreshUi(nextSession, uiScope);
       }
     },
-    [captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, setActiveUtilityForWindow, hostMode],
+    [captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, session, setActiveUtilityForWindow, hostMode],
   );
 
   const applyShellUri = useCallback(
@@ -4721,7 +4823,7 @@ function FrameworkOsShellInner({
       const openingAttempt = { clientInstanceId: crypto.randomUUID() };
       const { clientInstanceId } = openingAttempt;
       if (!admitDocumentOpeningV1({ runtimeKey, plugin, instanceId: targetSession.instanceId, background: target?.background === true }, openDocumentSessionsRef.current, closeDocumentRef.current)) return null;
-      if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
+      retireBrowserActorUi(runtimeKey, "browser-actor-action: opening replaced");
       let resolveReady!: () => void, rejectReady!: (error: Error) => void;
       const ready = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
       void ready.catch(() => {});
@@ -4779,7 +4881,7 @@ function FrameworkOsShellInner({
       });
       return committed ? { committed: true, runtimeKey, clientInstanceId } : null;
     },
-    [bindDocumentBackbone, documentAttachmentLane, ensureBackboneWorker, loadedPlugins, postBrowserActorViewState, resolveSyncTargetSession, hubEnv, retireDocumentAttachment],
+    [bindDocumentBackbone, documentAttachmentLane, ensureBackboneWorker, loadedPlugins, postBrowserActorViewState, resolveSyncTargetSession, hubEnv, retireDocumentAttachment, retireBrowserActorUi],
   );
   openDocumentRef.current = openDocument;
 
@@ -4816,6 +4918,8 @@ function FrameworkOsShellInner({
       waiter.reject(new Error("document closed"));
       socketActorReadyRef.current.delete(runtimeKey);
     }
+    const pendingInference = inferencePortOpeningRef.current;
+    if (pendingInference?.owner.runtimeKey === runtimeKey) pendingInference.mailbox.close("inference-opening: document retired");
     const inferenceOwner = inferencePortOwnerRef.current;
     const retainedInferenceOwner = retainInferencePortOwnerAfterCloseV1(inferenceOwner, runtimeKey);
     if (inferenceOwner !== null && retainedInferenceOwner === null) {
@@ -4836,7 +4940,7 @@ function FrameworkOsShellInner({
       void tutorial.stop().catch((error) => console.error("[DEBUG] tutorial retirement failed", error));
       dispatch({ type: "SET_TUTORIAL", value: null });
     }
-    if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
+    retireBrowserActorUi(runtimeKey, "browser-actor-action: document retired");
     rebootstrapDiscardedSessionsRef.current.delete(runtimeKey);
     setInferenceHistoryByRuntimeKey((current) => {
       if (!(runtimeKey in current)) return current;
@@ -4857,7 +4961,7 @@ function FrameworkOsShellInner({
     }
     const request: BackboneWorkerRequest = { kind: "close", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }) };
     backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest(request) });
-  }, []);
+  }, [retireBrowserActorUi]);
   closeDocumentRef.current = closeDocument;
 
   /** @deprecated superseded by {@link openDocument}; kept as a thin URI-parsing adapter only for the
@@ -5022,6 +5126,8 @@ function FrameworkOsShellInner({
           const viewState = windowViewContext(
             {
               ...session.viewState,
+              locale: uiLocaleRef.current,
+              terminology: uiTerminologyRef.current,
               activeToolId: next ? undefined : activeToolIdRef.current ?? undefined,
               activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
               windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
@@ -5056,7 +5162,7 @@ function FrameworkOsShellInner({
         const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
         const program = pluginEntry?.handle;
         if (program) {
-          const viewState: ViewModel = { ...session.viewState, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
+          const viewState: ViewModel = { ...session.viewState, locale: uiLocaleRef.current, terminology: uiTerminologyRef.current, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
           void program
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, activeWindowIdRef.current ?? undefined), viewState)
@@ -5178,6 +5284,8 @@ function FrameworkOsShellInner({
       const dispatchWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
       const baseDispatchViewState: ViewModel = {
         ...targetSession.viewState,
+        locale: uiLocale,
+        terminology: uiTerminology,
         windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
         activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
       };
@@ -5201,6 +5309,28 @@ function FrameworkOsShellInner({
       }
 
       const interactiveAction = action.action !== "suggestionsTick" && action.action !== "fillBuildTick";
+      let directBrowserActor: ReturnType<typeof directBrowserActorForSession>;
+      try {
+        directBrowserActor = directBrowserActorForSession(targetSession);
+      } catch (error) {
+        if (propagateFailure) throw error;
+        console.error("[DEBUG] authenticated browser actor action owner failed", error);
+        return;
+      }
+      if (directBrowserActor !== null) {
+        if (interactiveAction) beginInteractivePluginAction();
+        return dispatchDirectBrowserActorCommand(
+          directBrowserActor,
+          windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId),
+          dispatchViewState,
+        ).catch((actionError) => {
+          if (propagateFailure) throw actionError;
+          console.error("[DEBUG] authenticated browser actor action failed", action.action, action.args, actionError);
+          showTransientNotice(shellLabel("ui.common.renderError"), "error");
+        }).finally(() => {
+          if (interactiveAction) endInteractivePluginAction();
+        });
+      }
       if (interactiveAction) beginInteractivePluginAction();
       return plugin
         .handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState)
@@ -5231,6 +5361,8 @@ function FrameworkOsShellInner({
       captureDialogOrigin,
       isCurrentDialogOrigin,
       captureEffectOwner,
+      directBrowserActorForSession,
+      dispatchDirectBrowserActorCommand,
       isCurrentEffectOwner,
       applyHistoryPatch,
       attachSyncBackbone,
@@ -5285,6 +5417,37 @@ function FrameworkOsShellInner({
   // (and any `useMemo` keyed on the dispatcher passed to it) can actually bail.
   const onActionStable = useCallback((action: Parameters<typeof onAction>[0]) => onActionRef.current(action), []);
   const onIntentStable = useCallback((intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => onActionStable(uiIntentToActionDescriptor(intent)), [onActionStable]);
+  const onBrowserActorIntent = useCallback((runtimeKey: string, captured: RetainedBrowserActorUiV1, intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => {
+    const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+    const entry = openDocumentSessionsRef.current.get(runtimeKey);
+    if (retained?.actions !== captured.actions || retained.identity === null || entry?.clientInstanceId !== captured.clientInstanceId || entry.session.instanceId !== captured.sessionInstanceId || !shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session)) return;
+    const current = (): boolean => {
+      const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+      const opening = openDocumentSessionsRef.current.get(runtimeKey);
+      return live?.actions === captured.actions && live.identity !== null && opening?.clientInstanceId === captured.clientInstanceId && opening.session.instanceId === captured.sessionInstanceId && shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, opening.session);
+    };
+    beginInteractivePluginAction();
+    void retained.actions.dispatchIntent({
+      scope: retained.scope,
+      verifiedSurfaceId: retained.verifiedSurfaceId,
+      activationGeneration: retained.activationGeneration,
+      appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
+      instanceId: retained.identity.instanceId,
+      surfaceRevision: retained.store.getRevisionSnapshot(),
+    }, retained.windowKindId, intent).then((result) => {
+      return publishBrowserActorHostEffectsV1(result.hostEffects, current, (effect) => {
+        if ("requestInferenceProposal" in effect) return requestInferenceProposal(entry.session, current);
+        else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
+      });
+    }).catch((error) => {
+      if (browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.actions !== captured.actions) return;
+      console.error("[DEBUG] authenticated browser actor intent failed", error);
+      showTransientNotice(shellLabel("ui.common.renderError"), "error");
+    }).finally(endInteractivePluginAction);
+  }, [requestInferenceProposal]);
+  const refuseBrowserActorActionDescriptor = useCallback(() => {
+    console.error("[DEBUG] authenticated browser actor requires the complete UI intent");
+  }, []);
 
   //#region 🎥️TutorialOrchestration
   /** ⏱️ Real-time throttle for the director's UI/document/event application (~10Hz) — camera stays
@@ -7489,7 +7652,7 @@ function FrameworkOsShellInner({
       const ownerPluginId = commandOwnerPluginId(address.owner);
       if (!ownerPluginId || ownerPluginId !== session.pluginId) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === ownerPluginId)?.handle;
-      if (!plugin?.handleCommand) return;
+      if (!plugin) return;
       // 👁️✏️ Same client-side half of the read-only guarantee `onAction` applies above, for commands.
       if (session.app.role === "viewer" && resolvedCommands.find((entry) => commandAddressKey(entry.address) === commandAddressKey(address))?.definition.kind === "mutation") {
         showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
@@ -7499,6 +7662,21 @@ function FrameworkOsShellInner({
       const invocation: CommandInvocation = { address, arguments: args ?? {} };
       const commandOrigin = captureDialogOrigin(session);
       if (!isCurrentDialogOrigin(commandOrigin)) return;
+      let directBrowserActor: ReturnType<typeof directBrowserActorForSession>;
+      try {
+        directBrowserActor = directBrowserActorForSession(session);
+      } catch (error) {
+        console.error("[DEBUG] authenticated browser actor command owner failed", error);
+        return;
+      }
+      if (directBrowserActor !== null) {
+        void dispatchDirectBrowserActorCommand(directBrowserActor, invocation, dispatchViewState).catch((error) => {
+          console.error("[DEBUG] authenticated browser actor command failed", error);
+          showTransientNotice(shellLabel("ui.common.renderError"), "error");
+        });
+        return;
+      }
+      if (!plugin.handleCommand) return;
       const commandOwner = captureEffectOwner(session, commandOrigin);
       if (!isCurrentEffectOwner(commandOwner)) return;
       void plugin
@@ -7520,7 +7698,7 @@ function FrameworkOsShellInner({
           console.error("Command execution failed", error);
         });
     },
-    [applyHostEffects, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, isCurrentEffectOwner, commitUiPreference, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand, showTransientNotice, isViewerReadOnlyFault, uiLocale],
+    [applyHostEffects, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, directBrowserActorForSession, dispatchDirectBrowserActorCommand, isCurrentEffectOwner, commitUiPreference, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand, showTransientNotice, isViewerReadOnlyFault, uiLocale],
   );
 
   const handleCommandKeydown = useCallback(
@@ -8267,7 +8445,7 @@ function FrameworkOsShellInner({
             <WindowInstanceIdContext.Provider value={kind.id}>
               <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                 {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
-                <InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? pendingWindowUiNode())} onAction={onActionStable} onIntent={onIntentStable} />
+                <InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? pendingWindowUiNode())} onAction={browserActorStore === undefined ? onActionStable : refuseBrowserActorActionDescriptor} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => { if (currentDocumentRuntimeKey !== null && currentBrowserActorUi !== undefined) onBrowserActorIntent(currentDocumentRuntimeKey, currentBrowserActorUi, intent); }} />
               </ShellFaultBoundary>
             </WindowInstanceIdContext.Provider>
           </ChromeAwareWindowScrollSurface>
@@ -8329,12 +8507,16 @@ function FrameworkOsShellInner({
     activeUtilityByWindowId,
     appLabelsOverlay,
     currentBrowserActorUi,
+    currentDocumentRuntimeKey,
     extraWindowInstances,
     introductionActionWindowSegment,
     introductionUtilityId,
     introductionUtilityWindowId,
     loadedPlugins,
     onActionStable,
+    onBrowserActorIntent,
+    onIntentStable,
+    refuseBrowserActorActionDescriptor,
     panel,
     session,
     spawnedWindowEngagements,

@@ -1,0 +1,48 @@
+{
+  "schema": "semio.os.test-browser-host-gis-provenance-fixture/v1",
+  "specimens": [
+    {
+      "id": "selected-component",
+      "utf8": "gis-component-source",
+      "sha256": "6bc2562feb08fe69613e782d21acdc0a0840632e341613b995bd822f8c5ef7c2"
+    },
+    {
+      "id": "selected-descriptor",
+      "utf8": "gis-descriptor-source",
+      "sha256": "9c995146f71698b876411a1158a13f13dec0c9f29c92dbcc6dc373004c64dd86"
+    },
+    {
+      "id": "staged-core",
+      "utf8": "gis-component",
+      "sha256": "a62d7f510c37ed858d2b0ca56d6c3173e92ebd98e35561abd9e29076e9d4bfd8"
+    },
+    {
+      "id": "staged-bridge",
+      "utf8": "gis-bridge",
+      "sha256": "fffb9510f20232137d98d98e5657a0e72b11300e82f7f35e1b09ab2a0af5a2a4"
+    }
+  ],
+  "hostiles": [
+    {
+      "id": "selected-component-receipt-hash",
+      "target": "host-receipt",
+      "replacement": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "recomputeModuleSet": false,
+      "outcome": "refused"
+    },
+    {
+      "id": "staged-gis-descriptor",
+      "target": "staged-descriptor",
+      "replacement": "substituted-gis-descriptor",
+      "recomputeModuleSet": true,
+      "outcome": "refused"
+    },
+    {
+      "id": "staged-gis-bridge",
+      "target": "staged-bridge",
+      "replacement": "substituted-gis-bridge",
+      "recomputeModuleSet": true,
+      "outcome": "refused"
+    }
+  ]
+}

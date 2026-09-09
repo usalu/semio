@@ -31,13 +31,22 @@ pub enum JsonValue {
     // variant — serde's internally-tagged (`tag = "kind"`) representation can only merge the tag
     // into map-shaped content; a tuple variant wrapping a non-map type (`bool`/`String`/`Vec<_>`)
     // compiles fine but fails at RUNTIME serialization ("can only flatten structs and maps").
-    Bool { value: bool },
-    Number { lexeme: String },
-    String { value: String },
-    Array { items: Vec<JsonValue> },
-    Object { members: Vec<JsonMember> },
+    Bool {
+        value: bool,
+    },
+    Number {
+        lexeme: String,
+    },
+    String {
+        value: String,
+    },
+    Array {
+        items: Vec<JsonValue>,
+    },
+    Object {
+        members: Vec<JsonMember>,
+    },
 }
-
 
 impl From<serde_json::Value> for JsonValue {
     fn from(v: serde_json::Value) -> Self {

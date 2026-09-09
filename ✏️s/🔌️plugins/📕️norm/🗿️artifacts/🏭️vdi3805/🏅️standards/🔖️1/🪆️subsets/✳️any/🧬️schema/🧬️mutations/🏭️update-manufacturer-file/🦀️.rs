@@ -1,7 +1,6 @@
 //! 🏭️ `update-manufacturer-file` — atomically updates the manufacturer file header facet (the
 //! norm's `010` record fields are always authored together, never one-field-at-a-time).
 
-
 use crate::{ManufacturerFile, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

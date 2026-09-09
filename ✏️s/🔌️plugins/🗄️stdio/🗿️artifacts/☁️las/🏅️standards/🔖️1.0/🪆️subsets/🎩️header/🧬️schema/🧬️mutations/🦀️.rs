@@ -19,36 +19,36 @@ use crate::LasSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Mutations
+#[path = "➕insert-point/🦀️.rs"]
+pub mod insert_point;
+#[path = "📥insert-vlr/🦀️.rs"]
+pub mod insert_vlr;
+#[path = "➖remove-point/🦀️.rs"]
+pub mod remove_point;
+#[path = "📤remove-vlr/🦀️.rs"]
+pub mod remove_vlr;
+#[path = "📦set-bounds/🦀️.rs"]
+pub mod set_bounds;
+#[path = "🕰️set-creation-date/🦀️.rs"]
+pub mod set_creation_date;
+#[path = "✏️set-point/🦀️.rs"]
+pub mod set_point;
+#[path = "🔁set-points-by-return/🦀️.rs"]
+pub mod set_points_by_return;
+#[path = "📏set-scale-and-offset/🦀️.rs"]
+pub mod set_scale_and_offset;
 /// 📐️ Typed content mutation for `stdio.las`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🔢set-version/🦀️.rs"]
-pub mod set_version;
-#[path = "🏢set-system-identifier/🦀️.rs"]
-pub mod set_system_identifier;
 #[path = "🛠️set-software-info/🦀️.rs"]
 pub mod set_software_info;
-#[path = "🕰️set-creation-date/🦀️.rs"]
-pub mod set_creation_date;
-#[path = "📏set-scale-and-offset/🦀️.rs"]
-pub mod set_scale_and_offset;
-#[path = "📦set-bounds/🦀️.rs"]
-pub mod set_bounds;
-#[path = "🔁set-points-by-return/🦀️.rs"]
-pub mod set_points_by_return;
-#[path = "📥insert-vlr/🦀️.rs"]
-pub mod insert_vlr;
-#[path = "📤remove-vlr/🦀️.rs"]
-pub mod remove_vlr;
+#[path = "🏢set-system-identifier/🦀️.rs"]
+pub mod set_system_identifier;
+#[path = "🔢set-version/🦀️.rs"]
+pub mod set_version;
 #[path = "🗃️set-vlr-data/🦀️.rs"]
 pub mod set_vlr_data;
-#[path = "➕insert-point/🦀️.rs"]
-pub mod insert_point;
-#[path = "➖remove-point/🦀️.rs"]
-pub mod remove_point;
-#[path = "✏️set-point/🦀️.rs"]
-pub mod set_point;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
@@ -152,7 +152,9 @@ pub(crate) fn agg_inverse(this: &LasMutation, base: &LasSnapshot) -> Vec<LasMuta
         LasMutation::SetSystemIdentifier(_) => vec![LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: base.header.system_identifier.clone() })],
         LasMutation::SetSoftwareInfo(_) => vec![LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: base.header.generating_software.clone() })],
         LasMutation::SetCreationDate(_) => vec![LasMutation::SetCreationDate(set_creation_date::SetCreationDate { day_of_year: base.header.creation_day_of_year, year: base.header.creation_year })],
-        LasMutation::SetScaleAndOffset(_) => vec![LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale), offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset) })],
+        LasMutation::SetScaleAndOffset(_) => {
+            vec![LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale), offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset) })]
+        }
         LasMutation::SetBounds(_) => vec![LasMutation::SetBounds(set_bounds::SetBounds { max: (base.header.max_x, base.header.max_y, base.header.max_z), min: (base.header.min_x, base.header.min_y, base.header.min_z) })],
         LasMutation::SetPointsByReturn(_) => vec![LasMutation::SetPointsByReturn(set_points_by_return::SetPointsByReturn { counts: base.header.points_by_return })],
         LasMutation::InsertVlr(insert_vlr::InsertVlr { index, .. }) => vec![LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index: (*index).min(base.vlrs.len()) })],

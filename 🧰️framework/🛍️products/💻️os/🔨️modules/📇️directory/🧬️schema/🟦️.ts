@@ -1127,7 +1127,7 @@ export interface DocumentOpenCatalogV1 {
   generationId: string;
 }
 
-export const DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 = 14;
+export const DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 = 15;
 
 export interface DocumentExecutionProtocolV1 {
   appChannelVersion: typeof DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1;
@@ -1637,11 +1637,11 @@ export type GisMapInferenceProposalStateV1 = "none" | "offered" | "approved" | "
 
 /** 🧾️ The closed receipt one accepted submit returns; it never carries private result or base bytes. */
 export interface GisMapInferenceJobReceiptV1 {
-  schema: string;
+  schema: "semio.hub.inference-job-receipt/v1";
   jobId: string;
   state: GisMapInferenceJobStateV1;
   proposalState: GisMapInferenceProposalStateV1;
-  proposalHash?: string;
+  proposalHash: string | null;
   cursor: number;
   expiresAtMs: number;
 }
@@ -1673,13 +1673,13 @@ export interface GisMapInferencePreviewV1 {
 
 /** 📃️ The owner-private bounded page one events, cancel or poll read returns. */
 export interface GisMapInferenceEventPageV1 {
-  schema: string;
+  schema: "semio.hub.inference-job-events/v1";
   jobId: string;
   state: GisMapInferenceJobStateV1;
   proposalState: GisMapInferenceProposalStateV1;
   cancelRequested: boolean;
   stale: boolean;
-  proposalHash?: string;
+  proposalHash: string | null;
   preview?: GisMapInferencePreviewV1;
   events: readonly GisMapInferenceEventV1[];
   progress: readonly GisMapInferenceProgressV1[];
@@ -1688,7 +1688,7 @@ export interface GisMapInferenceEventPageV1 {
 
 /** ✅️ The closed approval outcome; `applied` is true only after a real committed-WAL witness. */
 export interface GisMapInferenceApprovalReceiptV1 {
-  schema: string;
+  schema: "semio.hub.inference-approval-receipt/v1";
   jobId: string;
   mutationId: string;
   commandHash: string;
@@ -1746,7 +1746,7 @@ export type GisMapInferencePortCodeV1 =
  * `submitting` have no server counterpart at all (nothing has been accepted yet), `approving`
  * corresponds to the server's `approval-prepared`, and the four terminals are exactly the packet's
  * `applied | cancelled | stale | failed`. */
-export type GisMapInferencePortPhaseV1 = "idle" | "submitting" | "running" | "offered" | "approving" | "applied" | "cancelled" | "stale" | "failed";
+export type GisMapInferencePortPhaseV1 = "idle" | "submitting" | "running" | "offered" | "approving" | "indeterminate" | "applied" | "cancelled" | "stale" | "failed";
 
 /** 💡️ Complete renderer-visible state of one document's port. It carries a phase, the server's own
  * job id, its bounded progress cursor, the hash the server published, whether a cancel was
@@ -1776,6 +1776,7 @@ export type GisMapInferencePortEventV1 =
   | { kind: "approve" }
   | { kind: "approval"; receipt: GisMapInferenceApprovalReceiptV1 }
   | { kind: "cancel" }
+  | { kind: "indeterminate"; code: GisMapInferencePortCodeV1 }
   | { kind: "failed"; code: GisMapInferencePortCodeV1 }
   | { kind: "clear" };
 
@@ -1823,20 +1824,20 @@ export function reduceGisMapInferencePortV1(current: GisMapInferencePortStatusV1
     case "lease-unverified":
       return current.phase === "idle" || current.phase === "submitting" ? { ...current, phase: "failed", code: "inference.lease-unverified" } : current;
     case "receipt": {
-      if (current.phase !== "submitting") return current;
+      if (current.phase !== "submitting" && !(current.phase === "indeterminate" && current.jobId === null)) return current;
       const page: GisMapInferenceEventPageV1 = {
-        schema: event.receipt.schema,
+        schema: "semio.hub.inference-job-events/v1",
         jobId: event.receipt.jobId,
         state: event.receipt.state,
         proposalState: event.receipt.proposalState,
         cancelRequested: false,
         stale: false,
-        ...(event.receipt.proposalHash === undefined ? {} : { proposalHash: event.receipt.proposalHash }),
+        proposalHash: event.receipt.proposalHash,
         events: [],
         progress: [],
         nextCursor: event.receipt.cursor,
       };
-      return { ...gisMapInferenceWithoutPreviewV1(current), phase: gisMapInferenceServerPhaseV1(page), jobId: event.receipt.jobId, cursor: event.receipt.cursor, proposalHash: event.receipt.proposalHash ?? null };
+      return { ...gisMapInferenceWithoutPreviewV1(current), phase: gisMapInferenceServerPhaseV1(page), jobId: event.receipt.jobId, cursor: event.receipt.cursor, proposalHash: event.receipt.proposalHash ?? null, code: null };
     }
     case "page": {
       if (current.jobId === null || current.jobId !== event.page.jobId) return current;
@@ -1852,18 +1853,20 @@ export function reduceGisMapInferencePortV1(current: GisMapInferencePortStatusV1
         proposalHash: event.page.proposalHash ?? null,
         ...((phase === "offered" || phase === "approving") && event.page.preview !== undefined ? { preview: event.page.preview } : {}),
         cancelRequested: current.cancelRequested || event.page.cancelRequested,
-        code: phase === "failed" ? (current.code ?? "inference.storage") : current.code,
+        code: phase === "failed" ? "inference.storage" : null,
       };
     }
     case "approve":
       return current.phase === "offered" && current.proposalHash !== null && current.preview?.proposalHash === current.proposalHash && current.preview.jobId === current.jobId && !current.cancelRequested ? { ...current, phase: "approving" } : current;
     case "approval": {
-      if (current.phase !== "approving" || current.jobId !== event.receipt.jobId || current.proposalHash !== event.receipt.proposalHash) return current;
+      if ((current.phase !== "approving" && current.phase !== "indeterminate") || current.jobId !== event.receipt.jobId || current.proposalHash !== event.receipt.proposalHash) return current;
       const withoutPreview = gisMapInferenceWithoutPreviewV1(current);
-      return event.receipt.applied ? { ...withoutPreview, phase: "applied" } : { ...withoutPreview, phase: "failed", code: "approval.commit-unavailable" };
+      return event.receipt.applied ? { ...withoutPreview, phase: "applied", code: null } : { ...withoutPreview, phase: "failed", code: "approval.commit-unavailable" };
     }
     case "cancel":
       return current.phase === "idle" ? current : { ...current, cancelRequested: true };
+    case "indeterminate":
+      return { ...gisMapInferenceWithoutPreviewV1(current), phase: "indeterminate", code: event.code };
     case "failed":
       return { ...gisMapInferenceWithoutPreviewV1(current), phase: event.code === "inference.cancelled" ? "cancelled" : "failed", code: event.code };
   }
@@ -1877,6 +1880,7 @@ export const GIS_MAP_INFERENCE_PORT_TEXT_V1: Readonly<Record<GisMapInferencePort
   running: Object.freeze({ en: "Computing the bounds proposal…", de: "Begrenzungsvorschlag wird berechnet…" }),
   offered: Object.freeze({ en: "A bounds proposal is ready for review.", de: "Ein Begrenzungsvorschlag liegt zur Prüfung bereit." }),
   approving: Object.freeze({ en: "Waiting for the server to commit the approved proposal…", de: "Warten auf die Freigabe des Vorschlags durch den Server…" }),
+  indeterminate: Object.freeze({ en: "The outcome is unknown. The original request is retained while its server state is checked.", de: "Das Ergebnis ist unbekannt. Die ursprüngliche Anfrage bleibt erhalten, während ihr Serverstatus geprüft wird." }),
   applied: Object.freeze({ en: "The approved proposal was committed to the document.", de: "Der freigegebene Vorschlag wurde im Dokument übernommen." }),
   cancelled: Object.freeze({ en: "The proposal was cancelled.", de: "Der Vorschlag wurde abgebrochen." }),
   stale: Object.freeze({ en: "The document changed while the proposal ran. Request a new one.", de: "Das Dokument hat sich während des Vorschlags geändert. Fordern Sie einen neuen an." }),
@@ -1896,7 +1900,7 @@ export const GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1: Readonly<Record<GisMapInferenc
   "inference.cancelled": Object.freeze({ en: "The proposal was cancelled.", de: "Der Vorschlag wurde abgebrochen." }),
   "approval.commit-unavailable": Object.freeze({ en: "The approved proposal could not be committed and was not applied.", de: "Der freigegebene Vorschlag konnte nicht übernommen werden und wurde nicht angewendet." }),
   "inference.storage": Object.freeze({ en: "The proposal service is temporarily unavailable.", de: "Der Vorschlagsdienst ist vorübergehend nicht verfügbar." }),
-  "inference.transport": Object.freeze({ en: "The outcome is unknown. Reopen the document before retrying.", de: "Das Ergebnis ist unbekannt. Öffnen Sie das Dokument erneut, bevor Sie es wiederholen." }),
+  "inference.transport": Object.freeze({ en: "The outcome is unknown. Close retries checking the original request without submitting another.", de: "Das Ergebnis ist unbekannt. Schließen prüft die ursprüngliche Anfrage erneut, ohne eine weitere zu senden." }),
   "inference.lease-unverified": Object.freeze({ en: "This document has no verified execution target, so no proposal can start.", de: "Dieses Dokument hat kein verifiziertes Ausführungsziel, daher kann kein Vorschlag starten." }),
 });
 
@@ -1955,7 +1959,7 @@ export function parseGisMapInferencePreviewV1(value: unknown): GisMapInferencePr
 /** 💡️ Strictly decodes the private worker-to-host status projection. */
 export function parseGisMapInferencePortStatusV1(value: unknown): GisMapInferencePortStatusV1 {
   const object = documentOpenObject(value, ["phase", "jobId", "cursor", "completed", "total", "proposalHash", "cancelRequested", "code"], ["preview"]);
-  const phases: readonly GisMapInferencePortPhaseV1[] = ["idle", "submitting", "running", "offered", "approving", "applied", "cancelled", "stale", "failed"];
+  const phases: readonly GisMapInferencePortPhaseV1[] = ["idle", "submitting", "running", "offered", "approving", "indeterminate", "applied", "cancelled", "stale", "failed"];
   const codes: readonly GisMapInferencePortCodeV1[] = [
     "inference.unavailable",
     "inference.denied",
@@ -2024,15 +2028,16 @@ export function sealGisMapInferenceApprovalRequestV1(jobId: string, proposalHash
 
 /** 🧾️ Strictly parses one accepted-submit receipt. */
 export function parseGisMapInferenceJobReceiptV1(value: unknown): GisMapInferenceJobReceiptV1 {
-  const object = documentOpenObject(value, ["schema", "jobId", "state", "proposalState", "cursor", "expiresAtMs"], ["proposalHash"]);
+  const object = documentOpenObject(value, ["schema", "jobId", "state", "proposalState", "proposalHash", "cursor", "expiresAtMs"]);
+  if (object.schema !== "semio.hub.inference-job-receipt/v1") throw new Error("gis-map-inference.invalid-receipt");
   const cursor = documentOpenInteger(object.cursor);
   if (cursor > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR) throw new Error("gis-map-inference.invalid-cursor");
   return {
-    schema: documentOpenText(object.schema),
+    schema: object.schema,
     jobId: gisMapInferenceHex(object.jobId, 32),
     state: gisMapInferenceJobState(object.state),
     proposalState: gisMapInferenceProposalState(object.proposalState),
-    ...(object.proposalHash === undefined ? {} : { proposalHash: gisMapInferenceHex(object.proposalHash, 64) }),
+    proposalHash: object.proposalHash === null ? null : gisMapInferenceHex(object.proposalHash, 64),
     cursor,
     expiresAtMs: documentOpenInteger(object.expiresAtMs, true),
   };
@@ -2041,7 +2046,8 @@ export function parseGisMapInferenceJobReceiptV1(value: unknown): GisMapInferenc
 /** 📃️ Strictly parses one bounded owner-private page, enforcing every published item/cursor bound
  * and a monotonically non-decreasing progress fold. */
 export function parseGisMapInferenceEventPageV1(value: unknown): GisMapInferenceEventPageV1 {
-  const object = documentOpenObject(value, ["schema", "jobId", "state", "proposalState", "cancelRequested", "stale", "events", "progress", "nextCursor"], ["proposalHash", "preview"]);
+  const object = documentOpenObject(value, ["schema", "jobId", "state", "proposalState", "cancelRequested", "stale", "proposalHash", "events", "progress", "nextCursor"], ["preview"]);
+  if (object.schema !== "semio.hub.inference-job-events/v1") throw new Error("gis-map-inference.invalid-page");
   if (typeof object.cancelRequested !== "boolean" || typeof object.stale !== "boolean") throw new Error("gis-map-inference.invalid-flags");
   if (!Array.isArray(object.events) || object.events.length > GIS_MAP_INFERENCE_EVENT_PAGE_MAX_ITEMS) throw new Error("gis-map-inference.invalid-events");
   if (!Array.isArray(object.progress) || object.progress.length > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR) throw new Error("gis-map-inference.invalid-progress");
@@ -2070,18 +2076,18 @@ export function parseGisMapInferenceEventPageV1(value: unknown): GisMapInference
   const jobId = gisMapInferenceHex(object.jobId, 32);
   const state = gisMapInferenceJobState(object.state);
   const proposalState = gisMapInferenceProposalState(object.proposalState);
-  const proposalHash = object.proposalHash === undefined ? undefined : gisMapInferenceHex(object.proposalHash, 64);
+  const proposalHash = object.proposalHash === null ? null : gisMapInferenceHex(object.proposalHash, 64);
   const preview = object.preview === undefined ? undefined : parseGisMapInferencePreviewV1(object.preview);
-  if (preview !== undefined && (state !== "succeeded" || proposalState !== "offered" || object.cancelRequested || object.stale || proposalHash === undefined || preview.jobId !== jobId || preview.proposalHash !== proposalHash))
+  if (preview !== undefined && (state !== "succeeded" || proposalState !== "offered" || object.cancelRequested || object.stale || proposalHash === null || preview.jobId !== jobId || preview.proposalHash !== proposalHash))
     throw new Error("gis-map-inference.invalid-preview-owner");
   return {
-    schema: documentOpenText(object.schema),
+    schema: object.schema,
     jobId,
     state,
     proposalState,
     cancelRequested: object.cancelRequested,
     stale: object.stale,
-    ...(proposalHash === undefined ? {} : { proposalHash }),
+    proposalHash,
     ...(preview === undefined ? {} : { preview }),
     events,
     progress,
@@ -2092,10 +2098,11 @@ export function parseGisMapInferenceEventPageV1(value: unknown): GisMapInference
 /** ✅️ Strictly parses one approval receipt. */
 export function parseGisMapInferenceApprovalReceiptV1(value: unknown): GisMapInferenceApprovalReceiptV1 {
   const object = documentOpenObject(value, ["schema", "jobId", "mutationId", "commandHash", "proposalHash", "applied", "undo"]);
+  if (object.schema !== "semio.hub.inference-approval-receipt/v1") throw new Error("gis-map-inference.invalid-approval-receipt");
   if (typeof object.applied !== "boolean") throw new Error("gis-map-inference.invalid-applied");
   const undo = documentOpenObject(object.undo, ["targetId", "expectedCurrent"]);
   return {
-    schema: documentOpenText(object.schema),
+    schema: object.schema,
     jobId: gisMapInferenceHex(object.jobId, 32),
     mutationId: gisMapInferenceHex(object.mutationId, 32),
     commandHash: gisMapInferenceHex(object.commandHash, 64),

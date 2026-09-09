@@ -1,6 +1,5 @@
 //! 🔩 `change-bridge-moment-resistance-knm` — sets the En1991 bridge moment resistance scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

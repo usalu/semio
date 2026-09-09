@@ -107,6 +107,10 @@ fn op_codecs_round_trip() {
     for step in std::iter::once(payload.clone()).chain(payload.inverse(&before())) {
         assert_eq!(PdfMutation::parse_op(&step.print_op()).expect("the text op parses"), step, "insert-page/round-trips-the-concrete-inverse: the text op form does not round-trip");
         assert_eq!(PdfMutation::decode_op(&step.encode_op().expect("the binary op encodes")).expect("the binary op decodes"), step, "insert-page/round-trips-the-concrete-inverse: the binary op form does not round-trip");
-        assert_eq!(dsl::from_dsl_value::<PdfMutation>((serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&step)).expect("the payload encodes")).into()).expect("the payload decodes"), step, "insert-page/round-trips-the-concrete-inverse: the JSON form does not round-trip");
+        assert_eq!(
+            dsl::from_dsl_value::<PdfMutation>((serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&step)).expect("the payload encodes")).into()).expect("the payload decodes"),
+            step,
+            "insert-page/round-trips-the-concrete-inverse: the JSON form does not round-trip"
+        );
     }
 }

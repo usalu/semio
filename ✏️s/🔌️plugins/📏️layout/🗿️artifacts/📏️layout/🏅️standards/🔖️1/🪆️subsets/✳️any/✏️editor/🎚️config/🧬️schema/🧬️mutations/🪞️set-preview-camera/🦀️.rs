@@ -18,7 +18,13 @@ impl protocol::MutationKind<LayoutConfig, LayoutConfigMutation> for SetPreviewCa
         next.preview_camera = self.camera.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &LayoutConfig) -> Vec<LayoutConfigMutation> { vec![LayoutConfigMutation::SetPreviewCamera(Self { camera: base.preview_camera.clone() })] }
-    fn label(&self) -> String { "Set Preview Camera".into() }
-    fn target(&self) -> Vec<String> { vec!["preview_camera".into()] }
+    fn inverse(&self, base: &LayoutConfig) -> Vec<LayoutConfigMutation> {
+        vec![LayoutConfigMutation::SetPreviewCamera(Self { camera: base.preview_camera.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Preview Camera".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["preview_camera".into()]
+    }
 }

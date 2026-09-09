@@ -1,9 +1,8 @@
 //! 🦉 `change-delta-sigma-ed` payload — changes the En1999 document's `delta_sigma_ed` (fatigue design stress range [MPa]).
 
-
-use crate::En1999Snapshot;
 use crate::diff::En1999Diff;
 use crate::mutations::En1999Mutation;
+use crate::En1999Snapshot;
 //#region 🔖️ChangeDeltaSigmaEd
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

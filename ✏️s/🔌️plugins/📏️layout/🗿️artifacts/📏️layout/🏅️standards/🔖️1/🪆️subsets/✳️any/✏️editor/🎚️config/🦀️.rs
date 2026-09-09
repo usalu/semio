@@ -7,10 +7,10 @@
 //! interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 
 use crate::LayoutCamera;
-use semio_framework_value_derive::{FromValue, ToValue};
 pub use crate::LayoutDropPreviewState;
 #[cfg(test)]
 use protocol::Mutation;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
 /// 🧮️ B1: layout's real `ArtifactApp::Config` — absorbs every field that used to live on
@@ -86,7 +86,7 @@ impl store::ArtifactPack for LayoutConfig {
 
 impl Default for LayoutConfig {
     fn default() -> Self {
-        Self { active_page_id: "page-1".into(), drop_preview: LayoutDropPreviewState::default(), engagement_input: String::new(), camera: LayoutCamera::default(), preview_camera: LayoutCamera::default(), }
+        Self { active_page_id: "page-1".into(), drop_preview: LayoutDropPreviewState::default(), engagement_input: String::new(), camera: LayoutCamera::default(), preview_camera: LayoutCamera::default() }
     }
 }
 

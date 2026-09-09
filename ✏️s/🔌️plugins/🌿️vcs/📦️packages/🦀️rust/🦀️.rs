@@ -8,10 +8,7 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault>`, the exact signature
 // `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned
@@ -20,15 +17,21 @@ extern crate semio_framework_schema as schema;
 // artefact of decomposition.
 #[allow(clippy::result_large_err)]
 //#region 🗿️Artifacts
-mod artifacts { pub use semio_s_artifact_vcs_vcs as vcs; }
+mod artifacts {
+    pub use semio_s_artifact_vcs_vcs as vcs;
+}
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_vcs_vcs::editor::*; }
+mod editor {
+    pub use semio_s_artifact_vcs_vcs::editor::*;
+}
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_vcs_vcs::viewer::*; }
+mod viewer {
+    pub use semio_s_artifact_vcs_vcs::viewer::*;
+}
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin
@@ -38,6 +41,5 @@ pub mod native_codecs;
 mod plugin;
 pub use plugin::{plugin, VcsApps};
 semio_framework_plugin::plugin_exports!(plugin, VcsApps);
-
 
 //#endregion 🔖️Plugin

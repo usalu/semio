@@ -6,9 +6,9 @@
 /// 🌬️ Translated nodal loads and member-addressed distributed loads.
 pub type TranslatedLoads = (Vec<NodalLoad>, Vec<(String, MemberUdl)>);
 
-use crate::artifacts::fem3d::{Fem3dSnapshot, FemElement, FemLoad};
 use crate::fem3d_engine::Fem3dError;
 use crate::model::{Bar3, Dof, Elements, Frame3, MemberUdl, NodalLoad, Node, Support};
+use crate::{Fem3dSnapshot, FemElement, FemLoad};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 use std::collections::HashMap;

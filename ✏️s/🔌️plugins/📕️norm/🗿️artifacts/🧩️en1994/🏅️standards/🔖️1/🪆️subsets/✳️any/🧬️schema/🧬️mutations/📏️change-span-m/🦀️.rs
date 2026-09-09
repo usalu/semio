@@ -1,6 +1,5 @@
 //! 🌉 `change-span-m` — sets the En 1994 beam span [m] scalar.
 
-
 use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload

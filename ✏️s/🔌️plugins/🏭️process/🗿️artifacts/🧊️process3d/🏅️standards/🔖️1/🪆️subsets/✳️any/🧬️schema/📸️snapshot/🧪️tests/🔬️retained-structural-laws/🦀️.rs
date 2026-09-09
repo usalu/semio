@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn capability(id: &str, recipe: MeasureRecipe) -> Capability {

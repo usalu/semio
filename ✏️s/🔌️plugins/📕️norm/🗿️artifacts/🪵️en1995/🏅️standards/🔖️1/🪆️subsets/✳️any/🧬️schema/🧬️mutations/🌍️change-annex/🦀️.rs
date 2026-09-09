@@ -5,11 +5,10 @@
 //! report `sharedFileRequests` for the rename once a later pass can touch `🦀️.rs` (mirrors the
 //! en1990/en1992 precedent).
 
-
-use crate::En1995Snapshot;
 use crate::diff::En1995Diff;
-use crate::mutations::En1995Mutation;
 use crate::document::AnnexChoice;
+use crate::mutations::En1995Mutation;
+use crate::En1995Snapshot;
 
 //#region 🔖️ChangeAnnex
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

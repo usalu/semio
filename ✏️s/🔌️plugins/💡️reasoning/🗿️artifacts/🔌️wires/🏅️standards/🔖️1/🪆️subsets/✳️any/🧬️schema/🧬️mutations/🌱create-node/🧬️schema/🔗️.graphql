@@ -1,0 +1,6 @@
+# 🧬️ CreateNode mutation payload.
+# import DslValue from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
+
+type CreateNode {
+  node: DslValue
+}

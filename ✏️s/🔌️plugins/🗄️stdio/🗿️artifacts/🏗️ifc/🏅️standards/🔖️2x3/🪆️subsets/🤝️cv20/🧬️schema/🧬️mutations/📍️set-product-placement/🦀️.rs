@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetProductPlacement {
-        pub(crate) product: u64,
-        pub(crate) placement: Option<u64>,
-    }
+    pub(crate) product: u64,
+    pub(crate) placement: Option<u64>,
+}
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProductPlacement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "product-placement", kind: "set-product-placement", record: "SetProductPlacement" };

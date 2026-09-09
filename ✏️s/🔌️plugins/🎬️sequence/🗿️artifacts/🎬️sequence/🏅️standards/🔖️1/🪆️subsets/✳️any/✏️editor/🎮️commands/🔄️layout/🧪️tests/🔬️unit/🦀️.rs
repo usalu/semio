@@ -1,15 +1,14 @@
-
-use crate::editor::sequence::SequenceCommand;
 use crate::editor::sequence::testkit::{dispatch, new_app};
+use crate::editor::sequence::SequenceCommand;
 
 use super::reorganize::Reorganize;
 use super::set_orientation::SetOrientation;
 use move_step_helper::move_all_steps_to_origin;
 
 mod move_step_helper {
-    use crate::editor::sequence::SequenceCommand;
     use crate::editor::sequence::commands::step::move_step::MoveStep;
     use crate::editor::sequence::testkit::dispatch;
+    use crate::editor::sequence::SequenceCommand;
     use semio_framework_plugin::{EditorApp, VcsArtifactApp};
 
     pub async fn move_all_steps_to_origin(app: &mut VcsArtifactApp<EditorApp<crate::editor::sequence::SequencePlayApp>>) {

@@ -5,7 +5,7 @@ use protocol::Mutation;
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live raster view state (brush, camera, active utility). Layer selection/hover
+/// 👥️ Shareable live raster brush and camera state. Layer selection/hover
 /// deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the `"layers"` interaction
 /// domain broadcasts automatically via the framework's typed `PresenceInteraction` field now.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
@@ -16,12 +16,11 @@ pub struct RasterPresence {
     pub brush_size: f64,
     pub brush_opacity: f64,
     pub camera: RasterCamera,
-    pub active_utility_id: String,
 }
 
 impl Default for RasterPresence {
     fn default() -> Self {
-        Self { brush_size: 24.0, brush_opacity: 1.0, camera: RasterCamera::default(), active_utility_id: "selectMarquee".into() }
+        Self { brush_size: 24.0, brush_opacity: 1.0, camera: RasterCamera::default() }
     }
 }
 
@@ -96,9 +95,22 @@ impl Mutation<RasterPresence> for RasterPresenceMutation {
 
     /// 🧷️ Hand-written (no `dsl::Mutations` derive on this enum) — presence is ephemeral shared
     /// state, so the `owner` path is registry metadata only.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-    ];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot",
+        semantic_kind: "snapshot",
+        display_name: "Snapshot",
+        emoji: "📄",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {

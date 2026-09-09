@@ -3,6 +3,325 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "♻️reset-document-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:reset-document-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.139
+      }
+    },
+    {
+      "name": "🖱️wires-pointer-move",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:wires-pointer-move",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.138
+      }
+    },
+    {
+      "name": "🧵️shared-value-canonical-json",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:shared-value-canonical-json",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.137
+      }
+    },
+    {
+      "name": "🧬️shared-value-clone",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:shared-value-clone",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.136
+      }
+    },
+    {
+      "name": "🪪️playbook-document-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:playbook-document-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.135
+      }
+    },
+    {
+      "name": "🪪️forms-document-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:forms-document-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.134
+      }
+    },
+    {
+      "name": "🗂️shared-map-delta-oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:shared-map-delta-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.133
+      }
+    },
+    {
+      "name": "🗂️shared-map-delta",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:shared-map-delta",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.132
+      }
+    },
+    {
+      "name": "🪪️rewriting-document-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:rewriting-document-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.131
+      }
+    },
+    {
+      "name": "🌱️shared-dynamic-value",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:shared-dynamic-value",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.13
+      }
+    },
+    {
+      "name": "🗂️rewriting-map-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:rewriting-map-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.128
+      }
+    },
+    {
+      "name": "🗂️rewriting-map-ownership-oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:rewriting-map-ownership-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.129
+      }
+    },
+    {
+      "name": "🪪️artifact-field-parity-test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:artifact-field-parity-test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.125
+      }
+    },
+    {
+      "name": "🪪️artifact-field-parity-report",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:artifact-field-parity-report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.126
+      }
+    },
+    {
+      "name": "🪪️artifact-field-parity-enforce",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:artifact-field-parity-enforce",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.127
+      }
+    },
+    {
+      "name": "🧪️test🪪️wires-document-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-wires-document-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.123
+      }
+    },
+    {
+      "name": "🧪️test🪪️wires-document-contract-oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-wires-document-contract-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.124
+      }
+    },
+    {
+      "name": "🧪️test🪪️shared-artifact-addressing",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-shared-artifact-addressing",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.121
+      }
+    },
+    {
+      "name": "🧪️test🪪️shared-artifact-addressing-oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-shared-artifact-addressing-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.122
+      }
+    },
+    {
+      "name": "🧪️test🪟️wires-window-transient",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-wires-window-transient",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.12
+      }
+    },
+    {
+      "name": "🧪️test🪟️retained-window-input",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-retained-window-input",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.118
+      }
+    },
+    {
+      "name": "🧪️test🪟️retained-window-input-oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-retained-window-input-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.119
+      }
+    },
+    {
+      "name": "🧪️test🪟️rewriting-window-config-oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-rewriting-window-config-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.117
+      }
+    },
+    {
+      "name": "🧪️test🪟️rewriting-window-config",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-rewriting-window-config",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.116
+      }
+    },
+    {
+      "name": "🧪️test🗿️artifact-contract-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-artifact-contract-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.115
+      }
+    },
+    {
+      "name": "⚖️gate🗿️artifact-contract-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-artifact-contract-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.114
+      }
+    },
+    {
+      "name": "🧪️test🎯️window-action-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-window-action-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.112
+      }
+    },
+    {
+      "name": "🧪️test🎯️window-action-context🔬️oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-window-action-context-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.113
+      }
+    },
+    {
+      "name": "🧪️test🔎️jack-query-oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-jack-query-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.1111
+      }
+    },
+    {
       "name": "🧪️test🔎️jack-query-ownership",
       "type": "node-terminal",
       "request": "launch",
@@ -474,6 +793,14 @@
       }
     },
     {
+      "name": "📥️deps wasm optimizer",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:deps-wasm-opt",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group": "3_dev", "order": -38.5}
+    },
+    {
       "name": "📥️deps tools",
       "type": "node-terminal",
       "request": "launch",
@@ -618,6 +945,17 @@
       },
       "env": {
         "SEMIO_TICKET_DIR": "${input:nxCacheTicket}"
+      }
+    },
+    {
+      "name": "🚦️ci baseline",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:ci-baseline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": -11
       }
     },
     {
@@ -2293,7 +2631,7 @@
       "name": "⚖️gate🎭️actor📤️empty-output-retirement",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-actor:test -- --testNamePattern=ActorOutputEmptyRetirement",
+      "command": "bun nx run @semio-tech/framework-actor:test-long -- --testNamePattern=ActorOutputEmptyRetirement",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -2304,7 +2642,7 @@
       "name": "⚖️gate🎭️actor📤️unused-return-retirement",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-actor:test -- --testNamePattern=CapturedUnusedReturnRetirement",
+      "command": "bun nx run @semio-tech/framework-actor:test-long -- --testNamePattern=CapturedUnusedReturnRetirement",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -2320,6 +2658,39 @@
       "presentation": {
         "group": "4_gate",
         "order": 400.9946
+      }
+    },
+    {
+      "name": "⚖️gate💻️os📦️document-cache-acceptance",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os:test-long -- --testNamePattern=\"publishes only accepted document cache\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.9947
+      }
+    },
+    {
+      "name": "⚖️gate💻️os🎯️browser-intent-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os:test-long -- --testNamePattern=\"browser UI intent|browser intent mailbox|direct browser intent owners|projects real browser intent publications|admits inference opening only|retains the preceding inference job\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.9948
+      }
+    },
+    {
+      "name": "⚖️gate💻️os🖥️browser-ui-readiness",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-react:test-exhaustive -- --testNamePattern=\"hands the displayed store intent|publishes direct document readiness\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.99485
       }
     },
     {
@@ -5958,6 +6329,14 @@
       }
     },
     {
+      "name": "⚖️gate📄️document-open-plan🧊️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:open-plan-source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.1079 }
+    },
+    {
       "name": "⚖️gate📄️document-open-plan🛡️server",
       "type": "node-terminal",
       "request": "launch",
@@ -6551,6 +6930,14 @@
       },
       "cwd": "${workspaceFolder}",
       "presentation": { "group": "4_gate", "order": 411.137 }
+    },
+    {
+      "name": "⚖️gate💡️inference-relay🌎️hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:inference-relay-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.139 }
     },
     {
       "name": "⚖️gate💡️gis-inference-ledger🌎️hub",
@@ -8814,6 +9201,30 @@
         "group": "4_build",
         "order": 206.14
       }
+    },
+    {
+      "name": "📦️check🧊️wgpu🔒️lockfile",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:lockfile-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 206.145 }
+    },
+    {
+      "name": "📦️generate🧊️wgpu🚀️boot",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:generate-browser-boot",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 206.146 }
+    },
+    {
+      "name": "📦️check🧊️wgpu🌐️browser",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:check-browser-worker",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 206.147 }
     },
     {
       "name": "📦️generate🧊️wgpu📦️artifacts",

@@ -1,7 +1,6 @@
-
 use super::*;
+use crate::editor::flow::testkit::{flow_app_with_registry, register_content_child, FlowApp};
 use crate::editor::flow::FlowCommand;
-use crate::editor::flow::testkit::{FlowApp, flow_app_with_registry, register_content_child};
 use semio_framework_plugin::testkit::meta;
 use semio_framework_plugin::{InvocationResult, PluginApp};
 use store::SpaceMember;

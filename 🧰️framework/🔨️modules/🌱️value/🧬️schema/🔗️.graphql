@@ -1,0 +1,2 @@
+"""🌱️ A JSON value tree preserving null, scalars, arrays, and object fields."""
+scalar DslValue

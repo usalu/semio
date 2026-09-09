@@ -1,8 +1,8 @@
 //! 🧮️ Trinity jack query executor.
 #![allow(dead_code)]
 
-use crate::standards::v1::subsets::any::schema::mutations::{change_data_property, create_edge, create_node, delete_node, move_node, rename_node, TrinityGraphMutation};
 use crate::apply_trinity_graph_mutations;
+use crate::standards::v1::subsets::any::schema::mutations::{change_data_property, create_edge, create_node, delete_node, move_node, rename_node, TrinityGraphMutation};
 use crate::{port_key, Edge, EntityRef, Graph, JackSnapshot, Node, Port, PortDirection, PropertyBag, PropertyValue};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -18,7 +18,7 @@ pub struct Binding {
 
 #[path = "🪜️execution/🦀️.rs"]
 mod execution;
-pub use execution::QueryExecution;
+pub use execution::{QueryExecution, QueryExecutionPreparation, QueryPreparationStep};
 
 /// ▶️ Execute a jack query against a graph and emit CQRS operations for mutations.
 pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {

@@ -85,9 +85,6 @@ impl En1997Diff {
             if let Some(value) = &self.z_investigated_m {
                 next.z_investigated_m = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -203,7 +200,6 @@ impl MutationDiff<En1997Snapshot> for En1997Diff {
         take!(pile_base_area_m2);
         take!(pile_n_profiles);
         take!(z_investigated_m);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

@@ -28,10 +28,7 @@ pub mod derived_composition {
     use crate::standards::v1::subsets::image::schema::SemioImageAnalyzer;
     #[cfg(feature = "conversion-image")]
     use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
-    use semio_framework_plugin::{
-        register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload,
-        StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-    };
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 
@@ -130,7 +127,8 @@ pub mod derived_composition {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::image::schema::semio_image_artifact_schema_descriptor());
         store::register_document_codec(store::ArtifactCodec::of::<SemioImageSnapshot, crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation>(
             crate::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,
-        )).expect("static Stdio registration must be available and conflict-free");
+        ))
+        .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         #[cfg(feature = "conversion-image")]
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");

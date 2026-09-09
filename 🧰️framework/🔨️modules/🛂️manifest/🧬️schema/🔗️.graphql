@@ -1,0 +1,2 @@
+enum AppRole { VIEWER EDITOR }
+type AppRef { pluginId: String! appId: String! }

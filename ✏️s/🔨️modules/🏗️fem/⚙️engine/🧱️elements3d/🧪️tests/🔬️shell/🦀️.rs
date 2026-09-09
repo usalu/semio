@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::model::{Model, NodalLoad, Node, Support, solve_linear_static};
+use crate::model::{solve_linear_static, Model, NodalLoad, Node, Support};
 
 const E: f64 = 1000.0;
 const NU: f64 = 0.25;

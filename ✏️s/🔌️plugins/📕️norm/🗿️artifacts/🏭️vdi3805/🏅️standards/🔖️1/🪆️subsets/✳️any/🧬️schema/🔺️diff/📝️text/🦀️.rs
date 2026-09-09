@@ -46,9 +46,6 @@ impl Vdi3805Diff {
             if let Some(value) = &self.limits {
                 next.limits = *value;
             }
-            if let Some(value) = &self.selected_check_index {
-                next.selected_check_index = *value;
-            }
             next
         })
     }
@@ -112,7 +109,6 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
         take!(geometry);
         take!(curves);
         take!(limits);
-        take!(selected_check_index);
     }
 }
 //#endregion 🔖️Apply

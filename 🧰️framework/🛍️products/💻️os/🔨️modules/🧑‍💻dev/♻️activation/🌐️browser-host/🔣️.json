@@ -13,6 +13,18 @@
   },
   "selectedGis": {
     "generationId": "6666666666666666666666666666666666666666666666666666666666666666",
-    "currentSha256": "7777777777777777777777777777777777777777777777777777777777777777"
+    "currentSha256": "7777777777777777777777777777777777777777777777777777777777777777",
+    "componentSha256": "8888888888888888888888888888888888888888888888888888888888888888",
+    "descriptorSha256": "9999999999999999999999999999999999999999999999999999999999999999",
+    "stagedDescriptorSha256": "9999999999999999999999999999999999999999999999999999999999999999",
+    "bridgeSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "generatedCores": [
+      {
+        "relativePath": "semio_s_plugin_gis_component.core.wasm",
+        "byteLength": 2097152,
+        "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    ],
+    "materializationReceiptSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
   }
 }

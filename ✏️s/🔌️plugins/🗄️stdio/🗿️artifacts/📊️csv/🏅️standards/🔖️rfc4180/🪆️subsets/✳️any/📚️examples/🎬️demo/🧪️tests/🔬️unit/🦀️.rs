@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::snapshot::{CsvField, CsvRecord};
 use crate::standards::v_rfc4180::subsets::any::schema::inferences::CsvInference;

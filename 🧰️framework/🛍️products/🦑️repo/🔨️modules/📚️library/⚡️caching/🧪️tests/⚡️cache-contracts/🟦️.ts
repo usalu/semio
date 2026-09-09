@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync, mkdirSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
-import { dirname, join, resolve, relative } from "node:path";
+import { chmodSync, lstatSync, readFileSync, mkdirSync, writeFileSync, mkdtempSync, readdirSync, rmSync, symlinkSync, utimesSync } from "node:fs";
+import { delimiter, dirname, join, resolve, relative } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { testGraphCoalescing } from "../🕸️daemon/🟦️.ts";
@@ -10,10 +10,48 @@ import { testServiceReadiness } from "../🌐️service-readiness/🟦️.ts";
 import { testDependencyBootstrap, testNxTooling, testDependencyCancellation } from "../📦️dependencies/🟦️.ts";
 import { testResourceLeases } from "../../🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts";
 import { testWasmOptimizer } from "../🕸️wasm/🟦️.ts";
+import { testCiBaseline } from "../../🚦️ci/🧭️baseline/🧪️tests/🧭️baseline-selection/🟦️.ts";
+import { testGithubHistory } from "../../🚦️ci/🐙️github/🧪️tests/🐙️workflow-history/🟦️.ts";
+import { testCiEnvironment } from "../../🚦️ci/🧭️baseline/🌿️environment/🧪️tests/🌿️workflow-context/🟦️.ts";
+import { testCiResolution } from "../../🚦️ci/🧭️baseline/🏃️resolve/🧪️tests/🧭️baseline-resolution/🟦️.ts";
+import { testCiBaselineCommand } from "../../🚦️ci/🧪️tests/🚦️baseline-command/🟦️.ts";
+import { testDevcontainerContext } from "../../📦️artifacts/🐳️containers/🧪️tests/🐳️devcontainer-context/🟦️.ts";
+import { testContainerRuntimeBootstrap } from "../../📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap/🟦️.ts";
+import { testCommandImportClosure } from "../🔗️command-imports/🟦️.ts";
+import { testTrunkLockfile } from "../🔒️trunk-lockfile/🟦️.ts";
+import { testContainerPersistentState } from "../../📦️artifacts/🐳️containers/🧪️tests/🔒️persistent-state/🟦️.ts";
+import { testExtensionAttach } from "../../📦️artifacts/🐳️containers/🧪️tests/🧩️extension-attach/🟦️.ts";
+import { testBinaryenToolchain } from "../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts";
+import { testWasmToolFingerprint } from "../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts";
 
 /** 🧪️ Verifies native source and command ownership against compiler and bundler input oracles. */
 export async function testCommandInputs(workspace: string, output: string): Promise<void> {
   await testWasmOptimizer(workspace, output);
+  await testBinaryenToolchain(workspace, output);
+  await testWasmToolFingerprint(workspace, output);
+  await testCiBaseline(workspace);
+  await testGithubHistory();
+  await testCiEnvironment();
+  await testCiResolution();
+  await testCiBaselineCommand(workspace, output);
+  testDevcontainerContext(workspace);
+  testContainerRuntimeBootstrap(workspace);
+  testContainerPersistentState(workspace);
+  testExtensionAttach(workspace, output);
+  const { testExtensionHostBuild } = await import("../../../../💻️client/🧩️vscode/📦️packages/🟦️typescript/⚙️build/🧪️tests/🧩️host-build/🟦️.ts");
+  await testExtensionHostBuild(output);
+  const { testExtensionPackage } = await import("../../../../💻️client/🧩️vscode/📦️packages/🟦️typescript/⚙️build/🧪️tests/📦️package/🟦️.ts");
+  await testExtensionPackage(output);
+  await testCommandImportClosure(workspace, output);
+  await testTrunkLockfile(workspace);
+  const { testWgpuBootInputs } = await import("../../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🧪️tests/⚡️cache-inputs/🟦️.ts");
+  await testWgpuBootInputs(workspace, output);
+  const { testTypeScriptSourceInputs } = await import("../../../🕸️dependencies/🟦️typescript/🧪️tests/⚡️inputs/🟦️.ts");
+  await testTypeScriptSourceInputs(output);
+  const { testGeneratorInputReceipt } = await import("../../🔏️inputs/🧪️tests/🔏️receipt/🟦️.ts");
+  await testGeneratorInputReceipt(workspace, output);
+  const { testPluginCoreOptimization } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🧪️tests/🕸️native-optimization/🟦️.ts");
+  await testPluginCoreOptimization(workspace, output);
   testNxDaemonTaskEnvironment(workspace);
   testNxDaemonDiagnostics(workspace, output);
   testNxDaemonRetention(workspace, output);
@@ -55,7 +93,17 @@ export async function testCommandInputs(workspace: string, output: string): Prom
     for (const path of cases.included.filter((s: string) => !s.endsWith("Cargo.toml"))) assert.ok(dependencies.includes(join(root, path)), `rustc did not consume ${path}`);
     const entry = join(workspace, library, "⚡️caching/🦀️cargo/📜️script.ts"), actual = cacheInternals.relativeScriptInputs([entry], workspace);
     const built = await require("esbuild").build({ entryPoints: [entry], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
-    assert.deepEqual(actual, Object.keys(built.metafile.inputs).map((path) => "{workspaceRoot}/" + relative(workspace, resolve(workspace, path))).sort());
+    const expected = Object.keys(built.metafile.inputs).map((path) => "{workspaceRoot}/" + relative(workspace, resolve(workspace, path))).sort();
+    const missing = expected.filter(path => !actual.includes(path)), extra = actual.filter(path => !expected.includes(path));
+    assert.deepEqual({ missing: missing.slice(0, 20), extra: extra.slice(0, 20) }, { missing: [], extra: [] }, "Command import ownership must match the runtime compiler");
+    for (const [path, content] of Object.entries(cases.commandRouter.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }
+    assert.equal(typeof cacheInternals.nativeTargetCommandInputs, "function", "Native target normalization must inspect its executable router");
+    const routerInputs = cacheInternals.nativeTargetCommandInputs({ options: { cwd: cases.commandRouter.cwd, command: cases.commandRouter.command } }, root, []);
+    const routerPaths = routerInputs.filter((input: unknown) => typeof input === "string").map((input: string) => input.replace("{workspaceRoot}/", ""));
+    for (const path of cases.commandRouter.included) assert.ok(routerPaths.includes(path), `missing native command input ${path}`);
+    for (const path of cases.commandRouter.excluded) assert.ok(!routerPaths.includes(path), `unrelated native command input ${path}`);
+    const routerOracle = await require("esbuild").build({ entryPoints: [join(root, cases.commandRouter.entry)], absWorkingDir: root, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
+    assert.deepEqual(routerPaths.sort(), Object.keys(routerOracle.metafile.inputs).sort(), "Local native router closure must match the independent esbuild oracle");
     console.log("[DEBUG] Native input closure preserves rustc-consumed assets, excludes frontend and separate tests, and matches the esbuild command import oracle PASS");
     
     const boundaries = JSON.parse(readFileSync(join(fixtures, "command-boundaries/🧫️cases.json"), "utf8"));
@@ -290,6 +338,20 @@ export async function testNativePreparation(workspace: string, output: string): 
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/native-preparation");
   const cases = JSON.parse(readFileSync(join(fixtures, "🧫️cases.json"), "utf8"));
   assert.equal(require("jsonschema").validate(cases, JSON.parse(readFileSync(join(fixtures, "🛂️schema/🔣️.json"), "utf8"))).valid, true);
+  const generatedFiles = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts")).href);
+  assert.equal(typeof generatedFiles.writeGeneratedFileIfChanged, "function");
+  const writeRoot = mkdtempSync(join(output, "generated-write-"));
+  try {
+    for (const row of cases.generatedWrites) {
+      const target = join(writeRoot, `${row.name}.txt`);
+      writeFileSync(target, row.initial);
+      utimesSync(target, new Date(946684800000), new Date(946684800000));
+      const before = lstatSync(target).mtimeMs;
+      assert.equal(generatedFiles.writeGeneratedFileIfChanged(target, row.next), row.rewritten, row.name);
+      assert.equal(readFileSync(target, "utf8"), row.next, row.name);
+      assert.equal(lstatSync(target).mtimeMs === before, !row.rewritten, `${row.name}: mtime identity`);
+    }
+  } finally { rmSync(writeRoot, { recursive: true, force: true }); }
   const native = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts")).href);
   assert.equal(typeof native.validateNativeCargoArguments, "function");
   for (const row of cases.arguments) if (row.valid) assert.doesNotThrow(() => native.validateNativeCargoArguments(row.operation, row.args)); else assert.throws(() => native.validateNativeCargoArguments(row.operation, row.args), /input contract/);
@@ -300,6 +362,95 @@ export async function testNativePreparation(workspace: string, output: string): 
   await Bun.sleep(cases.artifactProgress.intervalMs * 4);
   stopProgress();
   assert.equal(progress.some((line) => new RegExp(cases.artifactProgress.pattern).test(line)), true, "artifact build progress must remain visible while Cargo waits");
+  const artifactRouterSource = readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/📜️script.ts"), "utf8");
+  for (const witness of cases.artifactTestRunner.required) assert.ok(artifactRouterSource.includes(witness), `artifact test router must use ${witness}`);
+  for (const witness of cases.artifactTestRunner.forbidden) assert.ok(!artifactRouterSource.includes(witness), `artifact test router must not use ${witness}`);
+  const runnerRoot = mkdtempSync(join(output, "artifact-test-runner-"));
+  const capture = join(runnerRoot, "commands.jsonl"), stub = join(runnerRoot, "📜️script.ts");
+  const argv = process.argv, path = process.env.PATH, level = process.env.SEMIO_TEST_LEVEL, coverage = process.env.SEMIO_COVERAGE, artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR, testBudget = process.env.SEMIO_TEST_BUDGET_MS, buildBudget = process.env.SEMIO_BUILD_BUDGET_MS;
+  try {
+    writeFileSync(stub, `#!/usr/bin/env bun
+import { appendFileSync } from "node:fs";
+const args = process.argv.slice(2);
+appendFileSync(process.env.SEMIO_ARTIFACT_TEST_CAPTURE!, JSON.stringify(args) + "\\n");
+if (args[0] === "nextest" && args[1] === "list") console.log("{}");
+`);
+    chmodSync(stub, 0o755);
+    if (process.platform === "win32") writeFileSync(join(runnerRoot, "cargo.cmd"), `@bun "%~dp0📜️script.ts" %*\r\n`);
+    else symlinkSync("📜️script.ts", join(runnerRoot, "cargo"));
+    const artifactDir = join(runnerRoot, "artifacts"); mkdirSync(artifactDir);
+    process.env.PATH = runnerRoot + delimiter + (path ?? "");
+    process.env.SEMIO_ARTIFACT_TEST_CAPTURE = capture;
+    process.env.SEMIO_TEST_ARTIFACT_DIR = artifactDir;
+    process.env.SEMIO_TEST_BUDGET_MS = "5000";
+    process.env.SEMIO_BUILD_BUDGET_MS = "5000";
+    delete process.env.SEMIO_COVERAGE;
+    process.argv = [process.execPath, "artifact-test-fixture", "test", ...cases.artifactTestRunner.segments];
+    const packageRoot = join(workspace, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust");
+    const artifactRunner = await import("../../📦️artifacts/🦀️rust/📜️script.ts");
+    await artifactRunner.runArtifactRustPackageMain(packageRoot, "semio-s-artifact-stdio-pdf");
+    assert.equal(process.env.SEMIO_TEST_LEVEL, cases.artifactTestRunner.level);
+    const commands = readFileSync(capture, "utf8").trim().split(/\r?\n/u).map(line => JSON.parse(line) as string[]);
+    const listed = commands.find(args => args[0] === "nextest" && args[1] === "list"), executed = commands.find(args => args[0] === "nextest" && args[1] === "run");
+    assert.ok(listed?.includes("--lib") && listed.includes(cases.artifactTestRunner.level), "artifact test build must preserve selection and level profile");
+    assert.ok(cases.artifactTestRunner.runtimeFilters.every((filter: string) => executed?.includes(filter)) && executed?.includes("--nocapture"), "artifact test execution must preserve level-looking runtime filters and libtest filters");
+    const skips = executed!.flatMap((argument, index) => argument === "--skip" ? [executed![index + 1]] : []);
+    for (const excluded of cases.artifactTestRunner.includedSkips) assert.ok(skips.includes(excluded), `artifact test level must skip ${excluded}`);
+    for (const included of cases.artifactTestRunner.excludedSkips) assert.ok(!skips.includes(included), `artifact test level must retain ${included}`);
+    assert.ok(commands.every(args => args[0] !== "test"), "artifact test router must not bypass the budgeted Nextest runner");
+  } finally {
+    process.argv = argv;
+    const restore = (name: string, value: string | undefined): void => { if (value === undefined) delete process.env[name]; else process.env[name] = value; };
+    restore("PATH", path); restore("SEMIO_TEST_LEVEL", level); restore("SEMIO_COVERAGE", coverage); restore("SEMIO_TEST_ARTIFACT_DIR", artifacts); restore("SEMIO_TEST_BUDGET_MS", testBudget); restore("SEMIO_BUILD_BUDGET_MS", buildBudget); delete process.env.SEMIO_ARTIFACT_TEST_CAPTURE;
+    rmSync(runnerRoot, { recursive: true, force: true });
+  }
+  const captureRoot = mkdtempSync(join(output, "artifact-capture-"));
+  const capturePath = process.env.PATH;
+  try {
+    const packageRoot = join(captureRoot, "package"), dependencyRoot = join(captureRoot, "dependency"), binRoot = join(captureRoot, "bin");
+    const dependency = join(captureRoot, "target/deps/libfixture_dependency.rlib"), primary = join(captureRoot, "target/libfixture_primary.rlib"), stub = join(binRoot, "📜️script.ts");
+    mkdirSync(packageRoot, { recursive: true }); mkdirSync(dependencyRoot, { recursive: true }); mkdirSync(dirname(dependency), { recursive: true }); mkdirSync(binRoot, { recursive: true });
+    writeFileSync(join(packageRoot, "Cargo.toml"), "[package]\nname='fixture-primary'\nversion='0.0.0'\n");
+    writeFileSync(stub, `#!/usr/bin/env bun
+import { rmSync, writeFileSync } from "node:fs";
+const dependency = process.env.SEMIO_CAPTURE_DEPENDENCY!, primary = process.env.SEMIO_CAPTURE_PRIMARY!;
+rmSync(dependency, { force: true });
+if (process.env.SEMIO_CAPTURE_MISSING !== "1") writeFileSync(dependency, process.env.SEMIO_CAPTURE_DEPENDENCY_BYTES!);
+writeFileSync(primary, process.env.SEMIO_CAPTURE_PRIMARY_BYTES!);
+console.log(JSON.stringify({ reason: "compiler-artifact", package_id: "path+" + process.env.SEMIO_CAPTURE_DEPENDENCY_URL + "#fixture-dependency@0.0.0", target: { kind: ["lib"], name: "fixture_dependency" }, filenames: [dependency] }));
+if (process.env.SEMIO_CAPTURE_MISSING === "1") await Bun.sleep(30000);
+console.log(JSON.stringify({ reason: "compiler-artifact", package_id: "path+" + process.env.SEMIO_CAPTURE_PRIMARY_URL + "#fixture-primary@0.0.0", target: { kind: ["lib"], name: "fixture_primary" }, filenames: [primary] }));
+await Bun.sleep(Number(process.env.SEMIO_CAPTURE_DELAY_MS));
+rmSync(dependency);
+writeFileSync(dependency, process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES!);
+`);
+    chmodSync(stub, 0o755);
+    if (process.platform === "win32") writeFileSync(join(binRoot, "cargo.cmd"), `@bun "%~dp0📜️script.ts" %*\r\n`);
+    else symlinkSync("📜️script.ts", join(binRoot, "cargo"));
+    process.env.PATH = binRoot + delimiter + (capturePath ?? "");
+    process.env.SEMIO_CAPTURE_DEPENDENCY = dependency;
+    process.env.SEMIO_CAPTURE_PRIMARY = primary;
+    process.env.SEMIO_CAPTURE_DEPENDENCY_URL = pathToFileURL(dependencyRoot).href;
+    process.env.SEMIO_CAPTURE_PRIMARY_URL = pathToFileURL(packageRoot).href;
+    process.env.SEMIO_CAPTURE_DEPENDENCY_BYTES = cases.artifactCapture.dependency;
+    process.env.SEMIO_CAPTURE_PRIMARY_BYTES = cases.artifactCapture.primary;
+    process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES = cases.artifactCapture.replacement;
+    process.env.SEMIO_CAPTURE_DELAY_MS = String(cases.artifactCapture.delayMs);
+    await native.buildCargoArtifacts("package/Cargo.toml", [], captureRoot);
+    assert.equal(readFileSync(join(packageRoot, "dist/build/deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "Cargo dependency must be captured before a successor can replace its shared output");
+    assert.equal(readFileSync(join(packageRoot, "dist/build/libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "Cargo primary output must be captured from the same compiler event epoch");
+    process.env.SEMIO_CAPTURE_MISSING = "1";
+    const failureStarted = Date.now();
+    await assert.rejects(native.buildCargoArtifacts("package/Cargo.toml", [], captureRoot), /ENOENT/);
+    assert.ok(Date.now() - failureStarted < 5000, "A capture failure must cancel and await Cargo without leaving the build alive");
+    assert.equal(readFileSync(join(packageRoot, "dist/build/deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "A capture failure must preserve the previous dependency output");
+    assert.equal(readFileSync(join(packageRoot, "dist/build/libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "A capture failure must preserve the previous primary output");
+    assert.equal(readdirSync(join(packageRoot, "dist")).some((name) => name.startsWith("cargo-artifacts-")), false, "A capture failure must remove its private directory");
+  } finally {
+    process.env.PATH = capturePath;
+    for (const name of ["SEMIO_CAPTURE_DEPENDENCY", "SEMIO_CAPTURE_PRIMARY", "SEMIO_CAPTURE_DEPENDENCY_URL", "SEMIO_CAPTURE_PRIMARY_URL", "SEMIO_CAPTURE_DEPENDENCY_BYTES", "SEMIO_CAPTURE_PRIMARY_BYTES", "SEMIO_CAPTURE_REPLACEMENT_BYTES", "SEMIO_CAPTURE_DELAY_MS", "SEMIO_CAPTURE_MISSING"]) delete process.env[name];
+    rmSync(captureRoot, { recursive: true, force: true });
+  }
   const root = mkdtempSync(join(output, "native-preparation-"));
   try {
     for (const [path, content] of Object.entries(cases.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }
@@ -524,7 +675,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     await testNxTooling(root, ticketOutput(root, []));
     await testDependencyCancellation(root, ticketOutput(root, []));
     console.log("[DEBUG] Native command contracts passed; collecting project inventory");
-    const result = inventory(root), contracts = result.projects;
+    const result = await (await import("../../📇️inventory/🧪️tests/🕸️coverage/🟦️.ts")).testNativeInventory(root, inventory), contracts = result.projects;
     console.log(`[DEBUG] Project inventory collected: ${contracts.length} projects`);
     const toml = createRequire(testSource.url)("@iarna/toml");
     let componentPackages = 0;
@@ -542,7 +693,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       for (const row of vectors.materialization.profiles) {
         const target = project.targets[row.target], shared = contracts.find((project) => project.name === vectors.materialization.project)?.targets[row.support];
         assert.equal(target?.cache, true, `${project.name}:${row.target} needs a materialization producer`);
-        assert.deepEqual(target.dependsOn, [row.component, `${vectors.materialization.project}:${row.support}`]);
+        assert.deepEqual(target.dependsOn, [row.component, `${vectors.materialization.project}:${row.support}`, ...row.tooling]);
         assert.deepEqual(target.outputs, [`{workspaceRoot}/${vectors.materialization.root}/dist/${row.profile}/🔌️plugin-modules/${moduleDirectory}`]);
         assert.ok(target.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
         assert.ok(target.options.command.includes(`materialize ${row.profile} --manifest`));
@@ -669,7 +820,14 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.equal(target.cache, true, `${id} must cache its verified deliverables`);
       assert.deepEqual(target.outputs, authority.outputRoots.map((output: any) => `{workspaceRoot}/${output.path}`), id);
       for (const path of authority.inputPatterns) assert.ok(target.inputs.includes(`{workspaceRoot}/${path}`), `${id} missing ${path}`);
-      if (authority.inputDiscovery) assert.ok(target.inputs.some((input: any) => input.runtime?.includes("generator-inputs")), `${id} must hash discovered membership and ignored source bytes`);
+      if (authority.inputDiscovery) {
+        const fingerprint = policy.generatorInputs[authority.inputDiscovery.kind], separator = fingerprint.target.lastIndexOf(":"), owner = contracts.find((project) => project.name === fingerprint.target.slice(0, separator));
+        const guard = owner.targets[fingerprint.target.slice(separator + 1)];
+        assert.ok(target.inputs.some((input: any) => input.dependentTasksOutputFiles === fingerprint.output), `${id} must hash the discovered input receipt`);
+        assert.ok(!target.inputs.some((input: any) => input.runtime?.includes("generator-inputs")), `${id} must not repeat discovery inside the hasher`);
+        assert.ok(target.dependsOn.includes(fingerprint.target)); assert.equal(guard.cache, false);
+        assert.deepEqual(guard.outputs, [`{workspaceRoot}/${fingerprint.output}`]);
+      }
       if (authority.checkTarget) assert.equal(project.targets[authority.checkTarget.slice(authority.checkTarget.lastIndexOf(":") + 1)].cache, false, `${id} freshness checks must inspect current bytes`);
     }
     const [validatedProject, validatedTarget] = vectors.validationPrerequisite.target.split(":");

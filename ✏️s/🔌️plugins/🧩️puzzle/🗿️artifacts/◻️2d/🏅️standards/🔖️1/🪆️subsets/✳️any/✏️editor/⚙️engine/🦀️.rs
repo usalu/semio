@@ -25,12 +25,7 @@
 //! that consumer's file; two or more consumers put it here.
 
 pub use canvas::{CubicBez, Point, Vec2};
-pub use semio_framework_graph::canvas;
-pub use semio_framework_graph::{
-    apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_normal_undirected_redraw_layout_to_fixture_v1_json,
-    apply_redraw_layout_to_fixture_v1_json as apply_ported_redraw_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_value, GraphExtension,
-};
-pub use semio_framework_os_infinite::{self as graph, *};
+pub use semio_framework_os_infinite::{self as graph, apply_redraw_layout_to_fixture_v1_json as apply_ported_redraw_layout_to_fixture_v1_json, *};
 
 //#region 🔖️Puzzle2dExtension
 /// 🧩️ Puzzle 2d domain extension over the property graph canvas.

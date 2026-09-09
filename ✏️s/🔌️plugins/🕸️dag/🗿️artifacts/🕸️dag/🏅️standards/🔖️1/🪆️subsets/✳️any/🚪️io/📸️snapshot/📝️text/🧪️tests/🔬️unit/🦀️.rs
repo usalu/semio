@@ -1,11 +1,10 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn dump_example_dsl_when_requested() {
     if std::env::var("DUMP_DAG_EXAMPLE").is_ok() {
         use crate::snapshot::schema::DagSnapshot;
-        use crate::{DAG_DOCUMENT_SCHEMA, DagFixtureEdge, DagNodeSpec, dag_content_child_with_owner};
+        use crate::{dag_content_child_with_owner, DagFixtureEdge, DagNodeSpec, DAG_DOCUMENT_SCHEMA};
         let nodes = vec![DagNodeSpec { id: "slider-a".into(), name: "A".into(), ..Default::default() }, DagNodeSpec { id: "slider-b".into(), name: "B".into(), x: 200.0, ..Default::default() }];
         let edges = vec![DagFixtureEdge { id: "edge-1".into(), source: "slider-a@out".into(), target: "slider-b@in".into(), ..Default::default() }];
         let content = dag_content_child_with_owner(nodes, edges);

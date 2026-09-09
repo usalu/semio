@@ -1,0 +1,5 @@
+# 🧬️ DisconnectNodes mutation payload.
+
+type DisconnectNodes {
+  edgeId: String!
+}

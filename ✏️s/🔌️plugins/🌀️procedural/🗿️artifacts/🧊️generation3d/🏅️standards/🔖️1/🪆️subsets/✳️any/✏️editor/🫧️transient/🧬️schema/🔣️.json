@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/procedural/3d/transient/schema.json",
+  "title": "Generation3dTransient",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "generationPreviewText": {
+      "anyOf": [{ "type": "string" }, { "type": "null" }],
+      "x-semio-state": "ephemeral-local-app"
+    }
+  }
+}

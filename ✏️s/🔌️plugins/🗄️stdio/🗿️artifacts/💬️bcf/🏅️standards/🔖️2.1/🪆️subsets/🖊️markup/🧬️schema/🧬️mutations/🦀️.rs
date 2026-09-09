@@ -29,6 +29,20 @@ use crate::BcfSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Mutations
+#[path = "🗨️insert-comment/🦀️.rs"]
+pub mod insert_comment;
+#[path = "📌insert-topic/🦀️.rs"]
+pub mod insert_topic;
+#[path = "👁️insert-viewpoint/🦀️.rs"]
+pub mod insert_viewpoint;
+#[path = "🧹remove-comment/🦀️.rs"]
+pub mod remove_comment;
+#[path = "🗑️remove-topic/🦀️.rs"]
+pub mod remove_topic;
+#[path = "🙈remove-viewpoint/🦀️.rs"]
+pub mod remove_viewpoint;
+#[path = "✏️set-comment/🦀️.rs"]
+pub mod set_comment;
 /// 📐️ Typed content mutation for `stdio.bcf`.
 /// 🧪️ F6 CONFIRMED (real `cargo check` error, `dsl::DslOps` attempted and reverted): fails for
 /// the mutation-side twin of the diff's blockers — `SetSnapshot{snapshot: BcfSnapshot}`
@@ -45,24 +59,10 @@ use protocol::Mutation;
 //#region 🔖️Leaves
 #[path = "🗃️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🔢set-version/🦀️.rs"]
-pub mod set_version;
-#[path = "📌insert-topic/🦀️.rs"]
-pub mod insert_topic;
-#[path = "🗑️remove-topic/🦀️.rs"]
-pub mod remove_topic;
 #[path = "🖊️set-topic-markup/🦀️.rs"]
 pub mod set_topic_markup;
-#[path = "🗨️insert-comment/🦀️.rs"]
-pub mod insert_comment;
-#[path = "🧹remove-comment/🦀️.rs"]
-pub mod remove_comment;
-#[path = "✏️set-comment/🦀️.rs"]
-pub mod set_comment;
-#[path = "👁️insert-viewpoint/🦀️.rs"]
-pub mod insert_viewpoint;
-#[path = "🙈remove-viewpoint/🦀️.rs"]
-pub mod remove_viewpoint;
+#[path = "🔢set-version/🦀️.rs"]
+pub mod set_version;
 #[path = "📷set-viewpoint-camera/🦀️.rs"]
 pub mod set_viewpoint_camera;
 #[path = "🧱set-viewpoint-components/🦀️.rs"]
@@ -151,17 +151,25 @@ pub(crate) fn agg_diff(this: &BcfMutation, base: &BcfSnapshot) -> protocol::Muta
                 viewpoints: None,
             },
         ),
-        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid, comment }) => wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![comment.clone()] }), ..Default::default() }),
-        BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid, guid }) => wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), ..Default::default() }),
+        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid, comment }) => {
+            wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![comment.clone()] }), ..Default::default() })
+        }
+        BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid, guid }) => {
+            wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), ..Default::default() })
+        }
         BcfMutation::SetComment(set_comment::SetComment { topic_guid, guid, date, author, text, viewpoint_ref }) => {
             wrap_comment_diff(topic_guid, guid, BcfCommentDiff { date: date.clone(), author: author.clone(), text: text.clone(), viewpoint_ref: viewpoint_ref.clone() })
         }
         BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid, viewpoint }) => {
             wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![viewpoint.clone()] }), ..Default::default() })
         }
-        BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid, guid }) => wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), ..Default::default() }),
+        BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid, guid }) => {
+            wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), ..Default::default() })
+        }
         BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid, guid, camera }) => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: Some(camera.clone()), components: None, snapshot: None }),
-        BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid, guid, components }) => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None }),
+        BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid, guid, components }) => {
+            wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None })
+        }
         BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid, guid, snapshot }) => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: None, snapshot: Some(snapshot.clone()) }),
     })
 }
@@ -335,7 +343,9 @@ fn parse_bcf_mutation(line: &str) -> Result<BcfMutation, String> {
         "insert-viewpoint" => Ok(BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: dec_str(arg("topic-guid")?)?, viewpoint: dec_viewpoint(arg("viewpoint")?)? })),
         "remove-viewpoint" => Ok(BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)? })),
         "set-viewpoint-camera" => Ok(BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)?, camera: decode_option(arg("camera")?, dec_camera)? })),
-        "set-viewpoint-components" => Ok(BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)?, components: decode_option(arg("components")?, dec_components)? })),
+        "set-viewpoint-components" => {
+            Ok(BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)?, components: decode_option(arg("components")?, dec_components)? }))
+        }
         "set-viewpoint-snapshot" => Ok(BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)?, snapshot: decode_option(arg("snapshot")?, dec_bytes)? })),
         other => Err(format!("bcf mutation: unknown keyword {other:?}")),
     }
@@ -590,14 +600,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
         BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "keep".into(), comment: base.topics[0].comments[0].clone() }),
         BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: "keep".into(), guid: "c-keep".into() }),
         BcfMutation::SetComment(set_comment::SetComment { topic_guid: "keep".into(), guid: "c-keep".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) }),
-        BcfMutation::SetComment(set_comment::SetComment {
-            topic_guid: "keep".into(),
-            guid: "c-keep".into(),
-            date: Some("2025-01-01T00:00:00+00:00".into()),
-            author: Some("a@example.com".into()),
-            text: None,
-            viewpoint_ref: Some(Some("vp2".into())),
-        }),
+        BcfMutation::SetComment(set_comment::SetComment { topic_guid: "keep".into(), guid: "c-keep".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: Some("a@example.com".into()), text: None, viewpoint_ref: Some(Some("vp2".into())) }),
         BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "keep".into(), viewpoint: base.topics[0].viewpoints[0].clone() }),
         BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "keep".into(), guid: "vp-keep".into() }),
         BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "keep".into(), guid: "vp-keep".into(), camera: base.topics[0].viewpoints[0].camera.clone() }),

@@ -78,7 +78,12 @@ type IndexedDiffRef<'a, D, T> = (&'a [usize], &'a [(usize, D)], &'a [(usize, T)]
 /// everything else (index transport, annihilate-on-remove, patch-into-added) is the recipe's
 /// normative algorithm, identical for `vlrs` and `points`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>((d1_removed, d1_modified, d1_added): IndexedDiffRef<'_, D, Item>, (d2_removed, d2_modified, d2_added): IndexedDiffRef<'_, D, Item>, absorb_field: impl Fn(&mut D, D), patch_item: impl Fn(&mut Item, &D)) -> IndexedDiffParts<D, Item> {
+fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
+    (d1_removed, d1_modified, d1_added): IndexedDiffRef<'_, D, Item>,
+    (d2_removed, d2_modified, d2_added): IndexedDiffRef<'_, D, Item>,
+    absorb_field: impl Fn(&mut D, D),
+    patch_item: impl Fn(&mut Item, &D),
+) -> IndexedDiffParts<D, Item> {
     let max_ref =
         d1_removed.iter().copied().chain(d1_modified.iter().map(|(i, _)| *i)).chain(d1_added.iter().map(|(i, _)| *i)).chain(d2_removed.iter().copied()).chain(d2_modified.iter().map(|(i, _)| *i)).chain(d2_added.iter().map(|(i, _)| *i)).max();
     let l1 = max_ref.map_or(0, |m| m + 2);

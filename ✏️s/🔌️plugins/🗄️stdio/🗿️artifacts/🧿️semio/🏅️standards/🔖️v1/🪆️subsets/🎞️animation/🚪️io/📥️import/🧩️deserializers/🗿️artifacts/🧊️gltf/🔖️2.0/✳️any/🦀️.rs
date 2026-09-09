@@ -15,12 +15,12 @@
 //! `AnimInterpolation::CubicSpline` is still recorded (informational -- see the reverse direction's
 //! own doc comment on why it downgrades on export).
 
-use semio_s_artifact_stdio_gltf::engine::decode_accessor;
-use semio_s_artifact_stdio_gltf::schema::snapshot::GltfAnimationPath;
-use semio_s_artifact_stdio_gltf::GltfSnapshot;
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use semio_s_artifact_stdio_gltf::engine::decode_accessor;
+use semio_s_artifact_stdio_gltf::schema::snapshot::GltfAnimationPath;
+use semio_s_artifact_stdio_gltf::GltfSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };

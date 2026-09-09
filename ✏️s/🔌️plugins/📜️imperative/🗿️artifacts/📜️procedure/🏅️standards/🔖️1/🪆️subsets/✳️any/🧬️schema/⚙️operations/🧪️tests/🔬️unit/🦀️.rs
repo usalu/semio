@@ -1,10 +1,9 @@
-
 use super::*;
-use crate::Dictionary;
 use crate::schema::default_snapshot;
+use crate::Dictionary;
 use neural_engine::{Atom, Value};
-use protocol::SemanticMutation;
 use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use protocol::SemanticMutation;
 
 use std::collections::BTreeMap;
 

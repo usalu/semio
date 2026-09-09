@@ -1,6 +1,5 @@
-
 use super::*;
-use protocol::{Mutation, MutationDiff, fold_plan_diff, fold_plan_inverse};
+use protocol::{fold_plan_diff, fold_plan_inverse, Mutation, MutationDiff};
 use semio_framework_artifact_flow_flow::Widget;
 
 fn base_with_source_widget() -> FlowSnapshot {

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;

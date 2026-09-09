@@ -1,4 +1,3 @@
-
 use super::*;
 #[test]
 fn vector_layer_vectors_match_the_json_oracle() {

@@ -22,33 +22,33 @@ use protocol::MutationDiff;
 use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutation
+#[path = "📻insert-channel/🦀️.rs"]
+pub mod insert_channel;
+#[path = "🔑insert-keyframe/🦀️.rs"]
+pub mod insert_keyframe;
+#[path = "🎬insert-timeline/🦀️.rs"]
+pub mod insert_timeline;
+#[path = "🗑️remove-channel/🦀️.rs"]
+pub mod remove_channel;
+#[path = "🔓remove-keyframe/🦀️.rs"]
+pub mod remove_keyframe;
+#[path = "🧹remove-timeline/🦀️.rs"]
+pub mod remove_timeline;
+#[path = "📈set-channel-interpolation/🦀️.rs"]
+pub mod set_channel_interpolation;
+#[path = "🎯set-channel-target/🦀️.rs"]
+pub mod set_channel_target;
+#[path = "🕐set-keyframe-time/🦀️.rs"]
+pub mod set_keyframe_time;
+#[path = "🔢set-keyframe-value/🦀️.rs"]
+pub mod set_keyframe_value;
 /// 🏷️ Variant ordinals for the real binary `OpBinary` frame below (`tag u8`) — declaration order,
 /// 0-11. Must stay in lockstep with `variant_ordinal`/`OP_KEYWORDS`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🎬insert-timeline/🦀️.rs"]
-pub mod insert_timeline;
-#[path = "🧹remove-timeline/🦀️.rs"]
-pub mod remove_timeline;
 #[path = "🏷️set-timeline-name/🦀️.rs"]
 pub mod set_timeline_name;
-#[path = "📻insert-channel/🦀️.rs"]
-pub mod insert_channel;
-#[path = "🗑️remove-channel/🦀️.rs"]
-pub mod remove_channel;
-#[path = "🎯set-channel-target/🦀️.rs"]
-pub mod set_channel_target;
-#[path = "📈set-channel-interpolation/🦀️.rs"]
-pub mod set_channel_interpolation;
-#[path = "🔑insert-keyframe/🦀️.rs"]
-pub mod insert_keyframe;
-#[path = "🔓remove-keyframe/🦀️.rs"]
-pub mod remove_keyframe;
-#[path = "🕐set-keyframe-time/🦀️.rs"]
-pub mod set_keyframe_time;
-#[path = "🔢set-keyframe-value/🦀️.rs"]
-pub mod set_keyframe_value;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -79,20 +79,8 @@ pub enum SemioAnimationMutation {
 /// this subset's wire keywords are the two-letter `OP_KEYWORDS` tags (`IT`, `KV`, …), so the two
 /// tables are related only by position; `kinds_match_the_enum_and_the_catalog` below asserts that
 /// positional agreement rather than string equality.
-pub const KINDS: &[&str] = &[
-    "set-snapshot",
-    "insert-timeline",
-    "remove-timeline",
-    "set-timeline-name",
-    "insert-channel",
-    "remove-channel",
-    "set-channel-target",
-    "set-channel-interpolation",
-    "insert-keyframe",
-    "remove-keyframe",
-    "set-keyframe-time",
-    "set-keyframe-value",
-];
+pub const KINDS: &[&str] =
+    &["set-snapshot", "insert-timeline", "remove-timeline", "set-timeline-name", "insert-channel", "remove-channel", "set-channel-target", "set-channel-interpolation", "insert-keyframe", "remove-keyframe", "set-keyframe-time", "set-keyframe-value"];
 //#endregion 🔖️Mutation
 
 //#region 🔖️DiffBuilders
@@ -165,8 +153,12 @@ pub(crate) fn agg_diff(this: &SemioAnimationMutation, base: &SemioAnimationSnaps
         InsertChannel(insert_channel::InsertChannel { timeline_index, index, channel }) => diff_channel_collection(*timeline_index, IndexedTripleDiff { added: vec![IndexAdded { index: *index, item: channel.clone() }], ..Default::default() }),
         RemoveChannel(remove_channel::RemoveChannel { timeline_index, index }) => diff_channel_collection(*timeline_index, IndexedTripleDiff { removed: vec![*index], ..Default::default() }),
         SetChannelTarget(set_channel_target::SetChannelTarget { timeline_index, index, target }) => diff_channel_field(*timeline_index, *index, AnimChannelDiff { target: Some(target.clone()), interpolation: None, keyframes: None }),
-        SetChannelInterpolation(set_channel_interpolation::SetChannelInterpolation { timeline_index, index, interpolation }) => diff_channel_field(*timeline_index, *index, AnimChannelDiff { target: None, interpolation: Some(*interpolation), keyframes: None }),
-        InsertKeyframe(insert_keyframe::InsertKeyframe { timeline_index, channel_index, index, keyframe }) => diff_keyframe_collection(*timeline_index, *channel_index, IndexedTripleDiff { added: vec![IndexAdded { index: *index, item: keyframe.clone() }], ..Default::default() }),
+        SetChannelInterpolation(set_channel_interpolation::SetChannelInterpolation { timeline_index, index, interpolation }) => {
+            diff_channel_field(*timeline_index, *index, AnimChannelDiff { target: None, interpolation: Some(*interpolation), keyframes: None })
+        }
+        InsertKeyframe(insert_keyframe::InsertKeyframe { timeline_index, channel_index, index, keyframe }) => {
+            diff_keyframe_collection(*timeline_index, *channel_index, IndexedTripleDiff { added: vec![IndexAdded { index: *index, item: keyframe.clone() }], ..Default::default() })
+        }
         RemoveKeyframe(remove_keyframe::RemoveKeyframe { timeline_index, channel_index, index }) => diff_keyframe_collection(*timeline_index, *channel_index, IndexedTripleDiff { removed: vec![*index], ..Default::default() }),
         SetKeyframeTime(set_keyframe_time::SetKeyframeTime { timeline_index, channel_index, index, t }) => diff_keyframe_field(*timeline_index, *channel_index, *index, AnimKeyframeDiff { t: Some(*t), value: None }),
         SetKeyframeValue(set_keyframe_value::SetKeyframeValue { timeline_index, channel_index, index, value }) => diff_keyframe_field(*timeline_index, *channel_index, *index, AnimKeyframeDiff { t: None, value: Some(value.clone()) }),

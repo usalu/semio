@@ -164,7 +164,9 @@ fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutat
         Process3dMutationDsl::ReplaceMachineCapabilities { id, new_capabilities } => Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::ReplaceMachineCapabilities { id, new_capabilities }),
         Process3dMutationDsl::MoveStock { new_pose } => Process3dMutation::MoveStock(move_stock::MoveStock { new_pose }),
         Process3dMutationDsl::ChangeStockLabel { new_label } => Process3dMutation::ChangeStockLabel(change_stock_label::ChangeStockLabel { new_label }),
-        Process3dMutationDsl::ReplaceStockSolid { new_solid_json } => Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid: semio_framework_os_kernel::json::from_json_str(&new_solid_json).expect("valid ArtifactChild json") }),
+        Process3dMutationDsl::ReplaceStockSolid { new_solid_json } => {
+            Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid: semio_framework_os_kernel::json::from_json_str(&new_solid_json).expect("valid ArtifactChild json") })
+        }
         Process3dMutationDsl::ChangeCursor { new_resolved_up_to } => Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to }),
     }
 }

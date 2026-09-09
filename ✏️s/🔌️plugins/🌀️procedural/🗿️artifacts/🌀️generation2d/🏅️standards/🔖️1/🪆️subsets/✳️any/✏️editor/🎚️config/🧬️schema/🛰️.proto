@@ -7,9 +7,6 @@ message Generation2dConfig {
   string show_mode = 2;
   // @state config
   optional string selected_generation_id = 3;
-  // @state config
-  optional string generation_preview_text = 4;
-  // @state config
 }
 message CameraJson {
   double x = 1;

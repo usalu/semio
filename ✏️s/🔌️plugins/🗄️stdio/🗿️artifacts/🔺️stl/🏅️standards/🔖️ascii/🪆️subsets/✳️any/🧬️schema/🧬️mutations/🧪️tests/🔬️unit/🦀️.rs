@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::schema::diff::{StlTriangleAdded, StlTriangleDiff, StlTriangleModified, StlTrianglesDiff};
 use protocol::command::DiffAlgebra;

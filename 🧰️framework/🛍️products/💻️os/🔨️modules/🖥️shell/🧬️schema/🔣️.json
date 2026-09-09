@@ -251,6 +251,7 @@
         "running",
         "offered",
         "approving",
+        "indeterminate",
         "applied",
         "cancelled",
         "stale",
@@ -2376,25 +2377,6 @@
         }
       }
     },
-    "UiAppearance": {
-      "title": "UiAppearance",
-      "description": "🎨️ Appearance preference.",
-      "type": "string",
-      "enum": [
-        "system",
-        "light",
-        "dark"
-      ]
-    },
-    "UiChromeLayout": {
-      "title": "UiChromeLayout",
-      "description": "📐️ User-selected desktop/tablet chrome layout.",
-      "type": "string",
-      "enum": [
-        "desktop",
-        "tablet"
-      ]
-    },
     "UiDriver": {
       "title": "UiDriver",
       "description": "🚗️ A user-defined UI driver.",
@@ -2414,100 +2396,6 @@
         },
         "config": {
           "description": "Driver-specific configuration; any JSON value."
-        }
-      }
-    },
-    "UiLocale": {
-      "title": "UiLocale",
-      "description": "🌐️ Interface language. English first, then German; a host MUST make an explicit choice — there is no default language.",
-      "type": "string",
-      "enum": [
-        "en",
-        "de"
-      ]
-    },
-    "UiPreferences": {
-      "title": "UiPreferences",
-      "description": "⚙️ Persisted local-only OS UI preferences. Null selected values mean the user has not chosen a value yet.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "appearance",
-        "layout",
-        "driverId",
-        "customDrivers",
-        "locale",
-        "terminology",
-        "themeId",
-        "customThemes",
-        "keybindingOverrides"
-      ],
-      "properties": {
-        "appearance": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/UiAppearance"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "layout": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/UiChromeLayout"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "driverId": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "customDrivers": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/UiDriver"
-          }
-        },
-        "locale": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/UiLocale"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "terminology": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "themeId": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "customThemes": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/UiTheme"
-          }
-        },
-        "keybindingOverrides": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
         }
       }
     },

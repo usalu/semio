@@ -127,8 +127,6 @@ export interface Din16798Diff {
   ductTestPressurePa?: number;
   /** @state artifact */
   ductLeakageM3SM2?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }
 
 export interface Din16798Artifact {
@@ -194,5 +192,4 @@ export interface Din16798Artifact {
   ductClass: string;
   ductTestPressurePa: number;
   ductLeakageM3SM2: number;
-  selectedCheckIndex?: number | null;
 }

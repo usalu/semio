@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -39,11 +38,10 @@ fn config_set_sun_round_trip_as_raw_json() {
 }
 
 #[test]
-fn config_set_generation_round_trips() {
+fn config_set_selected_generation_round_trips() {
     let base = Generation3dConfig::default();
-    let next = config_round_trip(&base, &Generation3dConfigMutation::SetGeneration { selected_generation_id: Some("generation-1".into()), generation_preview_text: Some("42".into()) });
+    let next = config_round_trip(&base, &Generation3dConfigMutation::SetSelectedGeneration { selected_generation_id: Some("generation-1".into()) });
     assert_eq!(next.selected_generation_id, Some("generation-1".to_string()));
-    assert_eq!(next.generation_preview_text, Some("42".to_string()));
 }
 
 #[test]
@@ -62,7 +60,7 @@ fn config_op_text_round_trips_every_variant() {
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetPreviewCamera { camera: Generation3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 } });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSun { json: "{}".into() });
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSelectedGeneration { selected_generation_id: Some("g1".into()) });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetPreviewEval { eval_text: Some("{}".into()) });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::Snapshot { config: Generation3dConfig::default() });
 }

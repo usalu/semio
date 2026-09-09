@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetGroupAssignment {
-        pub(crate) id: u64,
-        pub(crate) assignment: Option<SavGroupAssignment>,
-    }
+    pub(crate) id: u64,
+    pub(crate) assignment: Option<SavGroupAssignment>,
+}
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssignment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "group-assignment", kind: "set-group-assignment", record: "SetGroupAssignment" };

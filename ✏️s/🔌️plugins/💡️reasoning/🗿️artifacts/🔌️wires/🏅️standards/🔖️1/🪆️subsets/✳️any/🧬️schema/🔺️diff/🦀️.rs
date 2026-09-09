@@ -21,11 +21,5 @@ pub struct WiresDiff {
     pub camera: Option<DslValue>,
     #[state(artifact)]
     pub meta: Option<DslValue>,
-    #[state(artifact)]
-    pub drag_node_id: Option<Option<String>>,
-    #[state(artifact)]
-    pub drag_last_x: Option<f64>,
-    #[state(artifact)]
-    pub drag_last_y: Option<f64>,
 }
 //#endregion 🔖️Diff

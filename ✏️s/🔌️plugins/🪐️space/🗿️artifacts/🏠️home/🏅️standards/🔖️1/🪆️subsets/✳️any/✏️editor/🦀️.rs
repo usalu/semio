@@ -130,7 +130,7 @@ fn home_retained_reduce(
     if home_retained_extent(command, snapshot, _interaction).is_none() {
         return Err(Fault::from("space-home-retained-route-mismatch"));
     }
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 pub struct HomeRetainedCommandJobFactory { keys: Vec<ToolFactoryKey> }
@@ -559,11 +559,11 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .mutation("createStudio", LocalizedLabel::native("Create Studio", "Studio erstellen"))
         .shell_action("bindSpaceFile", LocalizedLabel::native("Bind Studio File", "Studio-Datei verknüpfen"))
         .mutation("importSpace", LocalizedLabel::native("Import Studio", "Studio importieren"))
-        .shell_action("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"))
-        .shell_action("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"), semio_framework_plugin::ActionKind::Shell, "folder-open"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"), semio_framework_plugin::ActionKind::Shell, "folder"))
         .mutation("deleteVirtualFileSystemNode", LocalizedLabel::native("Delete File System Node", "Dateisystemknoten löschen"))
-        .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"))
-        .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"), semio_framework_plugin::ActionKind::Shell, "home"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"), semio_framework_plugin::ActionKind::View, "panel-left"))
         // 🐙️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: the overview table's
         // row-scoped actions. Every one of these is a pure `Effect` relay (contract §C6) — never a
         // document mutation — so each is `.shell_action`, matching `openSpace`/`goHome` above, not

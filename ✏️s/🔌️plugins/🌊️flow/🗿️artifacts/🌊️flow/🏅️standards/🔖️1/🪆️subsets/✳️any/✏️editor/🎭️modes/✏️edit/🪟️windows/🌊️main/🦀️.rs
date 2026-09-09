@@ -1,11 +1,12 @@
 //! 🌊️ Flow play app — the main node-graph window: the editable flow canvas.
 
-use crate::FlowSnapshot;
 use crate::editor::flow::config::FlowConfig;
 use crate::editor::flow::host_from_snapshot;
 use crate::editor::flow::modes::edit::windows::main::options;
 use crate::editor::flow::terminology::FlowPlayLabels;
-use flow::{semio_framework_artifact_infinite_dag::DagFixture, flow_backed_node_graph_extras, FlowEvalSession};
+use crate::FlowSnapshot;
+use flow::{flow_backed_node_graph_extras, FlowEvalSession};
+use semio_framework_artifact_infinite_dag::DagFixture;
 use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport};

@@ -1,0 +1,44 @@
+{
+  "contract": {
+    "entries": [
+      "entry.ts"
+    ],
+    "generated": [
+      "generated.ts"
+    ],
+    "externalDependencies": []
+  },
+  "files": {
+    "entry.ts": "import type { Missing } from \"./missing.ts\";\nimport { value } from \"./branch.ts\";\nimport { generated } from \"./generated.ts\";\nexport type { Absent } from \"./absent.ts\";\nexport { type Inline } from \"./inline.ts\";\nexport const result = value + generated;\n",
+    "branch.ts": "export { value } from \"./leaf.ts\";\n",
+    "leaf.ts": "export const value = 20;\n",
+    "generated.ts": "export const generated = 22;\n",
+    "inline.ts": "export interface Inline {}\nconsole.log(\"inline-loaded\");\n"
+  },
+  "expected": [
+    "branch.ts",
+    "entry.ts",
+    "inline.ts",
+    "leaf.ts"
+  ],
+  "result": 42,
+  "rejected": [
+    {
+      "source": "export * from \"unlisted\";",
+      "reason": "external"
+    },
+    {
+      "source": "const path = \"./leaf.ts\"; export const value = import(path);",
+      "reason": "literal"
+    },
+    {
+      "source": "export * from \"../outside.ts\";",
+      "reason": "workspace"
+    },
+    {
+      "source": "export const value = require(\"./leaf.ts\");",
+      "reason": null
+    }
+  ],
+  "generatedImport": "export { value as generated } from \"./leaf.ts\";\n"
+}

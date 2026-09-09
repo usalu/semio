@@ -13,6 +13,5 @@
     "max_records": 4096,
     "max_field_length": 512,
     "max_nesting_depth": 8
-  },
-  "selectedCheckIndex": null
+  }
 }

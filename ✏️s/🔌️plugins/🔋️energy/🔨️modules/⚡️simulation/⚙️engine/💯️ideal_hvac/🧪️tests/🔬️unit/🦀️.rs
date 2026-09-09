@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn unlimited_system() -> IdealLoadsConfig {

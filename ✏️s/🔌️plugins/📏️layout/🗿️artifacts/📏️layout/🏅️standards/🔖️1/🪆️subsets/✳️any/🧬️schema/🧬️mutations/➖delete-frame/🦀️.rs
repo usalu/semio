@@ -1,10 +1,9 @@
 //! ➖️ `delete-frame` — removes a {@link Frame} from a page by id (and every layer's `object_ids`
 //! referencing it); inverse recreates it via `create-frame`.
 
-
-use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
-use crate::mutations::{LayoutMutation, create_frame};
+use crate::mutations::{create_frame, LayoutMutation};
 use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -34,7 +33,6 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteFrame {
 }
 //#endregion ➖️DeleteFrame
 
-
 //#region ➖️DeleteFrame
 pub fn diff_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
@@ -49,7 +47,6 @@ pub fn diff_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> protoc
     })
 }
 //#endregion ➖️DeleteFrame
-
 
 //#region ➖️DeleteFrame
 pub fn inverse_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

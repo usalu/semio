@@ -8,8 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 //#region 🗑️DeleteStep
 /// 🗑️ Removes a step by id, cascading to every block it carried. Inverse recreates it (with its
 /// captured base position and blocks) via `create-step`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[derive(dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct DeleteStep {
     pub id: String,

@@ -1,9 +1,9 @@
 //! ✏️ ✏️ Layout play app commands command — `add-frame`.
 
+use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::mutations::create_frame::CreateFrame;
 use crate::mutations::LayoutMutation;
 use crate::{Frame, LayoutSnapshot};
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

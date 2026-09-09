@@ -13,7 +13,6 @@
     "worldCameraFov": 45,
     "frameStreamId": "stream-a",
     "frameIndex": 2,
-    "activeUtilityId": "select",
     "reportTable": "frames"
   },
   "cases": [
@@ -34,7 +33,6 @@
             "worldCameraFov": 45,
             "frameStreamId": "stream-a",
             "frameIndex": 7,
-            "activeUtilityId": "select",
             "reportTable": "tracks"
           }
         }
@@ -53,7 +51,6 @@
         "worldCameraFov": 45,
         "frameStreamId": "stream-a",
         "frameIndex": 7,
-        "activeUtilityId": "select",
         "reportTable": "tracks"
       }
     }

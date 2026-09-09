@@ -16,9 +16,8 @@
   "fEdKn": null,
   "aEfMm2": null,
   "fVK": null,
-  "fireDurationMin": 60.0,
+  "fireDurationMin": 60,
   "sectionDepthMm": null,
   "aVertMS2": null,
-  "nCyclesBridge": null,
-  "selectedCheckIndex": null
+  "nCyclesBridge": null
 }

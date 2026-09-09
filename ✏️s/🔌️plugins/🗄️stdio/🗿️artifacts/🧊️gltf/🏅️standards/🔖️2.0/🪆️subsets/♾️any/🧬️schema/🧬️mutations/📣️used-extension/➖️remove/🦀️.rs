@@ -1,18 +1,32 @@
 //! 🧬️ Direct remove-used-extension mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::GltfSnapshot;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
+use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.remove-used-extension.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/extensionsUsed"];
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-pub struct GltfWithdrawUsedExtensionPayload { pub extension: String }
+pub struct GltfWithdrawUsedExtensionPayload {
+    pub extension: String,
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn validate(payload: &GltfWithdrawUsedExtensionPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if !base.document.extensions_used.contains(&payload.extension) { return Err(reject("gltf.mutation.extension-absent", "document/extensionsUsed", "extension is not declared")); }
-    if base.document.extensions_required.contains(&payload.extension) { return Err(reject("gltf.mutation.extension-required", "document/extensionsRequired", "remove the requirement first")); } Ok(()) }
+pub fn validate(payload: &GltfWithdrawUsedExtensionPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if !base.document.extensions_used.contains(&payload.extension) {
+        return Err(reject("gltf.mutation.extension-absent", "document/extensionsUsed", "extension is not declared"));
+    }
+    if base.document.extensions_required.contains(&payload.extension) {
+        return Err(reject("gltf.mutation.extension-required", "document/extensionsRequired", "remove the requirement first"));
+    }
+    Ok(())
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfWithdrawUsedExtensionPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.extensions_used.retain(|value| value != &payload.extension); Ok(next) }
+pub fn apply(payload: &GltfWithdrawUsedExtensionPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.extensions_used.retain(|value| value != &payload.extension);
+    Ok(next)
+}
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -28,7 +42,10 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for RemoveUsedExt
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => { match apply(payload, base) { Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
+            Self::Apply(payload) => match apply(payload, base) {
+                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+                Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
+            },
             Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
                 Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
                 Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),

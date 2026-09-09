@@ -7,8 +7,8 @@ use crate::model::{EntityId, FixedTable, Model, SurfaceClass};
 use crate::site::solar_position;
 #[cfg(test)]
 use crate::solar::beam_incidence_cosine;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️ZoneGeometry
 /// 📐️ Precomputed zone geometry.

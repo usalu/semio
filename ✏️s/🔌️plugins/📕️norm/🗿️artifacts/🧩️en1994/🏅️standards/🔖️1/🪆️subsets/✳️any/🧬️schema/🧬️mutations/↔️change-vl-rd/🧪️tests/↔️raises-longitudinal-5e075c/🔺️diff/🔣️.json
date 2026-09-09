@@ -6,7 +6,7 @@
   "mPla": null,
   "mPlRd": null,
   "eta": null,
-  "vLRd": 240.0,
+  "vLRd": 240,
   "insulationThicknessMm": null,
   "fireRating": null,
   "deckType": null,
@@ -21,6 +21,5 @@
   "spanM": null,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

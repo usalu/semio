@@ -1,6 +1,5 @@
 //! 📇 `change-catalog-id` — sets the DIN 4108 `catalog_id` scalar.
 
-
 use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload

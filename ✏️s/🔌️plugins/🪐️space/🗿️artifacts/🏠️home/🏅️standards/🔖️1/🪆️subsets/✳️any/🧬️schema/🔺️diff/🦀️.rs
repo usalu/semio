@@ -12,7 +12,5 @@ pub struct SHomeDiff {
     pub schema: Option<String>,
     #[state(artifact)]
     pub catalog_generation: Option<u64>,
-    #[state(config)]
-    pub active_panel_tab: Option<String>,
 }
 //#endregion 🔖️Diff

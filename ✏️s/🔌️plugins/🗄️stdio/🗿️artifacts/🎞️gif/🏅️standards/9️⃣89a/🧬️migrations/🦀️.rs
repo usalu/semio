@@ -92,7 +92,8 @@ pub fn register() {
         to: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "89a".into(), subset: "*".into() },
         lossless: true,
         migrate_pack: migrate_87a_to_89a_pack,
-    }).expect("static Stdio registration must be available and conflict-free");
+    })
+    .expect("static Stdio registration must be available and conflict-free");
 }
 //#endregion Registration
 

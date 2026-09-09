@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::wfc_engine::model::ModelBuilder;
 use crate::wfc_engine::oracle;
@@ -84,7 +83,10 @@ fn proves_unsat_on_odd_cycle_with_backtrack_mode() {
     let config = SearchConfig { mode: SearchMode::Backtrack, ..Default::default() };
     let outcome = solve(&model, &topo, &config, 1, None, &[]);
     match outcome {
-        SolveOutcome::Unsatisfiable(report) => assert!(report.proven),
+        SolveOutcome::Unsatisfiable(report) => {
+            assert!(report.proven);
+            assert_eq!(report.report.model_fingerprint, model.fingerprint());
+        }
         other => panic!("expected Unsatisfiable, got {other:?}"),
     }
 }
@@ -150,7 +152,20 @@ fn budget_exceeded_reports_partial_state() {
     let (model, topo, _arcs) = checkerboard_topology(30);
     let config = SearchConfig { budget: Budget { max_observations: Some(0), ..Default::default() }, ..Default::default() };
     let outcome = solve(&model, &topo, &config, 1, None, &[]);
-    assert!(matches!(outcome, SolveOutcome::BudgetExceeded { .. }));
+    let SolveOutcome::BudgetExceeded { partial, report } = outcome else {
+        panic!("expected BudgetExceeded");
+    };
+    assert_eq!(report.seed, 1);
+    assert_eq!(report.model_fingerprint, model.fingerprint());
+    assert_eq!(report.metrics.observations, 0);
+    assert_eq!(partial.domains.len(), partial.decided.len());
+    assert!(partial.domains.len() <= topo.node_count());
+    for (domain, decided) in partial.domains.iter().zip(&partial.decided) {
+        if let Some(pattern) = decided {
+            assert_eq!(domain.count_ones(), 1);
+            assert!(domain.get(*pattern));
+        }
+    }
 }
 
 #[test]
@@ -212,7 +227,20 @@ fn cancellation_stops_search_and_reports_partial() {
     cancel.cancel();
     let config = SearchConfig::default();
     let outcome = solve_cancellable(&model, &topo, &config, 1, None, &[], &cancel);
-    assert!(matches!(outcome, SolveOutcome::Cancelled { .. }));
+    let SolveOutcome::Cancelled { partial, report } = outcome else {
+        panic!("expected Cancelled");
+    };
+    assert_eq!(report.seed, 1);
+    assert_eq!(report.model_fingerprint, model.fingerprint());
+    assert_eq!(report.metrics.observations, 0);
+    assert_eq!(partial.domains.len(), partial.decided.len());
+    assert!(partial.domains.len() <= topo.node_count());
+    for (domain, decided) in partial.domains.iter().zip(&partial.decided) {
+        if let Some(pattern) = decided {
+            assert_eq!(domain.count_ones(), 1);
+            assert!(domain.get(*pattern));
+        }
+    }
 }
 
 #[test]
@@ -225,10 +253,26 @@ fn cancel_token_reflects_state() {
 
 #[test]
 fn restart_only_never_proves_unsat_on_unsatisfiable_instance() {
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔍️decoding-and-graphs/🔣️.json")).unwrap();
+    let row = &oracle["restart"];
+    let base = row["base"].as_u64().unwrap();
+    let geometric = RestartSchedule::Geometric { base, factor: row["factor"].as_f64().unwrap() };
+    let expected: Vec<u64> = serde_json::from_value(row["budgets"].clone()).unwrap();
+    for (attempt, budget) in expected.into_iter().enumerate() {
+        assert_eq!(geometric.backtrack_budget(attempt as u64), Some(budget));
+    }
     let (model, topo, _arcs) = k_graph(5, 4);
-    let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(3), restart_schedule: RestartSchedule::Fixed(5), ..Default::default() };
-    let outcome = solve(&model, &topo, &config, 1, None, &[]);
-    assert!(matches!(outcome, SolveOutcome::Contradiction(_)));
+    for restart_schedule in [RestartSchedule::Fixed(base), geometric] {
+        let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(row["maxRestarts"].as_u64().unwrap()), restart_schedule, ..Default::default() };
+        let outcome = solve(&model, &topo, &config, 1, None, &[]);
+        let SolveOutcome::Contradiction(failed) = outcome else {
+            panic!("expected restart exhaustion");
+        };
+        assert!(failed.node.index() < topo.node_count());
+        assert_eq!(failed.report.seed, 1);
+        assert_eq!(failed.report.model_fingerprint, model.fingerprint());
+        assert!(failed.report.metrics.restarts > 0);
+    }
 }
 
 #[test]

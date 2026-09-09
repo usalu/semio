@@ -1,0 +1,8 @@
+# 🧬️ ResizeNode mutation payload.
+
+type ResizeNode {
+  nodeId: String!
+  newRadius: Float
+  newWidth: Float
+  newHeight: Float
+}

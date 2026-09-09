@@ -9,21 +9,15 @@ use crate::wfc_engine::ids::{NodeId, PatternId};
 /// 🎯️ Scores a complete assignment. Lower is not inherently better or worse — [`BestOfN::keep`]
 /// decides the direction.
 pub trait SoftConstraint {
-    fn name(&self) -> &'static str;
     fn score(&self, assignment: &[PatternId]) -> f64;
 }
 
 /// 🎯️ A [`SoftConstraint`] built from a plain closure, for one-off scoring without a named type.
 pub struct ScoreFn<F: Fn(&[PatternId]) -> f64> {
-    pub name: &'static str,
     pub f: F,
 }
 
 impl<F: Fn(&[PatternId]) -> f64> SoftConstraint for ScoreFn<F> {
-    fn name(&self) -> &'static str {
-        self.name
-    }
-
     fn score(&self, assignment: &[PatternId]) -> f64 {
         (self.f)(assignment)
     }

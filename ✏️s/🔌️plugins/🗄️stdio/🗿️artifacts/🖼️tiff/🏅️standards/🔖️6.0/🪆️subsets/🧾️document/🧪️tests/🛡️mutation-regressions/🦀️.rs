@@ -151,11 +151,7 @@ mod tests {
         // IFD-level (index-keyed), Insert+Remove-before: insert a new IFD at 1 -> [ifd0,new],
         // then remove index 0 -> [new] lands at final index 0 (the recipe's own canonical
         // shift case).
-        assert_absorb_law(
-            &base,
-            TiffMutation::InsertIfd(InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(1, 1)] } }),
-            TiffMutation::RemoveIfd(RemoveIfdMutation { index: 0 }),
-        );
+        assert_absorb_law(&base, TiffMutation::InsertIfd(InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(1, 1)] } }), TiffMutation::RemoveIfd(RemoveIfdMutation { index: 0 }));
 
         // IFD-level, Insert+Insert-same-index: both survive.
         assert_absorb_law(
@@ -173,25 +169,13 @@ mod tests {
         );
 
         // Tag-level, Modify+Remove: a pending field patch on a since-removed base tag vanishes.
-        assert_absorb_law(
-            &base,
-            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![7]) }),
-            TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 296 }),
-        );
+        assert_absorb_law(&base, TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![7]) }), TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 296 }));
 
         // Tag-level, Add then annihilate the very same add.
-        assert_absorb_law(
-            &base,
-            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 317, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) }),
-            TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 317 }),
-        );
+        assert_absorb_law(&base, TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 317, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) }), TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 317 }));
 
         // Two unrelated scalar sets absorb via LWW.
-        assert_absorb_law(
-            &base,
-            TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: TiffByteOrder::BigEndian }),
-            TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: TiffByteOrder::LittleEndian }),
-        );
+        assert_absorb_law(&base, TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: TiffByteOrder::BigEndian }), TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: TiffByteOrder::LittleEndian }));
     }
 
     #[semio_framework_async_macros::async_test]

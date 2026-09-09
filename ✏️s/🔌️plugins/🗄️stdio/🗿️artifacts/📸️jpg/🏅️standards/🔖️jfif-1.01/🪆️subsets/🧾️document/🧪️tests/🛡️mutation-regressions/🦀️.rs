@@ -122,13 +122,7 @@ mod tests {
 
     fn all_variants(base: &JpgSnapshot) -> Vec<JpgMutation> {
         vec![
-            JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation {
-                version: (1, 2),
-                density_units: JfifDensityUnits::PixelsPerCm,
-                x_density: 300,
-                y_density: 300,
-                thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }),
-            }),
+            JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation { version: (1, 2), density_units: JfifDensityUnits::PixelsPerCm, x_density: 300, y_density: 300, thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }) }),
             JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(0, 77) }),
             JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(3, 55) }),
             JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 0 }),
@@ -200,32 +194,16 @@ mod tests {
 
         // Insert+Remove-before: other_segments has [seg@0]; insert at 1 -> [seg,new]; then
         // remove index 0 ("seg") -> [new] lands at final index 0 (the recipe's own canonical case).
-        assert_absorb_law(
-            &base,
-            JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE3, vec![1]) }),
-            JpgMutation::RemoveOtherSegment(RemoveOtherSegmentMutation { index: 0 }),
-        );
+        assert_absorb_law(&base, JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE3, vec![1]) }), JpgMutation::RemoveOtherSegment(RemoveOtherSegmentMutation { index: 0 }));
 
         // Insert+Insert-same-index: both survive.
-        assert_absorb_law(
-            &base,
-            JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE4, vec![2]) }),
-            JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE5, vec![3]) }),
-        );
+        assert_absorb_law(&base, JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE4, vec![2]) }), JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE5, vec![3]) }));
 
         // Add+SetField: the second mutation patches directly into the still-pending added table.
-        assert_absorb_law(
-            &base,
-            JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(5, 1) }),
-            JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(5, 2) }),
-        );
+        assert_absorb_law(&base, JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(5, 1) }), JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(5, 2) }));
 
         // Modify+Remove: a pending field patch on a since-removed base item vanishes.
-        assert_absorb_law(
-            &base,
-            JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(0, 42) }),
-            JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 0 }),
-        );
+        assert_absorb_law(&base, JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(0, 42) }), JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 0 }));
 
         // Insert then annihilate the very same insert — huffman_tables' id-keyed transport.
         assert_absorb_law(
@@ -235,18 +213,10 @@ mod tests {
         );
 
         // Two unrelated scalar sets absorb via LWW.
-        assert_absorb_law(
-            &base,
-            JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: Some(1) }),
-            JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: Some(2) }),
-        );
+        assert_absorb_law(&base, JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: Some(1) }), JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: Some(2) }));
 
         // Tri-state set-then-clear: the later clear wins outright over the pending set.
-        assert_absorb_law(
-            &base,
-            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: Some(10) }),
-            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: None }),
-        );
+        assert_absorb_law(&base, JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: Some(10) }), JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: None }));
     }
 
     #[test]
@@ -422,13 +392,7 @@ mod tests {
     fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![
-            JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation {
-                version: (1, 2),
-                density_units: JfifDensityUnits::PixelsPerCm,
-                x_density: 300,
-                y_density: 300,
-                thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }),
-            }),
+            JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation { version: (1, 2), density_units: JfifDensityUnits::PixelsPerCm, x_density: 300, y_density: 300, thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }) }),
             JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation { version: (1, 1), density_units: JfifDensityUnits::Aspect, x_density: 1, y_density: 1, thumbnail: None }),
             JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(0, 77) }),
             JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 3 }),

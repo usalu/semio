@@ -1,4 +1,3 @@
-
 //! 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5 — w0-f (SDK gap
 //! closure lane) landed the canonical `testkit::{assert_viewer_never_mutates,
 //! assert_editor_and_viewer_share_dialect, new_viewer}` in `semio_framework_plugin`; used directly

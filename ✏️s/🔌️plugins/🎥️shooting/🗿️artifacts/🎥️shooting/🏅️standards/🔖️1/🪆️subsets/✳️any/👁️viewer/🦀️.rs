@@ -4,9 +4,9 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::{ShootingSnapshot, SHOOTING_DIALECT, SHOOTING_DOCUMENT_SCHEMA};
 use crate::viewer::shooting::modes::view;
 use crate::viewer::shooting::modes::view::windows::scene;
+use crate::{ShootingSnapshot, SHOOTING_DIALECT, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
@@ -72,7 +72,8 @@ impl ArtifactViewer for ShootingViewer {
         match body_key {
             scene::BODY_KEY => scene::render(doc.snapshot),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("shooting.viewer.ui.capacity", "viewer label admission failed")),
-        }.map(semio_framework_plugin::built_to_component_tree)
+        }
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer

@@ -15,62 +15,14 @@ message Puzzle5dArtifact {
   // @state artifact
   optional Puzzle5dKindCatalogs kind_catalogs = 5;
   // @state artifact
+  optional Puzzle5dKindCatalogsExtra kind_catalogs_extra = 9;
+  // @state artifact
   repeated Puzzle5dKindCompatibility kind_compatibility = 6;
   // @state artifact
   repeated Puzzle5dPart parts = 7;
   // @state artifact
   repeated Puzzle5dFastener fasteners = 8;
-  // @state presence
-  repeated string selected_part_ids = 9;
-  // @state presence
-  repeated string selected_grip_ids = 10;
-  // @state presence
-  repeated string selected_fastener_ids = 11;
-  // @state presence
-  string active_utility_id = 12;
   // @state config
-  double camera2d_x = 13;
-  // @state config
-  double camera2d_y = 14;
-  // @state config
-  double camera2d_zoom = 15;
-  // @state config
-  double camera3d_position_x = 16;
-  // @state config
-  double camera3d_position_y = 17;
-  // @state config
-  double camera3d_position_z = 18;
-  // @state config
-  double camera3d_target_x = 19;
-  // @state config
-  double camera3d_target_y = 20;
-  // @state config
-  double camera3d_target_z = 21;
-  // @state config
-  double camera3d_zoom = 22;
-  // @state config
-  string selection_method = 23;
-  // @state config
-  bool grid_snap_enabled = 24;
-  // @state config
-  double grid_factor = 25;
-  // @state config
-  double suggestion_offset = 26;
-  // @state config
-  double overlap_budget = 27;
-  // @state config
-  uint32 fill_count = 28;
-  // @state config
-  uint32 brush_candidate_index = 29;
-  // @state config
-  string lod_mode = 30;
-  // @state config
-  // @state config
-  string runtime_extras_json = 32;
-  // @state artifact
-  optional string hovered_part_id = 33;
-  // @state artifact
-  int64 preview_seq = 34;
 }
 
 
@@ -108,6 +60,12 @@ message Puzzle5dCatalogGripKind {
 message Puzzle5dCatalogFastenerKind { string id = 1; string name = 2; optional string label = 3; }
 message Puzzle5dCatalogRopeKind { string id = 1; string name = 2; string label = 3; string default_fastener_kind = 4; }
 message Puzzle5dKindCatalogs {
+  repeated Puzzle5dCatalogPartKind parts = 1;
+  repeated Puzzle5dCatalogGripKind grips = 2;
+  repeated Puzzle5dCatalogFastenerKind fasteners = 3;
+  repeated Puzzle5dCatalogRopeKind ropes = 4;
+}
+message Puzzle5dKindCatalogsExtra {
   repeated Puzzle5dCatalogPartKind parts = 1;
   repeated Puzzle5dCatalogGripKind grips = 2;
   repeated Puzzle5dCatalogFastenerKind fasteners = 3;

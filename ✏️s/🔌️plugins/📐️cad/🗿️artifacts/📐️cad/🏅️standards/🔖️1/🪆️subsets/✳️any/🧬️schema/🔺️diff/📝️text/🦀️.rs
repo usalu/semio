@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️Apply
 impl CadDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &CadArtifact) -> protocol::MutationApplyResult<CadArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
@@ -53,105 +53,6 @@ impl CadDiff {
             }
             if let Some(value) = &self.active_model_definition_id {
                 next.active_model_definition_id = value.clone();
-            }
-            if let Some(list) = &self.selected_object_ids {
-                next.selected_object_ids = list.values.clone();
-            }
-            if let Some(list) = &self.selected_node_ids {
-                next.selected_node_ids = list.values.clone();
-            }
-            if let Some(value) = &self.active_object_id {
-                next.active_object_id = value.clone();
-            }
-            if let Some(value) = &self.component_selection {
-                next.component_selection = value.clone();
-            }
-            if let Some(value) = &self.selected_reference_model_definition_id {
-                next.selected_reference_model_definition_id = value.clone();
-            }
-            if let Some(value) = &self.selected_reference_id {
-                next.selected_reference_id = value.clone();
-            }
-            if let Some(value) = &self.selected_primitive_id {
-                next.selected_primitive_id = value.clone();
-            }
-            if let Some(value) = &self.selected_primitive_kind {
-                next.selected_primitive_kind = value.clone();
-            }
-            if let Some(value) = &self.active_example_id {
-                next.active_example_id = value.clone();
-            }
-            if let Some(value) = &self.selection_method {
-                next.selection_method = value.clone();
-            }
-            if let Some(value) = &self.engagement_input {
-                next.engagement_input = value.clone();
-            }
-            if let Some(value) = &self.engagement_step {
-                next.engagement_step = value.clone();
-            }
-            if let Some(value) = &self.engagement_pane {
-                next.engagement_pane = value.clone();
-            }
-            if let Some(value) = &self.engagement_session_json {
-                next.engagement_session_json = value.clone();
-            }
-            if let Some(value) = &self.last_finalized_interaction_id {
-                next.last_finalized_interaction_id = value.clone();
-            }
-            if let Some(value) = self.sun_enabled {
-                next.sun_enabled = value;
-            }
-            if let Some(value) = self.sun_azimuth {
-                next.sun_azimuth = value;
-            }
-            if let Some(value) = self.sun_elevation {
-                next.sun_elevation = value;
-            }
-            if let Some(value) = self.sun_intensity {
-                next.sun_intensity = value;
-            }
-            if let Some(value) = &self.sun_color {
-                next.sun_color = value.clone();
-            }
-            if let Some(value) = &self.camera {
-                next.camera = value.clone();
-            }
-            if let Some(value) = &self.camera_building {
-                next.camera_building = value.clone();
-            }
-            if let Some(value) = &self.camera_energy {
-                next.camera_energy = value.clone();
-            }
-            if let Some(value) = &self.camera_structure_classic {
-                next.camera_structure_classic = value.clone();
-            }
-            if let Some(value) = self.dislocate_shape {
-                next.dislocate_shape = value;
-            }
-            if let Some(value) = self.dislocate_building {
-                next.dislocate_building = value;
-            }
-            if let Some(value) = self.dislocate_energy {
-                next.dislocate_energy = value;
-            }
-            if let Some(value) = self.dislocate_structure_classic {
-                next.dislocate_structure_classic = value;
-            }
-            if let Some(value) = &self.contributions_json {
-                next.contributions_json = value.clone();
-            }
-            if let Some(value) = &self.hovered_object_id {
-                next.hovered_object_id = value.clone();
-            }
-            if let Some(value) = &self.hovered_target_object_id {
-                next.hovered_target_object_id = value.clone();
-            }
-            if let Some(value) = &self.hovered_target_mode {
-                next.hovered_target_mode = value.clone();
-            }
-            if let Some(value) = &self.hovered_target_id {
-                next.hovered_target_id = *value;
             }
             next
         })
@@ -304,39 +205,6 @@ impl MutationDiff<CadSnapshot> for CadDiff {
         take!(drawings);
         take!(references_by_model_definition_id);
         take!(active_model_definition_id);
-        take!(selected_object_ids);
-        take!(selected_node_ids);
-        take!(active_object_id);
-        take!(component_selection);
-        take!(selected_reference_model_definition_id);
-        take!(selected_reference_id);
-        take!(selected_primitive_id);
-        take!(selected_primitive_kind);
-        take!(active_example_id);
-        take!(selection_method);
-        take!(engagement_input);
-        take!(engagement_step);
-        take!(engagement_pane);
-        take!(engagement_session_json);
-        take!(last_finalized_interaction_id);
-        take!(sun_enabled);
-        take!(sun_azimuth);
-        take!(sun_elevation);
-        take!(sun_intensity);
-        take!(sun_color);
-        take!(camera);
-        take!(camera_building);
-        take!(camera_energy);
-        take!(camera_structure_classic);
-        take!(dislocate_shape);
-        take!(dislocate_building);
-        take!(dislocate_energy);
-        take!(dislocate_structure_classic);
-        take!(contributions_json);
-        take!(hovered_object_id);
-        take!(hovered_target_object_id);
-        take!(hovered_target_mode);
-        take!(hovered_target_id);
         match (&mut self.nodes, other.nodes) {
             (Some(dst), Some(src)) => {
                 dst.added.extend(src.added);

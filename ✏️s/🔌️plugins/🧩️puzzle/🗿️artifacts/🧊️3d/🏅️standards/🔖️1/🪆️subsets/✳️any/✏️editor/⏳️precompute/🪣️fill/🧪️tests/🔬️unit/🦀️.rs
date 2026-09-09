@@ -1,9 +1,21 @@
-
 use super::*;
-use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
+
+/// ♻️ Takes ownership of a faulting step outcome and returns its retained page to the ledger.
+/// `RetainedJobPayload::drop` asserts one-page close (`🧵️job/🦀️.rs`), so a fault detail dropped on the
+/// floor raises a second panic during unwinding and aborts the whole binary — every production caller
+/// closes it, and so must every assertion that consumes one.
+fn faulted(outcome: StepOutcome) -> bool {
+    let StepOutcome::Fault(mut fault) = outcome else { return false };
+    while !fault.detail.terminal_is_empty() {
+        fault.detail.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
+    true
+}
+
+use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, DOCUMENT_CELL_SLOTS, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
 use crate::editor::puzzle3d::precompute::{FILL_ENVELOPE_MAX_BYTES, FILL_ENVELOPE_MAX_ITEMS};
 use crate::standards::v1::subsets::any::schema::{BrushKindWeights, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
-use semio_framework_job::{Generation, OperationId, RevisionId, StepBudget, root_cancel_token};
+use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
 use std::time::{Duration, Instant};
 
 fn empty_builder() -> FillBuilder {
@@ -743,7 +755,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
         assert!(matches!(rejected.step(&mut context), StepOutcome::PreviewReady(_)));
         assert_eq!(rejected.preview.rejection_reason.as_deref(), Some(format!("preparation-capacity:{expected_branch}:{cap}").as_str()));
         assert!(rejected.preview.candidate_ghost.is_none());
-        assert!(matches!(rejected.step(&mut context), StepOutcome::Fault(_)));
+        assert!(faulted(rejected.step(&mut context)));
         assert_eq!(
             (
                 rejected.base.objects.len(),
@@ -785,7 +797,7 @@ fn capacity_refusal_publishes_generation_qualified_no_ghost_diagnostic_before_fa
     assert_eq!(builder.preview.rejection_reason.as_deref(), Some(format!("preparation-capacity:fixture-objects:{DOCUMENT_OBJECT_SLOTS}").as_str()));
     assert!(builder.preview.candidate_ghost.is_none());
     assert!(builder.preview.sequence > 0);
-    assert!(matches!(builder.step(&mut context), StepOutcome::Fault(_)));
+    assert!(faulted(builder.step(&mut context)));
 }
 
 #[test]
@@ -794,7 +806,7 @@ fn stale_generation_stops_preparation_before_installing_any_entry() {
     let before = (builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len());
     let mut sequence = 0;
     let mut context = StepContext::new(builder.operation.operation, Generation(builder.operation.generation.0 + 1), StepBudget::new(1, 1), root_cancel_token(), || Some(0), &mut sequence);
-    assert!(matches!(builder.step(&mut context), StepOutcome::Fault(_)));
+    assert!(faulted(builder.step(&mut context)));
     assert_eq!((builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len()), before);
 }
 
@@ -990,7 +1002,9 @@ fn stale_generation_faults_without_progress() {
     let mut builder = empty_builder();
     let mut sequence = 0;
     let mut context = StepContext::new(OperationId(builder.operation.operation.0), Generation(builder.operation.generation.0 + 1), StepBudget::new(100, 10), root_cancel_token(), now, &mut sequence);
-    assert!(matches!(builder.step(&mut context), StepOutcome::Fault(_)));
+    let StepOutcome::Fault(fault) = builder.step(&mut context) else { panic!("a stale generation must fault") };
+    assert_eq!(fault.detail.single_page(), Some(b"stale-fill-operation".as_slice()));
+    assert!(faulted(StepOutcome::Fault(fault)));
     assert_eq!(builder.operation.base_revision, RevisionId(1));
 }
 
@@ -1088,10 +1102,7 @@ fn document_capacities_match_the_language_neutral_capacity_law() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
     let capacities = &law["documentCapacities"];
     let declared = |field: &str| capacities[field].as_u64().unwrap_or_else(|| panic!("{field} capacity")) as usize;
-    assert_eq!(
-        [declared("bookkeepingSlots"), declared("bookkeepingPageBytes"), declared("documentPageBytes"), declared("fillCountMax")],
-        [FIXED_OWNER_SLOTS, FIXED_OWNER_PAGE_BYTES, DOCUMENT_OWNER_PAGE_BYTES, FILL_COUNT_MAX]
-    );
+    assert_eq!([declared("bookkeepingSlots"), declared("bookkeepingPageBytes"), declared("documentPageBytes"), declared("fillCountMax")], [FIXED_OWNER_SLOTS, FIXED_OWNER_PAGE_BYTES, DOCUMENT_OWNER_PAGE_BYTES, FILL_COUNT_MAX]);
     assert_eq!(
         [declared("objectSlots"), declared("attractionSlots"), declared("vortexSlots"), declared("volumeSlots"), declared("kindSlots"), declared("candidateSlots"), declared("cellSlots")],
         [DOCUMENT_OBJECT_SLOTS, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_VORTEX_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_CELL_SLOTS]
@@ -1172,9 +1183,8 @@ fn nakagin_scale_fill_is_not_refused_and_places_at_least_one_object() {
         y: 0.0,
     };
     let attractions: Vec<AttractionProps> = (0..OBJECTS).map(|index| attraction(index, "connected-a")).chain((0..OBJECTS).map(|index| attraction(index, "connected-b"))).collect();
-    let kind_compatibility: Vec<KindCompatEntry> = (0..COMPATIBILITY_ROWS)
-        .map(|index| KindCompatEntry { source: format!("port-{index:02}"), target: format!("port-{index:02}"), bidirectional: true, important: false, specificity: Some("vortex".into()) })
-        .collect();
+    let kind_compatibility: Vec<KindCompatEntry> =
+        (0..COMPATIBILITY_ROWS).map(|index| KindCompatEntry { source: format!("port-{index:02}"), target: format!("port-{index:02}"), bidirectional: true, important: false, specificity: Some("vortex".into()) }).collect();
     let body = collision_body_from_buffers(&[-4.0, -4.0, 0.0, 4.0, -4.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 8.0], &[0, 1, 2, 0, 1, 3, 1, 2, 3, 2, 0, 3]).expect("capsule body");
     let scene = Arc::new(SceneConfig {
         fixture: Fixture { objects, attractions, target_volumes: Vec::new() },

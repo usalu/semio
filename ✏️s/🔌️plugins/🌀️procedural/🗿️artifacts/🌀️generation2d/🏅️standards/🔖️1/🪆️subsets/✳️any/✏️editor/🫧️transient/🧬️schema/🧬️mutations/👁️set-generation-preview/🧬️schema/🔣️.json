@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/procedural/2d/transient/mutation/set-generation-preview/schema.json",
+  "title": "SetGenerationPreview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["previewText"],
+  "properties": {
+    "previewText": { "anyOf": [{ "type": "string" }, { "type": "null" }] }
+  }
+}
+

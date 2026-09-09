@@ -68,10 +68,8 @@ pub mod io_registry {
 /// 🗂️ Registers codecs, the artifact schema descriptor, and every composer entry — dissolved out
 /// of the former `⚙️engine::register()` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
 /// MACHINES). `binary` is one of stdio's 10 deliberate imperative-`register()` artifacts (never
-/// converted to the `ArtifactDeclaration` builder pattern, per `crate::plugin()`'s own call —
-/// unchanged in call order/behavior, only the function's file moved with the deleted directory);
-/// left reachable at its old `crate::engine::register()` path via a pure
-/// re-export shim in `🦀️.rs`.
+/// converted to the `ArtifactDeclaration` builder pattern. The Binary package contribution invokes
+/// this function directly with the established call order and behavior.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
     semio_framework_plugin::register_composer_entries(io_registry::entries()).expect("static Stdio registration must be available and conflict-free");
@@ -79,10 +77,8 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    store::register_document_codec(store::ArtifactCodec::of::<
-        crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot,
-        crate::standards::v_raw::subsets::any::schema::mutations::BinaryMutation,
-    >(crate::STDIO_BINARY_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
+    store::register_document_codec(store::ArtifactCodec::of::<crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(crate::STDIO_BINARY_DOCUMENT_SCHEMA))
+        .expect("static Stdio registration must be available and conflict-free");
 }
 
 /// 📇️ P2-P3 follow-up fix: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion

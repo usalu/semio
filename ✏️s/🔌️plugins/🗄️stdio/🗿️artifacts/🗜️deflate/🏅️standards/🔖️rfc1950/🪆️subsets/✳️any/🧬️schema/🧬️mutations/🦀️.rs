@@ -7,16 +7,16 @@ use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutations
+#[path = "🧮set-compression-params/🦀️.rs"]
+pub mod set_compression_params;
+#[path = "📦set-payload/🦀️.rs"]
+pub mod set_payload;
+#[path = "📖set-preset-dictionary/🦀️.rs"]
+pub mod set_preset_dictionary;
 /// 📐️ Typed content mutation for `stdio.deflate`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🧮set-compression-params/🦀️.rs"]
-pub mod set_compression_params;
-#[path = "📖set-preset-dictionary/🦀️.rs"]
-pub mod set_preset_dictionary;
-#[path = "📦set-payload/🦀️.rs"]
-pub mod set_payload;
 //#endregion 🔖️Leaves
 
 /// 🧭️ `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly

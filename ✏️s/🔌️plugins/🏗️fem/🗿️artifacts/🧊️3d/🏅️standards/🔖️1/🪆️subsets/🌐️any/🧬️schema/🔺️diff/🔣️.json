@@ -46,41 +46,6 @@
     "analysis": {
       "$ref": "https://semio.tech/schema/s/fem/fem3d/artifact.json#/$defs/FemAnalysisSettings",
       "x-semio-state": "artifact"
-    },
-    "resultSourceId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "presence"
-    },
-    "resultMode": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "resultModeIndex": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "presence"
-    },
-    "camera": {
-      "$ref": "https://semio.tech/schema/s/fem/fem3d/artifact.json#/$defs/FemCamera",
-      "x-semio-state": "config"
-    },
-    "solverResultsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "artifact"
-    },
-    "meshPreviewJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {

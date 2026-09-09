@@ -7,13 +7,13 @@
 //! (`declare-doctype`, `rename-document-element`, `set-external-subset`, `set-standalone`,
 //! `declare-entity`, `undeclare-entity`) stay unreachable through this first-pass window.
 
+use crate::editor::xml_valid::modes::edit;
+use crate::editor::xml_valid::modes::edit::windows::main;
 use crate::schema::mutations::XmlNodePath;
 use crate::schema::snapshot::XmlNode;
 use crate::standards::v1_0::subsets::valid::schema::valid_mutations::set_text::SetText;
 use crate::standards::v1_0::subsets::valid::schema::XmlValidMutation;
 use crate::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
-use crate::editor::xml_valid::modes::edit;
-use crate::editor::xml_valid::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };

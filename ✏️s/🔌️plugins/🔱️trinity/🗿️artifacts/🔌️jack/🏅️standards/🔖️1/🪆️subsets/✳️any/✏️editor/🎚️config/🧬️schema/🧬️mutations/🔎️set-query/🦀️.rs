@@ -16,7 +16,13 @@ impl protocol::MutationKind<JackConfig, JackConfigMutation> for SetQuery {
         next.jack_query = self.value.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &JackConfig) -> Vec<JackConfigMutation> { vec![JackConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Set Query".into() }
-    fn target(&self) -> Vec<String> { vec!["jack_query".into()] }
+    fn inverse(&self, base: &JackConfig) -> Vec<JackConfigMutation> {
+        vec![JackConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Set Query".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["jack_query".into()]
+    }
 }

@@ -49,14 +49,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution {
-        identity: "jpg",
-        schema: ARTIFACT_DEFINITION_SCHEMA,
-        definition,
-        assembly,
-        formats,
-        native_codecs,
-    }
+    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "jpg", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Dialect
@@ -294,36 +287,36 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod top_level;
                         pub use top_level::*;
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif-header/🦀️.rs"]
                         pub mod change_jfif_header;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📊️replace-quant-table/🦀️.rs"]
-                        pub mod replace_quant_table;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧹️remove-quant-table/🦀️.rs"]
-                        pub mod remove_quant_table;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🌳️replace-huffman-table/🦀️.rs"]
-                        pub mod replace_huffman_table;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪓️remove-huffman-table/🦀️.rs"]
-                        pub mod remove_huffman_table;
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎚️change-re-encode-quality/🦀️.rs"]
+                        pub mod change_re_encode_quality;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔁️change-restart-interval/🦀️.rs"]
                         pub mod change_restart_interval;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-other-segment/🦀️.rs"]
                         pub mod insert_other_segment;
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪓️remove-huffman-table/🦀️.rs"]
+                        pub mod remove_huffman_table;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-other-segment/🦀️.rs"]
                         pub mod remove_other_segment;
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧹️remove-quant-table/🦀️.rs"]
+                        pub mod remove_quant_table;
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🌳️replace-huffman-table/🦀️.rs"]
+                        pub mod replace_huffman_table;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔲️replace-pixels/🦀️.rs"]
                         pub mod replace_pixels;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎚️change-re-encode-quality/🦀️.rs"]
-                        pub mod change_re_encode_quality;
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📊️replace-quant-table/🦀️.rs"]
+                        pub mod replace_quant_table;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
-                    #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/⚙️operations/🦀️.rs"]
-                    pub mod operations;
                     #[cfg(test)]
                     #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🛡️mutation-regressions/🦀️.rs"]
                     mod mutation_regressions;
+                    #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/⚙️operations/🦀️.rs"]
+                    pub mod operations;
                 }
                 #[path = "."]
                 pub mod io {

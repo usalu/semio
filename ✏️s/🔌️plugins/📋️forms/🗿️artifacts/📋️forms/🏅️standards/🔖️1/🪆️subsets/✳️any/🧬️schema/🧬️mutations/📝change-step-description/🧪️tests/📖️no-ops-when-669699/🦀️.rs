@@ -20,7 +20,7 @@
 //! case's own fixture value and is deliberately arbitrary — `change-step-description` never reads it.
 
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::{forms_steps, materialize_forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

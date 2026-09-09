@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{Path, Step};
 use protocol::Inference;

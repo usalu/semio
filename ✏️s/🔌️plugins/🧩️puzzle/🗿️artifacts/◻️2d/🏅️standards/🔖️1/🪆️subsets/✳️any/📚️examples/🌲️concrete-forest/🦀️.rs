@@ -29,11 +29,7 @@ pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️forest.spr.sem
 
 fn document_json() -> String {
     let projection = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
-    let mut value = dsl::ToValue::to_value(&projection);
-    if let dsl::DslValue::Object(entries) = &mut value {
-        entries.retain(|(key, _)| key != "camera");
-    }
-    dsl::json::to_json_string(&value)
+    dsl::json::to_json_string(&dsl::ToValue::to_value(&projection))
 }
 
 /// 📚️ Canonical example source for `App::example_source`.

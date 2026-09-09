@@ -49,6 +49,4 @@ export interface En1996Diff {
   hEfMm?: number;
   /** @state artifact */
   tEfMm?: number;
-  /** @state presence */
-  selectedCheckIndex?: number | null;
 }

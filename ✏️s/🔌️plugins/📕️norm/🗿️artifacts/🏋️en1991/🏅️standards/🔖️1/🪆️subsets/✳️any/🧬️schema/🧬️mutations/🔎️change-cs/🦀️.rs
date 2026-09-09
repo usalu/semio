@@ -1,6 +1,5 @@
 //! 🌀 `change-cs` — sets the En1991 size factor c_s scalar.
 
-
 use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload

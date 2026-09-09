@@ -1,9 +1,9 @@
 //! 🔄️ 🔄️ Wires play app commands command — `force-layout`.
 
+use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::op::WiresMutation;
 use crate::schema::{fixture_nodes, force_layout_board, node_position};
 use crate::WiresSnapshot;
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

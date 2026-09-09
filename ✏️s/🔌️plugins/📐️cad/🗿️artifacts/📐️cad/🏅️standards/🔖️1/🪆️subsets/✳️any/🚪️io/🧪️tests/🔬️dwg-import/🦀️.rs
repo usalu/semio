@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::CadSnapshot;
 #[semio_framework_async_macros::async_test]

@@ -26,10 +26,7 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveJavascriptAction {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfXMutation> {
-        support::action_with(base, "JavaScript", "JS", &self.script)
-            .map(|_| PdfXMutation::InsertJavascriptAction(InsertJavascriptAction { script: self.script.clone() }))
-            .into_iter()
-            .collect()
+        support::action_with(base, "JavaScript", "JS", &self.script).map(|_| PdfXMutation::InsertJavascriptAction(InsertJavascriptAction { script: self.script.clone() })).into_iter().collect()
     }
 
     fn label(&self) -> String {

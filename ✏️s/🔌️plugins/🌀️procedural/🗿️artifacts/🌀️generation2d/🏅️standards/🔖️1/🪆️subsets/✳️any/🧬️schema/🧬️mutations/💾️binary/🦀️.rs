@@ -7,11 +7,11 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::snapshot::text::{
-    CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl, camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl,
-    widget_to_dsl,
-};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::text::{
+    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
+    WidgetLayoutDsl,
+};
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
 use protocol::OpBinary;
 
@@ -126,9 +126,7 @@ fn generation2d_operation_to_dsl(operation: &Generation2dMutation) -> Generation
         Generation2dMutation::CreateGeneration(payload) => Generation2dOperationDsl::CreateGeneration { generation: form_generation_to_dsl(&payload.generation) },
         Generation2dMutation::DeleteGeneration(payload) => Generation2dOperationDsl::DeleteGeneration { id: payload.id.clone() },
         Generation2dMutation::RenameGeneration(payload) => Generation2dOperationDsl::RenameGeneration { id: payload.id.clone(), name: payload.name.clone() },
-        Generation2dMutation::ChangeGenerationValue(payload) => {
-            Generation2dOperationDsl::ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), value: payload.value.clone() }
-        }
+        Generation2dMutation::ChangeGenerationValue(payload) => Generation2dOperationDsl::ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), value: payload.value.clone() },
     }
 }
 
@@ -523,7 +521,9 @@ struct Generation2dReplayRetirement {
 
 impl store::ErasedSnapshotRetirement for Generation2dReplayRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.domain.is_empty() { return self.domain.close_step(maximum_items, maximum_bytes); }
+        if !self.domain.is_empty() {
+            return self.domain.close_step(maximum_items, maximum_bytes);
+        }
         if maximum_items == 0 || maximum_bytes < GENERATION2D_OWNER_BYTES {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -598,7 +598,12 @@ fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapsho
             if !payload.layout.x.is_finite() || !payload.layout.y.is_finite() {
                 return Err("generation2d-replay.layout-nonfinite");
             }
-            snapshot.fixture.layout.insert(generation2d_copy_string(&payload.id)?, semio_framework_artifact_flow_flow::WidgetLayout { x: payload.layout.x, y: payload.layout.y }).map(Generation2dReplayDisplaced::Layout).and_then(generation2d_retire_displaced)
+            snapshot
+                .fixture
+                .layout
+                .insert(generation2d_copy_string(&payload.id)?, semio_framework_artifact_flow_flow::WidgetLayout { x: payload.layout.x, y: payload.layout.y })
+                .map(Generation2dReplayDisplaced::Layout)
+                .and_then(generation2d_retire_displaced)
         }
         Generation2dMutation::ClearWidgetLayout(payload) => snapshot.fixture.layout.remove(&payload.id).map(Generation2dReplayDisplaced::Layout).and_then(generation2d_retire_displaced),
         Generation2dMutation::UpdateCamera(payload) => {
@@ -667,8 +672,16 @@ impl store::ErasedSnapshotRetirement for Generation2dRetainedSnapshotRetirement 
         }
         if let Some(generation) = self.generation.as_mut() {
             let step = generation.close_step(maximum_items, maximum_bytes)?;
-            if matches!(step, store::SnapshotRetirementStep::Complete) { self.generation.take(); }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: match step { store::SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => 0 } });
+            if matches!(step, store::SnapshotRetirementStep::Complete) {
+                self.generation.take();
+            }
+            return Ok(store::SnapshotRetirementStep::Pending {
+                released_items: 1,
+                released_bytes: match step {
+                    store::SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes,
+                    _ => 0,
+                },
+            });
         }
         if !self.flow.is_empty() {
             return self.flow.close_step(maximum_items, maximum_bytes);
@@ -688,7 +701,9 @@ impl store::ErasedSnapshotRetirement for Generation2dRetainedSnapshotRetirement 
 
 impl Drop for Generation2dRetainedSnapshotRetirement {
     fn drop(&mut self) {
-        if !std::thread::panicking() { assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Generation2d snapshot reached Drop before typed retirement"); }
+        if !std::thread::panicking() {
+            assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Generation2d snapshot reached Drop before typed retirement");
+        }
     }
 }
 
@@ -728,7 +743,9 @@ impl store::ErasedSnapshotRetirement for Generation2dRetainedSnapshotArcRetireme
 
 impl Drop for Generation2dRetainedSnapshotArcRetirement {
     fn drop(&mut self) {
-        if !std::thread::panicking() { assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Generation2d Arc snapshot reached Drop before retained close"); }
+        if !std::thread::panicking() {
+            assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Generation2d Arc snapshot reached Drop before retained close");
+        }
     }
 }
 
@@ -1460,7 +1477,11 @@ impl Generation2dRetainedMutationOwner {
                             *field = None;
                         }
                         Some(Generation2dMutationFrame::NeuralValue { field, value, .. }) if matches!(*field, Some(0 | 1)) && value.is_none() => {
-                            *value = Some(if *field == Some(0) { semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null) } else { semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(boolean)) });
+                            *value = Some(if *field == Some(0) {
+                                semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null)
+                            } else {
+                                semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(boolean))
+                            });
                             *field = None;
                         }
                         _ => return Err("generation2d-mutation.boolean-owner"),
@@ -2345,10 +2366,18 @@ fn generation2d_copy_neural_value(source: &semio_framework_artifact_flow_flow::n
     }
     Ok(match source {
         semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null) => semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Null),
-        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(value)) => semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(*value)),
-        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(value)) => semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(*value)),
-        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Decimal(value)) => semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Decimal(*value)),
-        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(value)) => semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(generation2d_copy_string(value)?)),
+        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(value)) => {
+            semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Boolean(*value))
+        }
+        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(value)) => {
+            semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(*value))
+        }
+        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Decimal(value)) => {
+            semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Decimal(*value))
+        }
+        semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(value)) => {
+            semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(generation2d_copy_string(value)?))
+        }
         semio_framework_artifact_flow_flow::neural::Value::Dictionary(value) => semio_framework_artifact_flow_flow::neural::Value::Dictionary(generation2d_copy_dictionary(value, depth + 1)?),
     })
 }
@@ -2398,7 +2427,9 @@ fn generation2d_copy_flow_ui(source: &semio_framework_artifact_flow_flow::FlowGu
     for (id, node) in &source.nodes {
         let chrome = match &node.chrome {
             semio_framework_artifact_flow_flow::NodeChrome::Plain { preview } => semio_framework_artifact_flow_flow::NodeChrome::Plain { preview: *preview },
-            semio_framework_artifact_flow_flow::NodeChrome::Slider { label, min, max, step, value } => semio_framework_artifact_flow_flow::NodeChrome::Slider { label: generation2d_copy_string(label)?, min: *min, max: *max, step: *step, value: *value },
+            semio_framework_artifact_flow_flow::NodeChrome::Slider { label, min, max, step, value } => {
+                semio_framework_artifact_flow_flow::NodeChrome::Slider { label: generation2d_copy_string(label)?, min: *min, max: *max, step: *step, value: *value }
+            }
             semio_framework_artifact_flow_flow::NodeChrome::Note { text } => semio_framework_artifact_flow_flow::NodeChrome::Note { text: generation2d_copy_string(text)? },
             semio_framework_artifact_flow_flow::NodeChrome::Image { src } => semio_framework_artifact_flow_flow::NodeChrome::Image { src: generation2d_copy_string(src)? },
             semio_framework_artifact_flow_flow::NodeChrome::Variable { name, schema } => semio_framework_artifact_flow_flow::NodeChrome::Variable { name: generation2d_copy_string(name)?, schema: generation2d_copy_string(schema)? },
@@ -2441,12 +2472,23 @@ fn generation2d_copy_widget(source: &semio_framework_artifact_flow_flow::Widget)
             for value in output_ports {
                 outputs.push(generation2d_copy_string(value)?);
             }
-            semio_framework_artifact_flow_flow::Widget::Neuron { id: generation2d_copy_string(id)?, neuron_kind: generation2d_copy_string(neuron_kind)?, params: generation2d_copy_dictionary(params, 0)?, input_ports: inputs, output_ports: outputs, preview: *preview }
+            semio_framework_artifact_flow_flow::Widget::Neuron {
+                id: generation2d_copy_string(id)?,
+                neuron_kind: generation2d_copy_string(neuron_kind)?,
+                params: generation2d_copy_dictionary(params, 0)?,
+                input_ports: inputs,
+                output_ports: outputs,
+                preview: *preview,
+            }
         }
-        semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, value, min, max, step } => semio_framework_artifact_flow_flow::Widget::InputSlider { id: generation2d_copy_string(id)?, label: generation2d_copy_string(label)?, value: *value, min: *min, max: *max, step: *step },
+        semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, value, min, max, step } => {
+            semio_framework_artifact_flow_flow::Widget::InputSlider { id: generation2d_copy_string(id)?, label: generation2d_copy_string(label)?, value: *value, min: *min, max: *max, step: *step }
+        }
         semio_framework_artifact_flow_flow::Widget::InputNote { id, text } => semio_framework_artifact_flow_flow::Widget::InputNote { id: generation2d_copy_string(id)?, text: generation2d_copy_string(text)? },
         semio_framework_artifact_flow_flow::Widget::InputImage { id, src } => semio_framework_artifact_flow_flow::Widget::InputImage { id: generation2d_copy_string(id)?, src: generation2d_copy_string(src)? },
-        semio_framework_artifact_flow_flow::Widget::Variable { id, name, schema } => semio_framework_artifact_flow_flow::Widget::Variable { id: generation2d_copy_string(id)?, name: generation2d_copy_string(name)?, schema: generation2d_copy_string(schema)? },
+        semio_framework_artifact_flow_flow::Widget::Variable { id, name, schema } => {
+            semio_framework_artifact_flow_flow::Widget::Variable { id: generation2d_copy_string(id)?, name: generation2d_copy_string(name)?, schema: generation2d_copy_string(schema)? }
+        }
         semio_framework_artifact_flow_flow::Widget::OutputPreview { id, preview, expanded } => {
             let mut next_expanded = semio_framework_artifact_flow_flow::OrderedSet::new();
             for value in expanded {
@@ -2456,7 +2498,9 @@ fn generation2d_copy_widget(source: &semio_framework_artifact_flow_flow::Widget)
         }
         semio_framework_artifact_flow_flow::Widget::OutputAction { id, action } => semio_framework_artifact_flow_flow::Widget::OutputAction { id: generation2d_copy_string(id)?, action: generation2d_copy_string(action)? },
         semio_framework_artifact_flow_flow::Widget::OutputExport { id, format } => semio_framework_artifact_flow_flow::Widget::OutputExport { id: generation2d_copy_string(id)?, format: generation2d_copy_string(format)? },
-        semio_framework_artifact_flow_flow::Widget::Cluster { id, name, tree, flow } => semio_framework_artifact_flow_flow::Widget::Cluster { id: generation2d_copy_string(id)?, name: generation2d_copy_string(name)?, tree: generation2d_copy_tree(tree, 0)?, flow: generation2d_copy_flow_ui(flow)? },
+        semio_framework_artifact_flow_flow::Widget::Cluster { id, name, tree, flow } => {
+            semio_framework_artifact_flow_flow::Widget::Cluster { id: generation2d_copy_string(id)?, name: generation2d_copy_string(name)?, tree: generation2d_copy_tree(tree, 0)?, flow: generation2d_copy_flow_ui(flow)? }
+        }
     })
 }
 
@@ -2489,7 +2533,13 @@ struct Generation2dSnapshotCopyCursor {
 impl Generation2dSnapshotCopyCursor {
     fn new(source: &Generation2dSnapshot) -> Result<Self, &'static str> {
         let mut target = Generation2dSnapshot {
-            fixture: semio_framework_artifact_flow_flow::FlowFixture { schema: String::new(), camera: semio_framework_artifact_flow_flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: semio_framework_artifact_flow_flow::OrderedMap::new() },
+            fixture: semio_framework_artifact_flow_flow::FlowFixture {
+                schema: String::new(),
+                camera: semio_framework_artifact_flow_flow::CameraJson::default(),
+                widgets: Vec::new(),
+                synapses: Vec::new(),
+                layout: semio_framework_artifact_flow_flow::OrderedMap::new(),
+            },
             generation: semio_framework_artifact_playbook_playbook::GenerationPlayRoot::default(),
         };
         target.fixture.widgets.try_reserve_exact(source.fixture.widgets.len()).map_err(|_| "generation2d-initializer.widgets-preflight")?;
@@ -3359,9 +3409,12 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
     let synapse = semio_framework_artifact_flow_flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-a".into(), to: "retained-b".into(), from_port: "out".into(), to_port: "in".into() };
     let mut values = semio_framework_artifact_playbook_playbook::PlaybookValues::new();
     values.insert("nested".into(), dsl::json::to_dsl_value(&dsl::json!({"array": [true, null, 3.5], "text": "retained"})));
-    let params = semio_framework_artifact_flow_flow::neural::Dictionary::new()
-        .insert("integer", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(7)))
-        .insert("nested", semio_framework_artifact_flow_flow::neural::Value::Dictionary(semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("text", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String("retained".into())))));
+    let params = semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("integer", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(7))).insert(
+        "nested",
+        semio_framework_artifact_flow_flow::neural::Value::Dictionary(
+            semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("text", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String("retained".into()))),
+        ),
+    );
     vec![
         create_widget(0, semio_framework_artifact_flow_flow::Widget::Neuron { id: "retained-a".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true }),
         replace_widget(semio_framework_artifact_flow_flow::Widget::Cluster { id: "retained-a".into(), name: "Replaced".into(), tree: Default::default(), flow: Default::default() }),

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::editor::flow::testkit::{FlowApp, dispatch, flow_app, flow_app_with_registry};
+use crate::editor::flow::testkit::{dispatch, flow_app, flow_app_with_registry, FlowApp};
 use semio_framework_plugin::testkit::meta;
 use semio_framework_plugin::{EditorApp, PluginApp};
 
@@ -172,6 +171,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
+        let expected: String = id.chars().flat_map(|character| if character.is_ascii_uppercase() { vec!['-', character.to_ascii_lowercase()] } else { vec![character] }).collect();
         let printed = protocol::OpText::print_op(&command);
         assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
     }
@@ -294,7 +294,7 @@ async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
     let config = FlowConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config };
+    let cfg = ConfigView { snapshot: &config, window: None };
     let topology = FlowPlayApp::interaction_topology(&doc, &cfg);
     let graph = topology.domains.get(FLOW_INTERACTION_GRAPH).expect("graph domain present in topology");
     let live = document.to_fixture();

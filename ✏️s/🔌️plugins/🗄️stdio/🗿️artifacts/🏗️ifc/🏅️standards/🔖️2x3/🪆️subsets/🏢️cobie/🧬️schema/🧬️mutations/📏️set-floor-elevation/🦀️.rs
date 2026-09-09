@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetFloorElevation {
-        pub(crate) storey: u64,
-        pub(crate) elevation: Option<f64>,
-    }
+    pub(crate) storey: u64,
+    pub(crate) elevation: Option<f64>,
+}
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetFloorElevation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "floor-elevation", kind: "set-floor-elevation", record: "SetFloorElevation" };

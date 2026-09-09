@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::editor::gis2d::testkit::{app, app_with_registry, gis2d_app_manifest_for_testkit, render};
+use crate::editor::gis2d::testkit::{app, close, gis2d_app_manifest_for_testkit, render};
 use semio_framework_plugin::{ContextMenuRequest, EditorApp, PluginApp, VcsArtifactApp};
 
 #[test]
@@ -8,15 +7,15 @@ fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
     let parent: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> = gis_map_parent_one_item_preparation_factory();
     let drawing: std::sync::Arc<
         dyn store::ArtifactStoreOneItemPreparationFactory<
-                semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-                semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
-            >,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+        >,
     > = gis_map_drawing_one_item_preparation_factory();
     let value: std::sync::Arc<
         dyn store::ArtifactStoreOneItemPreparationFactory<
-                semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-                semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
-            >,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+        >,
     > = gis_map_value_one_item_preparation_factory();
     assert_eq!([std::sync::Arc::strong_count(&parent), std::sync::Arc::strong_count(&drawing), std::sync::Arc::strong_count(&value)], [1, 1, 1]);
     let stamped = GisMapOneItemStampV1 { mutation_id: protocol::MutationId("11111111111111111111111111111111".into()), timestamp: protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 } };
@@ -100,6 +99,7 @@ async fn gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_su
     assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("first exact GIS load acknowledgement"));
     assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate GIS load acknowledgement is a no-op"));
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -117,6 +117,7 @@ async fn gis_map_live_envelope_cancel_closes_retained_pages_without_publication(
     app.cancel_artifact_envelope_load(handle).expect("cancel exact GIS ingress");
     assert_eq!(drive_gis_map_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
     assert_eq!(app.artifact_generation_now(), base_generation);
+    close(&mut app);
 }
 
 //#region 🔖️CommandSurface
@@ -144,22 +145,8 @@ fn every_command() -> Vec<Gis2dCommand> {
 
 /// 🏷️ The wire keyword each row prints under — the kebab `as` literal, independent of the camelCase
 /// manifest action id. Pinned so a reordered/renamed row is caught here, not in production.
-const WIRE_KEYWORDS: &[&str] = &[
-    "active-example",
-    "patch-positions",
-    "patch-routes",
-    "patch-route",
-    "toggle-layer-visibility",
-    "fit-world",
-    "camera",
-    "render-mode",
-    "vector-style",
-    "lod-mode",
-    "focus-feature",
-    "layer-stroke-scale",
-    "open-source",
-    "propose-bounds-region",
-];
+const WIRE_KEYWORDS: &[&str] =
+    &["active-example", "patch-positions", "patch-routes", "patch-route", "toggle-layer-visibility", "fit-world", "camera", "render-mode", "vector-style", "lod-mode", "focus-feature", "layer-stroke-scale", "open-source", "propose-bounds-region"];
 
 #[semio_framework_async_macros::async_test]
 async fn command_ids_are_unique_and_cover_every_row() {
@@ -228,13 +215,14 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let mut app = app().await;
     assert!(render(&mut app, "gis2d.play.nope").await.contains("Unknown body"));
+    close(&mut app);
 }
 //#endregion 🔖️Manifest
 
 //#region 🔖️Media
 #[semio_framework_async_macros::async_test]
 async fn export_media_map_out_produces_a_2d_map_structured_payload() {
-    let app = app().await;
+    let mut app = app().await;
     let document = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
@@ -242,11 +230,14 @@ async fn export_media_map_out_produces_a_2d_map_structured_payload() {
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
     assert_eq!(schema, "2d.map");
     assert!(json.contains("positions"));
+    drop(json);
+    drop(document);
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn import_media_features_in_adds_new_positions_as_operations() {
-    let app = app().await;
+    let mut app = app().await;
     let document = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
@@ -254,6 +245,11 @@ async fn import_media_features_in_adds_new_positions_as_operations() {
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming } };
     let emit = Gis2dPlayApp::import_media("features:in", &media, &doc).expect("features:in import");
     assert!(emit.artifact_mutations.iter().any(|operation| matches!(operation, GisMapMutation::CreatePosition(payload) if payload.item.id == "imported-1")));
+    drop(emit);
+    drop(doc);
+    drop(history);
+    drop(document);
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -295,12 +291,14 @@ async fn gis2d_map_media_exports_the_document_descriptor() {
 /// canonical migration pattern.
 #[semio_framework_async_macros::async_test]
 async fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_last() {
-    let mut app = app_with_registry().await;
+    let mut app = app().await;
     let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "gis2dMap".into(), args: None }, surface: None, window_instance_id: None, point: None };
     let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("empty-canvas context menu should not be empty");
     assert_eq!(last.id, "clearSelection", "known destructive clearSelection must be last: {menu:?}");
     assert_eq!(last.destructive, Some(true), "clearSelection must be marked destructive: {menu:?}");
+    drop(menu);
+    close(&mut app);
 }
 //#endregion 🔖️ContextMenu

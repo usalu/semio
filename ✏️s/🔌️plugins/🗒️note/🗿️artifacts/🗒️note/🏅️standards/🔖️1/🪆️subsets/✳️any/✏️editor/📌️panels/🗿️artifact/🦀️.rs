@@ -1,9 +1,9 @@
 //! 📄️ Note play app panel — the document tree: every block, with quick-add rows.
 
-use crate::schema::{block_icon, block_kind, block_name, block_tree_row_id, block_visible};
-use crate::{NoteBlockNode, NoteSnapshot};
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::editor::note::{ui_label, NOTE_INTERACTION_BLOCKS, NOTE_PLAY_CONTROLLER_ID};
+use crate::schema::{block_icon, block_kind, block_name, block_tree_row_id, block_visible};
+use crate::{NoteBlockNode, NoteSnapshot};
 use semio_framework_plugin::{
     tree_item, tree_item_desc, tree_item_with_action, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,

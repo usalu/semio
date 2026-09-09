@@ -1,17 +1,28 @@
 syntax = "proto3";
 package semio.s.reasoning.wires.mutation;
 
-// 🧬️ Wires mutation schema.
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-kind/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷change-node-shape/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚩set-node-root/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/🧬️schema/🛰️.proto";
 
 message WiresMutation {
-  // @state artifact
-  DslValue wires_fixture = 1;
-  // @state artifact
-  DslValue board_fixture = 2;
+  oneof mutation {
+    semio.s.reasoning.wires.mutation.disconnect_nodes.DisconnectNodes disconnect_nodes = 1;
+    semio.s.reasoning.wires.mutation.edit_node_text.EditNodeText edit_node_text = 2;
+    semio.s.reasoning.wires.mutation.create_node.CreateNode create_node = 3;
+    semio.s.reasoning.wires.mutation.change_node_kind.ChangeNodeKind change_node_kind = 4;
+    semio.s.reasoning.wires.mutation.resize_node.ResizeNode resize_node = 5;
+    semio.s.reasoning.wires.mutation.change_node_shape.ChangeNodeShape change_node_shape = 6;
+    semio.s.reasoning.wires.mutation.delete_node.DeleteNode delete_node = 7;
+    semio.s.reasoning.wires.mutation.set_node_root.SetNodeRoot set_node_root = 8;
+    semio.s.reasoning.wires.mutation.connect_nodes.ConnectNodes connect_nodes = 9;
+    semio.s.reasoning.wires.mutation.move_node.MoveNode move_node = 10;
+  }
 }
-
-message WiresStringList {
-  repeated string values = 1;
-}
-
-message DslValue {}

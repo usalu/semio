@@ -1,9 +1,9 @@
 //! 📋️ Architect register window — the active register's rows as a block-list surface.
 
-use crate::ProgramSnapshot;
 use crate::editor::architect::catalog::register_entities;
 use crate::editor::architect::chrome::{entity_id_from_json, entity_name_from_json};
 use crate::editor::architect::config::{active_register, ArchitectConfig};
+use crate::ProgramSnapshot;
 use semio_framework_plugin::{BlockListScene, Label, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

@@ -1,6 +1,5 @@
-
 use super::*;
-use crate::{CharacterStyle, Frame, GridSettings, LAYOUT_DOCUMENT_SCHEMA, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride};
+use crate::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
 
 fn minimal_document_with_character_style() -> LayoutSnapshot {
     LayoutSnapshot {

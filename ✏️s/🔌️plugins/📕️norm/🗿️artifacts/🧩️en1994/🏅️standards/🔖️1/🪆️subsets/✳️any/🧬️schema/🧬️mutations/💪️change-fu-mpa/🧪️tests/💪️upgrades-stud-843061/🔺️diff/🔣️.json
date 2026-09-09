@@ -15,12 +15,11 @@
   "dMm": null,
   "hScMm": null,
   "fCkMpa": null,
-  "fUMpa": 500.0,
+  "fUMpa": 500,
   "eCmMpa": null,
   "vEdPerStudKn": null,
   "spanM": null,
   "fYMpa": null,
   "nCyclesStud": null,
-  "deltaTauStudMpa": null,
-  "selectedCheckIndex": null
+  "deltaTauStudMpa": null
 }

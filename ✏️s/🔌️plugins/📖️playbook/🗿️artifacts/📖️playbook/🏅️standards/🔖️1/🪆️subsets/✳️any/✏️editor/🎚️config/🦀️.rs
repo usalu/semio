@@ -2,8 +2,7 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.playbook` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`). B1: absorbs `locale` (was read off `view_state.locale`) —
-//! mirrors `writer_engine::WriterConfig`/`forms::config::FormsConfig`'s B1 shape. 🕹️ ticket
+//! `ArtifactStore` (with a real `backwards`). 🕹️ ticket
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the former app-struct `RefCell<Vec<String>>`
 //! selection state that B1 had absorbed here as `selected_ids` moved OUT again, into the framework's own
 //! `InteractionState` (the "blocks" domain, declared on `PlaybookPlayApp`'s manifest) — this config no

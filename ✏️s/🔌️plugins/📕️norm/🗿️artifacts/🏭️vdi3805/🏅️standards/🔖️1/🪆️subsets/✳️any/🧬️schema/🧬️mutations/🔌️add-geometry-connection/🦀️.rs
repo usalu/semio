@@ -1,7 +1,6 @@
 //! 🔌️ `add-geometry-connection` — upserts one connection point on a geometry, addressed by the
 //! geometry id plus the connection's own stable `id`.
 
-
 use crate::{ConnectionPoint, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload

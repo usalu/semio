@@ -1,7 +1,6 @@
 //! 🖌️ 🖌️ Block 3D play app commands command — `hover-surface`.
 
 use crate::standards::v1::subsets::any::schema::mutations::text::Block3dMutation;
-use crate::Block3dBrushPreview;
 use crate::Block3dSnapshot;
 use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -19,5 +18,6 @@ pub struct HoverSurface {
 }
 
 pub fn handle(payload: &HoverSurface, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
-    Ok(Emit::config(vec![Block3dConfigMutation::SetBrushPreview { preview: Some(Block3dBrushPreview { position: payload.position, direction: payload.normal }) }]))
+    let _ = payload;
+    Ok(Emit::default())
 }

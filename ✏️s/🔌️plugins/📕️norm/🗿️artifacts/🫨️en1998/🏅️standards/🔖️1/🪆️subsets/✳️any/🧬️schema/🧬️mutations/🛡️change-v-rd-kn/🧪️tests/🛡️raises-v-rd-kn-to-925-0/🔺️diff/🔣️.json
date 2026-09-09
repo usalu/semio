@@ -6,7 +6,7 @@
   "structuralSystem": null,
   "t1S": null,
   "massT": null,
-  "vRdKn": 925.0,
+  "vRdKn": 925,
   "driftMm": null,
   "heightM": null,
   "multipleResistingSystems": null,
@@ -48,6 +48,5 @@
   "wallPhiDeg": null,
   "wallSoilGammaKnM3": null,
   "wallR": null,
-  "wallHRdKn": null,
-  "selectedCheckIndex": null
+  "wallHRdKn": null
 }

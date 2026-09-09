@@ -28,7 +28,8 @@
 //! (struct-only; every field on the struct falls back to its own `Default::default()`, or the
 //! type's own if the type itself is `Default`, on a missing key), `deny_unknown_fields`.
 //!
-//! Supported field attributes: `rename = "…"`, `default` (bare), `default = "path"`,
+//! Supported field attributes: `rename = "…"`, `required` (a present wire key is mandatory even
+//! for `Option<T>`), `default` (bare), `default = "path"`,
 //! `skip_serializing_if = "path"`, `serialize_with = "path"` (`fn(&FieldType) ->
 //! DslValue`, replaces the `ToValue::to_value` call for that field), `deserialize_with = "path"`
 //! (`fn(DslValue) -> Result<FieldType, ValueError>`, replaces the `FromValue::from_value` call —
@@ -116,7 +117,7 @@
 //! fields cased `camelCase` another).
 //!
 //! An enum variant's OWN named field (unlike a plain struct field) supports only `rename`,
-//! `default`, `skip`, and `skip_serializing_if` — `skip` omits the field on serialize and always
+//! `required`, `default`, `skip`, and `skip_serializing_if` — `skip` omits the field on serialize and always
 //! falls back to `default`/`Default::default()` on deserialize (no wire lookup at all), and
 //! `skip_serializing_if = "path"` omits the field on serialize when `path(&field)` is `true`,
 //! exactly like their plain-struct-field counterparts. `flatten`/`with`/`serialize_with`/
@@ -244,6 +245,7 @@ impl ContainerAttrs {
 #[derive(Default, Clone)]
 struct FieldAttrs {
     rename: Option<String>,
+    required: bool,
     default: FieldDefault,
     skip_serializing_if: Option<String>,
     serialize_with: Option<String>,
@@ -333,6 +335,7 @@ fn parse_field_attrs(attrs: &[syn::Attribute]) -> syn::Result<FieldAttrs> {
     for (key, value) in parse_value_meta(attrs)? {
         match key.as_str() {
             "rename" => out.rename = value,
+            "required" => out.required = true,
             "default" => out.default = value.map_or(FieldDefault::Bare, FieldDefault::Path),
             "skip_serializing_if" => out.skip_serializing_if = value,
             "serialize_with" => out.serialize_with = value,
@@ -509,14 +512,17 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs, v
             };
             return quote! { let #ident = #found; };
         }
-        let missing = match (&field.attrs.default, container.default) {
-            (FieldDefault::Path(path), _) => {
+        let missing = match (&field.attrs.default, container.default, field.attrs.required) {
+            (_, _, true) => quote! {
+                return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
+            },
+            (FieldDefault::Path(path), _, false) => {
                 let path: syn::Path = syn::parse_str(path).expect("valid default path");
                 quote! { #path() }
             }
-            (FieldDefault::Bare, _) | (FieldDefault::None, true) => quote! { ::std::default::Default::default() },
-            (FieldDefault::None, false) if field.is_option => quote! { ::std::default::Default::default() },
-            (FieldDefault::None, false) => quote! {
+            (FieldDefault::Bare, _, false) | (FieldDefault::None, true, false) => quote! { ::std::default::Default::default() },
+            (FieldDefault::None, false, false) if field.is_option => quote! { ::std::default::Default::default() },
+            (FieldDefault::None, false, false) => quote! {
                 return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
             },
         };
@@ -547,7 +553,7 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs, v
 /// 🎯 Rejects `flatten` on an enum variant's own named field with a `compile_error!` naming the
 /// field, instead of the previous silent drop — module docs call `flatten` "Deliberately NOT
 /// supported" on a variant's named fields (splicing into an already-tagged object is ambiguous),
-/// but nothing enforced that until now. `rename`, `default`, `skip`, `skip_serializing_if`,
+/// but nothing enforced that until now. `rename`, `required`, `default`, `skip`, `skip_serializing_if`,
 /// `serialize_with`/`deserialize_with`/`with` ARE supported on a variant's own named field (see
 /// `variant_field_to_value_push`/`variant_field_from_value_read` below) — `default` and the
 /// `*_with` trio already worked in practice (🏪️store's `ArtifactActorMsg::LocalMutations`/
@@ -557,10 +563,7 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs, v
 /// fixed below — same silent-drop bug class).
 fn check_variant_field_attrs_supported(field: &syn::Field, attrs: &FieldAttrs) -> syn::Result<()> {
     if attrs.flatten {
-        return Err(syn::Error::new_spanned(
-            field,
-            format!("#[value(...)] does not support `flatten` on enum variant field `{}` (only plain struct fields support it)", field.ident.as_ref().expect("named field")),
-        ));
+        return Err(syn::Error::new_spanned(field, format!("#[value(...)] does not support `flatten` on enum variant field `{}` (only plain struct fields support it)", field.ident.as_ref().expect("named field"))));
     }
     Ok(())
 }
@@ -618,14 +621,17 @@ fn variant_field_from_value_read(field: &syn::Field, field_attrs: &FieldAttrs, w
         };
         return Ok(quote! { let #ident = #missing; });
     }
-    let missing = match &field_attrs.default {
-        FieldDefault::Path(path) => {
+    let missing = match (&field_attrs.default, field_attrs.required) {
+        (_, true) => quote! {
+            return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
+        },
+        (FieldDefault::Path(path), false) => {
             let path: syn::Path = syn::parse_str(path).expect("valid default path");
             quote! { #path() }
         }
-        FieldDefault::Bare => quote! { ::std::default::Default::default() },
-        FieldDefault::None if type_is_option(&field.ty) => quote! { ::std::default::Default::default() },
-        FieldDefault::None => quote! {
+        (FieldDefault::Bare, false) => quote! { ::std::default::Default::default() },
+        (FieldDefault::None, false) if type_is_option(&field.ty) => quote! { ::std::default::Default::default() },
+        (FieldDefault::None, false) => quote! {
             return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
         },
     };
@@ -710,42 +716,50 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
             // = …)]` is present): a unit variant is still the bare wire-name string, a
             // single-unnamed-field or named-field variant becomes a one-key object
             // `{"VariantName": <payload>}`.
-            let arms = data.variants.iter().map(|variant| {
-                let variant_ident = &variant.ident;
-                let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
-                let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
-                let arm: syn::Result<proc_macro2::TokenStream> = match &variant.fields {
-                    Fields::Unit => Ok(quote! {
-                        Self::#variant_ident => #value_crate::DslValue::String(#wire_variant.to_string())
-                    }),
-                    Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => Ok(quote! {
-                        Self::#variant_ident(payload) => #value_crate::DslValue::object([
-                            (#wire_variant.to_string(), #value_crate::ToValue::to_value(payload)),
-                        ])
-                    }),
-                    Fields::Named(named) => {
-                        let push_into = quote! { content_entries };
-                        let pushes = named.named.iter().map(|field| {
-                            let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
-                            let ident = field.ident.clone().expect("named field");
-                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
-                            variant_field_to_value_push(field, &field_attrs, &wire_name, &ident, &push_into, &value_crate)
-                        }).collect::<syn::Result<Vec<_>>>()?;
-                        let idents = variant_destructure_patterns(named);
-                        Ok(quote! {
-                            Self::#variant_ident { #(#idents),* } => {
-                                let mut content_entries: Vec<(String, #value_crate::DslValue)> = Vec::new();
-                                #(#pushes)*
-                                #value_crate::DslValue::object([
-                                    (#wire_variant.to_string(), #value_crate::DslValue::Object(content_entries)),
-                                ])
-                            }
-                        })
-                    }
-                    other => Err(syn::Error::new_spanned(other, "#[derive(ToValue)] externally-tagged enum variants must be unit, a single unnamed payload, or named fields")),
-                };
-                arm
-            }).collect::<syn::Result<Vec<_>>>()?;
+            let arms = data
+                .variants
+                .iter()
+                .map(|variant| {
+                    let variant_ident = &variant.ident;
+                    let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
+                    let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
+                    let arm: syn::Result<proc_macro2::TokenStream> = match &variant.fields {
+                        Fields::Unit => Ok(quote! {
+                            Self::#variant_ident => #value_crate::DslValue::String(#wire_variant.to_string())
+                        }),
+                        Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => Ok(quote! {
+                            Self::#variant_ident(payload) => #value_crate::DslValue::object([
+                                (#wire_variant.to_string(), #value_crate::ToValue::to_value(payload)),
+                            ])
+                        }),
+                        Fields::Named(named) => {
+                            let push_into = quote! { content_entries };
+                            let pushes = named
+                                .named
+                                .iter()
+                                .map(|field| {
+                                    let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
+                                    let ident = field.ident.clone().expect("named field");
+                                    let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
+                                    variant_field_to_value_push(field, &field_attrs, &wire_name, &ident, &push_into, &value_crate)
+                                })
+                                .collect::<syn::Result<Vec<_>>>()?;
+                            let idents = variant_destructure_patterns(named);
+                            Ok(quote! {
+                                Self::#variant_ident { #(#idents),* } => {
+                                    let mut content_entries: Vec<(String, #value_crate::DslValue)> = Vec::new();
+                                    #(#pushes)*
+                                    #value_crate::DslValue::object([
+                                        (#wire_variant.to_string(), #value_crate::DslValue::Object(content_entries)),
+                                    ])
+                                }
+                            })
+                        }
+                        other => Err(syn::Error::new_spanned(other, "#[derive(ToValue)] externally-tagged enum variants must be unit, a single unnamed payload, or named fields")),
+                    };
+                    arm
+                })
+                .collect::<syn::Result<Vec<_>>>()?;
             quote! {
                 match self { #(#arms),* }
             }
@@ -754,76 +768,88 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
             let Some(tag) = &container.tag else {
                 unreachable!("the tag.is_none() arm above already handles every tag-less enum");
             };
-            let arms = data.variants.iter().map(|variant| {
-                let variant_ident = &variant.ident;
-                let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
-                let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
-                let arm: syn::Result<proc_macro2::TokenStream> = match (&variant.fields, &container.content) {
-                    (Fields::Unit, _) => Ok(quote! {
-                        Self::#variant_ident => #value_crate::DslValue::object([(#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string()))])
-                    }),
-                    (Fields::Unnamed(unnamed), Some(content)) if unnamed.unnamed.len() == 1 => Ok(quote! {
-                        Self::#variant_ident(payload) => #value_crate::DslValue::object([
-                            (#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string())),
-                            (#content.to_string(), #value_crate::ToValue::to_value(payload)),
-                        ])
-                    }),
-                    (Fields::Unnamed(unnamed), None) if unnamed.unnamed.len() == 1 => Ok(quote! {
-                        Self::#variant_ident(payload) => {
-                            let mut entries = match #value_crate::ToValue::to_value(payload) {
-                                #value_crate::DslValue::Object(entries) => entries,
-                                other => vec![("value".to_string(), other)],
-                            };
-                            entries.insert(0, (#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string())));
-                            #value_crate::DslValue::Object(entries)
+            let arms = data
+                .variants
+                .iter()
+                .map(|variant| {
+                    let variant_ident = &variant.ident;
+                    let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
+                    let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
+                    let arm: syn::Result<proc_macro2::TokenStream> = match (&variant.fields, &container.content) {
+                        (Fields::Unit, _) => Ok(quote! {
+                            Self::#variant_ident => #value_crate::DslValue::object([(#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string()))])
+                        }),
+                        (Fields::Unnamed(unnamed), Some(content)) if unnamed.unnamed.len() == 1 => Ok(quote! {
+                            Self::#variant_ident(payload) => #value_crate::DslValue::object([
+                                (#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string())),
+                                (#content.to_string(), #value_crate::ToValue::to_value(payload)),
+                            ])
+                        }),
+                        (Fields::Unnamed(unnamed), None) if unnamed.unnamed.len() == 1 => Ok(quote! {
+                            Self::#variant_ident(payload) => {
+                                let mut entries = match #value_crate::ToValue::to_value(payload) {
+                                    #value_crate::DslValue::Object(entries) => entries,
+                                    other => vec![("value".to_string(), other)],
+                                };
+                                entries.insert(0, (#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string())));
+                                #value_crate::DslValue::Object(entries)
+                            }
+                        }),
+                        (Fields::Named(named), Some(content)) => {
+                            let push_into = quote! { content_entries };
+                            let pushes = named
+                                .named
+                                .iter()
+                                .map(|field| {
+                                    let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
+                                    let ident = field.ident.clone().expect("named field");
+                                    let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
+                                    variant_field_to_value_push(field, &field_attrs, &wire_name, &ident, &push_into, &value_crate)
+                                })
+                                .collect::<syn::Result<Vec<_>>>()?;
+                            let idents = variant_destructure_patterns(named);
+                            Ok(quote! {
+                                Self::#variant_ident { #(#idents),* } => {
+                                    let mut content_entries: Vec<(String, #value_crate::DslValue)> = Vec::new();
+                                    #(#pushes)*
+                                    #value_crate::DslValue::object([
+                                        (#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string())),
+                                        (#content.to_string(), #value_crate::DslValue::Object(content_entries)),
+                                    ])
+                                }
+                            })
                         }
-                    }),
-                    (Fields::Named(named), Some(content)) => {
-                        let push_into = quote! { content_entries };
-                        let pushes = named.named.iter().map(|field| {
-                            let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
-                            let ident = field.ident.clone().expect("named field");
-                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
-                            variant_field_to_value_push(field, &field_attrs, &wire_name, &ident, &push_into, &value_crate)
-                        }).collect::<syn::Result<Vec<_>>>()?;
-                        let idents = variant_destructure_patterns(named);
-                        Ok(quote! {
-                            Self::#variant_ident { #(#idents),* } => {
-                                let mut content_entries: Vec<(String, #value_crate::DslValue)> = Vec::new();
-                                #(#pushes)*
-                                #value_crate::DslValue::object([
-                                    (#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string())),
-                                    (#content.to_string(), #value_crate::DslValue::Object(content_entries)),
-                                ])
-                            }
-                        })
-                    }
-                    (Fields::Named(named), None) => {
-                        // 🛡️ `__out_entries`, not `entries` — a user field literally named `entries`
-                        // (e.g. `SemioValue::Map { entries: Vec<SemioValueEntry> }`) would otherwise
-                        // shadow the accumulator once `#(#idents),*` destructures it into scope, making
-                        // `ToValue::to_value(#ident)` resolve to the accumulator itself (an owned
-                        // `Vec<(String, DslValue)>`) instead of the field's `&Vec<SemioValueEntry>`.
-                        let push_into = quote! { __out_entries };
-                        let pushes = named.named.iter().map(|field| {
-                            let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
-                            let ident = field.ident.clone().expect("named field");
-                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
-                            variant_field_to_value_push(field, &field_attrs, &wire_name, &ident, &push_into, &value_crate)
-                        }).collect::<syn::Result<Vec<_>>>()?;
-                        let idents = variant_destructure_patterns(named);
-                        Ok(quote! {
-                            Self::#variant_ident { #(#idents),* } => {
-                                let mut __out_entries: Vec<(String, #value_crate::DslValue)> = vec![(#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string()))];
-                                #(#pushes)*
-                                #value_crate::DslValue::Object(__out_entries)
-                            }
-                        })
-                    }
-                    (other, _) => Err(syn::Error::new_spanned(other, "#[derive(ToValue)] enum variants must be unit, a single unnamed payload, or named fields")),
-                };
-                arm
-            }).collect::<syn::Result<Vec<_>>>()?;
+                        (Fields::Named(named), None) => {
+                            // 🛡️ `__out_entries`, not `entries` — a user field literally named `entries`
+                            // (e.g. `SemioValue::Map { entries: Vec<SemioValueEntry> }`) would otherwise
+                            // shadow the accumulator once `#(#idents),*` destructures it into scope, making
+                            // `ToValue::to_value(#ident)` resolve to the accumulator itself (an owned
+                            // `Vec<(String, DslValue)>`) instead of the field's `&Vec<SemioValueEntry>`.
+                            let push_into = quote! { __out_entries };
+                            let pushes = named
+                                .named
+                                .iter()
+                                .map(|field| {
+                                    let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
+                                    let ident = field.ident.clone().expect("named field");
+                                    let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
+                                    variant_field_to_value_push(field, &field_attrs, &wire_name, &ident, &push_into, &value_crate)
+                                })
+                                .collect::<syn::Result<Vec<_>>>()?;
+                            let idents = variant_destructure_patterns(named);
+                            Ok(quote! {
+                                Self::#variant_ident { #(#idents),* } => {
+                                    let mut __out_entries: Vec<(String, #value_crate::DslValue)> = vec![(#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string()))];
+                                    #(#pushes)*
+                                    #value_crate::DslValue::Object(__out_entries)
+                                }
+                            })
+                        }
+                        (other, _) => Err(syn::Error::new_spanned(other, "#[derive(ToValue)] enum variants must be unit, a single unnamed payload, or named fields")),
+                    };
+                    arm
+                })
+                .collect::<syn::Result<Vec<_>>>()?;
             quote! {
                 match self { #(#arms),* }
             }
@@ -892,49 +918,62 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                 let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
                 quote! { #wire_variant => return Ok(Self::#variant_ident), }
             });
-            let object_arms = data.variants.iter().filter(|variant| !matches!(variant.fields, Fields::Unit)).map(|variant| {
-                let variant_ident = &variant.ident;
-                let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
-                let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
-                let arm: syn::Result<proc_macro2::TokenStream> = match &variant.fields {
-                    Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
-                        let payload_ty = &unnamed.unnamed[0].ty;
-                        Ok(quote! {
-                            #wire_variant => Self::#variant_ident(<#payload_ty as #value_crate::FromValue>::from_value(__payload)?),
-                        })
-                    }
-                    Fields::Named(named) => {
-                        let field_wire_names: Vec<String> = named.named.iter().map(|field| {
-                            let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
-                            let ident = field.ident.clone().expect("named field");
-                            field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all())
-                        }).collect();
-                        let deny_check = if container.deny_unknown_fields {
-                            deny_unknown_keys(&quote! { __variant_entries }, &field_wire_names, &value_crate)
-                        } else {
-                            quote! {}
-                        };
-                        let entries_ident = quote! { __variant_entries };
-                        let reads = named.named.iter().map(|field| {
-                            let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
-                            let ident = field.ident.clone().expect("named field");
-                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
-                            variant_field_from_value_read(field, &field_attrs, &wire_name, &ident, &entries_ident, &value_crate)
-                        }).collect::<syn::Result<Vec<_>>>()?;
-                        let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
-                        Ok(quote! {
-                            #wire_variant => {
-                                let __variant_entries = #value_crate::DslValue::into_object(__payload)?;
-                                #deny_check
-                                #(#reads)*
-                                Self::#variant_ident { #(#idents),* }
-                            },
-                        })
-                    }
-                    other => Err(syn::Error::new_spanned(other, "#[derive(FromValue)] externally-tagged enum variants must be unit, a single unnamed payload, or named fields")),
-                };
-                arm
-            }).collect::<syn::Result<Vec<_>>>()?;
+            let object_arms = data
+                .variants
+                .iter()
+                .filter(|variant| !matches!(variant.fields, Fields::Unit))
+                .map(|variant| {
+                    let variant_ident = &variant.ident;
+                    let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
+                    let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
+                    let arm: syn::Result<proc_macro2::TokenStream> = match &variant.fields {
+                        Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
+                            let payload_ty = &unnamed.unnamed[0].ty;
+                            Ok(quote! {
+                                #wire_variant => Self::#variant_ident(<#payload_ty as #value_crate::FromValue>::from_value(__payload)?),
+                            })
+                        }
+                        Fields::Named(named) => {
+                            let field_wire_names: Vec<String> = named
+                                .named
+                                .iter()
+                                .map(|field| {
+                                    let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
+                                    let ident = field.ident.clone().expect("named field");
+                                    field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all())
+                                })
+                                .collect();
+                            let deny_check = if container.deny_unknown_fields {
+                                deny_unknown_keys(&quote! { __variant_entries }, &field_wire_names, &value_crate)
+                            } else {
+                                quote! {}
+                            };
+                            let entries_ident = quote! { __variant_entries };
+                            let reads = named
+                                .named
+                                .iter()
+                                .map(|field| {
+                                    let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
+                                    let ident = field.ident.clone().expect("named field");
+                                    let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
+                                    variant_field_from_value_read(field, &field_attrs, &wire_name, &ident, &entries_ident, &value_crate)
+                                })
+                                .collect::<syn::Result<Vec<_>>>()?;
+                            let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
+                            Ok(quote! {
+                                #wire_variant => {
+                                    let __variant_entries = #value_crate::DslValue::into_object(__payload)?;
+                                    #deny_check
+                                    #(#reads)*
+                                    Self::#variant_ident { #(#idents),* }
+                                },
+                            })
+                        }
+                        other => Err(syn::Error::new_spanned(other, "#[derive(FromValue)] externally-tagged enum variants must be unit, a single unnamed payload, or named fields")),
+                    };
+                    arm
+                })
+                .collect::<syn::Result<Vec<_>>>()?;
             quote! {
                 if let #value_crate::DslValue::String(__s) = &value {
                     match __s.as_str() {
@@ -957,104 +996,120 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
             let Some(tag) = &container.tag else {
                 unreachable!("the tag.is_none() arm above already handles every tag-less enum");
             };
-            let arms = data.variants.iter().map(|variant| {
-                let variant_ident = &variant.ident;
-                let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
-                let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
-                let arm: syn::Result<proc_macro2::TokenStream> = match (&variant.fields, &container.content) {
-                    (Fields::Unit, Some(_)) => Ok(quote! {
-                        #wire_variant => Self::#variant_ident,
-                    }),
-                    (Fields::Unit, None) => {
-                        // 🛡️ Internally-tagged unit variant: the whole entries object is nothing
-                        // but the tag, so `deny_unknown_fields` allows exactly `{tag}`.
-                        let deny_check = if container.deny_unknown_fields {
-                            deny_unknown_keys(&quote! { __entries }, std::slice::from_ref(tag), &value_crate)
-                        } else {
-                            quote! {}
-                        };
-                        Ok(quote! {
-                            #wire_variant => { #deny_check Self::#variant_ident },
-                        })
-                    }
-                    (Fields::Unnamed(unnamed), Some(_)) if unnamed.unnamed.len() == 1 => {
-                        let payload_ty = &unnamed.unnamed[0].ty;
-                        Ok(quote! {
-                            #wire_variant => Self::#variant_ident(<#payload_ty as #value_crate::FromValue>::from_value(__content()?)?),
-                        })
-                    }
-                    (Fields::Unnamed(unnamed), None) if unnamed.unnamed.len() == 1 => {
-                        // 🩹 Strip the tag key before handing the object to the payload type's
-                        // own `FromValue` — `expand_to_value`'s sibling arm never puts the tag
-                        // INTO the payload's own entries (it prepends the tag after taking the
-                        // payload's `to_value()`, so the payload never emits it either), so
-                        // leaving the tag in here was a decode/encode asymmetry: a payload type
-                        // that itself carries `#[value(deny_unknown_fields)]` would reject its
-                        // own valid wire form because the wrapper's tag key looked unknown to it.
-                        //
-                        // 🪆 The `__scalar` arm is the exact inverse of `expand_to_value`'s runtime
-                        // branch: a payload whose `to_value()` is NOT an object cannot be spliced
-                        // beside the tag, so the encoder carries it as the single entry
-                        // `{"value": <scalar>}`. Which of the two shapes a given wire object is
-                        // cannot be decided from the payload TYPE at expansion time (a struct whose
-                        // only field is literally named `value` produces the same key set), so the
-                        // object form is attempted first and the carrier is unwrapped only when it
-                        // fails — that ordering decodes both shapes correctly, where a key-shape
-                        // test alone would mis-decode `struct P { value: String }`.
-                        let payload_ty = &unnamed.unnamed[0].ty;
-                        Ok(quote! {
-                            #wire_variant => Self::#variant_ident({
-                                let __payload: Vec<(String, #value_crate::DslValue)> = __entries.iter().filter(|(__k, _)| __k != #tag).cloned().collect();
-                                match <#payload_ty as #value_crate::FromValue>::from_value(#value_crate::DslValue::Object(__payload.clone())) {
-                                    ::core::result::Result::Ok(__decoded) => __decoded,
-                                    ::core::result::Result::Err(__object_error) => match __payload.as_slice() {
-                                        [(__k, __scalar)] if __k == "value" => <#payload_ty as #value_crate::FromValue>::from_value(__scalar.clone())?,
-                                        _ => return ::core::result::Result::Err(__object_error),
-                                    },
-                                }
-                            }),
-                        })
-                    }
-                    (Fields::Named(named), content_key) => {
-                        let source = if content_key.is_some() { quote! { __content()?.into_object()? } } else { quote! { __entries.clone() } };
-                        let field_wire_names: Vec<String> = named.named.iter().map(|field| {
-                            let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
-                            let ident = field.ident.clone().expect("named field");
-                            field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all())
-                        }).collect();
-                        let deny_check = if container.deny_unknown_fields {
-                            let allowed: Vec<String> = if content_key.is_some() {
-                                field_wire_names
+            let arms = data
+                .variants
+                .iter()
+                .map(|variant| {
+                    let variant_ident = &variant.ident;
+                    let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
+                    let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
+                    let arm: syn::Result<proc_macro2::TokenStream> = match (&variant.fields, &container.content) {
+                        (Fields::Unit, Some(_)) => Ok(quote! {
+                            #wire_variant => Self::#variant_ident,
+                        }),
+                        (Fields::Unit, None) => {
+                            // 🛡️ Internally-tagged unit variant: the whole entries object is nothing
+                            // but the tag, so `deny_unknown_fields` allows exactly `{tag}`.
+                            let deny_check = if container.deny_unknown_fields {
+                                deny_unknown_keys(&quote! { __entries }, std::slice::from_ref(tag), &value_crate)
                             } else {
-                                let mut allowed = vec![tag.clone()];
-                                allowed.extend(field_wire_names);
-                                allowed
+                                quote! {}
                             };
-                            deny_unknown_keys(&quote! { __variant_entries }, &allowed, &value_crate)
-                        } else {
-                            quote! {}
-                        };
-                        let entries_ident = quote! { __variant_entries };
-                        let reads = named.named.iter().map(|field| {
-                            let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
-                            let ident = field.ident.clone().expect("named field");
-                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
-                            variant_field_from_value_read(field, &field_attrs, &wire_name, &ident, &entries_ident, &value_crate)
-                        }).collect::<syn::Result<Vec<_>>>()?;
-                        let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
-                        Ok(quote! {
-                            #wire_variant => {
-                                let __variant_entries = #source;
-                                #deny_check
-                                #(#reads)*
-                                Self::#variant_ident { #(#idents),* }
-                            },
-                        })
-                    }
-                    (other, _) => Err(syn::Error::new_spanned(other, "#[derive(FromValue)] enum variants must be unit, a single unnamed payload, or named fields")),
-                };
-                arm
-            }).collect::<syn::Result<Vec<_>>>()?;
+                            Ok(quote! {
+                                #wire_variant => { #deny_check Self::#variant_ident },
+                            })
+                        }
+                        (Fields::Unnamed(unnamed), Some(_)) if unnamed.unnamed.len() == 1 => {
+                            let payload_ty = &unnamed.unnamed[0].ty;
+                            Ok(quote! {
+                                #wire_variant => Self::#variant_ident(<#payload_ty as #value_crate::FromValue>::from_value(__content()?)?),
+                            })
+                        }
+                        (Fields::Unnamed(unnamed), None) if unnamed.unnamed.len() == 1 => {
+                            // 🩹 Strip the tag key before handing the object to the payload type's
+                            // own `FromValue` — `expand_to_value`'s sibling arm never puts the tag
+                            // INTO the payload's own entries (it prepends the tag after taking the
+                            // payload's `to_value()`, so the payload never emits it either), so
+                            // leaving the tag in here was a decode/encode asymmetry: a payload type
+                            // that itself carries `#[value(deny_unknown_fields)]` would reject its
+                            // own valid wire form because the wrapper's tag key looked unknown to it.
+                            //
+                            // 🪆 The `__scalar` arm is the exact inverse of `expand_to_value`'s runtime
+                            // branch: a payload whose `to_value()` is NOT an object cannot be spliced
+                            // beside the tag, so the encoder carries it as the single entry
+                            // `{"value": <scalar>}`. Which of the two shapes a given wire object is
+                            // cannot be decided from the payload TYPE at expansion time (a struct whose
+                            // only field is literally named `value` produces the same key set), so the
+                            // object form is attempted first and the carrier is unwrapped only when it
+                            // fails — that ordering decodes both shapes correctly, where a key-shape
+                            // test alone would mis-decode `struct P { value: String }`.
+                            let payload_ty = &unnamed.unnamed[0].ty;
+                            Ok(quote! {
+                                #wire_variant => Self::#variant_ident({
+                                    let __payload: Vec<(String, #value_crate::DslValue)> = __entries.iter().filter(|(__k, _)| __k != #tag).cloned().collect();
+                                    match <#payload_ty as #value_crate::FromValue>::from_value(#value_crate::DslValue::Object(__payload.clone())) {
+                                        ::core::result::Result::Ok(__decoded) => __decoded,
+                                        ::core::result::Result::Err(__object_error) => match __payload.as_slice() {
+                                            [(__k, __scalar)] if __k == "value" => <#payload_ty as #value_crate::FromValue>::from_value(__scalar.clone())?,
+                                            _ => return ::core::result::Result::Err(__object_error),
+                                        },
+                                    }
+                                }),
+                            })
+                        }
+                        (Fields::Named(named), content_key) => {
+                            let source = if content_key.is_some() {
+                                quote! { __content()?.into_object()? }
+                            } else {
+                                quote! { __entries.clone() }
+                            };
+                            let field_wire_names: Vec<String> = named
+                                .named
+                                .iter()
+                                .map(|field| {
+                                    let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
+                                    let ident = field.ident.clone().expect("named field");
+                                    field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all())
+                                })
+                                .collect();
+                            let deny_check = if container.deny_unknown_fields {
+                                let allowed: Vec<String> = if content_key.is_some() {
+                                    field_wire_names
+                                } else {
+                                    let mut allowed = vec![tag.clone()];
+                                    allowed.extend(field_wire_names);
+                                    allowed
+                                };
+                                deny_unknown_keys(&quote! { __variant_entries }, &allowed, &value_crate)
+                            } else {
+                                quote! {}
+                            };
+                            let entries_ident = quote! { __variant_entries };
+                            let reads = named
+                                .named
+                                .iter()
+                                .map(|field| {
+                                    let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
+                                    let ident = field.ident.clone().expect("named field");
+                                    let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
+                                    variant_field_from_value_read(field, &field_attrs, &wire_name, &ident, &entries_ident, &value_crate)
+                                })
+                                .collect::<syn::Result<Vec<_>>>()?;
+                            let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
+                            Ok(quote! {
+                                #wire_variant => {
+                                    let __variant_entries = #source;
+                                    #deny_check
+                                    #(#reads)*
+                                    Self::#variant_ident { #(#idents),* }
+                                },
+                            })
+                        }
+                        (other, _) => Err(syn::Error::new_spanned(other, "#[derive(FromValue)] enum variants must be unit, a single unnamed payload, or named fields")),
+                    };
+                    arm
+                })
+                .collect::<syn::Result<Vec<_>>>()?;
             let content_helper = match &container.content {
                 Some(content) => quote! {
                     let __content = || -> ::core::result::Result<#value_crate::DslValue, #value_crate::ValueError> {

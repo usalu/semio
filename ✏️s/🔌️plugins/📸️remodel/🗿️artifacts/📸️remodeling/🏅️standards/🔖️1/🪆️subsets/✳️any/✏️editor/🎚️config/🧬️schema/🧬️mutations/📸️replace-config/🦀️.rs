@@ -15,7 +15,13 @@ impl protocol::MutationKind<RemodelingConfig, RemodelingConfigMutation> for Repl
     fn diff(&self, _base: &RemodelingConfig) -> protocol::MutationOutcome<RemodelingConfig> {
         protocol::MutationOutcome::new(self.config.clone())
     }
-    fn inverse(&self, base: &RemodelingConfig) -> Vec<RemodelingConfigMutation> { vec![RemodelingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })] }
-    fn label(&self) -> String { "Replace Config".into() }
-    fn target(&self) -> Vec<String> { vec!["config".into()] }
+    fn inverse(&self, base: &RemodelingConfig) -> Vec<RemodelingConfigMutation> {
+        vec![RemodelingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+    }
+    fn label(&self) -> String {
+        "Replace Config".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["config".into()]
+    }
 }

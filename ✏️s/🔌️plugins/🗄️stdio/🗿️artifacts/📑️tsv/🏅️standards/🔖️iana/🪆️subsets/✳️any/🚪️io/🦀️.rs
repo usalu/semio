@@ -47,9 +47,8 @@ pub mod derived_composition {
     pub fn register() {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<TsvSnapshot, crate::standards::iana::subsets::any::schema::mutations::TsvMutation>(
-            crate::standards::iana::subsets::any::schema::snapshot::STDIO_TSV_DOCUMENT_SCHEMA,
-        )).expect("static Stdio registration must be available and conflict-free");
+        store::register_document_codec(store::ArtifactCodec::of::<TsvSnapshot, crate::standards::iana::subsets::any::schema::mutations::TsvMutation>(crate::standards::iana::subsets::any::schema::snapshot::STDIO_TSV_DOCUMENT_SCHEMA))
+            .expect("static Stdio registration must be available and conflict-free");
     }
 
     /// 💡️ Registers `s.stdio.tsv.inference`'s facet leaves into the OS-wide inference catalog —

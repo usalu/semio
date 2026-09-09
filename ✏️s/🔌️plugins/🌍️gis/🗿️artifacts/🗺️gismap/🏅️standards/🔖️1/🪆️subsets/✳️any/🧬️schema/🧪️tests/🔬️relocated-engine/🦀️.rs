@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🌉️ Once-guarded stdio registration so `render_drawing_to_svg`'s `io_dispatch` call can

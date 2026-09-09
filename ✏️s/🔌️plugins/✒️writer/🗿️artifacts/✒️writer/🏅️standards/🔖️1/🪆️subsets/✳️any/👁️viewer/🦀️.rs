@@ -5,9 +5,9 @@
 //! artifact or draft mutation. MUST NOT import anything from the sibling editor module
 //! (`policyViewerPurityBreaches`).
 
-use crate::{WriterSnapshot, WRITER_DIALECT, WRITER_DOCUMENT_SCHEMA};
 use crate::viewer::writer::modes::view;
 use crate::viewer::writer::modes::view::windows::main;
+use crate::{schema, WriterSnapshot, WRITER_DIALECT, WRITER_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::{ArtifactViewer, ViewEmit, Viewer};
 use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;
@@ -51,7 +51,7 @@ impl ArtifactViewer for WriterViewer {
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> WriterSnapshot {
-        crate::schema::empty_writer_snapshot()
+        schema::empty_writer_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `WriterViewCommand::Noop` variant never carries a config

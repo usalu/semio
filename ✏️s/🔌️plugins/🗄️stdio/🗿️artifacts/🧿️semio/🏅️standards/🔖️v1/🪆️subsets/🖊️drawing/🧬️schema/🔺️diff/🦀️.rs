@@ -12,10 +12,13 @@
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, NamedModified};
-use crate::standards::v1::subsets::drawing::schema::snapshot::{dec_layer, dec_list, dec_node, dec_path_segment, dec_point2, dec_rgba, dec_style, dec_transform, enc_layer, enc_list, enc_node, enc_path_segment, enc_point2, enc_rgba, enc_style, enc_transform, DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::drawing::schema::snapshot::{
+    dec_layer, dec_list, dec_node, dec_path_segment, dec_point2, dec_rgba, dec_style, dec_transform, enc_layer, enc_list, enc_node, enc_path_segment, enc_point2, enc_rgba, enc_style, enc_transform, DrawCanvas, DrawLayer, DrawNode, DrawStyle,
+    PathSegment, SemioDrawingSnapshot,
+};
+use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -542,9 +545,7 @@ fn inverse_node_diff(current: &DrawNode, diff: &DrawNodeDiff) -> DrawNodeDiff {
             other => DrawNodeDiff::Replace { node: other.clone() },
         },
         DrawNodeDiff::Group(gd) => match current {
-            DrawNode::Group { transform, children } => {
-                DrawNodeDiff::Group(DrawGroupDiff { transform: gd.transform.as_ref().map(|_| *transform), children: gd.children.as_ref().map(|cd| inverse_indexed(children, cd, inverse_node_diff)) })
-            }
+            DrawNode::Group { transform, children } => DrawNodeDiff::Group(DrawGroupDiff { transform: gd.transform.as_ref().map(|_| *transform), children: gd.children.as_ref().map(|cd| inverse_indexed(children, cd, inverse_node_diff)) }),
             other => DrawNodeDiff::Replace { node: other.clone() },
         },
         DrawNodeDiff::Image(id) => match current {
@@ -610,13 +611,7 @@ fn absorb_canvas_diff(a: &DrawCanvasDiff, b: &DrawCanvasDiff) -> DrawCanvasDiff 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_style_diff(style: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyle {
-    DrawStyle {
-        name: style.name.clone(),
-        fill: diff.fill.unwrap_or(style.fill),
-        stroke: diff.stroke.unwrap_or(style.stroke),
-        stroke_width: diff.stroke_width.unwrap_or(style.stroke_width),
-        opacity: diff.opacity.unwrap_or(style.opacity),
-    }
+    DrawStyle { name: style.name.clone(), fill: diff.fill.unwrap_or(style.fill), stroke: diff.stroke.unwrap_or(style.stroke), stroke_width: diff.stroke_width.unwrap_or(style.stroke_width), opacity: diff.opacity.unwrap_or(style.opacity) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn between_style_diff(base: &DrawStyle, other: &DrawStyle) -> Option<DrawStyleDiff> {

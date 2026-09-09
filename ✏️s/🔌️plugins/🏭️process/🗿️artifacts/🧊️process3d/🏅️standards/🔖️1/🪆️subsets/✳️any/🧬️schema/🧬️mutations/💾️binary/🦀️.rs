@@ -1175,7 +1175,6 @@ struct Process3dRetainedCapabilityCursor {
     rules: Vec<CapabilityRule>,
 }
 
-
 impl Process3dRetainedCapabilityCursor {
     fn take_recipe(&mut self) -> Result<MeasureRecipe, String> {
         let first = self.recipe_fields[0].take().unwrap_or_default();
@@ -1353,7 +1352,6 @@ struct Process3dRetainedMachineCursor {
     capabilities: Vec<Capability>,
     capability: Option<Process3dRetainedCapabilityCursor>,
 }
-
 
 impl Process3dRetainedMachineCursor {
     fn finish(&mut self) -> WorkshopMachine {
@@ -1760,13 +1758,10 @@ impl Process3dRetainedMutationReader {
         let value = match self.tag {
             0 => Some(Process3dMutation::CreateStep(create_step::CreateStep {
                 index: self.index,
-                step: self.step.take().map_or(ProcessStep {
-                    id: String::new(),
-                    label: String::new(),
-                    enabled: false,
-                    origin: None,
-                    measure: ProcessMeasure::Drill { radius: 0.0, depth: 0.0, pose: Default::default() },
-                }, |mut cursor| cursor.take_partial()),
+                step: self
+                    .step
+                    .take()
+                    .map_or(ProcessStep { id: String::new(), label: String::new(), enabled: false, origin: None, measure: ProcessMeasure::Drill { radius: 0.0, depth: 0.0, pose: Default::default() } }, |mut cursor| cursor.take_partial()),
             })),
             1 => Some(Process3dMutation::DeleteStep(delete_step::DeleteStep { id: self.strings[0].take().unwrap_or_default() })),
             2 => Some(Process3dMutation::RenameStep(rename_step::RenameStep { id: self.strings[0].take().unwrap_or_default(), new_label: self.strings[1].take().unwrap_or_default() })),
@@ -1796,9 +1791,10 @@ impl Process3dRetainedMutationReader {
             12 => Some(Process3dMutation::MoveStock(move_stock::MoveStock { new_pose: self.pose.take().map(|mut cursor| cursor.take_partial()).unwrap_or_default() })),
             13 => Some(Process3dMutation::ChangeStockLabel(change_stock_label::ChangeStockLabel { new_label: self.strings[0].take().unwrap_or_default() })),
             14 => Some(Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid {
-                new_solid: self.child.take().map_or_else(|| {
-                    store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef { artifact_id: String::new(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
-                }, |mut cursor| cursor.take_partial()),
+                new_solid: self.child.take().map_or_else(
+                    || store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef { artifact_id: String::new(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } }),
+                    |mut cursor| cursor.take_partial(),
+                ),
             })),
             15 => Some(Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: None })),
             _ => None,
@@ -2244,9 +2240,7 @@ impl Process3dOwnerCensusCursor {
                 let bytes = Self::string_bytes(&[&source.stock_id, &source.stock_label])?
                     .checked_add(source.workshop.machines.capacity().saturating_mul(size_of::<WorkshopMachine>()))
                     .and_then(|value| value.checked_add(source.step_payloads.capacity().saturating_mul(size_of::<ProcessStep>())))
-                    .and_then(|value| {
-                        value.checked_add(source.tool_solids.capacity().saturating_mul(size_of_val(&process3d_empty_child::<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>())))
-                    })
+                    .and_then(|value| value.checked_add(source.tool_solids.capacity().saturating_mul(size_of_val(&process3d_empty_child::<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>()))))
                     .ok_or("process3d-owner.bytes-overflow")?;
                 self.totals.admit(10, bytes, 4)?;
                 self.totals.output_pages = PROCESS3D_MAXIMUM_OUTPUT_PAGES;
@@ -2934,10 +2928,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                         }
                     },
                     1 if index < entry.forwards.len() => {
-                        let id = entry
-                            .mutation_meta
-                            .get(index)
-                            .and_then(|meta| meta.mutation_id.as_ref()).map_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)), |id| protocol::MutationId(process3d_copy_string(&id.0).unwrap_or_default()));
+                        let id =
+                            entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.as_ref()).map_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)), |id| protocol::MutationId(process3d_copy_string(&id.0).unwrap_or_default()));
                         match runtime.seed_mutation(id) {
                             Ok(()) => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 },
                             Err(error) => {
@@ -3185,10 +3177,9 @@ pub fn process3d_document_store_initialization_job(
 #[cfg(test)]
 pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutation> {
     use crate::mutations::{
-        change_cursor::ChangeCursor, change_machine_icon::ChangeMachineIcon, change_step_enabled::ChangeStepEnabled, change_step_origin::ChangeStepOrigin, change_stock_label::ChangeStockLabel,
-        create_machine::CreateMachine, create_step::CreateStep, delete_machine::DeleteMachine, delete_step::DeleteStep, move_stock::MoveStock, rename_machine::RenameMachine,
-        rename_step::RenameStep, reorder_steps::ReorderSteps, replace_machine_capabilities::ReplaceMachineCapabilities, replace_step_measure::ReplaceStepMeasure,
-        replace_stock_solid::ReplaceStockSolid,
+        change_cursor::ChangeCursor, change_machine_icon::ChangeMachineIcon, change_step_enabled::ChangeStepEnabled, change_step_origin::ChangeStepOrigin, change_stock_label::ChangeStockLabel, create_machine::CreateMachine, create_step::CreateStep,
+        delete_machine::DeleteMachine, delete_step::DeleteStep, move_stock::MoveStock, rename_machine::RenameMachine, rename_step::RenameStep, reorder_steps::ReorderSteps, replace_machine_capabilities::ReplaceMachineCapabilities,
+        replace_step_measure::ReplaceStepMeasure, replace_stock_solid::ReplaceStockSolid,
     };
 
     let pose = crate::Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.5 };
