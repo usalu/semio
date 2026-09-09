@@ -1,0 +1,14 @@
+{
+  "windows": [
+    {
+      "id": "note-composite-a",
+      "config": { "camera": { "x": 3.0, "y": -2.0, "zoom": 1.5 } },
+      "transient": { "engagementInput": "Änderung" }
+    },
+    {
+      "id": "note-composite-b",
+      "config": { "camera": { "x": -11.25, "y": 7.75, "zoom": 0.625 } },
+      "transient": { "engagementInput": "Rename" }
+    }
+  ]
+}

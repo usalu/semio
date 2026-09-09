@@ -282,3 +282,27 @@ async fn tangent_spheres_union_volume_is_exact_sum() {
 }
 
 // #endregion 🧪️ExactCurvedTests
+
+/// 🧪 Every analytic primitive must be structurally valid on its own — the boolean re-runs
+/// `validate_body` over its result and attributes anything it cannot pin on a pre-existing solid
+/// to itself, so a primitive that is born invalid fails every boolean that touches it.
+/// 🐛 Both halves of this were live: the sphere's two collapsed POLE edges (one use each, zero
+/// length) were reported as `shell-not-closed` + `degenerate-edge`, and its single face measured
+/// ZERO area (`sliver-face`) because the duplicate pole vertex in its UV boundary blocked every
+/// ear of the triangulation.
+#[semio_framework_async_macros::async_test]
+async fn analytic_primitives_are_structurally_valid() {
+    for name in ["sphere", "torus", "cylinder", "box"] {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        match name {
+            "sphere" => make_sphere(&mut body, 1.0, &mut rec).map(|_| ()),
+            "torus" => crate::standards::v1::subsets::brep::schema::diff::primitives::make_torus(&mut body, 2.0, 0.5, &mut rec).map(|_| ()),
+            "cylinder" => make_cylinder(&mut body, 1.0, 2.0, &mut rec).map(|_| ()),
+            _ => make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).map(|_| ()),
+        }
+        .unwrap();
+        let issues = validate_body(&body);
+        assert!(issues.is_empty(), "{name}: {:?}", issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect::<Vec<_>>());
+    }
+}

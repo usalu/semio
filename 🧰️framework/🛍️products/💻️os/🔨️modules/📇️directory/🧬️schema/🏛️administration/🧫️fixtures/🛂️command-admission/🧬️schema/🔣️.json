@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/directory/administration-command-admission-fixture-v1.json",
+  "title": "Administration Command Admission Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "spaceId",
+    "allowed",
+    "unrelated",
+    "refused",
+    "malformed"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.directory.administration-command-admission-fixture.v1"
+    },
+    "spaceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allowed": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "capability",
+          "command"
+        ],
+        "properties": {
+          "capability": {
+            "enum": [
+              "renameSpace",
+              "setVisibility",
+              "deleteSpace",
+              "upsertMember",
+              "removeMember",
+              "createInvite",
+              "revokeInvite"
+            ]
+          },
+          "command": {
+            "$ref": "https://semio.tech/schema/os/directory/component.json#/$defs/DirectoryCommand"
+          }
+        }
+      }
+    },
+    "unrelated": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "https://semio.tech/schema/os/directory/component.json#/$defs/DirectoryCommand"
+      }
+    },
+    "refused": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "missing-page",
+          "member-page",
+          "foreign-command",
+          "foreign-page",
+          "foreign-space-view",
+          "withdrawn-capability"
+        ]
+      }
+    },
+    "malformed": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "uniqueItems": true,
+      "items": {}
+    }
+  }
+}

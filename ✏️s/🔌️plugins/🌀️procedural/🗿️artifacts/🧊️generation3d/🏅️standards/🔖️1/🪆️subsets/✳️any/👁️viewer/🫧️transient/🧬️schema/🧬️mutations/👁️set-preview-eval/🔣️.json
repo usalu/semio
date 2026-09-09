@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/👁️set-preview-eval",
+  "semanticKind": "set-preview-eval",
+  "displayName": "Set Preview Eval",
+  "emoji": "👁️",
+  "aggregateVariant": "SetPreviewEval",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-preview-eval",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

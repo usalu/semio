@@ -25,7 +25,7 @@ backend = "http://127.0.0.1:6141/mesh/"
 backend = "http://127.0.0.1:6141/infinite-assets/"
 
 [[proxy]]
-backend = "http://127.0.0.1:6141/cad-fixture/"
+backend = "http://127.0.0.1:6141/cad-assets/"
 
 [[hooks]]
 stage = "pre_build"

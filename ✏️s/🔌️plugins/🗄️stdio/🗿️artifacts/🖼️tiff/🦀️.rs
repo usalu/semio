@@ -9,7 +9,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub(crate) use semio_s_artifact_stdio_contract::{base64_standard, impl_serde_op_codec};
+pub(crate) use semio_s_artifact_stdio_contract::impl_serde_op_codec;
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 

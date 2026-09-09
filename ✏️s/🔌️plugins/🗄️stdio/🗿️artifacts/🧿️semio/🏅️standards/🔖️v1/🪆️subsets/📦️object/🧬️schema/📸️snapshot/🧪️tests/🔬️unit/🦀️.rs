@@ -60,6 +60,6 @@ async fn codec_retention_law() {
 async fn parent_snapshot_stores_only_child_handles_never_content() {
     let snap = demo_object_snapshot();
     let text = <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    assert!(text.contains(&enc_str("brep-01")), "hex-encoded child_id must be present");
+    assert!(text.contains(&enc_str("crate-brep")), "hex-encoded child_id must be present");
     assert!(!text.to_lowercase().contains("vertices") && !text.to_lowercase().contains("faces"), "must never embed brep/mesh field names — only the handle");
 }

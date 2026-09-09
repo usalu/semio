@@ -79,7 +79,7 @@ class TestScript extends BundleScript {
     const subset = join(this.repoRoot, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any");
     runCmd(process.execPath, ["test", join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")]);
     const plugin = resolve(this.root, "../..");
-    const authority = resolve(plugin, "🧪️publication-authority");
+    const authority = resolve(plugin, "🧫️fixtures/🧪️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
     const module = await Bun.file(resolve(plugin, "🧬️schema", "🔣️.json")).json() as { $id: string };
     const ajv = new Ajv({ allErrors: true, strict: true });

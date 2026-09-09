@@ -167,6 +167,65 @@ impl protocol::MutationDiff<Puzzle2dWindowTransient> for Puzzle2dWindowTransient
         *self = other;
     }
 }
+
+store::artifact_retire_struct!(Puzzle2dWindowTransient { engagement_input, brush_candidate_index, brush_candidates, brush_candidate_source_handle_id });
+
+impl store::retirement::RetireOwned for Puzzle2dWindowTransientMutation {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        match self {
+            Self::Snapshot { transient } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(transient)]),
+        }
+    }
+}
+
+fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient) -> Option<usize> {
+    fn charge(bytes: &mut usize, increment: usize) -> Option<()> {
+        *bytes = bytes.checked_add(increment)?;
+        (*bytes <= store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).then_some(())
+    }
+
+    let mut bytes = 0;
+    charge(&mut bytes, std::mem::size_of::<Puzzle2dWindowTransient>())?;
+    charge(&mut bytes, transient.engagement_input.capacity())?;
+    charge(&mut bytes, transient.brush_candidate_source_handle_id.capacity())?;
+    charge(&mut bytes, transient.brush_candidates.capacity().checked_mul(std::mem::size_of::<dsl::DslValue>())?)?;
+    let mut pending = Vec::new();
+    pending.try_reserve(transient.brush_candidates.len()).ok()?;
+    pending.extend(transient.brush_candidates.iter());
+    while let Some(value) = pending.pop() {
+        match value {
+            dsl::DslValue::String(value) => charge(&mut bytes, value.capacity())?,
+            dsl::DslValue::Array(values) => {
+                charge(&mut bytes, values.capacity().checked_mul(std::mem::size_of::<dsl::DslValue>())?)?;
+                pending.try_reserve(values.len()).ok()?;
+                pending.extend(values);
+            }
+            dsl::DslValue::Object(entries) => {
+                charge(&mut bytes, entries.capacity().checked_mul(std::mem::size_of::<(String, dsl::DslValue)>())?)?;
+                pending.try_reserve(entries.len()).ok()?;
+                for (key, value) in entries {
+                    charge(&mut bytes, key.capacity())?;
+                    pending.push(value);
+                }
+            }
+            dsl::DslValue::Null | dsl::DslValue::Bool(_) | dsl::DslValue::Number(_) => {}
+        }
+    }
+    Some(bytes)
+}
+
+fn puzzle2d_window_transient_preflight(mutation: &Puzzle2dWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let Puzzle2dWindowTransientMutation::Snapshot { transient } = mutation;
+    let retained_bytes = puzzle2d_window_transient_retained_bytes(transient).ok_or_else(|| "Puzzle 2D window transient exceeds its exact retained publication envelope".to_string())?;
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn puzzle2d_window_transient_transfer(mutation: Puzzle2dWindowTransientMutation) -> Puzzle2dWindowTransient {
+    match mutation {
+        Puzzle2dWindowTransientMutation::Snapshot { transient } => transient,
+    }
+}
+
 json_store!(Puzzle2dWindowTransient, "puzzle2dwindowtransient", "s.puzzle.puzzle2d.windowtransient");
 impl protocol::OpText for Puzzle2dWindowTransientMutation {
     fn print_op(&self) -> String {
@@ -210,14 +269,16 @@ macro_rules! owners {
             const WINDOW_KIND_ID: &'static str = $kind;
             type State = Puzzle2dWindowTransient;
             type Mutation = Puzzle2dWindowTransientMutation;
-            fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::State, Self::Mutation>> {
-                semio_framework_plugin::bounded_window_transient_preparation_factory::<Self>()
-            }
-            fn build_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::State>> {
-                semio_framework_plugin::bounded_window_transient_root_retirement_factory::<Self>()
-            }
-            fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::State, Self::Mutation>>> {
-                semio_framework_plugin::bounded_window_transient_store_disposer::<Self>()
+            fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+                let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+                let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+                let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+                    puzzle2d_window_transient_preflight,
+                    puzzle2d_window_transient_transfer,
+                    state.clone(),
+                    mutation.clone(),
+                ));
+                semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
             }
         }
     };
@@ -363,41 +424,5 @@ pub fn split(runtime: &crate::editor::puzzle2d::config::Puzzle2dPlayRuntime, win
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn same_kind_windows_compose_isolated_runtime() {
-        let shared = crate::editor::puzzle2d::config::Puzzle2dConfig::default();
-        let first = Puzzle2dWindowConfig { camera_x: 12.0, grid_factor: 4.0, ..Default::default() };
-        let second = Puzzle2dWindowConfig { camera_x: -7.0, grid_factor: 0.5, ..Default::default() };
-        let first_runtime = runtime(&shared, &first, &Puzzle2dWindowTransient::default(), Some(overview::WINDOW_KIND_ID));
-        let second_runtime = runtime(&shared, &second, &Puzzle2dWindowTransient::default(), Some(overview::WINDOW_KIND_ID));
-        assert_eq!(first_runtime.camera_x, 12.0);
-        assert_eq!(second_runtime.camera_x, -7.0);
-        assert_eq!(first_runtime.grid_factor, 4.0);
-        assert_eq!(second_runtime.grid_factor, 0.5);
-    }
-
-    #[test]
-    fn app_pack_and_spr_exclude_window_and_transient_fields() {
-        let shared = crate::editor::puzzle2d::config::Puzzle2dConfig::default();
-        let spr = dsl::json::to_json_string(&shared);
-        let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
-        assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(2));
-        let pack = store::ArtifactPack::encode_pack(&shared);
-        for forbidden in ["cameraX", "engagementInput", "brushCandidates", "fillJobCheckpointSequence"] {
-            assert!(!spr.contains(forbidden));
-            assert!(!pack.windows(forbidden.len()).any(|bytes| bytes == forbidden.as_bytes()));
-        }
-    }
-
-    #[test]
-    fn document_camera_is_only_the_initial_window_seed() {
-        let document = serde_json::json!({ "camera": { "x": 8.0, "y": -3.0, "zoom": 2.5 } });
-        let seed = document_seed(&document);
-        assert_eq!((seed.camera_x, seed.camera_y, seed.camera_zoom), (8.0, -3.0, 2.5));
-        let live = Puzzle2dWindowConfig { camera_x: 21.0, ..seed.clone() };
-        assert_ne!(live.camera_x, document_seed(&document).camera_x);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

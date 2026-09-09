@@ -103,6 +103,7 @@ impl SpaceArtifactCreationCatalogV1 {
 pub struct SpaceArtifactCreateV1 {
     pub schema: String,
     pub request_id: String,
+    pub expected_catalog_generation_id: String,
     pub kind_id: String,
     pub name: String,
 }
@@ -112,6 +113,7 @@ impl SpaceArtifactCreateV1 {
     pub fn validate(&self) -> bool {
         self.schema == "semio.hub.space-artifact-create/v1"
             && request_id(&self.request_id)
+            && digest(&self.expected_catalog_generation_id)
             && identity(&self.kind_id)
             && !self.name.is_empty()
             && self.name.chars().count() <= 128
@@ -183,6 +185,7 @@ pub struct SpaceArtifactCreationStatusV1 {
     pub schema: String,
     pub request_id: String,
     pub space_id: String,
+    pub catalog_generation_id: String,
     pub phase: SpaceArtifactCreationPhaseV1,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -195,6 +198,7 @@ impl SpaceArtifactCreationStatusV1 {
         self.schema == "semio.hub.space-artifact-creation-status/v1"
             && request_id(&self.request_id)
             && identity(&self.space_id)
+            && digest(&self.catalog_generation_id)
             && match (&self.phase, &self.ready) {
                 (SpaceArtifactCreationPhaseV1::Ready, Some(ready)) => ready.validate(),
                 (SpaceArtifactCreationPhaseV1::Ready, None) | (_, Some(_)) => false,

@@ -1,8 +1,8 @@
 "use components";
-import { fetchBody, slowEcho } from '../📞️out-callback/🖥️host-shim.js';
-import { environment, exit as exit$1, stderr, stdin, stdout, terminalInput, terminalOutput, terminalStderr, terminalStdin, terminalStdout } from '../📞️out-callback/🪞️preview2-shim/cli.js';
-import { monotonicClock } from '../📞️out-callback/🪞️preview2-shim/clocks.js';
-import { error, poll as poll$2, streams } from '../📞️out-callback/🪞️preview2-shim/io.js';
+import { fetchBody, slowEcho } from '../../../../🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🖥️host-shim.js';
+import { environment, exit as exit$1, stderr, stdin, stdout, terminalInput, terminalOutput, terminalStderr, terminalStdin, terminalStdout } from '../../../../🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/cli.js';
+import { monotonicClock } from '../../../../🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/clocks.js';
+import { error, poll as poll$2, streams } from '../../../../🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/io.js';
 const { getEnvironment } = environment;
 
 if (getEnvironment=== undefined) {

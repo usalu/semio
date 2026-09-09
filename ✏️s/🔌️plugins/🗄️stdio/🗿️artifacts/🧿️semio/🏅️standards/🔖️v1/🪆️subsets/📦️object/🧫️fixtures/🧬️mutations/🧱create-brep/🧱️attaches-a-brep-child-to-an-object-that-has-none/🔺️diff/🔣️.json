@@ -1,6 +1,6 @@
 {
   "brep": {
-    "childId": "brep-1",
+    "childId": "kitchen-sink-brep",
     "target": {
       "artifactId": "kitchen-sink-brep",
       "dialect": {

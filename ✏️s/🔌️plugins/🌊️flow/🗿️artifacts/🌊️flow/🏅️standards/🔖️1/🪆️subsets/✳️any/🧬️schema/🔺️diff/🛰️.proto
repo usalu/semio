@@ -1,83 +1,14 @@
 syntax = "proto3";
 package semio.s.flow.flow.diff;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
-// 🧬️ Flow diff schema — sparse field delta.
-
+// 🔺️ Sparse Flow document delta.
 message FlowDiff {
-  // @state artifact
   optional FlowArtifact artifact = 1;
-  // @state artifact
   optional string schema = 2;
-  // @state artifact
-  optional CameraJson camera = 3;
-  // @state artifact
-  optional FlowWidgetsDelta widgets = 4;
-  // @state artifact
-  optional FlowSynapsesDelta synapses = 5;
-  // @state artifact
-  optional FlowLayoutMapDelta layout = 6;
-  // @state config
+  optional semio.os.store.ArtifactChild content = 3; // child s.stdio.semio@v1/flow
 }
-
 message FlowArtifact {
   string schema = 1;
-  CameraJson camera = 2;
-  repeated Widget widgets = 3;
-  repeated SynapseSpec synapses = 4;
-  map<string, WidgetLayout> layout = 5;
-}
-
-message CameraJson {
-  double x = 1;
-  double y = 2;
-  double zoom = 3;
-}
-
-message WidgetLayout {
-  double x = 1;
-  double y = 2;
-}
-
-message SynapseSpec {
-  string id = 1;
-  string from = 2;
-  string to = 3;
-  string from_port = 4;
-  string to_port = 5;
-}
-
-message Widget {
-  string json = 1;
-}
-
-message FlowStringList {
-  repeated string values = 1;
-}
-
-message FlowWidgetPatchEntry {
-  string id = 1;
-  Widget patch = 2;
-}
-
-message FlowWidgetsDelta {
-  repeated Widget added = 1;
-  repeated string removed = 2;
-  repeated FlowWidgetPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message FlowSynapsePatchEntry {
-  string id = 1;
-  SynapseSpec patch = 2;
-}
-
-message FlowSynapsesDelta {
-  repeated SynapseSpec added = 1;
-  repeated string removed = 2;
-  repeated FlowSynapsePatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message FlowLayoutMapDelta {
-  map<string, WidgetLayout> entries = 1;
+  semio.os.store.ArtifactChild content = 2;
 }

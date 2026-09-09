@@ -26,17 +26,25 @@ pub fn accept_suggestion(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
         .or_else(|| ctx.selected_vortex_ids().first().cloned())
         .or_else(|| puzzle3d_brush_target_vortex(ctx.scene, ctx.interaction));
     ctx.scene.runtime.suggestion_menu = None;
+    // 🧯️ Every dead end below is now spoken: no target vortex and no surviving candidate are both
+    // "there is nothing to place here", and the engine's own refusal (collision / overlap budget) is a
+    // rejection. The popup still closes on all of them — `accept_suggestion_closes_menu_even_when_
+    // placement_fails` — but the failure itself is no longer invisible.
     let Some(vortex_id) = vortex_id else {
-        return;
+        return ctx.notice(|labels| labels.placement_unavailable.as_str());
     };
     let preview = ctx.app.precompute.borrow().brush_preview(&vortex_id, index);
     let Some(preview) = preview else {
-        return;
+        return ctx.notice(|labels| labels.placement_unavailable.as_str());
     };
     let before: Vec<String> = ctx.scene.fixture.objects.iter().map(|object| object.id.clone()).collect();
     let outcome = ctx.app.precompute.borrow_mut().dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload: BrushPlacePayload::from(preview) });
-    if let Ok(Puzzle3dEngineOutcome::Fixture(fixture)) = outcome {
-        if let Some(next) = fixture_from_engine_fixture(ctx.scene, &fixture) {
+    let placed_scene = match outcome {
+        Ok(Puzzle3dEngineOutcome::Fixture(fixture)) => fixture_from_engine_fixture(ctx.scene, &fixture),
+        _ => None,
+    };
+    match placed_scene {
+        Some(next) => {
             *ctx.scene = next;
             puzzle3d_rederive_all_attractions(&mut ctx.scene.fixture);
             resolve_puzzle3d_attractions(&mut ctx.scene.fixture);
@@ -45,5 +53,6 @@ pub fn accept_suggestion(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
             let placed: Vec<String> = ctx.scene.fixture.objects.iter().map(|object| object.id.clone()).filter(|id| !before.contains(id)).collect();
             ctx.replace_selection(PUZZLE3D_GRANULARITY_OBJECT, placed);
         }
+        None => ctx.notice(|labels| labels.placement_rejected.as_str()),
     }
 }

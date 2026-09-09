@@ -12,6 +12,15 @@ async fn default_camera_is_centered_and_unzoomed() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn writer_child_restore_projection_accepts_the_exact_owned_document() {
+    let snapshot = WriterSnapshot::default();
+    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Writer document child");
+    assert_eq!(projection.len(), 1);
+    assert!(projection.admits_member("document", &snapshot.document.target));
+    assert_eq!(snapshot.document.child_id, snapshot.document.target.artifact_id);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn child_local_text_fixture_proves_bounded_identity_isolation_aba_and_wire_omission() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚖️writer-child-local-text-law.json")).expect("language-neutral writer child fixture");
     let cases = fixture["cases"].as_array().expect("fixture cases");

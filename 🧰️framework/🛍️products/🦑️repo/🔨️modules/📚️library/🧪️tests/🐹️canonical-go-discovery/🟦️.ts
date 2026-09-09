@@ -17,6 +17,7 @@ type Vector = Readonly<{
 }>;
 
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🐹️canonical-go-discovery/🔣️.json"), "utf8")) as Vector;
+const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🐹️canonical-go-discovery/🔣️.json"), "utf8"));
 
 /** 🧱️Materializes one language-neutral discovery vector as an isolated Go module. */
 function materialize(root: string): void {
@@ -33,7 +34,7 @@ function materialize(root: string): void {
 
 test("canonical Go plans preserve private-package tests through the Go toolchain oracle", () => {
   expect(vector.contract).toBe("canonical-go-test-discovery-v1");
-  const validate = new Ajv({ strict: false }).compile({ type: "object", required: ["contract", "layout", "cases", "opaqueCases", "expectedPackages", "expectedTests"], additionalProperties: false, properties: { contract: { const: "canonical-go-test-discovery-v1" }, module: { type: "string", minLength: 1 }, layout: { type: "object", required: ["testsDirectory", "implementationFilename", "opaqueDirectoryNames"], additionalProperties: false, properties: { testsDirectory: { type: "string", minLength: 1 }, implementationFilename: { type: "string", pattern: "\\.go$" }, opaqueDirectoryNames: { type: "array", minItems: 1, uniqueItems: true, items: { type: "string", minLength: 1 } } } }, cases: { type: "array", minItems: 1 }, opaqueCases: { type: "array", minItems: 1 }, expectedPackages: { type: "array", minItems: 1, uniqueItems: true }, expectedTests: { type: "array", minItems: 1, uniqueItems: true } } });
+  const validate = new Ajv({ strict: false }).compile(schema);
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   const root = mkdtempSync(join(tmpdir(), "semio-canonical-go-plan-"));
   try {

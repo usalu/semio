@@ -269,3 +269,51 @@ Changed the three constant-size byte iterators in the stdio contract to as_chunk
 
 
 wasm958: {"status":101,"signal":null,"reason":"exit","counts":{"error":191,"warning":0},"cargoWarnings":["warning: build failed, waiting for other jobs to finish..."],"startedAt":"2026-09-09T09:03:05.834Z","finishedAt":"2026-09-09T09:13:26.218Z","packages":160}
+
+
+wasm1005: {"status":101,"signal":null,"reason":"exit","counts":{"error":2,"warning":0},"cargoWarnings":[],"startedAt":"2026-09-09T10:32:16.701Z","finishedAt":"2026-09-09T10:34:27.765Z","packages":160}
+
+
+wasm1009: {"status":101,"signal":null,"reason":"exit","counts":{"error":8,"warning":0},"cargoWarnings":[],"startedAt":"2026-09-09T10:37:03.299Z","finishedAt":"2026-09-09T10:38:07.365Z","packages":160}
+
+
+wasm1012: {"status":101,"signal":null,"reason":"exit","counts":{"error":2,"warning":0},"cargoWarnings":[],"startedAt":"2026-09-09T10:40:23.721Z","finishedAt":"2026-09-09T10:41:09.606Z","packages":160}
+
+
+wasm1015: {"status":101,"signal":null,"reason":"exit","counts":{"error":8,"warning":0},"cargoWarnings":["warning: build failed, waiting for other jobs to finish..."],"startedAt":"2026-09-09T10:42:42.100Z","finishedAt":"2026-09-09T10:44:49.379Z","packages":160}
+
+
+wasm1022: {"status":101,"signal":null,"reason":"exit","counts":{"error":11,"warning":0},"cargoWarnings":[],"startedAt":"2026-09-09T10:55:00.858Z","finishedAt":"2026-09-09T10:57:53.532Z","packages":160}
+
+
+wasm1027: {"status":101,"signal":null,"reason":"exit","counts":{"error":1,"warning":0},"cargoWarnings":[],"startedAt":"2026-09-09T11:01:34.012Z","finishedAt":"2026-09-09T11:01:56.258Z","packages":160}
+
+
+wasm1030: {"status":101,"signal":null,"reason":"exit","counts":{"error":11,"warning":0},"cargoWarnings":["warning: build failed, waiting for other jobs to finish..."],"startedAt":"2026-09-09T11:03:50.114Z","finishedAt":"2026-09-09T11:10:40.977Z","packages":160}
+
+
+wasm1037: {"status":101,"signal":null,"reason":"exit","counts":{"error":2,"warning":0},"cargoWarnings":[],"startedAt":"2026-09-09T11:15:24.435Z","finishedAt":"2026-09-09T11:17:39.036Z","packages":160}
+
+
+wasm1040: {"status":101,"signal":null,"reason":"exit","counts":{"error":7,"warning":0},"cargoWarnings":["warning: build failed, waiting for other jobs to finish..."],"startedAt":"2026-09-09T11:21:54.666Z","finishedAt":"2026-09-09T11:27:10.549Z","packages":160}
+
+
+wasm1044: {"status":101,"signal":null,"reason":"exit","counts":{"error":229,"warning":0},"cargoWarnings":["warning: build failed, waiting for other jobs to finish..."],"startedAt":"2026-09-09T11:31:03.127Z","finishedAt":"2026-09-09T11:50:12.772Z","packages":160}
+
+
+wasm1096: {"status":101,"signal":null,"reason":"exit","counts":{"error":9,"warning":0},"cargoWarnings":["warning: ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml: `default-features` is ignored for semio-s-plugin-flow-extension-brep, since `default-features` was not specified for `workspace.dependencies.semio-s-plugin-flow-extension-brep`, this could become a hard error in the future","warning: ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml: `default-features` is ignored for semio-s-plugin-flow-extension-math, since `default-features` was not specified for `workspace.dependencies.semio-s-plugin-flow-extension-math`, this could become a hard error in the future","warning: `semio-s-artifact-procedural-generation3d` (manifest) generated 2 warnings","warning: build failed, waiting for other jobs to finish..."],"startedAt":"2026-09-09T12:55:05.124Z","finishedAt":"2026-09-09T13:11:09.996Z","packages":160}
+
+
+wasm1106: {"status":101,"signal":null,"reason":"exit","counts":{"error":26,"warning":0},"cargoWarnings":["warning: build failed, waiting for other jobs to finish..."],"startedAt":"2026-09-09T13:13:53.754Z","finishedAt":"2026-09-09T13:16:21.805Z","packages":160}
+
+
+wasm1111: {"status":101,"signal":null,"reason":"exit","counts":{"error":6,"warning":0},"cargoWarnings":[],"startedAt":"2026-09-09T13:19:03.262Z","finishedAt":"2026-09-09T13:34:39.167Z","packages":160}
+
+
+wasm1118: {"diagnosticPass":true,"strict":false,"status":101,"signal":null,"reason":"exit","counts":{"error":1,"warning":0},"cargoWarnings":["warning: build failed, waiting for other jobs to finish..."],"startedAt":"2026-09-09T13:37:56.465Z","finishedAt":"2026-09-09T13:41:00.046Z","packages":160}
+
+
+wasm1123: {"status":101,"signal":null,"reason":"exit","counts":{"error":10,"warning":0},"cargoWarnings":["warning: build failed, waiting for other jobs to finish..."],"startedAt":"2026-09-09T13:42:30.140Z","finishedAt":"2026-09-09T13:55:11.144Z","packages":160}
+
+
+wasm1127: {"status":101,"signal":null,"reason":"exit","counts":{"error":1,"warning":0},"cargoWarnings":[],"startedAt":"2026-09-09T13:56:55.164Z","finishedAt":"2026-09-09T14:33:46.890Z","packages":160}

@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-gis-gisterrain-1-config
 Feature: Apply the gis3d editor camera mutation to a real config record
-  Gis3dConfig owns the session-only viewport camera. The host-owned locale is supplied through
+  GisTerrainWindowConfig owns the session-only viewport camera. The host-owned locale is supplied through
   ViewModel and is outside this mutation vocabulary.
 
   @id-mutate

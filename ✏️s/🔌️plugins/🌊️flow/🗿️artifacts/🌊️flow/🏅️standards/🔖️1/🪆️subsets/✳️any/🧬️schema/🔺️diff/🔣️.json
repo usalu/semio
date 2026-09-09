@@ -4,215 +4,25 @@
   "title": "FlowDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
-    "artifact": {
-      "$ref": "#/$defs/FlowArtifact",
-      "x-semio-state": "artifact"
-    },
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "camera": {
-      "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/CameraJson",
-      "x-semio-state": "artifact"
-    },
-    "widgets": {
-      "$ref": "#/$defs/FlowWidgetsDelta",
-      "x-semio-state": "artifact"
-    },
-    "synapses": {
-      "$ref": "#/$defs/FlowSynapsesDelta",
-      "x-semio-state": "artifact"
-    },
-    "layout": {
-      "$ref": "#/$defs/FlowLayoutMapDelta",
-      "x-semio-state": "artifact"
+    "artifact": { "$ref": "#/$defs/FlowArtifact", "x-semio-state": "artifact" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "content": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio",
+      "x-semio-child-standard": "v1",
+      "x-semio-child-subset": "flow"
     }
   },
   "$defs": {
     "FlowArtifact": {
-      "title": "FlowArtifact",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "schema",
-        "camera",
-        "widgets",
-        "synapses",
-        "layout"
-      ],
+      "required": ["schema", "content"],
       "properties": {
-        "schema": {
-          "type": "string"
-        },
-        "camera": {
-          "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/CameraJson"
-        },
-        "widgets": {
-          "type": "array",
-          "items": {
-            "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/Widget"
-          }
-        },
-        "synapses": {
-          "type": "array",
-          "items": {
-            "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/SynapseSpec"
-          }
-        },
-        "layout": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/WidgetLayout"
-          }
-        }
-      }
-    },
-    "FlowStringList": {
-      "title": "FlowStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "FlowWidgetsDelta": {
-      "title": "FlowWidgetsDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/Widget"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/FlowWidgetPatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "FlowWidgetPatchEntry": {
-      "title": "FlowWidgetPatchEntry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/Widget"
-        }
-      }
-    },
-    "FlowSynapsesDelta": {
-      "title": "FlowSynapsesDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/SynapseSpec"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/FlowSynapsePatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "FlowSynapsePatchEntry": {
-      "title": "FlowSynapsePatchEntry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/SynapseSpec"
-        }
-      }
-    },
-    "FlowLayoutMapDelta": {
-      "title": "FlowLayoutMapDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "entries"
-      ],
-      "properties": {
-        "entries": {
-          "type": "object",
-          "additionalProperties": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/WidgetLayout"
-              }
-            ]
-          }
-        }
+        "schema": { "type": "string" },
+        "content": { "$ref": "https://semio.tech/schema/os/store/child.json" }
       }
     }
   }

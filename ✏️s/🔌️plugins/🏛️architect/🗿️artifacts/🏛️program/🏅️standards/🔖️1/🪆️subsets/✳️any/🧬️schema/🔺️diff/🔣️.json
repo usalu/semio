@@ -4,291 +4,865 @@
   "title": "ProgramDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "artifact",
+    "schema",
+    "meta",
+    "project",
+    "stakeholders",
+    "users",
+    "activities",
+    "functions",
+    "elements",
+    "quantities",
+    "relationships",
+    "adjacencies",
+    "processes",
+    "flows",
+    "accessRules",
+    "operations",
+    "equipment",
+    "resources",
+    "storage",
+    "environmental",
+    "humanFactors",
+    "accessibility",
+    "privacy",
+    "safety",
+    "security",
+    "regulatory",
+    "siteContext",
+    "organizational",
+    "services",
+    "infrastructure",
+    "information",
+    "communication",
+    "wayfinding",
+    "schedules",
+    "flexibility",
+    "growth",
+    "sustainability",
+    "resilience",
+    "costs",
+    "delivery",
+    "risks",
+    "conflicts",
+    "requirements",
+    "priorities",
+    "scenarios",
+    "options",
+    "decisions",
+    "validations",
+    "performance",
+    "quality",
+    "artifacts",
+    "assumptions",
+    "constraints",
+    "complianceRecords",
+    "approvals",
+    "meetings",
+    "changes",
+    "collaboration",
+    "analyses",
+    "reports",
+    "searchFilters",
+    "statusRecords",
+    "workshops",
+    "surveys",
+    "issues",
+    "auditEvents",
+    "templates",
+    "knowledge",
+    "benchmarks",
+    "traces",
+    "governance"
+  ],
   "properties": {
     "artifact": {
-      "title": "ProgramArtifact",
-      "type": "object",
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/architect/program/artifact.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "schema": {
-      "type": "string",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ProgramMeta",
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ProgramMeta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "project": {
-      "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ProjectDefinition",
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ProjectDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "stakeholders": {
-      "$ref": "#/$defs/ProgramStakeholdersDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramStakeholdersDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "users": {
-      "$ref": "#/$defs/ProgramUsersDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramUsersDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "activities": {
-      "$ref": "#/$defs/ProgramActivitiesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramActivitiesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "functions": {
-      "$ref": "#/$defs/ProgramFunctionsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramFunctionsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "elements": {
-      "$ref": "#/$defs/ProgramElementsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramElementsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "quantities": {
-      "$ref": "#/$defs/ProgramQuantitiesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramQuantitiesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "relationships": {
-      "$ref": "#/$defs/ProgramRelationshipsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramRelationshipsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "adjacencies": {
-      "$ref": "#/$defs/ProgramAdjacenciesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramAdjacenciesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "processes": {
-      "$ref": "#/$defs/ProgramProcessesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramProcessesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "flows": {
-      "$ref": "#/$defs/ProgramFlowsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramFlowsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "accessRules": {
-      "$ref": "#/$defs/ProgramAccessRulesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramAccessRulesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "operations": {
-      "$ref": "#/$defs/ProgramOperationsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramOperationsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "equipment": {
-      "$ref": "#/$defs/ProgramEquipmentDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramEquipmentDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "resources": {
-      "$ref": "#/$defs/ProgramResourcesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramResourcesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "storage": {
-      "$ref": "#/$defs/ProgramStorageDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramStorageDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "environmental": {
-      "$ref": "#/$defs/ProgramEnvironmentalDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramEnvironmentalDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "humanFactors": {
-      "$ref": "#/$defs/ProgramHumanFactorsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramHumanFactorsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "accessibility": {
-      "$ref": "#/$defs/ProgramAccessibilityDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramAccessibilityDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "privacy": {
-      "$ref": "#/$defs/ProgramPrivacyDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramPrivacyDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "safety": {
-      "$ref": "#/$defs/ProgramSafetyDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramSafetyDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "security": {
-      "$ref": "#/$defs/ProgramSecurityDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramSecurityDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "regulatory": {
-      "$ref": "#/$defs/ProgramRegulatoryDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramRegulatoryDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "siteContext": {
-      "$ref": "#/$defs/ProgramSiteContextDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramSiteContextDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "organizational": {
-      "$ref": "#/$defs/ProgramOrganizationalDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramOrganizationalDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "services": {
-      "$ref": "#/$defs/ProgramServicesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramServicesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "infrastructure": {
-      "$ref": "#/$defs/ProgramInfrastructureDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramInfrastructureDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "information": {
-      "$ref": "#/$defs/ProgramInformationDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramInformationDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "communication": {
-      "$ref": "#/$defs/ProgramCommunicationDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramCommunicationDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "wayfinding": {
-      "$ref": "#/$defs/ProgramWayfindingDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramWayfindingDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "schedules": {
-      "$ref": "#/$defs/ProgramSchedulesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramSchedulesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "flexibility": {
-      "$ref": "#/$defs/ProgramFlexibilityDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramFlexibilityDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "growth": {
-      "$ref": "#/$defs/ProgramGrowthDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramGrowthDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "sustainability": {
-      "$ref": "#/$defs/ProgramSustainabilityDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramSustainabilityDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "resilience": {
-      "$ref": "#/$defs/ProgramResilienceDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramResilienceDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "costs": {
-      "$ref": "#/$defs/ProgramCostsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramCostsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "delivery": {
-      "$ref": "#/$defs/ProgramDeliveryDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramDeliveryDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "risks": {
-      "$ref": "#/$defs/ProgramRisksDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramRisksDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "conflicts": {
-      "$ref": "#/$defs/ProgramConflictsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramConflictsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "requirements": {
-      "$ref": "#/$defs/ProgramRequirementsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramRequirementsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "priorities": {
-      "$ref": "#/$defs/ProgramPrioritiesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramPrioritiesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "scenarios": {
-      "$ref": "#/$defs/ProgramScenariosDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramScenariosDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "options": {
-      "$ref": "#/$defs/ProgramOptionsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramOptionsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "decisions": {
-      "$ref": "#/$defs/ProgramDecisionsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramDecisionsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "validations": {
-      "$ref": "#/$defs/ProgramValidationsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramValidationsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "performance": {
-      "$ref": "#/$defs/ProgramPerformanceDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramPerformanceDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "quality": {
-      "$ref": "#/$defs/ProgramQualityDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramQualityDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
-    "documents": {
-      "$ref": "#/$defs/ProgramDocumentsDelta",
+    "artifacts": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramArtifactsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "assumptions": {
-      "$ref": "#/$defs/ProgramAssumptionsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramAssumptionsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "constraints": {
-      "$ref": "#/$defs/ProgramConstraintsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramConstraintsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "complianceRecords": {
-      "$ref": "#/$defs/ProgramComplianceRecordsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramComplianceRecordsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "approvals": {
-      "$ref": "#/$defs/ProgramApprovalsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramApprovalsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "meetings": {
-      "$ref": "#/$defs/ProgramMeetingsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramMeetingsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "changes": {
-      "$ref": "#/$defs/ProgramChangesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramChangesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "collaboration": {
-      "$ref": "#/$defs/ProgramCollaborationDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramCollaborationDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "analyses": {
-      "$ref": "#/$defs/ProgramAnalysesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramAnalysesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "reports": {
-      "$ref": "#/$defs/ProgramReportsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramReportsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "searchFilters": {
-      "$ref": "#/$defs/ProgramSearchFiltersDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramSearchFiltersDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "statusRecords": {
-      "$ref": "#/$defs/ProgramStatusRecordsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramStatusRecordsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "workshops": {
-      "$ref": "#/$defs/ProgramWorkshopsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramWorkshopsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "surveys": {
-      "$ref": "#/$defs/ProgramSurveysDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramSurveysDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "issues": {
-      "$ref": "#/$defs/ProgramIssuesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramIssuesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "auditEvents": {
-      "$ref": "#/$defs/ProgramAuditEventsDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramAuditEventsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "templates": {
-      "$ref": "#/$defs/ProgramTemplatesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramTemplatesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "knowledge": {
-      "$ref": "#/$defs/ProgramKnowledgeDelta",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio",
+      "x-semio-child-standard": "v1",
+      "x-semio-child-subset": "table"
     },
     "benchmarks": {
-      "$ref": "#/$defs/ProgramBenchmarksDelta",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio",
+      "x-semio-child-standard": "v1",
+      "x-semio-child-subset": "table"
     },
     "traces": {
-      "$ref": "#/$defs/ProgramTracesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProgramTracesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "governance": {
-      "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Governance",
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Governance"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     }
   },
@@ -300,7 +874,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -322,10 +897,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -336,7 +918,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -358,10 +941,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -372,7 +962,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -394,10 +985,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -408,7 +1006,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -430,10 +1029,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -444,7 +1050,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -466,10 +1073,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -480,7 +1094,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -502,10 +1117,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -516,7 +1138,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -538,10 +1161,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -552,7 +1182,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -574,10 +1205,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -588,7 +1226,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -610,10 +1249,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -624,7 +1270,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -646,10 +1293,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -660,7 +1314,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -682,10 +1337,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -696,7 +1358,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -718,10 +1381,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -732,7 +1402,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -754,10 +1425,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -768,7 +1446,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -790,10 +1469,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -804,7 +1490,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -826,10 +1513,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -840,7 +1534,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -862,10 +1557,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -876,7 +1578,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -898,10 +1601,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -912,7 +1622,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -934,10 +1645,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -948,7 +1666,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -970,10 +1689,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -984,7 +1710,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1006,10 +1733,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1020,7 +1754,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1042,10 +1777,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1056,7 +1798,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1078,10 +1821,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1092,7 +1842,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1114,10 +1865,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1128,7 +1886,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1150,10 +1909,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1164,7 +1930,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1186,10 +1953,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1200,7 +1974,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1222,10 +1997,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1236,7 +2018,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1258,10 +2041,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1272,7 +2062,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1294,10 +2085,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1308,7 +2106,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1330,10 +2129,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1344,7 +2150,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1366,10 +2173,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1380,7 +2194,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1402,10 +2217,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1416,7 +2238,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1438,10 +2261,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1452,7 +2282,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1474,10 +2305,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1488,7 +2326,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1510,10 +2349,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1524,7 +2370,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1546,10 +2393,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1560,7 +2414,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1582,10 +2437,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1596,7 +2458,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1618,10 +2481,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1632,7 +2502,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1654,10 +2525,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1668,7 +2546,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1690,10 +2569,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1704,7 +2590,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1726,10 +2613,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1740,7 +2634,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1762,10 +2657,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1776,7 +2678,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1798,10 +2701,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1812,7 +2722,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1834,10 +2745,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1848,7 +2766,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1870,10 +2789,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1884,7 +2810,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1906,10 +2833,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1920,7 +2854,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -1942,27 +2877,35 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
-    "ProgramDocumentsDelta": {
-      "title": "ProgramDocumentsDelta",
+    "ProgramArtifactsDelta": {
+      "title": "ProgramArtifactsDelta",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/DocumentRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ArtifactRecord"
           }
         },
         "removed": {
@@ -1974,14 +2917,21 @@
         "patched": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ProgramDocumentsPatchEntry"
+            "$ref": "#/$defs/ProgramArtifactsPatchEntry"
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1992,7 +2942,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2014,10 +2965,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2028,7 +2986,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2050,10 +3009,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2064,7 +3030,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2086,10 +3053,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2100,7 +3074,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2122,10 +3097,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2136,7 +3118,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2158,10 +3141,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2172,7 +3162,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2194,10 +3185,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2208,7 +3206,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2230,10 +3229,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2244,7 +3250,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2266,10 +3273,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2280,7 +3294,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2302,10 +3317,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2316,7 +3338,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2338,10 +3361,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2352,7 +3382,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2374,10 +3405,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2388,7 +3426,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2410,10 +3449,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2424,7 +3470,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2446,10 +3493,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2460,7 +3514,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2482,10 +3537,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2496,7 +3558,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2518,10 +3581,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2532,7 +3602,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2554,82 +3625,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "ProgramKnowledgeDelta": {
-      "title": "ProgramKnowledgeDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/KnowledgeRecord"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ProgramKnowledgePatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "ProgramBenchmarksDelta": {
-      "title": "ProgramBenchmarksDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/BenchmarkRecord"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ProgramBenchmarksPatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2640,7 +3646,8 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
@@ -2662,10 +3669,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -3697,13 +4711,13 @@
         }
       }
     },
-    "DocumentRecordPatch": {
-      "title": "DocumentRecordPatch",
+    "ArtifactRecordPatch": {
+      "title": "ArtifactRecordPatch",
       "type": "object",
       "additionalProperties": true
     },
-    "ProgramDocumentsPatchEntry": {
-      "title": "ProgramDocumentsPatchEntry",
+    "ProgramArtifactsPatchEntry": {
+      "title": "ProgramArtifactsPatchEntry",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -3715,7 +4729,7 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/DocumentRecordPatch"
+          "$ref": "#/$defs/ArtifactRecordPatch"
         }
       }
     },
@@ -4068,50 +5082,6 @@
         },
         "patch": {
           "$ref": "#/$defs/TemplateRecordPatch"
-        }
-      }
-    },
-    "KnowledgeRecordPatch": {
-      "title": "KnowledgeRecordPatch",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ProgramKnowledgePatchEntry": {
-      "title": "ProgramKnowledgePatchEntry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/KnowledgeRecordPatch"
-        }
-      }
-    },
-    "BenchmarkRecordPatch": {
-      "title": "BenchmarkRecordPatch",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ProgramBenchmarksPatchEntry": {
-      "title": "ProgramBenchmarksPatchEntry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/BenchmarkRecordPatch"
         }
       }
     },

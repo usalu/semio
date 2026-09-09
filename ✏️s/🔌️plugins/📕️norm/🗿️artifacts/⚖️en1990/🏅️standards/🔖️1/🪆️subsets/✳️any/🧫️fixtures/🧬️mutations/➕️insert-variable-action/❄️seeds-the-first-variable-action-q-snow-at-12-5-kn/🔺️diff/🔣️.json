@@ -3,7 +3,7 @@
   "qK": {
     "childId": "en1990-qk-69c0017661d2372c",
     "target": {
-      "artifactId": "en1990-qk",
+    "artifactId": "en1990-qk-69c0017661d2372c",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

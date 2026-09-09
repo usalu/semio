@@ -6,7 +6,7 @@
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 
 use crate::editor::generation3d::commands::{
-    add_generation, add_widget, delete_selection, flow_eval_tick, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
+    add_generation, add_widget, delete_selection, flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
     scale_selection, select_generation, set_active_example, set_camera, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection, update_generation_values, world_pointer_down,
 };
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
@@ -24,7 +24,7 @@ use semio_framework_os_flow::{FlowEvalSession, FlowHost};
 // needed (unlike the earlier cad pilot, written before that gap closed). `app::InteractionView` is a
 // separate, still-uncurated gap (unrelated to this ticket) — kept qualified.
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
     app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
     ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, EphemeralEmit, ExampleSource, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider,
@@ -87,16 +87,92 @@ semio_framework_plugin::app_commands! {
         "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
         "setCamera" as "camera" => set_camera::SetCamera,
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
-        "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick}
+        "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
+        "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
+        "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve}
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported at file top under its own flat name.
 //#endregion 🔖️Commands
 
+//#region 🔖️InstanceOperationOwner
+/// 🧠️ The ONE `FlowEvalSession` this app instance retains across turns — its neural cache, its
+/// `eval_json`, its live preview meshes and, critically, its `pending_tessellate_by_hash` table.
+/// Every entry point used to build a throwaway `FlowEvalSession::new()`, so an in-flight tessellate
+/// handle noted while emitting the request was gone before its answer could arrive and
+/// `resolve_preview_tessellate` always returned `false` — the 3d preview could never paint. (The
+/// throwaway also violated `FlowEvalSession`'s own `Drop` contract, which rejects a live drop.)
+/// Mirrors `FlowInstanceOperationOwner` in the flow artifact — the framework's reference owner.
+struct Generation3dInstanceOperationOwner {
+    eval_session: Option<FlowEvalSession>,
+    closing: bool,
+}
+
+impl Generation3dInstanceOperationOwner {
+    fn new() -> Self {
+        Self { eval_session: Some(FlowEvalSession::new()), closing: false }
+    }
+
+    fn with_session<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
+        if self.closing {
+            return Err(Fault::from("generation3d-eval-session-closing"));
+        }
+        self.eval_session.as_mut().map(body).ok_or_else(|| Fault::from("generation3d-eval-session-owner-missing"))
+    }
+}
+
+impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dInstanceOperationOwner {
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+
+    fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        let Some(session) = self.eval_session.as_mut() else { return Ok(semio_framework_plugin::PluginCloseStep::Complete) };
+        let step = session.close_step(maximum_items, maximum_bytes);
+        if session.terminal_is_empty() {
+            self.eval_session = None;
+        }
+        Ok(match step {
+            semio_framework_job::InteractiveJobCloseStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "Generation3d evaluation session awaits its exact close grant" },
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
+            semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_plugin::PluginCloseStep::Complete,
+        })
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        self.closing = true;
+        if let Some(session) = self.eval_session.as_mut() {
+            session.begin_close();
+        }
+        self.maintenance_step(maximum_items, maximum_bytes)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.eval_session.is_none()
+    }
+}
+
+/// 🧹️ The ownerless fallback: a scratch session retired through the explicit `begin_close` +
+/// granted `close_step` loop `FlowEvalSession`'s `Drop` contract demands. Reachable only from the
+/// marks-free `render` and the non-retained `handle`, neither of which is handed the app-instance
+/// operation owner by the framework — every live path uses the RETAINED session instead, so nothing
+/// that must survive a turn is ever computed here.
+fn with_scratch_session<R>(body: impl FnOnce(&mut FlowEvalSession) -> R) -> R {
+    let mut session = FlowEvalSession::new();
+    let result = body(&mut session);
+    session.begin_close();
+    while !session.terminal_is_empty() {
+        let _ = session.close_step(usize::MAX, usize::MAX);
+    }
+    result
+}
+//#endregion 🔖️InstanceOperationOwner
+
 //#region 🔖️Generation3dPlayApp
-/// 🧪️ Unit struct apart from `eval_session`: every former runtime field lives in [`Generation3dConfig`],
-/// written through [`Generation3dConfigMutation`]s.
+/// 🧪️ Unit struct: the retained evaluation session lives in [`Generation3dInstanceOperationOwner`]
+/// and every other former runtime field lives in [`Generation3dConfig`], written through
+/// [`Generation3dConfigMutation`]s.
 #[derive(Default)]
 pub struct Generation3dPlayApp;
 
@@ -145,16 +221,17 @@ fn generation3d_render_body(
     body_key: &str,
     document: &Generation3dSnapshot,
     config: &Generation3dConfig,
+    preview_eval_text: Option<&str>,
     generation_preview_text: Option<&str>,
     view_state: &semio_framework_plugin::ViewModel,
     marks: &PreviewInteractionMarks,
+    session: &FlowEvalSession,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let labels = generation3d_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().unwrap_or("move");
-    let session = FlowEvalSession::new();
     let node = match body_key {
-        flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, &session, marks),
-        edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session, active_utility, marks),
+        flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session, marks),
+        edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, preview_eval_text, session, active_utility, marks),
         generations::GENERATION_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, view_state.locale, view_state.terminology),
         form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.fixture, &document.generation, labels),
         generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.fixture, &document.generation, generation_preview_text, config, labels, active_utility, marks),
@@ -168,7 +245,7 @@ fn generation3d_render_body(
 
 //#region 🧵️RetainedCommands
 /// 🧾️ Every gen3d tool id, in `Generation3dCommand` declaration order — a bijection with
-/// `Generation3dCommand`'s 27 rows (asserted by `retained_route_dispositions_are_exact_and_exhaustive`
+/// `Generation3dCommand`'s 29 rows (asserted by `retained_route_dispositions_are_exact_and_exhaustive`
 /// below) and with `Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS`.
 const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setActiveExample",
@@ -198,6 +275,8 @@ const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setCamera",
     "selectGeneration",
     "flowEvalTick",
+    "flowEvalResolve",
+    "flowTessellateResolve",
 ];
 const GENERATION3D_RETAINED_PAYLOAD_SCHEMA: &str = "generation.3d.tool-command.v1";
 const GENERATION3D_RETAINED_RAW_BYTES: usize = 8_192;
@@ -208,16 +287,15 @@ const GENERATION3D_RETAINED_WORK_ITEMS: usize = 32;
 /// single largest Artifact mutation any of the 27 tools ever emits — 64 KiB stays a real ceiling, not a
 /// rubber stamp, for every example plus ordinary interactive graph edits.
 const GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
-/// 🎒️ Real bound for one Config-lane edit: `flowEvalTick`'s `SetPreviewEval` carries the largest config
-/// payload (`FlowEvalSession::eval_json()`, a per-node scalar/string summary — full mesh geometry leaves
-/// through `export_media("geometry:out", ..)` instead, never through config) — 256 KiB comfortably covers
-/// every one of the 8 examples' evaluated graphs (a handful to a few dozen nodes) without being unbounded.
+/// 🎒️ Real bound for one Config-lane edit: a full snapshot containing the flow/preview cameras,
+/// selected generation, and sun JSON remains bounded independently of computed preview output.
 const GENERATION3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 262_144;
 
 fn generation3d_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION3D_RETAINED_RAW_BYTES, 32, 32, 16_384, 7_500)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "BoundedArtifactCommandWork requires an optional extent callback")]
 fn generation3d_bounded_extent(_command: &Generation3dCommand, _snapshot: &Generation3dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     Some(1)
 }
@@ -336,11 +414,74 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
     }
 }
 
+struct Generation3dFlowEvalWindowWork {
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    complete: bool,
+    closing: bool,
+}
+
+impl Generation3dFlowEvalWindowWork {
+    fn new(instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self { Self { instance_owner, complete: false, closing: false } }
+}
+
+impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEvalWindowWork {
+    fn tool_id(&self) -> &'static str { "flowEvalTick" }
+
+    fn extent(
+        &self,
+        command: &Generation3dCommand,
+        _snapshot: &Generation3dSnapshot,
+        _interaction: &protocol::InteractionState,
+        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
+    ) -> Option<usize> {
+        let context = context?;
+        let view = context.view_state.as_ref()?;
+        let window = context.window_transient.as_ref()?;
+        (matches!(command, Generation3dCommand::FlowEvalTick(_))
+            && view.window_id.as_deref() == Some(window.window_id())
+            && window.window_kind_id() == edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW
+            && window.get::<edit_preview::transient::Generation3dPreviewWindowTransientOwner>().is_some())
+        .then_some(1)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+        if self.complete || self.closing { return Err(Fault::from("generation3d-flow-eval-window-work-terminal")); }
+        let context = input.context.ok_or_else(|| Fault::from("generation3d-flow-eval-window-context-required"))?;
+        let view = context.view_state.as_ref().ok_or_else(|| Fault::from("generation3d-flow-eval-window-view-required"))?;
+        let window = context.window_transient.as_ref().ok_or_else(|| Fault::from("generation3d-flow-eval-window-transient-required"))?;
+        if view.window_id.as_deref() != Some(window.window_id()) || window.window_kind_id() != edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW {
+            return Err(Fault::from("generation3d-flow-eval-window-owner-mismatch"));
+        }
+        window.get::<edit_preview::transient::Generation3dPreviewWindowTransientOwner>().ok_or_else(|| Fault::from("generation3d-flow-eval-window-owner-required"))?;
+        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let cfg = ConfigView { snapshot: input.config, window: context.window_config.as_ref() };
+        let (emit, eval_text) = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| owner.with_session(|session| flow_eval_tick::evaluate(&doc, &cfg, session))?)?;
+        self.complete = true;
+        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
+            emit,
+            ephemeral: EphemeralEmit {
+                presence: Vec::new(),
+                transient: Vec::new(),
+                window_transient: vec![edit_preview::transient::addressed(window, eval_text)?],
+            },
+        })
+    }
+
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if self.closing { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Blocked }
+    }
+
+    fn terminal_is_empty(&self) -> bool { self.closing }
+}
+
 /// 🕹️ `nodeGraphEdit`/`deleteSelection`/`{translate,rotate,scale}Selection` read real `graph` selection
 /// directly off `protocol::InteractionState` (the raw, crate-public half of what `app::InteractionView`
 /// wraps) — plugin code cannot construct an `InteractionView` itself (`state`/`hover`/`peers` are
 /// `pub(crate)` to `semio_framework_plugin`), so this is the only way a retained-command-job reducer can
 /// preserve the same real-selection behavior `Generation3dPlayApp::handle` gives those five commands above.
+#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
 fn generation3d_retained_reduce(
     command: &Generation3dCommand,
     snapshot: &Generation3dSnapshot,
@@ -350,13 +491,13 @@ fn generation3d_retained_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     operation: &AppOperationContext,
+    session: &mut FlowEvalSession,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>, Fault> {
     if !GENERATION3D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::from("generation3d-command-retained-route-rejected"));
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: None };
-    let mut session = FlowEvalSession::new();
     let selected = || interaction.selection.get("graph").map(|selection| selection.ids.clone()).unwrap_or_default();
     match command {
         Generation3dCommand::NodeGraphEdit(payload) => Ok(node_graph_edit::apply_selected(payload, &doc, &selected())),
@@ -364,7 +505,51 @@ fn generation3d_retained_reduce(
         Generation3dCommand::TranslateSelection(payload) => Ok(translate_selection::apply_selected(payload, &doc, &selected())),
         Generation3dCommand::RotateSelection(payload) => Ok(rotate_selection::apply_selected(payload, &doc, &selected())),
         Generation3dCommand::ScaleSelection(payload) => Ok(scale_selection::apply_selected(payload, &doc, &selected())),
-        _ => command.dispatch(&doc, &cfg, &mut session),
+        _ => command.dispatch(&doc, &cfg, session),
+    }
+}
+
+/// 🧵️ The retained-session twin of `BoundedArtifactCommandWork`: identical one-shot reduce, except
+/// the reducer runs against the app instance's RETAINED [`Generation3dInstanceOperationOwner`]
+/// session instead of a session born and destroyed inside the same dispatch. That is what makes
+/// `flowEvalResolve`'s `seed_node_cache` and `flowTessellateResolve`'s `resolve_preview_tessellate`
+/// land on the same cache the next render reads.
+struct Generation3dSessionCommandWork {
+    tool_id: &'static str,
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    consumed: bool,
+}
+
+impl Generation3dSessionCommandWork {
+    fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { tool_id, instance_owner, consumed: false }
+    }
+}
+
+impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSessionCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        command: &Generation3dCommand,
+        snapshot: &Generation3dSnapshot,
+        interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
+    ) -> Option<usize> {
+        generation3d_bounded_extent(command, snapshot, interaction)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+        if self.consumed {
+            return Err(Fault::from("generation3d-session-command-work-repeated"));
+        }
+        self.consumed = true;
+        let emit = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
+            owner.with_session(|session| generation3d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session))?
+        })?;
+        Ok(ArtifactCommandWorkStep::Complete(emit))
     }
 }
 
@@ -448,6 +633,8 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
         ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
         ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "flowEvalResolve", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "flowTessellateResolve", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ];
 }
 //#endregion 🧵️RetainedCommands
@@ -778,6 +965,11 @@ impl ArtifactEditor for Generation3dPlayApp {
         Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_envelope_decode_owner_bundle())
     }
 
+    /// 🧠️ One retained `FlowEvalSession` per app instance — see [`Generation3dInstanceOperationOwner`].
+    fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
+        Box::new(Generation3dInstanceOperationOwner::new())
+    }
+
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_document_store_owners())
     }
@@ -839,6 +1031,10 @@ impl ArtifactEditor for Generation3dPlayApp {
         Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<edit_preview::transient::Generation3dPreviewWindowTransientOwner>()
+    }
+
     const DIALECT: Dialect = crate::GENERATION3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
 
@@ -864,7 +1060,13 @@ impl ArtifactEditor for Generation3dPlayApp {
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Generation3dPlayApp>>> =
-            if GENERATION3D_PREVIEW_TOOL_IDS.contains(&tool_id) { Box::new(Generation3dPreviewCommandWork::new(tool_id)) } else { Box::new(BoundedArtifactCommandWork::new(tool_id, generation3d_retained_reduce, generation3d_bounded_extent)) };
+            if tool_id == "flowEvalTick" {
+                Box::new(Generation3dFlowEvalWindowWork::new(request.instance_operation_owner))
+            } else if GENERATION3D_PREVIEW_TOOL_IDS.contains(&tool_id) {
+                Box::new(Generation3dPreviewCommandWork::new(tool_id))
+            } else {
+                Box::new(Generation3dSessionCommandWork::new(tool_id, request.instance_operation_owner))
+            };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -927,6 +1129,8 @@ impl ArtifactEditor for Generation3dPlayApp {
             "setCamera" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "selectGeneration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "flowEvalTick" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "flowEvalResolve" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "flowTessellateResolve" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
 
@@ -1001,10 +1205,11 @@ impl ArtifactEditor for Generation3dPlayApp {
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
+        let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
         match action {
             "setActiveExample" => Ok(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
             "nodeGraphEdit" => Ok(Generation3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| dsl::json::to_json_string(value))).unwrap_or_else(|| "[]".into()),
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(dsl::json::to_json_string)).unwrap_or_else(|| "[]".into()),
             })),
             "deleteSelection" => Ok(Generation3dCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "removeWidget" => Ok(Generation3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
@@ -1081,6 +1286,14 @@ impl ArtifactEditor for Generation3dPlayApp {
             "setCamera" => Ok(Generation3dCommand::SetCamera(set_camera::SetCamera { camera: parse_preview_camera_json(&args) })),
             "selectGeneration" => Ok(Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
             "flowEvalTick" => Ok(Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
+            "flowEvalResolve" => Ok(Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
+                node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
+            })),
+            "flowTessellateResolve" => Ok(Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve {
+                node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
+            })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -1101,15 +1314,14 @@ impl ArtifactEditor for Generation3dPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, Self::DraftMutation>, Fault> {
-        let mut session = FlowEvalSession::new();
-        match command {
-            Generation3dCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction, &mut session),
-            Generation3dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, &mut session),
-            Generation3dCommand::TranslateSelection(payload) => translate_selection::apply(payload, doc, cfg, interaction, &mut session),
-            Generation3dCommand::RotateSelection(payload) => rotate_selection::apply(payload, doc, cfg, interaction, &mut session),
-            Generation3dCommand::ScaleSelection(payload) => scale_selection::apply(payload, doc, cfg, interaction, &mut session),
-            _ => command.dispatch(doc, cfg, &mut session),
-        }
+        with_scratch_session(|session| match command {
+            Generation3dCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction, session),
+            Generation3dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
+            Generation3dCommand::TranslateSelection(payload) => translate_selection::apply(payload, doc, cfg, interaction, session),
+            Generation3dCommand::RotateSelection(payload) => rotate_selection::apply(payload, doc, cfg, interaction, session),
+            Generation3dCommand::ScaleSelection(payload) => scale_selection::apply(payload, doc, cfg, interaction, session),
+            _ => command.dispatch(doc, cfg, session),
+        })
     }
 
     /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every widget's visible ports become `handle`
@@ -1155,26 +1367,27 @@ impl ArtifactEditor for Generation3dPlayApp {
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
     fn pending_effects(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>) -> Vec<Effect> {
-        let mut session = FlowEvalSession::new();
-        let host = semio_framework_os_flow::flow_host_with_session(&doc.snapshot.fixture, &session);
-        if session.sync(&host) {
-            vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(104), action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
-        } else {
-            Vec::new()
-        }
+        with_scratch_session(|session| {
+            let host = semio_framework_os_flow::flow_host_with_session(&doc.snapshot.fixture, session);
+            if session.sync(&host) {
+                vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(104), action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+            } else {
+                Vec::new()
+            }
+        })
     }
 
     /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, None, view_state, &PreviewInteractionMarks::default())
+        with_scratch_session(|session| generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, None, None, view_state, &PreviewInteractionMarks::default(), session))
     }
 
     /// 🕹️ Resolves the live `graph` hover/selection once per render and threads it into every
     /// window body — the node graph paints the hovered node/port, the world previews paint the
     /// hovered/selected instances, and the inspection panel finally sees a real selection.
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
@@ -1182,7 +1395,13 @@ impl ArtifactEditor for Generation3dPlayApp {
         transient: &semio_framework_plugin::TransientView<'_, Generation3dTransient>,
         interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot.generation_preview_text.as_deref(), view_state, &PreviewInteractionMarks::from_interaction(interaction))
+        let preview_eval_text = transient.window::<edit_preview::transient::Generation3dPreviewWindowTransientOwner>().and_then(|state| state.preview_eval_text.as_deref());
+        let marks = PreviewInteractionMarks::from_interaction(interaction);
+        owner
+            .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
+                owner.with_session(|session| generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, preview_eval_text, transient.snapshot.generation_preview_text.as_deref(), view_state, &marks, session))
+            })
+            .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("generation3d.eval-session-owner", error.message))?
     }
 
     fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -1238,6 +1457,8 @@ impl ArtifactEditor for Generation3dPlayApp {
 pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::GENERATION3D_DIALECT).document(["semio", "procedural", "3d"])
             .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) }))
+            .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung aufnehmen"), "runtime", ActionKind::View) }))
+            .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowTessellateResolve", LocalizedLabel::native("Resolve Preview Tessellation", "Vorschau-Tessellierung aufnehmen"), "runtime", ActionKind::View) }))
             .artifact_kind(artifact_kind())
             .icon_id("workflow")
             .mode_def(edit::definition())
@@ -1312,6 +1533,8 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
             .action_interactive_job("flowEvalTick", InteractiveJobClassification::Migrated)
+            .action_interactive_job("flowEvalResolve", InteractiveJobClassification::Migrated)
+            .action_interactive_job("flowTessellateResolve", InteractiveJobClassification::Migrated)
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                     ActionArgOption::new("neuron", LocalizedLabel::native("Neuron", "Neuron")),
@@ -1823,8 +2046,12 @@ pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &semio_frame
     handles
 }
 
-/// 📨 Host effects that tessellate preview handles inside the owning brep extension kernel.
-pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowFixture, cfg: &Generation3dConfig) -> Vec<Effect> {
+/// 📨 Extension invocations that tessellate preview handles inside the owning brep extension kernel.
+/// Each one names `flowTessellateResolve` as its response action, so the SDK's request registry mints
+/// the `req`, parks the continuation and dispatches the mesh JSON straight back into this app — the
+/// hand-minted `RequestId` this used to write owned no registry slot, so every tessellation result
+/// was discarded and the 3d preview could never paint.
+pub fn preview_tessellate_invocations(session: &mut FlowEvalSession, eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowFixture, cfg: &Generation3dConfig) -> Vec<semio_framework_plugin::ExtensionInvocation> {
     let tolerance = preview_tolerance(&cfg.lod_mode);
     let tolerance_bits = tolerance.to_bits();
     let mut live = std::collections::HashSet::new();
@@ -1838,7 +2065,7 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
         }
     }
     session.retain_preview_meshes(&live);
-    let mut effects = Vec::new();
+    let mut invocations = Vec::new();
     for handle in pending_preview_tessellate_handles(eval_json, fixture, session) {
         let node_hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance_bits);
         if session.note_pending_tessellate(node_hash, handle.clone()) {
@@ -1846,10 +2073,10 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
             request_object.insert("handle", dsl::json::Value::String(handle));
             request_object.insert("tolerance", dsl::json::Value::from(tolerance));
             request_object.insert("nodeHash", dsl::json::Value::from(node_hash));
-            effects.push(Effect::InvokeExtension { req: semio_framework_plugin::RequestId(105), extension_id: "brep".into(), capability: "tessellate".into(), request_json: dsl::json::to_string(&dsl::json::Value::Object(request_object)) });
+            invocations.push(semio_framework_plugin::ExtensionInvocation::new("brep", "tessellate", dsl::json::to_string(&dsl::json::Value::Object(request_object)), "flowTessellateResolve"));
         }
     }
-    effects
+    invocations
 }
 
 /// 👁️ One preview render's world-3d payload: the handle-deduplicated mesh table, the per-channel

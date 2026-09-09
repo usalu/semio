@@ -55,7 +55,7 @@ async fn the_undo_create_brep_reattaches_the_captured_handle() {
     let undo = mutation.inverse(&base);
     assert_eq!(undo.len(), 1, "deleting an existing child undoes as exactly one CreateBrep");
     let SemioObjectMutation::CreateBrep(recreate) = &undo[0] else { panic!("delete-brep must undo as CreateBrep") };
-    assert_eq!(recreate.child_id, "brep-1", "the undo must recapture the ORIGINAL child id from base");
+    assert_eq!(recreate.child_id, "kitchen-sink-brep", "the undo must recapture the ORIGINAL child id from base");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-brep applies");
     for step in &undo {
         current = step.diff(&current).diff().apply(&current).expect("the undo CreateBrep applies to the cleared object");

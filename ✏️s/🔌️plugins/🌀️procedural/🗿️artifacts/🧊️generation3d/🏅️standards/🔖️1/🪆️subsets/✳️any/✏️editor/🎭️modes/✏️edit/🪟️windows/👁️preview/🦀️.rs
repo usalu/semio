@@ -7,6 +7,9 @@ use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, ActionDescriptor, BuiltNode, LocalizedLabel, MeasureSelectItem, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
 
+#[path = "🫧️transient/🦀️.rs"]
+pub mod transient;
+
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_WINDOW_PREVIEW: &str = "procedural-preview";
 pub const GENERATION_3D_PLAY_BODY_PREVIEW: &str = "procedural.play.preview";
@@ -59,8 +62,8 @@ pub fn preview_window_measures(config: &Generation3dConfig, procedural_action: i
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, active_utility: &str, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let eval_json = config.preview_eval_text.clone().unwrap_or_default();
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, preview_eval_text: Option<&str>, session: &FlowEvalSession, active_utility: &str, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let eval_json = preview_eval_text.unwrap_or_default().to_string();
     let payload = preview_payload(&eval_json, &document.fixture, config, Some(session), marks);
     let selection_json = preview_selection_json(config, active_utility, &payload);
     let (meshes_json, instances_json) = (payload.meshes_json, payload.instances_json);

@@ -1,6 +1,6 @@
 //! 🗣️ Flow play app — the compiled-DAG window: the read-only wire literal of the current fixture.
 
-use crate::editor::flow::config::FlowConfig;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::host_from_snapshot;
 use crate::FlowSnapshot;
 use flow::FlowEvalSession;
@@ -36,7 +36,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
+pub fn render(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
     let host = host_from_snapshot(fixture, config, session);
     let scene = TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None);
     scene_surface(FLOW_PLAY_SURFACE_COMPILED, ContractSurfaceKind::TextEditor, &scene)

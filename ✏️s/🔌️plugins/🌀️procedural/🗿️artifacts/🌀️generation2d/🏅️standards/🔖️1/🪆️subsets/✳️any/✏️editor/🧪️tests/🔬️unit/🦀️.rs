@@ -103,16 +103,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation2dSnapshot, [u8;
 fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P2 production ingress credits");
-    crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_admit_publication_authority(
-        handle.operation,
-        handle.generation,
-        handle.generation.0,
-        handle.generation.0,
-        handle.generation.0,
-        8_192,
-        crate::standards::v1::subsets::any::schema::mutations::binary::GENERATION2D_MOUNTED_OUTPUT_CHANNELS,
-        crate::standards::v1::subsets::any::schema::mutations::binary::GENERATION2D_MOUNTED_CONTROL_CREDITS,
-    )
+    crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, crate::standards::v1::subsets::any::schema::mutations::binary::Generation2dPublicationCredits { maximum_items: 8_192, maximum_output_pages: crate::standards::v1::subsets::any::schema::mutations::binary::GENERATION2D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::standards::v1::subsets::any::schema::mutations::binary::GENERATION2D_MOUNTED_CONTROL_CREDITS })
     .expect("P2 production publication authority");
     for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
         let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
@@ -187,9 +178,9 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
 fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-    assert_eq!(GENERATION2D_BOUNDED_TOOL_IDS.len(), 12);
-    assert_eq!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 12);
-    assert_eq!(Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 12);
+    assert_eq!(GENERATION2D_BOUNDED_TOOL_IDS.len(), 13);
+    assert_eq!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 13);
+    assert_eq!(Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 13);
     assert_eq!(generation2d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(generation2d_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
     assert!(GENERATION2D_BOUNDED_TOOL_IDS.iter().all(|tool_id| Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
@@ -277,7 +268,7 @@ fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 21, "every Generation2dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 22, "every Generation2dCommand row must be covered by every_command()");
 }
 
 #[test]
@@ -313,6 +304,7 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "canvas-wheel",
         "select-generation",
         "flow-eval-tick",
+        "flow-eval-resolve",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -345,6 +337,7 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
         Generation2dCommand::CanvasWheel(canvas_wheel::CanvasWheel {}),
         Generation2dCommand::SelectGeneration(select_generation::SelectGeneration { id: Some("g1".into()) }),
         Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
+        Generation2dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 7, output_json: "{}".into() }),
     ]
 }
 //#endregion 🔖️CommandSurface

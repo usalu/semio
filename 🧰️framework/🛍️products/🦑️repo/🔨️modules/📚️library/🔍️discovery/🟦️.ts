@@ -1975,8 +1975,6 @@ export interface SemanticProjectionCatalogRegistration {
 /** 🧾️ Validates strict source/canonical identities, ownership, collisions, and path budgets. */
 export function semanticProjectionCatalogProblems(registrations: readonly SemanticProjectionCatalogRegistration[], taxonomy: Taxonomy = loadTaxonomy()): string[] {
   const problems: string[] = [];
-  const projected = taxonomy.semanticProjectedMemberKinds[taxonomy.mutationCatalogProjection.projectedMemberKindId];
-  const members = projected && taxonomy.semanticDirectoryMemberKinds[projected.sourceMemberKindId];
   const destinationOwners = new Set<string>();
   for (const [catalogIndex, catalog] of registrations.entries()) {
     const scope = `catalogs[${catalogIndex}]`;
@@ -1999,19 +1997,28 @@ export function semanticProjectionCatalogProblems(registrations: readonly Semant
       const mutationRoot = `${sourceOwner ?? catalog.ownerPath}/🧬️schema/🧬️mutations`;
       const grouped = Object.hasOwn(taxonomy.mutationDomainOwners, mutationRoot);
       const registeredOwner = grouped ? mutationOwnerRelativePath(mutationRoot, mutationId, taxonomy) : null;
-      const canonical = grouped ? registeredOwner ?? mutationDirectoryName : members ? canonicalSemanticDirectoryName(mutationDirectoryName, taxonomy) : mutationDirectoryName;
+      const canonical = grouped ? registeredOwner ?? mutationDirectoryName : mutationDirectoryName;
       if (grouped) {
         if (!registeredOwner || registeredOwner.split("/").at(-1) !== sourceMutationDirectoryName || registeredOwner.split("/").at(-1) !== mutationDirectoryName) problems.push(`${vectorScope} has no exact registered domain-operation owner for mutationId.`);
       } else {
         if ((sourceMutationDirectoryName.match(/[a-z0-9][a-z0-9-]*$/u)?.[0] ?? "") !== mutationId) problems.push(`${vectorScope}.sourceMutationDirectoryName must render mutationId.`);
         if ((mutationDirectoryName.match(/[a-z0-9][a-z0-9-]*$/u)?.[0] ?? "") !== mutationId) problems.push(`${vectorScope}.mutationDirectoryName must render mutationId.`);
-        if (!members?.memberNames.includes(canonical)) problems.push(`${vectorScope}.mutationDirectoryName has no exact canonical schema membership.`);
+        for (const [field, name] of Object.entries({ sourceMutationDirectoryName, mutationDirectoryName })) if (leadingEmojiIdentity(name).rest === name || pathEmojiStatuteFindings([{ path: name, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length > 0) problems.push(`${vectorScope}.${field} must be one canonical physical mutation identity.`);
       }
       if (!Array.isArray(vector.scenarios) || vector.scenarios.length === 0) problems.push(`${vectorScope}.scenarios must be non-empty.`);
+      const scenarioIds = new Set<string>();
+      const scenarioDirectories = new Set<string>();
       for (const [scenarioIndex, scenario] of (vector.scenarios ?? []).entries()) {
         const scenarioScope = `${vectorScope}.scenarios[${scenarioIndex}]`;
         if (Object.keys(scenario).sort().join("\0") !== ["directoryName", "id"].join("\0")) problems.push(`${scenarioScope} must contain exactly id and directoryName.`);
-        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(scenario.id) || leadingEmojiIdentity(scenario.directoryName).rest !== scenario.id || scenario.directoryName !== scenario.directoryName.normalize("NFC") || pathEmojiStatuteFindings([{ path: scenario.directoryName, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length > 0) problems.push(`${scenarioScope} must be one canonical NFC test-case identity.`);
+        const physicalScenarioId = leadingEmojiIdentity(scenario.directoryName).rest;
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(scenario.id)) problems.push(`${scenarioScope}.id must be one kebab-case logical identity.`);
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(physicalScenarioId) || physicalScenarioId === scenario.directoryName || scenario.directoryName !== scenario.directoryName.normalize("NFC") || /[\\/]/u.test(scenario.directoryName) || pathEmojiStatuteFindings([{ path: scenario.directoryName, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length > 0) problems.push(`${scenarioScope}.directoryName must be one canonical NFC physical test-case identity.`);
+        if (scenarioIds.has(scenario.id)) problems.push(`${scenarioScope}.id duplicates one logical scenario identity.`);
+        scenarioIds.add(scenario.id);
+        const scenarioDirectoryKey = scenario.directoryName.replaceAll("\uFE0F", "").toLocaleLowerCase("und");
+        if (scenarioDirectories.has(scenarioDirectoryKey)) problems.push(`${scenarioScope}.directoryName duplicates one physical scenario identity.`);
+        scenarioDirectories.add(scenarioDirectoryKey);
         const sourceTuple = `${mutationId}\0${sourceMutationDirectoryName}\0${scenario.id}`;
         const canonicalTuple = `${mutationId}\0${canonical}\0${scenario.id}`;
         if (sourceTuples.has(sourceTuple)) problems.push(`${scenarioScope} duplicates a source bundle tuple.`);
@@ -4249,7 +4256,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     if (Object.keys(taxonomy.semanticPackageProjectionContracts).join("\0") !== "nested-cargo-packages-v1") problems.push("semanticPackageProjectionContracts requires the exact nested Cargo contract.");
     for (const [id, contract] of Object.entries(taxonomy.semanticPackageProjectionContracts)) {
       exactKeys(contract, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "packageIds", "sourceLeafCounts", "purityCount", "adapterCount", "derivedLeafCount", "joinedPathBindingCounts", "generatedSourceRetirementCounts", "authoredFragmentCounts", "rationaleRule"], `semanticPackageProjectionContracts.${id}`);
-      if (contract.contractKind !== "exact-nested-cargo-package-catalog" || !exactOwnerPath(contract.authorityCatalogPath) || !/^[0-9a-f]{64}$/u.test(contract.authorityCatalogSha256) || JSON.stringify(contract.packageIds) !== JSON.stringify(["wgpu-renderer", "jcoprobe-guest"]) || JSON.stringify(contract.sourceLeafCounts) !== JSON.stringify([32, 4]) || contract.purityCount !== 27 || contract.adapterCount !== 5 || contract.derivedLeafCount !== 1 || JSON.stringify(contract.joinedPathBindingCounts) !== JSON.stringify([1, 0]) || JSON.stringify(contract.generatedSourceRetirementCounts) !== JSON.stringify([1, 0]) || JSON.stringify(contract.authoredFragmentCounts) !== JSON.stringify([31, 0]) || contract.rationaleRule !== "nested-cargo-package-projection-v1") problems.push(`semanticPackageProjectionContracts.${id} has invalid exact authority.`);
+      if (contract.contractKind !== "exact-nested-cargo-package-catalog" || !exampleAssetPath(contract.authorityCatalogPath, taxonomy) || !/^[0-9a-f]{64}$/u.test(contract.authorityCatalogSha256) || JSON.stringify(contract.packageIds) !== JSON.stringify(["wgpu-renderer", "jcoprobe-guest"]) || JSON.stringify(contract.sourceLeafCounts) !== JSON.stringify([32, 4]) || contract.purityCount !== 27 || contract.adapterCount !== 5 || contract.derivedLeafCount !== 1 || JSON.stringify(contract.joinedPathBindingCounts) !== JSON.stringify([1, 0]) || JSON.stringify(contract.generatedSourceRetirementCounts) !== JSON.stringify([1, 0]) || JSON.stringify(contract.authoredFragmentCounts) !== JSON.stringify([31, 0]) || contract.rationaleRule !== "nested-cargo-package-projection-v1") problems.push(`semanticPackageProjectionContracts.${id} has invalid exact authority.`);
     }
   }
 
@@ -4265,10 +4272,13 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (contract.contractKind === "exact-owner-path-catalog") {
         exactKeys(contract, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "expectedCounts", "authoredDocumentCorrections", "rationaleRule", ...(Object.hasOwn(contract, "currentSourceRevisions") ? ["currentSourceRevisions"] : [])], scope);
         if (Object.hasOwn(contract, "currentSourceRevisions")) {
-          try { parseSemanticOwnedCurrentSourceRevisions(contract.currentSourceRevisions); } catch (error) { problems.push(scope + ".currentSourceRevisions: " + (error instanceof Error ? error.message : String(error))); }
+          try {
+            const revisions = parseSemanticOwnedCurrentSourceRevisions(contract.currentSourceRevisions);
+            for (const [revisionId, revision] of Object.entries(revisions)) if (!exampleAssetPath(revision.expectationsPath, taxonomy)) problems.push(scope + ".currentSourceRevisions." + revisionId + ".expectationsPath must be beneath " + taxonomy.exampleAssetsDirName + ".");
+          } catch (error) { problems.push(scope + ".currentSourceRevisions: " + (error instanceof Error ? error.message : String(error))); }
         }
         if (id !== "readme-license-owner-leaves-v1" || contract.rationaleRule !== "readme-license-owner-projection-v1") problems.push(scope + " must be the exact README/LICENSE owner projection contract.");
-        if (!exactOwnerPath(contract.authorityCatalogPath)) problems.push(scope + ".authorityCatalogPath must be one repository-local non-opaque NFC path.");
+        if (!exampleAssetPath(contract.authorityCatalogPath, taxonomy)) problems.push(scope + ".authorityCatalogPath must be one repository-local path beneath " + taxonomy.exampleAssetsDirName + ".");
         if (typeof contract.authorityCatalogSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(contract.authorityCatalogSha256)) problems.push(scope + ".authorityCatalogSha256 must be one SHA-256 digest.");
         if (!taxonomy.fileKinds[contract.sourceFileKindId] || contract.sourceFileKindId !== "markdown") problems.push(scope + ".sourceFileKindId must be markdown.");
         if (!Array.isArray(contract.sourceBasenames) || contract.sourceBasenames.join("\0") !== "LICENSE.md\0README.md") problems.push(scope + ".sourceBasenames must be exactly LICENSE.md and README.md.");
@@ -5531,6 +5541,10 @@ function nestedCargoGeneratedPrestate(repoRoot: string, path: string, generatorI
 
 function exactOwnerPath(path: unknown): path is string {
   return typeof path === "string" && path.length > 0 && path === path.normalize("NFC") && !path.startsWith("/") && !path.includes("\\") && !/[\u0000-\u001f]/u.test(path) && path.split("/").every((part) => part !== "" && part !== "." && part !== "..") && !["compose", "temp/compose"].some((root) => path === root || path.startsWith(root + "/"));
+}
+
+function exampleAssetPath(path: unknown, taxonomy: Pick<Taxonomy, "exampleAssetsDirName">): path is string {
+  return exactOwnerPath(path) && path.split("/").includes(taxonomy.exampleAssetsDirName);
 }
 
 /** 📖️ Resolves the externally meaningful README/LICENSE basename beneath repository emoji identity. */

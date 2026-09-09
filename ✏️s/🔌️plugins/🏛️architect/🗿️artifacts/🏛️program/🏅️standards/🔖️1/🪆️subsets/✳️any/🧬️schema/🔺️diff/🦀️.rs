@@ -7,7 +7,7 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the program artifact.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramDiff {
     #[state(artifact)]
@@ -111,7 +111,7 @@ pub struct ProgramDiff {
     #[state(artifact)]
     pub quality: Option<ProgramQualityDelta>,
     #[state(artifact)]
-    pub documents: Option<ProgramArtifactsDelta>,
+    pub artifacts: Option<ProgramArtifactsDelta>,
     #[state(artifact)]
     pub assumptions: Option<ProgramAssumptionsDelta>,
     #[state(artifact)]
@@ -161,7 +161,7 @@ pub struct ProgramDiff {
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramStringList {
     pub values: Vec<String>,
@@ -170,7 +170,7 @@ pub struct ProgramStringList {
 /// 🧩 Identified-collection delta for `stakeholders`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramStakeholdersDelta {
     pub added: Vec<Stakeholder>,
@@ -182,7 +182,7 @@ pub struct ProgramStakeholdersDelta {
 /// 🩹 One patched `Stakeholder` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramStakeholdersPatchEntry {
     pub id: String,
@@ -192,7 +192,7 @@ pub struct ProgramStakeholdersPatchEntry {
 /// 🧩 Identified-collection delta for `users`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramUsersDelta {
     pub added: Vec<UserProfile>,
@@ -204,7 +204,7 @@ pub struct ProgramUsersDelta {
 /// 🩹 One patched `UserProfile` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramUsersPatchEntry {
     pub id: String,
@@ -214,7 +214,7 @@ pub struct ProgramUsersPatchEntry {
 /// 🧩 Identified-collection delta for `activities`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramActivitiesDelta {
     pub added: Vec<Activity>,
@@ -226,7 +226,7 @@ pub struct ProgramActivitiesDelta {
 /// 🩹 One patched `Activity` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramActivitiesPatchEntry {
     pub id: String,
@@ -236,7 +236,7 @@ pub struct ProgramActivitiesPatchEntry {
 /// 🧩 Identified-collection delta for `functions`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramFunctionsDelta {
     pub added: Vec<Function>,
@@ -248,7 +248,7 @@ pub struct ProgramFunctionsDelta {
 /// 🩹 One patched `Function` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramFunctionsPatchEntry {
     pub id: String,
@@ -258,7 +258,7 @@ pub struct ProgramFunctionsPatchEntry {
 /// 🧩 Identified-collection delta for `elements`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramElementsDelta {
     pub added: Vec<ProgramElement>,
@@ -270,7 +270,7 @@ pub struct ProgramElementsDelta {
 /// 🩹 One patched `ProgramElement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramElementsPatchEntry {
     pub id: String,
@@ -280,7 +280,7 @@ pub struct ProgramElementsPatchEntry {
 /// 🧩 Identified-collection delta for `quantities`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramQuantitiesDelta {
     pub added: Vec<QuantityRequirement>,
@@ -292,7 +292,7 @@ pub struct ProgramQuantitiesDelta {
 /// 🩹 One patched `QuantityRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramQuantitiesPatchEntry {
     pub id: String,
@@ -302,7 +302,7 @@ pub struct ProgramQuantitiesPatchEntry {
 /// 🧩 Identified-collection delta for `relationships`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramRelationshipsDelta {
     pub added: Vec<Relationship>,
@@ -314,7 +314,7 @@ pub struct ProgramRelationshipsDelta {
 /// 🩹 One patched `Relationship` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramRelationshipsPatchEntry {
     pub id: String,
@@ -324,7 +324,7 @@ pub struct ProgramRelationshipsPatchEntry {
 /// 🧩 Identified-collection delta for `adjacencies`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramAdjacenciesDelta {
     pub added: Vec<Adjacency>,
@@ -336,7 +336,7 @@ pub struct ProgramAdjacenciesDelta {
 /// 🩹 One patched `Adjacency` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramAdjacenciesPatchEntry {
     pub id: String,
@@ -346,7 +346,7 @@ pub struct ProgramAdjacenciesPatchEntry {
 /// 🧩 Identified-collection delta for `processes`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramProcessesDelta {
     pub added: Vec<Process>,
@@ -358,7 +358,7 @@ pub struct ProgramProcessesDelta {
 /// 🩹 One patched `Process` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramProcessesPatchEntry {
     pub id: String,
@@ -368,7 +368,7 @@ pub struct ProgramProcessesPatchEntry {
 /// 🧩 Identified-collection delta for `flows`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramFlowsDelta {
     pub added: Vec<FlowRequirement>,
@@ -380,7 +380,7 @@ pub struct ProgramFlowsDelta {
 /// 🩹 One patched `FlowRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramFlowsPatchEntry {
     pub id: String,
@@ -390,7 +390,7 @@ pub struct ProgramFlowsPatchEntry {
 /// 🧩 Identified-collection delta for `access_rules`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramAccessRulesDelta {
     pub added: Vec<AccessRule>,
@@ -402,7 +402,7 @@ pub struct ProgramAccessRulesDelta {
 /// 🩹 One patched `AccessRule` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramAccessRulesPatchEntry {
     pub id: String,
@@ -412,7 +412,7 @@ pub struct ProgramAccessRulesPatchEntry {
 /// 🧩 Identified-collection delta for `operations`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramOperationsDelta {
     pub added: Vec<OperationalRequirement>,
@@ -424,7 +424,7 @@ pub struct ProgramOperationsDelta {
 /// 🩹 One patched `OperationalRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramOperationsPatchEntry {
     pub id: String,
@@ -434,7 +434,7 @@ pub struct ProgramOperationsPatchEntry {
 /// 🧩 Identified-collection delta for `equipment`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramEquipmentDelta {
     pub added: Vec<Equipment>,
@@ -446,7 +446,7 @@ pub struct ProgramEquipmentDelta {
 /// 🩹 One patched `Equipment` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramEquipmentPatchEntry {
     pub id: String,
@@ -456,7 +456,7 @@ pub struct ProgramEquipmentPatchEntry {
 /// 🧩 Identified-collection delta for `resources`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramResourcesDelta {
     pub added: Vec<Resource>,
@@ -468,7 +468,7 @@ pub struct ProgramResourcesDelta {
 /// 🩹 One patched `Resource` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramResourcesPatchEntry {
     pub id: String,
@@ -478,7 +478,7 @@ pub struct ProgramResourcesPatchEntry {
 /// 🧩 Identified-collection delta for `storage`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramStorageDelta {
     pub added: Vec<StorageRequirement>,
@@ -490,7 +490,7 @@ pub struct ProgramStorageDelta {
 /// 🩹 One patched `StorageRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramStoragePatchEntry {
     pub id: String,
@@ -500,7 +500,7 @@ pub struct ProgramStoragePatchEntry {
 /// 🧩 Identified-collection delta for `environmental`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramEnvironmentalDelta {
     pub added: Vec<EnvironmentalRequirement>,
@@ -512,7 +512,7 @@ pub struct ProgramEnvironmentalDelta {
 /// 🩹 One patched `EnvironmentalRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramEnvironmentalPatchEntry {
     pub id: String,
@@ -522,7 +522,7 @@ pub struct ProgramEnvironmentalPatchEntry {
 /// 🧩 Identified-collection delta for `human_factors`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramHumanFactorsDelta {
     pub added: Vec<HumanFactorRequirement>,
@@ -534,7 +534,7 @@ pub struct ProgramHumanFactorsDelta {
 /// 🩹 One patched `HumanFactorRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramHumanFactorsPatchEntry {
     pub id: String,
@@ -544,7 +544,7 @@ pub struct ProgramHumanFactorsPatchEntry {
 /// 🧩 Identified-collection delta for `accessibility`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramAccessibilityDelta {
     pub added: Vec<AccessibilityRequirement>,
@@ -556,7 +556,7 @@ pub struct ProgramAccessibilityDelta {
 /// 🩹 One patched `AccessibilityRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramAccessibilityPatchEntry {
     pub id: String,
@@ -566,7 +566,7 @@ pub struct ProgramAccessibilityPatchEntry {
 /// 🧩 Identified-collection delta for `privacy`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramPrivacyDelta {
     pub added: Vec<PrivacyRequirement>,
@@ -578,7 +578,7 @@ pub struct ProgramPrivacyDelta {
 /// 🩹 One patched `PrivacyRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramPrivacyPatchEntry {
     pub id: String,
@@ -588,7 +588,7 @@ pub struct ProgramPrivacyPatchEntry {
 /// 🧩 Identified-collection delta for `safety`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramSafetyDelta {
     pub added: Vec<SafetyRequirement>,
@@ -600,7 +600,7 @@ pub struct ProgramSafetyDelta {
 /// 🩹 One patched `SafetyRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramSafetyPatchEntry {
     pub id: String,
@@ -610,7 +610,7 @@ pub struct ProgramSafetyPatchEntry {
 /// 🧩 Identified-collection delta for `security`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramSecurityDelta {
     pub added: Vec<SecurityRequirement>,
@@ -622,7 +622,7 @@ pub struct ProgramSecurityDelta {
 /// 🩹 One patched `SecurityRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramSecurityPatchEntry {
     pub id: String,
@@ -632,7 +632,7 @@ pub struct ProgramSecurityPatchEntry {
 /// 🧩 Identified-collection delta for `regulatory`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramRegulatoryDelta {
     pub added: Vec<RegulatoryRequirement>,
@@ -644,7 +644,7 @@ pub struct ProgramRegulatoryDelta {
 /// 🩹 One patched `RegulatoryRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramRegulatoryPatchEntry {
     pub id: String,
@@ -654,7 +654,7 @@ pub struct ProgramRegulatoryPatchEntry {
 /// 🧩 Identified-collection delta for `site_context`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramSiteContextDelta {
     pub added: Vec<SiteContext>,
@@ -666,7 +666,7 @@ pub struct ProgramSiteContextDelta {
 /// 🩹 One patched `SiteContext` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramSiteContextPatchEntry {
     pub id: String,
@@ -676,7 +676,7 @@ pub struct ProgramSiteContextPatchEntry {
 /// 🧩 Identified-collection delta for `organizational`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramOrganizationalDelta {
     pub added: Vec<OrganizationalRequirement>,
@@ -688,7 +688,7 @@ pub struct ProgramOrganizationalDelta {
 /// 🩹 One patched `OrganizationalRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramOrganizationalPatchEntry {
     pub id: String,
@@ -698,7 +698,7 @@ pub struct ProgramOrganizationalPatchEntry {
 /// 🧩 Identified-collection delta for `services`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramServicesDelta {
     pub added: Vec<ServiceRequirement>,
@@ -710,7 +710,7 @@ pub struct ProgramServicesDelta {
 /// 🩹 One patched `ServiceRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramServicesPatchEntry {
     pub id: String,
@@ -720,7 +720,7 @@ pub struct ProgramServicesPatchEntry {
 /// 🧩 Identified-collection delta for `infrastructure`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramInfrastructureDelta {
     pub added: Vec<InfrastructureRequirement>,
@@ -732,7 +732,7 @@ pub struct ProgramInfrastructureDelta {
 /// 🩹 One patched `InfrastructureRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramInfrastructurePatchEntry {
     pub id: String,
@@ -742,7 +742,7 @@ pub struct ProgramInfrastructurePatchEntry {
 /// 🧩 Identified-collection delta for `information`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramInformationDelta {
     pub added: Vec<InformationRequirement>,
@@ -754,7 +754,7 @@ pub struct ProgramInformationDelta {
 /// 🩹 One patched `InformationRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramInformationPatchEntry {
     pub id: String,
@@ -764,7 +764,7 @@ pub struct ProgramInformationPatchEntry {
 /// 🧩 Identified-collection delta for `communication`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramCommunicationDelta {
     pub added: Vec<CommunicationRequirement>,
@@ -776,7 +776,7 @@ pub struct ProgramCommunicationDelta {
 /// 🩹 One patched `CommunicationRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramCommunicationPatchEntry {
     pub id: String,
@@ -786,7 +786,7 @@ pub struct ProgramCommunicationPatchEntry {
 /// 🧩 Identified-collection delta for `wayfinding`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramWayfindingDelta {
     pub added: Vec<WayfindingRequirement>,
@@ -798,7 +798,7 @@ pub struct ProgramWayfindingDelta {
 /// 🩹 One patched `WayfindingRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramWayfindingPatchEntry {
     pub id: String,
@@ -808,7 +808,7 @@ pub struct ProgramWayfindingPatchEntry {
 /// 🧩 Identified-collection delta for `schedules`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramSchedulesDelta {
     pub added: Vec<ScheduleRequirement>,
@@ -820,7 +820,7 @@ pub struct ProgramSchedulesDelta {
 /// 🩹 One patched `ScheduleRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramSchedulesPatchEntry {
     pub id: String,
@@ -830,7 +830,7 @@ pub struct ProgramSchedulesPatchEntry {
 /// 🧩 Identified-collection delta for `flexibility`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramFlexibilityDelta {
     pub added: Vec<FlexibilityRequirement>,
@@ -842,7 +842,7 @@ pub struct ProgramFlexibilityDelta {
 /// 🩹 One patched `FlexibilityRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramFlexibilityPatchEntry {
     pub id: String,
@@ -852,7 +852,7 @@ pub struct ProgramFlexibilityPatchEntry {
 /// 🧩 Identified-collection delta for `growth`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramGrowthDelta {
     pub added: Vec<GrowthPlan>,
@@ -864,7 +864,7 @@ pub struct ProgramGrowthDelta {
 /// 🩹 One patched `GrowthPlan` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramGrowthPatchEntry {
     pub id: String,
@@ -874,7 +874,7 @@ pub struct ProgramGrowthPatchEntry {
 /// 🧩 Identified-collection delta for `sustainability`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramSustainabilityDelta {
     pub added: Vec<SustainabilityRequirement>,
@@ -886,7 +886,7 @@ pub struct ProgramSustainabilityDelta {
 /// 🩹 One patched `SustainabilityRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramSustainabilityPatchEntry {
     pub id: String,
@@ -896,7 +896,7 @@ pub struct ProgramSustainabilityPatchEntry {
 /// 🧩 Identified-collection delta for `resilience`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramResilienceDelta {
     pub added: Vec<ResilienceRequirement>,
@@ -908,7 +908,7 @@ pub struct ProgramResilienceDelta {
 /// 🩹 One patched `ResilienceRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramResiliencePatchEntry {
     pub id: String,
@@ -918,7 +918,7 @@ pub struct ProgramResiliencePatchEntry {
 /// 🧩 Identified-collection delta for `costs`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramCostsDelta {
     pub added: Vec<CostRequirement>,
@@ -930,7 +930,7 @@ pub struct ProgramCostsDelta {
 /// 🩹 One patched `CostRequirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramCostsPatchEntry {
     pub id: String,
@@ -940,7 +940,7 @@ pub struct ProgramCostsPatchEntry {
 /// 🧩 Identified-collection delta for `delivery`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramDeliveryDelta {
     pub added: Vec<DeliveryConstraint>,
@@ -952,7 +952,7 @@ pub struct ProgramDeliveryDelta {
 /// 🩹 One patched `DeliveryConstraint` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramDeliveryPatchEntry {
     pub id: String,
@@ -962,7 +962,7 @@ pub struct ProgramDeliveryPatchEntry {
 /// 🧩 Identified-collection delta for `risks`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramRisksDelta {
     pub added: Vec<Risk>,
@@ -974,7 +974,7 @@ pub struct ProgramRisksDelta {
 /// 🩹 One patched `Risk` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramRisksPatchEntry {
     pub id: String,
@@ -984,7 +984,7 @@ pub struct ProgramRisksPatchEntry {
 /// 🧩 Identified-collection delta for `conflicts`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramConflictsDelta {
     pub added: Vec<Conflict>,
@@ -996,7 +996,7 @@ pub struct ProgramConflictsDelta {
 /// 🩹 One patched `Conflict` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramConflictsPatchEntry {
     pub id: String,
@@ -1006,7 +1006,7 @@ pub struct ProgramConflictsPatchEntry {
 /// 🧩 Identified-collection delta for `requirements`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramRequirementsDelta {
     pub added: Vec<Requirement>,
@@ -1018,7 +1018,7 @@ pub struct ProgramRequirementsDelta {
 /// 🩹 One patched `Requirement` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramRequirementsPatchEntry {
     pub id: String,
@@ -1028,7 +1028,7 @@ pub struct ProgramRequirementsPatchEntry {
 /// 🧩 Identified-collection delta for `priorities`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramPrioritiesDelta {
     pub added: Vec<PriorityRecord>,
@@ -1040,7 +1040,7 @@ pub struct ProgramPrioritiesDelta {
 /// 🩹 One patched `PriorityRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramPrioritiesPatchEntry {
     pub id: String,
@@ -1050,7 +1050,7 @@ pub struct ProgramPrioritiesPatchEntry {
 /// 🧩 Identified-collection delta for `scenarios`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramScenariosDelta {
     pub added: Vec<Scenario>,
@@ -1062,7 +1062,7 @@ pub struct ProgramScenariosDelta {
 /// 🩹 One patched `Scenario` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramScenariosPatchEntry {
     pub id: String,
@@ -1072,7 +1072,7 @@ pub struct ProgramScenariosPatchEntry {
 /// 🧩 Identified-collection delta for `options`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramOptionsDelta {
     pub added: Vec<OptionEvaluation>,
@@ -1084,7 +1084,7 @@ pub struct ProgramOptionsDelta {
 /// 🩹 One patched `OptionEvaluation` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramOptionsPatchEntry {
     pub id: String,
@@ -1094,7 +1094,7 @@ pub struct ProgramOptionsPatchEntry {
 /// 🧩 Identified-collection delta for `decisions`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramDecisionsDelta {
     pub added: Vec<Decision>,
@@ -1106,7 +1106,7 @@ pub struct ProgramDecisionsDelta {
 /// 🩹 One patched `Decision` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramDecisionsPatchEntry {
     pub id: String,
@@ -1116,7 +1116,7 @@ pub struct ProgramDecisionsPatchEntry {
 /// 🧩 Identified-collection delta for `validations`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramValidationsDelta {
     pub added: Vec<ValidationRecord>,
@@ -1128,7 +1128,7 @@ pub struct ProgramValidationsDelta {
 /// 🩹 One patched `ValidationRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramValidationsPatchEntry {
     pub id: String,
@@ -1138,7 +1138,7 @@ pub struct ProgramValidationsPatchEntry {
 /// 🧩 Identified-collection delta for `performance`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramPerformanceDelta {
     pub added: Vec<PerformanceCriterion>,
@@ -1150,7 +1150,7 @@ pub struct ProgramPerformanceDelta {
 /// 🩹 One patched `PerformanceCriterion` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramPerformancePatchEntry {
     pub id: String,
@@ -1160,7 +1160,7 @@ pub struct ProgramPerformancePatchEntry {
 /// 🧩 Identified-collection delta for `quality`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramQualityDelta {
     pub added: Vec<QualityRecord>,
@@ -1172,7 +1172,7 @@ pub struct ProgramQualityDelta {
 /// 🩹 One patched `QualityRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramQualityPatchEntry {
     pub id: String,
@@ -1182,7 +1182,7 @@ pub struct ProgramQualityPatchEntry {
 /// 🧩 Identified-collection delta for `documents`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramArtifactsDelta {
     pub added: Vec<ArtifactRecord>,
@@ -1194,7 +1194,7 @@ pub struct ProgramArtifactsDelta {
 /// 🩹 One patched `ArtifactRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramArtifactsPatchEntry {
     pub id: String,
@@ -1204,7 +1204,7 @@ pub struct ProgramArtifactsPatchEntry {
 /// 🧩 Identified-collection delta for `assumptions`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramAssumptionsDelta {
     pub added: Vec<Assumption>,
@@ -1216,7 +1216,7 @@ pub struct ProgramAssumptionsDelta {
 /// 🩹 One patched `Assumption` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramAssumptionsPatchEntry {
     pub id: String,
@@ -1226,7 +1226,7 @@ pub struct ProgramAssumptionsPatchEntry {
 /// 🧩 Identified-collection delta for `constraints`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramConstraintsDelta {
     pub added: Vec<ConstraintRecord>,
@@ -1238,7 +1238,7 @@ pub struct ProgramConstraintsDelta {
 /// 🩹 One patched `ConstraintRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramConstraintsPatchEntry {
     pub id: String,
@@ -1248,7 +1248,7 @@ pub struct ProgramConstraintsPatchEntry {
 /// 🧩 Identified-collection delta for `compliance_records`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramComplianceRecordsDelta {
     pub added: Vec<ComplianceRecord>,
@@ -1260,7 +1260,7 @@ pub struct ProgramComplianceRecordsDelta {
 /// 🩹 One patched `ComplianceRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramComplianceRecordsPatchEntry {
     pub id: String,
@@ -1270,7 +1270,7 @@ pub struct ProgramComplianceRecordsPatchEntry {
 /// 🧩 Identified-collection delta for `approvals`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramApprovalsDelta {
     pub added: Vec<ApprovalRecord>,
@@ -1282,7 +1282,7 @@ pub struct ProgramApprovalsDelta {
 /// 🩹 One patched `ApprovalRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramApprovalsPatchEntry {
     pub id: String,
@@ -1292,7 +1292,7 @@ pub struct ProgramApprovalsPatchEntry {
 /// 🧩 Identified-collection delta for `meetings`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramMeetingsDelta {
     pub added: Vec<MeetingRecord>,
@@ -1304,7 +1304,7 @@ pub struct ProgramMeetingsDelta {
 /// 🩹 One patched `MeetingRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramMeetingsPatchEntry {
     pub id: String,
@@ -1314,7 +1314,7 @@ pub struct ProgramMeetingsPatchEntry {
 /// 🧩 Identified-collection delta for `changes`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramChangesDelta {
     pub added: Vec<ChangeRecord>,
@@ -1326,7 +1326,7 @@ pub struct ProgramChangesDelta {
 /// 🩹 One patched `ChangeRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramChangesPatchEntry {
     pub id: String,
@@ -1336,7 +1336,7 @@ pub struct ProgramChangesPatchEntry {
 /// 🧩 Identified-collection delta for `collaboration`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramCollaborationDelta {
     pub added: Vec<CollaborationRecord>,
@@ -1348,7 +1348,7 @@ pub struct ProgramCollaborationDelta {
 /// 🩹 One patched `CollaborationRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramCollaborationPatchEntry {
     pub id: String,
@@ -1358,7 +1358,7 @@ pub struct ProgramCollaborationPatchEntry {
 /// 🧩 Identified-collection delta for `analyses`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramAnalysesDelta {
     pub added: Vec<AnalysisRecord>,
@@ -1370,7 +1370,7 @@ pub struct ProgramAnalysesDelta {
 /// 🩹 One patched `AnalysisRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramAnalysesPatchEntry {
     pub id: String,
@@ -1380,7 +1380,7 @@ pub struct ProgramAnalysesPatchEntry {
 /// 🧩 Identified-collection delta for `reports`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramReportsDelta {
     pub added: Vec<ReportRecord>,
@@ -1392,7 +1392,7 @@ pub struct ProgramReportsDelta {
 /// 🩹 One patched `ReportRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramReportsPatchEntry {
     pub id: String,
@@ -1402,7 +1402,7 @@ pub struct ProgramReportsPatchEntry {
 /// 🧩 Identified-collection delta for `search_filters`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramSearchFiltersDelta {
     pub added: Vec<SearchFilter>,
@@ -1414,7 +1414,7 @@ pub struct ProgramSearchFiltersDelta {
 /// 🩹 One patched `SearchFilter` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramSearchFiltersPatchEntry {
     pub id: String,
@@ -1424,7 +1424,7 @@ pub struct ProgramSearchFiltersPatchEntry {
 /// 🧩 Identified-collection delta for `status_records`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramStatusRecordsDelta {
     pub added: Vec<StatusRecord>,
@@ -1436,7 +1436,7 @@ pub struct ProgramStatusRecordsDelta {
 /// 🩹 One patched `StatusRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramStatusRecordsPatchEntry {
     pub id: String,
@@ -1446,7 +1446,7 @@ pub struct ProgramStatusRecordsPatchEntry {
 /// 🧩 Identified-collection delta for `workshops`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramWorkshopsDelta {
     pub added: Vec<Workshop>,
@@ -1458,7 +1458,7 @@ pub struct ProgramWorkshopsDelta {
 /// 🩹 One patched `Workshop` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramWorkshopsPatchEntry {
     pub id: String,
@@ -1468,7 +1468,7 @@ pub struct ProgramWorkshopsPatchEntry {
 /// 🧩 Identified-collection delta for `surveys`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramSurveysDelta {
     pub added: Vec<Survey>,
@@ -1480,7 +1480,7 @@ pub struct ProgramSurveysDelta {
 /// 🩹 One patched `Survey` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramSurveysPatchEntry {
     pub id: String,
@@ -1490,7 +1490,7 @@ pub struct ProgramSurveysPatchEntry {
 /// 🧩 Identified-collection delta for `issues`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramIssuesDelta {
     pub added: Vec<Issue>,
@@ -1502,7 +1502,7 @@ pub struct ProgramIssuesDelta {
 /// 🩹 One patched `Issue` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramIssuesPatchEntry {
     pub id: String,
@@ -1512,7 +1512,7 @@ pub struct ProgramIssuesPatchEntry {
 /// 🧩 Identified-collection delta for `audit_events`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramAuditEventsDelta {
     pub added: Vec<AuditEvent>,
@@ -1524,7 +1524,7 @@ pub struct ProgramAuditEventsDelta {
 /// 🩹 One patched `AuditEvent` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramAuditEventsPatchEntry {
     pub id: String,
@@ -1534,7 +1534,7 @@ pub struct ProgramAuditEventsPatchEntry {
 /// 🧩 Identified-collection delta for `templates`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramTemplatesDelta {
     pub added: Vec<TemplateRecord>,
@@ -1546,7 +1546,7 @@ pub struct ProgramTemplatesDelta {
 /// 🩹 One patched `TemplateRecord` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramTemplatesPatchEntry {
     pub id: String,
@@ -1556,7 +1556,7 @@ pub struct ProgramTemplatesPatchEntry {
 /// 🧩 Identified-collection delta for `traces`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProgramTracesDelta {
     pub added: Vec<TraceLink>,
@@ -1568,7 +1568,7 @@ pub struct ProgramTracesDelta {
 /// 🩹 One patched `TraceLink` entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramTracesPatchEntry {
     pub id: String,

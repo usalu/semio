@@ -1,3 +1,4 @@
+use crate::JackWorkingScene;
 use super::*;
 use crate::ast::QueryResultKind;
 use crate::language_service::{complete, format as format_source, hover, lint, semantic_tokens};
@@ -9,16 +10,7 @@ fn mini_graph() -> Graph {
     let graph = &fixture["graph"];
     let nodes = dsl::FromValue::from_value(dsl::DslValue::from(graph["nodes"].clone())).unwrap();
     let edges = dsl::FromValue::from_value(dsl::DslValue::from(graph["edges"].clone())).unwrap();
-    let fixture = JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        graph["name"].as_str().unwrap().into(),
-        Some(graph["manifestId"].as_str().unwrap().into()),
-        Manifest::nakagin_default(),
-        Camera::default(),
-        nodes,
-        edges,
-        Some(graph["rootNodeId"].as_str().unwrap().into()),
-    );
+    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), graph["name"].as_str().unwrap().into(), Some(graph["manifestId"].as_str().unwrap().into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: nodes, edges: edges }, Some(graph["rootNodeId"].as_str().unwrap().into()));
     Graph::from_fixture(fixture).unwrap()
 }
 
@@ -196,7 +188,19 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         };
         let query = parse(case["query"].as_str().unwrap()).unwrap();
         let expected = execute(&graph, &query).unwrap();
-        let mut execution = QueryExecution::new(graph, query);
+        let snapshot = graph.to_fixture();
+        let mut preparation = QueryExecutionPreparation::new(query);
+        let mut preparation_turns = 0;
+        let mut execution = loop {
+            preparation_turns += 1;
+            assert!(preparation_turns < 10_000);
+            match preparation.step(&snapshot, 4096).expect("retained query preparation") {
+                QueryPreparationStep::Pending => {}
+                QueryPreparationStep::Complete(execution) => break execution,
+            }
+        };
+        assert!(preparation.terminal_is_empty());
+        eprintln!("[DEBUG] query ownership transferred after {preparation_turns} preparation turns");
         let mut steps = 0;
         let actual = loop {
             steps += 1;
@@ -205,7 +209,12 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
                 break result;
             }
         };
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0.kind, expected.0.kind);
+        assert_eq!(actual.0.columns, expected.0.columns);
+        assert_eq!(actual.0.rows, expected.0.rows);
+        assert_eq!(actual.1, expected.1);
+        let graph_value = |snapshot: &Option<JackSnapshot>| snapshot.as_ref().map(|snapshot| serde_json::from_str::<serde_json::Value>(&snapshot.to_json().expect("materialized graph JSON")).expect("reference JSON"));
+        assert_eq!(graph_value(&actual.0.graph_fixture), graph_value(&expected.0.graph_fixture));
         let packed = pack::to_json_string(&actual.0);
         assert!(packed.len() <= 1_048_576, "retained query result exceeded its emitted byte admission");
         let json: serde_json::Value = serde_json::from_str(&packed).unwrap();
@@ -368,4 +377,13 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
     }
     assert!(complete && execution.terminal_is_empty());
     eprintln!("[DEBUG] query output admission rejected a {encoded_cells}-byte table before publication");
+}
+
+#[test]
+fn query_preparation_layout_matches_neutral_budget() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️resumable-query/🔣️.json")).expect("neutral query ownership fixture");
+    let maximum = fixture["retainedExecution"]["maximumPreparationStepInlineBytes"].as_u64().expect("inline preparation budget") as usize;
+    let actual = size_of::<QueryPreparationStep>();
+    eprintln!("[DEBUG] Query preparation step occupies {actual} inline bytes; neutral maximum is {maximum}");
+    assert!(actual <= maximum, "query preparation must transfer a compact execution owner");
 }

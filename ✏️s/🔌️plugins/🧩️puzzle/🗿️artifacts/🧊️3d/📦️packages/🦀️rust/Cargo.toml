@@ -23,6 +23,9 @@ wasm-bindgen = { workspace = true, optional = true }
 semio-framework = { workspace = true }
 semio-framework-graph = { workspace = true }
 semio-framework-hash = { workspace = true }
+# 🔤️ First-party base64 codec — the paged `registerBrushMesh` wire carries mesh values as base64 of
+# little-endian bytes, which is the only encoding that fits 1 024 values in one 8 192-byte command.
+semio-framework-io-base64 = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }

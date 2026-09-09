@@ -1,5 +1,5 @@
 /** 🌊️ Flow editor — Main window: typed twin of `🦀️.rs`'s view-model. Mirrors the pane's
- * `render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession)` boundary — the
+ * `render(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession)` boundary — the
  * editable node-graph scene (`SurfaceKind::NodeGraph`, built via `build_node_graph_scene`). */
 
 /** 🌊️ The Main window's typed view-model — mirrors the Rust `render()` boundary's inputs. */

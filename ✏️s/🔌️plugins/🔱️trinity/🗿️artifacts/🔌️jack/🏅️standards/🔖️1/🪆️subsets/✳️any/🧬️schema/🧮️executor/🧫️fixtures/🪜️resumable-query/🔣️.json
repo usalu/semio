@@ -192,6 +192,7 @@
     }
   },
   "retainedExecution": {
+    "maximumPreparationStepInlineBytes": 16,
     "maximumQueryBytes": 4096,
     "maximumWorkUnitsPerStep": 1,
     "cancelAfterWorkUnits": 7,

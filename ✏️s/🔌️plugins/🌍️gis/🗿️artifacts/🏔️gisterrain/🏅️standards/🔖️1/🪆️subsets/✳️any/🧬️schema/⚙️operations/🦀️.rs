@@ -23,10 +23,7 @@ mod tests;
 
 pub fn apply_gis_terrain_mutation(snapshot: &mut GisTerrainSnapshot, mutation: &GisTerrainMutation) -> protocol::MutationApplyResult<()> {
     let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
-    // 🕸️ `mesh` is a pure function of `(exaggeration, imported_features_json)` — re-derive it after
-    // every mutation so the composed child handle never drifts from what
-    // `gis_terrain_mesh_from_snapshot` would actually build (see `GisTerrainSnapshot.mesh`'s doc).
-    *snapshot = crate::gis_terrain_snapshot_with_derived_mesh(next);
+    *snapshot = next;
     Ok(())
 }
 
@@ -51,10 +48,7 @@ pub const KINDS: &[&str] = &["change-exaggeration", "change-imported-features"];
 /// `GisTerrainSnapshot` can be named there, and hand-transcribing either into a Rust literal
 /// would be a second copy of the committed specification vector, free to drift away from it. This
 /// bridge is the whole surface an adapter needs, and every type in its signature is a `str`.
-/// Every committed snapshot is funnelled through `gis_terrain_snapshot_with_derived_mesh` on the way
-/// in — the same call `Default`, `apply_gis_terrain_mutation` and `GisTerrainDiff::apply` each make —
-/// because the committed vectors carry a placeholder mesh handle rather than a frozen digest.
-/// Funnelling BOTH the base and the expected after-snapshot keeps the comparison exact.
+/// Committed snapshots are decoded exactly, including their durable mesh handles.
 ///
 ///
 /// `after_json` is decoded through the SAME path as `base_json` and returned as `expectedSnapshot`,
@@ -66,8 +60,7 @@ pub const KINDS: &[&str] = &["change-exaggeration", "change-imported-features"];
 /// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
 pub fn gis_terrain_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<GisTerrainSnapshot, String> {
-        let decoded: GisTerrainSnapshot = dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())?;
-        Ok(crate::gis_terrain_snapshot_with_derived_mesh(decoded))
+        dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;

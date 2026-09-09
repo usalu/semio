@@ -13,6 +13,22 @@
   },
   "cases": [
     {
+      "id": "ordinary-mutation-unit-test-without-fixture-pair",
+      "remove": [],
+      "add": {
+        "🧬️schema/🧬️mutations/🪄️change-value/🧪️tests/🔬️unit/🦀️.rs": "#[test] fn unit() {}\n"
+      },
+      "valid": true
+    },
+    {
+      "id": "undeclared-physical-fixture-example",
+      "remove": [],
+      "add": {
+        "🧫️fixtures/🧬️mutations/🪄️change-value/🔬️unregistered/🎯️outcome/🔣️.json": "{}\n"
+      },
+      "valid": false
+    },
+    {
       "id": "canonical-fixture-implementation-pair",
       "remove": [],
       "add": {},

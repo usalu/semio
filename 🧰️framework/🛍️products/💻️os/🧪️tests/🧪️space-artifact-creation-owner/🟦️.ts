@@ -19,8 +19,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     attachLocalBrokerPort(port: MessagePort): void;
     detachLocalBrokerPort(): void;
     socketGrantTestIssue: typeof socketGrantTestIssue;
-    spaceArtifactCreationTestFetch: typeof spaceArtifactCreationTestFetch;
-    workerPostTestSink: typeof workerPostTestSink;
+    spaceArtifactCreationTestFetch: null | ((path: string, init: RequestInit, signal: AbortSignal) => Promise<FetchTimeoutResponse>);
+    workerPostTestSink: null | ((message: BackboneWorkerResponse) => void);
   };
   const { DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck } = dependencies;
   vitest.it("retains the preceding inference job when a successor opening is refused", async () => {
@@ -392,8 +392,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("space artifact creation owner", () => {
     const requestId = "1".repeat(32);
-    const response = (phase: HubSpaceArtifactCreationStatusV1["phase"], ready?: HubSpaceArtifactCreationStatusV1["ready"]): FetchTimeoutResponse => {
-      const body = JSON.stringify({ schema: "semio.hub.space-artifact-creation-status/v1", requestId, spaceId: "space-a", phase, ...(ready === undefined ? {} : { ready }) });
+    const catalogGenerationId = "3".repeat(64);
+    const response = (phase: HubSpaceArtifactCreationStatusV1["phase"], ready?: HubSpaceArtifactCreationStatusV1["ready"], generation = catalogGenerationId): FetchTimeoutResponse => {
+      const body = JSON.stringify({ schema: "semio.hub.space-artifact-creation-status/v1", requestId, spaceId: "space-a", catalogGenerationId: generation, phase, ...(ready === undefined ? {} : { ready }) });
       return new Response(body, { status: 200, headers: { "content-length": String(new TextEncoder().encode(body).byteLength) } });
     };
 
@@ -401,7 +402,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const body = JSON.stringify({
         schema: "semio.hub.space-artifact-creation-catalog/v1",
         spaceId: "space-a",
-        catalogGenerationId: "3".repeat(64),
+        catalogGenerationId,
         kinds: [{ kindId: "s.gis.gismap", schema: "s.gis.gismap", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" }, label: { en: "GIS Map", de: "GIS-Karte" } }],
       });
       const replies: BackboneWorkerResponse[] = [];
@@ -415,7 +416,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       await vi.waitFor(() => expect(replies.at(-1)).toEqual({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "ready" }));
       expect(replies).toEqual([
         { kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "loading" },
-        { kind: "space-artifact-creation-catalog", clientInstanceId, spaceId: "space-a", catalogGenerationId: "3".repeat(64), kinds: JSON.parse(body).kinds },
+        { kind: "space-artifact-creation-catalog", clientInstanceId, spaceId: "space-a", catalogGenerationId, kinds: JSON.parse(body).kinds },
         { kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "ready" },
       ]);
       expect(spaceArtifactCreationCatalogOperations).toHaveLength(0);
@@ -429,28 +430,35 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       ]);
     });
 
-    it("retains one exact request through preparing and discloses the server tuple only at ready", async () => {
+    it("retains the selected catalog generation through rotated and missing statuses until exact ready", async () => {
       const calls: Array<readonly [string, string]> = [];
+      const bodies: string[] = [];
       const statuses: Array<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>> = [];
+      const missingGeneration = JSON.stringify({ schema: "semio.hub.space-artifact-creation-status/v1", requestId, spaceId: "space-a", phase: "accepted" });
       const replies: readonly FetchTimeoutResponse[] = [
+        response("accepted", undefined, "4".repeat(64)),
+        new Response(missingGeneration, { status: 200, headers: { "content-length": String(new TextEncoder().encode(missingGeneration).byteLength) } }),
         response("accepted"),
-        response("preparing"),
         response("ready", { documentId: `artifact-${"2".repeat(32)}`, kindId: "s.gis.gismap", artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" } }),
       ];
       testSeams.spaceArtifactCreationTestFetch = async (path, init) => {
         calls.push([path, init.method ?? "GET"]);
+        if (typeof init.body === "string") bodies.push(init.body);
         return replies[calls.length - 1]!;
       };
       testSeams.workerPostTestSink = (message) => {
         if (message.kind === "space-artifact-creation-status") statuses.push(message);
       };
-      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" });
+      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", expectedCatalogGenerationId: catalogGenerationId, kindId: "s.gis.gismap", name: "Shared Map" });
       await vi.waitFor(() => expect(statuses.at(-1)?.phase).toBe("ready"), { timeout: 2_000 });
       expect(calls).toEqual([
         ["/spaces/space-a/artifact-creations", "POST"],
         [`/spaces/space-a/artifact-creations/${requestId}`, "GET"],
         [`/spaces/space-a/artifact-creations/${requestId}`, "GET"],
+        [`/spaces/space-a/artifact-creations/${requestId}`, "GET"],
       ]);
+      expect(JSON.parse(bodies[0]!)).toEqual({ schema: "semio.hub.space-artifact-create/v1", requestId, expectedCatalogGenerationId: catalogGenerationId, kindId: "s.gis.gismap", name: "Shared Map" });
+      expect(statuses.every((status) => status.catalogGenerationId === catalogGenerationId)).toBe(true);
       expect(statuses.filter((status) => status.ready !== undefined)).toHaveLength(1);
       expect(spaceArtifactCreationOperations).toHaveLength(0);
     });
@@ -465,7 +473,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       testSeams.workerPostTestSink = (message) => {
         if (message.kind === "space-artifact-creation-status") statuses.push(message);
       };
-      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" });
+      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", expectedCatalogGenerationId: catalogGenerationId, kindId: "s.gis.gismap", name: "Shared Map" });
       await vi.waitFor(() => expect(statuses.some((status) => status.phase === "preparing")).toBe(true));
       handleTsRequest({ kind: "space-artifact-create-cancel", requestId, spaceId: "space-a" });
       await vi.waitFor(() => expect(statuses.at(-1)?.phase).toBe("cancelled"), { timeout: 2_000 });
@@ -483,12 +491,52 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       testSeams.workerPostTestSink = (message) => {
         if (message.kind === "space-artifact-creation-status") statuses.push(message);
       };
-      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" });
+      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", expectedCatalogGenerationId: catalogGenerationId, kindId: "s.gis.gismap", name: "Shared Map" });
       await vi.waitFor(() => expect(statuses.some((status) => status.phase === "preparing")).toBe(true));
       handleTsRequest({ kind: "space-artifact-create-cancel", requestId, spaceId: "space-a" });
       await vi.waitFor(() => expect(statuses.at(-1)?.phase).toBe("failed"), { timeout: 2_000 });
       expect(statuses.some((status) => status.phase === "cancelled")).toBe(false);
       expect(spaceArtifactCreationOperations).toHaveLength(0);
+    });
+
+    it("requires a catalog refresh before failing one exact initial POST conflict without resubmission", async () => {
+      const calls: Array<readonly [string, string]> = [];
+      const statuses: BackboneWorkerResponse[] = [];
+      testSeams.spaceArtifactCreationTestFetch = async (path, init) => {
+        calls.push([path, init.method ?? "GET"]);
+        return new Response(null, { status: 409 });
+      };
+      testSeams.workerPostTestSink = (message) => statuses.push(message);
+      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", expectedCatalogGenerationId: catalogGenerationId, kindId: "s.gis.gismap", name: "Shared Map" });
+      await vi.waitFor(() => expect(spaceArtifactCreationOperations).toHaveLength(0));
+      expect(calls).toEqual([["/spaces/space-a/artifact-creations", "POST"]]);
+      expect(statuses).toEqual([
+        { kind: "space-artifact-creation-status", requestId, spaceId: "space-a", catalogGenerationId, phase: "accepted" },
+        { kind: "space-artifact-creation-catalog-refresh-required", requestId, spaceId: "space-a", catalogGenerationId },
+        { kind: "space-artifact-creation-status", requestId, spaceId: "space-a", catalogGenerationId, phase: "failed" },
+      ]);
+    });
+
+    it("suppresses a late initial POST conflict after the exact creation owner retires", async () => {
+      let resolveResponse!: (response: FetchTimeoutResponse) => void;
+      const statuses: BackboneWorkerResponse[] = [];
+      testSeams.spaceArtifactCreationTestFetch = () => new Promise((resolve) => {
+        resolveResponse = resolve;
+      });
+      testSeams.workerPostTestSink = (message) => {
+        if (message.kind === "space-artifact-creation-status" || message.kind === "space-artifact-creation-catalog-refresh-required") statuses.push(message);
+      };
+      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", expectedCatalogGenerationId: catalogGenerationId, kindId: "s.gis.gismap", name: "Shared Map" });
+      await vi.waitFor(() => expect(spaceArtifactCreationOperations).toHaveLength(1));
+      const operation = spaceArtifactCreationOperations.get(requestId)!;
+      spaceArtifactCreationOperations.delete(requestId);
+      operation.abort.abort(new Error("space artifact creation: replaced"));
+      resolveResponse(new Response(null, { status: 409 }));
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(statuses).toEqual([
+        { kind: "space-artifact-creation-status", requestId, spaceId: "space-a", catalogGenerationId, phase: "accepted" },
+      ]);
     });
   });
 
@@ -1577,36 +1625,31 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("backbone-worker space administration", () => {
     const SPACE = "space-admin-01";
 
-    /** ⏳️ Settles the operation by waiting until the worker stops posting, rather than by a fixed
-     * number of turns: `parseDirectorySpaceAdministrationPageV1` awaits `crypto.subtle.digest`, whose
-     * turn count is not fixed, so a constant loop is load-dependent and therefore flaky. Bounded at 60
-     * turns so a genuinely stuck operation still fails the test instead of hanging it. */
-    const settleAdministrationTurns = async (harness?: { readonly posted: readonly unknown[] }): Promise<void> => {
-      let quiet = 0;
-      let seen = harness?.posted.length ?? -1;
-      for (let turn = 0; turn < 60 && quiet < 4; turn += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        if (harness === undefined) {
-          quiet += 1;
-          continue;
-        }
-        quiet = harness.posted.length === seen ? quiet + 1 : 0;
-        seen = harness.posted.length;
-      }
+    /** ⏳️ Waits for actual operation completion, including asynchronous page and receipt verification. */
+    const settleAdministrationTurns = async (_harness?: { readonly posted: readonly unknown[] }): Promise<void> => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await vi.waitFor(() => {
+        const operation = testSeams.directoryAdministration;
+        if (operation === null) return;
+        expect(operation.phase).toBe("ready");
+        expect(operation.requestId).toBeNull();
+        expect(operation.pageRead).toBeNull();
+      }, { timeout: 2000, interval: 5 });
+      await new Promise((resolve) => setTimeout(resolve, 0));
     };
 
-    async function sealAdministrationPage(members: readonly { userId: string; email: string; role: "author" | "spectator"; owner: boolean }[], invites: readonly { inviteId: string; createdAtMs: number }[]): Promise<string> {
+    async function sealAdministrationPage(members: readonly { userId: string; email: string; role: "author" | "spectator"; owner: boolean }[], invites: readonly { inviteId: string; createdAtMs: number }[], properties: { name?: string; visibility?: "public" | "private"; capabilities?: Readonly<Record<string, boolean>> } = {}): Promise<string> {
       const unsigned = {
         access: "author" as const,
         schema: "semio.directory.space-administration-page.v1" as const,
         sessionBindingSha256: "a".repeat(64),
         authorizationGeneration: 5,
         spaceId: SPACE,
-        space: { id: SPACE, name: "Administered", kind: "studio", visibility: "private", ownerUserId: "user-a", role: "author", memberCount: members.length, documentCount: 0, activeConnections: 0, createdAtMs: 1, updatedAtMs: 2 },
+        space: { id: SPACE, name: properties.name ?? "Administered", kind: "studio", visibility: properties.visibility ?? "private", ownerUserId: "user-a", role: "author", memberCount: members.length, documentCount: 0, activeConnections: 0, createdAtMs: 1, updatedAtMs: 2 },
         members: { rows: members.map((row) => ({ userId: row.userId, email: row.email, displayName: row.userId, role: row.role, owner: row.owner })) },
         documents: { rows: [] as unknown[] },
         invites: { rows: invites.map((row) => ({ inviteId: row.inviteId, role: "spectator" as const, createdAtMs: row.createdAtMs, expiresAtMs: 900000, revoked: false, accepted: false })) },
-        capabilities: { renameSpace: true, setVisibility: true, deleteSpace: true, upsertMember: true, removeMember: true, createInvite: true, revokeInvite: true },
+        capabilities: { renameSpace: true, setVisibility: true, deleteSpace: true, upsertMember: true, removeMember: true, createInvite: true, revokeInvite: true, ...properties.capabilities },
       };
       const digest = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(unsigned))));
       return JSON.stringify({ ...unsigned, receiptSha256: Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("") });
@@ -1627,13 +1670,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       return JSON.stringify({ ...unsigned, receiptSha256: Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("") });
     }
 
-    async function sealCommandReceipt(requestId: string, command: DirectoryCommand, inviteToken?: string): Promise<string> {
+    async function sealCommandReceipt(requestId: string, command: DirectoryCommand, inviteToken?: string, outcome: "accepted" | "previously-accepted" | "secret-undeliverable" = "accepted"): Promise<string> {
       const commandSha256 = await directorySha256(JSON.stringify(command));
       const unsigned = {
         schema: "semio.directory.command-receipt.v1" as const,
         requestId,
         commandSha256,
-        outcome: "accepted" as const,
+        outcome,
         events: [] as unknown[],
         result: inviteToken === undefined ? { kind: "none" as const } : { kind: "invite" as const, inviteToken },
       };
@@ -1673,6 +1716,161 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       };
     }
 
+    it("admits administration transport only for the verified page's exact space and command capability", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const base = "./🔨️modules/📇️directory/🧬️schema/";
+      const fixture = JSON.parse(readFileSync(new URL(base + "🏛️administration/🧫️fixtures/🛂️command-admission/🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL(base + "🏛️administration/🧫️fixtures/🛂️command-admission/🧬️schema/🔣️.json", source.url), "utf8"));
+      const directorySchema = JSON.parse(readFileSync(new URL(base + "🔣️.json", source.url), "utf8"));
+      expect(new Ajv({ strict: true }).addSchema(directorySchema).compile(schema)(fixture)).toBe(true);
+      const members = [{ userId: "user-a", email: "a@example.invalid", role: "author" as const, owner: true }];
+      let epoch = 100;
+      for (const row of fixture.allowed as Array<{ capability: string; command: DirectoryCommand }>) {
+        for (const refusal of ["foreign-command", "withdrawn-capability", "member-page", "missing-page"]) {
+          const harness = administrationHarness([200]);
+          try {
+            testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+            harness.bodies.push(refusal === "member-page" ? await sealMemberAdministrationPage() : await sealAdministrationPage(members, [], { capabilities: refusal === "withdrawn-capability" ? { [row.capability]: false } : {} }));
+            handleTsRequest({ kind: "directory-administration-open", operationEpoch: ++epoch, spaceId: SPACE });
+            if (refusal !== "missing-page") await settleAdministrationTurns(harness);
+            const command = refusal === "foreign-command" ? { ...row.command, spaceId: "another-space" } : row.command;
+            handleTsRequest({ kind: "directory-administration-submit", operationEpoch: epoch, requestId: "1".repeat(32), command });
+            await settleAdministrationTurns(harness);
+            expect(equal(harness.requests.filter((entry) => entry.startsWith("POST")), []), row.command.kind + ":" + refusal).toBe(true);
+            expect(harness.posted.some((message) => message.kind === "directory-administration-state" && message.phase === "submitting")).toBe(false);
+            expect(testSeams.directoryAdministration?.requestId).toBeNull();
+          } finally {
+            harness.release();
+            closeDirectory();
+          }
+        }
+      }
+      const harness = administrationHarness([200]);
+      try {
+        testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        harness.bodies.push(await sealAdministrationPage(members, []));
+        handleTsRequest({ kind: "directory-administration-open", operationEpoch: ++epoch, spaceId: SPACE });
+        await settleAdministrationTurns(harness);
+        for (const command of [...fixture.unrelated, ...fixture.malformed]) {
+          handleTsRequest({ kind: "directory-administration-submit", operationEpoch: epoch, requestId: "1".repeat(32), command });
+          await settleAdministrationTurns(harness);
+          expect(equal(harness.requests.filter((entry) => entry.startsWith("POST")), [])).toBe(true);
+          expect(testSeams.directoryAdministration?.phase).toBe("ready");
+        }
+        console.log("[DEBUG] actual administration worker refused foreign-space, withdrawn, member, unverified, unrelated and malformed commands before POST");
+      } finally {
+        harness.release();
+        closeDirectory();
+      }
+    });
+
+    it("retires older administration page reads and refuses refresh during a sealed command", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const base = "./🔨️modules/📇️directory/🧬️schema/🏛️administration/🧫️fixtures/📄️page-retirement/";
+      const fixture = JSON.parse(readFileSync(new URL(base + "🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL(base + "🧬️schema/🔣️.json", source.url), "utf8"));
+      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      const author = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
+      const member = await sealMemberAdministrationPage();
+      for (const row of fixture.cases) {
+        const harness = administrationHarness([200]);
+        const pending: Array<(value: Response) => void> = [];
+        let reads = 0;
+        try {
+          testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: async () => ++reads === 1 ? new Response(author) : await new Promise<Response>((resolve) => pending.push(resolve)) });
+          handleTsRequest({ kind: "directory-administration-open", operationEpoch: 145, spaceId: SPACE });
+          await settleAdministrationTurns(harness);
+          handleTsRequest({ kind: "directory-administration-refresh", operationEpoch: 145 });
+          handleTsRequest({ kind: "directory-administration-refresh", operationEpoch: 145 });
+          expect(pending).toHaveLength(2);
+          pending[1]!(new Response(member));
+          await settleAdministrationTurns(harness);
+          expect(testSeams.directoryAdministration?.canonicalJson).toBe(member);
+          const messages = harness.posted.length;
+          pending[0]!(row.older === "failure" ? new Response("", { status: 403 }) : new Response(author));
+          await settleAdministrationTurns(harness);
+          expect(equal(testSeams.directoryAdministration?.page?.access, row.expected), row.id).toBe(true);
+          expect(testSeams.directoryAdministration?.canonicalJson).toBe(member);
+          expect(harness.posted).toHaveLength(messages);
+        } finally {
+          harness.release();
+          closeDirectory();
+        }
+      }
+      const harness = administrationHarness([200]);
+      try {
+        testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        harness.bodies.push(author);
+        handleTsRequest({ kind: "directory-administration-open", operationEpoch: 146, spaceId: SPACE });
+        await settleAdministrationTurns(harness);
+        const command: DirectoryCommand = { kind: "rename-space", spaceId: SPACE, name: "Research" };
+        harness.bodies.push(await sealCommandReceipt("3".repeat(32), command), author);
+        handleTsRequest({ kind: "directory-administration-submit", operationEpoch: 146, requestId: "3".repeat(32), command });
+        const requests = harness.requests.length;
+        handleTsRequest({ kind: "directory-administration-refresh", operationEpoch: 146 });
+        expect(harness.requests.length - requests).toBe(fixture.refreshDuringSubmit.additionalRequests);
+        expect(harness.posted.at(-1)).toMatchObject({ phase: "submitting", code: fixture.refreshDuringSubmit.code });
+        await settleAdministrationTurns(harness);
+        await settleAdministrationTurns(harness);
+        console.log("[DEBUG] administration worker ignored retired page success/failure and blocked refresh during a sealed command");
+      } finally {
+        harness.release();
+        closeDirectory();
+      }
+    });
+
+    it("changes space properties only after exact worker receipts and canonical refreshes", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const base = "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🧫️fixtures/⚙️properties/";
+      const fixture = JSON.parse(readFileSync(new URL(base + "🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL(base + "🧬️schema/🔣️.json", source.url), "utf8"));
+      const directorySchema = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🔣️.json", source.url), "utf8"));
+      expect(new Ajv({ strict: true }).addSchema(directorySchema).compile(schema)(fixture)).toBe(true);
+      const members = [{ userId: "user-a", email: "a@example.invalid", role: "author" as const, owner: true }];
+      const properties: { name: string; visibility: "public" | "private" } = { name: "Administered", visibility: "private" };
+      const harness = administrationHarness([200]);
+      let canonical = await sealAdministrationPage(members, [], properties);
+      try {
+        testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        harness.bodies.push(canonical);
+        handleTsRequest({ kind: "directory-administration-open", operationEpoch: 140, spaceId: SPACE });
+        await settleAdministrationTurns(harness);
+        let index = 0;
+        for (const row of fixture.cases as Array<{ command: Extract<DirectoryCommand, { kind: "rename-space" | "set-visibility" }> }>) {
+          const requestId = (++index).toString(16).padStart(32, "0");
+          const receipt = await sealCommandReceipt(requestId, row.command);
+          if (row.command.kind === "rename-space") properties.name = row.command.name;
+          else properties.visibility = row.command.visibility;
+          const next = await sealAdministrationPage(members, [], properties);
+          harness.bodies.push(receipt, next);
+          const start = harness.posted.length;
+          handleTsRequest({ kind: "directory-administration-submit", operationEpoch: 140, requestId, command: row.command });
+          expect(testSeams.directoryAdministration?.canonicalJson).toBe(canonical);
+          await settleAdministrationTurns(harness);
+          await settleAdministrationTurns(harness);
+          const states = harness.posted.slice(start).filter((message) => message.kind === "directory-administration-state");
+          expect(equal(states.map((message) => message.phase), ["submitting", "receipt", "refreshing", "ready"])).toBe(true);
+          expect(states.slice(0, 3).every((message) => message.canonicalJson === canonical)).toBe(true);
+          expect(states[1]?.receiptSha256).toBe(JSON.parse(receipt).receiptSha256);
+          expect(states[3]?.canonicalJson).toBe(next);
+          expect(equal(JSON.parse(next).space.name, properties.name)).toBe(true);
+          expect(equal(JSON.parse(next).space.visibility, properties.visibility)).toBe(true);
+          canonical = next;
+        }
+        expect(harness.requests.filter((entry) => entry.startsWith("POST"))).toHaveLength(fixture.cases.length);
+        console.log("[DEBUG] actual worker applied four neutral name/visibility results only after independently SHA-256 sealed receipt and page refresh");
+      } finally {
+        harness.release();
+        closeDirectory();
+      }
+    });
+
     it("drives loading → ready → submitting → receipt → refreshing without changing state before the receipt", async () => {
       const harness = administrationHarness([200, 200]);
       const first = await sealAdministrationPage(
@@ -1710,6 +1908,65 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(harness.requests.filter((entry) => entry.startsWith("POST"))).toHaveLength(1);
       } finally {
         harness.release();
+        closeDirectory();
+      }
+    });
+
+    it("settles delete only from an exact accepted receipt and never interprets a page 404 as deletion", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const base = "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🧫️fixtures/🗑️delete-space/";
+      const fixture = JSON.parse(readFileSync(new URL(base + "🔣️.json", source.url), "utf8")) as { acceptedOutcomes: Array<"accepted" | "previously-accepted"> };
+      const schema = JSON.parse(readFileSync(new URL(base + "🧬️schema/🔣️.json", source.url), "utf8"));
+      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      const page = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
+      let epoch = 160;
+      for (const outcome of fixture.acceptedOutcomes) {
+        const harness = administrationHarness([200]);
+        const command: DirectoryCommand = { kind: "delete-space", spaceId: SPACE };
+        const requestId = (++epoch).toString(16).padStart(32, "0");
+        try {
+          testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+          harness.bodies.push(page, await sealCommandReceipt(requestId, command, undefined, outcome));
+          handleTsRequest({ kind: "directory-administration-open", operationEpoch: epoch, spaceId: SPACE });
+          await settleAdministrationTurns(harness);
+          const requestCount = harness.requests.length;
+          handleTsRequest({ kind: "directory-administration-submit", operationEpoch: epoch, requestId, command });
+          await vi.waitFor(() => expect(harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1)).toMatchObject({ phase: "deleted", receiptSha256: expect.stringMatching(/^[0-9a-f]{64}$/u) }));
+          const terminal = harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1) as Extract<BackboneWorkerResponse, { kind: "directory-administration-state" }>;
+          expect(terminal.canonicalJson).toBeUndefined();
+          expect(terminal.inviteCapabilityPending).toBeUndefined();
+          expect(harness.requests.slice(requestCount).filter((request) => request.startsWith("POST"))).toHaveLength(1);
+          expect(harness.requests.slice(requestCount).filter((request) => request.startsWith("GET"))).toHaveLength(0);
+          expect(testSeams.directoryAdministration).toBeNull();
+        } finally {
+          harness.release();
+          closeDirectory();
+        }
+      }
+      const refused = administrationHarness([200]);
+      try {
+        const command: DirectoryCommand = { kind: "delete-space", spaceId: SPACE };
+        const requestId = "f".repeat(32);
+        testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: refused.fetches as never });
+        refused.bodies.push(page, await sealCommandReceipt(requestId, command, undefined, "secret-undeliverable"));
+        handleTsRequest({ kind: "directory-administration-open", operationEpoch: 190, spaceId: SPACE });
+        await settleAdministrationTurns(refused);
+        handleTsRequest({ kind: "directory-administration-submit", operationEpoch: 190, requestId, command });
+        await vi.waitFor(() => expect(refused.posted.filter((message) => message.kind === "directory-administration-state").at(-1)).toMatchObject({ phase: "failed", code: "invalid" }));
+        expect(refused.posted.some((message) => message.kind === "directory-administration-state" && message.phase === "deleted")).toBe(false);
+      } finally {
+        refused.release();
+        closeDirectory();
+      }
+      const missing = administrationHarness([404]);
+      try {
+        testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: missing.fetches as never });
+        handleTsRequest({ kind: "directory-administration-open", operationEpoch: 191, spaceId: SPACE });
+        await vi.waitFor(() => expect(missing.posted.filter((message) => message.kind === "directory-administration-state").at(-1)).toMatchObject({ phase: "denied", code: "forbidden" }));
+        expect(missing.posted.some((message) => message.kind === "directory-administration-state" && message.phase === "deleted")).toBe(false);
+      } finally {
+        missing.release();
         closeDirectory();
       }
     });
@@ -2658,6 +2915,46 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(harness.requests.filter((entry: string) => entry.endsWith("/cancel") || entry.endsWith("/reconcile"))).toHaveLength(0);
         console.log("[DEBUG] authenticated broker replacement retained the original request without replay under its successor");
       } finally { testSeams.detachLocalBrokerPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
+    });
+
+    it("requires verified session authority to physically reopen a fresh document owner", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const authorityFixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+      const authorities = authorityFixture.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
+      const validate = new Ajv({ strict: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/GisMapInferencePortV1" });
+      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      const harness = await inferenceHarness({ lease: "editor" });
+      try {
+        const original = harness.state;
+        const originalClientInstanceId = original.openClientInstanceId;
+        harness.bodies.push(JSON.stringify(authorities[1]));
+        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
+        const absentBeforeReopen = artifactState(DOCUMENT, SPACE) === undefined;
+        const successorClientInstanceId = "12345678-1234-4123-8123-123456789abd";
+        openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller", clientInstanceId: successorClientInstanceId });
+        const successor = artifactState(DOCUMENT, SPACE)!;
+        successor.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(true), "http://hub.test", new Uint8Array(1), new Uint8Array(1));
+        const operationEpoch = fixture.retainedClosing.operationEpoch + 11;
+        handleTsRequest({ kind: "inference-open", operationEpoch, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+        const opening = harness.posted.filter((message) => message.kind === "inference-port-opened").at(-1) as Extract<BackboneWorkerResponse, { kind: "inference-port-opened" }>;
+        const projection = {
+          oldClosed: original.closed,
+          absentBeforeReopen,
+          differentOwner: successor !== original,
+          differentClient: successor.openClientInstanceId !== originalClientInstanceId,
+          openingOutcome: opening.outcome,
+          successorOwnsFreshClient: testSeams.inferencePort?.clientInstanceId === successorClientInstanceId,
+        };
+        expect(equal(projection, fixture.retainedClosing.authorityFence.physicalReopen)).toBe(true);
+        expect(testSeams.inferencePort?.request).toBeNull();
+        handleTsRequest({ kind: "inference-close", operationEpoch });
+        expect(testSeams.inferencePort).toBeNull();
+        console.log("[DEBUG] authenticated replacement physically reopened one fresh worker document owner");
+      } finally { harness.release(); }
     });
 
     it("correlates every Directory bootstrap page with the verified broker session authority", async () => {

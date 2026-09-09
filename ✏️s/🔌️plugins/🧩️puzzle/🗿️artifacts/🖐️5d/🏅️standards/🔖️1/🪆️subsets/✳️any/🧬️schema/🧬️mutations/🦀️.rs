@@ -439,6 +439,13 @@ impl store::ArtifactDsl for Puzzle5dPlaySnapshot {
     }
 }
 
+/// 🧒️ Composition view of the play snapshot: a puzzle 5d document owns no child artifacts.
+impl semio_framework_schema::ArtifactCompositionFields for Puzzle5dPlaySnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
+}
+
 impl store::ArtifactPack for Puzzle5dPlaySnapshot {
     // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: the former
     // `dsl::to_dsl_value(&self.0)`/`dsl::from_dsl_value(value).map(Puzzle5dPlaySnapshot)` calls

@@ -1,6 +1,7 @@
-# 🧬️ GIS terrain artifact schema — every field with its state class.
-
+# 🏔️ Terrain document and independently owned mesh handle.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type GisTerrainArtifact {
   exaggeration: Float! @state(class: ARTIFACT)
   importedFeaturesJson: String! @state(class: ARTIFACT)
+  mesh: ArtifactChild @state(class: ARTIFACT)
 }

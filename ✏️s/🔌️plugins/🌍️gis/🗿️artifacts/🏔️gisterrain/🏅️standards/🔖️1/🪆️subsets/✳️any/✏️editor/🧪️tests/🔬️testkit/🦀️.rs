@@ -34,13 +34,23 @@ pub fn close(app: &mut Gis3dApp) {
 
 /// 🎯️ Dispatches a typed Terrain command and completes its bounded host publication protocol.
 pub async fn dispatch(app: &mut Gis3dApp, command: Gis3dCommand) -> TypedOperationFixtureReceipt {
+    dispatch_at(app, command, main_window_view()).await
+}
+
+/// 🎯️ Dispatches through the exact addressed Terrain window captured by the retained operation.
+pub async fn dispatch_at(app: &mut Gis3dApp, command: Gis3dCommand, view_state: ViewModel) -> TypedOperationFixtureReceipt {
     let mut action_meta = meta("local");
-    action_meta.view_state = Some(main_window_view());
+    action_meta.view_state = Some(view_state);
     let admission = app.dispatch_typed(command, &action_meta).await.expect("dispatch");
     assert!(admission.mutations.is_empty(), "retained Terrain commands publish only through acknowledged result pages");
     settle_registered_typed_operation(app, action_meta.instance_id).await.expect("settle Terrain dispatch")
 }
 
 pub async fn render(app: &mut Gis3dApp, body_key: &str) -> String {
-    semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &main_window_view()).await.expect("render")).expect("render projection")
+    render_at(app, body_key, &main_window_view()).await
+}
+
+/// 🪟️ Renders from the persisted configuration of one exact Terrain window.
+pub async fn render_at(app: &mut Gis3dApp, body_key: &str, view_state: &ViewModel) -> String {
+    semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render projection")
 }

@@ -4,16 +4,15 @@
   "title": "DagDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "content"],
   "properties": {
-    "schema": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "schema": {
+      "const": "dag.dag",
+      "x-semio-state": "artifact"
+    },
     "content": {
-      "anyOf": [
-        { "type": "null" },
-        { "$ref": "https://semio.tech/schema/os/store/child.json" }
-      ],
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/graph",
       "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio.graph"
+      "x-semio-child-kind": "s.stdio.semio"
     }
   }
 }

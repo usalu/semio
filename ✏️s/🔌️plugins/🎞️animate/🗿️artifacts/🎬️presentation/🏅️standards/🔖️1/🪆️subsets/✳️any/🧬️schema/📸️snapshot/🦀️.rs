@@ -21,16 +21,16 @@ use schema::ArtifactSchema;
 /// composes exactly one of each, matching writer's `document: WriterDocumentChild` single-`Option`-in-
 /// the-diff convention rather than lowpoly's optional-slot double-`Option` shape.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.animate.presentation")]
 pub struct PresentationSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.presentation")]
+    #[child(kind = "s.stdio.semio")]
     pub presentation: PresentationChild,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.animation")]
+    #[child(kind = "s.stdio.semio")]
     pub animation: AnimationChild,
 }
 

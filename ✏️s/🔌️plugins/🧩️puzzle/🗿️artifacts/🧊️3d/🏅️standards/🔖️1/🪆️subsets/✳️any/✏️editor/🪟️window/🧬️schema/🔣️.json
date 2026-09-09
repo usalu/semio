@@ -78,7 +78,7 @@
     "Puzzle3dWindowConfig": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["lodAutomatic", "lodDepthVariable", "gridVisible", "lodManual", "gridSnapEnabled", "gridSpacing", "selectableKinds", "proximityRadius", "chunkSize", "voxelDims", "transformMove", "transformRotate", "vortexShow", "vortexDirection", "sun", "camera"],
+      "required": ["lodAutomatic", "lodDepthVariable", "gridVisible", "lodManual", "gridSnapEnabled", "gridSpacing", "selectableKinds", "proximityRadius", "chunkSize", "voxelDims", "transformMove", "transformRotate", "vortexShow", "vortexDirection", "selectionMethod", "sun", "camera"],
       "properties": {
         "lodAutomatic": { "type": "boolean" },
         "lodDepthVariable": { "type": "boolean" },
@@ -94,6 +94,7 @@
         "transformRotate": { "type": "boolean" },
         "vortexShow": { "type": "string" },
         "vortexDirection": { "type": "string" },
+        "selectionMethod": { "type": "string", "enum": ["pick", "rectangle", "lasso"] },
         "sun": { "$ref": "#/definitions/WorldSunConfig" },
         "camera": { "$ref": "#/definitions/Puzzle3dCamera" }
       }
@@ -101,7 +102,7 @@
     "Puzzle3dWindowTransient": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["engagementInput", "brushCandidateIndex"],
+      "required": ["engagementInput", "brushCandidateIndex", "activation"],
       "properties": {
         "suggestionMenu": {
           "anyOf": [
@@ -110,7 +111,8 @@
           ]
         },
         "engagementInput": { "type": "string" },
-        "brushCandidateIndex": { "type": "integer", "minimum": 0 }
+        "brushCandidateIndex": { "type": "integer", "minimum": 0 },
+        "activation": { "type": "string" }
       }
     }
   },

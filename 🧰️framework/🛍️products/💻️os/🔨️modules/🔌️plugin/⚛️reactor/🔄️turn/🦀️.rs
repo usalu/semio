@@ -47,6 +47,8 @@ crate::component_persistent_local! {
 }
 
 thread_local! {
+    /// 🐞️ `[DEBUG]` turn sequence for the phase trace — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+    static TURN_TRACE: Cell<u64> = const { Cell::new(0) };
     /// 🐞️ `[DEBUG]` more-work streak trace: (current streak, total more-work turns) — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
     static MORE_WORK_TRACE: RefCell<(u64, u64)> = const { RefCell::new((0, 0)) };
 }
@@ -122,6 +124,10 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
 ) -> Result<T, semio_framework::Fault> {
     let started_us = semio_framework_job::default_now_us();
+    let turn_seq = TURN_TRACE.with(|seq| { let next = seq.get() + 1; seq.set(next); next });
+    if turn_seq.is_multiple_of(256) {
+        eprintln!("[DEBUG] turn {turn_seq} begin events={} page={}", events.len(), command_page.is_some());
+    }
     let retryable_lifecycle = command_page.is_none() && cold_pair_page.is_none() && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)));
     let mut dirty = DirtyPollOwners::new();
     let mut focus = None;
@@ -267,8 +273,34 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                 }
                 with_pending_patches(|pending| pending.borrow_mut().apply_issued_rejection(receipt, &surface, revision, |generation| PATCHES.with(|patches| patches.mark_rejected(&surface, generation))));
             }
+            // 🔁️ Two delivery shapes share one id space. A `RequestRegistry::request` id parks a
+            // future and is woken by `resolve`; a `request_continuation` id parks NOTHING and is
+            // answered by redispatching its `response_action` into the owning app instance with the
+            // outcome merged onto the original request object. Before this branch existed the second
+            // shape did not: a plugin that wanted an extension result had to hand-mint a `RequestId`,
+            // which owns no registry slot, so `resolve` silently dropped every extension outcome.
             Event::Completed { req, result } => {
-                REGISTRY.with(|registry| registry.resolve(req, crate::host::outcome_to_result(result)));
+                let outcome = crate::host::outcome_to_result(result);
+                match take_extension_response(req, &outcome) {
+                    Some((instance, action, args)) if native_close_key(runtime, instance).is_ok() => {
+                        let output = crate::plugin_runtime::plugin_dispatch_response_action(runtime, instance, &action, &args).await;
+                        for frame_bytes in output.frames {
+                            route_app_frame(instance, &frame_bytes, &mut document_backbone_effects);
+                        }
+                        for one in &output.effects {
+                            if let Ok(effect) = decode_wire_effect(one) {
+                                push_admitted_effect(&mut document_backbone_effects, instance, effect);
+                            }
+                        }
+                        for one in &output.events {
+                            if let Ok(event) = decode_wire_app_event(one) {
+                                document_backbone_effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
+                            }
+                        }
+                    }
+                    Some(_) => {}
+                    None => REGISTRY.with(|registry| registry.resolve(req, outcome)),
+                }
             }
             Event::HttpChunk { req, bytes, done } => {
                 // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): used to discard every
@@ -845,6 +877,9 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
         hub.expire(now_ms);
         hub.flush()
     });
+    if turn_seq.is_multiple_of(256) {
+        eprintln!("[DEBUG] turn {turn_seq} end more_work={more_work}");
+    }
     let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
     let mut result = semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress, cold_pair_ingress, lifecycle_receipt, ui_patch_receipt };
@@ -895,12 +930,17 @@ fn pump_process_worker_pool() -> bool {
         let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(PROCESS_POOL_WALL_MS);
         let mut pumps = 0;
+        let before = pool.try_cooperative_snapshot();
         while pumps < PROCESS_POOL_PUMPS_PER_TURN && pool.has_pending_work() && std::time::Instant::now() < deadline {
             let Some(now_ms) = semio_framework_job::default_now_ms() else { break };
             pool.pump(now_ms);
             pumps += 1;
         }
-        pool.has_pending_work()
+        let remaining = pool.has_pending_work();
+        if remaining && pumps == PROCESS_POOL_PUMPS_PER_TURN {
+            eprintln!("[DEBUG] pool pumps={pumps} remaining={remaining} before={before:?} after={:?}", pool.try_cooperative_snapshot());
+        }
+        remaining
     }
     #[cfg(not(target_arch = "wasm32"))]
     false

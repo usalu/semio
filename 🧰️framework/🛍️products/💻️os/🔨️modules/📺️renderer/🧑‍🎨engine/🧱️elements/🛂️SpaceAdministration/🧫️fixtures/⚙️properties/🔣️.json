@@ -1,0 +1,17 @@
+{
+  "schema": "semio.shell.space-administration-properties-fixture.v1",
+  "spaceId": "space-admin-01",
+  "cases": [
+    { "id": "rename", "intent": { "kind": "rename-space", "name": "Research" }, "command": { "kind": "rename-space", "spaceId": "space-admin-01", "name": "Research" } },
+    { "id": "unicode-name", "intent": { "kind": "rename-space", "name": "Grüße 🌍" }, "command": { "kind": "rename-space", "spaceId": "space-admin-01", "name": "Grüße 🌍" } },
+    { "id": "public", "intent": { "kind": "set-visibility", "visibility": "public" }, "command": { "kind": "set-visibility", "spaceId": "space-admin-01", "visibility": "public" } },
+    { "id": "private", "intent": { "kind": "set-visibility", "visibility": "private" }, "command": { "kind": "set-visibility", "spaceId": "space-admin-01", "visibility": "private" } }
+  ],
+  "refused": ["capability-withdrawn", "member", "loading", "submitting", "receipt", "refreshing", "cancelled", "denied", "stale", "failed", "foreign-page"],
+  "invalidNames": ["", "   ", "line\nbreak", "\u0000"],
+  "retiredVerificationPhases": ["ready", "failed"],
+  "locales": [
+    { "locale": "en", "name": "Space name", "rename": "Rename space", "visibility": "Visibility", "applyVisibility": "Change visibility", "public": "Public", "private": "Private" },
+    { "locale": "de", "name": "Space-Name", "rename": "Space umbenennen", "visibility": "Sichtbarkeit", "applyVisibility": "Sichtbarkeit ändern", "public": "Öffentlich", "private": "Privat" }
+  ]
+}

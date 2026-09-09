@@ -1,18 +1,12 @@
 syntax = "proto3";
-package semio.s.gis.gismap.snapshot;
-
-// 🧬️ GIS map snapshot schema — artifact-lane fields only.
-
+package semio.s.gis.gismap;
+import "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📍️feature/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message GisMapSnapshot {
-  // @state artifact
   repeated GisMapFeature positions = 1;
-  // @state artifact
   repeated GisMapFeature routes = 2;
-  // @state artifact
   repeated GisMapFeature regions = 3;
-}
-
-message GisMapFeature {
-  string id = 1;
-  string data_json = 2;
+  semio.os.store.ArtifactChild drawing = 4;
+  optional semio.os.store.ArtifactChild image = 5;
+  semio.os.store.ArtifactChild value = 6;
 }

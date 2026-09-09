@@ -82,6 +82,34 @@ impl protocol::MutationDiff<WiresCanvasTransient> for WiresCanvasTransient {
 mod mutations;
 pub use mutations::*;
 
+store::artifact_retire_struct!(WiresCanvasTransient { drag_node_id, drag_start_x, drag_start_y, drag_last_x, drag_last_y, drag_zoom });
+store::artifact_retire_struct!(SetDrag { node_id, start_x, start_y, last_x, last_y, zoom });
+
+impl store::retirement::RetireOwned for WiresCanvasTransientMutation {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        match self {
+            Self::SetDrag(value) => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(value)]),
+        }
+    }
+}
+
+const WIRES_CANVAS_TRANSIENT_FIXED_BYTES: usize = 5 * size_of::<f64>() + 32;
+
+fn wires_canvas_transient_footprint(mutation: &WiresCanvasTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let WiresCanvasTransientMutation::SetDrag(value) = mutation;
+    if !value.start_x.is_finite() || !value.start_y.is_finite() || !value.last_x.is_finite() || !value.last_y.is_finite() || !value.zoom.is_finite() || value.zoom <= 0.0 {
+        return Err("Wires canvas drag contains a non-finite coordinate or invalid zoom".into());
+    }
+    let retained_bytes = WIRES_CANVAS_TRANSIENT_FIXED_BYTES.checked_add(value.node_id.as_ref().map_or(0, String::len)).ok_or_else(|| "Wires canvas drag footprint overflowed".to_string())?;
+    let footprint = store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes };
+    footprint.is_admissible().then_some(footprint).ok_or_else(|| "Wires canvas drag exceeds its retained publication envelope".into())
+}
+
+fn wires_canvas_transient_transfer(mutation: WiresCanvasTransientMutation) -> WiresCanvasTransient {
+    let WiresCanvasTransientMutation::SetDrag(value) = mutation;
+    WiresCanvasTransient { drag_node_id: value.node_id, drag_start_x: value.start_x, drag_start_y: value.start_y, drag_last_x: value.last_x, drag_last_y: value.last_y, drag_zoom: value.zoom }
+}
+
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
@@ -100,15 +128,10 @@ impl semio_framework_plugin::WindowTransientOwner for WiresCanvasTransientOwner 
     type State = WiresCanvasTransient;
     type Mutation = WiresCanvasTransientMutation;
 
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::State, Self::Mutation>> {
-        semio_framework_plugin::bounded_window_transient_preparation_factory::<Self>()
-    }
-
-    fn build_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::State>> {
-        semio_framework_plugin::bounded_window_transient_root_retirement_factory::<Self>()
-    }
-
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::State, Self::Mutation>>> {
-        semio_framework_plugin::bounded_window_transient_store_disposer::<Self>()
+    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+        let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(wires_canvas_transient_footprint, wires_canvas_transient_transfer, state.clone(), mutation.clone()));
+        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }

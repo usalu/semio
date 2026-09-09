@@ -10,6 +10,6 @@ pub fn diff(payload: &ReplaceWidget, base: &Generation2dSnapshot) -> protocol::M
     let Some(index) = widget_index(&base.fixture, id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{id}\" does not exist."), [id.to_string()]);
     };
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff { removed: vec![], set: vec![(index, payload.widget.clone())] }, SynapsesDiff::default(), LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![], set: vec![(index, payload.widget.clone())] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None))
 }
 //#endregion 🔖️Diff

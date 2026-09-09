@@ -179,6 +179,7 @@ impl Default for MountedPlanarDomain {
     }
 }
 
+#[expect(clippy::large_enum_variant, reason = "Mounted domains retain their admitted fixed polygon slots inline so adopting and retiring the domain adds no allocation.")]
 enum MeshDomainOwner {
     Dynamic(PlanarDomain),
     Mounted(MountedPlanarDomain),

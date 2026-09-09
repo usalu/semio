@@ -1,30 +1,19 @@
-# 🧬️ CadDiff schema.
-
+# 🔺️ Sparse CAD document diff over composed model and drawing child identities.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import CadArtifact from "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 type CadDiff {
   artifact: CadArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
   id: String @state(class: ARTIFACT)
-  objects: CadObjectsDelta @state(class: ARTIFACT)
-  buildingObjects: CadObjectsDelta @state(class: ARTIFACT)
-  energyObjects: CadObjectsDelta @state(class: ARTIFACT)
-  structureClassicObjects: CadObjectsDelta @state(class: ARTIFACT)
+  shapeModel: ArtifactChild @state(class: ARTIFACT)
+  buildingModel: ArtifactChild @state(class: ARTIFACT)
+  energyModel: ArtifactChild @state(class: ARTIFACT)
+  structureClassicModel: ArtifactChild @state(class: ARTIFACT)
+  drawings: CadDrawingChildList @state(class: ARTIFACT)
   referencesByModelDefinitionId: [CadReferenceListEntry!] @state(class: ARTIFACT)
   nodes: CadNodesDelta @state(class: ARTIFACT)
-  shapeGeometry: CadGeometry @state(class: ARTIFACT)
-  buildingGeometry: CadGeometry @state(class: ARTIFACT)
-  energyGeometry: CadGeometry @state(class: ARTIFACT)
-  structureClassicGeometry: CadGeometry @state(class: ARTIFACT)
-  activeModelDefinitionId: String @state(class: ARTIFACT)
 }
-
-type CadObject { id: String! }
-type CadNode { id: String! }
-type CadReferenceList { values: [String!]! }
-type CadReferenceListEntry { key: String! value: CadReferenceList! }
-type CadGeometry { anchorsJson: String }
-type CadCamera { zoom: Float }
-
-type CadStringList { values: [String!]! }
-type CadObjectsDelta { added: [CadObject!]! removed: [String!]! patched: [CadObject!]! reordered: [String!] }
-type CadNodesDelta { added: [CadNode!]! removed: [String!]! patched: [CadNode!]! reordered: [String!] }
-type CadArtifact { schema: String }
+type CadDrawingChildList { values: [ArtifactChild!]! }
+type CadNodePatch { label: String }
+type CadNodePatchEntry { id: String! patch: CadNodePatch! }
+type CadNodesDelta { added: [CadNode!]! removed: [String!]! patched: [CadNodePatchEntry!]! reordered: [String!] }

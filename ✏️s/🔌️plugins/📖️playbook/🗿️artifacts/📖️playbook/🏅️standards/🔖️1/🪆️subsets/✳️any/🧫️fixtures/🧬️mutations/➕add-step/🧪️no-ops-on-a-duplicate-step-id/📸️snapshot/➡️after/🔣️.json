@@ -6,7 +6,7 @@
   "document": {
     "childId": "playbook-document-add-step-duplicate",
     "target": {
-      "artifactId": "playbook-document",
+      "artifactId": "playbook-document-add-step-duplicate",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -17,7 +17,7 @@
   "flow": {
     "childId": "playbook-flow-add-step-duplicate",
     "target": {
-      "artifactId": "playbook-flow",
+      "artifactId": "playbook-flow-add-step-duplicate",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

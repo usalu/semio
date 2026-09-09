@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::vcs::forms_bridge;
+use canvas::camera::{world_to_screen, Camera, Viewport};
 use canvas::Point;
-use canvas::camera::{Camera, Viewport, world_to_screen};
-use dag::{HandleRole, computation_node_width, slider_widget_height};
+use dag::{computation_node_width, slider_widget_height, HandleRole};
 use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::PropertyBag;
 use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo};
@@ -206,8 +205,8 @@ fn slider_updates_preview() {
 
 #[test]
 fn evaluate_skips_unchanged_tree_after_move_widget() {
-    use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
     let calls = Arc::new(AtomicUsize::new(0));
     let calls_for_bridge = calls.clone();
     let mut host = FlowHost::default();
@@ -386,8 +385,8 @@ fn connect_ports_replaces_existing_incoming_on_same_input() {
 
 #[test]
 fn evaluate_runs_after_tree_change() {
-    use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
     let calls = Arc::new(AtomicUsize::new(0));
     let calls_for_bridge = calls.clone();
     let mut host = FlowHost::default();
@@ -438,8 +437,8 @@ fn dirty_propagation_only_dispatches_affected_branch() {
 
 #[test]
 fn neural_cache_persists_across_evaluations() {
-    use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
     let calls = Arc::new(AtomicUsize::new(0));
     let calls_for_bridge = calls.clone();
     let mut host = FlowHost::default();
@@ -1345,8 +1344,8 @@ fn delete_selection_removes_widget_from_fixture() {
 
 #[test]
 fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
+    use canvas::camera::{world_to_screen, Camera, Viewport};
     use canvas::Point;
-    use canvas::camera::{Camera, Viewport, world_to_screen};
     let mut host = FlowHost::default();
     host.set_viewport(1280, 800, 1.0);
     host.fixture.widgets = vec![

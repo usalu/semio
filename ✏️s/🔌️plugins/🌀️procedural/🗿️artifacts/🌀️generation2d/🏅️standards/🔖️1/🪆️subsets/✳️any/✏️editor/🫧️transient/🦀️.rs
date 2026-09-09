@@ -18,7 +18,7 @@ impl store::ArtifactDsl for Generation2dTransient {
         Self::__DSL_ENVELOPE_ID
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = store::semio_format::split_text_preamble(text).map(|(_, rest)| rest).unwrap_or(text);
+        let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, rest)| rest);
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }

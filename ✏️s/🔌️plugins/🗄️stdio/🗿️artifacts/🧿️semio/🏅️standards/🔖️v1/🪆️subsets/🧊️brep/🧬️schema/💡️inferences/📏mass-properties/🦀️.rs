@@ -735,6 +735,23 @@ fn ear_clip(poly: &[Pnt2]) -> Vec<[Pnt2; 3]> {
                 break;
             }
         }
+        // 🩹 No ear at all means the remaining ring is numerically degenerate somewhere (a run of
+        // exactly-collinear boundary samples, which every dense curve discretisation produces), NOT
+        // that the polygon is untriangulable. Bailing out here silently returns a PARTIAL
+        // triangulation, and every moment integrated over it — area, volume, centroid — is then
+        // short by whatever the abandoned tail covered. Clip the flattest remaining corner instead:
+        // its own triangle contributes ~nothing to the integral, and removing it always makes
+        // progress, so the loop terminates with the whole polygon consumed.
+        let ear_at = ear_at.or_else(|| {
+            let n = idx.len();
+            (0..n)
+                .map(|i| {
+                    let (a, b, c) = (pts[idx[(i + n - 1) % n]], pts[idx[i]], pts[idx[(i + 1) % n]]);
+                    (i, ((b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y)).abs())
+                })
+                .min_by(|left, right| left.1.partial_cmp(&right.1).unwrap_or(std::cmp::Ordering::Equal))
+                .map(|(i, _)| i)
+        });
         let Some(i) = ear_at else { break };
         let n = idx.len();
         let prev = idx[(i + n - 1) % n];
@@ -1003,11 +1020,34 @@ fn loop_uv_polygon(body: &Body, loop_id: crate::standards::v1::subsets::brep::sc
                 prev_u = Some(uv.x);
             }
             prev_was_pole = is_pole;
+            // 🐛 A repeated vertex is fatal downstream, not merely redundant: `ear_clip`'s
+            // blocking test is `point_in_or_on_triangle`, so a duplicate of any candidate ear's
+            // OWN corner reads as a point lying inside that ear and blocks it — with every
+            // candidate blocked the triangulation bails out empty and the face measures as ZERO
+            // area. Found live on the single-seam sphere, whose pole branch (above) deliberately
+            // keeps the shared vertex of both the arriving and departing coedge: `face_area` of a
+            // plain unit sphere came out `0`, which `validate_body` then reported as a
+            // `sliver-face`, failing every boolean that produced or preserved a sphere face.
+            if poly.last().is_some_and(|last| (last.x - uv.x).abs() <= UV_WELD && (last.y - uv.y).abs() <= UV_WELD) {
+                continue;
+            }
             poly.push(uv);
         }
     }
+    while poly.len() > 1 {
+        let (Some(first), Some(last)) = (poly.first().copied(), poly.last().copied()) else { break };
+        if (first.x - last.x).abs() > UV_WELD || (first.y - last.y).abs() > UV_WELD {
+            break;
+        }
+        poly.pop();
+    }
     Ok(poly)
 }
+
+/// 📏 UV coincidence threshold for [`loop_uv_polygon`]'s duplicate-vertex weld — far below any
+/// meaningful parametric feature (a full periodic domain is `2π` wide) and far above the rounding
+/// two different p-curves can produce for the same shared vertex.
+const UV_WELD: f64 = 1e-12;
 
 /// 📏 Curvature-adaptive point count for one coedge's boundary contribution: exact 2 for a
 /// straight `Line`, chordal-deviation-derived for `Circle`/`Ellipse` (their own radius, or the

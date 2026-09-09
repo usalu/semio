@@ -1,15 +1,10 @@
+use crate::JackWorkingScene;
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::CreateNode;
 use crate::{Camera, Manifest, PortDirection};
 
 fn mini_fixture() -> JackSnapshot {
-    JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "mini".into(),
-        Some("nakagin".into()),
-        Manifest::nakagin_default(),
-        Camera::default(),
-        vec![
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -32,8 +27,7 @@ fn mini_fixture() -> JackSnapshot {
                 properties: PropertyBag::new(),
                 ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
             },
-        ],
-        vec![Edge {
+        ], edges: vec![Edge {
             id: "e1".into(),
             kind: "Connection".into(),
             source: "root@out-a".into(),
@@ -44,9 +38,7 @@ fn mini_fixture() -> JackSnapshot {
                 p.insert("v".into(), PropertyValue::Number(-0.6));
                 p
             },
-        }],
-        Some("root".into()),
-    )
+        }] }, Some("root".into()))
 }
 
 fn mini_node(id: &str, x: f64, y: f64, ports: Vec<Port>) -> Node {
@@ -110,7 +102,7 @@ async fn graph_op_set_data_property_rejects_unknown_entity_kind() {
     let fixture = mini_fixture();
     let mut nodes = fixture.nodes();
     nodes[0].kind = "Ghost".into();
-    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
+    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges() }, fixture.root_node_id.clone());
     let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("x".into())), &fixture).expect_err("unknown entity kind");
     assert!(matches!(err, crate::TrinityRamError::UnknownEntityKind { .. }));
 }

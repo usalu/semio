@@ -1,11 +1,20 @@
 syntax = "proto3";
 package semio.s.layout.layout.snapshot;
-message JsonSnapshot {
-  string schema = 1;
-  string value_wire = 2;
-}
-
+import "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
 message LayoutSnapshot {
-  optional string schema = 1;
-  optional string value = 2;
+  string schema = 1;
+  string name = 2;
+  semio.s.layout.layout.artifact.GridSettings grid = 3;
+  repeated semio.s.layout.layout.artifact.ParagraphStyle paragraph_styles = 4;
+  repeated semio.s.layout.layout.artifact.CharacterStyle character_styles = 5;
+  repeated semio.s.layout.layout.artifact.TextStory stories = 6;
+  repeated semio.s.layout.layout.artifact.ImageLink links = 7;
+  repeated semio.s.layout.layout.artifact.ParentPage parent_pages = 8;
+  repeated semio.s.layout.layout.artifact.Spread spreads = 9;
+  repeated semio.s.layout.layout.artifact.Page pages = 10;
+  optional string print_target = 11;
+  optional string data_fields_json = 12;
+  semio.s.layout.layout.artifact.LayoutDrawingChild background_drawing = 13;
+  semio.os.store.ArtifactLink referenced_model = 14;
 }

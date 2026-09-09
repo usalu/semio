@@ -6,10 +6,12 @@ import { WORKSPACE_ROOT, toolJobRustBlock, toolJobImmutableOperationRootsExact, 
 /** 🧹️ Cross-checks CAD domain retirement byte counts independently of its Rust ownership cursor. */
 export function cadPresenceRetirementSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️retirement.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/♻️retirement/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/CadPresenceRetirementLaws" });
+  const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
+  ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
+  const validate = ajv.addSchema(schema).compile({ $ref: `${schema.$id}#/$defs/CadPresenceRetirementLaws` });
   if (!validate(fixture)) throw new Error(`CAD presence retirement schema: ${JSON.stringify(validate.errors)}`);
   const counts = new Map<string, number>();
   for (const law of fixture.cases) {
@@ -26,7 +28,7 @@ export function cadPresenceRetirementSelfTests(): number {
     if (validate(hostile)) throw new Error("CAD presence schema accepted an enlarged production grant");
   }
   const storeBase = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence");
-  const storeFixture = JSON.parse(readFileSync(join(storeBase, "🧹️retirement.json"), "utf8"));
+  const storeFixture = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🧹️retirement.json"), "utf8"));
   const storeSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🧹️retirement.schema.json"), "utf8"));
   const validateStore = new Ajv({ strict: true, allErrors: true }).compile(storeSchema);
   if (!validateStore(storeFixture)) throw new Error(`presence Store retirement schema: ${JSON.stringify(validateStore.errors)}`);
@@ -149,7 +151,7 @@ export function cadPresenceRetirementSelfTests(): number {
   ];
   for (const hostile of closeSourceHostiles) if (hostile === retirementSource || exactCloseFactories(hostile)) throw new Error("Presence close guard admitted factory substitution or wrong returned-read retirement");
   const closeFactoryChecks = 2 + closeSchemaHostiles.length + closeSourceHostiles.length;
-  const commitFixture = JSON.parse(readFileSync(join(storeBase, "📌️peer-commit.json"), "utf8"));
+  const commitFixture = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/📌️peer-commit.json"), "utf8"));
   const commitSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/📌️peer-commit.schema.json"), "utf8"));
   const validateCommit = new Ajv({ strict: true, allErrors: true }).compile(commitSchema);
   if (!validateCommit(commitFixture)) throw new Error("Presence peer commit fixture violates strict schema");
@@ -167,7 +169,7 @@ export function cadPresenceRetirementSelfTests(): number {
   ];
   for (const [store, retirement] of commitSourceHostiles) if (exactPeerCommit(store, retirement)) throw new Error("Presence peer commit guard admitted foreign/stale publication or lost base ownership");
   const commitChecks = 2 + commitFixture.cases.length + commitSchemaHostiles.length + commitSourceHostiles.length;
-  const peerFixture = JSON.parse(readFileSync(join(storeBase, "🛂️peer-admission.json"), "utf8"));
+  const peerFixture = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🛂️peer-admission.json"), "utf8"));
   const peerSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🛂️peer-admission.schema.json"), "utf8"));
   const validatePeer = new Ajv({ strict: true, allErrors: true }).compile(peerSchema);
   if (!validatePeer(peerFixture)) throw new Error(`peer admission fixture schema: ${JSON.stringify(validatePeer.errors)}`);

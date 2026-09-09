@@ -124,7 +124,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
 export async function testBrowserModuleRelocation(workspace: string): Promise<void> {
   const require = createRequire(import.meta.url), directory = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🕸️imports");
   const { rewritePreview2ShimImportSource } = await import(pathToFileURL(join(directory, "🟦️.ts")).href);
-  const fixture = JSON.parse(readFileSync(join(directory, "🧫️cases.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🕸️imports/🧫️cases.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(directory, "../../../🌐️browser-bundle/🧬️schema/🔣️.json"), "utf8")), validator = new (require("ajv").default)();
   validator.addSchema(schema);
   assert.ok(validator.validate({ $ref: schema.$id + "#/$defs/Preview2ShimImportRewriteV1" }, fixture));

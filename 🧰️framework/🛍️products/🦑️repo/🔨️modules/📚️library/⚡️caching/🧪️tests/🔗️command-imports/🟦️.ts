@@ -23,6 +23,8 @@ export async function testCommandImportClosure(workspace: string, output: string
     const executeBundle = (result: any) => execute(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString("base64")}`, "{result:api.result,lazy:(await api.lazy()).value,sideEffect:globalThis.fixtureLoaded,typeExportSideEffect:Boolean(globalThis.fixtureTypeExportLoaded)}");
     const built = await build();
     assert.deepEqual(original, oracle(built)); assert.deepEqual(executeBundle(built), fixture.execution);
+    const nodeClosure = execute(pathToFileURL(resolve(import.meta.dir, "../../../🟨️.mjs")).href, `api.cacheInternals.relativeScriptInputs([${JSON.stringify(entry)}], ${JSON.stringify(root)}).map(path => path.replace("{workspaceRoot}/", "")).sort()`);
+    assert.deepEqual(nodeClosure, original, "Node-hosted Nx must resolve the same TypeScript imports as Bun and esbuild");
     writeFileSync(join(root, "🟦️.ts"), fixture.changedSource); writeFileSync(join(root, "replacement.ts"), fixture.replacement);
     const changed = normalize(cacheInternals.relativeScriptInputs([entry], root));
     const rebuilt = await build();

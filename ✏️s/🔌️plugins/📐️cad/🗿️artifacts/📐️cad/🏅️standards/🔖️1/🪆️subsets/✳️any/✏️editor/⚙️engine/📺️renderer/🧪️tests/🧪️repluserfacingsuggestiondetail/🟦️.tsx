@@ -468,7 +468,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { resolve } = await import("node:path");
       const { ModelSpace } = await import("../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts");
-      const json = JSON.parse(readFileSync(resolve(source.directoryname, "../../../📚️examples/🖼️assets/🎮️play/🔣️.json"), "utf8"));
+      const json = JSON.parse(readFileSync(resolve(source.directory, "../../../📚️examples/🖼️assets/🎮️play/🔣️.json"), "utf8"));
       const model = (ModelSpace.fromJSON(json).models[defaultModelDefinitionId()] ?? ModelSpace.fromJSON(json).models[""])!;
       const mdId = defaultModelDefinitionId();
       expect(Object.keys(model.solids).length).toBeGreaterThan(0);

@@ -76,7 +76,7 @@ pub fn default_presentation_snapshot() -> PresentationSnapshot {
 }
 
 //#region 🔖️PresentationBridge
-/// 🕸️ Owned CHILD handle types for the composed `s.stdio.semio.presentation`/`s.stdio.semio.animation`
+/// 🕸️ Owned CHILD handle types for the composed `s.stdio.semio@v1/presentation`/`s.stdio.semio@v1/animation`
 /// documents — ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`animate→C:presentation,animation`):
 /// the shared source figure + its named tile crops now live in the composed `presentation` child's
 /// slide-deck structure instead of inline `source`/`tiles` fields on `PresentationSnapshot`. `animation`
@@ -87,11 +87,6 @@ pub fn default_presentation_snapshot() -> PresentationSnapshot {
 /// comment for the honest gap this leaves).
 pub type PresentationChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot>;
 pub type AnimationChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot>;
-
-/// 🪪️ Fixed target-identity roots for the two singleton composed children (this artifact only ever
-/// has exactly one presentation deck and one animation set, never a collection of either).
-const PRESENTATION_CHILD_ARTIFACT_ID: &str = "animate-presentation-deck-presentation";
-const ANIMATION_CHILD_ARTIFACT_ID: &str = "animate-presentation-deck-animation";
 
 /// 🌉 REAL bidirectional converter (forward half): `(source, tiles)` -> one composed
 /// `SemioPresentationSnapshot`. `source` becomes the deck's single `SlideMaster` (id `"source"`, one
@@ -172,7 +167,7 @@ pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileD
     let content_hash = hasher.finish();
     let child_id = format!("presentation-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "presentation".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: PRESENTATION_CHILD_ARTIFACT_ID.into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
@@ -190,7 +185,7 @@ pub fn animation_child_handle() -> AnimationChild {
     let content_hash = hasher.finish();
     let child_id = format!("animation-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "animation".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: ANIMATION_CHILD_ARTIFACT_ID.into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️PresentationBridge

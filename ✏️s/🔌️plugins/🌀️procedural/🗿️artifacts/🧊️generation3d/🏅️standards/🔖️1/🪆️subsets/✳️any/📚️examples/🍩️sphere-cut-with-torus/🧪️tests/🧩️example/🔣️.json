@@ -1,0 +1,39 @@
+{
+  "schema": "s.procedural.generation3d.example-geometry/v1",
+  "example": "sphere-cut-with-torus",
+  "opChain": [
+    "brep.prim3d.sphere",
+    "brep.prim3d.torus",
+    "brep.bool.cut",
+    "brep.measure.volume"
+  ],
+  "preview": {
+    "node": "brep_bool_cut_5",
+    "channel": "solid",
+    "kind": "solid"
+  },
+  "tessellationTolerance": 0.01,
+  "expect": {
+    "minTriangles": 24,
+    "closed": true,
+    "volume": 37.841142613316,
+    "volumeTolerance": 0.05,
+    "volumeSource": "numeric oracle (scipy.integrate.quad): V(ball r=2.2) - V(torus R=2.0 r=0.5 clipped to the ball)",
+    "edgePerimeter": null,
+    "edgePerimeterTolerance": 0.0,
+    "boundingBoxMin": [
+      -2.2,
+      -2.2,
+      -2.2
+    ],
+    "boundingBoxMax": [
+      2.2,
+      2.2,
+      2.2
+    ],
+    "boundingBoxTolerance": 0.005,
+    "kernelVolumeNode": "brep_measure_volume_2",
+    "kernelVolumeChannel": "volume"
+  },
+  "kernelStatus": "blocked-on-boolean-kernel"
+}

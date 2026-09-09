@@ -987,6 +987,190 @@ pub(crate) fn shared_brush_mesh(url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
 }
 //#endregion 🥽️SharedBrushMeshes
 
+//#region 🧩️PagedBrushMeshUploads
+/// 📏️ Values — `f32` positions and `u32` indices counted together — one `registerBrushMesh` page
+/// carries. 1 024 values are 4 096 little-endian payload bytes, 5 464 base64 characters; the shared
+/// retained wire admits [`PUZZLE_COMMAND_RAW_BYTES`] (8 192) bytes per command, which leaves the
+/// envelope (`surfaceId`, `url`, `page`, `pageCount`, `digest`, two key names) 2 700 bytes of head
+/// room. The host's own pager (`🌐️World3dHost/🟦️.tsx`) shrinks a page below this only when a long
+/// mesh id would otherwise push the envelope over the same limit.
+///
+/// [`PUZZLE_COMMAND_RAW_BYTES`]: crate::retained_command::PUZZLE_COMMAND_RAW_BYTES
+pub const PUZZLE3D_MESH_PAGE_VALUES: usize = 1_024;
+
+/// 🔤️ Base64 characters one page's payload string may hold — [`PUZZLE3D_MESH_PAGE_VALUES`] values as
+/// four bytes each, padded to the codec's four-character group.
+pub const PUZZLE3D_MESH_PAGE_BASE64_CHARS: usize = (PUZZLE3D_MESH_PAGE_VALUES * 4).div_ceil(3).div_ceil(4) * 4;
+
+/// 📦️ Partial uploads the process stages at once. A sequence is opened and closed by one mesh
+/// identity's own page run, so four covers every world window a desktop layout opens at once, and a
+/// fifth identity retires the least recently advanced slot instead of growing the staging area.
+const PUZZLE3D_MESH_UPLOAD_SLOTS: usize = 4;
+
+/// 🧮️ Longest page run one mesh identity may claim: both arrays at the engine's own
+/// [`FILL_WORKER_MAX_MESH_VALUES`] ceiling, paged at [`PUZZLE3D_MESH_PAGE_VALUES`]. The largest mesh
+/// this repo ships — `🧊️placeholder.glb`, 25 344 positions plus 48 384 indices — is 72 pages.
+const PUZZLE3D_MESH_UPLOAD_MAX_PAGES: u32 = (FILL_WORKER_MAX_MESH_VALUES * 2).div_ceil(PUZZLE3D_MESH_PAGE_VALUES) as u32;
+
+/// 🚫️ Why one `registerBrushMesh` page was refused. Every arm is a wire fault the client can act on,
+/// never a silent drop: the command arm turns it into a shell notification.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Puzzle3dMeshUploadFault {
+    /// 🏷️ `page`/`pageCount` are absent, zero, out of order or beyond [`PUZZLE3D_MESH_UPLOAD_MAX_PAGES`].
+    Envelope,
+    /// 🔤️ A payload string is not base64, or carries a value count above [`PUZZLE3D_MESH_PAGE_VALUES`].
+    Payload,
+    /// 🕳️ The page does not continue the staged run for this identity.
+    Gap,
+    /// 📦️ The run would exceed [`FILL_WORKER_MAX_MESH_VALUES`] in one of its two arrays.
+    Capacity,
+    /// #️⃣ The closed run does not hash to the digest the client declared.
+    Digest,
+    /// 📐️ The closed run is not a finite, closed, in-range indexed triangle page.
+    Geometry,
+}
+
+impl Puzzle3dMeshUploadFault {
+    /// 🏷️ Stable wire code, mirrored by the `registerBrushMesh` notification and the unit laws.
+    pub fn code(self) -> &'static str {
+        match self {
+            Self::Envelope => "puzzle3d-register-mesh-envelope",
+            Self::Payload => "puzzle3d-register-mesh-payload",
+            Self::Gap => "puzzle3d-register-mesh-gap",
+            Self::Capacity => "puzzle3d-register-mesh-capacity",
+            Self::Digest => "puzzle3d-register-mesh-digest",
+            Self::Geometry => "puzzle3d-register-mesh-geometry",
+        }
+    }
+}
+
+/// 🧱️ What one accepted page did to its identity's run.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Puzzle3dMeshUploadStep {
+    /// 🧱️ The page landed and the run is still open.
+    Staged { next_page: u32, page_count: u32 },
+    /// ✅️ The page closed the run; the geometry is the client's mesh, digest-verified.
+    Complete(Vec<f32>, Vec<u32>),
+}
+
+/// 🧵️ One mesh identity's open page run.
+struct Puzzle3dMeshUploadSlot {
+    url: String,
+    digest: String,
+    page_count: u32,
+    next_page: u32,
+    positions: Vec<f32>,
+    indices: Vec<u32>,
+    touched: u64,
+}
+
+/// 🗄️ Process-wide staging area for page runs that have not closed yet. Fixed capacity in slots and,
+/// per slot, in values — an abandoned run costs the process one slot until the next session retirement
+/// sweeps it, never unbounded memory.
+struct Puzzle3dBrushMeshUploads {
+    slots: Vec<Puzzle3dMeshUploadSlot>,
+    sequence: u64,
+    swept: u64,
+}
+
+fn brush_mesh_uploads() -> &'static Mutex<Puzzle3dBrushMeshUploads> {
+    static UPLOADS: OnceLock<Mutex<Puzzle3dBrushMeshUploads>> = OnceLock::new();
+    UPLOADS.get_or_init(|| Mutex::new(Puzzle3dBrushMeshUploads { slots: Vec::new(), sequence: 0, swept: 0 }))
+}
+
+/// #️⃣ The identity a client declares for a mesh: unkeyed BLAKE3 over the positions' little-endian
+/// bytes followed by the indices' — byte-identical to the renderer's own `puzzle3dBrushMeshDigest`
+/// (`🌐️World3dHost/🟦️.tsx`), which hashes the same two typed arrays through the framework's
+/// first-party `blake3Hex`.
+pub fn brush_mesh_digest(positions: &[f32], indices: &[u32]) -> String {
+    let mut bytes = Vec::with_capacity(positions.len().saturating_add(indices.len()).saturating_mul(4));
+    bytes.extend(positions.iter().flat_map(|value| value.to_le_bytes()));
+    bytes.extend(indices.iter().flat_map(|value| value.to_le_bytes()));
+    semio_framework_hash::hash_bytes(&bytes)
+}
+
+/// 🔤️ One page's payload string as the four-byte values it carries — base64 of little-endian `f32`
+/// positions or `u32` indices. Refuses a string longer than one page may carry, a byte run that is not
+/// whole values, and a value count above the caller's remaining page budget.
+pub fn decode_brush_mesh_page_values(encoded: &str, budget: usize) -> Option<Vec<[u8; 4]>> {
+    if encoded.len() > PUZZLE3D_MESH_PAGE_BASE64_CHARS || budget > PUZZLE3D_MESH_PAGE_VALUES {
+        return None;
+    }
+    let bytes = semio_framework_io_base64::base64_standard_decode(encoded).ok()?;
+    (bytes.len().is_multiple_of(4) && bytes.len() / 4 <= budget).then(|| bytes.as_chunks::<4>().0.to_vec())
+}
+
+/// 🧩️ Admits one page of a mesh identity's upload run into the staging area, and hands back the whole
+/// geometry the moment the run closes. A run is keyed by `(url, digest)`: a client that restarts an
+/// upload with different bytes opens a different run instead of corrupting the staged one, and the
+/// closed run is refused unless it hashes to the digest that keyed it.
+pub fn stage_brush_mesh_page(url: &str, digest: &str, page: u32, page_count: u32, positions: &[f32], indices: &[u32]) -> Result<Puzzle3dMeshUploadStep, Puzzle3dMeshUploadFault> {
+    if digest.is_empty() || page_count == 0 || page_count > PUZZLE3D_MESH_UPLOAD_MAX_PAGES || page >= page_count {
+        return Err(Puzzle3dMeshUploadFault::Envelope);
+    }
+    if positions.len().saturating_add(indices.len()) > PUZZLE3D_MESH_PAGE_VALUES {
+        return Err(Puzzle3dMeshUploadFault::Payload);
+    }
+    let mut uploads = brush_mesh_uploads().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    uploads.sequence = uploads.sequence.saturating_add(1);
+    let sequence = uploads.sequence;
+    let held = uploads.slots.iter().position(|slot| slot.url == url && slot.digest == digest);
+    let index = match held {
+        Some(index) if uploads.slots[index].next_page == page && uploads.slots[index].page_count == page_count => index,
+        Some(_) if page != 0 => return Err(Puzzle3dMeshUploadFault::Gap),
+        Some(index) => {
+            uploads.slots[index] = Puzzle3dMeshUploadSlot { url: url.to_string(), digest: digest.to_string(), page_count, next_page: 0, positions: Vec::new(), indices: Vec::new(), touched: sequence };
+            index
+        }
+        None if page != 0 => return Err(Puzzle3dMeshUploadFault::Gap),
+        None => {
+            if uploads.slots.len() >= PUZZLE3D_MESH_UPLOAD_SLOTS {
+                let stale = uploads.slots.iter().enumerate().min_by_key(|(_, slot)| slot.touched).map(|(index, _)| index).ok_or(Puzzle3dMeshUploadFault::Capacity)?;
+                uploads.slots.swap_remove(stale);
+            }
+            uploads.slots.push(Puzzle3dMeshUploadSlot { url: url.to_string(), digest: digest.to_string(), page_count, next_page: 0, positions: Vec::new(), indices: Vec::new(), touched: sequence });
+            uploads.slots.len() - 1
+        }
+    };
+    let slot = &mut uploads.slots[index];
+    if slot.positions.len().saturating_add(positions.len()) > FILL_WORKER_MAX_MESH_VALUES || slot.indices.len().saturating_add(indices.len()) > FILL_WORKER_MAX_MESH_VALUES {
+        uploads.slots.swap_remove(index);
+        return Err(Puzzle3dMeshUploadFault::Capacity);
+    }
+    slot.positions.extend_from_slice(positions);
+    slot.indices.extend_from_slice(indices);
+    slot.next_page = page.saturating_add(1);
+    slot.touched = sequence;
+    if slot.next_page < slot.page_count {
+        return Ok(Puzzle3dMeshUploadStep::Staged { next_page: slot.next_page, page_count: slot.page_count });
+    }
+    let closed = uploads.slots.swap_remove(index);
+    if brush_mesh_digest(&closed.positions, &closed.indices) != closed.digest {
+        return Err(Puzzle3dMeshUploadFault::Digest);
+    }
+    if !brush_mesh_geometry_is_admissible(&closed.positions, &closed.indices) {
+        return Err(Puzzle3dMeshUploadFault::Geometry);
+    }
+    Ok(Puzzle3dMeshUploadStep::Complete(closed.positions, closed.indices))
+}
+
+/// 🧹️ Drops every run that did not advance across a whole session-retirement cycle — the page runs a
+/// closed document instance abandoned. A run that is still being paged carries a `touched` newer than
+/// the watermark and survives.
+pub fn retire_abandoned_brush_mesh_uploads() {
+    let mut uploads = brush_mesh_uploads().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let watermark = uploads.swept;
+    uploads.slots.retain(|slot| slot.touched > watermark);
+    uploads.swept = uploads.sequence;
+}
+
+/// 🔎️ Open page runs, for the unit laws and the staging census.
+pub fn staged_brush_mesh_uploads() -> Vec<(String, String, u32, u32)> {
+    let uploads = brush_mesh_uploads().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    uploads.slots.iter().map(|slot| (slot.url.clone(), slot.digest.clone(), slot.next_page, slot.page_count)).collect()
+}
+//#endregion 🧩️PagedBrushMeshUploads
+
 //#region 🔖️Engine
 /// 🗺️ Cell edge of the interactive brush broad phase — the same 8.0 world units the bulk fill planner
 /// indexes with, so one document's two lanes bucket identically.
@@ -1393,11 +1577,14 @@ impl Puzzle3dCollision {
     /// 🥽️ Real geometry for one mesh identity, derived once per process through the content-addressed
     /// decode kernel — the id-only wire path a second document (or a later command on the same one)
     /// takes instead of re-uploading buffers.
-    pub(crate) fn adopt_shared_mesh(&mut self, url: &str) -> bool {
-        if self.mesh_is_fallback.get(url) == Some(&false) {
+    pub(crate) fn adopt_shared_mesh(&mut self, url: &str, digest: Option<&str>) -> bool {
+        if self.mesh_is_fallback.get(url) == Some(&false) && digest.is_none_or(|digest| self.mesh_sources.get(url).is_some_and(|mesh| brush_mesh_digest(&mesh.positions, &mesh.indices) == digest)) {
             return true;
         }
         let Some((positions, indices)) = shared_brush_mesh(url) else { return false };
+        if digest.is_some_and(|digest| brush_mesh_digest(&positions, &indices) != digest) {
+            return false;
+        }
         self.install_collision_mesh(url.to_string(), &positions, &indices, false);
         true
     }
@@ -1475,7 +1662,13 @@ impl Puzzle3dCollision {
         let resume_from = prior.as_ref().map_or(0, |entry| entry.resume_candidate_index);
         let prior_free = prior.map(|entry| entry.free).unwrap_or_default();
         let result = self.compute_brush_cache_entry_partial(vortex_full_id, resume_from, prior_free, deadline);
-        if result.unknown_pending && result.resume_candidate_index > 0 && !self.brush_queue.iter().any(|id| id == vortex_full_id) {
+        // 🖌️ A NON-TERMINAL entry is owed another slice, whatever its resume cursor says. Gating the
+        // re-queue on `resume_candidate_index > 0` livelocked every target that could not clear its
+        // broad-phase index (`brush_index_ready`, `brush_collision_free_until`) or its very first
+        // narrow-phase candidate inside one 500 µs slice: the entry landed in `brush_cache` pending,
+        // which also stops `prepare_one_brush_target` re-enqueuing it, so the lane could never come
+        // back to it and the suggestion popup opened empty forever.
+        if result.unknown_pending && !self.brush_queue.iter().any(|id| id == vortex_full_id) {
             self.brush_queue.push_front(vortex_full_id.to_string());
         }
         self.brush_cache.insert(vortex_full_id.to_string(), result);
@@ -1544,27 +1737,35 @@ impl Puzzle3dCollision {
         let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
         let host_id = host.id.clone();
         if !self.brush_index_ready {
+            eprintln!("[DEBUG] free_until {target_full_id} index_not_ready candidates={}", candidates.len());
             return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: resume_from };
         }
         let mut unknown_pending = false;
+        let mut no_preview = 0usize;
+        let mut no_mesh = 0usize;
+        let mut collided = 0usize;
         for (index, candidate) in candidates.iter().enumerate().skip(resume_from) {
             if default_now_us().is_none_or(|now| now >= deadline_us) {
                 return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: index };
             }
             let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
             let Some(preview) = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, catalogs, &scene.fixture) else {
+                no_preview += 1;
                 continue;
             };
             if !self.meshes.contains_key(&preview.mesh_url) {
+                eprintln!("[DEBUG] free_until {target_full_id} missing mesh {}", preview.mesh_url);
+                no_mesh += 1;
                 unknown_pending = true;
                 continue;
             }
             match self.preview_collides_indexed(&preview, &host_id, overlap_budget, 1024, deadline_us) {
                 None => unknown_pending = true,
-                Some(true) => {}
+                Some(true) => collided += 1,
                 Some(false) => free.push(candidate.clone()),
             }
         }
+        eprintln!("[DEBUG] free_until {target_full_id} candidates={} free={} no_preview={no_preview} no_mesh={no_mesh} collided={collided} pending={unknown_pending}", candidates.len(), free.len());
         BrushCollisionFreeResult { free, unknown_pending, resume_candidate_index: 0 }
     }
 
@@ -1685,7 +1886,8 @@ impl Puzzle3dCollision {
                     let resume_from = prior.as_ref().map_or(0, |entry| entry.resume_candidate_index);
                     let prior_free = prior.map(|entry| entry.free).unwrap_or_default();
                     let result = self.compute_brush_cache_entry_partial(&full_id, resume_from, prior_free, deadline);
-                    let needs_resume = result.unknown_pending && result.resume_candidate_index > 0;
+                    // 🖌️ Same law as `refresh_brush_candidates`: pending IS the owed signal.
+                    let needs_resume = result.unknown_pending;
                     if needs_resume {
                         self.brush_queue.push_front(full_id.clone());
                     }
@@ -1739,6 +1941,7 @@ impl Puzzle3dCollision {
     }
 
     fn compute_brush_cache_entry_partial(&mut self, target_full_id: &str, resume_from: usize, prior_free: Vec<BrushCompatibleCandidate>, deadline_us: u64) -> BrushCollisionFreeResult {
+        eprintln!("[DEBUG] partial {target_full_id} scene_none={} meshes={} objects={}", self.scene.is_none(), self.meshes.len(), self.scene.as_ref().map_or(0, |s| s.fixture.objects.len()));
         let Some(scene) = &self.scene else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
         };
@@ -1762,6 +1965,7 @@ impl Puzzle3dCollision {
         }
         let compatible = brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules);
         let compatible: Vec<BrushCompatibleCandidate> = compatible.into_iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0).collect();
+        eprintln!("[DEBUG] partial {target_full_id} compatible={}", compatible.len());
         self.brush_collision_free_until(target_full_id, &compatible, scene.overlap_budget, resume_from, prior_free, deadline_us)
     }
 
@@ -2015,6 +2219,21 @@ impl Puzzle3dPrecomputeSession {
         self.engine.register_mesh_fallback(url.to_string(), positions, indices);
     }
 
+    /// 🧩️ Admits one page of a client's mesh upload run and installs the geometry the moment the run
+    /// closes — the paged half of the `registerBrushMesh` wire contract, which is how a document-scale
+    /// GLB reaches this session at all: one whole mesh never fitted in the shared retained command's
+    /// 8 192 raw bytes. `Ok(None)` is a closed, digest-verified, installed mesh; `Ok(Some(next))` is an
+    /// open run waiting for page `next`. See [`stage_brush_mesh_page`].
+    pub fn stage_mesh_page(&mut self, url: &str, digest: &str, page: u32, page_count: u32, positions: &[f32], indices: &[u32]) -> Result<Option<u32>, Puzzle3dMeshUploadFault> {
+        match stage_brush_mesh_page(url, digest, page, page_count, positions, indices)? {
+            Puzzle3dMeshUploadStep::Staged { next_page, .. } => Ok(Some(next_page)),
+            Puzzle3dMeshUploadStep::Complete(positions, indices) => {
+                self.register_mesh(url, &positions, &indices);
+                Ok(None)
+            }
+        }
+    }
+
     /// 🧵️ Hands the brush lane out to the app's session slot, leaving this engine empty — the check-in
     /// half of the per-instance session. Never carries fill state.
     pub(crate) fn take_collision_session(&mut self) -> Puzzle3dCollisionSession {
@@ -2028,9 +2247,9 @@ impl Puzzle3dPrecomputeSession {
 
     /// 🥽️ Installs real geometry for one mesh identity out of the process-wide derived-mesh store —
     /// the id-only wire path, so a mesh uploaded once serves every document instance.
-    pub fn adopt_shared_mesh(&mut self, url: &str) -> bool {
+    pub fn adopt_shared_mesh(&mut self, url: &str, digest: Option<&str>) -> bool {
         self.supersede_admitted_fill();
-        self.engine.adopt_shared_mesh(url)
+        self.engine.adopt_shared_mesh(url, digest)
     }
 
     pub fn has_mesh(&self, url: &str) -> bool {

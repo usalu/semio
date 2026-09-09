@@ -1911,6 +1911,42 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
+    it("admits only closed semantically valid directory administration requests", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️directory/🏛️administration-worker-wire-v1.json", source.url), "utf8")) as {
+        valid: readonly BackboneWorkerRequest[];
+        invalid: readonly { name: string; request: unknown }[];
+      };
+      const commandFixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🏛️administration/🧫️fixtures/🛂️command-admission/🔣️.json", source.url), "utf8")) as {
+        allowed: readonly { command: unknown }[];
+        unrelated: readonly unknown[];
+        malformed: readonly unknown[];
+      };
+      const directorySchema = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🔣️.json", source.url), "utf8"));
+      const commandOracle = new Ajv({ strict: true }).addKeyword("x-semio-note").addSchema(directorySchema).getSchema(`${directorySchema.$id}#/$defs/DirectoryCommand`)!;
+      const wire = (request: unknown): Uint8Array => new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue(request)]);
+
+      for (const request of fixture.valid) expect(equal(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request)), request)).toBe(true);
+      for (const command of [...commandFixture.allowed.map((row) => row.command), ...commandFixture.unrelated]) {
+        expect(commandOracle(command), JSON.stringify(commandOracle.errors)).toBe(true);
+        const request = { kind: "directory-administration-submit", operationEpoch: 7, requestId: "9f8e7d6c5b4a39281706f5e4d3c2b1a0", command };
+        const decoded = decodeBackboneWorkerRequest(wire(request));
+        expect(equal(decoded, request)).toBe(true);
+        expect(JSON.stringify((decoded as { command: unknown }).command)).toBe(JSON.stringify(command));
+      }
+      for (const row of fixture.invalid) expect(() => decodeBackboneWorkerRequest(wire(row.request)), row.name).toThrow();
+      for (const command of commandFixture.malformed) {
+        if (commandOracle(command)) continue;
+        expect(() => decodeBackboneWorkerRequest(wire({ kind: "directory-administration-submit", operationEpoch: 7, requestId: "9f8e7d6c5b4a39281706f5e4d3c2b1a0", command }))).toThrow();
+      }
+      for (const request of [
+        { kind: "directory-administration-open", operationEpoch: 1, spaceId: "s".repeat(257) },
+        { kind: "directory-administration-refresh", operationEpoch: 1, cursor: "a".repeat(1025) },
+      ]) expect(() => decodeBackboneWorkerRequest(wire(request))).toThrow();
+    });
+
     const fromHex = (hex: string): Uint8Array => new Uint8Array(Buffer.from(hex, "hex"));
 
     it("retains one exact causal OpBinary through actor send and receive frames", () => {
@@ -2093,25 +2129,35 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(() => decodeBackboneWorkerRequest(malformed)).toThrow("invalid client instance id");
     });
 
-    it("withholds creation authority and document coordinates until an exact ready status", () => {
+    it("withholds creation authority and document coordinates until an exact ready status", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️directory/🌱️space-artifact-creation-generation-v1.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🌱️space-artifact-creation-generation-v1/🔣️.json", source.url), "utf8"));
+      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
       const requestId = "1".repeat(32);
+      const catalogGenerationId = "3".repeat(64);
       const clientInstanceId = "12345678-1234-4123-8123-123456789abc";
       const catalogRequest: BackboneWorkerRequest = { kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: "space-a" };
       const catalog: BackboneWorkerResponse = {
         kind: "space-artifact-creation-catalog",
         clientInstanceId,
         spaceId: "space-a",
-        catalogGenerationId: "3".repeat(64),
+        catalogGenerationId,
         kinds: [{ kindId: "s.gis.gismap", schema: "s.gis.gismap", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" }, label: { en: "GIS Map", de: "GIS-Karte" } }],
       };
-      const request: BackboneWorkerRequest = { kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" };
+      const request: BackboneWorkerRequest = { kind: "space-artifact-create", requestId, spaceId: "space-a", expectedCatalogGenerationId: catalogGenerationId, kindId: "s.gis.gismap", name: "Shared Map" };
       const ready: BackboneWorkerResponse = {
         kind: "space-artifact-creation-status",
         requestId,
         spaceId: "space-a",
+        catalogGenerationId,
         phase: "ready",
         ready: { documentId: `artifact-${"2".repeat(32)}`, kindId: "s.gis.gismap", artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" } },
       };
+      expect(equal(fixture.request, request)).toBe(true);
+      expect(equal(fixture.ready, ready)).toBe(true);
       expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(catalogRequest))).toEqual(catalogRequest);
       for (const phase of ["loading", "ready", "unavailable"] as const) {
         const status: BackboneWorkerResponse = { kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase };
@@ -2121,6 +2167,16 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request))).toEqual(request);
       expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId, spaceId: "space-a" }))).toEqual({ kind: "space-artifact-create-cancel", requestId, spaceId: "space-a" });
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(ready))).toEqual(ready);
+      const refreshRequired: BackboneWorkerResponse = { kind: "space-artifact-creation-catalog-refresh-required", requestId, spaceId: "space-a", catalogGenerationId };
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(refreshRequired))).toEqual(refreshRequired);
+      expect(fixture.initialPostConflict).toEqual({
+        httpStatus: 409,
+        workerResponseKind: refreshRequired.kind,
+        terminalPhase: "failed",
+        emissionOrder: ["catalog-refresh-required", "failed"],
+        catalogRefresh: true,
+        autoResubmit: false,
+      });
       const leaked = encodePackValue({ ...ready, phase: "preparing" });
       expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...leaked]))).toThrow("invalid fields");
       const forgedCatalog = encodePackValue({ ...catalog, kinds: [{ ...catalog.kinds[0], descriptor: "forbidden" }] });
@@ -2131,6 +2187,20 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...mismatched]))).toThrow("invalid ready identity");
       const overposted = encodePackValue({ ...request, descriptor: "forbidden" });
       expect(() => decodeBackboneWorkerRequest(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...overposted]))).toThrow("invalid space artifact creation fields");
+      const missingGeneration = encodePackValue({ kind: request.kind, requestId, spaceId: request.spaceId, kindId: request.kindId, name: request.name });
+      expect(() => decodeBackboneWorkerRequest(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...missingGeneration]))).toThrow("invalid space artifact creation fields");
+      const zeroGeneration = encodePackValue({ ...request, expectedCatalogGenerationId: "0".repeat(64) });
+      expect(() => decodeBackboneWorkerRequest(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...zeroGeneration]))).toThrow("invalid space artifact creation intent");
+      const missingStatusGeneration = encodePackValue({ kind: ready.kind, requestId, spaceId: ready.spaceId, phase: "accepted" });
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...missingStatusGeneration]))).toThrow("invalid owner");
+      for (const invalidRefresh of [
+        { ...refreshRequired, catalogGenerationId: "0".repeat(64) },
+        { kind: refreshRequired.kind, requestId, spaceId: "space-a" },
+        { ...refreshRequired, retry: true },
+      ]) {
+        const wire = encodePackValue(invalidRefresh);
+        expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...wire]))).toThrow("space artifact creation catalog refresh: invalid");
+      }
     });
 
     it("keeps inference status scope and validated preview exact across the private worker wire", () => {

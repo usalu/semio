@@ -23,11 +23,6 @@ use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
-/// 🧵 Sibling triad-leaf modules wired by `🦀️.rs` under eight pre-existing (pre-semantic)
-/// directory slots — their directory/module names are leftovers of the generic slots each was
-/// repurposed from (`sharedFileRequests` in this ticket's wave2 report has the glue.rs rename that
-/// would align them; not editable here — glue.rs is shared with the sibling `generation3d` artifact).
-
 //#region 🔖️Addressing
 /// 🌡️ Resolves a widget's stable id to its BASE-state index in the fixture's widget list.
 pub fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {

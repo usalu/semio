@@ -3,7 +3,7 @@
 use neural_engine as neural;
 
 use crate::{OrderedMap, OrderedSet};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
@@ -488,13 +488,17 @@ fn input_spec_to_port(spec: &ChannelSpec, params: &Dictionary, connected: bool) 
 }
 
 pub fn default_neuron_input_ports(kind: &str, input_ports: &[String], kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
+    default_neuron_input_ports_from_info(input_ports, kind_infos.get(kind))
+}
+
+fn default_neuron_input_ports_from_info(input_ports: &[String], kind_info: Option<&OperatorInfo>) -> Vec<String> {
     if !input_ports.is_empty() {
         return input_ports.to_vec();
     }
-    if let Some(spec) = kind_infos.get(kind).and_then(|info| info.variadic_input.as_ref()) {
+    if let Some(spec) = kind_info.and_then(|info| info.variadic_input.as_ref()) {
         return (0..spec.min).map(|index| index.to_string()).collect();
     }
-    if let Some(info) = kind_infos.get(kind) {
+    if let Some(info) = kind_info {
         if !info.inputs.is_empty() && info.inputs[0].name != "*" {
             return info.inputs.iter().map(|entry| entry.name.clone()).collect();
         }
@@ -511,10 +515,14 @@ fn variadic_output_label(index: usize) -> String {
 }
 
 pub fn default_neuron_output_ports(kind: &str, output_ports: &[String], kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
+    default_neuron_output_ports_from_info(output_ports, kind_infos.get(kind))
+}
+
+fn default_neuron_output_ports_from_info(output_ports: &[String], kind_info: Option<&OperatorInfo>) -> Vec<String> {
     if !output_ports.is_empty() {
         return output_ports.to_vec();
     }
-    if let Some(spec) = kind_infos.get(kind).and_then(|info| info.variadic_output.as_ref()) {
+    if let Some(spec) = kind_info.and_then(|info| info.variadic_output.as_ref()) {
         return (0..spec.min).map(|index| index.to_string()).collect();
     }
     vec![]
@@ -1059,16 +1067,31 @@ pub fn descriptor_explicit_id(descriptor: &WidgetDescriptor) -> Option<String> {
     }
 }
 
-pub fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos: &HashMap<String, OperatorInfo>) -> Widget {
+pub fn generated_widget_id<'a>(descriptor: &WidgetDescriptor, existing_ids: impl IntoIterator<Item = &'a str>) -> (String, u64) {
+    let prefix = match descriptor {
+        WidgetDescriptor::Neuron { neuron_kind, .. } => neuron_kind.replace('.', "_"),
+        WidgetDescriptor::InputSlider { .. } => "slider".into(),
+        WidgetDescriptor::InputNote { .. } => "note".into(),
+        WidgetDescriptor::InputImage { .. } => "image".into(),
+        WidgetDescriptor::Variable { .. } => "variable".into(),
+        WidgetDescriptor::OutputPreview { .. } => "preview".into(),
+        WidgetDescriptor::OutputAction { .. } => "action".into(),
+        WidgetDescriptor::OutputExport { .. } => "export".into(),
+    };
+    let id_prefix = format!("{prefix}_");
+    let used = existing_ids.into_iter().filter_map(|id| id.strip_prefix(&id_prefix)?.parse::<u64>().ok()).collect::<HashSet<_>>();
+    let mut serial = 2_u64;
+    while used.contains(&serial) {
+        serial = serial.checked_add(1).expect("the finite Flow widget set must leave a generated identifier");
+    }
+    (format!("{prefix}_{serial}"), serial)
+}
+
+pub fn widget_from_descriptor_with_info(descriptor: &WidgetDescriptor, id: String, kind_info: Option<&OperatorInfo>) -> Widget {
     match descriptor {
-        WidgetDescriptor::Neuron { neuron_kind, .. } => Widget::Neuron {
-            id,
-            neuron_kind: neuron_kind.clone(),
-            params: Dictionary::new(),
-            input_ports: default_neuron_input_ports(neuron_kind, &[], kind_infos),
-            output_ports: default_neuron_output_ports(neuron_kind, &[], kind_infos),
-            preview: true,
-        },
+        WidgetDescriptor::Neuron { neuron_kind, .. } => {
+            Widget::Neuron { id, neuron_kind: neuron_kind.clone(), params: Dictionary::new(), input_ports: default_neuron_input_ports_from_info(&[], kind_info), output_ports: default_neuron_output_ports_from_info(&[], kind_info), preview: true }
+        }
         WidgetDescriptor::InputSlider { label, value, min, max, step, .. } => {
             let (value, min, max, step) = resolve_input_slider_fields(*value, *min, *max, *step);
             Widget::InputSlider { id, label: label.clone(), value, min, max, step }
@@ -1082,6 +1105,14 @@ pub fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_in
             Widget::Variable { id, name: name.clone().filter(|value| !value.trim().is_empty()).unwrap_or_else(default_variable_name), schema: schema.clone().filter(|value| !value.trim().is_empty()).unwrap_or_else(default_variable_schema) }
         }
     }
+}
+
+pub fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos: &HashMap<String, OperatorInfo>) -> Widget {
+    let kind_info = match descriptor {
+        WidgetDescriptor::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind),
+        _ => None,
+    };
+    widget_from_descriptor_with_info(descriptor, id, kind_info)
 }
 // #endregion 🔖️Document
 

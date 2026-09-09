@@ -2,13 +2,12 @@ import { expect, test } from "bun:test";
 import { readFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-/** 🧩️ Guards the split of the former 13-key `transaction-dispositions` blob (see
- *  `🧹️normalization/🟦️.ts` `requireExactKeys("transaction sentinel cases fixture", …)`) into
- *  one kind-only `🔣️.json` leaf per semantic consumer, each carrying exactly its own keys. */
+/** 🧩️ Validate the exact keys of each transaction example or runtime authority catalog. */
 const fixturesRoot = resolve(import.meta.dir, "../../🧫️fixtures");
+const assetsRoot = resolve(import.meta.dir, "../../🖼️assets");
 
-const groups: readonly { readonly directory: string; readonly exactKeys: readonly string[] }[] = [
-  { directory: "🚨️transaction-sentinel-cases", exactKeys: ["schemaVersion", "symlinkFlavorCases", "virtualPathPolicyCases"] },
+const groups: readonly { readonly directory: string; readonly root?: string; readonly exactKeys: readonly string[] }[] = [
+  { directory: "🚨️transaction-sentinel-cases", root: assetsRoot, exactKeys: ["schemaVersion", "symlinkFlavorCases", "virtualPathPolicyCases"] },
   { directory: "🎲️transaction-disposition-outcomes", exactKeys: ["affectedStateCases", "expectedDispositionOperations", "negativeDispositionCases", "schemaVersion"] },
   { directory: "🤝️transaction-protocol", exactKeys: ["failureStages", "journalStates", "schemaVersion", "virtualPreimageNodes"] },
   { directory: "📒️transaction-ledger-boundaries", exactKeys: ["boundaries", "schemaVersion", "transactionLedgers", "workspaceLedgers"] },
@@ -23,8 +22,8 @@ test("the former combined transaction-dispositions fixture no longer exists", ()
   expect(existsSync(join(fixturesRoot, "🧪️transaction-dispositions"))).toBe(false);
 });
 
-for (const group of groups) test(`${group.directory} fixture carries exactly its own consumer's keys`, () => {
-  const path = join(fixturesRoot, group.directory, "🔣️.json");
+for (const group of groups) test(`${group.directory} data carries exactly its own consumer's keys`, () => {
+  const path = join(group.root ?? fixturesRoot, group.directory, "🔣️.json");
   expect(existsSync(path)).toBe(true);
   const value = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
   requireExactKeysLike(value, group.exactKeys);
@@ -33,14 +32,14 @@ for (const group of groups) test(`${group.directory} fixture carries exactly its
 
 test("the dead attemptLayout key was dropped, not smuggled into any split fixture", () => {
   for (const group of groups) {
-    const path = join(fixturesRoot, group.directory, "🔣️.json");
+    const path = join(group.root ?? fixturesRoot, group.directory, "🔣️.json");
     const value = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
     expect(Object.hasOwn(value, "attemptLayout")).toBe(false);
   }
 });
 
 test("sentinel case rows keep the exact shape the normalization engine requires", () => {
-  const value = JSON.parse(readFileSync(join(fixturesRoot, "🚨️transaction-sentinel-cases/🔣️.json"), "utf8")) as {
+  const value = JSON.parse(readFileSync(join(assetsRoot, "🚨️transaction-sentinel-cases/🔣️.json"), "utf8")) as {
     virtualPathPolicyCases: Record<string, unknown>[];
     symlinkFlavorCases: Record<string, unknown>[];
   };

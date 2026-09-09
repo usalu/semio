@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🧬️mutations/📷️set-preview-camera",
+  "semanticKind": "set-preview-camera",
+  "displayName": "Set Preview Camera",
+  "emoji": "📷️",
+  "aggregateVariant": "SetPreviewCamera",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "preview-camera",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

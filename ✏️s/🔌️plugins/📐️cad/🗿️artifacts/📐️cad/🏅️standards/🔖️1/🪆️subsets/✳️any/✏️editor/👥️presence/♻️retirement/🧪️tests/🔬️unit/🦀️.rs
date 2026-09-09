@@ -10,7 +10,7 @@ fn presence(case: &protocol::os_pack::json::Value) -> CadPresence {
 
 #[test]
 fn retained_cad_presence_close_preserves_shared_roots_and_byte_grants() {
-    let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("../../../🧪️retirement.json")).unwrap();
+    let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("../../../🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let value = presence(case);
         let oracle = value.clone();
@@ -68,7 +68,7 @@ fn retained_cad_presence_close_worker_unwind_preserves_the_original_panic() {
 #[test]
 fn retained_cad_presence_close_nonempty_roster_retains_readers_and_domain_bytes() {
     use semio_framework_plugin::{ArtifactOwnedDisposer, PluginCloseStep};
-    let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("../../../🧪️retirement.json")).unwrap();
+    let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("../../../🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
     let value = |name: &str| presence(fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == name).unwrap());
     for case in fixture["storeCases"].as_array().unwrap() {
         let mut owner = store::PresenceStore::<CadPresence, super::super::CadPresenceMutation>::new(value(case["local"].as_str().unwrap()));

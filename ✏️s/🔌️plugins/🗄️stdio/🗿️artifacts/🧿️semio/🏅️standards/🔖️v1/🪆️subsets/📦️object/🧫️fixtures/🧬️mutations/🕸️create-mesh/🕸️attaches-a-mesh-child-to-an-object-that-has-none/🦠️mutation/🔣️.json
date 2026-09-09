@@ -1,6 +1,6 @@
 {
   "CreateMesh": {
-    "child_id": "mesh-1",
+    "child_id": "kitchen-sink-mesh",
     "target": {
       "artifactId": "kitchen-sink-mesh",
       "dialect": {

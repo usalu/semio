@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use protocol::{DiffCodec, Mutation, MutationDiff, OpText, SemanticMutation};
 
 /// 🔧️ All 6 collections are id-keyed SETS with no user-meaningful display order (this facet's
 /// own `🔺️diff` module doc comment; same shape `🕸️graph`'s `nodes`/`edges` already establish and
@@ -165,6 +165,63 @@ async fn language_neutral_tolerance_contract_matches_rust_decoder() {
     for test_case in fixture["diffCases"].as_array().expect("tolerance diff cases are an array") {
         let accepted = crate::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json(&test_case["diff"].to_string()).is_ok();
         assert_eq!(accepted, test_case["accepted"].as_bool().expect("case declares acceptance"), "{}", test_case["id"].as_str().expect("case id is a string"));
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn language_neutral_delete_inverses_preserve_distinct_tolerances() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
+    for test_case in fixture["inverseCases"].as_array().expect("inverse cases are an array") {
+        let base = crate::standards::v1::subsets::brep::schema::snapshot::decode_semio_brep_snapshot_json(&test_case["before"].to_string()).expect("inverse base decodes");
+        let mutation = decode_semio_brep_mutation_json(&test_case["mutation"].to_string()).expect("delete mutation decodes");
+        let expected = test_case["expectedInverse"].as_array().expect("expected inverse is an array").iter().map(|operation| decode_semio_brep_mutation_json(&operation.to_string()).expect("expected inverse operation decodes")).collect::<Vec<_>>();
+        let actual = mutation.inverse(&base);
+        assert_eq!(actual, expected, "{}", test_case["id"].as_str().expect("inverse case id is a string"));
+        let mut restored = mutation.diff(&base).diff().apply(&base).expect("delete diff applies");
+        for operation in actual {
+            restored = operation.diff(&restored).diff().apply(&restored).expect("inverse diff applies");
+        }
+        assert_eq!(sorted_by_id(restored), sorted_by_id(base), "{}", test_case["id"].as_str().expect("inverse case id is a string"));
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn language_neutral_tolerance_codec_rejections_match_rust() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
+    for test_case in fixture["diffCodecCases"].as_array().expect("diff codec cases are an array") {
+        let accepted = match test_case["encoding"].as_str().expect("diff codec encoding is a string") {
+            "text" => SemioBrepDiff::parse_diff(test_case["value"].as_str().expect("text diff case has a value")).is_ok(),
+            "binary" => {
+                let bytes = crate::standards::v1::subsets::brep::schema::diff::hex_decode(test_case["bytesHex"].as_str().expect("binary diff case has bytes")).expect("binary diff fixture is hex");
+                SemioBrepDiff::decode_diff(&bytes).is_ok()
+            }
+            other => panic!("unknown diff codec encoding {other:?}"),
+        };
+        assert_eq!(accepted, test_case["accepted"].as_bool().expect("diff codec case declares acceptance"), "{}", test_case["id"].as_str().expect("diff codec case id is a string"));
+    }
+    for test_case in fixture["textMutationCases"].as_array().expect("text mutation cases are an array") {
+        let accepted = SemioBrepMutation::parse_op(test_case["value"].as_str().expect("text mutation case has a value")).is_ok();
+        assert_eq!(accepted, test_case["accepted"].as_bool().expect("text mutation case declares acceptance"), "{}", test_case["id"].as_str().expect("text mutation case id is a string"));
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn flattened_transport_discriminants_enforce_create_required_fields() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
+    for contract in fixture["transportRequiredFields"].as_array().expect("transport contracts are an array") {
+        let schema = contract["schema"].as_str().expect("transport schema is a string");
+        let discriminant = contract["discriminant"].as_str().expect("transport discriminant is a string");
+        let required = contract["requiredFields"].as_array().expect("required fields are an array");
+        for test_case in fixture["cases"].as_array().expect("tolerance cases are an array").iter().filter(|test_case| test_case["schema"].as_str() == Some(schema)) {
+            let payload = test_case["mutation"].as_object().and_then(|mutation| mutation.values().next()).and_then(serde_json::Value::as_object).expect("create case has an object payload");
+            let complete = required.iter().all(|field| payload.contains_key(field.as_str().expect("required field is a string")));
+            let decoded = decode_semio_brep_mutation_json(&test_case["mutation"].to_string());
+            assert_eq!(decoded.is_ok(), complete, "{}", test_case["id"].as_str().expect("case id is a string"));
+            if let Ok(operation) = decoded {
+                let matches_discriminant = matches!((discriminant, operation), ("CREATE_VERTEX", SemioBrepMutation::CreateVertex(_)) | ("CREATE_EDGE", SemioBrepMutation::CreateEdge(_)) | ("CREATE_FACE", SemioBrepMutation::CreateFace(_)));
+                assert!(matches_discriminant, "{discriminant} must select its create payload");
+            }
+        }
     }
 }
 //#endregion 🧪️OpCodecRoundTripLaw

@@ -1,19 +1,18 @@
-
 #[path = "../../📐️change-a-mm2/🧪️tests/📐️enlarges-section-area-to-2250-mm2/🦀️.rs"]
 mod tests_change_a_mm2_enlarges_section_area_to_2250_mm2;
-#[path = "../../⚗️change-alloy/⚗️switches-alloy-to-aw7020t6/🦀️.rs"]
+#[path = "../../⚗️change-alloy/🧪️tests/⚗️switches-alloy-to-aw7020t6/🦀️.rs"]
 mod tests_change_alloy_switches_alloy_to_aw7020t6;
 #[path = "../../🌍️change-annex/🧪️tests/🌍️switches-national-annex-to-en/🦀️.rs"]
 mod tests_change_annex_switches_national_annex_to_en;
 #[path = "../../🧮️change-beta-w/🧪️tests/🧮️raises-weld-correlation-beta-w-to-0-75/🦀️.rs"]
 mod tests_change_beta_w_raises_weld_correlation_beta_w_to_0_75;
-#[path = "../../⬇️change-chi/⬇️lowers-buckling-chi-to-0-5/🦀️.rs"]
+#[path = "../../⬇️change-chi/🧪️tests/⬇️lowers-buckling-chi-to-0-5/🦀️.rs"]
 mod tests_change_chi_lowers_buckling_chi_to_0_5;
 #[path = "../../🏷️change-delta-sigma-c/🧪️tests/🏷️upgrades-detail-category-to-90-mpa/🦀️.rs"]
 mod tests_change_delta_sigma_c_upgrades_detail_category_to_90_mpa;
 #[path = "../../↕️change-delta-sigma-ed/🧪️tests/↕️raises-fatigue-stress-range-to-62-5-mpa/🦀️.rs"]
 mod tests_change_delta_sigma_ed_raises_fatigue_stress_range_to_62_5_mpa;
-#[path = "../../📉️change-fatigue-m/📉️flattens-sn-slope-to-m-5/🦀️.rs"]
+#[path = "../../📉️change-fatigue-m/🧪️tests/📉️flattens-sn-slope-to-m-5/🦀️.rs"]
 mod tests_change_fatigue_m_flattens_sn_slope_to_m_5;
 #[path = "../../🌀️change-it-mm4/🧪️tests/🌀️raises-torsion-constant-to-10240-mm4/🦀️.rs"]
 mod tests_change_it_mm4_raises_torsion_constant_to_10240_mm4;
@@ -25,7 +24,7 @@ mod tests_change_m_ed_knm_raises_design_moment_to_9_5_knm;
 mod tests_change_n_cycles_doubles_fatigue_cycles_to_2000000;
 #[path = "../../🏋️change-n-ed-kn/🧪️tests/🏋️raises-axial-force-to-180-kn/🦀️.rs"]
 mod tests_change_n_ed_kn_raises_axial_force_to_180_kn;
-#[path = "../../↔️change-sheet-b-mm/↔️widens-sheet-to-320-mm/🦀️.rs"]
+#[path = "../../↔️change-sheet-b-mm/🧪️tests/↔️widens-sheet-to-320-mm/🦀️.rs"]
 mod tests_change_sheet_b_mm_widens_sheet_to_320_mm;
 #[path = "../../🎚️change-sheet-k-sigma/🧪️tests/🎚️raises-sheet-plate-buckling-k-sigma-to-6-25/🦀️.rs"]
 mod tests_change_sheet_k_sigma_raises_sheet_plate_buckling_k_sigma_to_6_25;

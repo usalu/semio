@@ -17,3 +17,9 @@ pub fn handle(payload: &FlowTessellateResolve, _doc: &ArtifactView<'_, Generatio
     let _ = session.resolve_preview_tessellate(payload.node_hash, &payload.output_json);
     Ok(Emit::default())
 }
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

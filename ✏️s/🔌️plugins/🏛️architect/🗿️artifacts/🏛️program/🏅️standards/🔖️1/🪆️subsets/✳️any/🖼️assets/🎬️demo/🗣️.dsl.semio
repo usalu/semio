@@ -7,10 +7,10 @@ project {
   id=project-1 code=CLN-001 client-name="Sample Health" owner-organization="" funding-model="" brief-summary=text="" problem-statement=text="" vision=text="" mission=text="" objectives=[ ] success-criteria=[ ] project-priorities=[ ] completion-criteria=[ ] decision-criteria=[ ] scope-inclusions=[ ] scope-exclusions=[ ] assumptions=[ ] constraints-summary=[ ] dependencies=[ ] deliverables=[ ] phases=[ ] geographic-context=text="" development-context=text="" operational-context=text="" regulatory-context=[ ] ownership=consultant-ids=[ ] participant-ids=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z"
 }
 knowledge {
-  child_id=architect-knowledge-7904dd65836c8ff4 target="architect-program-knowledge!s.stdio.semio@v1/table"
+  child_id=architect-knowledge-7904dd65836c8ff4 target="architect-knowledge-7904dd65836c8ff4!s.stdio.semio@v1/table"
 }
 benchmarks {
-  child_id=architect-benchmarks-7904dd65836c8ff4 target="architect-program-benchmarks!s.stdio.semio@v1/table"
+  child_id=architect-benchmarks-7904dd65836c8ff4 target="architect-benchmarks-7904dd65836c8ff4!s.stdio.semio@v1/table"
 }
 governance {
   id=governance-2 framework="" roles=[ ] responsibilities=[ ] approval-matrix=[ ] escalation-paths=[ ] meeting-cadence=[ ] decision-rights=[ ] change-control-process=[ ] quality-policy=text="" compliance-obligations=[ ] document-control=[ ] stakeholder-engagement-plan=[ ] ethics-policy=[ ] data-governance=[ ] review-hierarchy=[ ] accountability-rules=[ ] exception-management=[ ] governance-performance=[ ]

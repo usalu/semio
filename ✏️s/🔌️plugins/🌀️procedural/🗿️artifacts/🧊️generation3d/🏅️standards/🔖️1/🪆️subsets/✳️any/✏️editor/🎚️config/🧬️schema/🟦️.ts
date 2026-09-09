@@ -12,8 +12,6 @@ export interface Generation3dConfig {
   sunJson: string;
   /** @state config */
   selectedGenerationId?: string;
-  /** @state config */
-  previewEvalText?: string;
 }
 
 export type CameraJson = { x: number; y: number; zoom: number };

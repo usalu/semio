@@ -51,11 +51,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-coefficient" => Vector {
-            before: include_str!("../../../➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧪️tests/🧪️raises-the-leading-coefficient-to-three-halves/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧪️tests/🧪️raises-the-leading-coefficient-to-three-halves/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧪️tests/🧪️raises-the-leading-coefficient-to-three-halves/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../../➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧪️tests/🧪️raises-the-leading-coefficient-to-three-halves/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../../➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧪️tests/🧪️raises-the-leading-coefficient-to-three-halves/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change-coefficient/🧪️raises-the-leading-coefficient-to-three-halves/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change-coefficient/🧪️raises-the-leading-coefficient-to-three-halves/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change-coefficient/🧪️raises-the-leading-coefficient-to-three-halves/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change-coefficient/🧪️raises-the-leading-coefficient-to-three-halves/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change-coefficient/🧪️raises-the-leading-coefficient-to-three-halves/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-equation-1-equation: no committed specification vector is registered for kind {other:?}"),
     }

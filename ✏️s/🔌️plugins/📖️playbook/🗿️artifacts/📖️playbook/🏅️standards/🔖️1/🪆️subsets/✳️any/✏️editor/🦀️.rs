@@ -112,6 +112,7 @@ fn playbook_retained_extent(command: &PlaybookCommand, _snapshot: &PlaybookSnaps
     (bytes <= PLAYBOOK_RETAINED_RAW_BYTES).then_some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
 fn playbook_retained_reduce(
     command: &PlaybookCommand,
     snapshot: &PlaybookSnapshot,

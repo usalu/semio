@@ -1,5 +1,218 @@
 # Current End-to-End Acceptance Frontier
 
+## 2026-09-09 14:49 UTC Framework Collection Qualified
+
+Full framework15737 is GREEN131/131 across2 files:89 facade plus42 actual kernel
+tests, with no duplicate source. Before configuration repair, exact kernel
+discovery19417 exited1 without tests. Kernel test types now use real first-party
+module contracts; no kernel runtime implementation changed. Broad type83614
+remains active. See `📓️kernel-extracted-test-authority.md`.
+
+## 2026-09-09 14:44 UTC Active Native And Kernel Discovery
+
+The admitted native proposal retry is45974, receipt
+`gis-map-proposal-native/exact-cargo-laws-N1AVY4/00`. Source/AJV/third-party
+preflights pass; latest owner report has active Stdio compilation, no diagnostics
+and no native law yet. No native completion is inferred from elapsed build time.
+
+Exact kernel test discovery19417 genuinely failed with no test files. Root added
+the real kernel source to the existing framework includeSource/coverage lists.
+Kernel86514 and type83614 now qualify its restored first-party test types and
+actual collection. Kernel runtime implementation and commands remain unchanged.
+
+## 2026-09-09 14:40 UTC Extracted Runtime Test Authority
+
+ShardClient's erased dependency/type seam is repaired. Final actual runtime74987
+is GREEN150/150; broad renderer type1095 remains RED525 globally but has zero
+diagnostics in ShardClient and its extracted tests, down from123 owned errors.
+Terra validated all202 literal imports and24 original-source URL targets.
+See `📓️shard-client-extracted-test-authority.md`.
+
+Root is separately restoring exact kernel test dependencies and qualifying
+actual suite discovery; no kernel runtime behavior changed. WGPU owns safe
+Delete Space UI/worker completion and the pending invite-copy button guard.
+The previous native PpeGyP attempt failed at compile before laws due to a new
+HashProjection composition bound; Home supplied the empty-composition trait
+implementation and has the admitted native retry running. The full two-peer
+journey remains unqualified; goal and ticket stay open.
+
+## 2026-09-09 14:08 UTC Scoped Administration Qualification
+
+Full OS8757 is GREEN340/340 across5 files, including actual worker refusal before
+POST, superseded page read cancellation/late-result retirement, receipt-bound
+rename/visibility refresh and strict administration wire envelopes/scalars.
+Renderer strict shared-parser recheck32719 is GREEN18/18; previous explicit
+19-file coverage remains718/718 for its source snapshot.
+
+Full OS59481 previously failed338/2, exposing Pack-to-JSON field ordering and
+a test waiter that returned during asynchronous verification. Both were
+corrected before8757. WGPU is strengthening nested serialized-byte equality
+before proceeding to the missing delete-space UI's exact receipt-driven terminal.
+Root hands off the administration implementation files after this qualification.
+
+Broad type34244 remains RED391, without owned administration/worker/schema
+diagnostics. Native proposal PpeGyP remains CPU-active; Home has not restarted or
+modified Rust mid-build. Two-mounted-peer journey and goal completion remain open.
+
+## 2026-09-09 13:42 UTC Emitted Browser And Renderer Qualification
+
+All19 configured renderer files are qualified in three explicit, disjoint groups:
+84/84 across8,491/491 across7,143/143 across4, totaling718/718. Root read all three
+JSON receipts and verified19 unique files, no missing or unexpected file and no
+overlap. The earlier automatic shards are not complete-suite evidence.
+
+Actual no-write production Rollup68884 is GREEN1/104 skipped. Its80 outputs total
+104,410,659 bytes; independent Node/WebCrypto SHA-256 agrees. The emitted inventory
+contains no test/Vitest/node:/bun: modules, and installed distribution is unchanged.
+Production React boot was restored to the actual entry and the dead pseudo-test
+removed. See `📓️selected-gis-browser-byte-provenance.md`. This does not prove
+Chromium or two-author behavior.
+
+Native proposal eou3J6 is terminal RED: laws0–2 passed, but law3 rejects GIS
+one-item assembly because MutationMeta omitted the durable authority group ID.
+Home repaired the production factory and has warm native receipt
+`gis-map-proposal-native/exact-cargo-laws-PpeGyP/00` active. Both the grouped
+assembly and maintenance-close repair await that native qualification.
+
+Root now owns worker administration admission: retain only a verified exact-space
+page and refuse unscoped/unavailable commands before POST. WGPU separately owns
+strict administration wire decoding. Terra audits actual two-mounted-Shell
+journey readiness while Home remains sole Cargo owner. Goal and ticket remain open.
+
+## 2026-09-09 12:45 UTC Administration And Bundle Frontier
+
+Root added the previously missing authored space rename/visibility controls.
+Renderer51101 is GREEN16/16; full renderer32284 subsequently hit its300000ms
+process budget without a test summary. Complete-suite requalification is now
+using three disjoint Vitest shards under the unchanged per-process bound. Seven exact-space
+capability mappings now share one domain helper, with42 neutral refusal checks.
+The worker previously admitted arbitrary commands under an open author pane;
+WGPU owns retaining the parsed page and enforcing that helper before sealing,
+plus a genuine no-POST hostile worker regression. That worker proof is not yet
+covered by the renderer result. See `📓️space-administration-properties.md`.
+
+WGPU's actual no-write Rollup inspection stopped before bundling: current config
+correctly rejected a stale generated production session target. Session39653
+is RED, not an emitted-byte qualification. Its no-Cargo session regeneration is
+underway; protected native artifacts must not be silently relabeled as current.
+
+Home's production maintenance task completion now physically drops its complete
+Store-owning task before releasing the barrier observed by close. Root separately
+reviewed the ordering in `📓️inference-maintenance-close-review.md`. Authoritative
+native receipt `gis-map-proposal-native/exact-cargo-laws-eou3J6/00` is still
+compiling, with no native law yet qualified in that receipt.
+
+The extension placeholder was reclassified after source-author audit: no current
+app/plugin authors an Extension node. It is dormant unfinished capability, not
+a demonstrated Map journey blocker. Generic UI intentionally keeps its address
+opaque; no ad-hoc address protocol was introduced. The broad renderer type gate
+remains RED575 in the latest snapshot, without owned administration diagnostics.
+
+## 2026-09-09 12:02 UTC Native Task Lifetime Frontier
+
+Proposal76932 is terminal RED in `gis-map-proposal-native/exact-cargo-laws-pVRGIf/00`.
+Laws0–2 passed; law3 failed during Tokio shutdown with one retained Store snapshot
+read lease (`returned1023 != issued1024`). This is not a passing approval law.
+Home owns the exact task-lifetime investigation and warm protected hub-target;
+creation and the actual trusted two-mounted-peer journey remain queued.
+
+Current full renderer43590 is GREEN712/712 across19 files after all eight moved
+ShellHost fixtures were validated at canonical paths. Full OS is GREEN336/336
+across5 files, including the new genuine worker physical-close/reopen law.
+Current browser staging and Hub two-author source preflights are GREEN, but
+emitted browser byte exclusion/build and mounted full-journey proof remain open.
+WGPU owns the emitted-bundle qualification without competing Cargo.
+
+Root's exact obsolete reactor Cargo cache was removed after owner confirmation,
+exact path validation and a complete empty open-file audit. Disk recovered from
+about6.5GiB to19GiB; protected Hub target, source, inputs, fixtures and reports
+were preserved. See `📓️obsolete-reactor-cache-reclamation.md`.
+
+The live extension-slot stub remains open. Generic UI deliberately declares an
+opaque extension address, so the next design must establish a declared resolver
+mapping and exact action/surface ownership rather than revive per-verb rendering
+or assume slash parsing identifies a body. Terra is auditing that authority.
+
+## 2026-09-09 11:38 UTC Active Native And Type Frontier
+
+The authoritative native proposal retry is76932, receipt
+`🗑️generated/gis-map-proposal-native/exact-cargo-laws-pVRGIf/00`. It reached Cargo
+and was compiling current dependencies at Home's latest report; no law is yet
+qualified in that receipt. The creation native cohort and actual trusted two-peer
+journey remain queued behind this sole fleet Cargo owner.
+
+WGPU's genuine worker authority-replacement/physical-close/reopen law is GREEN1/
+335 skipped. Its neutral projection asserts old-state retirement and map removal,
+a fresh document object/client, and inference capture of only that new owner.
+This is worker lifecycle evidence, not the React Shell/full journey. The full
+OS rerun is temporarily stopped at the shared Writer graph-input repair.
+
+Root's extracted PluginRuntime type seam is qualified: runtime25447 GREEN76/76;
+broad type28976 RED950 but no diagnostic in PluginRuntime or its extracted test.
+No global type pass is claimed. The latest two-file fixture verification28597
+did not reach tests because Writer imports/schema paths need exact correction.
+
+A separate active frontend gap is documented in
+`📓️extension-slot-frontend-frontier.md`: a live Shell resolver still returns an
+unavailable placeholder for found extension contributors. Current actor/surface
+and action ownership must be audited before replacing that unfinished path.
+
+## 2026-09-09 11:16 UTC Current Closure
+
+OS335/335 and renderer712/712 across19 renderer files are GREEN. The latest full
+renderer run includes the private creation mount and exact-owner catalog-refresh
+wiring. Initial POST409 signals refresh before unchanged failed status; Shell
+withdraws its captured catalog refs synchronously, requests one catalog reload,
+and never resubmits the create. Successor owners/catalogs are not invalidated.
+
+The mount gate has eight neutral cases.18733 is GREEN2/446 skipped, including
+pending-port retirement without deadline expiry. Private bootstrap/rebootstrap
+and snapshot failure also close the exact entry and reject the earlier socket
+waiter; Terra independently reviewed these lifetime paths. Ordinary rebootstrap
+is unchanged.
+
+Home reports current Rust/Hub creation source coherence through request/status,
+durable digest, preclaim equality, duplicate replay, no-facts/no-events rotation
+law, genesis helper and actual composition caller. Creation46 structured/14 raw
+and proposal/ledger source oracles are GREEN. Prior native96646 failed law2 after
+two passing laws; corrected native proposal and creation cohorts remain required.
+The65126 launch did not reach Cargo because its artifact path was relative;
+Home is relaunching with the exact absolute ticket-generated root.
+
+Broad renderer typecheck remains RED. Restored extracted PluginRuntime type
+imports and exact dependency seam removed missing-type/any cascades in that
+owned test; current final type and runtime-law checks are active. The existing
+broad gate has not been weakened. The real trusted two-mounted-peer approval,
+durable Undo and same-data-root restart journey remains unproven.
+
+## 2026-09-09 10:39 UTC Creation Generation Frontier
+
+The current worker generation packet passes full OS333/333 across five files.
+Root's common creation corpus passes46 structured and14 raw-wire source cases.
+Renderer8979 is the genuine missing-mount-helper RED1/446 skipped;99071 is
+GREEN12/435 skipped after private creation mount admission. The earlier82573
+attempt failed graph construction and did not execute a behavioral test.
+
+Shell now preserves the captured generation through the private Ready target and
+requires a current actor mount of exactly that generation before committing.
+Port readiness alone cannot satisfy this gate; close/fault/rebootstrap retire it,
+and post-resolution retirement still blocks commit. Seven schema-backed neutral
+mount cases pass the helper gate. The additional composed document-opening law
+is authored and its current registered rerun is active. Current renderer type
+qualification is also active; no global type pass is claimed.
+
+Home's sole native96646 remains in compilation, zero reported compiler errors and
+no laws executed at the latest1h31m snapshot. That is explicitly the pre-new-
+creation-contract cohort. Hub/Rust generation binding and public committed
+approval replay correction are queued until it terminates. Host disk pressure
+is being inspected read-only; no unrelated target/process has been removed.
+
+Bare initial POST409 can mean multiple conflicts, not proven catalog mismatch.
+WGPU owns a separate exact-owner OS refresh-required signal that keeps canonical
+creation phases unchanged and never auto-resubmits. Root will wire catalog
+invalidation/refetch. The genuine current trusted Stdio+GIS two-mounted-peer,
+approval/Undo/restart acceptance journey remains incomplete.
+
 ## 2026-09-09 07:50 UTC Authenticated Session Frontier
 
 At09:42UTC current full styling81848 is GREEN41 laws/1371 assertions after the

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.s.stdio.semio.v1.base.geometry;
+
+message SemioPoint3 { double x = 1; double y = 2; double z = 3; }
+message SemioPoint2 { double x = 1; double y = 2; }
+message SemioUv { double u = 1; double v = 2; }
+message SemioRgba { float r = 1; float g = 2; float b = 3; float a = 4; }
+message SemioQuaternion { double x = 1; double y = 2; double z = 3; double w = 4; }
+message SemioTransform { SemioPoint3 translation = 1; SemioQuaternion rotation = 2; SemioPoint3 scale = 3; }

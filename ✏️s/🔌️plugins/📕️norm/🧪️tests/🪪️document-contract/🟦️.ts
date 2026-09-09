@@ -1,10 +1,24 @@
 /** 🧪️ Norm document facets share child identities and reject editor state and whole-document diffs. */
+import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { assertDocumentContractOracle } from "../../../../../🧰️framework/🔨️modules/🧬️schema/🧪️testkit/🪪️document-contract/🟦️.ts";
 import ioSchema from "../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import childSchema from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import vectors from "./../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+
+function snapshotFiles(root: string): string[] {
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(root, entry.name);
+    return entry.isDirectory() ? snapshotFiles(path) : entry.name === "🔣️.json" && path.includes("/📸️snapshot/") ? [path] : [];
+  });
+}
+
+function childKind(schema: Record<string, any>, field: string): unknown {
+  const property = schema.properties[field];
+  return property["x-semio-child-kind"] ?? property.anyOf?.[0]?.["x-semio-child-kind"];
+}
 
 /** ⚖️ Compares real native mutation fixtures with independent Ajv validation and production parsers. */
 export async function testNormDocumentContractOracle(): Promise<void> {
@@ -23,5 +37,14 @@ export async function testNormDocumentContractOracle(): Promise<void> {
       mutationRoots: [join(root, "../🧫️fixtures/🧬️mutations")],
       committed: owner.committed,
     });
+    for (const facet of facets) assert.equal(childKind(facet.schema, owner.childField), "s.stdio.semio");
+    const files = snapshotFiles(join(root, "../🧫️fixtures/🧬️mutations"));
+    assert.equal(files.length, owner.committed.snapshots);
+    for (const path of files) {
+      const value = facets[1].module[`parse${owner.name}Snapshot`](JSON.parse(readFileSync(path, "utf8")));
+      const child = value[owner.childField];
+      assert.equal(child.target.dialect.artifactKind, "s.stdio.semio", `${path}:${owner.childField} kind`);
+      assert.equal(child.target.artifactId, child.childId, `${path}:${owner.childField} identity`);
+    }
   }
 }

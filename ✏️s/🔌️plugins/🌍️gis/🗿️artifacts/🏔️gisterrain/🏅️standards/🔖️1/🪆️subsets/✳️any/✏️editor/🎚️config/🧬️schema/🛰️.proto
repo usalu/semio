@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.app.gis.gis3d;
-message Gis3dConfig {
-  // @state config
-  string camera_json = 1;
-  // @state config
-}

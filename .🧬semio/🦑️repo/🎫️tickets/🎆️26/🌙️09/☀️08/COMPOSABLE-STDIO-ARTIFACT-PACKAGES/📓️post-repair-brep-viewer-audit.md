@@ -53,3 +53,5 @@ At audit handoff, root reported that a fresh ordinary `repo:artifact-package-con
 ## Coordinator Follow-up After Lifecycle Repair
 
 The current wrapper method inventory was compared directly with all declared `ArtifactViewer` methods after Norm's forwarding repair: 44 trait methods and 44 wrapper methods; missing names: []. The source inspection confirmed delegation of lifecycle, preparation, window, projection and command/render/media hooks to `V`, while retaining bounded fixture-only fallbacks for absent owners/disposers. This is source evidence only. The new focused native hook-preservation regression is queued; Block also retains strict-close runtime acceptance as a pending gate. Raw method-inventory receipt: `🗑️generated/bounded-viewer-hook-forwarding-audit.json`.
+
+The coordinator also compared associated declarations: all nine viewer associated types and all three associated constants are present in the wrapper, with no omitted names. The constrained empty presence/transient types remain equivalent to V's required associated types. Runtime acceptance remains pending.

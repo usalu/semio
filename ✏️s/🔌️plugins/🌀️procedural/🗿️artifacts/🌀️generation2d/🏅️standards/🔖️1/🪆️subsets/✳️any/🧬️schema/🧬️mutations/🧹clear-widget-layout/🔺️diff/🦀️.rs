@@ -8,5 +8,5 @@ pub fn diff(payload: &super::ClearWidgetLayout, base: &Generation2dSnapshot) -> 
     if !base.fixture.layout.contains_key(&payload.id) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Widget \"{}\" already has no layout entry.", payload.id));
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff::default(), SynapsesDiff::default(), LayoutDiff { removed: vec![payload.id.clone()], set: vec![] }, None, None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff { removed: vec![payload.id.clone()], set: vec![] }, None, None))
 }

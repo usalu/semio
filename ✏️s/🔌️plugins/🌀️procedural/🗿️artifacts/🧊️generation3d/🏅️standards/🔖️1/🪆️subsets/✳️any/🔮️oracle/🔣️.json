@@ -48,6 +48,105 @@
           ]
         }
       }
+    },
+    {
+      "id": "example-geometry-parry3d",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "parry3d",
+      "version": "0.17",
+      "capabilities": [
+        "procedural-3d-1-example-geometry"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/dimforge/parry",
+      "rationale": "🧊️ The third-party half that touches REAL KERNEL OUTPUT. `🧪️tests/🧊️example-geometry-3d-1/🥒️.feature`'s subject, `📚️examples/🧪️tests/🧩️geometry/🦀️.rs`, evaluates each of the eight bundled examples' own `🗣️.dsl.semio` through the real `FlowHost` with the packaged `brep`/`math` flow extensions installed and tessellates the preview handle through the same `tessellate_geometry` bridge the editor's preview path calls; `parry3d` then recomputes that triangle soup's volume and centre of mass (`MassProperties::from_trimesh`) and its axis-aligned bounding box (`TriMesh::local_aabb`) with code this repository did not write, and the lane asserts BOTH numbers against the committed `🧪️tests/🧩️example/🔣️.json` expectation. `parry3d` sits on no exact-geometry kernel (`engine.family = \"none\"`): it is a mesh/collision library, so its independence from the `semio-s-artifact-stdio-semio` B-Rep kernel under test is total, and it is already carried at exactly this standing — `[dev-dependencies]` only, never `[dependencies]`, never production-reachable — by `🧰️framework/🔨️modules/🧊️3d`. ⚠️ WHAT IT CANNOT ESTABLISH, stated so the count of evidence is not overstated: `parry3d` measures whatever soup it is handed and cannot tell a correct solid from a wrong one, so it is PAIRED with, never substituted for, the committed expectation that `example-geometry-scipy` derives independently. The two together are what closes the case: `scipy` says what the number must be, `parry3d` says what the kernel actually produced, and the fixture is the single file both are held to.",
+      "engine": {
+        "family": "none",
+        "implementation": "parry3d (dimforge collision-detection and mass-properties library)",
+        "version": "0.17"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "example-geometry-scipy",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "scipy",
+      "packages": [
+        "scipy",
+        "numpy"
+      ],
+      "version": ">=1.18.0",
+      "capabilities": [
+        "procedural-3d-1-example-geometry"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://scipy.org",
+      "rationale": "📐️ The third-party half that states WHAT THE NUMBER MUST BE, independently of any semio code. `🧪️tests/🧊️example-geometry-3d-1/🐍️.py` reads exactly two committed, language-neutral inputs — each example's own `🗣️.dsl.semio` (for its wired slider values and its declared `neuron-kind` chain) and the packaged brep extension descriptor `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🔣️.json` (for the channel defaults an unwired port falls back to, which is how `🍩️sphere-cut-with-torus`'s torus gets its major/minor radii) — and re-derives every expected number in all eight `🧪️tests/🧩️example/🔣️.json` fixtures. It imports nothing from this repository and evaluates no graph: it recognises each op chain as the classical solid it is and integrates that solid. Six of the eight are closed form (rectangular prism twice, regular-polygon prism, hollow box, rounded box as the Minkowski sum of a shrunk cube with a ball); the two that are not are integrated with `scipy.integrate.quad` — the ball∪cube union over clipped disc areas, and the ball∖torus difference over the torus tube angle. ⚠️ WHAT IT CANNOT ESTABLISH: it never touches the kernel, so it can only convict a wrong FIXTURE, never a wrong SOLID; a disagreement located here is a fixture error and a disagreement located in the Rust lane is a kernel error. That half is `example-geometry-parry3d`. 📌️ A THIRD, NON-ORACLE CONFIRMATION, recorded so the evidence is not miscounted as three references: the TypeScript lane (`📚️examples/<example>/🧪️tests/🧩️example/🟦️.ts`) repeats both quadratures with its own composite-Simpson rule and recomputes every closed-form value, so the two integrated volumes rest on two independent quadrature implementations rather than one library — but that lane is this repository's own code and contributes no third-party independence.",
+      "engine": {
+        "family": "none",
+        "implementation": "scipy.integrate.quad adaptive quadrature over analytic solid cross-sections",
+        "version": ">=1.18.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "io-round-trip-parry3d",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "parry3d",
+      "version": "0.17",
+      "capabilities": [
+        "procedural-3d-1-io"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/dimforge/parry",
+      "rationale": "🔺️ The QUALIFYING third-party half of this subset's IO surface. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END found that seven of this artifact's nine format leaves were placeholders that could not fail: export returned `print_dsl(snapshot).into_bytes()` — the artifact's own DSL text — under the target format's name (byte-identical bodies for las, png, stl, dwg, obj, gltf and ply), and import did `let _ = bytes; Ok(Generation3dSnapshot::default())`, discarding the file for an EMPTY document. Neither direction ever raised an error. The lane registered here, `[[test]] io-round-trip` at `🚪️io/🧪️tests/🔁️round-trip/🦀️.rs`, drives ONE committed geometry (`🧫️fixtures/🚪️io/🧊️unit-cube/🔣️.json`: 8 shared vertices, 12 triangles, bounds [0,0,0]..[1,1,1], enclosed volume exactly 1.0) out through every real export leaf and back in through every real import leaf, and hands every RECOVERED mesh to `parry3d::mass_properties::MassProperties::from_trimesh` and `parry3d::bounding_volume::Aabb::from_points`. What parry3d contributes is the number no assertion of ours can supply on its own: the enclosed volume. A codec that dropped a face, reversed a winding or collapsed an axis moves that number and does not necessarily move a triangle count, which is exactly the class of silent corruption the placeholders' replacement has to be held to. parry3d shares no code with this repository's mesh path and is already a registered test-only dependency of this subset (see `example-geometry-parry3d`, which uses the same library on kernel output rather than on codec output — the two lanes are independent and are both kept). COVERAGE, stated rather than implied: the third-party check runs on the six formats whose export leaves produce geometry — stl, obj, ply, gltf, dwg and (as a point cloud, so bounds only, no volume) las. `txt` is this artifact's own full-fidelity DSL text and is round-tripped by value equality instead, `json` was already real before this ticket, and `png` is generation2d's export claim and refuses in both directions here. NETWORK: none; the library is vendored through the workspace lock like every other test-lane dependency.",
+      "engine": {
+        "family": "none",
+        "implementation": "parry3d (dimforge collision-detection and mass-properties library)",
+        "version": "0.17"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "procedural-3d-io-python-independent",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "procedural-3d-1-io"
+      ],
+      "comparisonProfiles": [
+        "semantic-mesh-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🚪️ The SUPPLEMENTAL, cross-LANGUAGE half of the same IO surface, at `🧪️tests/🚪️io-procedural-3d-1/🐍️.py`: an independent Python implementation of the three text mesh grammars this artifact writes and reads — ASCII STL, Wavefront OBJ and ASCII PLY — written from the format specifications and from `🧫️fixtures/🚪️io/🧊️unit-cube/🔣️.json`, importing nothing from this repository's Rust. It writes the committed cube in each grammar, reads it back, and projects triangle count, vertex count, bounds and enclosed volume; the committed `🧫️fixtures/🚪️io/🧊️unit-cube/*second-implementation.*` files ARE its output, and `[[test]] io-round-trip` feeds exactly those files through this artifact's real import leaves — so the two implementations meet on both sides of the boundary rather than only agreeing about a number. WHY IT IS REGISTERED AS SUPPLEMENTAL AND NOT AS QUALIFYING, stated plainly: STL, OBJ and PLY are not semio-native formats and real third-party readers for all three exist and are already registered by their owning stdio subsets (`stl_io`, `tobj`, `ply-rs`), so `verified-native-second-implementation` would be an unearned claim here. The qualifying third-party oracle for `procedural-3d-1-io` is `io-round-trip-parry3d`, registered beside this entry. What this entry adds that no library in the subject's own ecosystem can is a reader written in ANOTHER LANGUAGE from the specification by an implementer who did not read our writer — the one shape of evidence that separates 'the codec works' from 'our reader accepts our writer'. CEILING: the SUBJECT half of that case (`🦀️.rs` beside the reference) does not run this artifact's codec, because a generated test host may not link a plugin crate; it replays the committed vector and checks only container magic and per-triangle record counts. The codec itself is exercised against the same bytes by the in-crate `io-round-trip` lane. SCOPE: only the three text grammars are adjudicated cross-language — `gltf` and `dwg` are container formats a page of Python could only re-implement as a worse copy of the artifact's own codec, and `las` is export-only for this artifact by design; all three are covered by the parry3d lane instead. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation of the ascii stl, wavefront obj and ascii ply grammars",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

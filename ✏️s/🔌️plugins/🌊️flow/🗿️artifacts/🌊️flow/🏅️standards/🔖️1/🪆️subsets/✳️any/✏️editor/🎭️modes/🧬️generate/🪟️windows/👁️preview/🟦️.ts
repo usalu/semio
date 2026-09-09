@@ -1,5 +1,5 @@
 /** 👁️ Flow editor — Generate-mode Preview window: typed twin of `🦀️.rs`'s view-model.
- * Mirrors the pane's `render(config: &FlowConfig)` boundary — the evaluated output preview text of the
+ * Mirrors the pane's `render(config: &FlowWindowTransient)` boundary — the evaluated output preview text of the
  * active generation. */
 
 /** 👁️ The Preview window's typed view-model — mirrors the Rust `render()` boundary's inputs. */

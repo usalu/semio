@@ -1,7 +1,8 @@
-# 🔺️ SemioObjectDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
+# import SemioTransform from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type SemioObjectDiff {
-  transformTouched: Boolean!
-  brepTouched: Boolean!
-  meshTouched: Boolean!
-  propertiesTouched: Boolean!
+  transform: SemioTransform @state(class: ARTIFACT)
+  brep: ArtifactChild @state(class: ARTIFACT)
+  mesh: ArtifactChild @state(class: ARTIFACT)
+  properties: ArtifactChild @state(class: ARTIFACT)
 }

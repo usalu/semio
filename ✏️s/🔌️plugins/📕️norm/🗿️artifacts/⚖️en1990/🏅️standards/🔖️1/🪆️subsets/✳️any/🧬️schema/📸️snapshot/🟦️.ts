@@ -5,7 +5,7 @@ import { parseEn1990Artifact } from "../🟦️.ts";
 export interface En1990Snapshot {
   /** 🗿️ @state artifact */
   gK: number;
-  /** 🗿️ @state artifact */
+  /** 🗿️ @state artifact @child kind=s.stdio.semio */
   qK: ArtifactChild;
   /** 🗿️ @state artifact */
   resistanceKn: number;

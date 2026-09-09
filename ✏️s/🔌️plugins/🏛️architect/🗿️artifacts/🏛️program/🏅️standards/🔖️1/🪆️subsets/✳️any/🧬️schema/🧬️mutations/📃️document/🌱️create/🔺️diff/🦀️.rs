@@ -12,5 +12,5 @@ pub fn diff(payload: &CreateDocument, base: &ProgramSnapshot) -> protocol::Mutat
     if base.artifacts.iter().any(|row| row.header.id == id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A document already exists with this id.", [id.0]);
     }
-    protocol::MutationOutcome::new(ProgramDiff { documents: Some(ProgramArtifactsDelta { added: vec![payload.document.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { artifacts: Some(ProgramArtifactsDelta { added: vec![payload.document.clone()], ..Default::default() }), ..Default::default() })
 }

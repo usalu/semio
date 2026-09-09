@@ -1,0 +1,38 @@
+{
+  "schema": "s.procedural.generation3d.example-geometry/v1",
+  "example": "sphere-box-fuse",
+  "opChain": [
+    "brep.prim3d.sphere",
+    "brep.prim3d.box",
+    "brep.bool.fuse"
+  ],
+  "preview": {
+    "node": "fuse",
+    "channel": "solid",
+    "kind": "solid"
+  },
+  "tessellationTolerance": 0.01,
+  "expect": {
+    "minTriangles": 24,
+    "closed": true,
+    "volume": 7.245424930456,
+    "volumeTolerance": 0.02,
+    "volumeSource": "numeric oracle (scipy.integrate.quad): V(ball r=1.2) + V(cube 1.5) - V(ball cap-clipped cube)",
+    "edgePerimeter": null,
+    "edgePerimeterTolerance": 0.0,
+    "boundingBoxMin": [
+      -1.2,
+      -1.2,
+      -1.2
+    ],
+    "boundingBoxMax": [
+      1.5,
+      1.5,
+      1.5
+    ],
+    "boundingBoxTolerance": 0.005,
+    "kernelVolumeNode": null,
+    "kernelVolumeChannel": null
+  },
+  "kernelStatus": "blocked-on-boolean-kernel"
+}

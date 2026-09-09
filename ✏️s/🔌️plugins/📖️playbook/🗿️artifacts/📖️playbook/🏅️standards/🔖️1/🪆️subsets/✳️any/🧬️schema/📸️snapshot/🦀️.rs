@@ -25,10 +25,10 @@ pub struct PlaybookSnapshot {
     #[state(artifact)]
     pub title: Option<String>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.document")]
+    #[child(kind = "s.stdio.semio")]
     pub document: crate::PlaybookDocumentChild,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.flow")]
+    #[child(kind = "s.stdio.semio")]
     pub flow: crate::PlaybookFlowChild,
 }
 
@@ -109,7 +109,7 @@ fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -252,14 +252,14 @@ fn decode_playbook_snapshot_binary(bytes: &[u8]) -> Result<PlaybookSnapshot, Str
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let mut snapshot = PlaybookSnapshot::default();
-    snapshot.schema = read_str_lp(&mut reader)?;
-    snapshot.id = read_str_lp(&mut reader)?;
-    snapshot.version = read_str_lp(&mut reader)?;
-    snapshot.title = read_opt_str(&mut reader)?;
-    snapshot.document = read_child(&mut reader)?;
-    snapshot.flow = read_child(&mut reader)?;
-    Ok(snapshot)
+    Ok(PlaybookSnapshot {
+        schema: read_str_lp(&mut reader)?,
+        id: read_str_lp(&mut reader)?,
+        version: read_str_lp(&mut reader)?,
+        title: read_opt_str(&mut reader)?,
+        document: read_child(&mut reader)?,
+        flow: read_child(&mut reader)?,
+    })
 }
 //#endregion 🔖️BinaryPrimitives
 

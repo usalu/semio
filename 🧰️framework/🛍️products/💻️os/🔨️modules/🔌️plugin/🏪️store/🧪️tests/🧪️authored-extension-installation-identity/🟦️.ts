@@ -54,7 +54,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { installationDirectoryEmoji, installationDirectoryCollision } = await import("../../../../🧩️extension/🟦️.ts");
       const schema = JSON.parse(readFileSync(new URL("../../🧩️extension/📐️directory.schema.json", source.url), "utf8"));
       const vector = JSON.parse(readFileSync(new URL("../../🧩️extension/🧪️installation.json", source.url), "utf8"));
-      const cases = JSON.parse(readFileSync(new URL("../📇️registry/📦️deployment/🧪️cases.json", source.url), "utf8"));
+      const cases = JSON.parse(readFileSync(new URL("../📇️registry/🧫️fixtures/📦️deployment/🧪️cases.json", source.url), "utf8"));
       const validate = new Ajv({ strict: true }).compile(schema);
       for (const name of [...cases.validDirectories, ...cases.invalidDirectories]) {
         const valid = cases.validDirectories.includes(name);

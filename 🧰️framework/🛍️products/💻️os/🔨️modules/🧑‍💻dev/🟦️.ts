@@ -42,6 +42,11 @@ const defaults = {
 };
 
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️source-contract/🟦️.ts");
-  await registerTests1(import.meta.vitest, { PUZZLE_BOARD_SESSION_FACTORIES, appId, appRole, boot, brand, defaults, locks, pluginFilter, renderer }, { directory: import.meta.dir, url: import.meta.url });
+  const plugins = boot.plugins;
+  if (renderer !== "wgpu") {
+    const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
+    void bootFrameworkOs({ plugin: pluginFilter, plugins, surfaceSessionFactories: PUZZLE_BOARD_SESSION_FACTORIES, appId, appRole, locks, defaults, brand }).catch((error) => {
+      console.error("[DEBUG] os-dev react boot failed", error);
+    });
+  }
 }

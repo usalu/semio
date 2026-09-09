@@ -1,0 +1,18 @@
+{
+  "accepted": [
+    { "previewEvalText": null },
+    { "previewEvalText": "{\"node\":{\"value\":7}}" }
+  ],
+  "rejected": [
+    { "previewEvalText": 7 },
+    { "previewEvalText": "{}", "windowId": "payload-owned" }
+  ],
+  "configWithMisclassifiedField": {
+    "lodMode": "",
+    "showMode": "shaded",
+    "camera": { "x": 0, "y": 0, "zoom": 1 },
+    "previewCamera": { "position": [4, -4, 3], "target": [0, 0, 0], "fov": 45 },
+    "sunJson": "{}",
+    "previewEvalText": "{}"
+  }
+}

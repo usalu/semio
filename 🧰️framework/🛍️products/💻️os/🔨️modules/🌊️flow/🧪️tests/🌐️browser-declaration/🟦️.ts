@@ -27,7 +27,7 @@ type Field = { name: string; type: "utf8" | "optional-utf8" | "f64" | "u64" | "u
 type Contract = { operations: Record<string, number>; arguments: Record<string, Field[]> };
 const excluded = new Set(["open", "attachSurface", "renderFrame"]);
 const fieldTypes: Record<Field["type"], string> = { utf8: "string", "optional-utf8": "string | null", f64: "number", u64: "number", u32: "number", u8: "number", bool: "boolean", bytes: "ArrayBufferView | readonly number[]" };
-const contractPath = join(testFileUrlToPath(new URL(".", testSourceUrl)), "../../../🕸️wasm/🧫️fixtures/📡️abi.json");
+const contractPath = join(testFileUrlToPath(new URL(".", testSourceUrl)), "../../../🕸️wasm/🧬️schema/📡️abi.json");
 const declarationName = "../../../🕸️wasm/📦️packages/🟨️javascript/📝️flow-browser.d.ts";
 
 export function flowBrowserDeclaration(): string {

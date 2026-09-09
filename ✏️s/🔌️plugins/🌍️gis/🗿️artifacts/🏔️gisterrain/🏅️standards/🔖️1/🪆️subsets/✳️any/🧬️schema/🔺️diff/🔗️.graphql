@@ -1,16 +1,7 @@
-# 🧬️ GIS terrain diff schema — sparse field delta.
-
+# 🔺️ Sparse Terrain document changes; null means unchanged.
+# import GisTerrainArtifact from "../🔗️.graphql"
 type GisTerrainDiff {
   artifact: GisTerrainArtifact @state(class: ARTIFACT)
   exaggeration: Float @state(class: ARTIFACT)
   importedFeaturesJson: String @state(class: ARTIFACT)
-}
-
-type GisTerrainArtifact {
-  exaggeration: Float!
-  importedFeaturesJson: String!
-}
-
-type GisTerrainStringList {
-  values: [String!]!
 }

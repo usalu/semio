@@ -1,7 +1,7 @@
 //! 🔳️ Main-window option — the canvas grid group (visibility toggle, snap toggle, factor slider).
 //! Its command handlers live in `🎮️commands/👁️set-grid-visible`.
 
-use crate::editor::flow::config::FlowConfig;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::FLOW_PLAY_APP_ID;
 use semio_framework_plugin::{ActionDescriptor, WindowMeasure};
@@ -12,7 +12,7 @@ fn grid_action(action: &str) -> ActionDescriptor {
     ActionDescriptor { controller_id: FLOW_PLAY_APP_ID.into(), action: action.into(), args: None }
 }
 
-pub fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
+pub fn measure(config: &FlowMainWindowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "flow-play-measures.grid".into(),
         label: labels.grid.into(),

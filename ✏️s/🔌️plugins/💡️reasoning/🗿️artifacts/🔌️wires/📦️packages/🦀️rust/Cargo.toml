@@ -15,7 +15,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-replication.workspace = true
+replication = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-ui-contract.workspace = true
 semio-framework-job.workspace = true
 semio-s-artifact-stdio-csv = { workspace = true }

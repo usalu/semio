@@ -7,7 +7,7 @@
       "committed": { "snapshots": 20, "diffs": 6 },
       "document": {
         "gK": 45,
-        "qK": { "childId": "actions-a", "target": { "artifactId": "variable-actions", "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "table" } } },
+        "qK": { "childId": "actions-a", "target": { "artifactId": "actions-a", "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "table" } } },
         "resistanceKn": 250,
         "consequenceClass": 2,
         "annex": "De",
@@ -26,7 +26,7 @@
         "occupants": 4,
         "hT": 92.5,
         "hV": 40.75,
-        "climate": { "childId": "climate-a", "target": { "artifactId": "monthly-climate", "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "table" } } },
+        "climate": { "childId": "climate-a", "target": { "artifactId": "climate-a", "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "table" } } },
         "internalGainsWM2": 3.5,
         "solarGainsKwh": 84,
         "systemLossesKwh": 800,

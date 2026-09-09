@@ -126,7 +126,7 @@ class ConfigMutationSourceScript extends BundleScript {
     const declarations = filesBelow(configRoot).filter((path) => path.endsWith(".rs")).flatMap((path) => [...readFileSync(path, "utf8").matchAll(/pub struct NormConfig\b/g)].map(() => path));
     if (declarations.length !== 1 || declarations[0] !== join(configRoot, "🧬️schema", "🦀️.rs")) throw new Error("NormConfig must have one schema-owned Rust declaration");
     const schema = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "☑️change-selected-check-index", "🧬️schema", "🔣️.json"), "utf8"));
-    const fixture = JSON.parse(readFileSync(join(configRoot, "🧪️tests", "🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(configRoot, "🧫️fixtures", "🔣️.json"), "utf8"));
     const aggregate = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "🔣️.json"), "utf8"));
     const ajv = new Ajv({ allErrors: true, strict: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
@@ -175,7 +175,7 @@ type SurfaceFixture = { contractId: "semio.norm.surface-render/v1"; rows: Surfac
 
 class SurfaceRenderSourceScript extends BundleScript {
   run(): void {
-    const testRoot = join(this.root, "..", "..", "🖥️app-surface", "🧪️tests");
+    const testRoot = join(this.root, "..", "..", "🖥️app-surface", "🧫️fixtures");
     const module = JSON.parse(readFileSync(join(this.root, "..", "..", "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
     const fixture = JSON.parse(readFileSync(join(testRoot, "🔣️.json"), "utf8")) as SurfaceFixture;
     const pluginRoot = readFileSync(join(this.root, "..", "..", "🦀️.rs"), "utf8");
@@ -238,7 +238,7 @@ class DescribeScript extends BundleScript {
 class MutationLeafTaxonomyGenerateScript extends BundleScript {
   run(): void {
     const value = taxonomy(this.root);
-    writeFileSync(join(this.root, "📇️mutation-leaf-taxonomy-v1.json"), `${JSON.stringify(value, null, 2)}\n`);
+    writeFileSync(join(this.root, "../../🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"), `${JSON.stringify(value, null, 2)}\n`);
     console.log(`norm mutation-leaf taxonomy generated: ${value.rows.length} payloads`);
   }
 }
@@ -247,7 +247,7 @@ class MutationLeafTaxonomyCheckScript extends BundleScript {
   run(): void {
     const actual = taxonomy(this.root);
     const module = JSON.parse(readFileSync(join(this.root, "../../🧬️schema/🔣️.json"), "utf8"));
-    const fixture = JSON.parse(readFileSync(join(this.root, "📇️mutation-leaf-taxonomy-v1.json"), "utf8")) as MutationLeafTaxonomy;
+    const fixture = JSON.parse(readFileSync(join(this.root, "../../🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"), "utf8")) as MutationLeafTaxonomy;
     const ajv = new Ajv({ allErrors: true, strict: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);

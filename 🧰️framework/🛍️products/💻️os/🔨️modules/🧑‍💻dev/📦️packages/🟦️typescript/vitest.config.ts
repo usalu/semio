@@ -40,10 +40,10 @@ export default defineConfig({
     /** 🎚️Only the level-gated cases touch a DOM (Canvas PNG pixel parity); the `quick` subset is pure
      * Node helper logic, and paying jsdom's ~7 s environment setup there costs a quarter of the level's
      * whole wall-clock budget. */
-    environment: testLevelAtLeast("long") ? "jsdom" : "node",
+    environment: process.env.SEMIO_BUILD_INSPECTION_OUTPUT ? "node" : testLevelAtLeast("long") ? "jsdom" : "node",
     // 🩹️ In-source files belong only in `includeSource`; listing them in BOTH keys made Vitest
     // collect them twice. Dedicated regression files remain ordinary `include` entries.
-    include: ["🧹️config.test.ts"],
+    include: ["../../🧪️tests/🧹️config/🟦️.ts"],
     includeSource: inSource,
     coverage: { include: ["📜️script.ts", ...WIT_MAPPING_IN_SOURCE] },
   },

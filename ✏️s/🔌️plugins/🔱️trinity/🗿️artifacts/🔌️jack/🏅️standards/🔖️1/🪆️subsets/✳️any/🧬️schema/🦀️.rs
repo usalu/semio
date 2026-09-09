@@ -22,7 +22,7 @@ pub struct JackArtifact {
     #[state(artifact)]
     pub camera: Camera,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.graph")]
+    #[child(kind = "s.stdio.semio")]
     pub content: JackContentChild,
     #[state(artifact)]
     pub root_node_id: Option<String>,

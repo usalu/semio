@@ -37,6 +37,9 @@ class ChildIdentityCheckScript extends BundleScript {
           package: "semio-s-artifact-flow-flow",
           target: { kind: "lib" },
           laws: [
+            "command_ids_are_unique_and_match_the_declared_manifest_actions",
+            "every_command_round_trips_through_text_and_binary",
+            "every_printed_op_line_starts_with_the_rows_wire_keyword",
             "scene_identity_matches_node_crypto_and_adopts_the_exact_root",
             "every_artifact_variant_matches_serde_bytes_including_nested_chrome",
             "large_unicode_key_and_label_scene_matches_serde_without_an_ordinal_map_scan",
@@ -61,7 +64,18 @@ class ChildEditCheckScript extends BundleScript {
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
       cargoArgs: segments,
-      groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["add_widget_dispatches_one_typed_child_edit_without_repointing_parent_content"] }],
+      groups: [
+        {
+          package: "semio-s-artifact-flow-flow",
+          target: { kind: "lib" },
+          laws: [
+            "child_add_widget_uses_the_smallest_available_identity_and_the_descriptor_default_payload",
+            "child_add_widget_preserves_every_descriptor_payload_and_neuron_port_default",
+            "child_add_widget_rejects_an_explicit_identity_collision",
+            "add_widget_dispatches_one_typed_child_edit_without_repointing_parent_content",
+          ],
+        },
+      ],
     });
     console.log(`[DEBUG] Flow typed child edit native law: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
@@ -71,11 +85,12 @@ class AddWidgetRetainedCheckScript extends BundleScript {
   async oracle(): Promise<void> {
     const root = new URL("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/", import.meta.url);
     const fixture = await Bun.file(new URL("🧫️fixtures/🧵️add-widget-retained/🔣️.json", root)).json();
-    const schemaModule = await Bun.file(new URL("../🧬️schema/🔣️.json", root)).json();
+    const schemaModule = await Bun.file(new URL("🧫️fixtures/🧬️schema/🔣️.json", root)).json();
     const ajv = new Ajv({ strict: true, allErrors: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-    ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
+    for (const keyword of ["x-semio-state", "x-semio-child-kind", "x-semio-child-standard", "x-semio-child-subset"]) ajv.addKeyword({ keyword, metaSchema: { type: "string" } });
     for (const numeric of ["double", "float", "int32", "int64", "uint32", "uint64"]) ajv.addFormat(numeric, true);
+    for (const schema of ["🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"]) ajv.addSchema(await Bun.file(join(this.repoRoot, schema)).json());
     const validate = ajv.addSchema(schemaModule).compile({ $ref: `${schemaModule.$id}#/$defs/FlowAddWidgetRetained` });
     assert(validate(fixture), JSON.stringify(validate.errors));
     const deny = { accepted: false, sessionCalls: 0, parentMutations: 0, childGroups: 0, visibleGroups: 0 };

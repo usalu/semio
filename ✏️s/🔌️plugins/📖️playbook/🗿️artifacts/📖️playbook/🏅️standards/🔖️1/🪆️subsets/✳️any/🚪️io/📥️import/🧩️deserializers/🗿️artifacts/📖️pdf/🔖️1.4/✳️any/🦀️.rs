@@ -7,6 +7,6 @@ pub fn deserialize_bytes(bytes: &[u8]) -> Result<PlaybookSnapshot, String> {
     let mut snap = empty_playbook_snapshot();
     snap.id = "playbook-import".into();
     let _ = ("pdf-import", b"pdf");
-    snap.title = Some(format!("Imported pdf"));
+    snap.title = Some("Imported pdf".to_string());
     Ok(snap)
 }

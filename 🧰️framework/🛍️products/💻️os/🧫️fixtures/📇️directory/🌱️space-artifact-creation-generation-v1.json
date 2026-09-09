@@ -1,0 +1,51 @@
+{
+  "schema": "semio.os.space-artifact-creation-generation-fixture/v1",
+  "catalogGenerationId": "3333333333333333333333333333333333333333333333333333333333333333",
+  "rotatedCatalogGenerationId": "4444444444444444444444444444444444444444444444444444444444444444",
+  "request": {
+    "kind": "space-artifact-create",
+    "requestId": "11111111111111111111111111111111",
+    "spaceId": "space-a",
+    "expectedCatalogGenerationId": "3333333333333333333333333333333333333333333333333333333333333333",
+    "kindId": "s.gis.gismap",
+    "name": "Shared Map"
+  },
+  "accepted": {
+    "kind": "space-artifact-creation-status",
+    "requestId": "11111111111111111111111111111111",
+    "spaceId": "space-a",
+    "catalogGenerationId": "3333333333333333333333333333333333333333333333333333333333333333",
+    "phase": "accepted"
+  },
+  "ready": {
+    "kind": "space-artifact-creation-status",
+    "requestId": "11111111111111111111111111111111",
+    "spaceId": "space-a",
+    "catalogGenerationId": "3333333333333333333333333333333333333333333333333333333333333333",
+    "phase": "ready",
+    "ready": {
+      "documentId": "artifact-22222222222222222222222222222222",
+      "kindId": "s.gis.gismap",
+      "artifactSchema": "s.gis.gismap",
+      "parentDialect": {
+        "artifactKind": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any"
+      }
+    }
+  },
+  "initialPostConflict": {
+    "httpStatus": 409,
+    "workerResponseKind": "space-artifact-creation-catalog-refresh-required",
+    "terminalPhase": "failed",
+    "emissionOrder": ["catalog-refresh-required", "failed"],
+    "catalogRefresh": true,
+    "autoResubmit": false
+  },
+  "cases": [
+    { "name": "current", "requestGeneration": "current", "statusGeneration": "current", "admitted": true },
+    { "name": "missing-request", "requestGeneration": "missing", "statusGeneration": "current", "admitted": false },
+    { "name": "missing-status", "requestGeneration": "current", "statusGeneration": "missing", "admitted": false },
+    { "name": "rotated-status", "requestGeneration": "current", "statusGeneration": "rotated", "admitted": false }
+  ]
+}

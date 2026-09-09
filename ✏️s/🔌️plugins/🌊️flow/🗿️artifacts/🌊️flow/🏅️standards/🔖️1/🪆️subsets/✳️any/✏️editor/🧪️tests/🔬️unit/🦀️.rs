@@ -43,13 +43,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     )
     .await;
     assert!(started.mutations.is_empty(), "retained addWidget must not publish through its immediate invocation result");
-    let settled = semio_framework_plugin::testkit::settle_registered_typed_operation(&mut app, 1).await;
-    if let Err(error) = &settled {
-        let violations = semio_framework_trace::Watchdog::violations();
-        semio_framework_plugin::testkit::close_registered_fixture_app(&mut app);
-        panic!("retained addWidget publication and exact ACK: {error:?}; callback violations: {violations:?}");
-    }
-    let lanes = settled.expect("retained addWidget publication and exact ACK").lanes;
+    let lanes = semio_framework_plugin::testkit::settle_registered_typed_operation(&mut app, 1).await.expect("retained addWidget publication and exact ACK").lanes;
     assert_eq!(lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Terminal]);
     assert!(!PluginApp::has_pending_typed_operations(&app));
     let parent_after = app.snapshot().expect("Flow parent after retained addWidget");
@@ -112,8 +106,8 @@ fn delete_cascade_inverse_restores_exact_edge_order_and_label() {
 /// 🗂️ Serde is the independent Rust JSON oracle for the language-agnostic Flow/Note route census.
 #[test]
 fn action_cohort_fixtures_match_the_exact_route_census() {
-    let flow: Value = serde_json::from_str(include_str!("../../../../../../../../../🎬️action-cohort/🔣️.json")).expect("Flow action-cohort fixture must be valid JSON");
-    let note: Value = serde_json::from_str(include_str!("../../../../../../../../../../🗒️note/🧪️action-cohort/🔣️.json")).expect("Note action-cohort fixture must be valid JSON");
+    let flow: Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🎬️action-cohort/🔣️.json")).expect("Flow action-cohort fixture must be valid JSON");
+    let note: Value = serde_json::from_str(include_str!("../../../../../../../../../../🗒️note/🧫️fixtures/🧪️action-cohort/🔣️.json")).expect("Note action-cohort fixture must be valid JSON");
     for (fixture, owner, total, framework_owned) in [(&flow, "FlowPlayApp", 37_u64, 0_usize), (&note, "NotePlayApp", 36_u64, 0_usize)] {
         assert_eq!(fixture["owner"], owner);
         assert_eq!(fixture["routeCount"].as_u64(), Some(total));
@@ -144,7 +138,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 37, "every FlowCommand row must be covered by every_command()");
+    assert_eq!(ids, FlowCommand::TOOL_JOB_IDS, "every FlowCommand row must be covered in declaration order by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -215,7 +209,6 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         }),
         FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: vec![spotlight_commit::FlowNodeGraphEditOp::DeleteSelection] }),
         FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
-        FlowCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         FlowCommand::Evaluate(evaluate::Evaluate {}),
         FlowCommand::FocusSelection(focus_selection::FocusSelection {}),
         FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 } }),
@@ -237,7 +230,6 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
         FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
         FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }),
-        FlowCommand::DuplicateWidgetStep(duplicate_widget_step::DuplicateWidgetStep { generation: 7, phase: "widget".into(), scan_index: 64, suffix: 2, candidate_id: "n1-copy-2".into(), ..Default::default() }),
     ]
 }
 //#endregion 🔖️CommandSurface
@@ -282,7 +274,7 @@ async fn graph_interaction_domain_is_declared_topology_and_scoped_to_the_main_wi
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
     let document = FlowSnapshot::default();
-    let config = FlowConfig::default();
+    let config = FlowMainWindowConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
@@ -327,7 +319,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 
 #[semio_framework_async_macros::async_test]
 async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
-    let config = FlowConfig::default();
+    let config = FlowMainWindowConfig::default();
     let fixture = FlowSnapshot::default();
     let session = FlowEvalSession::new();
     let mut host = host_from_snapshot(&fixture, &config, &session);

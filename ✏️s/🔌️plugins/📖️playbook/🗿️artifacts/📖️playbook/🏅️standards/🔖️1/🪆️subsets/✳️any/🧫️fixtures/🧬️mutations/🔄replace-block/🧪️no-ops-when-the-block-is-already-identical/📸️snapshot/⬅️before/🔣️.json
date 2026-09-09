@@ -6,7 +6,7 @@
   "document": {
     "childId": "playbook-document-replace-block-identical",
     "target": {
-      "artifactId": "playbook-document",
+      "artifactId": "playbook-document-replace-block-identical",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -17,7 +17,7 @@
   "flow": {
     "childId": "playbook-flow-replace-block-identical",
     "target": {
-      "artifactId": "playbook-flow",
+      "artifactId": "playbook-flow-replace-block-identical",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

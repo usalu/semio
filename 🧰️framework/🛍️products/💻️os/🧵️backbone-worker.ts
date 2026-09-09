@@ -98,6 +98,7 @@ import type {
   DirectoryCommandReceiptV1,
   DirectoryCommandRequestV1,
   DirectoryCommandResultV1,
+  DirectorySpaceAdministrationPageV1,
   DocumentExecutionTargetLeaseFieldsV1,
   DocumentExecutionTargetProgressV1,
   DocumentExecutionTargetStatusCodeV1,
@@ -133,6 +134,7 @@ import {
   DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,
   DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1,
   directoryCommandErrorIsTransient,
+  directoryAdministrationCommandAllowedV1,
   directoryCommandRequestJson,
   directoryCommandSha256,
   documentExecutionTargetStatusRoleV1,
@@ -4207,16 +4209,24 @@ async function driveSpaceArtifactCreation(operation: SpaceArtifactCreationOperat
     }
     try {
       let response: FetchTimeoutResponse;
+      let initialPost = false;
       if (operation.cancelRequested && !operation.cancelSent) {
         operation.cancelSent = true;
         response = await spaceArtifactCreationFetch(operation, `/${operation.request.requestId}/cancel`, { method: "POST" });
       } else if (first) {
         first = false;
+        initialPost = true;
         response = await spaceArtifactCreationFetch(operation, "", { method: "POST", headers: { "content-type": "application/json" }, body: requestBody });
       } else {
         response = await spaceArtifactCreationFetch(operation, `/${operation.request.requestId}`, { method: "GET" });
       }
+      if (!spaceArtifactCreationCurrent(operation)) return;
       if (!response.ok) {
+        if (initialPost && response.status === 409) {
+          post({ kind: "space-artifact-creation-catalog-refresh-required", requestId: operation.request.requestId, spaceId: operation.request.spaceId, catalogGenerationId: operation.request.expectedCatalogGenerationId });
+          settleSpaceArtifactCreation(operation, { ...operation.latest, phase: "failed" });
+          return;
+        }
         if (response.status >= 400 && response.status < 500) {
           settleSpaceArtifactCreation(operation, { ...operation.latest, phase: "failed" });
           return;
@@ -4662,6 +4672,8 @@ type DirectoryAdministrationOperationV1 = {
   abort: AbortController;
   phase: DirectoryAdministrationPhaseV1;
   canonicalJson: string | null;
+  page: DirectorySpaceAdministrationPageV1 | null;
+  pageRead: AbortController | null;
   receiptSha256: string | null;
   outcome: DirectoryCommandOutcomeV1 | null;
   inviteToken: string | null;
@@ -4696,7 +4708,10 @@ function terminateDirectoryAdministration(operation: DirectoryAdministrationOper
   if (operation.closed) return;
   operation.closed = true;
   operation.abort.abort(new Error("directory administration closed"));
+  operation.pageRead?.abort(new Error("directory administration closed"));
+  operation.pageRead = null;
   operation.canonicalJson = null;
+  operation.page = null;
   operation.receiptSha256 = null;
   operation.outcome = null;
   operation.inviteToken = null;
@@ -4707,6 +4722,26 @@ function terminateDirectoryAdministration(operation: DirectoryAdministrationOper
   operation.phase = phase;
   if (directoryAdministration === operation) directoryAdministration = null;
   if (notify) postDirectoryAdministrationState(operation, code);
+}
+
+/** 🗑️ Settles the destructive command only from its exact request-bound accepted receipt. */
+function completeDirectoryAdministrationDeletion(operation: DirectoryAdministrationOperationV1, receipt: DirectoryCommandReceiptV1): void {
+  operation.closed = true;
+  operation.abort.abort(new Error("directory administration deleted"));
+  operation.pageRead?.abort(new Error("directory administration deleted"));
+  operation.pageRead = null;
+  operation.canonicalJson = null;
+  operation.page = null;
+  operation.receiptSha256 = receipt.receiptSha256;
+  operation.outcome = receipt.outcome;
+  operation.inviteToken = null;
+  operation.inviteCapabilityStatus = null;
+  operation.inviteTransferEpoch = null;
+  operation.requestId = null;
+  operation.authorPage = false;
+  operation.phase = "deleted";
+  if (directoryAdministration === operation) directoryAdministration = null;
+  postDirectoryAdministrationState(operation);
 }
 
 /** 🔎️ Returns the live operation for `operationEpoch`, or `null` when it has been replaced. */
@@ -4734,19 +4769,28 @@ function directoryAdministrationPageTermination(error: unknown, aborted: boolean
 async function loadDirectoryAdministrationPage(operationEpoch: number, cursor: string | undefined, loading: "loading" | "refreshing"): Promise<void> {
   const operation = liveDirectoryAdministration(operationEpoch);
   if (operation === null) return;
+  if (operation.requestId !== null || operation.phase === "submitting") {
+    postDirectoryAdministrationState(operation, "capacity");
+    return;
+  }
   const client = directoryClient;
   if (client === null) {
     terminateDirectoryAdministration(operation, "failed", "transport");
     return;
   }
+  const read = new AbortController();
+  operation.pageRead?.abort(new Error("directory administration page replaced"));
+  operation.pageRead = read;
   operation.phase = loading;
+  operation.page = null;
   operation.authorPage = false;
   postDirectoryAdministrationState(operation);
   try {
-    const page = await client.spaceAdministrationPage(operation.spaceId, cursor, { signal: operation.abort.signal });
+    const page = await client.spaceAdministrationPage(operation.spaceId, cursor, { signal: read.signal });
     const live = liveDirectoryAdministration(operationEpoch);
-    if (live === null || live !== operation) return;
+    if (live === null || live !== operation || operation.pageRead !== read) return;
     operation.canonicalJson = page.canonicalJson;
+    operation.page = page.page;
     operation.authorPage = page.page.access === "author";
     if (!operation.authorPage) {
       operation.inviteToken = null;
@@ -4756,9 +4800,11 @@ async function loadDirectoryAdministrationPage(operationEpoch: number, cursor: s
     operation.phase = "ready";
     postDirectoryAdministrationState(operation);
   } catch (error) {
-    if (operation.closed) return;
-    const termination = directoryAdministrationPageTermination(error, operation.abort.signal.aborted);
+    if (operation.closed || operation.pageRead !== read) return;
+    const termination = directoryAdministrationPageTermination(error, read.signal.aborted);
     terminateDirectoryAdministration(operation, termination.phase, termination.code);
+  } finally {
+    if (operation.pageRead === read) operation.pageRead = null;
   }
 }
 
@@ -4778,6 +4824,8 @@ function openDirectoryAdministration(operationEpoch: number, spaceId: string): v
     abort: new AbortController(),
     phase: "loading",
     canonicalJson: null,
+    page: null,
+    pageRead: null,
     receiptSha256: null,
     outcome: null,
     inviteToken: null,
@@ -4800,6 +4848,10 @@ async function submitDirectoryAdministrationCommand(operationEpoch: number, requ
   if (operation === null) return;
   if (operation.requestId !== null || operation.phase === "submitting") {
     postDirectoryAdministrationState(operation, "capacity");
+    return;
+  }
+  if (operation.phase !== "ready" || !directoryAdministrationCommandAllowedV1(operation.page, operation.spaceId, command)) {
+    postDirectoryAdministrationState(operation, "invalid");
     return;
   }
   const client = directoryClient;
@@ -4837,6 +4889,14 @@ async function submitDirectoryAdministrationCommand(operationEpoch: number, requ
   }
   const live = liveDirectoryAdministration(operationEpoch);
   if (live === null || live !== operation) return;
+  if (command.kind === "delete-space") {
+    if ((receipt.outcome !== "accepted" && receipt.outcome !== "previously-accepted") || receipt.result.kind !== "none") {
+      terminateDirectoryAdministration(operation, "failed", "invalid");
+      return;
+    }
+    completeDirectoryAdministrationDeletion(operation, receipt);
+    return;
+  }
   operation.requestId = null;
   operation.receiptSha256 = receipt.receiptSha256;
   operation.outcome = receipt.outcome;

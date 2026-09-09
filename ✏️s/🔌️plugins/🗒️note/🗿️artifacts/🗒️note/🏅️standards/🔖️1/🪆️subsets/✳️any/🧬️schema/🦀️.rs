@@ -94,24 +94,6 @@ impl NoteArtifact {
         }
     }
 
-    fn default_ui() -> Self {
-        Self {
-            schema: NOTE_DOCUMENT_SCHEMA.into(),
-            id: String::new(),
-            title: None,
-            blocks: Vec::new(),
-            grid_visible: Some(true),
-            grid_spacing: Some(32.0),
-            grid_subdivisions: Some(4.0),
-            grid_opacity: Some(0.35),
-            snap_enabled: Some(false),
-            snap_grid_spacing: Some(8.0),
-            pencil_width: Some(3.0),
-            eraser_radius: Some(12.0),
-            assets: BTreeMap::new(),
-            linked_artifact: None,
-        }
-    }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::NoteSnapshot) {

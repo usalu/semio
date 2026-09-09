@@ -1,0 +1,11 @@
+{
+  "title": "Procedural 3d End To End",
+  "emoji": "🧊️",
+  "status": "open",
+  "description": "Get the 🧊️generation3d artifact of the 🌀️procedural plugin (✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d) working end to end from a user perspective: the procedural 3d playground boots (react, then wgpu wasm), every window renders working content, all eight examples load and switch with live 3d preview, hover and selection work, editor actions dispatch at runtime, and the architecture is optimized wherever the app hits performance limits. Fleet: Fable 5.1 coordination, Opus 5 execution agents, Sonnet 5 read-only audit agents, maximum parallelism, working alongside other sessions on shared files.",
+  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
+  "sessions": ["⚪9f5f6952-6c25-4056-a743-773b3668812e"],
+  "client": "claude-code",
+  "llm": "fable-5-1",
+  "note": "Ticket bookkeeping done manually on disk: repo MCP CONNECT_TIMEOUT at session start (2026-09-09)."
+}

@@ -1,5 +1,5 @@
 /** 📝️ Flow editor — Generate-mode Form window: typed twin of `🦀️.rs`'s view-model. Mirrors
- * the pane's `render(fixture: &FlowSnapshot, config: &FlowConfig)` boundary — the input form for the
+ * the pane's `render(fixture: &FlowSnapshot, config: &FlowMainWindowConfig and FlowWindowTransient)` boundary — the input form for the
  * active generation, or a placeholder when no generation exists yet. */
 
 /** 📝️ The Form window's typed view-model — mirrors the Rust `render()` boundary's inputs. */

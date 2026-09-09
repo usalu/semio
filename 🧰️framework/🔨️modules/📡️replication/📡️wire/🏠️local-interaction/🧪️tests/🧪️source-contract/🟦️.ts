@@ -125,7 +125,7 @@ console.log(`[DEBUG] Local-interaction retained-update cases=${updateFixture.cas
 //#endregion 🩹️RetainedUpdateContract
 
 //#region 🔁️InteractionMutationLeaf
-const mutationLeaf = new URL("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state", import.meta.url);
+const mutationLeaf = new URL("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/", import.meta.url);
 const mutationDescriptor = await Bun.file(new URL("🔣️.json", mutationLeaf)).json();
 const mutationSchema = await Bun.file(new URL("🧬️schema/🔣️.json", mutationLeaf)).json();
 const mutationFixture = await Bun.file(new URL("🧫️fixtures/🔣️.json", mutationLeaf)).json();

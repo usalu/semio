@@ -657,10 +657,7 @@ where
     }
 }
 
-pub(crate) async fn committed_durable_group_decision_from_transaction<S: WalStorage>(
-    document: &ArtifactId,
-    mut transaction: db_wal::WalCommittedTransaction<'_, '_, S>,
-) -> Result<Option<ArtifactCommittedDurableGroupDecisionV1>, DbError> {
+pub(crate) async fn committed_durable_group_decision_from_transaction<S: WalStorage>(document: &ArtifactId, mut transaction: db_wal::WalCommittedTransaction<'_, '_, S>) -> Result<Option<ArtifactCommittedDurableGroupDecisionV1>, DbError> {
     let transaction_id = transaction.transaction_id();
     let segment_index = transaction.segment_index();
     let record_count = transaction.record_count();
@@ -714,10 +711,7 @@ where
     ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
 {
     Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
-    Recovering {
-        owner: ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
-        checkpoint: ArtifactDurableGroupRecoveredCheckpointV1,
-    },
+    Recovering { owner: ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, checkpoint: ArtifactDurableGroupRecoveredCheckpointV1 },
     Complete(store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
     Empty,
 }
@@ -761,8 +755,7 @@ where
     shared: Arc<ArtifactDurableGroupRecoveryTargetSharedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>,
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> ArtifactDurableGroupRecoveryDriverCoreV1
-    for ArtifactDurableGroupRecoveryTargetDriverV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> ArtifactDurableGroupRecoveryDriverCoreV1 for ArtifactDurableGroupRecoveryTargetDriverV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
     ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
@@ -782,10 +775,7 @@ where
             *state = current;
             return Ok(true);
         };
-        match recovery.advance(store::ArtifactStoreOneItemGrant {
-            maximum_items: 1,
-            maximum_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,
-        }) {
+        match recovery.advance(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES }) {
             ArtifactCommittedDurableGroupRecoveryAdvanceV1::Progress(_) | ArtifactCommittedDurableGroupRecoveryAdvanceV1::Blocked => {
                 *state = ArtifactDurableGroupRecoveryTargetStateV1::Recovering { owner: recovery, checkpoint };
                 Ok(false)
@@ -801,29 +791,17 @@ where
                 };
                 drop(recovery);
                 if terminal.document != self.shared.document {
-                    *state = ArtifactDurableGroupRecoveryTargetStateV1::Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(
-                        terminal.owners.parent,
-                        terminal.owners.drawing,
-                        terminal.owners.value,
-                    ));
+                    *state = ArtifactDurableGroupRecoveryTargetStateV1::Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(terminal.owners.parent, terminal.owners.drawing, terminal.owners.value));
                     return Err(DbError::Corrupt("committed durable group recovery returned a different document".to_string()));
                 }
                 if terminal.receipt != *checkpoint.receipt() {
-                    *state = ArtifactDurableGroupRecoveryTargetStateV1::Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(
-                        terminal.owners.parent,
-                        terminal.owners.drawing,
-                        terminal.owners.value,
-                    ));
+                    *state = ArtifactDurableGroupRecoveryTargetStateV1::Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(terminal.owners.parent, terminal.owners.drawing, terminal.owners.value));
                     return Err(DbError::Corrupt("committed durable group recovery returned a different receipt".to_string()));
                 }
                 let mut checkpoint = checkpoint;
                 checkpoint.already_applied = terminal.already_applied;
                 *self.shared.recovered_checkpoint.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(checkpoint);
-                *state = ArtifactDurableGroupRecoveryTargetStateV1::Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(
-                    terminal.owners.parent,
-                    terminal.owners.drawing,
-                    terminal.owners.value,
-                ));
+                *state = ArtifactDurableGroupRecoveryTargetStateV1::Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(terminal.owners.parent, terminal.owners.drawing, terminal.owners.value));
                 Ok(true)
             }
         }
@@ -880,8 +858,7 @@ where
     request: Option<Pin<Box<db_actor::AskFuture<ArtifactMessage, Result<(), DbError>>>>>,
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
-    ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
     ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
@@ -890,26 +867,19 @@ where
     ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
     ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
 {
-    fn new(
-        document: ArtifactId,
-        admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
-    ) -> (Self, ArtifactDurableGroupRecoveryDriverV1) {
+    fn new(document: ArtifactId, admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>) -> (Self, ArtifactDurableGroupRecoveryDriverV1) {
         let shared = Arc::new(ArtifactDurableGroupRecoveryTargetSharedV1 {
             document,
             state: std::sync::Mutex::new(ArtifactDurableGroupRecoveryTargetStateV1::Admitting(admission)),
             scan_complete: std::sync::atomic::AtomicBool::new(false),
             recovered_checkpoint: std::sync::Mutex::new(None),
         });
-        let driver = ArtifactDurableGroupRecoveryDriverV1 {
-            owner: Box::new(ArtifactDurableGroupRecoveryTargetDriverV1 { shared: shared.clone() }),
-        };
+        let driver = ArtifactDurableGroupRecoveryDriverV1 { owner: Box::new(ArtifactDurableGroupRecoveryTargetDriverV1 { shared: shared.clone() }) };
         (Self { shared, request: None }, driver)
     }
 
     fn driver(&self) -> ArtifactDurableGroupRecoveryDriverV1 {
-        ArtifactDurableGroupRecoveryDriverV1 {
-            owner: Box::new(ArtifactDurableGroupRecoveryTargetDriverV1 { shared: self.shared.clone() }),
-        }
+        ArtifactDurableGroupRecoveryDriverV1 { owner: Box::new(ArtifactDurableGroupRecoveryTargetDriverV1 { shared: self.shared.clone() }) }
     }
 
     pub async fn advance(&mut self) -> Result<bool, DbError> {
@@ -922,9 +892,7 @@ where
         Ok(self.shared.scan_complete.load(std::sync::atomic::Ordering::Acquire))
     }
 
-    pub fn take_terminal_owners(
-        &mut self,
-    ) -> Option<store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+    pub fn take_terminal_owners(&mut self) -> Option<store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
         if self.request.is_some() || !self.shared.scan_complete.load(std::sync::atomic::Ordering::Acquire) {
             return None;
         }
@@ -941,9 +909,7 @@ where
 
     /// 🧹 Returns exact Stores only when a failed scan has no accepted committed witness in
     /// flight. Once a witness is accepted, recovery is non-cancellable and must be resumed.
-    pub fn take_idle_owners(
-        &mut self,
-    ) -> Option<store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+    pub fn take_idle_owners(&mut self) -> Option<store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
         if self.request.is_some() {
             return None;
         }
@@ -968,10 +934,7 @@ where
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        matches!(
-            &*self.shared.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner),
-            ArtifactDurableGroupRecoveryTargetStateV1::Empty
-        )
+        matches!(&*self.shared.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner), ArtifactDurableGroupRecoveryTargetStateV1::Empty)
     }
 }
 //#endregion 🔖️Receipt
@@ -2064,8 +2027,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                                 for fragment in bytes.fragments() {
                                     canonical_pack.extend_from_slice(fragment);
                                 }
-                                let record = store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(canonical_pack)
-                                    .map_err(|error| DbError::Corrupt(format!("committed durable group decision is invalid: {error}")))?;
+                                let record = store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(canonical_pack).map_err(|error| DbError::Corrupt(format!("committed durable group decision is invalid: {error}")))?;
                                 if record.document().artifact_id != core_id.0 {
                                     return Err(DbError::Corrupt("committed durable group decision targets a different replay document".to_string()));
                                 }
@@ -2085,12 +2047,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                             return Err(DbError::Corrupt("durable group decision must be the sole committed transaction body".to_string()));
                         }
                         seen = seen.checked_add(1).ok_or_else(|| DbError::LimitExceeded("artifact replay head sequence"))?;
-                        let receipt = store::durable_group::DurableOwnedGroupJournalReceiptV1 {
-                            anchor_sha256: record.anchor_sha256().to_string(),
-                            decision_sha256: record.decision_sha256().to_string(),
-                            transaction_id,
-                            segment_index,
-                        };
+                        let receipt = store::durable_group::DurableOwnedGroupJournalReceiptV1 { anchor_sha256: record.anchor_sha256().to_string(), decision_sha256: record.decision_sha256().to_string(), transaction_id, segment_index };
                         let duplicate = engine.durable_group_receipts.insert(receipt.decision_sha256.clone(), receipt).is_some();
                         if !duplicate {
                             replay_frontier = Frontier {
@@ -3207,12 +3164,9 @@ impl HistoryReplayReservation {
                 let entries = cursor.entries.as_ref().map(Vec::capacity);
                 let source = cursor.source_pages.as_ref().map(Vec::capacity);
                 match (result, operations, entries, source) {
-                    (Some(result), Some(operations), Some(entries), Some(source)) => Some((
-                        (result * size_of::<Option<Vec<u8>>>()) as u64,
-                        (operations * size_of::<HistoryTextRange>()) as u64,
-                        (entries * size_of::<ArtifactHistoryEntry>()) as u64,
-                        (source * size_of::<Option<Vec<u8>>>()) as u64,
-                    )),
+                    (Some(result), Some(operations), Some(entries), Some(source)) => {
+                        Some(((result * size_of::<Option<Vec<u8>>>()) as u64, (operations * size_of::<HistoryTextRange>()) as u64, (entries * size_of::<ArtifactHistoryEntry>()) as u64, (source * size_of::<Option<Vec<u8>>>()) as u64))
+                    }
                     _ => None,
                 }
             })

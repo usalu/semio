@@ -693,7 +693,7 @@
   "frozenCoordinateEvidenceContracts": {
     "readme-current-source-revision-input": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🔖️readme-current-source-revision/🔣️.json",
-      "sha256": "7697e8654fa60d6d5befcd501b0ff3a629251a51207e7fc9410344b5870d15fb",
+      "sha256": "1d9700f8bcdebaa4622373c85faa58bf5d626cee34fc19cf57310feba543f3d7",
       "schemaVersion": 1,
       "coordinates": [
         {
@@ -708,7 +708,7 @@
     },
     "readme-reviewed-expectation-input": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/👀️readme-reviewed-fixture-inputs/🎯️reviewed-expectations/🔣️.json",
-      "sha256": "7c6c64ee9bb155ec4180e6bb9e476cbca84fe24752c868eb28ec53a6ee73f62c",
+      "sha256": "b2a6129ad3abb7d1ea6140a7050c2200b0c29f5ab178bad7fe81f02cbcbdd0a3",
       "schemaVersion": 1,
       "coordinates": [
         {
@@ -6442,24 +6442,6 @@
       ],
       "source": "registry"
     },
-    "puzzle-publication-authority": {
-      "ownerKindIds": [
-        "distribution-puzzle"
-      ],
-      "memberNames": [
-        "🔏️publication-authority"
-      ],
-      "source": "registry"
-    },
-    "plugin-publication-authority": {
-      "ownerKindIds": [
-        "members-of-plugins"
-      ],
-      "memberNames": [
-        "🔏️publication-authority"
-      ],
-      "source": "registry"
-    },
     "cad-typology-definitions": {
       "ownerKindIds": [
         "typologies"
@@ -7248,7 +7230,6 @@
         "🧮️set-algorithm",
         "🧮️set-analysis-settings",
         "🧮️set-eval-outputs",
-        "🧰️set-active",
         "🧰️set-active-utility",
         "🧰️utility",
         "🧱️add-bar",
@@ -10779,8 +10760,6 @@
         "subset"
       ],
       "memberNames": [
-        "🗄️retained-jobs",
-        "🧪️retained-jobs",
         "🧵️simulation-session"
       ],
       "source": "registry"
@@ -12282,8 +12261,8 @@
   "semanticPackageProjectionContracts": {
     "nested-cargo-packages-v1": {
       "contractKind": "exact-nested-cargo-package-catalog",
-      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📽️nested-cargo-package-projection/🔣️.json",
-      "authorityCatalogSha256": "490a3abe1202d10258e6ec972b16ffd76d376b914a80b42250149f2776e4ecc3",
+      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json",
+      "authorityCatalogSha256": "136f78b1002df27bc05863123c6197ea5b957ac0a030cb4afa6d1ba5e1215572",
       "packageIds": [
         "wgpu-renderer",
         "jcoprobe-guest"
@@ -13192,7 +13171,7 @@
     },
     "readme-license-owner-leaves-v1": {
       "contractKind": "exact-owner-path-catalog",
-      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚖️readme-license-owner-authority/🔣️.json",
+      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
       "authorityCatalogSha256": "2dcb31628412a9e95b4adfc8756d8fbe9dfa1b397742b3f8a47c603ad15ccc79",
       "currentSourceRevisions": {
         "testing-readme-protocol-v2-reviewed": {
@@ -13210,8 +13189,8 @@
             "size": 12511,
             "mode": "0644"
           },
-          "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🗺️testing-readme-coordinates/🔣️.json",
-          "expectationsSha256": "7c6c64ee9bb155ec4180e6bb9e476cbca84fe24752c868eb28ec53a6ee73f62c"
+          "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🗺️testing-readme-coordinates/🔣️.json",
+          "expectationsSha256": "b2a6129ad3abb7d1ea6140a7050c2200b0c29f5ab178bad7fe81f02cbcbdd0a3"
         }
       },
       "sourceFileKindId": "markdown",
@@ -17917,7 +17896,7 @@
       "expires": null
     },
     "jco-vendor-cli": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🪞️preview2-shim/cli.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/cli.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored CLI module",
       "configurability": "unconfigurable",
@@ -17928,7 +17907,7 @@
       "expires": null
     },
     "jco-vendor-clocks": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🪞️preview2-shim/clocks.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/clocks.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored clock module",
       "configurability": "unconfigurable",
@@ -17939,7 +17918,7 @@
       "expires": null
     },
     "jco-vendor-config": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🪞️preview2-shim/config.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/config.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored configuration module",
       "configurability": "unconfigurable",
@@ -17950,7 +17929,7 @@
       "expires": null
     },
     "jco-vendor-environment": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🪞️preview2-shim/environment.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/environment.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored environment module",
       "configurability": "unconfigurable",
@@ -17961,7 +17940,7 @@
       "expires": null
     },
     "jco-vendor-filesystem": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🪞️preview2-shim/filesystem.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/filesystem.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored filesystem module",
       "configurability": "unconfigurable",
@@ -17972,7 +17951,7 @@
       "expires": null
     },
     "jco-vendor-http": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🪞️preview2-shim/http.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/http.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored HTTP module",
       "configurability": "unconfigurable",
@@ -17983,7 +17962,7 @@
       "expires": null
     },
     "jco-vendor-index": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🪞️preview2-shim/index.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/index.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored public module",
       "configurability": "unconfigurable",
@@ -17994,7 +17973,7 @@
       "expires": null
     },
     "jco-vendor-io": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🪞️preview2-shim/io.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/io.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored IO module",
       "configurability": "unconfigurable",
@@ -18005,7 +17984,7 @@
       "expires": null
     },
     "jco-vendor-random": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🪞️preview2-shim/random.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/random.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored random module",
       "configurability": "unconfigurable",
@@ -18016,7 +17995,7 @@
       "expires": null
     },
     "jco-vendor-sockets": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🪞️preview2-shim/sockets.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/sockets.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored sockets module",
       "configurability": "unconfigurable",
@@ -24410,7 +24389,7 @@
         "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
         "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📽️nested-cargo-package-projection/🔣️.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json"
       ],
       "outputRoots": [
         {

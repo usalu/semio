@@ -1,9 +1,8 @@
-
 use super::super::super::DbIoBackendControl;
 use super::*;
 use std::sync::{
-    Arc,
     atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 
 struct Counter(AtomicUsize);

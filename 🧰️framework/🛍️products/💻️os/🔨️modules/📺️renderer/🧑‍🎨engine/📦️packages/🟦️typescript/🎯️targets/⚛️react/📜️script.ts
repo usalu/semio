@@ -113,8 +113,9 @@ class ArtifactCreationProgressCheckScript extends BundleScript {
 
 /** 📇️ Proves the visible retained Home identity/ACK bridge and language-neutral boundaries. */
 export function directoryHomeBootstrapOracle(repoRoot: string): number {
-  const contractRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📇️directory-bootstrap");
-  const fixture = JSON.parse(readFileSync(join(contractRoot, "🔣️.json"), "utf8")) as {
+  const shellHostRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost");
+  const contractRoot = join(shellHostRoot, "📇️directory-bootstrap");
+  const fixture = JSON.parse(readFileSync(join(shellHostRoot, "🧫️fixtures/📇️directory-bootstrap/🔣️.json"), "utf8")) as {
     receipt: Readonly<Record<string, unknown>>;
     identities: Readonly<Record<"a" | "b", Readonly<{ userId: string; displayName: string }>>>;
     hostile: readonly { readonly id: string; readonly patch: Readonly<Record<string, unknown>> }[];
@@ -238,8 +239,9 @@ class DirectoryInviteCapabilityCheckScript extends BundleScript {
 
 /** 👥️ Proves exact-scope lifecycle keys and worker-verified host-only presence projection. */
 export function scopedPresenceOracle(repoRoot: string): number {
-  const contractRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/👥️presence-scope");
-  const fixture = JSON.parse(readFileSync(join(contractRoot, "🔣️.json"), "utf8")) as {
+  const shellHostRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost");
+  const contractRoot = join(shellHostRoot, "👥️presence-scope");
+  const fixture = JSON.parse(readFileSync(join(shellHostRoot, "🧫️fixtures/👥️presence-scope/🔣️.json"), "utf8")) as {
     documentId: string;
     cases: readonly { readonly scope: { readonly spaceId: string; readonly documentId: string }; readonly runtimeKey: string; readonly surface: string }[];
     close: { readonly clearsRuntimeKey: string; readonly preservesRuntimeKey: string };

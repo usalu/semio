@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "initial": 0,
+      "after": 7
+    },
+    {
+      "initial": 9,
+      "after": 11
+    }
+  ]
+}

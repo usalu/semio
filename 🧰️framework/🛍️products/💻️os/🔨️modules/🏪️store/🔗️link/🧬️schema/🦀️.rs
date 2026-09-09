@@ -26,4 +26,3 @@ pub enum LinkPin {
     Checkpoint { id: String },
     Snapshot { blob: BlobRef },
 }
-

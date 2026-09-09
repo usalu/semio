@@ -1,0 +1,24 @@
+{
+  "schema": "semio.shell.space-administration-delete-space-fixture.v1",
+  "spaceId": "space-admin-01",
+  "acceptedOutcomes": ["accepted", "previously-accepted"],
+  "refusedPhases": ["loading", "submitting", "receipt", "refreshing", "cancelled", "denied", "stale", "failed", "deleted"],
+  "locales": [
+    {
+      "locale": "en",
+      "delete": "Delete space",
+      "warning": "Deleting this space permanently removes it for every member.",
+      "confirm": "Delete space permanently",
+      "cancel": "Keep space",
+      "deleted": "Space deletion was accepted by the server."
+    },
+    {
+      "locale": "de",
+      "delete": "Space löschen",
+      "warning": "Wenn du diesen Space dauerhaft löschst, wird er für alle Mitglieder entfernt.",
+      "confirm": "Space dauerhaft löschen",
+      "cancel": "Space behalten",
+      "deleted": "Die Löschung des Space wurde vom Server angenommen."
+    }
+  ]
+}

@@ -98,7 +98,6 @@ Feature: Apply every typed cad composition mutation twice — once in Rust, once
       | move-reference                 | 📍move-reference/📍️moves-the-shape-reference-off-origin                           |
       | replace-reference-media        | 🖇️replace-reference-media/🖼️reattaches-the-shape-reference-to-a-new-plan          |
       | replace-references             | 📎replace-references/🔄️swaps-the-shape-reference-list                             |
-      | change-active-model-definition | 🎯change-active-model-definition/🏗️switches-the-active-pane-to-the-building-model |
 
   @id-inverse
   @level-exhaustive
@@ -138,7 +137,6 @@ Feature: Apply every typed cad composition mutation twice — once in Rust, once
       | move-reference                 | 📍move-reference/📍️moves-the-shape-reference-off-origin                           |
       | replace-reference-media        | 🖇️replace-reference-media/🖼️reattaches-the-shape-reference-to-a-new-plan          |
       | replace-references             | 📎replace-references/🔄️swaps-the-shape-reference-list                             |
-      | change-active-model-definition | 🎯change-active-model-definition/🏗️switches-the-active-pane-to-the-building-model |
 
   @id-identity-round-trip
   @level-long

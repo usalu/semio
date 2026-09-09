@@ -162,7 +162,7 @@ fn expected(value: &serde_json::Value) -> SemioFlowSnapshot {
 
 #[test]
 fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for (rows, valid) in [("valid", true), ("invalid", false)] {
         for row in fixture[rows].as_array().unwrap() {
             let wire = bytes(row["hex"].as_str().unwrap());
@@ -247,8 +247,8 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
 
 #[test]
 fn semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
-    let lifecycle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/♻️lifecycle/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let lifecycle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️lifecycle/🔣️.json")).unwrap();
     let wire = bytes(fixture["valid"][1]["hex"].as_str().unwrap());
     for row in lifecycle["admission"].as_array().unwrap() {
         let state = row["state"].as_str().unwrap();

@@ -3,6 +3,115 @@ use crate::editor::flow::testkit::{dispatch, flow_app};
 use crate::editor::flow::FlowCommand;
 use store::{ArtifactPack, SpaceMember};
 
+#[test]
+fn child_add_widget_uses_the_smallest_available_identity_and_the_descriptor_default_payload() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::apply_semio_flow_mutation;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowNode;
+
+    let existing = |id: &str| FlowNode { id: id.into(), kind: "inputNote".into(), label: "inputNote".into(), params: vec![], position: Default::default() };
+    let mut content = SemioFlowSnapshot { nodes: vec![existing("note_2"), existing("note_4")], ..Default::default() };
+    let before = content.clone();
+    let descriptor = r#"{"kind":"inputNote"}"#;
+    let descriptor_reference: serde_json::Value = serde_json::from_str(descriptor).expect("serde descriptor reference");
+    assert_eq!(descriptor_reference, serde_json::json!({ "kind": "inputNote" }));
+
+    let mutation = child_add_widget_mutation(&content, descriptor, 40.0, 51.0).expect("host-free child mutation");
+    apply_semio_flow_mutation(&mut content, &mutation);
+
+    assert_eq!(&content.nodes[..before.nodes.len()], before.nodes.as_slice());
+    assert_eq!(content.edges, before.edges);
+    let inserted = content.nodes.last().expect("appended node");
+    assert_eq!(inserted.position, SemioPoint2 { x: 40.0, y: 51.0 });
+    assert_eq!(
+        flow::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(inserted)),
+        serde_json::json!({
+            "id": "note_3",
+            "kind": "inputNote",
+            "label": "inputNote",
+            "params": [{ "key": "text", "value": "" }],
+            "position": { "x": 40.0, "y": 51.0 }
+        })
+    );
+}
+
+#[test]
+fn child_add_widget_preserves_every_descriptor_payload_and_neuron_port_default() {
+    use flow::neural::{ChannelSpec, OperatorInfo, VariadicSpec};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::apply_semio_flow_mutation;
+
+    struct Case<'a> {
+        descriptor: &'a str,
+        info: Option<&'a OperatorInfo>,
+        id: &'a str,
+        kind: &'a str,
+        label: &'a str,
+        params: &'a [(&'a str, &'a str)],
+    }
+
+    let named_info = OperatorInfo { id: "owned.named".into(), inputs: vec![ChannelSpec::named("A", "A", "a", "A"), ChannelSpec::named("B", "B", "b", "B")], ..Default::default() };
+    let variadic_info =
+        OperatorInfo { id: "owned.variadic".into(), variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }), variadic_output: Some(VariadicSpec { slot_key: "value".into(), min: 1, max: None }), ..Default::default() };
+    let cases = [
+        Case {
+            descriptor: r#"{"kind":"neuron","neuronKind":"owned.named"}"#,
+            info: Some(&named_info),
+            id: "owned_named_2",
+            kind: "neuron",
+            label: "neuron",
+            params: &[("neuronKind", "owned.named"), ("params", "{}"), ("inputPorts", r#"["a","b"]"#), ("outputPorts", "[]"), ("preview", "true")],
+        },
+        Case {
+            descriptor: r#"{"kind":"neuron","neuronKind":"owned.variadic"}"#,
+            info: Some(&variadic_info),
+            id: "owned_variadic_2",
+            kind: "neuron",
+            label: "neuron",
+            params: &[("neuronKind", "owned.variadic"), ("params", "{}"), ("inputPorts", r#"["0","1"]"#), ("outputPorts", r#"["0"]"#), ("preview", "true")],
+        },
+        Case { descriptor: r#"{"kind":"inputSlider","label":"Gain"}"#, info: None, id: "slider_2", kind: "inputSlider", label: "Gain", params: &[("label", "Gain"), ("value", "3"), ("min", "0"), ("max", "10"), ("step", "0.1")] },
+        Case { descriptor: r#"{"kind":"inputNote"}"#, info: None, id: "note_2", kind: "inputNote", label: "inputNote", params: &[("text", "")] },
+        Case { descriptor: r#"{"kind":"inputImage"}"#, info: None, id: "image_2", kind: "inputImage", label: "inputImage", params: &[("src", "")] },
+        Case { descriptor: r#"{"kind":"outputPreview"}"#, info: None, id: "preview_2", kind: "outputPreview", label: "outputPreview", params: &[("preview", "{}"), ("expanded", "[]")] },
+        Case { descriptor: r#"{"kind":"outputAction"}"#, info: None, id: "action_2", kind: "outputAction", label: "outputAction", params: &[("action", "log")] },
+        Case { descriptor: r#"{"kind":"outputExport"}"#, info: None, id: "export_2", kind: "outputExport", label: "outputExport", params: &[("format", "svg")] },
+        Case { descriptor: r#"{"kind":"variable"}"#, info: None, id: "variable_2", kind: "variable", label: "variable", params: &[("name", "value"), ("schema", "dictionary")] },
+    ];
+
+    for case in cases {
+        let serde_descriptor: serde_json::Value = serde_json::from_str(case.descriptor).expect("serde descriptor reference");
+        assert_eq!(serde_descriptor["kind"], case.kind);
+        let descriptor: semio_framework_artifact_flow_flow::WidgetDescriptor = flow::os_pack::json::from_json_str(case.descriptor).expect("typed descriptor");
+        let mut content = SemioFlowSnapshot::default();
+        let mutation = child_add_widget_mutation_from_descriptor(&content, &descriptor, case.info, 12.0, 34.0).expect("typed child mutation");
+        apply_semio_flow_mutation(&mut content, &mutation);
+        let inserted = content.nodes.last().expect("appended node");
+        let params = case.params.iter().map(|(key, value)| serde_json::json!({ "key": key, "value": value })).collect::<Vec<_>>();
+        assert_eq!(
+            flow::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(inserted)),
+            serde_json::json!({
+                "id": case.id,
+                "kind": case.kind,
+                "label": case.label,
+                "params": params,
+                "position": { "x": 12.0, "y": 34.0 }
+            }),
+            "descriptor {}",
+            case.descriptor
+        );
+    }
+}
+
+#[test]
+fn child_add_widget_rejects_an_explicit_identity_collision() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowNode;
+
+    let content = SemioFlowSnapshot { nodes: vec![FlowNode { id: "taken".into(), kind: "inputNote".into(), label: "inputNote".into(), params: vec![], position: Default::default() }], ..Default::default() };
+    let descriptor = flow::os_pack::json::from_json_str(r#"{"kind":"inputNote","id":"taken"}"#).expect("typed descriptor");
+    let error = child_add_widget_mutation_from_descriptor(&content, &descriptor, None, 0.0, 0.0).expect_err("duplicate identity must fail");
+    assert!(error.to_string().contains("widget id already exists: taken"), "{error}");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_content() {
     use semio_framework_plugin::app::TypedOperationResultLane;

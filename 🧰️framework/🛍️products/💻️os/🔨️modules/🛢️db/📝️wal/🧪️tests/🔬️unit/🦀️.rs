@@ -1,4 +1,3 @@
-
 use super::*;
 use db_storage::{MemoryStorage, WalStorage};
 use {ArtifactId, DurabilityClass, Frontier};

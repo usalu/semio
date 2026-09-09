@@ -51,9 +51,6 @@ impl CadDiff {
             if let Some(delta) = &self.nodes {
                 next.nodes = apply_nodes_delta(&next.nodes, delta).map_err(|error| error.under(["nodes"]))?;
             }
-            if let Some(value) = &self.active_model_definition_id {
-                next.active_model_definition_id = value.clone();
-            }
             next
         })
     }
@@ -178,9 +175,6 @@ impl MutationDiff<CadSnapshot> for CadDiff {
             if let Some(delta) = &self.nodes {
                 next.nodes = apply_nodes_delta(&next.nodes, delta).map_err(|error| error.under(["nodes"]))?;
             }
-            if let Some(value) = &self.active_model_definition_id {
-                next.active_model_definition_id = value.clone();
-            }
             next
         })
     }
@@ -204,7 +198,6 @@ impl MutationDiff<CadSnapshot> for CadDiff {
         take!(structure_classic_model);
         take!(drawings);
         take!(references_by_model_definition_id);
-        take!(active_model_definition_id);
         match (&mut self.nodes, other.nodes) {
             (Some(dst), Some(src)) => {
                 dst.added.extend(src.added);

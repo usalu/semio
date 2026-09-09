@@ -79,7 +79,7 @@ type RetainedAuditFixture = {
 
 class RetainedAuditScript extends BundleScript {
   async run(): Promise<void> {
-    const fixturePath = resolve(this.root, "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json");
+    const fixturePath = resolve(this.root, "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json");
     const schemaPath = resolve(this.root, "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json");
     const ownerPath = resolve(this.root, "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
     const fixture = (await Bun.file(fixturePath).json()) as RetainedAuditFixture;
@@ -92,7 +92,7 @@ class RetainedAuditScript extends BundleScript {
     const commandIds = [...commandBlock.matchAll(/^\s*"([^"]+)"\s+as\s+/gm)].map((match) => match[1]!);
     const routeIds = fixture.routes.map((route) => route.id);
     const expectedAdmitted = [
-      "addNode", "renameNode", "patchCadPlayReference", "focusModelDefinition",
+      "addNode", "renameNode", "patchCadPlayReference",
       "setCamera", "setProjection", "setProjectionParam", "setDislocateOption", "setNodeSelection", "setReferenceSelection", "referenceHover", "engagementInput", "engagementPossibleSelect", "engagementRepeatLast",
       "engagementAbort", "worldPointerMove", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setContributions", "loadRawRequest",
     ];

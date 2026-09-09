@@ -84,21 +84,45 @@ pub use mutations::*;
 
 pub struct Block3dWorldWindowTransientOwner;
 
+impl store::retirement::RetireOwned for Block3dBrushPreview {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        store::retirement::sequence(vec![store::retirement::leaf(self.position), store::retirement::leaf(self.direction)])
+    }
+}
+
+impl store::retirement::RetireOwned for Block3dWorldWindowTransient {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        store::retirement::RetireOwned::retirement(self.brush_preview)
+    }
+}
+
+impl store::retirement::RetireOwned for Block3dWorldWindowTransientMutation {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        let Self::SetBrushPreview(mutation) = self;
+        store::retirement::RetireOwned::retirement(mutation.preview)
+    }
+}
+
+#[expect(clippy::unnecessary_wraps, reason = "ArtifactEphemeralTransferPreparationFactory requires a fallible footprint callback")]
+fn preview_footprint(_: &Block3dWorldWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: size_of::<Block3dWorldWindowTransientMutation>() })
+}
+
+fn preview_transfer(mutation: Block3dWorldWindowTransientMutation) -> Block3dWorldWindowTransient {
+    let Block3dWorldWindowTransientMutation::SetBrushPreview(mutation) = mutation;
+    Block3dWorldWindowTransient { brush_preview: mutation.preview }
+}
+
 impl semio_framework_plugin::WindowTransientOwner for Block3dWorldWindowTransientOwner {
     const WINDOW_KIND_ID: &'static str = WINDOW_KIND_ID;
     type State = Block3dWorldWindowTransient;
     type Mutation = Block3dWorldWindowTransientMutation;
 
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::State, Self::Mutation>> {
-        semio_framework_plugin::bounded_window_transient_preparation_factory::<Self>()
-    }
-
-    fn build_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::State>> {
-        semio_framework_plugin::bounded_window_transient_root_retirement_factory::<Self>()
-    }
-
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::State, Self::Mutation>>> {
-        semio_framework_plugin::bounded_window_transient_store_disposer::<Self>()
+    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+        let state: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::State>> = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>> = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preview_footprint, preview_transfer, state.clone(), mutation.clone()));
+        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }
 

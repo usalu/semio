@@ -11,5 +11,5 @@ pub fn diff(payload: &DeleteDocument, base: &ProgramSnapshot) -> protocol::Mutat
     if !base.artifacts.iter().any(|row| row.header.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", "No document exists with this id.", [payload.id.0.clone()]);
     }
-    protocol::MutationOutcome::new(ProgramDiff { documents: Some(ProgramArtifactsDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { artifacts: Some(ProgramArtifactsDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
 }

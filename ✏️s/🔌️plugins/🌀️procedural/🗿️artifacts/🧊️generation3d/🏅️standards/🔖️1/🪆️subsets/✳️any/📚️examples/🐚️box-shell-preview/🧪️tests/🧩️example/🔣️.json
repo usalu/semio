@@ -1,0 +1,37 @@
+{
+  "schema": "s.procedural.generation3d.example-geometry/v1",
+  "example": "box-shell-preview",
+  "opChain": [
+    "brep.prim3d.box",
+    "brep.solid.shell"
+  ],
+  "preview": {
+    "node": "shell",
+    "channel": "solid",
+    "kind": "solid"
+  },
+  "tessellationTolerance": 0.05,
+  "expect": {
+    "minTriangles": 24,
+    "closed": true,
+    "volume": 3.903999999999999,
+    "volumeTolerance": 0.001,
+    "volumeSource": "analytic outer 2^3 minus inner (2-2*0.2)^3",
+    "edgePerimeter": null,
+    "edgePerimeterTolerance": 0.0,
+    "boundingBoxMin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "boundingBoxMax": [
+      2.0,
+      2.0,
+      2.0
+    ],
+    "boundingBoxTolerance": 0.001,
+    "kernelVolumeNode": null,
+    "kernelVolumeChannel": null
+  },
+  "kernelStatus": "green"
+}

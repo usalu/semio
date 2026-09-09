@@ -6405,7 +6405,6 @@ dependencies = [
  "semio-framework-os-kernel-dsl-derive",
  "semio-framework-plugin",
  "semio-framework-schema",
- "semio-framework-trace",
  "semio-framework-ui",
  "semio-framework-ui-contract",
  "semio-framework-value-derive",
@@ -7045,6 +7044,7 @@ dependencies = [
 name = "semio-s-artifact-procedural-generation3d"
 version = "0.1.0"
 dependencies = [
+ "parry3d",
  "semio-framework",
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-infinite-dag",
@@ -7069,8 +7069,11 @@ dependencies = [
  "semio-s-artifact-stdio-obj",
  "semio-s-artifact-stdio-ply",
  "semio-s-artifact-stdio-png",
+ "semio-s-artifact-stdio-semio",
  "semio-s-artifact-stdio-stl",
  "semio-s-artifact-stdio-txt",
+ "semio-s-plugin-flow-extension-brep",
+ "semio-s-plugin-flow-extension-math",
  "serde",
  "serde_json",
 ]
@@ -7147,6 +7150,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-graph",
  "semio-framework-hash",
+ "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -7854,6 +7858,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-semio"
 version = "0.1.0"
 dependencies = [
+ "parry3d",
  "semio-framework",
  "semio-framework-3d",
  "semio-framework-async-macros",

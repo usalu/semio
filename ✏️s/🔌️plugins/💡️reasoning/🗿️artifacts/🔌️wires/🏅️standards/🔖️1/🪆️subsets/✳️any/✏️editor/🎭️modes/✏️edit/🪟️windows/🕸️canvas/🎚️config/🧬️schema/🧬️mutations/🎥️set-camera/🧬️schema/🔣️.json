@@ -4,32 +4,17 @@
   "title": "SetCamera",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "camera"
-  ],
+  "required": ["camera"],
   "properties": {
     "camera": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
+      "required": ["x", "y", "zoom"],
       "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "zoom": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        }
-      },
-      "x-semio-state": "config",
-      "x-semio-owner": "window"
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "zoom": { "type": "number", "exclusiveMinimum": 0 }
+      }
     }
   }
 }

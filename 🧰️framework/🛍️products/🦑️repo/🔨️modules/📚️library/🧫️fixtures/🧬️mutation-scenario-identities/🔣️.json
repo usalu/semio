@@ -1,0 +1,92 @@
+{
+  "contract": "mutation-scenario-identities-v1",
+  "scenarioSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [
+      "id",
+      "directoryName"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "directoryName": {
+        "type": "string",
+        "pattern": "^[^a-z0-9/\\\\]+[a-z0-9]+(?:-[a-z0-9]+)*$"
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "distinct-logical-and-physical",
+      "scenarios": [
+        {
+          "id": "rename-model-renames-the-model",
+          "directoryName": "✅️renames-the-model"
+        }
+      ],
+      "valid": true
+    },
+    {
+      "id": "independent-declarations",
+      "scenarios": [
+        {
+          "id": "logical-outcome",
+          "directoryName": "🧪️physical-case"
+        }
+      ],
+      "valid": true
+    },
+    {
+      "id": "malformed-logical",
+      "scenarios": [
+        {
+          "id": "Rename-Model",
+          "directoryName": "✅️renames-the-model"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "malformed-physical",
+      "scenarios": [
+        {
+          "id": "rename-model",
+          "directoryName": "renames-the-model"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "duplicate-logical",
+      "scenarios": [
+        {
+          "id": "same-case",
+          "directoryName": "✅️first-case"
+        },
+        {
+          "id": "same-case",
+          "directoryName": "⛔️second-case"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "duplicate-physical",
+      "scenarios": [
+        {
+          "id": "first-case",
+          "directoryName": "✅️same-case"
+        },
+        {
+          "id": "second-case",
+          "directoryName": "✅️same-case"
+        }
+      ],
+      "valid": false
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "reviewed-readme-fixture-inputs-v1",
   "catalog": {
-    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚖️readme-license-owner-authority/🔣️.json",
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
     "sha256": "2dcb31628412a9e95b4adfc8756d8fbe9dfa1b397742b3f8a47c603ad15ccc79",
     "caseIndex": 31
   },
@@ -42,8 +42,8 @@
         "pointer": "/revisions/testing-readme-protocol-v2-reviewed/expectationsPath"
       },
       "preimage": {
-        "sha256": "7c6c64ee9bb155ec4180e6bb9e476cbca84fe24752c868eb28ec53a6ee73f62c",
-        "size": 12357,
+        "sha256": "b2a6129ad3abb7d1ea6140a7050c2200b0c29f5ab178bad7fe81f02cbcbdd0a3",
+        "size": 12355,
         "mode": 420
       }
     }

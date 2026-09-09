@@ -1,6 +1,7 @@
-# 🧬️ GIS terrain snapshot schema — artifact-lane fields only.
-
+# 🏔️ Terrain document and independently owned mesh handle.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type GisTerrainSnapshot {
   exaggeration: Float! @state(class: ARTIFACT)
   importedFeaturesJson: String! @state(class: ARTIFACT)
+  mesh: ArtifactChild @state(class: ARTIFACT)
 }

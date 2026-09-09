@@ -4,9 +4,6 @@
   "title": "CadMutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/change-active-model-definition/schema.json"
-    },
-    {
       "$ref": "https://semio.tech/schema/s/cad/cad/mutation/change-reference-hidden/schema.json"
     },
     {

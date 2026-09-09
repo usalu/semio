@@ -33,7 +33,7 @@ pub enum UseClass {
 }
 
 /// 📐️ Monthly climate data for balancing. Keeps its `dsl::DslRecord` derive — unlike the snapshot's
-/// own storage (now a composed `s.stdio.semio.table` child, see `🔖️Composition` below),
+/// own storage (now a composed `s.stdio.semio`/`table` child, see `🔖️Composition` below),
 /// `update-climate`'s mutation PAYLOAD still carries a literal `MonthlyClimate` on the wire (the
 /// payload is real data, never a handle — `📓️migration-recipe.md`'s pattern), so this type still
 /// needs its own `DslField` impl for `Din18599MutationDsl`'s `#[dsl(block)]`-nested encoding.
@@ -63,7 +63,7 @@ impl MonthlyClimate {
 //#region 🔖️Composition
 /// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2 (orchestrator-dispatched
 /// correction, `norm→C:table` on `din18599.climate`): the inline `MonthlyClimate` (two twelve-month
-/// arrays) is replaced by a fixed composed `s.stdio.semio.table` CHILD slot — twelve rows (one per
+/// arrays) is replaced by a fixed composed `s.stdio.semio`/`table` CHILD slot — twelve rows (one per
 /// calendar month), two columns (`thetaEC`/`gHWM2`). The single `update-climate` mutation triad
 /// keeps its exact public payload/wire shape (`MonthlyClimate` travels on the wire as a literal
 /// value, same as before — only the SNAPSHOT's own storage becomes a composed child) — only the
@@ -126,14 +126,15 @@ fn din18599_climate_scene_id(climate: &MonthlyClimate) -> String {
     format!("din18599-climate-{:016x}", hasher.finish())
 }
 
-fn din18599_climate_target() -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef { artifact_id: "din18599-climate".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
+fn din18599_climate_target(child_id: &str) -> store::os_io::ArtifactRef {
+    store::os_io::ArtifactRef { artifact_id: child_id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
 /// 🏗️ Mints the composed-child handle and transfers the climate into that exact owner.
 pub fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18599ClimateChild {
     let scene_id = din18599_climate_scene_id(climate);
-    store::ArtifactChild::new(scene_id, din18599_climate_target()).with_local_owner(std::sync::Arc::new(Din18599ClimateWorkingData { climate: climate.clone() }))
+    let target = din18599_climate_target(&scene_id);
+    store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(Din18599ClimateWorkingData { climate: climate.clone() }))
 }
 
 /// 🔎 The live `MonthlyClimate` behind a snapshot's composed child — the single read call site

@@ -145,7 +145,7 @@ pub fn try_values_map(config: &FormsConfig) -> Object {
         .into_iter()
         .map(|(key, chunks)| {
             let raw = chunks.iter().fold(String::new(), |mut raw, chunk| {
-                raw.push_str(&chunk);
+                raw.push_str(chunk);
                 raw
             });
             (key, dsl::os_pack::json::parse(&raw).unwrap_or(Value::Null))
@@ -208,7 +208,7 @@ fn question_kind_route_from_topic(topic_contribution: &semio_framework_plugin::T
         return None;
     }
     let payload = topic_contribution.decode::<FormsQuestionKindTopicPayload>().ok()?;
-    (payload.question_kind == kind).then(|| QuestionKindRoute { app_id: payload.app_id, params_body_key: payload.params_body_key, preview_body_key: payload.preview_body_key })
+    (payload.question_kind == kind).then_some(QuestionKindRoute { app_id: payload.app_id, params_body_key: payload.params_body_key, preview_body_key: payload.preview_body_key })
 }
 
 /// 🗂️ Reads the open `TopicContribution` (`"forms.questionKind"` topic) shape per entry.
@@ -411,10 +411,12 @@ fn forms_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(FORMS_RETAINED_RAW_BYTES, 64, 64, 4_096, 7_500)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "BoundedArtifactCommandWork requires an optional extent callback")]
 fn forms_bounded_extent(_command: &FormsCommand, _snapshot: &FormsSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     Some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
 fn forms_retained_reduce(
     command: &FormsCommand,
     snapshot: &FormsSnapshot,

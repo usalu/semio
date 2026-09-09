@@ -1,0 +1,205 @@
+{
+  "document": {
+    "schema": "procedure.document",
+    "flow": {
+      "childId": "procedure-flow",
+      "target": {
+        "artifactId": "procedure-flow",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "flow"
+        }
+      }
+    },
+    "text": {
+      "childId": "procedure-text",
+      "target": {
+        "artifactId": "procedure-text",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "text"
+        }
+      }
+    }
+  },
+  "diff": {
+    "artifact": {
+      "schema": "procedure.document",
+      "flow": {
+        "childId": "procedure-flow",
+        "target": {
+          "artifactId": "procedure-flow",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "flow"
+          }
+        }
+      },
+      "text": {
+        "childId": "procedure-text",
+        "target": {
+          "artifactId": "procedure-text",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "text"
+          }
+        }
+      }
+    },
+    "schema": "procedure.document",
+    "flow": {
+      "childId": "procedure-flow",
+      "target": {
+        "artifactId": "procedure-flow",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "flow"
+        }
+      }
+    },
+    "text": {
+      "childId": "procedure-text",
+      "target": {
+        "artifactId": "procedure-text",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "text"
+        }
+      }
+    }
+  },
+  "invalidDocuments": [
+    {
+      "schema": "procedure.document",
+      "path": {
+        "steps": []
+      },
+      "seed": {}
+    },
+    {
+      "schema": "procedure.document",
+      "flow": {
+        "childId": "procedure-flow",
+        "target": {
+          "artifactId": "procedure-flow",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "flow"
+          }
+        }
+      },
+      "text": {
+        "childId": "procedure-text",
+        "target": {
+          "artifactId": "procedure-text",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "text"
+          }
+        }
+      },
+      "camera": {}
+    },
+    {
+      "schema": "procedure.document",
+      "flow": {
+        "childId": "procedure-flow",
+        "target": {
+          "artifactId": "procedure-flow",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "flow"
+          }
+        }
+      },
+      "text": null
+    },
+    {
+      "schema": "procedure.document",
+      "flow": {
+        "childId": "procedure-flow",
+        "target": {
+          "artifactId": "procedure-flow",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "flow"
+          }
+        },
+        "nodes": []
+      },
+      "text": {
+        "childId": "procedure-text",
+        "target": {
+          "artifactId": "procedure-text",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "text"
+          }
+        }
+      }
+    }
+  ],
+  "invalidDiffs": [
+    {
+      "path": {
+        "steps": []
+      }
+    },
+    {
+      "seed": {}
+    },
+    {
+      "flow": {
+        "childId": "procedure-flow",
+        "target": {
+          "artifactId": "procedure-flow",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "flow"
+          }
+        },
+        "nodes": []
+      }
+    },
+    {
+      "artifact": {
+        "schema": "procedure.document",
+        "flow": {
+          "childId": "procedure-flow",
+          "target": {
+            "artifactId": "procedure-flow",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "flow"
+            }
+          }
+        },
+        "text": {
+          "childId": "procedure-text",
+          "target": {
+            "artifactId": "procedure-text",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "text"
+            }
+          }
+        },
+        "camera": {}
+      }
+    }
+  ]
+}

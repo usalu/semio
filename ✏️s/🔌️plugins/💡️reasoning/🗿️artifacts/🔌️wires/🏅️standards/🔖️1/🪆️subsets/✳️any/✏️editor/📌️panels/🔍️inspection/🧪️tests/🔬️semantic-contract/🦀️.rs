@@ -26,12 +26,7 @@ fn wires_semantic_panels_match_the_json_oracle() {
     }
     let board = crate::wires_working_board(&document);
     for node in [
-        crate::editor::wires::modes::edit::windows::canvas::render(
-            &board,
-            &document.wires_fixture,
-            &crate::editor::wires::modes::edit::windows::canvas::config::WiresCanvasWindowConfig::default(),
-        )
-        .expect("editor canvas"),
+        crate::editor::wires::modes::edit::windows::canvas::render(&board, &document.wires_fixture, &crate::editor::wires::modes::edit::windows::canvas::config::WiresCanvasWindowConfig::default()).expect("editor canvas"),
         crate::viewer::wires::modes::view::windows::canvas::render(&document).expect("viewer canvas"),
     ] {
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };

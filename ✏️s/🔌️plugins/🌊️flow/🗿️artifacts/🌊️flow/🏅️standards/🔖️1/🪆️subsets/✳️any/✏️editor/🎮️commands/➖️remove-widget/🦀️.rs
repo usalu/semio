@@ -1,6 +1,7 @@
 //! 🪟️ 🧩️ Flow play app commands command — `remove-widget`.
 
-use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::host_operations;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
@@ -16,8 +17,8 @@ pub struct RemoveWidget {
 /// get dropped from the selection here; selection is framework-owned `InteractionState` now — no
 /// `SetSelection` config mutation needed, the framework auto-prunes the deleted id out of `graph`'s
 /// selection via `interaction_topology` on the next dispatch.
-pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let target_id = &payload.widget_id;
-    let operations = host_operations(doc.snapshot, cfg.snapshot, session, |host| host.remove_widget(target_id).is_ok());
+    let operations = host_operations(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, |host| host.remove_widget(target_id).is_ok());
     Ok(Emit::mutations(operations))
 }

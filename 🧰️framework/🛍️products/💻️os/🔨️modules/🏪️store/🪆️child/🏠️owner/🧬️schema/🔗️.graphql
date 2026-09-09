@@ -1,0 +1,3 @@
+# 🏠️ Shared child-envelope ownership coordinate.
+# import ArtifactRef from "../../../../../../../🔨️modules/🚪️io/🧬️schema/🔗️.graphql"
+type OwnerRef { parent: ArtifactRef! slot: String! childId: String! }

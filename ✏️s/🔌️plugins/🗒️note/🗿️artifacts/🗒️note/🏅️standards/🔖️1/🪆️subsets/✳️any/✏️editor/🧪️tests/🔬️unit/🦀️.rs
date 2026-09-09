@@ -169,6 +169,79 @@ async fn note_labels_resolve_native_by_default() {
 }
 //#endregion 🔖️Locale
 
+//#region 🪟️WindowOwnership
+#[semio_framework_async_macros::async_test]
+async fn exact_composite_window_cameras_isolate_and_reload_without_document_or_app_config_changes() {
+    use crate::editor::note::testkit::{close_app, composite_view, dispatch_with_view, note_app_with_registry, render_with_view};
+    let mut app = Box::new(note_app_with_registry().await);
+    let mut reopened = Box::new(note_app_with_registry().await);
+    let view_a = composite_view("note-composite-a");
+    let view_b = composite_view("note-composite-b");
+    let document_before = app.snapshot().expect("document before window configuration");
+    let app_config_before = app.config_pack().await.expect("app config before window configuration");
+
+    let result_a = dispatch_with_view(&mut app, NoteCommand::SetCamera(set_camera::SetCamera { camera: crate::NoteCamera { x: 12.5, y: -6.5, zoom: 3.5 } }), view_a.clone()).await;
+    let result_b = dispatch_with_view(&mut app, NoteCommand::SetCamera(set_camera::SetCamera { camera: crate::NoteCamera { x: -42.5, y: 7.5, zoom: 1.5 } }), view_b.clone()).await;
+    assert!(result_a.mutations.is_empty() && result_b.mutations.is_empty());
+    assert_eq!(app.snapshot().expect("document after window configuration"), document_before);
+    let app_config_after = app.config_pack().await.expect("app config after window configuration");
+    assert_eq!((app_config_after.pack, app_config_after.spr), (app_config_before.pack, app_config_before.spr));
+
+    let composite_a = render_with_view(&mut app, NOTE_PLAY_BODY_COMPOSITE, &view_a).await;
+    let composite_b = render_with_view(&mut app, NOTE_PLAY_BODY_COMPOSITE, &view_b).await;
+    assert!(composite_a.contains("12.5") && composite_a.contains("-6.5"), "window a must render its exact camera: {composite_a}");
+    assert!(composite_b.contains("-42.5") && composite_b.contains("7.5"), "window b must render its exact camera: {composite_b}");
+    assert_eq!(app.window_config_generation(&view_a).await.expect("window a generation"), Some(1));
+    assert_eq!(app.window_config_generation(&view_b).await.expect("window b generation"), Some(1));
+
+    let packs = app.window_config_packs().await.expect("two exact Note window packs");
+    assert_eq!(packs.len(), 2);
+    for pack in packs {
+        reopened.load_window_config_pack(pack).await.expect("reload exact Note window pack");
+    }
+    assert_eq!(render_with_view(&mut reopened, NOTE_PLAY_BODY_COMPOSITE, &view_a).await, composite_a);
+    assert_eq!(render_with_view(&mut reopened, NOTE_PLAY_BODY_COMPOSITE, &view_b).await, composite_b);
+    close_app(&mut reopened).await;
+    close_app(&mut app).await;
+    eprintln!("[DEBUG] two Note composite windows published and rendered independent cameras, preserved document and app configuration, reloaded both exact persistent partitions, and closed their registered apps");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn exact_composite_window_transient_isolates_resets_and_cancels_with_registered_app() {
+    use crate::editor::note::testkit::{close_app, composite_view, dispatch_with_view, note_app_with_registry};
+    let mut app = Box::new(note_app_with_registry().await);
+    let view_a = composite_view("note-transient-a");
+    let view_b = composite_view("note-transient-b");
+
+    dispatch_with_view(&mut app, NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Alpha".into() }), view_a.clone()).await;
+    let transient_a = app.window_transient_snapshot(&view_a).expect("window a transient").expect("window a owner");
+    let transient_b = app.window_transient_snapshot(&view_b).expect("window b transient").expect("window b owner");
+    assert_eq!(transient_a.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some("Alpha"));
+    assert_eq!(transient_b.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
+
+    let document = app.document_pack().await.expect("document pack before reset");
+    app.load_document_pack(&document).await.expect("reload document and reset window transient");
+    let reset_a = app.window_transient_snapshot(&view_a).expect("reset window a transient").expect("reset window a owner");
+    assert_eq!(reset_a.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
+    assert_eq!(app.window_transient_generation(&view_a).expect("reset window a generation"), Some(0));
+
+    let pending = app
+        .dispatch_typed(
+            NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Cancelled".into() }),
+            &semio_framework_plugin::ActionMeta { view_state: Some(view_a.clone()), ..testkit::meta("cancel") },
+        )
+        .await
+        .expect("start retained transient command");
+    assert!(pending.mutations.is_empty());
+    assert!(app.has_pending_typed_operations(), "retained transient command must remain owned before publication advances");
+    app.load_document_pack(&document).await.expect("replacement cancels captured transient publication authority");
+    let cancelled = app.window_transient_snapshot(&view_a).expect("cancelled window a transient").expect("cancelled window a owner");
+    assert_eq!(cancelled.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
+    close_app(&mut app).await;
+    eprintln!("[DEBUG] Note composite transient input stayed exact-window isolated, document reload reset ephemeral state, replacement cancelled an unpublished retained mutation, and registered app close reached terminal-empty ownership");
+}
+//#endregion 🪟️WindowOwnership
+
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {

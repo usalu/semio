@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/gis/gisterrain/window/config/schema.json",
+  "title": "GisTerrainWindowConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cameraJson"
+  ],
+  "properties": {
+    "cameraJson": {
+      "type": "string",
+      "x-semio-state": "config",
+      "x-semio-owner": "window"
+    }
+  }
+}

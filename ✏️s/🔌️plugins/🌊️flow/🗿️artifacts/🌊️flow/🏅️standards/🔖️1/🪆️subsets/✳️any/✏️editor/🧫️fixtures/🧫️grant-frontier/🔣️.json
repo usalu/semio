@@ -7,22 +7,6 @@
     64,
     4096
   ],
-  "canonicalVariants": [
-    "Snapshot",
-    "SetContributions",
-    "SetPreviewOff",
-    "SetCamera",
-    "SetLodMode",
-    "SetProximityDistance",
-    "SetGridVisible",
-    "SetGridSnapEnabled",
-    "SetGridFactor",
-    "SetCatalogueSections",
-    "SetAutomationEnabled",
-    "SetGeneration",
-    "SetDuplicateWidgetProgress",
-    "CancelDuplicateWidget"
-  ],
   "cases": [
     {
       "id": "tiny-production",

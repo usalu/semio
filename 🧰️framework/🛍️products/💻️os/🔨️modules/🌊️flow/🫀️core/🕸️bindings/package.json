@@ -11,8 +11,7 @@
     "flow_core.d.ts",
     "flow_core_bg.wasm.d.ts",
     "🌐️flow-browser.js",
-    "🖥️flow-host.js",
-    "📝️flow-browser.d.ts"
+    "🖥️flow-host.js"
   ],
   "main": "flow_core.js",
   "module": "flow_core.js",
@@ -22,10 +21,7 @@
       "types": "./flow_core.d.ts",
       "import": "./flow_core.js"
     },
-    "./🌐️flow-browser.js": {
-      "types": "./📝️flow-browser.d.ts",
-      "import": "./🌐️flow-browser.js"
-    },
+    "./🌐️flow-browser.js": "./🌐️flow-browser.js",
     "./🖥️flow-host.js": "./🖥️flow-host.js"
   }
 }

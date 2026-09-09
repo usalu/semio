@@ -12,6 +12,6 @@ pub fn diff(payload: &RenameGeneration, base: &Generation2dSnapshot) -> protocol
     if entry.name == payload.name {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Generation \"{}\" is already named \"{}\".", payload.id, payload.name));
     }
-    protocol::MutationOutcome::new(diff_generation_from_ops(base, vec![GenerationMutation::Rename { id: payload.id.clone(), name: payload.name.clone() }]))
+    protocol::MutationOutcome::new(diff_generation_from_ops(base, &[GenerationMutation::Rename { id: payload.id.clone(), name: payload.name.clone() }]))
 }
 //#endregion 🔖️Diff

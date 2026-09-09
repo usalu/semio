@@ -21,6 +21,9 @@ enum BrepMutationKind {
   MOVE_VERTEX = 12;
 }
 
+// Flattening keeps fields usable across all 13 variants, so proto presence alone cannot express
+// create-specific requiredness. Consumers must validate the mutation discriminant against the
+// authoritative create payload schemas; the shared tolerance fixture tests that mapping.
 message SemioBrepMutation {
   BrepMutationKind mutation = 1;
   optional string id = 2;

@@ -35,6 +35,9 @@ semio_framework_plugin::app_labels! {
         depth: native_en "Depth", native_de "Tiefe", reuse_en "Depth", reuse_de "Tiefe";
         height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
         placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
+        placement_rejected: native_en "Placement rejected — it collides or exceeds the overlap budget", native_de "Platzierung abgelehnt — sie kollidiert oder überschreitet das Überlappungsbudget", reuse_en "Placement rejected — it collides or exceeds the overlap budget", reuse_de "Platzierung abgelehnt — sie kollidiert oder überschreitet das Überlappungsbudget";
+        placement_unavailable: native_en "No placement available here", native_de "Hier ist keine Platzierung möglich", reuse_en "No placement available here", reuse_de "Hier ist keine Platzierung möglich";
+        placement_occupied: native_en "That connection point is already taken", native_de "Dieser Verbindungspunkt ist bereits belegt", reuse_en "That connection point is already taken", reuse_de "Dieser Verbindungspunkt ist bereits belegt";
         show: native_en "Show", native_de "Anzeigen", reuse_en "Show", reuse_de "Anzeigen";
         hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";
         lock: native_en "Lock", native_de "Sperren", reuse_en "Lock", reuse_de "Sperren";

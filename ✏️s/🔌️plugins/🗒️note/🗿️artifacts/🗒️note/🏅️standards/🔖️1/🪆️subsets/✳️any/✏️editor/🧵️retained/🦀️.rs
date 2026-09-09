@@ -1092,6 +1092,7 @@ enum NoteBlockMaterializationPhase {
     Complete,
 }
 
+#[expect(clippy::large_enum_variant, reason = "The already boxed block cursor owns its text cursors inline; another box would add an allocation and retirement owner for every text block.")]
 enum NoteBlockPayloadMaterialization {
     Text {
         phase: u8,

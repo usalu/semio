@@ -1,0 +1,2972 @@
+{
+  "snapshotCases": [
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [],
+        "designs": [],
+        "objects": [],
+        "models": [],
+        "representations": []
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.object",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ],
+        "locale": "de"
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure",
+            "locale": "de"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "wrong",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": "drawing-1",
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "missing-type"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "missing-type",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "missing-piece",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": null,
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "locale": "de"
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "locale": "de"
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "valid": false
+    }
+  ],
+  "diffCases": [
+    {
+      "input": {},
+      "valid": true
+    },
+    {
+      "input": {
+        "types": {
+          "values": [
+            {
+              "id": "t1",
+              "name": "Girder",
+              "category": "structure"
+            },
+            {
+              "id": "t2",
+              "name": "Column",
+              "category": "structure"
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "objects": {
+          "values": [
+            {
+              "childId": "obj-2",
+              "target": {
+                "artifactId": "obj-2",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "properties": null
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "representations": {
+          "values": [
+            {
+              "target": {
+                "artifactId": "drawing-2",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "drawing"
+                }
+              },
+              "pin": {
+                "kind": "checkpoint",
+                "id": "v2"
+              },
+              "role": "t1"
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "locale": "de"
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "objects": [
+          {
+            "childId": "obj-2",
+            "target": {
+              "artifactId": "obj-2",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "objects": {
+          "values": [
+            {
+              "childId": "wrong",
+              "target": {
+                "artifactId": "wrong",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "objects": {
+          "values": [
+            {
+              "childId": "wrong",
+              "target": {
+                "artifactId": "obj-2",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "representations": {
+          "values": [
+            {
+              "target": "drawing-2",
+              "pin": {
+                "kind": "head"
+              },
+              "role": "t1"
+            }
+          ]
+        }
+      },
+      "valid": false
+    }
+  ],
+  "patchCases": [
+    {
+      "before": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "diff": {},
+      "patch": [],
+      "after": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      }
+    },
+    {
+      "before": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "diff": {
+        "types": {
+          "values": [
+            {
+              "id": "t1",
+              "name": "Girder",
+              "category": "structure"
+            },
+            {
+              "id": "t2",
+              "name": "Column",
+              "category": "structure"
+            }
+          ]
+        }
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/types",
+          "value": [
+            {
+              "id": "t1",
+              "name": "Girder",
+              "category": "structure"
+            },
+            {
+              "id": "t2",
+              "name": "Column",
+              "category": "structure"
+            }
+          ]
+        }
+      ],
+      "after": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Girder",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      }
+    },
+    {
+      "before": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "diff": {
+        "properties": null
+      },
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/properties"
+        }
+      ],
+      "after": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      }
+    },
+    {
+      "before": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-1",
+            "target": {
+              "artifactId": "obj-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      },
+      "diff": {
+        "objects": {
+          "values": [
+            {
+              "childId": "obj-2",
+              "target": {
+                "artifactId": "obj-2",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/objects",
+          "value": [
+            {
+              "childId": "obj-2",
+              "target": {
+                "artifactId": "obj-2",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "after": {
+        "schema": "stdio.semio.kit",
+        "types": [
+          {
+            "id": "t1",
+            "name": "Beam",
+            "category": "structure"
+          },
+          {
+            "id": "t2",
+            "name": "Column",
+            "category": "structure"
+          }
+        ],
+        "designs": [
+          {
+            "id": "d1",
+            "name": "Frame",
+            "pieces": [
+              {
+                "id": "p1",
+                "typeId": "t1",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              },
+              {
+                "id": "p2",
+                "typeId": "t2",
+                "transform": {
+                  "translation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "c1",
+                "connectingPieceId": "p1",
+                "connectingPort": "end",
+                "connectedPieceId": "p2",
+                "connectedPort": "start"
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "childId": "obj-2",
+            "target": {
+              "artifactId": "obj-2",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            }
+          }
+        ],
+        "models": [
+          {
+            "childId": "mod-1",
+            "target": {
+              "artifactId": "mod-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "model"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "representations": [
+          {
+            "target": {
+              "artifactId": "drawing-1",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
+            },
+            "pin": {
+              "kind": "head"
+            },
+            "role": "t1"
+          }
+        ]
+      }
+    }
+  ]
+}

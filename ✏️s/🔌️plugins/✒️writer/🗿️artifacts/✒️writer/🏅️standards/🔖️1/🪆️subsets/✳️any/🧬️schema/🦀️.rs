@@ -20,7 +20,7 @@ pub struct WriterArtifact {
     #[state(artifact)]
     pub uri: String,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.document")]
+    #[child(kind = "s.stdio.semio")]
     pub document: WriterDocumentChild,
 }
 //#endregion 🔖️Artifact

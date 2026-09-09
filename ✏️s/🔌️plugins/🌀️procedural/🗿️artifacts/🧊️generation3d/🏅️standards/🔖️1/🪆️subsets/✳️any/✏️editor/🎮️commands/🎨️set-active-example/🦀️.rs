@@ -22,7 +22,6 @@ fn config_after_example_load(previous: &Generation3dConfig, flow_camera: &Camera
         lod_mode: previous.lod_mode.clone(),
         show_mode: previous.show_mode.clone(),
         sun_json: previous.sun_json.clone(),
-        preview_eval_text: None,
     }
 }
 

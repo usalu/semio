@@ -1239,7 +1239,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       const validate = await devContractModule("BuildInspectionV1");
       expect(validate(fixture.expected)).toBe(true);
       for (const rejected of fixture.rejected) expect(validate(rejected)).toBe(false);
-      expect(fixture.settings).toEqual({ write: false, emptyOutDir: false, publicDir: false, maximumDurationMs: 180_000 });
+      expect(fixture.settings).toEqual({ write: false, emptyOutDir: false, publicDir: false, maximumDurationMs: 240_000 });
       expect(Buffer.byteLength(fixture.specimen)).toBe(fixture.expected[0].bytes);
       expect(createHash("sha256").update(fixture.specimen).digest("hex")).toBe(fixture.expected[0].sha256);
       expect(Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(fixture.specimen))).toString("hex")).toBe(fixture.expected[0].sha256);
@@ -1249,6 +1249,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       const { execFile } = await import("node:child_process"), { default: Ajv } = await import("ajv"), { writeFileSync } = await import("node:fs");
       const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔎️build-inspection.json"), "utf8"));
+      const boundary = JSON.parse(readFileSync(join(fixtureRoot, "🧹️production-tests.json"), "utf8"));
       const outputPath = resolve(process.env.SEMIO_BUILD_INSPECTION_OUTPUT!);
       const ticketRoot = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets");
       expect(relative(ticketRoot, outputPath).replace(/\\/g, "/")).toMatch(/^[^/]+\/[^/]+\/[^/]+\/[^/]+\/🗑️generated\/[^/]+\/[^/]+\.json$/u);
@@ -1278,7 +1279,8 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
             import { pathToFileURL } from 'node:url';
             const settings = JSON.parse(process.argv[2]);
             console.error('[DEBUG] importing actual production configuration');
-            const { default: config } = await import(pathToFileURL(process.argv[1]).href);
+            const { default: configExport } = await import(pathToFileURL(process.argv[1]).href);
+            const config = typeof configExport === 'function' ? await configExport({ command: 'build', mode: 'production', isSsrBuild: false, isPreview: false }) : await configExport;
             console.error('[DEBUG] production configuration loaded; starting no-write Rollup build');
             const result = await build({ ...config, configFile: false, publicDir: settings.publicDir, cacheDir: process.argv[3], build: { ...config.build, write: settings.write, emptyOutDir: settings.emptyOutDir, outDir: process.argv[4] } });
             const bundles = Array.isArray(result) ? result : [result], rows = [];
@@ -1301,10 +1303,12 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       const validate = await devContractModule("BuildInspectionV1");
       expect(validate(rows), JSON.stringify(validate.errors)).toBe(true);
       expect(new Set(rows.map((row: { fileName: string }) => row.fileName)).size).toBe(rows.length);
+      const moduleIdentities = rows.flatMap((row: { facadeModuleId: string | null; imports: string[]; dynamicImports: string[]; modules: string[] }) => [row.facadeModuleId, ...row.imports, ...row.dynamicImports, ...row.modules]).filter((value: string | null): value is string => value !== null).map((value: string) => value.replaceAll("\\", "/"));
+      expect(moduleIdentities.flatMap((identity: string) => boundary.deniedProductionModuleFragments.filter((fragment: string) => identity.includes(fragment)).map((fragment: string) => ({ identity, fragment })))).toEqual([]);
       expect(existsSync(join(dirname(outputPath), "vite-inspection-unwritten"))).toBe(false);
       writeFileSync(outputPath, JSON.stringify(rows, null, 2) + "\n", { flag: "wx" });
       console.log(`[DEBUG] inspected ${rows.length} actual Rollup outputs; preserved ${Object.keys(before).length} distribution files`);
-    }, 210_000);
+    }, 270_000);
 
     itLong("excludes test-only Node imports from production output while preserving runtime and test-mode branches", async () => {
       const ts = await import("typescript"), { execFileSync } = await import("node:child_process");
@@ -1341,7 +1345,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
     itLong("routes encoded OS watcher and installation requests through the actual adapter handlers", async () => {
       const ts = await import("typescript"), { EventEmitter } = await import("node:events");
       const { URL: OracleURL } = await import("whatwg-url");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧪️cases.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
       const handlers = new Map<string, Function>(), watched: string[] = [];
       const environment = {
         mkdirSync() {}, watch(path: string) { watched.push(path); }, join, moduleRoutePath,

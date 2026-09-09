@@ -5,6 +5,10 @@ use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
+#[cfg(test)]
+#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+mod document_contract_tests;
+
 //#region 🔖️Artifact
 /// 🧬️ cad document artifact state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
@@ -16,26 +20,31 @@ pub struct CadArtifact {
     #[state(artifact)]
     pub id: String,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.model")]
+    #[child(kind = "s.stdio.semio")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub shape_model: Option<CadModelChild>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.model")]
+    #[child(kind = "s.stdio.semio")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub building_model: Option<CadModelChild>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.model")]
+    #[child(kind = "s.stdio.semio")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub energy_model: Option<CadModelChild>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.model")]
+    #[child(kind = "s.stdio.semio")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub structure_classic_model: Option<CadModelChild>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.drawing")]
+    #[child(kind = "s.stdio.semio")]
+    #[value(default)]
     pub drawings: Vec<CadDrawingChild>,
     #[state(artifact)]
+    #[value(default)]
     pub references_by_model_definition_id: BTreeMap<String, CadReferenceList>,
     #[state(artifact)]
+    #[value(default)]
     pub nodes: Vec<CadNode>,
-    #[state(artifact)]
-    pub active_model_definition_id: String,
 }
 //#endregion 🔖️Artifact
 
@@ -59,7 +68,6 @@ impl CadArtifact {
             drawings: self.drawings.clone(),
             references_by_model_definition_id: self.references_by_model_definition_id.clone(),
             nodes: self.nodes.clone(),
-            active_model_definition_id: self.active_model_definition_id.clone(),
         }
     }
 
@@ -75,7 +83,6 @@ impl CadArtifact {
             drawings: snapshot.drawings,
             references_by_model_definition_id: snapshot.references_by_model_definition_id,
             nodes: snapshot.nodes,
-            active_model_definition_id: snapshot.active_model_definition_id,
         }
     }
 
@@ -90,7 +97,6 @@ impl CadArtifact {
         self.drawings = snapshot.drawings;
         self.references_by_model_definition_id = snapshot.references_by_model_definition_id;
         self.nodes = snapshot.nodes;
-        self.active_model_definition_id = snapshot.active_model_definition_id;
     }
 }
 //#endregion 🔖️Conversions
@@ -145,7 +151,6 @@ pub mod derived_construction {
             drawings: Vec::new(),
             references_by_model_definition_id: BTreeMap::new(),
             nodes: Vec::new(),
-            active_model_definition_id: String::new(),
         }
     }
 

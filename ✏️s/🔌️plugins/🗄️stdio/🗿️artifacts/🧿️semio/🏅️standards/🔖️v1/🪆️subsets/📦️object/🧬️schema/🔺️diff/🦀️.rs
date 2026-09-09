@@ -15,7 +15,7 @@ use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 
 //#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.object.diff")]
 pub struct SemioObjectDiff {
@@ -33,7 +33,33 @@ pub struct SemioObjectDiff {
     pub properties: Option<Option<store::ArtifactChild<SemioValueSnapshot>>>,
 }
 
+impl dsl::FromValue for SemioObjectDiff {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let mut diff = Self::default();
+        for (key, value) in dsl::DslValue::into_object(value)? {
+            match key.as_str() {
+                "transform" => diff.transform = Some(dsl::FromValue::from_value(value)?),
+                "brep" => diff.brep = Some(dsl::FromValue::from_value(value)?),
+                "mesh" => diff.mesh = Some(dsl::FromValue::from_value(value)?),
+                "properties" => diff.properties = Some(dsl::FromValue::from_value(value)?),
+                _ => return Err(dsl::ValueError::new(format!("unknown Object diff field {key}"))),
+            }
+        }
+        diff.validate().map_err(dsl::ValueError::new)?;
+        Ok(diff)
+    }
+}
+
 impl SemioObjectDiff {
+    /// 🧩️ Validates every supplied child replacement before publication.
+    pub fn validate(&self) -> Result<(), String> {
+        use crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
+        if let Some(Some(child)) = &self.brep { validate_semio_child_identity(&child.child_id, &child.target, "brep")?; }
+        if let Some(Some(child)) = &self.mesh { validate_semio_child_identity(&child.child_id, &child.target, "mesh")?; }
+        if let Some(Some(child)) = &self.properties { validate_semio_child_identity(&child.child_id, &child.target, "value")?; }
+        Ok(())
+    }
+
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
         self.transform.is_none() && self.brep.is_none() && self.mesh.is_none() && self.properties.is_none()
@@ -42,6 +68,7 @@ impl SemioObjectDiff {
 
 impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
     fn apply(&self, base: &SemioObjectSnapshot) -> protocol::MutationApplyResult<SemioObjectSnapshot> {
+        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.child-identity".into(), message, target: Vec::new() })?;
         let mut next = base.clone();
         if let Some(t) = &self.transform {
             next.transform = *t;
@@ -144,7 +171,7 @@ impl protocol::DiffCodec for SemioObjectDiff {
         print_object_diff(self)
     }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_object_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_object_diff(line).and_then(|diff| { diff.validate()?; Ok(diff) }).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=transform, bit1=brep,
@@ -196,7 +223,9 @@ impl protocol::DiffCodec for SemioObjectDiff {
         let brep = if presence & 0b0010 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };
         let mesh = if presence & 0b0100 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };
         let properties = if presence & 0b1000 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };
-        Ok(SemioObjectDiff { transform, brep, mesh, properties })
+        let diff = SemioObjectDiff { transform, brep, mesh, properties };
+        diff.validate().map_err(map_err)?;
+        Ok(diff)
     }
 }
 //#endregion 🔖️HandcraftedDiffCodec
@@ -214,7 +243,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioObjectDiff> {
         SemioObjectDiff { brep: Some(None), ..Default::default() },
         SemioObjectDiff {
             mesh: Some(Some(store::ArtifactChild::new(
-                "mesh-x".into(),
+                "m1".into(),
                 store::os_io::ArtifactRef { artifact_id: "m1".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() } },
             ))),
             ..Default::default()

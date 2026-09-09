@@ -37,7 +37,7 @@ async fn attaches_the_brep_handle_to_an_object_that_had_none() {
     let produced = mutation().diff(&base).diff().apply(&base).expect("🧱create-brep applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "🧱create-brep/attaches-a-brep-child-to-an-object-that-has-none: applied state differs from the committed after-snapshot");
     let handle = produced.brep.as_ref().expect("the brep slot must be populated afterwards");
-    assert_eq!(handle.child_id, "brep-1", "the handle keeps the payload's own child id");
+    assert_eq!(handle.child_id, "kitchen-sink-brep", "the handle keeps the payload's own child id");
     assert_eq!(handle.target.dialect.subset, "brep", "the handle points at a brep-subset artifact");
     assert_eq!(produced.transform, base.transform, "🧱create-brep must not touch the object's placement");
     assert!(produced.mesh.is_none() && produced.properties.is_none(), "🧱create-brep must not touch the other two child slots");

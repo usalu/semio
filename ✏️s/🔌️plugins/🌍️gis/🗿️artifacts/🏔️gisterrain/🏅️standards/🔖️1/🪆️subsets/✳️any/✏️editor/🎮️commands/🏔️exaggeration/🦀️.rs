@@ -1,9 +1,8 @@
 //! 🏔️ GIS 3D play app command — vertical exaggeration, the terrain's one editable document property.
 
-use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
 use crate::op::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetExaggeration
@@ -20,7 +19,7 @@ pub mod set_exaggeration {
         pub exaggeration: f64,
     }
 
-    pub fn handle(payload: &SetExaggeration, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetExaggeration, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisTerrainMutation, NoConfigMutation>, Fault> {
         use crate::mutations::change_exaggeration::ChangeExaggeration;
         Ok(Emit::amend(vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: payload.exaggeration })], GIS3D_EXAGGERATION_COALESCE_KEY))
     }

@@ -1,6 +1,4 @@
-//! 🧱️ `create-brep` — sets the object's `brep` CHILD slot to a new owned handle. If the slot was
-//! already occupied, this OVERWRITES it (the inverse restores whichever handle was there before,
-//! not merely "delete" — see `↩️inverse`).
+//! 🧱️ Creates an exact brep child reference in a vacant Object slot.
 
 use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
 use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
@@ -8,6 +6,7 @@ use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(deny_unknown_fields)]
 pub struct CreateBrep {
     pub child_id: String,
     pub target: store::os_io::ArtifactRef,

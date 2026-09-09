@@ -1,0 +1,4 @@
+type GisTerrainWindowConfig {
+  # @owner window
+  cameraJson: String! @state(class: CONFIG)
+}

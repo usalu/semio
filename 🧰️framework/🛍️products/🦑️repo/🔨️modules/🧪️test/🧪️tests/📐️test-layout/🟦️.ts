@@ -100,7 +100,6 @@ describe("📐️ canonical test layout", () => {
         const result = await build({ entryPoints: [vector.sources[0]!.path], absWorkingDir: root, bundle: true, write: false, metafile: true, platform: "node", format: "esm", logLevel: "silent" });
         const fixture = Object.keys(result.metafile!.inputs).some(path => path.split("/").includes(taxonomy.testFixturesDirName));
         expect(inspectTestLayoutSources(taxonomy, vector.sources).some(finding => finding.code === "production-fixture-dependency")).toBe(fixture);
-        console.log(`[DEBUG] ${vector.id}: esbuild fixture dependency ${fixture}`);
       }
     } finally { rmSync(directory, { recursive: true, force: true }); }
   });

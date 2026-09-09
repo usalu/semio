@@ -65,3 +65,15 @@ Native `--list` and exact-law execution for the freshly retargeted routes remain
 ## Coordinator Resolution Of Flow Routing
 
 A subsequent direct source read confirms that the twelve artifact-owned Flow laws now select `semio-s-artifact-flow-flow`. The thirteenth law, `flow_actual_surface_factories_close_all_owners_under_neutral_grants`, correctly remains on `semio-s-plugin-flow`: it constructs the actual parent plugin and closed app fleet. The ordinary parent plugin check, plugin tests and component description routes also remain on the composition package. This resolves the static package-routing finding; all thirteen native laws remain a separate pending acceptance gate.
+
+## Current Declaration Refresh
+
+Static snapshot: 2026-09-09T13:46:45+02:00. This refresh read the current artifact roots, authored Cargo and package manifests, package directories, and parent roots. It did not invoke Cargo metadata, Nx, a native build, or a broad test aggregate.
+
+The current artifact-owner count is 99. Each has one distinct Rust package name, a Cargo manifest with lib.path set to ../../🦀️.rs, and both its project router and project declaration. Forty owners also declare TypeScript packages: 36 stdio, 3 Block, and 1 Sequence. Their manifests retain module/private/type declaration fields and their package routers and declarations. The package-directory scan found zero implementation files below all artifact Rust and TypeScript package directories after allowing only the package router and excluding generated outputs.
+
+The 36 stdio leaves are all declaration-selectable: each has its taxonomy source, Rust manifest, router, and project declaration. None directly names semio-s-plugin-stdio, resolves a direct Cargo path into the stdio parent package or registry, or enables the parent full-artifact-catalog feature. The executable production-source scan found zero semio_s_plugin_stdio or full_artifact_catalog references. One excluded Txt oracle documentation comment explicitly explains that its oracle does not depend on the parent plugin; it is not an executable import or dependency.
+
+The parent-root scan found zero current parent source files that recompile an artifact through a path attribute or publicly re-export artifact implementation. The existing accepted Cargo-metadata DAG audit remains applicable for the unchanged transitive workspace dependency closure; this refresh establishes that the current authored leaf declarations retain its direct dependency direction. The shared stdio contract remains a neutral s-module contract rather than a plugin or catalog backedge.
+
+No actionable package defect was found. Native and Nx acceptance remain outside this static refresh. The current receipt is [final-boundary-current-static-audit.json](🗑️generated/final-boundary-current-static-audit.json).

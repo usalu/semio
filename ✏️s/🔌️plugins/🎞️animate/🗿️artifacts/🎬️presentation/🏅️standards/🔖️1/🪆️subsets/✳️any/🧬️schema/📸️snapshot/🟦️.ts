@@ -1,9 +1,13 @@
-/** 📸️ Presentation snapshot schema — artifact-lane fields only. */
+/** 📸️ Presentation snapshot retains only shared document child identities. */
+import { parsePresentationArtifact, type ArtifactChild } from "../🟦️.ts";
+
 export interface PresentationSnapshot {
   /** @state artifact */ schema: string;
-  /** @state artifact */ source: FigureTileSource;
-  /** @state artifact */ tiles: FigureTileDraft[];
+  /** @state artifact @child kind=s.stdio.semio */ presentation: ArtifactChild;
+  /** @state artifact @child kind=s.stdio.semio */ animation: ArtifactChild;
 }
-export interface FigureTileFrame { x: number; y: number; width: number; height: number; }
-export interface FigureTileSource { src: string; kind: string; frame: FigureTileFrame; sourceAspect?: number | null; pdfPage?: number | null; }
-export interface FigureTileDraft { id: string; name: string; crop: FigureTileFrame; }
+
+/** 🔎️ Validates a snapshot through the exact Presentation document boundary. */
+export function parsePresentationSnapshot(value: unknown, at = "$"): PresentationSnapshot {
+  return parsePresentationArtifact(value, at);
+}

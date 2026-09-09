@@ -31,6 +31,44 @@ async fn sample_plugin_round_trips_json() {
     assert_eq!(decoded.adjacencies.len(), 1);
 }
 
+#[test]
+fn program_document_contract_json_text_pack_and_projection() {
+    let source = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🔬️document-contract/🔣️.json");
+    let oracle: serde_json::Value = serde_json::from_str(source).expect("language-neutral Program document fixture");
+    assert!(oracle.get("documents").is_none(), "obsolete documents alias must be rejected from the final fixture");
+    assert!(oracle.get("artifacts").is_some(), "native artifacts register must be present");
+
+    let snapshot: ProgramSnapshot = dsl::json::from_json_str(source).expect("native Program JSON decoder");
+    let canonical: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&snapshot)).expect("native Program canonical JSON");
+    assert_eq!(canonical, oracle, "native JSON codec must preserve the fixture contract");
+
+    let mut foreign_parent = oracle.clone();
+    foreign_parent.as_object_mut().expect("Program fixture object").insert("foreign".into(), serde_json::Value::Bool(true));
+    let foreign_parent_json = serde_json::to_string(&foreign_parent).expect("foreign parent JSON");
+    assert!(dsl::json::from_json_str::<ProgramSnapshot>(&foreign_parent_json).is_err(), "native Program snapshot decoder must reject a foreign parent field");
+    assert!(dsl::json::from_json_str::<crate::schema::ProgramArtifact>(&foreign_parent_json).is_err(), "native Program artifact decoder must reject a foreign parent field");
+
+    let mut foreign_row: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&sample_plugin())).expect("sample Program JSON");
+    foreign_row["stakeholders"].as_array_mut().expect("stakeholder register")[0]
+        .as_object_mut()
+        .expect("stakeholder row")
+        .insert("foreign".into(), serde_json::Value::Bool(true));
+    let foreign_row_json = serde_json::to_string(&foreign_row).expect("foreign nested row JSON");
+    assert!(dsl::json::from_json_str::<ProgramSnapshot>(&foreign_row_json).is_err(), "native Program snapshot decoder must reject a foreign nested row field");
+    for child in [&snapshot.knowledge, &snapshot.benchmarks] {
+        assert_eq!(child.child_id, child.target.artifact_id, "child target must address its minted child identity");
+        assert_eq!(child.target.dialect.artifact_kind, "s.stdio.semio");
+        assert_eq!(child.target.dialect.standard, "v1");
+        assert_eq!(child.target.dialect.subset, "table");
+    }
+
+    let artifact = crate::schema::ProgramArtifact::from_snapshot(snapshot.clone());
+    assert_eq!(artifact.to_snapshot(), snapshot, "artifact/snapshot projection must preserve every document field");
+    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
+    semio_framework_os_kernel::os_store::test_support::assert_pack_round_trip(&snapshot);
+    println!("[DEBUG] program-document-contract json=text=pack=projection child-identities=2 unknown-fields=parent,nested-row");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn composed_register_rows_belong_to_each_exact_child() {
     let benchmarks = benchmarks_child_from_records(&[]);

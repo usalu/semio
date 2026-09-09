@@ -14,5 +14,5 @@ pub fn diff(payload: &MoveWidget, base: &Generation3dSnapshot) -> protocol::Muta
     if !payload.layout.x.is_finite() || !payload.layout.y.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Position for widget \"{}\" is not finite.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff::default(), SynapsesDiff::default(), LayoutDiff { removed: vec![], set: vec![(payload.id.clone(), payload.layout.clone())] }, None, None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff { removed: vec![], set: vec![(payload.id.clone(), payload.layout.clone())] }, None, None))
 }

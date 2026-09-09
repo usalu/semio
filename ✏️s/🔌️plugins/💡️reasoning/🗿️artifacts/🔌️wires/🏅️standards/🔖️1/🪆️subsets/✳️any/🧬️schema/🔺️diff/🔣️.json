@@ -35,7 +35,8 @@
           "$ref": "https://semio.tech/schema/os/store/child.json"
         }
       ],
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
     "meta": {
       "$ref": "https://semio.tech/schema/framework/value/schema.json",

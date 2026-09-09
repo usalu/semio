@@ -74,7 +74,7 @@ use crate::document::{AnnexChoice, CheckReport, DesignSituation};
 use crate::standards::v1::subsets::any::schema::{append_combination_set, check_reliability_index, check_seismic_situation, ActionSet, NaDe, NaEn, NationalAnnexes};
 use crate::En1990QkEntry;
 /// 🔁️ Convert a `En1990Snapshot`'s `q_k` entries (read through the `en1990_qk` working-scene
-/// accessor — `q_k` is a composed `s.stdio.semio.table` child slot, ticket
+/// accessor — `q_k` is a composed `s.stdio.semio`/`table` child slot, ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) into the plain `(category, value)` pairs
 /// `ActionSet` expects.
 fn action_set_from_document(document: &En1990Snapshot) -> ActionSet {

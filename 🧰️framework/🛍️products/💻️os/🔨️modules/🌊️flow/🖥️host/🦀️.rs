@@ -1243,10 +1243,10 @@ impl FlowHost {
         for widget in &mut self.fixture.widgets {
             if let Widget::OutputPreview { id, preview, .. } = widget {
                 if let Some(out) = outputs.get(id) {
-                    *preview = out.clone();
+                    std::mem::replace(preview, out.clone()).retire_cold();
                 } else if let Some(syn) = self.fixture.synapses.iter().find(|s| s.to == *id) {
                     if let Some(src) = outputs.get(&syn.from) {
-                        *preview = preview_dict_from_connection(src, &syn.from_port, &syn.to_port);
+                        std::mem::replace(preview, preview_dict_from_connection(src, &syn.from_port, &syn.to_port)).retire_cold();
                     }
                 }
             }
@@ -1527,24 +1527,9 @@ impl FlowHost {
     }
 
     fn next_widget_id(&mut self, descriptor: &WidgetDescriptor) -> String {
-        let prefix = match descriptor {
-            WidgetDescriptor::Neuron { neuron_kind, .. } => neuron_kind.replace('.', "_"),
-            WidgetDescriptor::InputSlider { .. } => "slider".into(),
-            WidgetDescriptor::InputNote { .. } => "note".into(),
-            WidgetDescriptor::InputImage { .. } => "image".into(),
-            WidgetDescriptor::Variable { .. } => "variable".into(),
-            WidgetDescriptor::OutputPreview { .. } => "preview".into(),
-            WidgetDescriptor::OutputAction { .. } => "action".into(),
-            WidgetDescriptor::OutputExport { .. } => "export".into(),
-        };
-        let id_prefix = format!("{prefix}_");
-        let used = self.fixture.widgets.iter().filter_map(|widget| widget_id_for(widget).strip_prefix(&id_prefix)?.parse::<u64>().ok()).collect::<HashSet<_>>();
-        let mut serial = 2_u64;
-        while used.contains(&serial) {
-            serial = serial.checked_add(1).expect("the finite Flow widget set must leave a generated identifier");
-        }
+        let (id, serial) = generated_widget_id(descriptor, self.fixture.widgets.iter().map(widget_id_for));
         self.next_widget_serial = serial;
-        format!("{prefix}_{serial}")
+        id
     }
 
     pub fn set_slider_value(&mut self, widget_id: &str, value: f64) {

@@ -338,7 +338,9 @@ impl FaultStorage {
 }
 
 impl WalStorage for FaultStorage {
-    async fn acquire_writer(&self, document: &ArtifactId) -> Result<db_storage::WalWriterPermit, DbError> { self.inner.wal().await.acquire_writer(document).await }
+    async fn acquire_writer(&self, document: &ArtifactId) -> Result<db_storage::WalWriterPermit, DbError> {
+        self.inner.wal().await.acquire_writer(document).await
+    }
     async fn create_segment(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
         self.inner.wal().await.create_segment(writer, index).await
     }

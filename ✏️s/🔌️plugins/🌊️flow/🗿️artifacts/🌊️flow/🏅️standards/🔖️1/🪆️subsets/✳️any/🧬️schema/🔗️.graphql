@@ -1,35 +1,7 @@
-# 🧬️ Flow artifact schema — every field with its state class.
-
+# 🧬️ Flow document artifact: durable schema and composed content identity.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type FlowArtifact {
   schema: String! @state(class: ARTIFACT)
-  camera: CameraJson! @state(class: ARTIFACT)
-  widgets: [Widget!]! @state(class: ARTIFACT)
-  synapses: [SynapseSpec!]! @state(class: ARTIFACT)
-  layout: [WidgetLayoutEntry!]! @state(class: ARTIFACT)
+  # @child kind=s.stdio.semio standard=v1 subset=flow
+  content: ArtifactChild! @state(class: ARTIFACT)
 }
-
-type CameraJson {
-  x: Float!
-  y: Float!
-  zoom: Float!
-}
-
-type WidgetLayout {
-  x: Float!
-  y: Float!
-}
-
-type WidgetLayoutEntry {
-  key: String!
-  value: WidgetLayout!
-}
-
-type SynapseSpec {
-  id: String!
-  from: String!
-  to: String!
-  fromPort: String!
-  toPort: String!
-}
-
-scalar Widget

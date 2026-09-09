@@ -6,7 +6,7 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️Snapshot
 /// 📸️ Persisted writer document snapshot. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
 /// wave 3 (`writer→C:document`): the inline `text: String` content field is replaced by a fixed
-/// composed `s.stdio.semio.document` CHILD slot — the writer plugin no longer defines its own
+/// composed `s.stdio.semio`/`document` CHILD slot — the writer plugin no longer defines its own
 /// text-block content model, it composes stdio's `document` subset instead. `#[child(...)]` drives
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, dsl::ToValue, dsl::FromValue)]
@@ -23,7 +23,7 @@ pub struct WriterSnapshot {
     #[value(default = "crate::default_uri")]
     pub uri: String,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.document")]
+    #[child(kind = "s.stdio.semio")]
     pub document: WriterDocumentChild,
 }
 

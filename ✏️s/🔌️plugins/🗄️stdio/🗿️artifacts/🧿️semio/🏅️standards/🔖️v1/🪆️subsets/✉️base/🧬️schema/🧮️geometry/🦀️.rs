@@ -20,8 +20,8 @@ use serde::{Deserialize, Serialize};
 /// site needs it, `ToValue`/`FromValue` is the real production codec.
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioPoint3 {
     pub x: f64,
     pub y: f64,
@@ -29,14 +29,18 @@ pub struct SemioPoint3 {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase")]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioPoint2 {
     pub x: f64,
     pub y: f64,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase")]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioUv {
     pub u: f64,
     pub v: f64,
@@ -45,7 +49,9 @@ pub struct SemioUv {
 
 //#region 🔖️Color
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase")]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioRgba {
     pub r: f32,
     pub g: f32,
@@ -59,8 +65,8 @@ pub struct SemioRgba {
 /// comment). Defaults to the identity rotation `(0,0,0,1)`.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioQuaternion {
     pub x: f64,
     pub y: f64,
@@ -76,8 +82,8 @@ impl Default for SemioQuaternion {
 
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioTransform {
     pub translation: SemioPoint3,
     pub rotation: SemioQuaternion,

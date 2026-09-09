@@ -13,7 +13,7 @@
   ],
   "properties": {
     "schema": {
-      "type": "string",
+      "const": "forms.form",
       "x-semio-state": "artifact"
     },
     "id": {
@@ -32,14 +32,14 @@
       "x-semio-state": "artifact"
     },
     "structure": {
-      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/value",
       "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio.value"
+      "x-semio-child-kind": "s.stdio.semio"
     },
     "results": {
-      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/table",
       "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio.table"
+      "x-semio-child-kind": "s.stdio.semio"
     }
   }
 }

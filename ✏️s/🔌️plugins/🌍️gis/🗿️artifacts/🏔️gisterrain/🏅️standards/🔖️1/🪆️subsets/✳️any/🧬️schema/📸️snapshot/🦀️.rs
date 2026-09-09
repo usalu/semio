@@ -17,7 +17,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS terrain document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainSnapshot {
     #[state(artifact)]
@@ -25,17 +25,9 @@ pub struct GisTerrainSnapshot {
     /// 🔌️ `map:in`'s insertion point — last-imported `2d.map` descriptor JSON.
     #[state(artifact)]
     pub imported_features_json: String,
-    /// 🕸️ Owned CHILD handle for this terrain's composed mesh representation (`s.stdio.semio.mesh`,
-    /// ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`). Content-addressed off
-    /// `(exaggeration, imported_features_json)` — the only two persisted fields — via
-    /// `gis_terrain_mesh_child_handle`/`gis_terrain_mesh_content_key`; every constructor of a
-    /// `GisTerrainSnapshot` (this file's `Default`, `apply_gis_terrain_mutation`,
-    /// `GisTerrainDiff::apply`) re-derives it so the handle never drifts from what
-    /// `gis_terrain_mesh_from_snapshot` would actually build. Replaces the placeholder-only
-    /// `3d.mesh` `ArtifactKindSpec` this artifact used to re-declare (see
-    /// `crate::🦀️.rs`'s removal comment).
+    /// 🪆️ Exact independently owned mesh handle, preserved by parent scalar edits.
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.mesh")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
 }

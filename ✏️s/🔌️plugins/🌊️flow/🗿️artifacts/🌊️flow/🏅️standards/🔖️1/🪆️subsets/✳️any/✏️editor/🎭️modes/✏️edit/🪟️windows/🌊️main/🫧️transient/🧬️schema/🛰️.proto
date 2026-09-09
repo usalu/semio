@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.s.flow.flow.window_transient;
+message FlowWindowTransient { string generation_json = 1; string duplicate_widget_progress_json = 2; }

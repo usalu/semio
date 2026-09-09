@@ -18,7 +18,7 @@ import {
   retainInferencePortOwnerAfterCloseV1,
   type InferencePortOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx";
-import fixture from "../../🧱️elements/🏛️ShellHost/👥️presence-scope/🔣️.json";
+import fixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/👥️presence-scope/🔣️.json";
 import presenceSchema from "../../../../🏪️store/👥️presence/🧬️schema/🔣️.json" with { type: "json" };
 
 type Case = (typeof fixture.cases)[number];

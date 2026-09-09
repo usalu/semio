@@ -2,16 +2,18 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
-import { applyWriterMainWindowConfigMutation, type WriterMainWindowConfigMutation } from "../../🧬️schema/🧬️mutations/🟦️";
-import { applyWriterMainWindowTransientMutation, type WriterMainWindowTransientMutation } from "../../../🫧️transient/🧬️schema/🧬️mutations/🟦️";
+import { applyWriterMainWindowConfigMutation, type WriterMainWindowConfigMutation } from "../../🧬️schema/🧬️mutations/🟦️.ts";
+import { applyWriterMainWindowTransientMutation, type WriterMainWindowTransientMutation } from "../../../🫧️transient/🧬️schema/🧬️mutations/🟦️.ts";
+import { testWriterPartialConstructionOracle } from "../../../🫧️transient/🧪️tests/🧩️partial-construction/🟦️.ts";
 
 /** 🧪️ Validates exact Writer window partitions against Ajv and independent JSON Patch. */
 export function testWriterWindowStateOracle(): void {
+  testWriterPartialConstructionOracle();
   const fixture = JSON.parse(readFileSync(new URL("./../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
-  const configSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
-  const configMutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
-  const transientSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
-  const transientMutationSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🧬️mutations/../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
+  const configSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const configMutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
+  const transientSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const transientMutationSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addKeyword("x-semio-state");
   ajv.addKeyword("x-semio-owner");

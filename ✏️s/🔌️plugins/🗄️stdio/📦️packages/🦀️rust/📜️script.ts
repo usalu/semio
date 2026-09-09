@@ -375,14 +375,14 @@ async function runCatalogRootContractTests(root: string): Promise<void> {
 class FlowRetainedDecodeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { default: assert } = await import("node:assert/strict");
-    const { default: Ajv } = await import("ajv/dist/2020.js");
+    const { default: Ajv } = await import("ajv");
     const leb = await import("@webassemblyjs/leb128");
     const base = join(this.root, "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary");
-    const fixture = JSON.parse(readFileSync(join(base, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-    const validate = ajv.compile(schema);
+    const validate = ajv.compile(schema.$defs.FlowRetainedSnapshot);
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const header = Buffer.concat([Buffer.from([137,83,69,77,13,10,26,10,24,0,0,0]), Buffer.from("stdio.semio.flow.pack v1")]);
     const decode = (hex: string): unknown => {
@@ -440,9 +440,8 @@ class FlowRetainedDecodeScript extends BundleScript {
     for (const row of fixture.valid) { assert.deepEqual(decode(row.hex), row.snapshot, row.id); assert.equal(encode(row.snapshot).toString("hex"), row.hex, row.id); }
     for (const row of fixture.invalid) assert.throws(() => decode(row.hex), (error: Error) => error.message === row.reason, row.id);
     console.log(`[DEBUG] Flow retained decoder independent oracle: ${fixture.valid.length} exact wire snapshots, ${fixture.invalid.length} hostile denials; third-party LEB128 and AJV agree`);
-    const lifecycle = JSON.parse(readFileSync(join(base, "🧫️fixture/♻️lifecycle/🔣️.json"), "utf8"));
-    const lifecycleSchema = JSON.parse(readFileSync(join(base, "🧬️schema/♻️lifecycle/🔣️.json"), "utf8"));
-    const validateLifecycle = ajv.compile(lifecycleSchema);
+    const lifecycle = JSON.parse(readFileSync(join(base, "🧫️fixtures/♻️lifecycle/🔣️.json"), "utf8"));
+    const validateLifecycle = ajv.compile(schema.$defs.FlowRetainedSnapshotLifecycle);
     assert(validateLifecycle(lifecycle), ajv.errorsText(validateLifecycle.errors));
     assert.equal(new Set(lifecycle.admission.map((row: any) => row.id)).size, 5);
     for (const row of lifecycle.admission) {
@@ -464,7 +463,7 @@ class FlowRetainedDecodeScript extends BundleScript {
     assert.equal(typedBytes, lifecycle.multiPage.snapshotRetiredBytes);
     assert.equal(inputBytes + identityBytes + typedBytes, lifecycle.multiPage.totalRetiredBytes);
     console.log(`[DEBUG] Flow lifecycle independent oracle: ${lifecycle.admission.length} exact admission states, ${lifecycle.multiPage.inputPages} input pages, ${lifecycle.multiPage.totalRetiredBytes} retained bytes; third-party encoding and strict AJV agree`);
-    const source = readFileSync(join(base, "🧪️tests/🦀️.rs"), "utf8");
+    const source = readFileSync(join(base, "🧪️tests/💾️binary/🦀️.rs"), "utf8");
     assert(source.includes("semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures"));
     assert(source.includes("semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"), "retained Flow lifecycle native law is absent");
     if (segments.includes("--oracle-only")) return;
@@ -593,7 +592,7 @@ class SubsetDirectoryWiringScript extends BundleScript {
     const [mode, artifact, subset] = segments;
     if ((mode !== "generate" && mode !== "check") || artifact !== "semio" || subset !== "mesh") throw new Error("subset-directory-wiring expects generate|check semio mesh");
     const { default: assert } = await import("node:assert/strict");
-    const fixtureRoot = join(import.meta.dir, "🧭️wiring-fixture/🗂️subset-directory-wiring");
+    const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/🧭️wiring/🗂️subset-directory-wiring");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as SubsetDirectoryFixture;
     const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🗂️subset-directory-wiring/🔣️.json"), "utf8"));
     const { default: Ajv2020 } = await import("ajv/dist/2020.js");

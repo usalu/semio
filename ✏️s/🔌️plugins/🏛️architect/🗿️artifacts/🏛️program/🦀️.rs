@@ -92,14 +92,15 @@ fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
     format!("architect-benchmarks-{:016x}", hasher.finish())
 }
 
-fn program_benchmarks_target() -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef { artifact_id: "architect-program-benchmarks".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
+fn program_benchmarks_target(scene_id: &str) -> store::os_io::ArtifactRef {
+    store::os_io::ArtifactRef { artifact_id: scene_id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
 /// 🏗️ Mints the composed-child handle and transfers rows into that exact owner.
 pub fn benchmarks_child_from_records(records: &[BenchmarkRecord]) -> ProgramBenchmarksChild {
     let scene_id = program_benchmarks_scene_id(records);
-    store::ArtifactChild::new(scene_id, program_benchmarks_target()).with_local_owner(std::sync::Arc::new(ProgramBenchmarksWorkingTable { records: records.to_vec() }))
+    let target = program_benchmarks_target(&scene_id);
+    store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(ProgramBenchmarksWorkingTable { records: records.to_vec() }))
 }
 
 /// 🔎 The live `benchmarks` rows behind a snapshot's composed child — the single read call site
@@ -161,13 +162,14 @@ fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
     format!("architect-knowledge-{:016x}", hasher.finish())
 }
 
-fn program_knowledge_target() -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef { artifact_id: "architect-program-knowledge".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
+fn program_knowledge_target(scene_id: &str) -> store::os_io::ArtifactRef {
+    store::os_io::ArtifactRef { artifact_id: scene_id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
 pub fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowledgeChild {
     let scene_id = program_knowledge_scene_id(records);
-    store::ArtifactChild::new(scene_id, program_knowledge_target()).with_local_owner(std::sync::Arc::new(ProgramKnowledgeWorkingTable { records: records.to_vec() }))
+    let target = program_knowledge_target(&scene_id);
+    store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(ProgramKnowledgeWorkingTable { records: records.to_vec() }))
 }
 
 pub fn program_knowledge(snapshot: &ProgramSnapshot) -> Vec<KnowledgeRecord> {

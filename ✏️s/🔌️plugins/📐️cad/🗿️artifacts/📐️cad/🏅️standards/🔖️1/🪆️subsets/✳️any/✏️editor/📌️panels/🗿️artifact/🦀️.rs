@@ -2,7 +2,7 @@
 //! and reference overlays, plus the scene's nodes.
 
 use crate::editor::cad::terminology::{typology_label, CadLabels};
-use crate::editor::cad::{cad_action, cad_tree_item, ui_label, ui_node_list, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView};
+use crate::editor::cad::{cad_action, cad_tree_item, cad_tree_item_static, ui_label, ui_node_list, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView};
 use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
 use crate::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use crate::{CadPaneId, CadReference, CadSnapshot};
@@ -35,11 +35,9 @@ pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &Cad
         // pending-domain-binding placeholder — already a documented no-op path today, since
         // `build_document_tree` renders every pane's object section empty (UNIFIED-COMPOSABLE-
         // ARTIFACT-SYSTEM gap).
-        let args = ui_value_map([("modelDefinitionId", ui_value_text(id_suffix)?)])?;
-        cad_tree_item(format!("cad-primitive:{id_suffix}:{}:{}", object.id, primitive.primitive_id), format!("{}: {}", primitive.slot, primitive.primitive_id), Some("hexagon"), cad_action("focusModelDefinition", Some(args))?)
+        cad_tree_item_static(format!("cad-primitive:{id_suffix}:{}:{}", object.id, primitive.primitive_id), format!("{}: {}", primitive.slot, primitive.primitive_id), Some("hexagon"))
     }))?;
-    let args = ui_value_map([("modelDefinitionId", ui_value_text(id_suffix)?)])?;
-    let mut item = cad_tree_item(format!("cad-object:{id_suffix}:{}", object.id), &object.label, Some("box"), cad_action("focusModelDefinition", Some(args))?)?;
+    let mut item = cad_tree_item_static(format!("cad-object:{id_suffix}:{}", object.id), &object.label, Some("box"))?;
     for primitive in primitive_items {
         item.children.try_push(primitive).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad primitive child admission failed"))?;
     }

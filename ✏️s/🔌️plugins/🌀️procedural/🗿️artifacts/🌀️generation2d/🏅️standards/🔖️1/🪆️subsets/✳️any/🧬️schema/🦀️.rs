@@ -17,10 +17,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
 //#region 🔖️Generation2dArtifact
 /// 🧬️ Generation2dArtifact facet type.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, Default)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.generation2d")]
-
 pub struct Generation2dArtifact {
     #[state(artifact)]
     pub fixture: FlowFixture,
@@ -29,11 +28,6 @@ pub struct Generation2dArtifact {
 }
 //#endregion 🔖️Generation2dArtifact
 
-impl Default for Generation2dArtifact {
-    fn default() -> Self {
-        Self { fixture: FlowFixture::default(), generation: GenerationPlayRoot::default() }
-    }
-}
 
 impl Generation2dArtifact {
     /// 📸️ Persisted subset.
@@ -43,7 +37,7 @@ impl Generation2dArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Generation2dSnapshot) -> Self {
-        Self { fixture: snapshot.fixture, generation: snapshot.generation, ..Self::default() }
+        Self { fixture: snapshot.fixture, generation: snapshot.generation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

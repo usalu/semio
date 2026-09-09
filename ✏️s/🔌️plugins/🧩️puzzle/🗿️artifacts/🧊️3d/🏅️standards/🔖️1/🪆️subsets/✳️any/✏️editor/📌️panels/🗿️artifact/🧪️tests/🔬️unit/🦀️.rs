@@ -178,3 +178,83 @@ fn the_outliner_renders_the_nakagin_example() {
     drop(page);
     drain_retired_ui_owners();
 }
+
+/// 🔁️ One row action's `setSelectionFlag` args, flattened to `(flag, value)` — the two entries the
+/// reducer reads (`🎮️commands/🔖️set-selection-flag/🦀️.rs`).
+fn flag_binding(row_action: &semio_framework_ui_contract::RowAction) -> (String, bool) {
+    let Some(semio_framework_plugin::UiValue::Map(map)) = row_action.action.args.as_ref() else {
+        panic!("a hide/lock row action must carry setSelectionFlag args");
+    };
+    let (mut flag, mut value) = (String::new(), None);
+    let mut cursor = map.iter();
+    while let Some((key, entry)) = cursor.advance() {
+        match (key.as_str(), entry) {
+            ("flag", semio_framework_plugin::UiValue::Text(text)) => flag = text.as_str().to_string(),
+            ("value", semio_framework_plugin::UiValue::Bool(bit)) => value = Some(*bit),
+            _ => {}
+        }
+    }
+    (flag, value.expect("a hide/lock row action must carry an explicit value"))
+}
+
+/// 🔁️ Every hide/lock row action of one built page, keyed by its row.
+fn flag_bindings(node: &super::BuiltNode, rows: &mut Vec<(String, String, bool)>) {
+    if let semio_framework_ui_contract::Component::TreeItem(props) = &node.component {
+        for row_action in props.row_actions.iter() {
+            let (flag, value) = flag_binding(row_action);
+            rows.push((node.key.as_str().to_string(), flag, value));
+        }
+    }
+    for child in node.children.iter() {
+        flag_bindings(child, rows);
+    }
+}
+
+/// 🙈️ The outliner's inline hide/lock toggles must ASK FOR THE INVERSE of the row's current flag —
+/// `📓️2026-09-09-user-feature-checklist.md` §17/summary #8: `flag_args` hardcoded `value: true`, so
+/// "Show"/"Unlock" re-sent the state the row was already in and an outliner-hidden object could never
+/// be un-hidden from the row that hid it. Asserted for all three row kinds that carry the toggles
+/// (object / reference / target volume) in both states, so a regression in any one of them fails.
+#[test]
+fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
+    let _page = page_guard();
+    let native = labels_for(semio_framework_plugin::Terminology::Native);
+    for flagged in [false, true] {
+        drain_retired_ui_owners();
+        let mut fixture = empty_fixture();
+        fixture.objects.push(crate::editor::puzzle3d::Puzzle3dObject {
+            id: "object-1".into(),
+            label: None,
+            object_kind: Some("Object".into()),
+            origin: [0.0, 0.0, 0.0],
+            orientation: None,
+            scale: None,
+            mesh_url: None,
+            vortices: Vec::new(),
+            hidden: flagged,
+            locked: flagged,
+            reveal_index: None,
+        });
+        fixture.references.push(crate::editor::puzzle3d::Puzzle3dReference {
+            id: "reference-1".into(),
+            source: crate::editor::puzzle3d::Puzzle3dReferenceSource { url: "/reference/plan.png".into(), media_kind: Some("image".into()) },
+            hidden: flagged,
+            locked: flagged,
+            ..Default::default()
+        });
+        fixture.target_volumes.push(crate::editor::puzzle3d::Puzzle3dTargetVolume { id: "volume-1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: flagged, locked: flagged });
+        let page = super::render(&fixture, native).expect("a three-row outliner page must be admitted");
+        let mut rows = Vec::new();
+        flag_bindings(&page, &mut rows);
+        assert_eq!(rows.len(), 6, "one hide plus one lock row action per object/reference/target-volume row: {rows:?}");
+        for (key, flag, value) in &rows {
+            assert_eq!(*value, !flagged, "row {key}'s {flag} toggle must ask for {} while the row is {flagged}", !flagged);
+        }
+        for expected in ["object-1", "reference-1", "volume-1"] {
+            assert_eq!(rows.iter().filter(|(key, _, _)| key == expected).count(), 2, "row {expected} lost a hide/lock action: {rows:?}");
+        }
+        eprintln!("[DEBUG] outliner flag rows flagged={flagged} rows={rows:?}");
+        drop(page);
+    }
+    drain_retired_ui_owners();
+}

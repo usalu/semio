@@ -1,0 +1,13 @@
+syntax = "proto3";
+package semio.app.generation.3d.viewer;
+message Generation3dViewPresence {
+  // @state presence
+  Generation3dViewCamera preview_camera = 1;
+  // @state presence
+  string show_mode = 2;
+}
+message Generation3dViewCamera {
+  repeated double position = 1;
+  repeated double target = 2;
+  double fov = 3;
+}

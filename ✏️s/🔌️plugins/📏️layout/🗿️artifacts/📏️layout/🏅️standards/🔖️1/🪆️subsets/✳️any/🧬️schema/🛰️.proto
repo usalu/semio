@@ -1,53 +1,43 @@
 syntax = "proto3";
 package semio.s.layout.layout.artifact;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🛰️.proto";
 
+message GridSettings { double baseline_grid = 1; double baseline_offset = 2; bool snap_to_baseline = 3; }
+message ParagraphStyle { string id = 1; string name = 2; string font_family = 3; double font_size = 4; uint32 font_weight = 5; double leading = 6; double tracking = 7; string alignment = 8; }
+message Rgba { repeated float values = 1; }
+message CharacterStyle { string id = 1; optional string name = 2; optional string font_family = 3; optional double font_size = 4; optional uint32 font_weight = 5; optional bool italic = 6; optional Rgba color = 7; optional double tracking = 8; }
+message TextStyleRun { uint64 start = 1; uint64 end = 2; optional string paragraph_style_id = 3; optional string character_style_id = 4; }
+message TextStory { string id = 1; string content = 2; repeated TextStyleRun style_runs = 3; }
+message ImageLink { string id = 1; string path = 2; string hash = 3; uint32 width = 4; uint32 height = 5; uint32 dpi = 6; optional string color_profile = 7; optional string state = 8; optional string proxy_data_url = 9; }
+message LayoutBounds { double x = 1; double y = 2; double w = 3; double h = 4; double rotation = 5; }
+message LayoutRect { double x = 1; double y = 2; double w = 3; double h = 4; }
+message PageMargins { double top = 1; double right = 2; double bottom = 3; double left = 4; }
+message PageColumns { uint32 count = 1; double gutter = 2; }
+message Layer { string id = 1; string name = 2; bool visible = 3; bool locked = 4; repeated string object_ids = 5; }
+message FrameRect { string id = 1; string layer_id = 2; LayoutBounds bounds = 3; optional bool locked = 4; optional bool visible = 5; optional Rgba fill = 6; optional Rgba stroke = 7; }
+message FrameText { string id = 1; string layer_id = 2; LayoutBounds bounds = 3; optional bool locked = 4; optional bool visible = 5; string story_id = 6; optional string thread_next = 7; uint32 columns = 8; LayoutRect inset = 9; string wrap_mode = 10; }
+message FrameImage { string id = 1; string layer_id = 2; LayoutBounds bounds = 3; optional bool locked = 4; optional bool visible = 5; string link_id = 6; }
+message Frame { oneof kind { FrameRect rect = 1; FrameText text = 2; FrameImage image = 3; } }
+message PageOverride { string object_id = 1; optional LayoutBounds bounds = 2; optional bool visible = 3; optional bool locked = 4; }
+message ParentPage { string id = 1; string name = 2; double width = 3; double height = 4; repeated string layer_ids = 5; repeated Layer layers = 6; repeated Frame frames = 7; }
+message Page { string id = 1; string name = 2; string spread_id = 3; optional string parent_page_id = 4; double width = 5; double height = 6; PageMargins margins = 7; PageColumns columns = 8; repeated LayoutRect guides = 9; repeated string layer_ids = 10; repeated Layer layers = 11; repeated Frame frames = 12; repeated PageOverride overrides = 13; }
+message Spread { string id = 1; string name = 2; repeated string page_ids = 3; }
+message LayoutDrawingChild { semio.os.store.ArtifactChild handle = 1; semio.s_stdio_semio_drawing.snapshot.SemioDrawingSnapshot content = 2; }
 message LayoutArtifact {
-  // @state artifact
   string schema = 1;
-  // @state artifact
   string name = 2;
-  // @state artifact
   GridSettings grid = 3;
-  // @state artifact
   repeated ParagraphStyle paragraph_styles = 4;
-  // @state artifact
   repeated CharacterStyle character_styles = 5;
-  // @state artifact
   repeated TextStory stories = 6;
-  // @state artifact
   repeated ImageLink links = 7;
-  // @state artifact
   repeated ParentPage parent_pages = 8;
-  // @state artifact
   repeated Spread spreads = 9;
-  // @state artifact
   repeated Page pages = 10;
-  // @state artifact
   optional string print_target = 11;
-  // @state artifact
   optional string data_fields_json = 12;
-}
-
-message GridSettings {
-  double baseline_grid = 1;
-  double baseline_offset = 2;
-  bool snap_to_baseline = 3;
-}
-
-message LayoutDropPreviewState {
-  string kind = 1;
-  double x = 2;
-  double y = 3;
-}
-
-message ParagraphStyle { string id = 1; }
-message CharacterStyle { string id = 1; }
-message TextStory { string id = 1; }
-message ImageLink { string id = 1; }
-message ParentPage { string id = 1; }
-message Spread { string id = 1; }
-message Page { string id = 1; }
-
-message LayoutStringList {
-  repeated string values = 1;
+  LayoutDrawingChild background_drawing = 13;
+  semio.os.store.ArtifactLink referenced_model = 14;
 }

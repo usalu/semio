@@ -1,5 +1,5 @@
 {
   "mutation": "createBuildingModel",
-  "childId": "building-model-2",
+  "childId": "cad-building-2",
   "target": "cad-building-2!s.stdio.semio@v1/model"
 }

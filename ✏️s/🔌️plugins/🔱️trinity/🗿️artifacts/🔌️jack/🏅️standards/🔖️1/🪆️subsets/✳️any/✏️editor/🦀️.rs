@@ -7,7 +7,7 @@
 //! command enum stays hand-rolled — see its own doc comment — only the match body is decomposed).
 
 use crate::editor::jack::commands;
-use crate::editor::jack::query_window_config::{JackEditorWindowConfigMutation, JackEditorWindowConfigOwner};
+use crate::editor::jack::query_window_config::JackEditorWindowConfigOwner;
 use crate::editor::jack::transient::{JackEditorWindowTransientOwner, JackResultsWindowTransientOwner};
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
@@ -323,6 +323,7 @@ fn jack_retained_window_config_extent(command: &TrinityJackCommand, _snapshot: &
     (bytes <= JACK_RETAINED_RAW_BYTES).then_some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
 fn jack_retained_window_config_reduce(
     command: &TrinityJackCommand,
     _snapshot: &JackSnapshot,

@@ -121,7 +121,11 @@ fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
             let samples = same_parameter_deviations(surface, pcurve, curve3, coedge.prange, edge.range, BASE_SAMPLES);
             let Some(&(worst_s, worst_dev)) = samples.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)) else { continue };
             if worst_dev > edge.tol.value() {
-                issues.push(ValidationIssue { entity: format!("coedge-{}", coedge_id.raw_index()), code: "same-parameter-violated", message: format!("pcurve and 3D curve disagree by {worst_dev} at s={worst_s} (tol {})", edge.tol.value()) });
+                issues.push(ValidationIssue {
+                    entity: format!("coedge-{}", coedge_id.raw_index()),
+                    code: "same-parameter-violated",
+                    message: format!("pcurve and 3D curve disagree by {worst_dev} at s={worst_s} (tol {}; face-{} edge-{} prange {:?} range {:?})", edge.tol.value(), face_id.raw_index(), coedge.edge.raw_index(), coedge.prange, edge.range),
+                });
             }
         }
     }
@@ -179,6 +183,23 @@ fn same_parameter_deviations(
 /// (audit §6.12: "manifold orientation ... shell closure ... incomplete"). Fewer than 2 is an open
 /// boundary; more than 2 is non-manifold within this shell; exactly 2 with the SAME sense means
 /// the two faces sharing the edge disagree on orientation.
+/// 🩺️ `true` when `edge_id` is a POINT edge — the standard BREP idiom that closes a parametric
+/// rectangle along a collapsed iso-line (a sphere's two poles, `Curve3::Line { dir: ZERO }` with
+/// `v0 == v1`). Such an edge carries no traversal direction and bounds no surface strip, so it
+/// legitimately appears ONCE in its shell (OCCT's `BRep_Builder::Degenerated` flag, here derived
+/// intrinsically from the geometry rather than persisted) and is not a sliver. A full-period seam
+/// edge also has `v0 == v1` but a non-zero length, so it stays subject to the ordinary two-use
+/// rule.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_point_edge(body: &Body, edge_id: EdgeId) -> bool {
+    let Some(edge) = body.edges.get(edge_id) else { return false };
+    if edge.v0 != edge.v1 {
+        return false;
+    }
+    let Some(curve) = body.curves3.get(edge.curve) else { return false };
+    curve_ops::arc_length(curve, edge.range.0, edge.range.1, 1e-9) <= edge.tol.value()
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn check_shell_closure_and_orientation(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (shell_id, shell) in body.shells.iter() {
@@ -191,6 +212,9 @@ fn check_shell_closure_and_orientation(body: &Body, issues: &mut Vec<ValidationI
             }
         }
         for (edge_id, uses) in edge_uses {
+            if is_point_edge(body, edge_id) {
+                continue;
+            }
             if uses.len() != 2 {
                 issues.push(ValidationIssue {
                     entity: format!("shell-{}-edge-{}", shell_id.raw_index(), edge_id.raw_index()),
@@ -241,6 +265,9 @@ fn check_solid_orientation(body: &Body, issues: &mut Vec<ValidationIssue>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn check_degenerate_geometry(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (edge_id, edge) in body.edges.iter() {
+        if is_point_edge(body, edge_id) {
+            continue;
+        }
         let Some(curve) = body.curves3.get(edge.curve) else { continue };
         let len = curve_ops::arc_length(curve, edge.range.0, edge.range.1, 1e-9);
         if len < edge.tol.value() {

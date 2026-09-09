@@ -9,7 +9,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.procedural.generation3d")]
-
 pub struct Generation3dDiff {
     #[state(artifact)]
     pub artifact: Option<Box<Generation3dArtifact>>,

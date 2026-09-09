@@ -1,0 +1,78 @@
+{
+  "document": {
+    "schema": "cad.document",
+    "id": "cad-contract",
+    "shapeModel": {
+      "childId": "cad-shape-model",
+      "target": {
+        "artifactId": "cad-shape-model",
+        "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "model" }
+      }
+    },
+    "drawings": [
+      {
+        "childId": "cad-drawing",
+        "target": {
+          "artifactId": "cad-drawing",
+          "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "drawing" }
+        }
+      }
+    ],
+    "referencesByModelDefinitionId": {
+      "spatial.shape": [
+        {
+          "id": "reference-1",
+          "sourceUrl": "https://example.test/plan.png",
+          "mediaKind": "image",
+          "origin": [0, 0, 0],
+          "orientation": null,
+          "scale": 1,
+          "widthWorld": 10,
+          "hidden": false,
+          "locked": true,
+          "opacity": 0.5
+        }
+      ]
+    },
+    "nodes": [{ "id": "node-1", "label": "Root", "kind": "group" }]
+  },
+  "diff": {
+    "shapeModel": {
+      "childId": "cad-shape-model-2",
+      "target": {
+        "artifactId": "cad-shape-model-2",
+        "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "model" }
+      }
+    },
+    "drawings": {
+      "values": [
+        {
+          "childId": "cad-drawing-2",
+          "target": {
+            "artifactId": "cad-drawing-2",
+            "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "drawing" }
+          }
+        }
+      ]
+    },
+    "nodes": {
+      "added": [{ "id": "node-2", "label": "Body", "kind": "solid" }],
+      "removed": [],
+      "patched": [],
+      "reordered": null
+    }
+  },
+  "invalidDocuments": [
+    { "kind": "field", "field": "objects", "value": [] },
+    { "kind": "field", "field": "shapeGeometry", "value": {} },
+    { "kind": "field", "field": "activeModelDefinitionId", "value": "spatial.shape" },
+    { "kind": "shapeChildId", "value": "foreign-id" },
+    { "kind": "shapeSubset", "value": "drawing" },
+    { "kind": "drawingSubset", "value": "model" }
+  ],
+  "invalidDiffs": [
+    { "objects": { "added": [], "removed": [], "patched": [] } },
+    { "activeModelDefinitionId": "aec.building" },
+    { "drawings": [] }
+  ]
+}

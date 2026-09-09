@@ -64,7 +64,7 @@ export function completionRejectionOracle(repoRoot?: string): number {
   if (repoRoot) {
     assert.equal(new Set(law.callers.map((row: { family: string }) => row.family)).size, law.callers.length);
     for (const row of law.callers) {
-      const source = readFileSync(resolve(repoRoot, row.source), "utf8").split("#[cfg(test)]", 1)[0]!;
+      const source = readFileSync(resolve(repoRoot, row.source), "utf8");
       const retain = source.indexOf("self.pending_completion_rejection = Some(rejected)");
       const guard = source.indexOf(row.terminalGuard);
       const close = source.indexOf("emit.close_child_one(maximum_items, maximum_bytes)");

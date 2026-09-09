@@ -129,8 +129,8 @@ pub const NOTE_DIALECT: Dialect = Dialect { artifact_kind: "s.note.note", standa
 //#region 🔖️Domain
 pub const NOTE_DOCUMENT_SCHEMA: &str = "note.document";
 
-/// 🎥️ Camera pose — ephemeral view state that lives in `crate::editor::note::config::NoteConfig`, never in
-/// `NoteSnapshot`, so it stays out of undo history and off the operation channel.
+/// 🎥️ Camera pose — persisted by the exact composite-window configuration owner, never in
+/// `NoteSnapshot` or app-wide configuration, so two open canvases retain independent poses.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]

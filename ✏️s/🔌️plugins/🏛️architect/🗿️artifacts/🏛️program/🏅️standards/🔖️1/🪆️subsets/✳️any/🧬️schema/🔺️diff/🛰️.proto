@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.architect.program.diff;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Program diff schema
 message ProgramDiff {
@@ -104,7 +105,7 @@ message ProgramDiff {
   // @state artifact
   optional ProgramQualityDelta quality = 50;
   // @state artifact
-  optional ProgramDocumentsDelta documents = 51;
+  optional ProgramArtifactsDelta artifacts = 51;
   // @state artifact
   optional ProgramAssumptionsDelta assumptions = 52;
   // @state artifact
@@ -138,9 +139,9 @@ message ProgramDiff {
   // @state artifact
   optional ProgramTemplatesDelta templates = 67;
   // @state artifact
-  optional ProgramKnowledgeDelta knowledge = 68;
+  optional semio.os.store.ArtifactChild knowledge = 68;
   // @state artifact
-  optional ProgramBenchmarksDelta benchmarks = 69;
+  optional semio.os.store.ArtifactChild benchmarks = 69;
   // @state artifact
   optional ProgramTracesDelta traces = 70;
   // @state artifact
@@ -699,16 +700,16 @@ message ProgramQualityPatchEntry {
   QualityRecord item = 2;
 }
 
-message ProgramDocumentsDelta {
-  repeated DocumentRecord added = 1;
+message ProgramArtifactsDelta {
+  repeated ArtifactRecord added = 1;
   repeated string removed = 2;
-  repeated ProgramDocumentsPatchEntry patched = 3;
+  repeated ProgramArtifactsPatchEntry patched = 3;
   repeated string reordered = 4;
 }
 
-message ProgramDocumentsPatchEntry {
+message ProgramArtifactsPatchEntry {
   string id = 1;
-  DocumentRecord item = 2;
+  ArtifactRecord item = 2;
 }
 
 message ProgramAssumptionsDelta {
@@ -901,30 +902,6 @@ message ProgramTemplatesDelta {
 message ProgramTemplatesPatchEntry {
   string id = 1;
   TemplateRecord item = 2;
-}
-
-message ProgramKnowledgeDelta {
-  repeated KnowledgeRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramKnowledgePatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message ProgramKnowledgePatchEntry {
-  string id = 1;
-  KnowledgeRecord item = 2;
-}
-
-message ProgramBenchmarksDelta {
-  repeated BenchmarkRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramBenchmarksPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message ProgramBenchmarksPatchEntry {
-  string id = 1;
-  BenchmarkRecord item = 2;
 }
 
 message ProgramTracesDelta {

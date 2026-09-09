@@ -72,10 +72,6 @@ impl EquationArtifact {
         Self { notation: snapshot.notation, results: snapshot.results, computed: snapshot.computed, equation: snapshot.equation }
     }
 
-    fn default_ui() -> Self {
-        let default_snapshot = crate::equation_snapshot_with_state(&EquationGraph::default(), &EquationGeometry::default());
-        Self { notation: default_snapshot.notation, results: default_snapshot.results, computed: default_snapshot.computed, equation: default_snapshot.equation }
-    }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::EquationSnapshot) {

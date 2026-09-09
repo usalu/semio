@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { type AgentBridgeConfig, useAgentBridge, applyInboundShellCommand, bridgeProtocols, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, discoverAgentBridgeConfig, encodeJsonPayload } from "./🟦️.tsx";
+import { type AgentBridgeConfig, useAgentBridge, applyInboundShellCommand, bridgeProtocols, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, discoverAgentBridgeConfig, encodeJsonPayload } from "../../🟦️.tsx";
 import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "../../../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -42,7 +42,7 @@ describe("bridgeProtocols", () => {
 type FixtureRow = { readonly direction: "shell_to_gateway" | "gateway_to_shell"; readonly variant: string; readonly frame: unknown; readonly hex: string };
 
 function loadFixtures(): readonly FixtureRow[] {
-  const path = join(here, "..", "..", "..", "..", "🌉️mcp", "🧵️bridge", "🧫️fixtures", "📨️frames.json");
+  const path = join(here, "..", "..", "..", "..", "..", "..", "🌉️mcp", "🧵️bridge", "🧫️fixtures", "📨️frames.json");
   return JSON.parse(readFileSync(path, "utf8")) as FixtureRow[];
 }
 

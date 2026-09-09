@@ -1,31 +1,6 @@
-# 🧬️ GIS map diff schema — sparse field delta.
-
-type GisMapDiff {
-  artifact: GisMapArtifact @state(class: ARTIFACT)
-  positions: GisMapFeaturesDelta @state(class: ARTIFACT)
-  routes: GisMapFeaturesDelta @state(class: ARTIFACT)
-  regions: GisMapFeaturesDelta @state(class: ARTIFACT)
-}
-
-type GisMapArtifact {
-  positions: [GisMapFeature!]!
-  routes: [GisMapFeature!]!
-  regions: [GisMapFeature!]!
-}
-
-type GisMapFeature { id: String! data: String! }
-type GisMapBoolEntry { key: String! value: Boolean! }
-type GisMapNumberEntry { key: String! value: Float! }
-type GisMapStringList { values: [String!]! }
-type GisMapBoolMapDelta { entries: [GisMapBoolDiffEntry!]! }
-type GisMapNumberMapDelta { entries: [GisMapNumberDiffEntry!]! }
-type GisMapBoolDiffEntry { key: String! value: Boolean }
-type GisMapNumberDiffEntry { key: String! value: Float }
-type GisMapFeaturesDelta {
-  added: [GisMapFeature!]!
-  removed: [String!]!
-  patched: [GisMapFeaturePatchEntry!]!
-  reordered: [String!]
-}
-type GisMapFeaturePatchEntry { id: String! patch: GisMapFeaturePatch! }
-type GisMapFeaturePatch { data: String }
+# 🔺️ Map deltas reuse the document and feature schema owners.
+# import GisMapArtifact from "../🔗️.graphql"
+# import GisMapFeature, GisMapFeaturePatch from "../📍️feature/🔗️.graphql"
+type GisMapDiff { artifact: GisMapArtifact, positions: GisMapFeaturesDelta, routes: GisMapFeaturesDelta, regions: GisMapFeaturesDelta }
+type GisMapFeaturesDelta { added: [GisMapFeature!]!, removed: [String!]!, patched: [GisMapFeaturePatchEntry!]!, reordered: [String!] }
+type GisMapFeaturePatchEntry { id: String!, patch: GisMapFeaturePatch! }

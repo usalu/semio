@@ -1,4 +1,3 @@
-
 use super::*;
 
 async fn close_replication_rejection(mut rejected: ReplicationRejected) -> DbError {

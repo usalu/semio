@@ -1,3 +1,4 @@
+import semioChildSchema from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🔣️.json" with { type: "json" };
 import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧪️testkit/🪪️document-contract/🟦️.ts";
 /** 🧪️ Forms persisted fields and child identities agree with independent JSON Schema validation. */
 import { join } from "node:path";
@@ -16,12 +17,13 @@ export function testFormsDocumentContractOracle(): void {
   const { title: _, ...base } = vectors.document;
   assertDocumentContractOracle({
     name: "Forms",
-    dependencies: [ioSchema, childSchema],
+    dependencies: [ioSchema, childSchema, semioChildSchema],
+    childIdentityFields: ["structure", "results"],
     artifact: { schema: artifactSchema, parse: artifact.parseFormsArtifact },
     snapshot: { schema: snapshotSchema, parse: snapshot.parseFormsSnapshot },
     diff: { schema: diffSchema, parse: diff.parseFormsDiff },
     validDocuments: [{ input: vectors.document, output: vectors.document }, { input: base, output: base }, { input: { ...base, title: null }, output: base }],
-    invalidDocuments: [...Object.entries(vectors.invalidDocumentFields).map(([key, value]) => ({ ...vectors.document, [key]: value })), ...vectors.invalidChildren.map((child) => ({ ...vectors.document, structure: child }))],
+    invalidDocuments: [...vectors.invalidIdentityDocuments, ...Object.entries(vectors.invalidDocumentFields).map(([key, value]) => ({ ...vectors.document, [key]: value })), ...vectors.invalidChildren.map((child) => ({ ...vectors.document, structure: child }))],
     mutationRoots: [join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations")],
     committed: { snapshots: 20, diffs: 6 },
   });

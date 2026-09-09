@@ -6,7 +6,7 @@
   "document": {
     "childId": "playbook-document-remove-step-missing",
     "target": {
-      "artifactId": "playbook-document",
+      "artifactId": "playbook-document-remove-step-missing",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -17,7 +17,7 @@
   "flow": {
     "childId": "playbook-flow-remove-step-missing",
     "target": {
-      "artifactId": "playbook-flow",
+      "artifactId": "playbook-flow-remove-step-missing",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

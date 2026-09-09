@@ -33,7 +33,7 @@ function summary(abi) {
 //#endregion 🔮️OwnedOraclePort
 
 const expected = JSON.parse(await readFile(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
-const abi = JSON.parse(await readFile(new URL("../../🧫️fixtures/📡️abi.json", import.meta.url), "utf8"));
+const abi = JSON.parse(await readFile(new URL("../../🧬️schema/📡️abi.json", import.meta.url), "utf8"));
 const owned = summary(abi);
 const thirdParty = new AjvFlowSchemaOracle().summarize(abi);
 if (JSON.stringify(owned) !== JSON.stringify(expected)) throw new Error("Flow owned schema summary drift");

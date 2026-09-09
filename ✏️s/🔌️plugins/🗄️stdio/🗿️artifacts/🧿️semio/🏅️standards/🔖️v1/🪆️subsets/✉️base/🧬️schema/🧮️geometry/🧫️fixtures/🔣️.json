@@ -1,0 +1,148 @@
+{
+  "cases": [
+    {
+      "type": "SemioPoint3",
+      "input": {
+        "x": 1.25,
+        "y": -2,
+        "z": 3
+      },
+      "valid": true
+    },
+    {
+      "type": "SemioPoint2",
+      "input": {
+        "x": 1,
+        "y": 2
+      },
+      "valid": true
+    },
+    {
+      "type": "SemioUv",
+      "input": {
+        "u": 0.25,
+        "v": 0.5
+      },
+      "valid": true
+    },
+    {
+      "type": "SemioRgba",
+      "input": {
+        "r": 0.25,
+        "g": 0.5,
+        "b": 0.75,
+        "a": 1
+      },
+      "valid": true
+    },
+    {
+      "type": "SemioQuaternion",
+      "input": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "valid": true
+    },
+    {
+      "type": "SemioTransform",
+      "input": {
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "valid": true
+    },
+    {
+      "type": "SemioPoint3",
+      "input": {
+        "x": 1,
+        "y": 2
+      },
+      "valid": false
+    },
+    {
+      "type": "SemioPoint3",
+      "input": {
+        "x": 1,
+        "y": 2,
+        "z": "3"
+      },
+      "valid": false
+    },
+    {
+      "type": "SemioQuaternion",
+      "input": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1,
+        "locale": "de"
+      },
+      "valid": false
+    },
+    {
+      "type": "SemioTransform",
+      "input": {
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        }
+      },
+      "valid": false
+    },
+    {
+      "type": "SemioTransform",
+      "input": {
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "zoom": 2
+      },
+      "valid": false
+    },
+    {
+      "type": "SemioRgba",
+      "input": [],
+      "valid": false
+    }
+  ]
+}

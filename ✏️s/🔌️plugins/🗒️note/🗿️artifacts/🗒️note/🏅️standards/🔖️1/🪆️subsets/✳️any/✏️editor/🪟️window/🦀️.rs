@@ -3,7 +3,7 @@
 use crate::editor::note::NOTE_PLAY_WINDOW_COMPOSITE;
 use crate::NoteCamera;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, Default)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -11,13 +11,8 @@ pub struct NoteCompositeWindowConfig {
     pub camera: NoteCamera,
 }
 
-impl Default for NoteCompositeWindowConfig {
-    fn default() -> Self {
-        Self { camera: NoteCamera::default() }
-    }
-}
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -25,12 +20,12 @@ pub struct NoteCompositeWindowTransient {
     pub engagement_input: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum NoteCompositeWindowConfigMutation {
     Snapshot { config: NoteCompositeWindowConfig },
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum NoteCompositeWindowTransientMutation {
     Snapshot { transient: NoteCompositeWindowTransient },
 }
@@ -128,6 +123,28 @@ impl protocol::MutationDiff<NoteCompositeWindowTransient> for NoteCompositeWindo
     fn absorb(&mut self, other: Self) { *self = other; }
 }
 
+store::artifact_retire_struct!(NoteCompositeWindowTransient { engagement_input });
+
+impl store::retirement::RetireOwned for NoteCompositeWindowTransientMutation {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        match self {
+            Self::Snapshot { transient } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(transient)]),
+        }
+    }
+}
+
+fn note_composite_window_transient_preflight(mutation: &NoteCompositeWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let NoteCompositeWindowTransientMutation::Snapshot { transient } = mutation;
+    let retained_bytes = size_of::<NoteCompositeWindowTransient>().checked_add(transient.engagement_input.capacity()).ok_or_else(|| "Note composite window transient footprint overflowed".to_string())?;
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn note_composite_window_transient_transfer(mutation: NoteCompositeWindowTransientMutation) -> NoteCompositeWindowTransient {
+    match mutation {
+        NoteCompositeWindowTransientMutation::Snapshot { transient } => transient,
+    }
+}
+
 pub struct NoteCompositeWindowConfigOwner;
 impl semio_framework_plugin::WindowConfigOwner for NoteCompositeWindowConfigOwner {
     const WINDOW_KIND_ID: &'static str = NOTE_PLAY_WINDOW_COMPOSITE;
@@ -145,9 +162,17 @@ impl semio_framework_plugin::WindowTransientOwner for NoteCompositeWindowTransie
     const WINDOW_KIND_ID: &'static str = NOTE_PLAY_WINDOW_COMPOSITE;
     type State = NoteCompositeWindowTransient;
     type Mutation = NoteCompositeWindowTransientMutation;
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_transient_preparation_factory::<Self>() }
-    fn build_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::State>> { semio_framework_plugin::bounded_window_transient_root_retirement_factory::<Self>() }
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_transient_store_disposer::<Self>() }
+    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+        let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+            note_composite_window_transient_preflight,
+            note_composite_window_transient_transfer,
+            state.clone(),
+            mutation.clone(),
+        ));
+        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+    }
 }
 
 pub fn register_config(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> { registry.register::<NoteCompositeWindowConfigOwner>() }
@@ -177,18 +202,5 @@ pub fn addressed_transient(snapshot: &semio_framework_plugin::WindowTransientSna
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn window_schema_round_trips_match_the_serde_json_oracle() {
-        let config = NoteCompositeWindowConfig { camera: NoteCamera { x: 3.0, y: -2.0, zoom: 1.5 } };
-        let transient = NoteCompositeWindowTransient { engagement_input: "Änderung".into() };
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&config)).expect("independent config oracle"), serde_json::json!({"camera":{"x":3.0,"y":-2.0,"zoom":1.5}}));
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&transient)).expect("independent transient oracle"), serde_json::json!({"engagementInput":"Änderung"}));
-        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
-        store::os_store::test_support::assert_dsl_pack_equivalence(&transient);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowConfigMutation::Snapshot { config });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowTransientMutation::Snapshot { transient });
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -8,7 +8,7 @@ import _ from "lodash";
 
 //#region 🪪️RuntimeIdentityOracle
 export function testDirectoryRuntimeIdentityFixture(): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🔣️.json", testSourceUrl.href), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
   const module = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", testSourceUrl.href), "utf8")) as { $id: string };
   const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module).getSchema(`${module.$id}#/$defs/DirectoryClientRuntimeIdentityV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));

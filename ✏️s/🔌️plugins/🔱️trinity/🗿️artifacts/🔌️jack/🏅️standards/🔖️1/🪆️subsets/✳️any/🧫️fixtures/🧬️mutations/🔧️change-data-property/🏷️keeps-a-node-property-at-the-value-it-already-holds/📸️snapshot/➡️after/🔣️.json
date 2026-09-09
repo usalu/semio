@@ -7,14 +7,14 @@
     "portKinds": []
   },
   "camera": {
-    "x": 0.0,
-    "y": 0.0,
-    "zoom": 1.0
+    "x": 0,
+    "y": 0,
+    "zoom": 1
   },
   "content": {
     "childId": "jack-content-change-data-property-noop-fixture",
     "target": {
-      "artifactId": "jack-content",
+      "artifactId": "jack-content-change-data-property-noop-fixture",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

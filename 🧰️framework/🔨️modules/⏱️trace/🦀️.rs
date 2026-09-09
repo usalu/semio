@@ -16,7 +16,10 @@
 //! 🕰️ **Clock**: `std::time::Instant` doesn't exist (usably) on `wasm32-unknown-unknown` without WASI
 //! p2. The embedding host installs one actual monotonic source shared by tracing and job deadlines.
 //! Missing or backward readings produce an exact callback fault, never synthetic time. Telemetry is
-//! optional and nonblocking; [`CallbackVerdict`] is the caller-owned quarantine authority.
+//! optional and nonblocking; [`CallbackVerdict`] is the caller-owned MEASUREMENT of one step and
+//! [`StepOverrunLedger`] the caller-owned quarantine authority over a run of them, because the only
+//! clock any target guarantees measures WALL time and a single over-ceiling wall reading says as much
+//! about the machine's scheduler as about the step.
 //!
 //! 🚫️async: this crate deliberately writes NO `async fn` anywhere, breaking with the rest of the
 //! repo's universal-async convention (see `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/
@@ -363,7 +366,8 @@ impl CallbackTimer {
 //#region 🐕️Watchdog
 /// 🚨️ What [`Watchdog::violations`] reports once a wrapped site's elapsed time crosses
 /// [`INTERACTIVE_STEP_CEILING_US`] — enough to name the offending site, correlate it back to the
-/// operation/generation in flight, and quarantine it afterward.
+/// operation/generation in flight, and feed it to that session's [`StepOverrunLedger`], which decides
+/// whether a run of them is the step's own work.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ContractViolation {
     pub site: &'static str,
@@ -391,6 +395,13 @@ pub struct CallbackVerdict {
 }
 
 impl CallbackVerdict {
+    /// 🔎️ Whether THIS ONE sample breached its clock authority — an unusable reading
+    /// ([`CallbackVerdict::clock_fault`]) or an over-ceiling elapsed WALL time
+    /// ([`CallbackVerdict::violation`]). A measurement, never on its own a quarantine authority: a
+    /// single over-ceiling wall reading is as often the machine descheduling the thread as it is the
+    /// step's own work (measured: a 19 µs unit read 14 571 µs on a load-average-90 box, and a
+    /// browser worker is descheduled the same way). [`StepOverrunLedger`] is the authority that turns
+    /// a run of these into a terminal verdict.
     pub fn is_fault(&self) -> bool {
         self.elapsed.is_err() || self.elapsed.is_ok_and(interactive_step_contract_violated)
     }
@@ -502,6 +513,113 @@ impl Drop for Watchdog {
 mod watchdog_tail;
 pub use watchdog_tail::WatchdogAdmission;
 //#endregion 🐕️Watchdog
+
+//#region 📒️OverrunLedger
+/// 🔁️ How many CONSECUTIVE steps of ONE session must each breach [`INTERACTIVE_STEP_CEILING_US`]
+/// before the overrun is attributed to the step's own work instead of to the machine that scheduled
+/// it. [`INTERACTIVE_STEP_CEILING_US`] itself is unchanged: it still says what "interactive" means
+/// for one step, and every single breach is still recorded ([`Watchdog::violations`],
+/// [`step_overrun_counts`]). What changes is who may be *quarantined* for it.
+///
+/// 🧮️ Why a consecutive count and not thread CPU time: `clock_gettime(CLOCK_THREAD_CPUTIME_ID)`
+/// would attribute an overrun exactly, but it exists only off-`wasm32`. `wasi:clocks` publishes a
+/// monotonic and a wall clock and NO per-thread CPU clock, and the browser has neither — so a
+/// CPU-time law would leave the one target where descheduling is worst (a browser worker sharing a
+/// core with ~20 booting WASM plugins) running the very law this constant replaces. Fuel-versus-
+/// elapsed was rejected for the same reason in the other direction: fuel is job-declared, and the
+/// steps that trip this ceiling are precisely the cheap ones that consume none. A consecutive count
+/// needs only the monotonic clock the runtime already requires, so ONE law holds on every target.
+///
+/// 📏️ Sized at four: a descheduling burst has to survive four separate scheduler decisions in a row
+/// to reach it, while a step that genuinely costs more than 8 ms overruns *every* step and is stopped
+/// after at most `4 × INTERACTIVE_STEP_CEILING_US` = 32 ms — well inside the frame budget a stuck
+/// operation would otherwise burn forever.
+pub const SUSTAINED_OVERRUN_QUARANTINE_STEPS: u32 = 4;
+
+static RECORDED_STEP_OVERRUNS: AtomicU64 = AtomicU64::new(0);
+static SUSTAINED_OVERRUN_QUARANTINES: AtomicU64 = AtomicU64::new(0);
+
+/// ⚖️ What one [`CallbackVerdict`] means for the session that produced it, once its own
+/// [`StepOverrunLedger`] has seen it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StepQuarantine {
+    Admitted,
+    RecordedOverrun { consecutive: u32 },
+    SustainedOverrun { consecutive: u32 },
+    ClockFault(CallbackClockFault),
+}
+
+impl StepQuarantine {
+    /// 🛑️ Whether the owning session must be terminated. A single overrun never is; an unusable
+    /// clock reading always is, because nothing about that step was measured at all.
+    pub fn is_terminal(self) -> bool {
+        matches!(self, StepQuarantine::SustainedOverrun { .. } | StepQuarantine::ClockFault(_))
+    }
+}
+
+/// 📒️ One session's fixed-capacity overrun ledger — four counters, no allocation, `Copy`, usable
+/// from any thread and from `wasm32`. Every [`CallbackVerdict`] a session mints is admitted here
+/// exactly once, in step order, and the ledger answers whether that session has now overrun
+/// [`SUSTAINED_OVERRUN_QUARANTINE_STEPS`] steps in a row. Any admitted step resets the run, so an
+/// isolated descheduling spike is recorded and forgotten while a runaway step still quarantines.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct StepOverrunLedger {
+    consecutive: u32,
+    longest_run: u32,
+    total: u32,
+    worst_elapsed_us: u64,
+}
+
+impl StepOverrunLedger {
+    pub const fn new() -> StepOverrunLedger {
+        StepOverrunLedger { consecutive: 0, longest_run: 0, total: 0, worst_elapsed_us: 0 }
+    }
+
+    /// ⚖️ Admits one verdict and returns this session's quarantine authority for it.
+    pub fn admit(&mut self, verdict: &CallbackVerdict) -> StepQuarantine {
+        if let Some(fault) = verdict.clock_fault() {
+            self.consecutive = 0;
+            return StepQuarantine::ClockFault(fault);
+        }
+        let Some(violation) = verdict.violation() else {
+            self.consecutive = 0;
+            return StepQuarantine::Admitted;
+        };
+        self.consecutive = self.consecutive.saturating_add(1);
+        self.longest_run = self.longest_run.max(self.consecutive);
+        self.total = self.total.saturating_add(1);
+        self.worst_elapsed_us = self.worst_elapsed_us.max(violation.elapsed_us);
+        RECORDED_STEP_OVERRUNS.fetch_add(1, Ordering::Relaxed);
+        if self.consecutive < SUSTAINED_OVERRUN_QUARANTINE_STEPS {
+            return StepQuarantine::RecordedOverrun { consecutive: self.consecutive };
+        }
+        SUSTAINED_OVERRUN_QUARANTINES.fetch_add(1, Ordering::Relaxed);
+        StepQuarantine::SustainedOverrun { consecutive: self.consecutive }
+    }
+
+    pub fn consecutive_overruns(&self) -> u32 {
+        self.consecutive
+    }
+
+    pub fn longest_overrun_run(&self) -> u32 {
+        self.longest_run
+    }
+
+    pub fn total_overruns(&self) -> u32 {
+        self.total
+    }
+
+    pub fn worst_elapsed_us(&self) -> u64 {
+        self.worst_elapsed_us
+    }
+}
+
+/// 📊️ Process-wide `(recorded step overruns, sustained-overrun quarantines)` — the second number is
+/// how often an overrun was ever attributed to a step rather than to the machine.
+pub fn step_overrun_counts() -> (u64, u64) {
+    (RECORDED_STEP_OVERRUNS.load(Ordering::Relaxed), SUSTAINED_OVERRUN_QUARANTINES.load(Ordering::Relaxed))
+}
+//#endregion 📒️OverrunLedger
 
 //#region 🧵️ThreadRole
 /// 🧵️ Which role the calling OS thread was registered under — [`ThreadRole::Unknown`] until

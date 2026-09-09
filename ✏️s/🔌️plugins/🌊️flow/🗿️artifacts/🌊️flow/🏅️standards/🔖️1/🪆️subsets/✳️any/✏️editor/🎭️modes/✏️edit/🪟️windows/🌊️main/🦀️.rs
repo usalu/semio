@@ -1,6 +1,6 @@
 //! 🌊️ Flow play app — the main node-graph window: the editable flow canvas.
 
-use crate::editor::flow::config::FlowConfig;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::host_from_snapshot;
 use crate::editor::flow::modes::edit::windows::main::options;
 use crate::editor::flow::terminology::FlowPlayLabels;
@@ -41,7 +41,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `☑️options/*` components.
-pub fn window_measures(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &FlowMainWindowConfig, labels: &FlowPlayLabels) -> Vec<WindowMeasure> {
     vec![options::lod::measure(config, labels), options::proximity::measure(config, labels), options::grid::measure(config, labels)]
 }
 //#endregion 🔖️Definition
@@ -81,7 +81,7 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, V
 //#endregion 🔖️Workflow
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
+pub fn render(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
     let host = host_from_snapshot(fixture, config, session);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };

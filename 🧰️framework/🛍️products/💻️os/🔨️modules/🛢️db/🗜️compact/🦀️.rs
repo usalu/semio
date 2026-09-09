@@ -883,8 +883,7 @@ fn database_compaction_descriptor_backing(descriptor: &db_snapshot::SnapshotDesc
         .and_then(|value| value.checked_add(usize::from(descriptor.vcs_head.is_some())))
         .and_then(|value| value.checked_add(1))
         .ok_or(DbError::LimitExceeded("database compaction snapshot backing items"))?;
-    let hash_bytes =
-        descriptor.roots.capacity().checked_add(descriptor.new_pages.capacity()).and_then(|value| value.checked_mul(size_of::<ContentHash>())).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
+    let hash_bytes = descriptor.roots.capacity().checked_add(descriptor.new_pages.capacity()).and_then(|value| value.checked_mul(size_of::<ContentHash>())).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
     let bytes = hash_bytes.checked_add(descriptor.document.0.capacity()).and_then(|value| value.checked_add(descriptor.vcs_head.as_ref().map_or(0, String::capacity))).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
     Ok((items, bytes))
 }
@@ -1078,13 +1077,7 @@ impl DatabaseCompactionSegmentOwners {
     }
 
     fn observe_head(&mut self, segment_index: u64, head_seq: u64) -> Result<(), DbError> {
-        let horizon = self
-            .slots
-            .iter_mut()
-            .take(usize::from(self.len))
-            .flatten()
-            .find(|horizon| horizon.segment_index == segment_index)
-            .ok_or_else(|| DbError::Corrupt("committed WAL transaction names an unknown segment".to_string()))?;
+        let horizon = self.slots.iter_mut().take(usize::from(self.len)).flatten().find(|horizon| horizon.segment_index == segment_index).ok_or_else(|| DbError::Corrupt("committed WAL transaction names an unknown segment".to_string()))?;
         horizon.max_head_seq = Some(horizon.max_head_seq.map_or(head_seq, |head| head.max(head_seq)));
         Ok(())
     }
@@ -1117,7 +1110,6 @@ impl DatabaseCompactionHashOwners {
         self.len = self.len.checked_add(1).ok_or(DbError::LimitExceeded("database compaction payload hash cursor"))?;
         Ok(())
     }
-
 }
 
 async fn compaction_opportunity(cancelled: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {
@@ -1155,11 +1147,7 @@ async fn close_compaction_page(mut page: db_state::Page) -> Result<(), DbError> 
     close_compaction_owner(|| Ok(page.close_step()?.is_some())).await
 }
 
-async fn committed_compaction_horizons<S: db_storage::WalStorage>(
-    storage: &S,
-    document: &ArtifactId,
-    cancelled: &std::sync::atomic::AtomicBool,
-) -> Result<DatabaseCompactionSegmentOwners, DbError> {
+async fn committed_compaction_horizons<S: db_storage::WalStorage>(storage: &S, document: &ArtifactId, cancelled: &std::sync::atomic::AtomicBool) -> Result<DatabaseCompactionSegmentOwners, DbError> {
     let control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
     let mut replay = db_wal::replay_committed_document(storage, document, control).await?;
     let scan = async {
@@ -1175,11 +1163,7 @@ async fn committed_compaction_horizons<S: db_storage::WalStorage>(
                     loop {
                         match transaction.next_record_step()? {
                             db_wal::WalCommittedRecordStep::Record(record) => {
-                                let observed = if let db_wal::WalRecord::Frontier(frontier) | db_wal::WalRecord::SnapshotPub { frontier, .. } = record {
-                                    horizons.observe_head(segment_index, frontier.head_seq)
-                                } else {
-                                    Ok(())
-                                };
+                                let observed = if let db_wal::WalRecord::Frontier(frontier) | db_wal::WalRecord::SnapshotPub { frontier, .. } = record { horizons.observe_head(segment_index, frontier.head_seq) } else { Ok(()) };
                                 let closed = close_compaction_owner(|| transaction.close_record_step()).await;
                                 observed?;
                                 closed?;

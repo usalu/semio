@@ -430,17 +430,17 @@ impl Generation3dMountedTypedSnapshotOwner {
         Ok(true)
     }
 
-    fn begin_dsl(&mut self) -> Result<bool, &'static str> {
+    fn begin_dsl(&mut self) -> bool {
         if self.dsl_destination.is_some() {
-            return Ok(true);
+            return true;
         }
-        let Some(parent) = self.stack.len().checked_sub(1) else { return Ok(false) };
+        let Some(parent) = self.stack.len().checked_sub(1) else { return false };
         let field = match self.stack.get(parent) {
             Some(Generation3dMountedContainerOwner::Record { owner: Generation3dMountedRecordOwner::Widget(widget), field: Some(field @ (2 | 3)), .. }) if widget.keyword == "cluster" => *field,
-            _ => return Ok(false),
+            _ => return false,
         };
         self.dsl_destination = Some((parent, usize::from(field - 2)));
-        Ok(true)
+        true
     }
 
     fn assign_f64(&mut self, value: f64) -> Result<(), &'static str> {
@@ -799,15 +799,12 @@ impl Generation3dMountedTypedSnapshotOwner {
                 _ => return Err("generation3d-mounted.field-owner"),
             },
             Token::Unsigned { role: Role::TableRows, value } => self.pending_table_rows = Some(value),
-            Token::Unsigned { role: Role::TableField, value } => match self.stack.last_mut() {
-                Some(
+            Token::Unsigned { role: Role::TableField, value } => if let Some(
                     Generation3dMountedContainerOwner::Synapses { field, present, next, .. } | Generation3dMountedContainerOwner::Generations { field, present, next, .. } | Generation3dMountedContainerOwner::Dictionary { field, present, next, .. },
-                ) => {
-                    *field = Some(u16::try_from(value).map_err(|_| "generation3d-mounted.table-field")?);
-                    present.fill(false);
-                    *next = 0;
-                }
-                _ => {}
+                ) = self.stack.last_mut() {
+                *field = Some(u16::try_from(value).map_err(|_| "generation3d-mounted.table-field")?);
+                present.fill(false);
+                *next = 0;
             },
             Token::Tag { value: 0x06 | 0x07, .. } => self.begin_string()?,
             Token::Unsigned { role: Role::StringLength, value } => {
@@ -829,7 +826,7 @@ impl Generation3dMountedTypedSnapshotOwner {
             }
             Token::Unsigned { role: Role::Symbol, value } => self.begin_symbol(value, catalog)?,
             Token::Tag { value: 0x11, .. } if self.json_destination.is_none() => {
-                self.begin_dsl()?;
+                self.begin_dsl();
             }
             Token::F64(value) if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::float(f64::from_bits(value)))?,
             Token::F64(value) if self.json_destination.is_some() => self.assign_json(dsl::DslValue::float(f64::from_bits(value)))?,
@@ -880,23 +877,18 @@ impl Generation3dMountedTypedSnapshotOwner {
                 _ => return Err("generation3d-mounted.wire-node-owner"),
             },
             Token::TablePresence { rows, value } => match self.stack.last_mut() {
-                Some(Generation3dMountedContainerOwner::Synapses { present, .. } | Generation3dMountedContainerOwner::Generations { present, .. } | Generation3dMountedContainerOwner::Dictionary { present, .. }) if rows as usize == present.len() => {
-                    if value == 0 {
-                        present.fill(true);
-                    }
+                Some(Generation3dMountedContainerOwner::Synapses { present, .. } | Generation3dMountedContainerOwner::Generations { present, .. } | Generation3dMountedContainerOwner::Dictionary { present, .. }) if rows as usize == present.len() && value == 0 => {
+                    present.fill(true);
                 }
                 _ => {}
             },
-            Token::TableBitmap { first_row, value } => match self.stack.last_mut() {
-                Some(Generation3dMountedContainerOwner::Synapses { present, .. } | Generation3dMountedContainerOwner::Generations { present, .. } | Generation3dMountedContainerOwner::Dictionary { present, .. }) => {
-                    for bit in 0..8 {
-                        let row = first_row as usize + bit;
-                        if row < present.len() {
-                            present[row] = value & (1 << bit) != 0;
-                        }
+            Token::TableBitmap { first_row, value } => if let Some(Generation3dMountedContainerOwner::Synapses { present, .. } | Generation3dMountedContainerOwner::Generations { present, .. } | Generation3dMountedContainerOwner::Dictionary { present, .. }) = self.stack.last_mut() {
+                for bit in 0..8 {
+                    let row = first_row as usize + bit;
+                    if row < present.len() {
+                        present[row] = value & (1 << bit) != 0;
                     }
                 }
-                _ => {}
             },
             Token::End(kind) => {
                 if !self.end_dsl(kind)? && !self.end_json(kind)? {

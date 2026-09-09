@@ -1,131 +1,51 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/imperative/imperative/diff.json",
+  "$id": "https://semio.tech/schema/s/imperative/procedure/diff.json",
   "title": "ProcedureDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
     "artifact": {
-      "title": "ProcedureArtifact",
-      "type": "object",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/s/imperative/procedure/artifact.json"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "schema": {
-      "type": "string",
+      "type": [
+        "string",
+        "null"
+      ],
       "x-semio-state": "artifact"
     },
-    "path": {
-      "$ref": "#/$defs/ProcedurePathDelta",
-      "x-semio-state": "artifact"
-    },
-    "seed": {
-      "type": "object",
-      "additionalProperties": true,
-      "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "ProcedureStringList": {
-      "title": "ProcedureStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
+    "flow": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        }
       ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
-    "ProcedurePathRef": {
-      "title": "ProcedurePathRef",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [],
-      "properties": {
-        "owner": {
-          "type": "string"
+    "text": {
+      "anyOf": [
+        {
+          "type": "null"
         },
-        "slot": {
-          "type": "string"
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
         }
-      }
-    },
-    "ProcedurePathDelta": {
-      "title": "ProcedurePathDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "pathRef",
-        "steps"
       ],
-      "properties": {
-        "pathRef": {
-          "$ref": "#/$defs/ProcedurePathRef"
-        },
-        "steps": {
-          "$ref": "#/$defs/ProcedureStepsDelta"
-        }
-      }
-    },
-    "ProcedureStepsDelta": {
-      "title": "ProcedureStepsDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://semio.tech/schema/s/imperative/imperative/artifact.json#/$defs/ProcedureStep"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ProcedureStepPatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "ProcedureStepPatchEntry": {
-      "title": "ProcedureStepPatchEntry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "type": "object",
-          "additionalProperties": true
-        }
-      }
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     }
   }
 }

@@ -9,6 +9,7 @@
 //! compute a whole `next: RewritingSnapshot` use to emit granular mutations. The
 //! `TrinityRewritingCommand` enum stays hand-rolled (TEMPLATE §5.1 fallback, same rationale as `jack`).
 
+use semio_s_artifact_trinity_jack::JackWorkingScene;
 use crate::editor::rewriting::window_config;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
@@ -221,7 +222,7 @@ fn lhs_semantic_graph_fixture(lhs: &schema::Lhs, rule_layout: &BTreeMap<String, 
         nodes.push(semantic_rule_node("lhs-where", "rewriting.where", where_clause, 220.0, 80.0, rule_layout));
         edges.push(semio_s_artifact_trinity_jack::Edge { id: "lhs-match-where".into(), kind: "rewriting.flow".into(), source: "lhs-match@out".into(), target: "lhs-where@in".into(), properties: Default::default() });
     }
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "lhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges, None)
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "lhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: edges }, None)
 }
 
 fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
@@ -260,7 +261,7 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPo
     if nodes.is_empty() {
         nodes.push(semantic_rule_node("rhs-empty", "rewriting.create", "result:Piece", 0.0, 0.0, rule_layout));
     }
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "rhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges, None)
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "rhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: edges }, None)
 }
 
 pub(crate) fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {

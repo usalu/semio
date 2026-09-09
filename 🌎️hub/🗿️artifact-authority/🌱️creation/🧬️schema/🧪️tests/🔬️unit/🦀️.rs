@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -75,19 +74,37 @@ fn creation_facts_follow_neutral_terminal_and_exact_pair_transitions() {
             assert_eq!(format!("{:?}", operation.phase).to_lowercase(), row["phase"].as_str().unwrap());
         }
     }
-    for case in ["actor", "request", "revision", "clock", "intent-digest", "catalog-generation", "pair", "descriptor", "receipt-sequence", "receipt-checkpoint", "receipt-ids-missing", "receipt-ids-duplicate", "receipt-ids-empty", "private-locator"] {
+    for case in [
+        "actor",
+        "request",
+        "revision",
+        "clock",
+        "intent-digest",
+        "catalog-generation",
+        "expected-catalog-generation",
+        "pair",
+        "descriptor",
+        "receipt-sequence",
+        "receipt-checkpoint",
+        "receipt-ids-missing",
+        "receipt-ids-duplicate",
+        "receipt-ids-empty",
+        "private-locator",
+    ] {
         let mut facts = vec![fact("accepted", 1), fact("prepared", 2), fact("committed", 3)];
         match case {
             "actor" => facts[1].actor_user_id = "other-user".into(),
             "request" => facts[1].request_id = "22".repeat(16),
             "revision" => facts[1].revision = 3,
             "clock" => facts[1].recorded_at_ms = 999,
-            "intent-digest" | "catalog-generation" => {
+            "intent-digest" | "catalog-generation" | "expected-catalog-generation" => {
                 if let ArtifactCreationFactBodyV1::Accepted { intent } = &mut facts[0].body {
                     if case == "intent-digest" {
                         intent.command_sha256 = "00".repeat(32);
-                    } else {
+                    } else if case == "catalog-generation" {
                         intent.catalog_generation = "00".repeat(32);
+                    } else {
+                        intent.request.expected_catalog_generation_id = "77".repeat(32);
                     }
                 }
             }

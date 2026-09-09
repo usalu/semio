@@ -9,3 +9,7 @@ A neutral node/edge identity fixture and native first-party JSON versus serde_js
 The shared demo DSL bytes now live with the framework DAG artifact and all known framework/plugin consumers refer to its exported constant. The native neutral graph identity test was added before this source move. The first Nx attempt (`dag-demo-ownership-native-1.log`) stopped in unrelated concurrent taxonomy projection validation before Cargo. The second attempt uses the ticket's lazy domain-command router and is pending. The global field parity report attempt (`artifact-field-parity-note-10.log`) encountered the same taxonomy validation; no new parity count is claimed.
 
 The earlier Note full native run (`note-document-contract-native-1.log`) reached SDK compilation and failed four incorrectly qualified empty-owner disposer references. They now use their canonical crate reexports. The Note tests themselves have not yet run.
+
+## Native Verification
+
+`dag-demo-ownership-native-2.log` completed through Bun/Nx with exit 0: all 57 framework DAG native tests passed, including the neutral demo graph identity test. Total runner duration 22m38s included waiting for the shared Cargo target.

@@ -1,6 +1,6 @@
 use super::*;
 use crate::mutations::{
-    change_active_model_definition::ChangeActiveModelDefinition, change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeReferenceLocked, change_reference_width::ChangeReferenceWidth,
+change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeReferenceLocked, change_reference_width::ChangeReferenceWidth,
     create_building_model::CreateBuildingModel, create_drawing::CreateDrawing, create_energy_model::CreateEnergyModel, create_node::CreateNode, create_shape_model::CreateShapeModel, create_structure_classic_model::CreateStructureClassicModel,
     delete_building_model::DeleteBuildingModel, delete_drawing::DeleteDrawing, delete_energy_model::DeleteEnergyModel, delete_node::DeleteNode, delete_shape_model::DeleteShapeModel, delete_structure_classic_model::DeleteStructureClassicModel,
     move_reference::MoveReference, rename_node::RenameNode, replace_reference_media::ReplaceReferenceMedia, replace_references::ReplaceReferences,
@@ -39,7 +39,6 @@ pub fn every_mutation() -> Vec<CadMutation> {
             new_opacity: Some(0.5),
         }),
         CadMutation::ReplaceReferences(ReplaceReferences { model_definition_id: "spatial.shape".into(), references: vec![sample_reference()] }),
-        CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() }),
     ]
 }
 
@@ -86,8 +85,7 @@ async fn create_shape_model_satisfies_the_inverse_and_absorb_laws() {
 #[semio_framework_async_macros::async_test]
 async fn create_drawing_satisfies_the_inverse_and_absorb_laws() {
     let base = sample_scene();
-    let sample = sample_model_child("law-drawing-1");
-    let mutation = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-law-1".into(), target: sample.target.to_uri() });
+    let mutation = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-law-1".into(), target: "drawing-law-1!s.stdio.semio@v1/drawing".into() });
     store::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-law-1".into() }).diff(&base).diff().clone();

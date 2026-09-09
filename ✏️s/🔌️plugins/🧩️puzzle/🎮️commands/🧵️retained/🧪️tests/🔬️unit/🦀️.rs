@@ -229,7 +229,7 @@ fn language_neutral_fixtures_match_production_catalogs_through_the_owned_oracle(
 
 #[test]
 fn hostile_fixture_mutations_change_the_oracle_result_or_fail_closed() {
-    let fixture = include_str!("../../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json");
+    let fixture = include_str!("../../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json");
     let oracle = SerdeJsonFixtureOracle;
     let baseline = oracle.evaluate(fixture).expect("baseline");
     for mutated in [fixture.replacen("8192", "8193", 1), fixture.replacen("addNode", "missingNode", 1), fixture.replacen("maxPlusOne", "maxPlusTwo", 1), fixture.replacen("\"de\":", "\"fr\":", 1), fixture.replacen("0:0:0:0:0:0", "9:9:9:9:9:9", 1)] {

@@ -19,7 +19,7 @@ pub mod retained_command;
 
 #[cfg(all(test, feature = "component-app-assembly"))]
 fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'static str], &'static str) {
-    ("puzzle5d", "puzzle.5d", editor::puzzle5d::PUZZLE5D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json"))
+    ("puzzle5d", "puzzle.5d", editor::puzzle5d::PUZZLE5D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
 }
 
 //#region ⚠️ Errors

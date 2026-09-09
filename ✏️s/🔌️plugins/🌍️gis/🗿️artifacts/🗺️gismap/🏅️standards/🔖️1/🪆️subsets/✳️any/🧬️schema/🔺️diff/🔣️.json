@@ -4,100 +4,61 @@
   "title": "GisMapDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
     "artifact": {
-      "title": "GisMapArtifact",
-      "type": "object",
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/gis/gismap/artifact.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "positions": {
-      "$ref": "#/$defs/GisMapFeaturesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GisMapFeaturesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "routes": {
-      "$ref": "#/$defs/GisMapFeaturesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GisMapFeaturesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "regions": {
-      "$ref": "#/$defs/GisMapFeaturesDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GisMapFeaturesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     }
   },
   "$defs": {
-    "GisMapStringList": {
-      "title": "GisMapStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "GisMapBoolMapDelta": {
-      "title": "GisMapBoolMapDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "entries"
-      ],
-      "properties": {
-        "entries": {
-          "type": "object",
-          "additionalProperties": {
-            "type": [
-              "boolean",
-              "null"
-            ]
-          }
-        }
-      }
-    },
-    "GisMapNumberMapDelta": {
-      "title": "GisMapNumberMapDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "entries"
-      ],
-      "properties": {
-        "entries": {
-          "type": "object",
-          "additionalProperties": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "type": "number",
-                "format": "double"
-              }
-            ]
-          }
-        }
-      }
-    },
     "GisMapFeaturesDelta": {
-      "title": "GisMapFeaturesDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
       "properties": {
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/gis/gismap/artifact.json#/$defs/GisMapFeature"
+            "$ref": "https://semio.tech/schema/s/gis/gismap/feature.json"
           }
         },
         "removed": {
@@ -113,7 +74,10 @@
           }
         },
         "reordered": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "type": "string"
           }
@@ -121,32 +85,20 @@
       }
     },
     "GisMapFeaturePatchEntry": {
-      "title": "GisMapFeaturePatchEntry",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
       "properties": {
         "id": {
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/GisMapFeaturePatch"
+          "$ref": "https://semio.tech/schema/s/gis/gismap/feature.json#/$defs/GisMapFeaturePatch"
         }
-      }
-    },
-    "GisMapFeaturePatch": {
-      "title": "GisMapFeaturePatch",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "data": {
-          "type": "object",
-          "additionalProperties": true
-        }
-      }
+      },
+      "required": [
+        "id",
+        "patch"
+      ]
     }
   }
 }

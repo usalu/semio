@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.app.generation.three_d.window.procedural_preview.transient;
+
+message Generation3dPreviewWindowTransient {
+  optional string preview_eval_text = 1;
+}
+
+message SetGeneration3dPreviewWindowEvaluation {
+  optional string eval_text = 1;
+}

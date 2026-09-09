@@ -1490,11 +1490,8 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
   ];
 }
 
-/** @emoji 🌐️ Reference-plane fixture trees every `*-play` static bundle serves unconditionally
- * (not app-specific — `cad/fixture` and `infinite/fixture` back shared world reference planes used
- * across playgrounds), kept as a literal baseline rather than per-plugin metadata. */
+/** @emoji 🌐️ Reference-plane assets every `*-play` static bundle serves unconditionally. */
 export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[] = [
-  { kind: "static-dir", route: "/cad-fixture", root: "✏️s/🔌️plugins/📐️cad/🧫️fixtures" },
   { kind: "static-dir", route: "/infinite-assets", root: "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets" },
 ];
 //#endregion 🔖️StaticDirAssetPlugin

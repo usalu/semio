@@ -28,3 +28,13 @@ fn qk_working_table_is_owned_by_the_exact_child() {
 
     assert_eq!(observed, SerdeJsonEn1990ChildOwnerOracle::expected());
 }
+
+
+#[test]
+fn en1990_child_restore_projection_accepts_the_exact_owned_qk_table() {
+    let snapshot = En1990Snapshot::default();
+    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical EN 1990 qK child");
+    assert_eq!(projection.len(), 1);
+    assert!(projection.admits_member("qK", &snapshot.q_k.target));
+    assert_eq!(snapshot.q_k.child_id, snapshot.q_k.target.artifact_id);
+}

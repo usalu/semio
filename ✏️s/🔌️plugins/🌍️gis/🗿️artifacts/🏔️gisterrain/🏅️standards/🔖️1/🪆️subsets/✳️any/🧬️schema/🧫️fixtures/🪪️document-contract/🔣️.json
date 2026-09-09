@@ -1,0 +1,244 @@
+{
+  "document": {
+    "exaggeration": 2.5,
+    "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+    "mesh": {
+      "childId": "terrain-mesh-custom",
+      "target": {
+        "artifactId": "terrain-mesh-custom",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "mesh"
+        }
+      }
+    }
+  },
+  "diff": {
+    "artifact": null,
+    "exaggeration": 3,
+    "importedFeaturesJson": null
+  },
+  "invalidDocuments": [
+    {
+      "exaggeration": 2,
+      "importedFeaturesJson": "{}",
+      "mesh": {
+        "vertices": []
+      }
+    },
+    {
+      "exaggeration": 2,
+      "importedFeaturesJson": "{}",
+      "locale": "de"
+    }
+  ],
+  "invalidDiffs": [
+    {
+      "camera": {}
+    },
+    {
+      "artifact": {
+        "exaggeration": 2,
+        "importedFeaturesJson": "{}",
+        "mesh": {
+          "vertices": []
+        }
+      }
+    }
+  ],
+  "diffCases": [
+    {
+      "name": "empty",
+      "before": {
+        "exaggeration": 2.5,
+        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "mesh": {
+          "childId": "terrain-mesh-custom",
+          "target": {
+            "artifactId": "terrain-mesh-custom",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      },
+      "diff": {},
+      "patch": [],
+      "after": {
+        "exaggeration": 2.5,
+        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "mesh": {
+          "childId": "terrain-mesh-custom",
+          "target": {
+            "artifactId": "terrain-mesh-custom",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "exaggeration",
+      "before": {
+        "exaggeration": 2.5,
+        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "mesh": {
+          "childId": "terrain-mesh-custom",
+          "target": {
+            "artifactId": "terrain-mesh-custom",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      },
+      "diff": {
+        "exaggeration": 3
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/exaggeration",
+          "value": 3
+        }
+      ],
+      "after": {
+        "exaggeration": 3,
+        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "mesh": {
+          "childId": "terrain-mesh-custom",
+          "target": {
+            "artifactId": "terrain-mesh-custom",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "import",
+      "before": {
+        "exaggeration": 2.5,
+        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "mesh": {
+          "childId": "terrain-mesh-custom",
+          "target": {
+            "artifactId": "terrain-mesh-custom",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      },
+      "diff": {
+        "importedFeaturesJson": "{}"
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/importedFeaturesJson",
+          "value": "{}"
+        }
+      ],
+      "after": {
+        "exaggeration": 2.5,
+        "importedFeaturesJson": "{}",
+        "mesh": {
+          "childId": "terrain-mesh-custom",
+          "target": {
+            "artifactId": "terrain-mesh-custom",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "explicit replacement",
+      "before": {
+        "exaggeration": 2.5,
+        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "mesh": {
+          "childId": "terrain-mesh-custom",
+          "target": {
+            "artifactId": "terrain-mesh-custom",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      },
+      "diff": {
+        "artifact": {
+          "exaggeration": 2.5,
+          "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+          "mesh": {
+            "childId": "terrain-mesh-replaced",
+            "target": {
+              "artifactId": "terrain-mesh-replaced",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            }
+          }
+        }
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "",
+          "value": {
+            "exaggeration": 2.5,
+            "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+            "mesh": {
+              "childId": "terrain-mesh-replaced",
+              "target": {
+                "artifactId": "terrain-mesh-replaced",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "mesh"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "after": {
+        "exaggeration": 2.5,
+        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "mesh": {
+          "childId": "terrain-mesh-replaced",
+          "target": {
+            "artifactId": "terrain-mesh-replaced",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

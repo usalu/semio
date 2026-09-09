@@ -34,6 +34,11 @@ pub(crate) mod fixture {
             pub(crate) struct $snapshot {
                 pub value: i32,
             }
+            impl semio_framework_schema::ArtifactCompositionFields for $snapshot {
+                fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+                    Ok(())
+                }
+            }
             impl store::ArtifactDsl for $snapshot {
                 const EXTENSION: &'static str = $schema;
                 fn parse_dsl(text: &str) -> Result<Self, store::TextError> {

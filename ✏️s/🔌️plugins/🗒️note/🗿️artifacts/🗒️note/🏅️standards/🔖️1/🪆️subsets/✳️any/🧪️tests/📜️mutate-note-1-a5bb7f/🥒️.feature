@@ -39,7 +39,7 @@ Feature: Apply the typed note document identity mutation twice — once in Rust,
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id          | vector                                      |
-      | rename-note | 🏷️rename-note/🧪️tests/🏷️retitles-the-document |
+      | rename-note | 🏷️rename-note/🏷️retitles-the-document |
 
   @id-inverse
   @level-exhaustive
@@ -54,4 +54,4 @@ Feature: Apply the typed note document identity mutation twice — once in Rust,
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id          | vector                                      |
-      | rename-note | 🏷️rename-note/🧪️tests/🏷️retitles-the-document |
+      | rename-note | 🏷️rename-note/🏷️retitles-the-document |

@@ -101,8 +101,8 @@ fn note_ops_from_canvas_events(document: &NoteSnapshot, events: &[NoteCanvasEven
             NoteCanvasEvent::PutAsset { key, asset } => {
                 next.assets.insert(key.clone(), asset.clone());
             }
-            // 📷️ Camera never touches the document — `inkApplyEvents` pulls it into runtime state before
-            // this function ever sees the batch (see the `NoteCanvasEvent::SetCamera` filter there).
+            // 📷️ Camera never touches the document — the caller publishes it through the exact
+            // composite-window configuration owner.
             NoteCanvasEvent::SetCamera { .. } => {}
         }
     }

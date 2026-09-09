@@ -67,7 +67,7 @@ class TestScript extends BundleScript {
 
     const root = resolve(import.meta.dir, "../..");
     const module = JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8")) as { $id: string };
-    const fixture = JSON.parse(readFileSync(resolve(root, "🧪️interactive-job/🔣️.json"), "utf8")) as Fixture;
+    const fixture = JSON.parse(readFileSync(resolve(root, "🧫️fixtures/🧪️interactive-job/🔣️.json"), "utf8")) as Fixture;
     const source = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");
     const schemaSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "utf8");
     const sessionSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs"), "utf8");

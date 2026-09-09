@@ -19,7 +19,7 @@
     }
   },
   "mesh": {
-    "childId": "mesh-1",
+    "childId": "kitchen-sink-mesh",
     "target": {
       "artifactId": "kitchen-sink-mesh",
       "dialect": {
@@ -30,7 +30,7 @@
     }
   },
   "properties": {
-    "childId": "props-1",
+    "childId": "kitchen-sink-properties",
     "target": {
       "artifactId": "kitchen-sink-properties",
       "dialect": {

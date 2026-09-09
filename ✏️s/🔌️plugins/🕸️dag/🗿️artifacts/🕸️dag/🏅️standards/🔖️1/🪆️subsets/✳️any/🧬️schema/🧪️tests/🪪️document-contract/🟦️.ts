@@ -1,3 +1,4 @@
+import semioChildSchema from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🔣️.json" with { type: "json" };
 /** 🧪️ DAG document facets use the native shared graph-child identity. */
 import assert from "node:assert/strict";
 import { join } from "node:path";
@@ -16,12 +17,13 @@ import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json
 export function testDagDocumentContractOracle(): void {
   assertDocumentContractOracle({
     name: "DAG",
-    dependencies: [ioSchema, childSchema],
+    dependencies: [ioSchema, childSchema, semioChildSchema],
+    childIdentityFields: ["content"],
     artifact: { schema: artifactSchema, parse: parseDagArtifact },
     snapshot: { schema: snapshotSchema, parse: parseDagSnapshot },
     diff: { schema: diffSchema, parse: parseDagDiff },
     validDocuments: [{ input: vectors.document, output: vectors.document }],
-    invalidDocuments: vectors.invalidDocuments,
+    invalidDocuments: [...vectors.invalidDocuments, ...vectors.invalidIdentityDocuments],
     invalidDiffs: vectors.invalidDiffs,
     mutationRoots: [join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations")],
     committed: { snapshots: 28, diffs: 0 },

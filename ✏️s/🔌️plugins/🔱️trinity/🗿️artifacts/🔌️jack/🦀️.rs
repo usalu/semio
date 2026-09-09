@@ -291,7 +291,7 @@ pub fn jack_content_child_handle(nodes: &[Node], edges: &[Edge]) -> JackContentC
     let content_hash = hasher.finish();
     let child_id = format!("jack-content-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "jack-content".into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️ContentBridge
@@ -444,18 +444,15 @@ impl JackSnapshot {
         let nodes: Vec<Node> = value.get("nodes").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
         let edges: Vec<Edge> = value.get("edges").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
         let root_node_id: Option<String> = value.get("rootNodeId").and_then(|v| v.as_str()).map(str::to_string);
-        let mut fixture = Self::with_content(schema, name, manifest_id, manifest, camera, nodes, edges, root_node_id);
+        let mut fixture = Self::with_content(schema, name, manifest_id, manifest, camera, JackWorkingScene { nodes: nodes, edges: edges }, root_node_id);
         fixture.validate_schema()?;
         fixture.resolve_manifest()?;
         Ok(fixture)
     }
 
-    /// 🏗️ Drop-in constructor mirroring the OLD `nodes`/`edges`-bearing struct literal's field order
-    /// — mints+caches the composed content child so every existing fixture-builder call site becomes
-    /// a mechanical `JackSnapshot { .., nodes, edges, .. }` → `JackSnapshot::with_content(.., nodes,
-    /// edges, ..)` rewrite instead of a hand-rolled handle mint at each site.
-    pub fn with_content(schema: String, name: String, manifest_id: Option<String>, manifest: Manifest, camera: Camera, nodes: Vec<Node>, edges: Vec<Edge>, root_node_id: Option<String>) -> Self {
-        Self { schema, name, manifest_id, manifest, camera, content: jack_content_child_with_owner(nodes, edges), root_node_id }
+    /// 🏗️ Transfers one working scene into the snapshot's exact composed content owner.
+    pub fn with_content(schema: String, name: String, manifest_id: Option<String>, manifest: Manifest, camera: Camera, scene: JackWorkingScene, root_node_id: Option<String>) -> Self {
+        Self { schema, name, manifest_id, manifest, camera, content: jack_content_child_with_owner(scene.nodes, scene.edges), root_node_id }
     }
 
     /// 🔎 Live node list, read through the working-scene cache — replaces the old direct `.nodes`
@@ -504,16 +501,7 @@ impl Graph {
     }
 
     pub fn to_fixture(&self) -> JackSnapshot {
-        JackSnapshot::with_content(
-            JackSnapshot::SCHEMA.to_string(),
-            self.name.clone(),
-            self.manifest_id.clone(),
-            self.manifest.clone(),
-            self.camera.clone(),
-            self.nodes.values().cloned().collect(),
-            self.edges.values().cloned().collect(),
-            self.root_node_id.clone(),
-        )
+        JackSnapshot::with_content(JackSnapshot::SCHEMA.to_string(), self.name.clone(), self.manifest_id.clone(), self.manifest.clone(), self.camera.clone(), JackWorkingScene { nodes: self.nodes.values().cloned().collect(), edges: self.edges.values().cloned().collect() }, self.root_node_id.clone())
     }
 
     pub fn load_json(json: &str) -> Result<Self, TrinityRamError> {
@@ -529,7 +517,7 @@ impl Graph {
         let nodes: Vec<Node> = node_ids.iter().filter_map(|id| self.nodes.get(id).cloned()).collect();
         let edges: Vec<Edge> = edge_ids.iter().filter_map(|id| self.edges.get(id).cloned()).collect();
         let root_node_id = self.root_node_id.clone().filter(|id| node_ids.contains(id));
-        JackSnapshot::with_content(JackSnapshot::SCHEMA.to_string(), format!("{} subgraph", self.name), self.manifest_id.clone(), self.manifest.clone(), self.camera.clone(), nodes, edges, root_node_id)
+        JackSnapshot::with_content(JackSnapshot::SCHEMA.to_string(), format!("{} subgraph", self.name), self.manifest_id.clone(), self.manifest.clone(), self.camera.clone(), JackWorkingScene { nodes: nodes, edges: edges }, root_node_id)
     }
 
     pub fn node(&self, id: &str) -> Option<&Node> {
@@ -652,7 +640,7 @@ pub const TRINITY_GRAPH_SCHEMA: &str = JackSnapshot::SCHEMA;
 pub const TRINITY_JACK_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.trinity.jack", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 
 pub fn empty_trinity_graph_fixture() -> JackSnapshot {
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "trinity".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), Vec::new(), Vec::new(), None)
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "trinity".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: Vec::new(), edges: Vec::new() }, None)
 }
 
 /// 🎯️ `ArtifactKindSpec` identity shared by every `jack`-family app that mounts this artifact.

@@ -4542,6 +4542,12 @@ pub mod vcs_integration {
         pub latest_hash: [u8; 32],
     }
 
+    impl store::os_schema_composition::ArtifactCompositionFields for HashProjection {
+        fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+            Ok(())
+        }
+    }
+
     impl store::ArtifactDsl for HashProjection {
         const EXTENSION: &'static str = "dbhash";
 

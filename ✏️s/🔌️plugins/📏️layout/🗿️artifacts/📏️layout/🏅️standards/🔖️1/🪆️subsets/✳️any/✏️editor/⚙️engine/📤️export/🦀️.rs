@@ -2868,56 +2868,56 @@ impl LayoutExportJob {
         }
     }
 
-    fn close_json_cursor(cursor: &mut Option<JsonValidationCursor>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage) -> Result<PluginCloseStep, Fault> {
+    fn close_json_cursor(cursor: &mut Option<JsonValidationCursor>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage) -> PluginCloseStep {
         if let Some(cursor) = cursor.as_mut() {
             if cursor.stack.pop().is_some() {
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             debug_assert!(cursor.stack.is_empty());
         }
         drop(cursor.take());
         *stage = next;
-        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
     }
 
-    fn close_typed_cursor(cursor: &mut Option<TypedJsonCursor>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    fn close_typed_cursor(cursor: &mut Option<TypedJsonCursor>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> PluginCloseStep {
         if let Some(cursor) = cursor.as_mut() {
             if let Some(node) = cursor.stack.last() {
                 let bytes = typed_json_node_owned_bytes(node);
                 if bytes > maximum_bytes {
                     let released = Self::close_typed_node_payload(cursor.stack.last_mut().expect("typed close node remains owned"), maximum_bytes);
-                    return Ok(PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released });
+                    return PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released };
                 }
                 drop(cursor.stack.pop());
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
             }
             debug_assert!(cursor.stack.is_empty());
         }
         drop(cursor.take());
         *stage = next;
-        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
     }
 
-    fn close_optional_string(value: &mut Option<String>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    fn close_optional_string(value: &mut Option<String>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> PluginCloseStep {
         if let Some(value) = value.as_mut() {
             if let Some(released) = Self::close_string(value, maximum_bytes) {
-                return Ok(PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released });
+                return PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released };
             }
             debug_assert!(value.is_empty());
         }
         drop(value.take());
         *stage = next;
-        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
     }
 
-    fn close_required_string(value: &mut String, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    fn close_required_string(value: &mut String, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> PluginCloseStep {
         if let Some(released) = Self::close_string(value, maximum_bytes) {
-            return Ok(PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released });
+            return PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released };
         }
         debug_assert!(value.is_empty());
         drop(std::mem::take(value));
         *stage = next;
-        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
     }
 
     fn close_export_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
@@ -2926,9 +2926,9 @@ impl LayoutExportJob {
         }
         match self.close_stage {
             LayoutExportCloseStage::Publication => Err(Fault::from("layout-export-publication-close-not-dispatched")),
-            LayoutExportCloseStage::JsonValidation => Self::close_json_cursor(&mut self.json_validation, LayoutExportCloseStage::TypedValidation, &mut self.close_stage),
-            LayoutExportCloseStage::TypedValidation => Self::close_typed_cursor(&mut self.typed_validation, LayoutExportCloseStage::PackageJson, &mut self.close_stage, maximum_bytes),
-            LayoutExportCloseStage::PackageJson => Self::close_typed_cursor(&mut self.package_json, LayoutExportCloseStage::Rects, &mut self.close_stage, maximum_bytes),
+            LayoutExportCloseStage::JsonValidation => Ok(Self::close_json_cursor(&mut self.json_validation, LayoutExportCloseStage::TypedValidation, &mut self.close_stage)),
+            LayoutExportCloseStage::TypedValidation => Ok(Self::close_typed_cursor(&mut self.typed_validation, LayoutExportCloseStage::PackageJson, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::PackageJson => Ok(Self::close_typed_cursor(&mut self.package_json, LayoutExportCloseStage::Rects, &mut self.close_stage, maximum_bytes)),
             LayoutExportCloseStage::Rects => {
                 if self.rects.pop().is_some() {
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
@@ -2999,11 +2999,11 @@ impl LayoutExportJob {
                 self.close_stage = LayoutExportCloseStage::ZipCurrentName;
                 Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
-            LayoutExportCloseStage::ZipCurrentName => Self::close_optional_string(&mut self.zip.current_name, LayoutExportCloseStage::PageAuthority, &mut self.close_stage, maximum_bytes),
-            LayoutExportCloseStage::PageAuthority => Self::close_optional_string(&mut self.request.page_id, LayoutExportCloseStage::Preflight, &mut self.close_stage, maximum_bytes),
-            LayoutExportCloseStage::Preflight => Self::close_optional_string(&mut self.request.preflight_json, LayoutExportCloseStage::ParentAuthority, &mut self.close_stage, maximum_bytes),
-            LayoutExportCloseStage::ParentAuthority => Self::close_required_string(&mut self.request.parent_document_id, LayoutExportCloseStage::RevisionAuthority, &mut self.close_stage, maximum_bytes),
-            LayoutExportCloseStage::RevisionAuthority => Self::close_required_string(&mut self.request.canonical_base_revision_hex, LayoutExportCloseStage::OutputChunks, &mut self.close_stage, maximum_bytes),
+            LayoutExportCloseStage::ZipCurrentName => Ok(Self::close_optional_string(&mut self.zip.current_name, LayoutExportCloseStage::PageAuthority, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::PageAuthority => Ok(Self::close_optional_string(&mut self.request.page_id, LayoutExportCloseStage::Preflight, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::Preflight => Ok(Self::close_optional_string(&mut self.request.preflight_json, LayoutExportCloseStage::ParentAuthority, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::ParentAuthority => Ok(Self::close_required_string(&mut self.request.parent_document_id, LayoutExportCloseStage::RevisionAuthority, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::RevisionAuthority => Ok(Self::close_required_string(&mut self.request.canonical_base_revision_hex, LayoutExportCloseStage::OutputChunks, &mut self.close_stage, maximum_bytes)),
             LayoutExportCloseStage::OutputChunks => {
                 if maximum_bytes < OUTPUT_CHUNK_BYTES {
                     return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });

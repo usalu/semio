@@ -13,5 +13,5 @@ pub fn diff(payload: &CreateWidget, base: &Generation3dSnapshot) -> protocol::Mu
     if widget_index(&base.fixture, id).is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A widget with id \"{id}\" already exists."), [id.to_string()]);
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff { removed: vec![], set: vec![(payload.index, payload.widget.clone())] }, SynapsesDiff::default(), LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![], set: vec![(payload.index, payload.widget.clone())] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None))
 }

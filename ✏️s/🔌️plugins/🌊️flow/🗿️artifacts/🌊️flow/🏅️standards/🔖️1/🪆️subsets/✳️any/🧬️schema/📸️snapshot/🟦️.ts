@@ -1,36 +1,15 @@
-/** 🧬️ Flow snapshot schema — artifact-lane fields only. */
+/** 📸️ Flow document snapshot: durable schema and composed content identity. */
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
 export interface FlowSnapshot {
-  /** @state artifact */
-  schema: string;
-  /** @state artifact */
-  camera: CameraJson;
-  /** @state artifact */
-  widgets: Widget[];
-  /** @state artifact */
-  synapses: SynapseSpec[];
-  /** @state artifact */
-  layout: Record<string, WidgetLayout>;
+  /** @state artifact */ schema: string;
+  /** @state artifact @child kind=s.stdio.semio standard=v1 subset=flow */ content: ArtifactChild;
 }
 
-export interface CameraJson {
-  x: number;
-  y: number;
-  zoom: number;
+export function parseFlowSnapshot(value: unknown, at = "$"): FlowSnapshot {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: FlowSnapshot must be an object`);
+  const row = value as Record<string, unknown>;
+  if (Object.keys(row).length !== 2 || !Object.hasOwn(row, "schema") || !Object.hasOwn(row, "content")) throw new Error(`${at}: FlowSnapshot requires exactly schema and content`);
+  if (typeof row.schema !== "string") throw new Error(`${at}.schema: value is not a string`);
+  return { schema: row.schema, content: parseArtifactChild(row.content) };
 }
-
-export interface WidgetLayout {
-  x: number;
-  y: number;
-}
-
-export interface SynapseSpec {
-  id: string;
-  from: string;
-  to: string;
-  fromPort: string;
-  toPort: string;
-}
-
-/** Widget payload as JSON text (opaque enum). */
-export type Widget = string;

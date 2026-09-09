@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/space-artifact-creation-generation-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "catalogGenerationId", "rotatedCatalogGenerationId", "request", "accepted", "ready", "initialPostConflict", "cases"],
+  "properties": {
+    "schema": { "const": "semio.os.space-artifact-creation-generation-fixture/v1" },
+    "catalogGenerationId": { "$ref": "#/$defs/Digest" },
+    "rotatedCatalogGenerationId": { "$ref": "#/$defs/Digest" },
+    "request": { "$ref": "#/$defs/CreateRequest" },
+    "accepted": { "$ref": "#/$defs/AcceptedStatus" },
+    "ready": { "$ref": "#/$defs/ReadyStatus" },
+    "initialPostConflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["httpStatus", "workerResponseKind", "terminalPhase", "emissionOrder", "catalogRefresh", "autoResubmit"],
+      "properties": {
+        "httpStatus": { "const": 409 },
+        "workerResponseKind": { "const": "space-artifact-creation-catalog-refresh-required" },
+        "terminalPhase": { "const": "failed" },
+        "emissionOrder": {
+          "type": "array",
+          "items": [
+            { "const": "catalog-refresh-required" },
+            { "const": "failed" }
+          ],
+          "additionalItems": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "catalogRefresh": { "const": true },
+        "autoResubmit": { "const": false }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "requestGeneration", "statusGeneration", "admitted"],
+        "properties": {
+          "name": { "enum": ["current", "missing-request", "missing-status", "rotated-status"] },
+          "requestGeneration": { "enum": ["current", "missing"] },
+          "statusGeneration": { "enum": ["current", "missing", "rotated"] },
+          "admitted": { "type": "boolean" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Digest": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "RequestId": { "type": "string", "pattern": "^(?!0{32}$)[0-9a-f]{32}$" },
+    "Identity": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$" },
+    "CreateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "requestId", "spaceId", "expectedCatalogGenerationId", "kindId", "name"],
+      "properties": {
+        "kind": { "const": "space-artifact-create" },
+        "requestId": { "$ref": "#/$defs/RequestId" },
+        "spaceId": { "$ref": "#/$defs/Identity" },
+        "expectedCatalogGenerationId": { "$ref": "#/$defs/Digest" },
+        "kindId": { "$ref": "#/$defs/Identity" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "AcceptedStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "requestId", "spaceId", "catalogGenerationId", "phase"],
+      "properties": {
+        "kind": { "const": "space-artifact-creation-status" },
+        "requestId": { "$ref": "#/$defs/RequestId" },
+        "spaceId": { "$ref": "#/$defs/Identity" },
+        "catalogGenerationId": { "$ref": "#/$defs/Digest" },
+        "phase": { "const": "accepted" }
+      }
+    },
+    "ReadyStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "requestId", "spaceId", "catalogGenerationId", "phase", "ready"],
+      "properties": {
+        "kind": { "const": "space-artifact-creation-status" },
+        "requestId": { "$ref": "#/$defs/RequestId" },
+        "spaceId": { "$ref": "#/$defs/Identity" },
+        "catalogGenerationId": { "$ref": "#/$defs/Digest" },
+        "phase": { "const": "ready" },
+        "ready": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["documentId", "kindId", "artifactSchema", "parentDialect"],
+          "properties": {
+            "documentId": { "type": "string", "pattern": "^artifact-(?!0{32}$)[0-9a-f]{32}$" },
+            "kindId": { "$ref": "#/$defs/Identity" },
+            "artifactSchema": { "$ref": "#/$defs/Identity" },
+            "parentDialect": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["artifactKind", "standard", "subset"],
+              "properties": {
+                "artifactKind": { "$ref": "#/$defs/Identity" },
+                "standard": { "$ref": "#/$defs/Identity" },
+                "subset": { "$ref": "#/$defs/Identity" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

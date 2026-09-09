@@ -4,7 +4,6 @@
 //! read-mostly for this first pass — exaggeration and the `map:in` overlay layer are the only
 //! editable/undoable document state (see `crate`).
 
-use crate::editor::gis3d::config::Gis3dConfig;
 /// ⚠️ Fixed opportunistically (was a pre-existing, ticket-predating unresolved `crate::modules`
 /// import — see `💡️inferences/🦀️.rs`'s identical fix for the full story). Real home:
 /// `crate::schema`'s `🔖️TerrainDescriptor` region.
@@ -15,6 +14,9 @@ use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSur
 use semio_framework_plugin::{scene_surface, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, World3dScene};
 use semio_framework_surface::terrain::projection;
 use serde_json::{json, Value};
+
+#[path = "⚙️config/🦀️.rs"]
+pub mod config;
 
 //#region 🔖️Constants
 pub const GIS3D_PLAY_WINDOW_MAIN: &str = "gis3d-main";
@@ -65,10 +67,10 @@ fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &GisTerrainSnapshot, cfg: config::GisTerrainWindowConfig) -> UiAssemblyResult<BuiltNode> {
     let descriptor = parse_descriptor(document);
     let mut scene = World3dScene::base(
-        cfg.camera_json.clone(),
+        cfg.camera_json,
         "[]".into(),
         instances_json(&descriptor),
         // 🕹️ Pin selection now lives in the framework-owned "features" interaction domain (ticket

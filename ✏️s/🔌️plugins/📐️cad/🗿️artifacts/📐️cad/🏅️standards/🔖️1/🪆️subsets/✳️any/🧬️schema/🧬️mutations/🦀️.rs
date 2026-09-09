@@ -74,7 +74,6 @@ pub enum CadMutation {
     MoveReference(move_reference::MoveReference),
     ReplaceReferenceMedia(replace_reference_media::ReplaceReferenceMedia),
     ReplaceReferences(replace_references::ReplaceReferences),
-    ChangeActiveModelDefinition(change_active_model_definition::ChangeActiveModelDefinition),
 }
 
 /// 🏷️ The kebab-case spelling of every [`CadMutation`] variant, in declaration order — the exact
@@ -101,12 +100,10 @@ pub const KINDS: &[&str] = &[
     "move-reference",
     "replace-reference-media",
     "replace-references",
-    "change-active-model-definition",
 ];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Leaves
-use super::change_active_model_definition;
 use super::change_reference_hidden;
 use super::change_reference_locked;
 use super::change_reference_width;

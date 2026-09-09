@@ -46,5 +46,18 @@
     "oldPublicationAccepted": false,
     "oldWorkCancelled": true,
     "newWorkCancelled": false
+  },
+  "retirementFairness": {
+    "owners": [
+      "first",
+      "second"
+    ],
+    "blocked": [
+      "first"
+    ],
+    "expectedSurvivors": [
+      "first"
+    ],
+    "zeroGrantAdvancesCursor": false
   }
 }

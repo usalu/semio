@@ -439,7 +439,7 @@ pub fn world_selection_json(envelope: &Puzzle3dScene, interaction: &Puzzle3dInte
     let runtime = &envelope.runtime;
     let object_ids = interaction.selected_object_ids();
     let hovered_id = interaction.hovered_object_id(&envelope.fixture).map(str::to_string).or_else(|| interaction.hovered_reference_id(&envelope.fixture).map(|id| format!("reference:{id}")));
-    let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", object_ids, hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
+    let mut value: Value = serde_json::from_str(&world3d_selection_json(runtime.selection_method.as_str(), object_ids, hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
@@ -533,7 +533,7 @@ pub fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowEn
         input: Some(WindowEngagementInput {
             id: Some("puzzle3d-engagement".into()),
             value: Some(envelope.runtime.engagement_input.clone()),
-            placeholder: Some("brush, fill <n>, zoom, clear, rectangle, lasso".into()),
+            placeholder: Some(crate::editor::puzzle3d::commands::engagement_submit::PUZZLE3D_ENGAGEMENT_VERBS.join(", ")),
             disabled: None,
             on_change: Some(puzzle3d_action("engagementInput", None)),
             on_submit: Some(puzzle3d_action("engagementSubmit", None)),

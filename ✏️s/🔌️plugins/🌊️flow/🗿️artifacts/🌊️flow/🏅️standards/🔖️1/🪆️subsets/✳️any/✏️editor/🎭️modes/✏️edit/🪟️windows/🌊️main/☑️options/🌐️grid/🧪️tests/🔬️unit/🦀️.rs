@@ -5,7 +5,7 @@ use crate::editor::flow::terminology::flow_play_labels;
 /// pinned here so the two can't drift apart.
 #[semio_framework_async_macros::async_test]
 async fn the_factor_slider_range_matches_the_command_handler_clamp() {
-    let config = FlowConfig::default();
+    let config = FlowMainWindowConfig::default();
     match measure(&config, flow_play_labels(&semio_framework_plugin::ViewModel::default())) {
         WindowMeasure::Group { children, .. } => {
             let slider = children.iter().find(|child| matches!(child, WindowMeasure::Slider { id, .. } if id == "flow-play-measures.grid-factor")).expect("factor slider");

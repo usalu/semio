@@ -1,0 +1,45 @@
+{
+  "payload": {
+    "text": "λ🙂",
+    "repeat": 2048,
+    "utf8Bytes": 12288
+  },
+  "retirementGrant": {
+    "maximumItems": 1,
+    "maximumBytes": 7
+  },
+  "cases": [
+    {
+      "id": "zero-item",
+      "items": 0,
+      "bytes": 4096,
+      "cancelBefore": false,
+      "prepared": false,
+      "transferCalls": 0
+    },
+    {
+      "id": "zero-byte-transfer",
+      "items": 1,
+      "bytes": 0,
+      "cancelBefore": false,
+      "prepared": true,
+      "transferCalls": 1
+    },
+    {
+      "id": "cancel-before-transfer",
+      "items": 1,
+      "bytes": 0,
+      "cancelBefore": true,
+      "prepared": false,
+      "transferCalls": 0
+    },
+    {
+      "id": "ordinary-transfer",
+      "items": 1,
+      "bytes": 7,
+      "cancelBefore": false,
+      "prepared": true,
+      "transferCalls": 1
+    }
+  ]
+}

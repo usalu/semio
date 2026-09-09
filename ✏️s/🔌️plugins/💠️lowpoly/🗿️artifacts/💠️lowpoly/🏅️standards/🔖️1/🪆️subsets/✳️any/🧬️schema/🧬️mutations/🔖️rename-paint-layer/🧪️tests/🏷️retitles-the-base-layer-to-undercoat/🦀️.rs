@@ -11,11 +11,11 @@ use crate::LowpolyDiff;
 use crate::LowpolyMutation;
 use crate::LowpolySnapshot;
 
-const BEFORE: &str = include_str!("../../../../../📄️documents/🧬️mutations/🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../📄️documents/🧬️mutations/🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../📄️documents/🧬️mutations/🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../📄️documents/🧬️mutations/🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../📄️documents/🧬️mutations/🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat/🎯️outcome/🔣️.json");
 
 /// 🔓️ Decodes committed fixture JSON through the artifact's own value codec — these types carry
 /// `ToValue`/`FromValue`, never `serde`, because `LowpolyObject.mesh` is an `ArtifactChild` handle.

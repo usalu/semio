@@ -4,32 +4,56 @@
   "title": "GisMapSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "positions",
-    "routes",
-    "regions"
-  ],
   "properties": {
     "positions": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/gis/gismap/artifact.json#/$defs/GisMapFeature"
+        "$ref": "https://semio.tech/schema/s/gis/gismap/feature.json"
       },
       "x-semio-state": "artifact"
     },
     "routes": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/gis/gismap/artifact.json#/$defs/GisMapFeature"
+        "$ref": "https://semio.tech/schema/s/gis/gismap/feature.json"
       },
       "x-semio-state": "artifact"
     },
     "regions": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/gis/gismap/artifact.json#/$defs/GisMapFeature"
+        "$ref": "https://semio.tech/schema/s/gis/gismap/feature.json"
       },
       "x-semio-state": "artifact"
+    },
+    "drawing": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
+    },
+    "image": {
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
+    },
+    "value": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     }
-  }
+  },
+  "required": [
+    "positions",
+    "routes",
+    "regions",
+    "drawing",
+    "value"
+  ]
 }

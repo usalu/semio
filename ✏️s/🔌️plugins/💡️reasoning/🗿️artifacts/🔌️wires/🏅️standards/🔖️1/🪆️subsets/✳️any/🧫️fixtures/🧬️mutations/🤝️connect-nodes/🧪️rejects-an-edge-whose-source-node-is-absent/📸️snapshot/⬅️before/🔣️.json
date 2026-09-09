@@ -36,7 +36,7 @@
   "content": {
     "childId": "wires-content-connect-miss-fixture",
     "target": {
-      "artifactId": "wires-content",
+      "artifactId": "wires-content-connect-miss-fixture",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

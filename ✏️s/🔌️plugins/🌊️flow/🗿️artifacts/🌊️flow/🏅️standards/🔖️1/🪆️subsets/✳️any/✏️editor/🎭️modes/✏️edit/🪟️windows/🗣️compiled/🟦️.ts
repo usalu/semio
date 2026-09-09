@@ -1,5 +1,5 @@
 /** 🗣️ Flow editor — Compiled DAG window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * pane's `render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession)` boundary —
+ * pane's `render(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession)` boundary —
  * the read-only compiled wire literal of the current fixture, rendered as a text-editor scene. */
 
 /** 🗣️ The Compiled DAG window's typed view-model — mirrors the Rust `render()` boundary's inputs. */

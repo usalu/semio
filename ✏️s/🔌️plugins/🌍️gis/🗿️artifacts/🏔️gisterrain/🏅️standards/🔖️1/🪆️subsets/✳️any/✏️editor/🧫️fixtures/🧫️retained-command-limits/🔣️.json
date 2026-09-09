@@ -8,6 +8,6 @@
   ],
   "publicationLanes": {
     "setExaggeration": ["artifact", "ui", "terminal"],
-    "setCamera": ["config", "ui", "terminal"]
+    "setCamera": ["window-config", "ui", "terminal"]
   }
 }

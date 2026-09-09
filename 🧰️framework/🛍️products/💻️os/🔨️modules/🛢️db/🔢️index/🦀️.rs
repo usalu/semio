@@ -19,9 +19,9 @@ use crate::db_durability::Frontier;
 use crate::db_ids::{check_len, ActorId, ArtifactId, DbError};
 use crate::*;
 use db_storage::IndexStorage;
-use pack::ByteWriter;
 #[cfg(test)]
 use pack::crc32c;
+use pack::ByteWriter;
 
 //#region 🔖️Limits
 /// @emoji 🛡️ Ceiling on one entry's key, validated via `check_len` before the key's bytes

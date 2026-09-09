@@ -305,7 +305,7 @@ const FREE_FLOAT_TOLERANCE_K: f64 = 2.5;
 /// 📁️ The committed fixture tree, resolved from the crate manifest rather than the process
 /// working directory so it holds under `cargo test` from anywhere.
 fn subset_root() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any")
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
 }
 
 fn fixture_path(case: &str) -> std::path::PathBuf {

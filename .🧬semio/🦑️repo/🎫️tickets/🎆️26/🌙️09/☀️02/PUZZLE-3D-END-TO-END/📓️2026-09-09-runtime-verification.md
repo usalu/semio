@@ -102,3 +102,49 @@ continuations, and the reactor trace (worker `eprintln`, read via the console bu
 - Concern for the framework owner: a single overrun of any maintenance unit kills the instance
   (`RuntimeMaintenanceStatus::Fault(InteractiveCeiling)` → reactor turn error → actor trapped); a
   quarantine of the offending job would keep the app alive.
+
+## 12:40 rebuild #7 (non-fatal ceiling verdict, W-P3, W-R2, W-T, host-owned tool switches)
+
+- The actor no longer traps; sections and both canvases mount; the boot `setActiveExample` and the
+  local-interaction read fail with the retained job's real fault: **`puzzle command wire payload is
+  malformed`** — `RetainedPuzzleCommandJob`'s `Decode` phase runs `Puzzle3dCommand::decode_op`, which
+  parses the externally-tagged map `{"SetActiveExample":{"window_id":…,"args":…}}` that `encode_op`
+  writes, but the host's JSON action route (`dispatch_action` / `dispatch_command` →
+  `admit_command_json`) admitted the tuple `["setActiveExample", args]` as the retained raw wire and
+  transferred it to the app-owned factory. The native tests never saw it because the testkit uses the
+  test-only `dispatch_typed`, which admits `encode_op(&command)`.
+- Fix (framework, `🔌️plugin/🦀️.rs`): both JSON routes now build the typed command first and admit its
+  exact `OpBinary` wire through `admit_command_wire` (the `dispatch_typed` shape); the dead
+  `admit_command_json` was removed. Rebuild #8 waits behind a peer's in-flight `🫧️transient` refactor.
+
+## 14:20 rebuilds #8-#10 — the second architectural wasm gap, measured
+
+- Rebuild #8 (exact `encode_op` wire for JSON actions): the boot `setActiveExample` succeeds in 2.4 s,
+  no faults, both scenes render, sections arrive. The next host action, the shell's
+  `noteShellCommand` (a framework-reserved route), never returns.
+- Rebuild #10 trace: `[DEBUG] turn 870 begin events=0` is followed by
+  `[DEBUG] reserved job 'noteShellCommand' poll 1…4096: Submitted` with no later turn phase — the
+  poll loop of `run_framework_reserved_job` spins INSIDE one reactor turn. `dispatch_action` →
+  `dispatch_framework_reserved_action` is driven synchronously by `resolve_ready`, whose poll loop
+  re-polls `plugin_job_yield_once` immediately and never pumps the cooperative pool, so the mounted
+  worker step submitted by `pump_one` can never execute on wasm. Natively a pool thread runs it, which is
+  why no test sees this. Every framework-reserved route (undo, redo, clipboard, history revert, shell
+  notes, tutorial recording) hangs the actor on the React target.
+- Fix (`🔌️plugin/🦀️.rs` `run_framework_reserved_job`): after a non-terminal poll the loop pumps the
+  process pool itself on wasm (`pool.pump(now_ms)`), the same law `drive_typed_operation_worker` applies
+  to typed operations. Rebuild #11 queued; per-turn phase traces reduced to every 256th turn.
+
+## 17:10 rebuild #11 (reserved-route pump, exact wire, W-B/W-M/W-P3/W-R2/W-D2, composition impl)
+
+- Boot: `setActiveExample` OK 2.4 s, `noteShellCommand` OK 1.6 s — the reserved-route hang is gone.
+  Sections, both scenes, outliner and inspection render.
+- `readLocalInteraction` and `readHistory` at boot still exhaust 4096 continuations in ~4 s
+  (`typed_operation=true` streak of 5066 turns that then ends) — the boot example load's typed operation
+  runs to completion but the two reads drain on it; W-A adds drain polling and completion routing.
+- `registerBrushMesh` now fails with its real reason: `rejected 63997 raw bytes before decoding;
+  maximum is 8192` — the world layer uploads the whole GLB in one command → W-M2 pages it.
+- Example switch to Nakagin: `setActiveExample` returns OK (started) in 705 ms, the job runs 395 turns,
+  no fault, but the document view never updates and History shows no edit: the completion
+  (`Invocation { in_reply_to: 0, ui_scope }`) is dropped by the channel client (no waiter with seq 0)
+  → W-A (`📓️2026-09-09-wave-A-async-completion-refresh.md`). History rows render as
+  `framework.history.entry.[object Object]` (pack integer carrier) — same wave.

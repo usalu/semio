@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "sustainedOverrunSteps": 4,
   "cases": [
     {"id":"timer-site-held","lock":"site","callback":"timer","returnsWhileHeld":true,"violationRetained":false,"returnedEvent":false},
     {"id":"watchdog-site-held","lock":"site","callback":"watchdog","returnsWhileHeld":true,"violationRetained":true,"returnedEvent":false},
@@ -7,10 +8,18 @@
     {"id":"event-ring-held","lock":"event","callback":"event","returnsWhileHeld":true,"violationRetained":false,"returnedEvent":true}
   ],
   "verdicts": [
-    {"id":"strict-equality","start":100,"end":8100,"fault":true,"clockFault":null},
-    {"id":"under-ceiling","start":100,"end":8099,"fault":false,"clockFault":null},
-    {"id":"backward","start":100,"end":99,"fault":true,"clockFault":"Backward"},
-    {"id":"missing-end","start":100,"end":null,"fault":true,"clockFault":"Missing"},
-    {"id":"missing-start","start":null,"end":100,"fault":true,"clockFault":"Missing"}
+    {"id":"strict-equality","start":100,"end":8100,"fault":true,"clockFault":null,"sessionTerminal":false},
+    {"id":"under-ceiling","start":100,"end":8099,"fault":false,"clockFault":null,"sessionTerminal":false},
+    {"id":"backward","start":100,"end":99,"fault":true,"clockFault":"Backward","sessionTerminal":true},
+    {"id":"missing-end","start":100,"end":null,"fault":true,"clockFault":"Missing","sessionTerminal":true},
+    {"id":"missing-start","start":null,"end":100,"fault":true,"clockFault":"Missing","sessionTerminal":true}
+  ],
+  "overruns": [
+    {"id":"clean-run","elapsedUs":[10,20,30],"terminalIndex":null,"consecutive":0,"longestRun":0,"total":0,"worstElapsedUs":0},
+    {"id":"single-descheduled-step","elapsedUs":[14571],"terminalIndex":null,"consecutive":1,"longestRun":1,"total":1,"worstElapsedUs":14571},
+    {"id":"isolated-spikes-between-clean-steps","elapsedUs":[9000,10,10000,20,14571,30],"terminalIndex":null,"consecutive":0,"longestRun":1,"total":3,"worstElapsedUs":14571},
+    {"id":"three-consecutive-under-threshold","elapsedUs":[8000,8001,9000],"terminalIndex":null,"consecutive":3,"longestRun":3,"total":3,"worstElapsedUs":9000},
+    {"id":"burst-then-recovery-then-burst","elapsedUs":[9000,9000,9000,7999,9000,9000,9000],"terminalIndex":null,"consecutive":3,"longestRun":3,"total":6,"worstElapsedUs":9000},
+    {"id":"runaway-every-step","elapsedUs":[9000,12000,9000,25593,9000],"terminalIndex":3,"consecutive":5,"longestRun":5,"total":5,"worstElapsedUs":25593}
   ]
 }

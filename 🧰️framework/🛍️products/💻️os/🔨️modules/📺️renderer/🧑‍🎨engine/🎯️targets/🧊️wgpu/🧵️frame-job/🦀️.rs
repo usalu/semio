@@ -171,6 +171,7 @@ struct ActiveFrameBuild {
     cancel: CancelToken,
     preview_sequence: u64,
     phase: ActiveFramePhase,
+    overruns: semio_framework_trace::StepOverrunLedger,
     completed: Option<crate::AppFramePresentation>,
     closing: bool,
 }
@@ -211,7 +212,7 @@ impl ActiveFrameBuild {
                 ActiveFramePhase::DeadlineAdmissionRejected(rejected)
             }
         };
-        Self { runtime, handle, operation, generation, cancel, preview_sequence: 0, phase, completed: None, closing: false }
+        Self { runtime, handle, operation, generation, cancel, preview_sequence: 0, phase, overruns: semio_framework_trace::StepOverrunLedger::new(), completed: None, closing: false }
     }
 
     fn cancel(&self) {
@@ -222,6 +223,10 @@ impl ActiveFrameBuild {
         retire_active_phase(&mut self.phase)
     }
 
+    /// 🛑️ Terminates the frame for an overrun its own `StepOverrunLedger` attributed to the step —
+    /// an unusable clock reading, or `SUSTAINED_OVERRUN_QUARANTINE_STEPS` consecutive over-ceiling
+    /// phases. One over-ceiling WALL reading on a browser worker sharing a core is recorded by the
+    /// watchdog and never reaches here.
     fn quarantine_overrun(&self, site: &'static str) {
         self.runtime.record_frame_fault(site);
         self.cancel.cancel_now();
@@ -241,7 +246,8 @@ impl ActiveFrameBuild {
                 if !matches!(poll, Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) || !session.checkout_outcome() {
                     return ActiveFrameStep::Pending;
                 }
-                if session.callback_verdict().is_some_and(semio_framework_trace::CallbackVerdict::is_fault) {
+                let deadline_verdict = session.callback_verdict().copied();
+                if deadline_verdict.is_some_and(|verdict| self.overruns.admit(&verdict).is_terminal()) {
                     self.quarantine_overrun("os_renderer.frame.deadlines exceeded its exact clock authority");
                     return ActiveFrameStep::Pending;
                 }
@@ -280,7 +286,7 @@ impl ActiveFrameBuild {
                     return ActiveFrameStep::Pending;
                 }
                 let applied = self.runtime.apply_pending_step();
-                if watchdog.finish().is_fault() {
+                if self.overruns.admit(&watchdog.finish()).is_terminal() {
                     self.quarantine_overrun("os_renderer.frame.apply_pending overran the interactive ceiling");
                     return ActiveFrameStep::Pending;
                 }
@@ -301,7 +307,7 @@ impl ActiveFrameBuild {
                     let mut context = StepContext::new(self.operation, self.generation, now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)), self.cancel.clone(), now_us, &mut self.preview_sequence);
                     transaction.step(&self.runtime, &self.handle, &mut context)
                 };
-                if watchdog.finish().is_fault() {
+                if self.overruns.admit(&watchdog.finish()).is_terminal() {
                     if let crate::AppFrameTransactionStep::Complete(frame) = transaction_step {
                         let preparation = frame.into_preparation();
                         self.phase = ActiveFramePhase::Prepare(preparation);
@@ -323,7 +329,8 @@ impl ActiveFrameBuild {
             }
             ActiveFramePhase::Prepare(preparation) => {
                 let outcome = preparation.drive_step(self.operation, self.generation, self.cancel.clone(), &mut self.preview_sequence);
-                if preparation.callback_verdict().is_some_and(semio_framework_trace::CallbackVerdict::is_fault) {
+                let prepare_verdict = preparation.callback_verdict().copied();
+                if prepare_verdict.is_some_and(|verdict| self.overruns.admit(&verdict).is_terminal()) {
                     self.quarantine_overrun("os_renderer.prepare.worker overran the interactive ceiling");
                     return ActiveFrameStep::Pending;
                 }

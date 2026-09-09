@@ -1,8 +1,12 @@
 type TestSource = { readonly directory: string; readonly url: string };
+type KernelTestModule = typeof import("../../🟦️.ts");
+type IoSchemaTestModule = typeof import("../../../🚪️io/🧬️schema/🟦️.ts");
+type ActorTestModule = typeof import("../../../🎭️actor/📮️shard-client/🟦️.ts");
+type ResidentTestModule = typeof import("../../../🌱️value/💾️resident/🟦️.ts");
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<KernelTestModule, "createTurnOutcomeBroadcast">, source: TestSource): Promise<void> {
   const { createTurnOutcomeBroadcast } = dependencies;
-  type TurnOutcome = any;
+  type TurnOutcome = import("../../🟦️.ts").TurnOutcome;
 
   const { describe, expect, it } = vitest;
 
@@ -52,12 +56,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<KernelTestModule, "AppRouter"> & Pick<IoSchemaTestModule, "dialectCoordinate">, source: TestSource): Promise<void> {
   const { AppRouter, dialectCoordinate } = dependencies;
-  type AppRef = any;
-  type AppRole = any;
-  type AppRouterManifest = any;
-  type ArtifactDialect = any;
+  type AppRef = import("../../../🛂️manifest/🧬️schema/🟦️.ts").AppRef;
+  type AppRole = import("../../../🛂️manifest/🧬️schema/🟦️.ts").AppRole;
+  type AppRouterManifest = import("../../🟦️.ts").AppRouterManifest;
+  type ArtifactDialect = import("../../../🚪️io/🧬️schema/🟦️.ts").ArtifactDialect;
 
   const { describe, expect, it } = vitest;
 
@@ -106,13 +110,16 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<KernelTestModule, "ActivationRegistry" | "DEFAULT_MAX_RESIDENT_ACTORS" | "RUNTIME_METRICS_PUBLISH_INTERVAL_MS" | "intersectCapabilityGrants" | "residentActorCapFromMemory" | "runtimeMetricsDue"> & Pick<ActorTestModule, "ShardClient"> & Pick<ResidentTestModule, "OwnedResidentLedger">, source: TestSource): Promise<void> {
   const { ActivationRegistry, DEFAULT_MAX_RESIDENT_ACTORS, OwnedResidentLedger, RUNTIME_METRICS_PUBLISH_INTERVAL_MS, ShardClient, intersectCapabilityGrants, residentActorCapFromMemory, runtimeMetricsDue } = dependencies;
-  type MemoryProbe = any;
-  type PluginCatalog = any;
-  type RuntimeMetricsSnapshot = any;
-  type ShardBudget = any;
-  type ShardCapabilityGrant = any;
+  type MemoryProbe = import("../../🟦️.ts").MemoryProbe;
+  type PluginCatalog = import("../../🟦️.ts").PluginCatalog;
+  type RuntimeMetricsSnapshot = import("../../🟦️.ts").RuntimeMetricsSnapshot;
+  type ActivationRegistry = import("../../🟦️.ts").ActivationRegistry;
+  type ShardBudget = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardBudget;
+  type ShardCapabilityGrant = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardCapabilityGrant;
+  type ShardClient = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardClient;
+  type OwnedResidentLedger = import("../../../🌱️value/💾️resident/🟦️.ts").OwnedResidentLedger;
 
   const { describe, expect, it, vi } = vitest;
 
@@ -554,7 +561,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<KernelTestModule, "expandPluginRegistry">, source: TestSource): Promise<void> {
   const { expandPluginRegistry } = dependencies;
 
   const { describe, expect, it } = vitest;
@@ -581,10 +588,10 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<KernelTestModule, "IoEntryGraph" | "ioIdentify" | "ioRun"> & Pick<IoSchemaTestModule, "dialectCoordinate">, source: TestSource): Promise<void> {
   const { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun } = dependencies;
-  type ArtifactDialect = any;
-  type IoEntryGraphPlugin = any;
+  type ArtifactDialect = import("../../../🚪️io/🧬️schema/🟦️.ts").ArtifactDialect;
+  type IoEntryGraphPlugin = import("../../🟦️.ts").IoEntryGraphPlugin;
 
   const { describe, expect, it } = vitest;
   describe("IoEntryGraph", () => {

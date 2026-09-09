@@ -19,8 +19,6 @@ pub struct Generation3dConfig {
     pub sun_json: String,
     #[state(config)]
     pub selected_generation_id: Option<String>,
-    #[state(config)]
-    pub preview_eval_text: Option<String>,
 }
 
 //region 📎 App-schema descriptor

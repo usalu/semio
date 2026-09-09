@@ -55,7 +55,7 @@ async fn the_undo_create_mesh_reattaches_the_captured_handle() {
     let undo = mutation.inverse(&base);
     assert_eq!(undo.len(), 1, "deleting an existing child undoes as exactly one CreateMesh");
     let SemioObjectMutation::CreateMesh(recreate) = &undo[0] else { panic!("delete-mesh must undo as CreateMesh") };
-    assert_eq!(recreate.child_id, "mesh-1", "the undo must recapture the ORIGINAL child id from base");
+    assert_eq!(recreate.child_id, "kitchen-sink-mesh", "the undo must recapture the ORIGINAL child id from base");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-mesh applies");
     for step in &undo {
         current = step.diff(&current).diff().apply(&current).expect("the undo CreateMesh applies to the cleared object");

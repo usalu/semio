@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.app.generation.3d.viewer;
+message Generation3dViewConfig {
+  // @state config
+  string lod_mode = 1;
+  // @state config
+  string show_mode = 2;
+  // @state config
+  Generation3dViewCamera preview_camera = 3;
+  // @state config
+  string sun_json = 4;
+}
+message Generation3dViewCamera {
+  repeated double position = 1;
+  repeated double target = 2;
+  double fov = 3;
+}

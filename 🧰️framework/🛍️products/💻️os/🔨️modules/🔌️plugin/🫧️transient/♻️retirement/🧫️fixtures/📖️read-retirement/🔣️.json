@@ -1,0 +1,8 @@
+{
+  "maximumSteps": 64,
+  "maximumBytes": 4096,
+  "zeroGrantReleasedItems": 0,
+  "heldReadBlocks": true,
+  "releasedReadCompletes": true,
+  "terminalIsEmpty": true
+}

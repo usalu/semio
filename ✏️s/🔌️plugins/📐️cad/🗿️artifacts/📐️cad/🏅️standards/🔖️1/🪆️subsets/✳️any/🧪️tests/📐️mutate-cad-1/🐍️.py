@@ -41,7 +41,7 @@ from semio_repo_test import Adapter, Outcome
 
 
 # region 🔖️Vocabulary
-REQUIRED = ("schema", "id", "drawings", "referencesByModelDefinitionId", "nodes", "activeModelDefinitionId")
+REQUIRED = ("schema", "id", "drawings", "referencesByModelDefinitionId", "nodes")
 """🗂️ The members every committed `CadSnapshot` carries."""
 
 SLOTS = {"shape-model": "shapeModel", "building-model": "buildingModel", "energy-model": "energyModel", "structure-classic-model": "structureClassicModel"}
@@ -78,7 +78,6 @@ KINDS = (
     "move-reference",
     "replace-reference-media",
     "replace-references",
-    "change-active-model-definition",
 )
 """🏷️ Every kind the catalog declares, in its declared order."""
 
@@ -219,8 +218,6 @@ def apply_mutation(document, kind, payload):
     elif kind == "replace-references":
         references_of(document, payload["modelDefinitionId"], kind, "mutate")
         document["referencesByModelDefinitionId"][payload["modelDefinitionId"]] = copy.deepcopy(payload["references"])
-    elif kind == "change-active-model-definition":
-        document["activeModelDefinitionId"] = payload["newModelDefinitionId"]
     else:
         raise AssertionError("mutate-%s: this implementation declares no verb for that kind" % kind)
     return document
@@ -264,8 +261,6 @@ def inverse_mutation(document, kind, payload):
         return [(kind, undo)]
     if kind == "replace-references":
         return [(kind, {"modelDefinitionId": payload["modelDefinitionId"], "references": copy.deepcopy(references_of(document, payload["modelDefinitionId"], kind, "inverse"))})]
-    if kind == "change-active-model-definition":
-        return [(kind, {"newModelDefinitionId": document["activeModelDefinitionId"]})]
     raise AssertionError("inverse-%s: this implementation declares no inverse for that kind" % kind)
 # endregion 🔖️Verbs
 
@@ -390,8 +385,6 @@ def identity_handler(ctx):
             raise AssertionError("identity-round-trip: the committed document must occupy the %s slot" % slot)
     if not document["drawings"] or not document["nodes"]:
         raise AssertionError("identity-round-trip: the committed document must carry a drawing child and a node tree")
-    if document["activeModelDefinitionId"] not in document["referencesByModelDefinitionId"]:
-        raise AssertionError("identity-round-trip: the active model definition %r has no reference list" % document["activeModelDefinitionId"])
     for member in list(SLOTS.values()) + ["drawings"]:
         for handle in ([document[member]] if member in SLOTS.values() else document[member]):
             if parse_target(print_target(handle), "identity-round-trip") != handle["target"]:

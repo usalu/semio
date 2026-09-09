@@ -1,15 +1,15 @@
 //! ✏️ Wires document editing with gestures owned by each concrete canvas window.
 
-#[path = "🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🦀️.rs"]
-pub mod window_transient;
 #[path = "🧵️retained/🦀️.rs"]
 mod retained;
+#[path = "🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🦀️.rs"]
+pub mod window_transient;
 
 use crate::editor::wires::commands::add_node;
 use crate::editor::wires::commands::add_relationship;
 use crate::editor::wires::commands::delete_selection;
 use crate::editor::wires::commands::set_active_example;
-use crate::editor::wires::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up};
+use crate::editor::wires::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, node_graph_viewport};
 use crate::editor::wires::commands::{force_layout, reorganize};
 use crate::editor::wires::modes::edit;
 use crate::editor::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -147,6 +147,7 @@ semio_framework_plugin::app_commands! {
         "canvasPointerMove" as "pointer-move" => canvas_pointer_move::CanvasPointerMove,
         "canvasPointerDown" as "pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "canvasPointerUp" as "pointer-up" => canvas_pointer_up::CanvasPointerUp,
+        "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
     }
 }
 //#endregion 🔖️Commands
@@ -157,7 +158,7 @@ semio_framework_plugin::app_commands! {
 pub struct ReasoningWiresPlayApp;
 
 //#region 🧵️RetainedCommands
-const WIRES_RETAINED_TOOL_IDS: &[&str] = &["canvasPointerDown", "canvasPointerMove", "canvasPointerUp"];
+const WIRES_RETAINED_TOOL_IDS: &[&str] = &["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "nodeGraphViewport"];
 const WIRES_RETAINED_PAYLOAD_SCHEMA: &str = "reasoning.wires.tool-command.v1";
 const WIRES_RETAINED_RAW_BYTES: usize = 8_192;
 const WIRES_RETAINED_WORK_ITEMS: usize = 1_048_576;
@@ -165,6 +166,7 @@ const WIRES_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
     ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
 ];
 
 fn wires_retained_contract() -> ToolExecutionContract {
@@ -176,6 +178,7 @@ fn wires_retained_extent(command: &WiresCommand, _snapshot: &WiresSnapshot, _int
         WiresCommand::CanvasPointerUp(_) => Some(WIRES_RETAINED_WORK_ITEMS),
         WiresCommand::CanvasPointerDown(payload) if payload.id.as_ref().is_none_or(|id| id.len() <= 1_024) && payload.x.is_finite() && payload.y.is_finite() => Some(WIRES_RETAINED_WORK_ITEMS),
         WiresCommand::CanvasPointerMove(payload) if payload.x.is_finite() && payload.y.is_finite() => Some(1),
+        WiresCommand::NodeGraphViewport(payload) if payload.camera.x.is_finite() && payload.camera.y.is_finite() && payload.camera.zoom.is_finite() && payload.camera.zoom > 0.0 => Some(1),
         _ => None,
     }
 }
@@ -192,33 +195,15 @@ struct WiresWindowDragWork {
 }
 
 impl WiresWindowDragWork {
-    fn drag_mutation(
-        window: &semio_framework_plugin::WindowTransientSnapshot,
-        node_id: Option<String>,
-        start_x: f64,
-        start_y: f64,
-        last_x: f64,
-        last_y: f64,
-        zoom: f64,
-    ) -> semio_framework_plugin::WindowTransientMutation {
-        semio_framework_plugin::WindowTransientMutation::of::<window_transient::WiresCanvasTransientOwner>(
-            window.window_id(),
-            window_transient::SetDrag { node_id, start_x, start_y, last_x, last_y, zoom }.into(),
-        )
+    fn drag_mutation(window: &semio_framework_plugin::WindowTransientSnapshot, node_id: Option<String>, start_x: f64, start_y: f64, last_x: f64, last_y: f64, zoom: f64) -> semio_framework_plugin::WindowTransientMutation {
+        semio_framework_plugin::WindowTransientMutation::of::<window_transient::WiresCanvasTransientOwner>(window.window_id(), window_transient::SetDrag { node_id, start_x, start_y, last_x, last_y, zoom }.into())
     }
 
     fn clear(window: &semio_framework_plugin::WindowTransientSnapshot) -> semio_framework_plugin::WindowTransientMutation {
         Self::drag_mutation(window, None, 0.0, 0.0, 0.0, 0.0, 1.0)
     }
 
-    fn complete_down(
-        &mut self,
-        window: &semio_framework_plugin::WindowTransientSnapshot,
-        node_id: Option<String>,
-        x: f64,
-        y: f64,
-        zoom: f64,
-    ) -> ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>> {
+    fn complete_down(&mut self, window: &semio_framework_plugin::WindowTransientSnapshot, node_id: Option<String>, x: f64, y: f64, zoom: f64) -> ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>> {
         self.consumed = true;
         let effects = node_id.as_ref().map(|id| vec![wires_select_effect(std::slice::from_ref(id), WIRES_GRANULARITY_NODE, "replace")]).unwrap_or_default();
         let mutation = Self::drag_mutation(window, node_id, x, y, x, y, zoom);
@@ -227,10 +212,7 @@ impl WiresWindowDragWork {
 
     fn complete_clear(&mut self, window: &semio_framework_plugin::WindowTransientSnapshot) -> ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>> {
         self.consumed = true;
-        ArtifactCommandWorkStep::CompleteWithEphemeral {
-            emit: Emit::default(),
-            ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![Self::clear(window)] },
-        }
+        ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![Self::clear(window)] } }
     }
 }
 
@@ -241,25 +223,27 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
 
     fn extent(&self, command: &WiresCommand, snapshot: &WiresSnapshot, interaction: &protocol::InteractionState, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>) -> Option<usize> {
         let context = context?;
-        context.window_transient.as_ref()?.get::<window_transient::WiresCanvasTransientOwner>()?;
-        if matches!(command, WiresCommand::CanvasPointerDown(_)) {
-            context
-                .window_config
-                .as_ref()?
-                .get::<edit::windows::canvas::config::WiresCanvasWindowConfigOwner>()?;
+        if matches!(command, WiresCommand::NodeGraphViewport(_)) {
+            context.window_config.as_ref()?.get::<edit::windows::canvas::config::WiresCanvasWindowConfigOwner>()?;
+        } else {
+            context.window_transient.as_ref()?.get::<window_transient::WiresCanvasTransientOwner>()?;
+            if matches!(command, WiresCommand::CanvasPointerDown(_)) {
+                context.window_config.as_ref()?.get::<edit::windows::canvas::config::WiresCanvasWindowConfigOwner>()?;
+            }
         }
         (command.command_id() == self.tool_id).then(|| wires_retained_extent(command, snapshot, interaction)).flatten()
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<ReasoningWiresPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>>, Fault> {
+        #[cfg(test)]
+        eprintln!("[DEBUG] Wires retained work tool={} visited={} node={} field={} consumed={}", self.tool_id, self.visited, self.node_cursor, self.field_cursor, self.consumed);
         if self.consumed || self.visited >= WIRES_RETAINED_WORK_ITEMS {
             return Err(Fault::from("wires-window-drag-work-capacity"));
         }
         self.visited += 1;
-        let window = input.context.and_then(|context| context.window_transient.as_ref()).ok_or_else(|| Fault::from("wires-drag-requires-window"))?;
-        let transient = window.get::<window_transient::WiresCanvasTransientOwner>().ok_or_else(|| Fault::from("wires-drag-window-kind"))?;
         match input.command {
             WiresCommand::CanvasPointerDown(payload) => {
+                let window = input.context.and_then(|context| context.window_transient.as_ref()).ok_or_else(|| Fault::from("wires-drag-requires-window"))?;
                 let Some(id) = payload.id.as_ref() else {
                     return Ok(self.complete_clear(window));
                 };
@@ -290,6 +274,8 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
                 Ok(ArtifactCommandWorkStep::Progress { stage: "canvas-hit", preview: &[] })
             }
             WiresCommand::CanvasPointerMove(payload) => {
+                let window = input.context.and_then(|context| context.window_transient.as_ref()).ok_or_else(|| Fault::from("wires-drag-requires-window"))?;
+                let transient = window.get::<window_transient::WiresCanvasTransientOwner>().ok_or_else(|| Fault::from("wires-drag-window-kind"))?;
                 let Some(id) = transient.drag_node_id.as_ref() else {
                     self.consumed = true;
                     return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
@@ -301,21 +287,12 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
                     return Err(Fault::from("wires-drag-camera-invalid"));
                 }
                 self.consumed = true;
-                let gesture = Self::drag_mutation(
-                    window,
-                    Some(id.clone()),
-                    transient.drag_start_x,
-                    transient.drag_start_y,
-                    payload.x,
-                    payload.y,
-                    transient.drag_zoom,
-                );
-                Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
-                    emit: Emit::default(),
-                    ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![gesture] },
-                })
+                let gesture = Self::drag_mutation(window, Some(id.clone()), transient.drag_start_x, transient.drag_start_y, payload.x, payload.y, transient.drag_zoom);
+                Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![gesture] } })
             }
             WiresCommand::CanvasPointerUp(_) => {
+                let window = input.context.and_then(|context| context.window_transient.as_ref()).ok_or_else(|| Fault::from("wires-drag-requires-window"))?;
+                let transient = window.get::<window_transient::WiresCanvasTransientOwner>().ok_or_else(|| Fault::from("wires-drag-window-kind"))?;
                 let Some(id) = transient.drag_node_id.as_ref() else {
                     return Ok(self.complete_clear(window));
                 };
@@ -358,6 +335,15 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
                 self.node_x = None;
                 self.node_y = None;
                 Ok(ArtifactCommandWorkStep::Progress { stage: "canvas-move-target", preview: &[] })
+            }
+            WiresCommand::NodeGraphViewport(payload) => {
+                let window = input.context.and_then(|context| context.window_config.as_ref()).ok_or_else(|| Fault::from("wires-viewport-requires-window"))?;
+                let mutation = semio_framework_plugin::WindowConfigMutation::of::<edit::windows::canvas::config::WiresCanvasWindowConfigOwner>(
+                    window.window_id(),
+                    edit::windows::canvas::config::WiresCanvasWindowConfigMutation::SetCamera(edit::windows::canvas::config::SetCamera { camera: payload.camera.clone() }),
+                );
+                self.consumed = true;
+                Ok(ArtifactCommandWorkStep::Complete(Emit { window_config_mutations: vec![mutation], ..Default::default() }))
             }
             _ => Err(Fault::from("wires-window-drag-route")),
         }
@@ -493,7 +479,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         factory: "WiresRetainedCommandJobFactory",
         factory_type: WiresRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 16, 1_048_576, 16_384, 7_500),
-        tools: ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]
+        tools: ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "nodeGraphViewport"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -557,12 +543,19 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         doc: &ArtifactView<'_, WiresSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<WiresMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             WiresCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
+            WiresCommand::NodeGraphViewport(payload) => {
+                let view = view_state.ok_or_else(|| Fault::from("wires-canvas-window-context-required"))?;
+                let mut emit = Emit::default();
+                emit.window_config_mutations
+                    .push(edit::windows::canvas::config::addressed(view, edit::windows::canvas::config::WiresCanvasWindowConfigMutation::SetCamera(edit::windows::canvas::config::SetCamera { camera: payload.camera.clone() }))?);
+                Ok(emit)
+            }
             _ => command.dispatch(doc, cfg),
         }
     }
@@ -653,6 +646,7 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         // below via `.interaction(...)`.
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::Mutation, "mouse-pointer"))
+        .action_with(semio_framework_plugin::ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), semio_framework_plugin::ActionKind::View, "camera"))
         .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
@@ -662,6 +656,7 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("reorganize", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
+        .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
         // 🕹️ Domain "graph": identities (node) and relationships (edge) — `Flat` (the mindmap graph
         // has no parent/child structure to build a topology from, see `WIRES_INTERACTION_GRAPH`'s
         // doc comment); single-select, pick-only, replace-only merge (matches the pre-migration

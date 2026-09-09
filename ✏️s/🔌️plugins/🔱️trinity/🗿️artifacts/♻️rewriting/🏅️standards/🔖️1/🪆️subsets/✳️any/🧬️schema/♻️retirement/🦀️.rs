@@ -32,5 +32,5 @@ pub fn document_store_owners() -> store::MemberStoreOwners<RewritingSnapshot, Re
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🔬️document-retirement/🦀️.rs"]
 mod tests;

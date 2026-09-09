@@ -22,7 +22,7 @@ pub fn render(snapshot: &TiffSnapshot) -> semio_framework_plugin::UiAssemblyResu
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn image_view(snapshot: &TiffSnapshot) -> ImageView {
     let bytes = encode_tiff(snapshot).ok().unwrap_or_default();
-    ImageView { width: 0, height: 0, mime: "image/tiff".into(), base64: crate::base64_standard(&bytes) }
+    ImageView { width: 0, height: 0, mime: "image/tiff".into(), base64: semio_s_artifact_stdio_contract::base64_standard(&bytes) }
 }
 
 #[cfg(test)]

@@ -13,7 +13,7 @@ export interface Din18599Diff {
   hT?: number | null;
   /** 🗿️ @state artifact */
   hV?: number | null;
-  /** 🗿️ @state artifact */
+  /** 🗿️ @state artifact @child kind=s.stdio.semio */
   climate?: ArtifactChild | null;
   /** 🗿️ @state artifact */
   internalGainsWM2?: number | null;

@@ -3,7 +3,7 @@
   "schema": null,
   "id": null,
   "shapeModel": {
-    "childId": "shape-model-2",
+    "childId": "cad-shape-2",
     "target": {
       "artifactId": "cad-shape-2",
       "dialect": {
@@ -18,6 +18,5 @@
   "structureClassicModel": null,
   "drawings": null,
   "referencesByModelDefinitionId": null,
-  "nodes": null,
-  "activeModelDefinitionId": null
+  "nodes": null
 }

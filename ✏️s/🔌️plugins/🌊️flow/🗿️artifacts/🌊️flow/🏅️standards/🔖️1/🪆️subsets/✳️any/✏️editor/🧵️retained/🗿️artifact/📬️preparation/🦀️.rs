@@ -320,7 +320,7 @@ impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Prep
                     dialect: store::os_io::ArtifactDialect { artifact_kind: state.texts[5].take().unwrap(), standard: state.texts[6].take().unwrap(), subset: state.texts[7].take().unwrap() },
                 };
                 let content = crate::FlowContentChild::new(state.texts[3].take().unwrap(), target).with_local_owner(state.scene_root.take().unwrap());
-                state.post = Some(FlowSnapshot { schema: state.texts[0].take().unwrap(), camera: state.base.as_ref().unwrap().get().camera.clone(), content });
+                state.post = Some(FlowSnapshot { schema: state.texts[0].take().unwrap(), content });
                 state.phase = 111;
             }
             111 => {

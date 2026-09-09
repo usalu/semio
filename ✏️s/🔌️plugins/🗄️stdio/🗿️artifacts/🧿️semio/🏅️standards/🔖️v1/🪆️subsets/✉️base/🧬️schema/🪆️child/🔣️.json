@@ -1,0 +1,224 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json",
+  "title": "SemioChild",
+  "$defs": {
+    "brep": {
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "brep"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "mesh": {
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "mesh"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "value": {
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "value"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "object": {
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "model": {
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "model"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "graph": {
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "graph"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "table": {
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "table"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

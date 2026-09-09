@@ -21,6 +21,10 @@ pub struct Puzzle3dWindowConfig {
     pub transform_rotate: bool,
     pub vortex_show: String,
     pub vortex_direction: String,
+    /// 🖱️ How a viewport drag sweeps a selection — `PUZZLE3D_SELECTION_METHOD_PICK`/`…_RECTANGLE`/
+    /// `…_LASSO`. A window option like `vortex_show`, not activation scratch: switching utility or
+    /// tool must not silently put the marquee back to a shape the user did not ask for.
+    pub selection_method: String,
     pub sun: WorldSunConfig,
     pub camera: Puzzle3dCamera,
 }
@@ -49,6 +53,7 @@ impl Puzzle3dWindowConfig {
             transform_rotate: runtime.transform_rotate,
             vortex_show: runtime.vortex_show.clone(),
             vortex_direction: runtime.vortex_direction.clone(),
+            selection_method: runtime.selection_method.clone(),
             sun: runtime.sun.clone(),
             camera: runtime.camera.clone(),
         }
@@ -66,12 +71,33 @@ impl protocol::Mutation<Puzzle3dWindowConfig> for Puzzle3dWindowConfigMutation {
     fn inverse(&self, base: &Puzzle3dWindowConfig) -> Vec<Self> { vec![Self::Snapshot { config: base.clone() }] }
 }
 
+/// 🫧️ One window instance's interaction scratch: the one-shot suggestion popup, the engagement input
+/// line and the brush candidate the popup is hovering. All three belong to ONE host activation — the
+/// mode-wide active tool, or that window's active utility — and none of them may outlive it.
+///
+/// 🏛️ [`Self::activation`] is the id the scratch was captured under, and NOT a plugin-side copy of the
+/// host's session state: the app never reads it to answer "what is active", only to answer "is what I
+/// am holding still mine". The host stays the sole authority (`ViewModel::active_tool_id` /
+/// `active_utility_id`, `📓️2026-09-09-peer-config-runtime-split.md` §1(d)); [`runtime`] compares the
+/// two on every `handle`/`render`/`window_measures` call and drops scratch whose activation has moved
+/// on. This replaces the clearing the `setActiveTool` reducer used to do: the framework dispatches
+/// `setActiveTool`/`setActiveUtility` as an empty `Emit` (`🔌️plugin/🦀️.rs` `dispatch_action`), so no
+/// app reducer ever runs for them, and a push-based framework hook would both re-introduce that
+/// duplicate and still miss every activation change that arrives as a plain refresh.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dWindowTransient {
     pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
     pub engagement_input: String,
     pub brush_candidate_index: usize,
+    pub activation: String,
+}
+
+/// 🏛️ The host activation this window is under: the mode-wide active tool wins, then the window's own
+/// active utility (`ViewModel::for_window_instance` stamps `active_utility_id` from the per-window
+/// map), else nothing. The two are mutually exclusive by the shell's own rule.
+pub fn host_activation(view: Option<&semio_framework_plugin::ViewModel>) -> String {
+    view.and_then(|view| view.active_tool_id.clone().or_else(|| view.active_utility_id.clone())).unwrap_or_default()
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -126,6 +152,37 @@ impl protocol::MutationDiff<Puzzle3dWindowTransient> for Puzzle3dWindowTransient
     fn absorb(&mut self, other: Self) { *self = other; }
 }
 
+store::artifact_retire_struct!(Puzzle3dSuggestionMenu { x, y, window_id, vortex_full_id });
+store::artifact_retire_struct!(Puzzle3dWindowTransient { suggestion_menu, engagement_input, brush_candidate_index, activation });
+
+impl store::retirement::RetireOwned for Puzzle3dWindowTransientMutation {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        match self {
+            Self::Snapshot { transient } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(transient)]),
+        }
+    }
+}
+
+/// 📏️ The exact heap bytes ONE window transient retains: the suggestion popup's two owned ids when
+/// it is open, plus the engagement input line. Every other field is a fixed-width scalar the
+/// enclosing record already accounts for.
+fn puzzle3d_window_transient_retained_bytes(transient: &Puzzle3dWindowTransient) -> Option<usize> {
+    let menu = transient.suggestion_menu.as_ref().map_or(Some(0), |menu| menu.window_id.capacity().checked_add(menu.vortex_full_id.capacity()))?;
+    menu.checked_add(transient.engagement_input.capacity())?.checked_add(transient.activation.capacity())
+}
+
+fn puzzle3d_window_transient_preflight(mutation: &Puzzle3dWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let Puzzle3dWindowTransientMutation::Snapshot { transient } = mutation;
+    let retained_bytes = puzzle3d_window_transient_retained_bytes(transient).ok_or_else(|| "Puzzle 3D window transient footprint overflowed".to_string())?;
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn puzzle3d_window_transient_transfer(mutation: Puzzle3dWindowTransientMutation) -> Puzzle3dWindowTransient {
+    match mutation {
+        Puzzle3dWindowTransientMutation::Snapshot { transient } => transient,
+    }
+}
+
 pub struct Puzzle3dWindowConfigOwner;
 impl semio_framework_plugin::WindowConfigOwner for Puzzle3dWindowConfigOwner {
     const WINDOW_KIND_ID: &'static str = main::WINDOW_KIND_ID;
@@ -143,9 +200,17 @@ impl semio_framework_plugin::WindowTransientOwner for Puzzle3dWindowTransientOwn
     const WINDOW_KIND_ID: &'static str = main::WINDOW_KIND_ID;
     type State = Puzzle3dWindowTransient;
     type Mutation = Puzzle3dWindowTransientMutation;
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_transient_preparation_factory::<Self>() }
-    fn build_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::State>> { semio_framework_plugin::bounded_window_transient_root_retirement_factory::<Self>() }
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_transient_store_disposer::<Self>() }
+    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+        let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+            puzzle3d_window_transient_preflight,
+            puzzle3d_window_transient_transfer,
+            state.clone(),
+            mutation.clone(),
+        ));
+        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+    }
 }
 
 pub fn register_config(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
@@ -156,7 +221,19 @@ pub fn register_transient(registry: &mut semio_framework_plugin::WindowTransient
     registry.register::<Puzzle3dWindowTransientOwner>()
 }
 
+/// 🫧️ Retires interaction scratch the host has already moved past: a transient captured under a
+/// different activation than the one this call carries is not this activation's scratch, so the
+/// suggestion popup, the engagement input and the brush candidate index all read as empty. Fixed
+/// cost — one string comparison per call, no allocation on the matching path.
+pub fn live_transient(transient: &Puzzle3dWindowTransient, activation: &str) -> Puzzle3dWindowTransient {
+    if transient.activation == activation {
+        return transient.clone();
+    }
+    Puzzle3dWindowTransient { activation: activation.to_string(), ..Puzzle3dWindowTransient::default() }
+}
+
 pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient: &Puzzle3dWindowTransient, view: Option<&semio_framework_plugin::ViewModel>) -> Puzzle3dRuntime {
+    let transient = &live_transient(transient, &host_activation(view));
     Puzzle3dRuntime {
         fill_count: shared.fill_count,
         overlap_budget: shared.overlap_budget,
@@ -176,6 +253,7 @@ pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient
         transform_rotate: window.transform_rotate,
         vortex_show: window.vortex_show.clone(),
         vortex_direction: window.vortex_direction.clone(),
+        selection_method: window.selection_method.clone(),
         sun: window.sun.clone(),
         camera: window.camera.clone(),
         suggestion_menu: transient.suggestion_menu.clone(),
@@ -190,8 +268,10 @@ pub fn shared(runtime: &Puzzle3dRuntime) -> Puzzle3dConfig {
     Puzzle3dConfig { fill_count: runtime.fill_count, overlap_budget: runtime.overlap_budget, object_kind_weights: runtime.object_kind_weights.clone(), vortex_kind_weights: runtime.vortex_kind_weights.clone() }
 }
 
-pub fn transient(runtime: &Puzzle3dRuntime) -> Puzzle3dWindowTransient {
-    Puzzle3dWindowTransient { suggestion_menu: runtime.suggestion_menu.clone(), engagement_input: runtime.engagement_input.clone(), brush_candidate_index: runtime.brush_candidate_index }
+/// 🫧️ The scratch this turn wants to retain, stamped with the activation it belongs to — read back by
+/// [`live_transient`] on every later call.
+pub fn transient(runtime: &Puzzle3dRuntime, view: Option<&semio_framework_plugin::ViewModel>) -> Puzzle3dWindowTransient {
+    Puzzle3dWindowTransient { suggestion_menu: runtime.suggestion_menu.clone(), engagement_input: runtime.engagement_input.clone(), brush_candidate_index: runtime.brush_candidate_index, activation: host_activation(view) }
 }
 
 pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, Puzzle3dConfig>) -> Puzzle3dWindowConfig { view.window::<Puzzle3dWindowConfigOwner>().cloned().unwrap_or_default() }
@@ -210,30 +290,5 @@ pub fn addressed_transient(view: &semio_framework_plugin::ViewModel, transient: 
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn same_kind_windows_compose_independently() {
-        let shared = Puzzle3dConfig::default();
-        let first = Puzzle3dWindowConfig { grid_spacing: 2.0, camera: Puzzle3dCamera { zoom: 4.0, ..Default::default() }, ..Default::default() };
-        let second = Puzzle3dWindowConfig { grid_spacing: 40.0, camera: Puzzle3dCamera { zoom: 0.5, ..Default::default() }, ..Default::default() };
-        let first_runtime = runtime(&shared, &first, &Puzzle3dWindowTransient::default(), None);
-        let second_runtime = runtime(&shared, &second, &Puzzle3dWindowTransient::default(), None);
-        assert_eq!((first_runtime.grid_spacing, first_runtime.camera.zoom), (2.0, 4.0));
-        assert_eq!((second_runtime.grid_spacing, second_runtime.camera.zoom), (40.0, 0.5));
-    }
-
-    #[test]
-    fn app_pack_and_spr_exclude_window_transient_and_operation_fields() {
-        let shared = Puzzle3dConfig::default();
-        let spr = dsl::json::to_json_string(&shared);
-        let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
-        assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(4));
-        let pack = store::ArtifactPack::encode_pack(&shared);
-        for forbidden in ["camera", "windowOptions", "engagementInput", "suggestionMenu", "fillCheckpoint", "fillApplyGeneration"] {
-            assert!(!spr.contains(forbidden));
-            assert!(!pack.windows(forbidden.len()).any(|bytes| bytes == forbidden.as_bytes()));
-        }
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

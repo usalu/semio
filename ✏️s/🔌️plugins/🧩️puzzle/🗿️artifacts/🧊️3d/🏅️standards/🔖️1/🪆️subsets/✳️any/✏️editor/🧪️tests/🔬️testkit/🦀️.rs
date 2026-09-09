@@ -124,8 +124,22 @@ impl MaintenanceStageBudget {
 /// close contract itself is stated exactly once, explicitly, by [`close_witness`].
 pub struct Puzzle3dApp {
     raw: Option<Puzzle3dRawApp>,
+    /// 🏛️ The HOST's own session state, owned here because the host owns it in production: the live
+    /// window roster, the mode-wide `active_tool_id`, and the per-window `active_utility_by_window_id`
+    /// (`📓️2026-09-09-peer-config-runtime-split.md` §1(d)). `setActiveTool`/`setActiveUtility` are
+    /// dispatched by the framework as an empty `Emit` (`🔌️plugin/🦀️.rs` `dispatch_action`), so the app
+    /// writes nothing and the ONLY thing that can carry an activation to the next call is this record.
+    /// Minting a fresh `ViewModel` per call — what this fixture used to do — made every activation
+    /// unobservable one call later, which is a state no real host can be in.
+    view: ViewModel,
     /// ⏱️ Every cooperative-maintenance unit this fixture drove, attributed to its own fixed stage.
     pub maintenance: MaintenanceStageBudget,
+}
+
+/// 🧰️ `resolveUtilityActivation` (`🛠️ShellHelpers/🟦️.tsx`), verbatim: an empty request — or
+/// re-requesting what is already active — deactivates; anything else activates.
+fn resolve_activation(current: Option<&str>, requested: &str) -> Option<String> {
+    (!requested.is_empty() && current != Some(requested)).then(|| requested.to_string())
 }
 
 impl std::ops::Deref for Puzzle3dApp {
@@ -142,6 +156,52 @@ impl std::ops::DerefMut for Puzzle3dApp {
 }
 
 impl Puzzle3dApp {
+    /// 🪟️ Registers one window instance in the fixture's live roster, exactly as the shell's own
+    /// `sessionWindowInstances` grows the moment a pane is opened or split. Idempotent.
+    fn ensure_window(&mut self, window_id: &str) {
+        if !self.view.window_instances.iter().any(|instance| instance.id == window_id) {
+            self.view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: main::WINDOW_KIND_ID.into() });
+        }
+    }
+
+    /// 🎯️ The exact per-call projection a host sends: the whole live session — roster, mode-wide tool,
+    /// per-window utility map — addressed at ONE concrete window instance through the framework's own
+    /// `ViewModel::for_window_instance`, which is what stamps `active_utility_id` for that pane.
+    pub fn window_view(&self, window_id: &str) -> ViewModel {
+        let mut view = self.view.clone();
+        if !view.window_instances.iter().any(|instance| instance.id == window_id) {
+            view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: main::WINDOW_KIND_ID.into() });
+        }
+        view.for_window_instance(window_id).expect("puzzle3d test window roster")
+    }
+
+    /// 🛠️🧰️ The shell's own activation branches (`🏛️ShellHost/🟦️.tsx`'s `SET_ACTIVE_TOOL_ACTION_ID`
+    /// and `SET_ACTIVE_UTILITY_ACTION_ID`), applied to this fixture's session BEFORE the verb is
+    /// forwarded — the same order the shell uses, so the plugin call already sees the new activation.
+    /// A tool and a window utility are mutually exclusive interaction owners: activating a tool clears
+    /// every window's utility, activating a utility clears the tool.
+    fn activate(&mut self, action: &str, args: Option<&Value>, window_id: &str) {
+        let requested = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).unwrap_or_default();
+        if action == SET_ACTIVE_TOOL_ACTION_ID {
+            let next = resolve_activation(self.view.active_tool_id.as_deref(), requested("toolId"));
+            self.view.active_tool_id = next.clone();
+            if next.is_some() {
+                self.view.active_utility_by_window_id.clear();
+            }
+            return;
+        }
+        let window = args.and_then(|value| value.get("windowId")).and_then(Value::as_str).filter(|id| !id.is_empty()).unwrap_or(window_id).to_string();
+        match resolve_activation(self.view.active_utility_by_window_id.get(&window).map(String::as_str), requested("utilityId")) {
+            Some(utility) => {
+                self.view.active_utility_by_window_id.insert(window, utility);
+                self.view.active_tool_id = None;
+            }
+            None => {
+                self.view.active_utility_by_window_id.remove(&window);
+            }
+        }
+    }
+
     /// ⏱️ One cooperative-maintenance unit shaped exactly like the OS runtime's live-cleanup clock
     /// drives it, timed by the framework's own clock and attributed to the fixed stage that ran it.
     /// The stage is read BEFORE the call: `maintenance_step`'s idle early return leaves the
@@ -219,7 +279,8 @@ pub fn puzzle3d_manifest_for_testkit() -> App {
 pub async fn app() -> Puzzle3dApp {
     let mut app = testkit::new_app_with_registry::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit).await;
     app.bind_instance_id(1).await;
-    Puzzle3dApp { raw: Some(app), maintenance: MaintenanceStageBudget::default() }
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }], ..Default::default() };
+    Puzzle3dApp { raw: Some(app), view, maintenance: MaintenanceStageBudget::default() }
 }
 
 /// 🪪️ The instance identity every fixture binds, and therefore the receiver `take_typed_operation_result_page`
@@ -286,22 +347,19 @@ async fn settle_into(app: &mut Puzzle3dApp, result: Result<InvocationResult, Fau
     })
 }
 
-/// 🪟️ Builds the production-shaped roster and exact active instance used by window owner capture.
-pub fn window_view(window_id: &str) -> ViewModel {
-    let mut window_instances = vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }];
-    if window_id != main::WINDOW_KIND_ID {
-        window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: main::WINDOW_KIND_ID.into() });
-    }
-    ViewModel { window_instances, ..Default::default() }.for_window_instance(window_id).expect("puzzle3d test window roster")
-}
-
 /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
 /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
 /// `Self::Command` channel). Reconstructs the `Puzzle3dCommand` from the same
 /// `(action, args, window_id)` triple every pre-B1 test already passed.
 pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
     let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
-    let action_meta = ActionMeta { view_state: Some(window_view(window_id)), ..meta("local") };
+    app.ensure_window(window_id);
+    // 🏛️ The host resolves its OWN session state first and only then forwards the verb — so the very
+    // call that activates a tool/utility already carries it, exactly as `🏛️ShellHost/🟦️.tsx` does.
+    if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID) {
+        app.activate(action, args, window_id);
+    }
+    let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
     // 🕰️ Framework-reserved verbs stay on `handle_action`: this is exactly the `skip` set
     // `PluginBuilder`'s own declared-action bridge check uses (`🧰️framework/…/🔌️plugin/🦀️.rs`), i.e. every
     // verb the framework injects and handles itself. A reserved verb sent down the typed channel faults
@@ -359,8 +417,18 @@ pub async fn hover_id(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>
 }
 
 /// 🖼️ The rendered body, as JSON — every panel/window assertion navigates this value.
+///
+/// 🪟️ The ViewModel is addressed at the very window the body key names (`<body>:<windowInstanceId>`,
+/// else the main instance), exactly like `dispatch`: a host never asks "render this pane" without
+/// saying which pane, and the window-owned config/transient partitions are captured through
+/// `ViewModel::window_id` — a bare `ViewModel::default()` renders every window-owned field at its
+/// type default (no camera, no suggestion popup, no engagement scratch), which is a state no real
+/// render can be in.
 pub async fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
-    let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+    let window_id = body_key.split_once(':').map_or(main::WINDOW_KIND_ID, |(_, window)| window);
+    app.ensure_window(window_id);
+    let view = app.window_view(window_id);
+    let tree = app.render(body_key, None, &view).await.expect("render");
     let mut stack = vec![&tree.root];
     let mut rendered_scene = None;
     while let Some(node) = stack.pop() {
@@ -511,7 +579,8 @@ pub fn measure_group_tag(measures: &[WindowMeasure], group_id: &str) -> Option<O
 
 /// 🪣️ How far background fill planning has preloaded, read off the fill tool's own count slider.
 pub async fn fill_ready(app: &mut Puzzle3dApp) -> f64 {
-    app.tool_measures(&ViewModel::default()).await.get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
+    let view = app.window_view(main::WINDOW_KIND_ID);
+    app.tool_measures(&view).await.get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
 }
 
 /// 🪣️ Drives `fillBuildTick` until planning has reached `target` placements (or the budget runs out).
@@ -549,5 +618,6 @@ pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str
         window_instance_id: None,
         point: None,
     };
-    app.context_menu(&request, &ViewModel::default()).await
+    let view = app.window_view(main::WINDOW_KIND_ID);
+    app.context_menu(&request, &view).await
 }

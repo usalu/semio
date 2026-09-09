@@ -22,6 +22,13 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
     fn build_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>>;
 }
 
+/// 📏️ `retained_bytes` is THIS item's own encoded cost (forward op plus description), not the
+/// owner's `MAXIMUM_PUBLICATION_BYTES` ceiling: the per-turn grant a publisher hands down is a work
+/// budget for one turn (`TYPED_OPERATION_RESULT_PAGE_BYTES`), while the ceiling is the widest record
+/// the schema may ever carry. Gating a turn on the ceiling made every owner whose ceiling exceeds
+/// that grant permanently unpublishable — the publication spun in `Blocked` forever and the whole
+/// typed operation behind it never quiesced. Same shape as the transient lane's
+/// `BoundedTransientPreparation` (`🫧️transient/🧵️publication/🦀️.rs`).
 struct BoundedWindowConfigPreparation<O: WindowConfigOwner> {
     base: Option<store::SnapshotRead<O::State>>,
     mutation: Option<O::Mutation>,
@@ -29,6 +36,7 @@ struct BoundedWindowConfigPreparation<O: WindowConfigOwner> {
     authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<O::State, O::Mutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
     cancelled: bool,
     closing: bool,
 }
@@ -41,15 +49,24 @@ impl<O: WindowConfigOwner> Default for BoundedWindowConfigPreparationFactory<O> 
     }
 }
 
+impl<O: WindowConfigOwner> BoundedWindowConfigPreparationFactory<O> {
+    /// 📏️ ONE item's exact encoded cost — the same quantity `preflight` bounds and the preparation
+    /// gates its own turn on.
+    fn item_retained_bytes(mutation: &O::Mutation, description: Option<&str>) -> Result<usize, String> {
+        let retained_bytes = protocol::OpBinary::encode_op(mutation).map_err(|error| error.to_string())?.len().saturating_add(description.map_or(0, str::len));
+        if retained_bytes > O::MAXIMUM_PUBLICATION_BYTES {
+            return Err("window config mutation exceeds its owner-declared publication bound".into());
+        }
+        Ok(retained_bytes)
+    }
+}
+
 impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparationFactory<O::State, O::Mutation> for BoundedWindowConfigPreparationFactory<O> {
     fn preflight(&self, mutation: &O::Mutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || O::MAXIMUM_PUBLICATION_BYTES == 0 || O::MAXIMUM_PUBLICATION_BYTES > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {
             return Err("window config publication has an invalid lane or byte bound".into());
         }
-        let retained_bytes = protocol::OpBinary::encode_op(mutation).map_err(|error| error.to_string())?.len().saturating_add(description.map_or(0, str::len));
-        if retained_bytes > O::MAXIMUM_PUBLICATION_BYTES {
-            return Err("window config mutation exceeds its owner-declared publication bound".into());
-        }
+        Self::item_retained_bytes(mutation, description)?;
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: O::MAXIMUM_PUBLICATION_BYTES })
     }
 
@@ -57,13 +74,13 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparationFactory<O::Stat
         &self,
         request: store::ArtifactStoreOneItemPreparationRequest<O::State, O::Mutation>,
     ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<O::State, O::Mutation>>, store::ArtifactStoreOneItemPreparationRequest<O::State, O::Mutation>> {
-        if request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
-        {
+        if request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() {
             return Err(request);
         }
+        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err() {
+            return Err(request);
+        }
+        let Ok(retained_bytes) = Self::item_retained_bytes(&request.mutation, request.description.as_deref()) else { return Err(request) };
         Ok(Box::new(BoundedWindowConfigPreparation::<O> {
             base: Some(request.base),
             mutation: Some(request.mutation),
@@ -71,6 +88,7 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparationFactory<O::Stat
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            retained_bytes,
             cancelled: false,
             closing: false,
         }))
@@ -79,8 +97,11 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparationFactory<O::Stat
 
 impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparation<O::State, O::Mutation> for BoundedWindowConfigPreparation<O> {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if self.cancelled || self.closing || !grant.permits_one() || grant.maximum_bytes < O::MAXIMUM_PUBLICATION_BYTES {
+        if self.cancelled || self.closing || !grant.permits_one() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if grant.maximum_bytes < self.retained_bytes {
+            return Err("window config item cannot ever fit the publication turn's byte grant".into());
         }
         if self.prepared.is_some() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
@@ -154,11 +175,11 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparation<O::State, O::M
     }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < O::MAXIMUM_PUBLICATION_BYTES {
+        if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
         if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: O::MAXIMUM_PUBLICATION_BYTES });
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes.min(grant.maximum_bytes) });
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {

@@ -239,7 +239,8 @@ export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promi
 
 /** 🌉️ Proves the receipt-bound GIS cold-pair, tiled-map patch, and addressed mutation corpus. */
 export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<void> {
-  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch");
+  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧫️fixtures/🌉️component-cold-map-patch");
+  const testRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch");
   const fixtureBytes = readFileSync(join(fixtureRoot, "🔣️.json"));
   const fixture = JSON.parse(fixtureBytes.toString("utf8"));
   const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisComponentColdMapPatch");
@@ -285,7 +286,7 @@ export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<v
     }
     if (admitted(candidate)) throw new Error(`GIS component hostile admitted ${hostile}`);
   }
-  const testSource = readFileSync(join(fixtureRoot, "🦀️.rs"), "utf8");
+  const testSource = readFileSync(join(testRoot, "🦀️.rs"), "utf8");
   for (const marker of [
     "ColdDocumentPairPage",
     "ColdPairIngressStatus::Applied",

@@ -4,13 +4,19 @@
   "title": "DagArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "content"],
+  "required": [
+    "schema",
+    "content"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "schema": {
+      "const": "dag.dag",
+      "x-semio-state": "artifact"
+    },
     "content": {
-      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/graph",
       "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio.graph"
+      "x-semio-child-kind": "s.stdio.semio"
     }
   }
 }

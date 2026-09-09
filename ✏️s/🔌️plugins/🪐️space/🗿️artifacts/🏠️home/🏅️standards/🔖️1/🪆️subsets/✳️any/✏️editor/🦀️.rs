@@ -117,6 +117,7 @@ fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _inter
     (admitted <= limit).then_some(HOME_RETAINED_WORK_ITEMS)
 }
 
+#[expect(clippy::too_many_arguments, reason = "ArtifactCommandReducer requires the eight operation, document, configuration, history, and interaction inputs.")]
 fn home_retained_reduce(
     command: &HomeCommand,
     snapshot: &SHomeSnapshot,

@@ -19,7 +19,7 @@
     }
   },
   "properties": {
-    "childId": "props-1",
+    "childId": "kitchen-sink-properties",
     "target": {
       "artifactId": "kitchen-sink-properties",
       "dialect": {

@@ -12,5 +12,5 @@ pub fn diff(payload: &ChangeGenerationValue, base: &Generation3dSnapshot) -> pro
     if existing.values.get(&payload.question_id) == Some(&payload.new_value) {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", format!("Generation \"{}\" question \"{}\" is already \"{}\".", payload.id, payload.question_id, serde_json::Value::from(&payload.new_value)));
     }
-    protocol::MutationOutcome::new(diff_generation_from_ops(base, vec![GenerationMutation::UpdateValues { id: payload.id.clone(), question_id: payload.question_id.clone(), value: payload.new_value.clone() }]))
+    protocol::MutationOutcome::new(diff_generation_from_ops(base, &[GenerationMutation::UpdateValues { id: payload.id.clone(), question_id: payload.question_id.clone(), value: payload.new_value.clone() }]))
 }

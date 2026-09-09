@@ -1,0 +1,2 @@
+# 🫧️ Ephemeral local Flow state for one concrete invoking window.
+type FlowWindowTransient { generationJson: String! duplicateWidgetProgressJson: String! }

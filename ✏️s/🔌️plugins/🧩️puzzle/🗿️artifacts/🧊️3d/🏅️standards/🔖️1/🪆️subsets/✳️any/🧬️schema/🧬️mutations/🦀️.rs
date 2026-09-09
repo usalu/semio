@@ -510,6 +510,20 @@ impl store::ArtifactDsl for Puzzle3dPlaySnapshot {
     }
 }
 
+/// 🧒️ Composition view of the play snapshot: a puzzle document owns no child artifacts, so the
+/// typed snapshot's own (empty) composition is the whole answer.
+impl semio_framework_schema::ArtifactCompositionFields for Puzzle3dPlaySnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
+        semio_framework_schema::ArtifactCompositionFields::visit_child_refs(self.typed.as_ref(), visitor)
+    }
+    fn child_slots() -> &'static [semio_framework_schema::ChildSlotSpec] {
+        <Puzzle3dSnapshot as semio_framework_schema::ArtifactCompositionFields>::child_slots()
+    }
+    fn link_slots() -> &'static [semio_framework_schema::LinkSlotSpec] {
+        <Puzzle3dSnapshot as semio_framework_schema::ArtifactCompositionFields>::link_slots()
+    }
+}
+
 impl store::ArtifactPack for Puzzle3dPlaySnapshot {
     // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: the former
     // `dsl::to_dsl_value(self.value())`/`dsl::from_dsl_value(value).map(Self::new)` calls required

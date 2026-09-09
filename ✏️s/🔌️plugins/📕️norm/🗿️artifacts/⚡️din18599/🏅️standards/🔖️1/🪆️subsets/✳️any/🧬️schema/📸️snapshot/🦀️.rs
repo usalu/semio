@@ -7,7 +7,7 @@ use framework_schema::ArtifactSchema;
 
 /// 📸️ Persisted Din18599 document snapshot. Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
 /// round 2 (`norm→C:table` on `din18599.climate`): the inline `MonthlyClimate` (two twelve-month
-/// arrays) is replaced by a fixed composed `s.stdio.semio.table` CHILD slot — see
+/// arrays) is replaced by a fixed composed `s.stdio.semio`/`table` CHILD slot — see
 /// `🗿️artifacts/⚡️din18599/🦀️.rs`'s `🔖️Composition` region for the converters/
 /// working-scene cache. `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s slot-table emission;
 /// never hand-written.
@@ -28,7 +28,7 @@ pub struct Din18599Snapshot {
     #[state(artifact)]
     pub h_v: f64,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
     pub climate: Din18599ClimateChild,
     #[state(artifact)]

@@ -74,7 +74,7 @@ class TestScript extends BundleScript {
     ];
     runCmd(process.execPath, ["test", ...cases.map(path => resolve(this.repoRoot, path))]);
     const plugin = resolve(this.root, "../..");
-    const authority = resolve(plugin, "🧪️publication-authority");
+    const authority = resolve(plugin, "🧫️fixtures/🧪️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
     const module = await Bun.file(resolve(plugin, "🧬️schema", "🔣️.json")).json() as { $id: string };
     const ajv = new Ajv({ allErrors: true, strict: true });

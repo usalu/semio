@@ -2178,12 +2178,7 @@ pub async fn replay_committed_document<'storage, S: db_storage::WalStorage>(stor
     WalCommittedCursor::open(storage, document, control).await
 }
 
-pub async fn replay_committed_segment<'storage, S: db_storage::WalStorage>(
-    storage: &'storage S,
-    document: &ArtifactId,
-    segment_index: u64,
-    control: WalCursorControl,
-) -> Result<WalCommittedCursor<'storage, S>, DbError> {
+pub async fn replay_committed_segment<'storage, S: db_storage::WalStorage>(storage: &'storage S, document: &ArtifactId, segment_index: u64, control: WalCursorControl) -> Result<WalCommittedCursor<'storage, S>, DbError> {
     WalCommittedCursor::open_at_segment(storage, document, segment_index, control).await
 }
 

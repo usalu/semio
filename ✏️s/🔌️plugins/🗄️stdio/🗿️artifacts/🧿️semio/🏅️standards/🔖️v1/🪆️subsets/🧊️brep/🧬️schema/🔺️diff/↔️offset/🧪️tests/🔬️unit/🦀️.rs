@@ -45,7 +45,9 @@ async fn offset_cylinder_matches_closed_form() {
     let solid = make_cylinder(&mut body, r, h, &mut rec).unwrap();
     let grown = offset_solid_with_corner(&mut body, solid, d, OffsetCorner::Sharp, &mut rec).unwrap();
     let v = solid_volume(&body, grown, 1e-4).unwrap();
-    let closed_form = PI * (r + d) * (r + d) * h;
+    // A SHARP solid offset moves every face outward along its own normal, so the two planar caps
+    // travel `d` as well: the grown cylinder is radius `r + d` AND height `h + 2d`, not `h`.
+    let closed_form = PI * (r + d) * (r + d) * (h + 2.0 * d);
     assert!((v - closed_form).abs() < 1e-2 * closed_form, "v={v} expected={closed_form}");
 }
 

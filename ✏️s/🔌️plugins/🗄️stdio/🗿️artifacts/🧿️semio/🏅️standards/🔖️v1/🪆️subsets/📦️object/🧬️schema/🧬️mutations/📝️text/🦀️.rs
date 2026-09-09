@@ -131,11 +131,11 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioObjectMutation> {
         SemioObjectMutation::MoveObject(MoveObject { translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }),
         SemioObjectMutation::RotateObject(RotateObject { rotation: SemioQuaternion { x: 0.0, y: 0.0, z: 0.0, w: 1.0 } }),
         SemioObjectMutation::ScaleObject(ScaleObject { scale: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } }),
-        SemioObjectMutation::CreateBrep(CreateBrep { child_id: "b1".into(), target: ref_of("brep", "t1") }),
+        SemioObjectMutation::CreateBrep(CreateBrep { child_id: "t1".into(), target: ref_of("brep", "t1") }),
         SemioObjectMutation::DeleteBrep(DeleteBrep {}),
-        SemioObjectMutation::CreateMesh(CreateMesh { child_id: "m1".into(), target: ref_of("mesh", "t2") }),
+        SemioObjectMutation::CreateMesh(CreateMesh { child_id: "t2".into(), target: ref_of("mesh", "t2") }),
         SemioObjectMutation::DeleteMesh(DeleteMesh {}),
-        SemioObjectMutation::CreateProperties(CreateProperties { child_id: "p1".into(), target: ref_of("value", "t3") }),
+        SemioObjectMutation::CreateProperties(CreateProperties { child_id: "t3".into(), target: ref_of("value", "t3") }),
         SemioObjectMutation::DeleteProperties(DeleteProperties {}),
     ]
 }

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::vcs_integration::{HashMutation, HashProjection};
 use db_storage::{PayloadStorage as _, WalStorage as _};

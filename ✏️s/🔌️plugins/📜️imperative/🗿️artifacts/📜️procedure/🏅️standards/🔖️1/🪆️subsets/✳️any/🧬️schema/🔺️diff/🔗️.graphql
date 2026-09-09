@@ -1,63 +1,9 @@
-# 🧬️ Imperative diff schema — sparse field delta over the artifact.
-
+# 🧬️ Procedure durable diff composed from shared flow and text child identities.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ProcedureArtifact from "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 type ProcedureDiff {
   artifact: ProcedureArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
-  path: ProcedurePathDelta @state(class: ARTIFACT)
-  seed: [ProcedureSeedEntry!] @state(class: ARTIFACT)
+  flow: ArtifactChild @state(class: ARTIFACT)
+  text: ArtifactChild @state(class: ARTIFACT)
 }
-
-type ProcedureStringList {
-  values: [String!]!
-}
-
-type ProcedurePathRef {
-  owner: String
-  slot: String
-}
-
-type ProcedurePathDelta {
-  pathRef: ProcedurePathRef!
-  steps: ProcedureStepsDelta!
-}
-
-type ProcedureStepsDelta {
-  added: [ProcedureStep!]!
-  removed: [String!]!
-  patched: [ProcedureStepPatchEntry!]!
-  reordered: [String!]
-}
-
-type ProcedureStepPatchEntry {
-  id: String!
-  patch: JSON!
-}
-
-type ProcedurePath {
-  steps: [ProcedureStep!]!
-}
-
-type ProcedureStep {
-  id: String!
-  kind: String!
-  params: JSON
-  bodies: [ProcedureStepBodyEntry!]
-}
-
-type ProcedureStepBodyEntry {
-  slot: String!
-  path: ProcedurePath!
-}
-
-type ProcedureSeedEntry {
-  key: String!
-  value: JSON!
-}
-
-type ProcedureArtifact {
-  schema: String!
-  path: ProcedurePath!
-  seed: [ProcedureSeedEntry!]!
-}
-
-scalar JSON

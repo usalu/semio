@@ -6,7 +6,7 @@
   "document": {
     "childId": "playbook-document-move-step-already-there",
     "target": {
-      "artifactId": "playbook-document",
+      "artifactId": "playbook-document-move-step-already-there",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -17,7 +17,7 @@
   "flow": {
     "childId": "playbook-flow-move-step-already-there",
     "target": {
-      "artifactId": "playbook-flow",
+      "artifactId": "playbook-flow-move-step-already-there",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

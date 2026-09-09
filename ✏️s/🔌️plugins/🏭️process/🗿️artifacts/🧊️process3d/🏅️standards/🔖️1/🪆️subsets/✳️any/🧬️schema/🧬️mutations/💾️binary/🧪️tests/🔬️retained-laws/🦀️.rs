@@ -19,6 +19,17 @@ fn authority_fixture() -> Process3dPublicationLease {
     }
 }
 
+/// 🔒️ `process3d_admit_publication_authority` fills ONE process-global fixed authority table, which
+/// answers `process3d-publication.saturated` the moment two holders overlap. Every law that mints a
+/// real publication lease takes this lane first, so the suite's own parallelism cannot starve one
+/// law of the authority another law is holding. Poisoning is absorbed: a lane is a scheduling
+/// device, and the panic that poisoned it is already the failure being reported.
+static PUBLICATION_AUTHORITY_LANE: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn publication_authority_lane() -> std::sync::MutexGuard<'static, ()> {
+    PUBLICATION_AUTHORITY_LANE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 fn close_store(mut store: store::ArtifactStore<Process3dSnapshot, Process3dMutation>) {
     use semio_framework_plugin::ArtifactOwnedDisposer;
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
@@ -190,6 +201,7 @@ fn owned_store_measured(label: &str, operation_value: u64, budget: &mut Replacem
 
 #[test]
 fn actual_atomic_publication_is_fail_closed_and_retires_stale_candidate() {
+    let _lane = publication_authority_lane();
     let authority = authority_fixture();
     let operation = semio_framework_job::OperationId(authority.operation);
     let generation = semio_framework_job::Generation(authority.generation);
@@ -240,6 +252,7 @@ fn actual_atomic_publication_is_fail_closed_and_retires_stale_candidate() {
 /// overruns.
 #[test]
 fn every_store_replacement_phase_unit_fits_the_interactive_step_budget() {
+    let _lane = publication_authority_lane();
     let mut best = ReplacementPhaseBudget::default();
     for round in 0..REPLACEMENT_BUDGET_ROUNDS {
         best.keep_best_round(&measure_one_store_replacement(round as u64));

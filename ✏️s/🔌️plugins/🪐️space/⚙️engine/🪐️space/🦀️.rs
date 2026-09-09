@@ -356,6 +356,7 @@ fn space_bounded_extent(command: &SpaceCommand, _snapshot: &WorkflowSnapshot, _i
     SPACE_BOUNDED_TOOL_IDS.contains(&command.command_id()).then_some(SPACE_BOUNDED_WORK_ITEMS)
 }
 
+#[expect(clippy::too_many_arguments, reason = "BoundedArtifactCommandWork requires the full retained reducer context callback")]
 fn space_bounded_reduce(
     command: &SpaceCommand,
     snapshot: &WorkflowSnapshot,

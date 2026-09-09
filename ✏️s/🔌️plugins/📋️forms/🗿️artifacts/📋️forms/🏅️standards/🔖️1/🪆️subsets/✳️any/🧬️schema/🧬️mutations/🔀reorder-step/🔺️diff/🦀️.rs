@@ -18,6 +18,6 @@ pub fn diff_reorder_step(payload: &ReorderStep, base: &FormsSnapshot) -> protoco
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" is already at index {at}.", payload.id));
     }
     order.insert(at, payload.id.clone());
-    protocol::MutationOutcome::new(forms_diff_from_delta(FormsStepsDelta { reordered: Some(order), ..Default::default() }, base))
+    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { reordered: Some(order), ..Default::default() }, base))
 }
 //#endregion 🔖️Diff

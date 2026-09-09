@@ -15,6 +15,6 @@ pub struct SelectGeneration {
 }
 
 pub fn handle(payload: &SelectGeneration, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    let args = dsl::DslValue::object([("id".into(), payload.id.clone().map(dsl::DslValue::String).unwrap_or(dsl::DslValue::Null))]);
+    let args = dsl::DslValue::object([("id".into(), payload.id.clone().map_or(dsl::DslValue::Null, dsl::DslValue::String))]);
     Ok(handle_generation("selectGeneration", Some(&args), doc, cfg).emit)
 }

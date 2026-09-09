@@ -2286,8 +2286,12 @@ export class ShardClient {
 //#endregion 🧵️ShardClient
 
 //#region 🧪️Tests
+export type { InboundMessage, OutboundMessage, PendingEntry, ShardInstanceOwner, ShardSlot };
+export type ShardClientTestDependenciesV1 = ReturnType<typeof shardClientTestDependenciesV1>;
+const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, NO_RESIDENT_FAULT, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, shardJspiAvailable, uiResidentMetadataEnvelope });
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts");
-  await registerTests1(import.meta.vitest, { ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, NO_RESIDENT_FAULT, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, shardJspiAvailable, uiResidentMetadataEnvelope }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
+  await registerTests1(import.meta.vitest, shardClientTestDependenciesV1(), { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️Tests

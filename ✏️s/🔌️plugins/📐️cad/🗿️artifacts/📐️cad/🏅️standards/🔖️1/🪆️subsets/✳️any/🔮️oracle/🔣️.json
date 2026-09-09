@@ -59,17 +59,6 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "change-active-model-definition",
-          "sourceMutationDirectoryName": "🎯change-active-model-definition",
-          "mutationDirectoryName": "🎯change-active-model-definition",
-          "scenarios": [
-            {
-              "id": "switches-the-active-pane-to-the-building-model",
-              "directoryName": "🏗️switches-the-active-pane-to-the-building-model"
-            }
-          ]
-        },
-        {
           "mutationId": "change-reference-hidden",
           "sourceMutationDirectoryName": "👁️change-reference-hidden",
           "mutationDirectoryName": "👁️change-reference-hidden",
@@ -298,8 +287,7 @@
         "change-reference-width",
         "move-reference",
         "replace-reference-media",
-        "replace-references",
-        "change-active-model-definition"
+        "replace-references"
       ]
     }
   ],
@@ -312,26 +300,6 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
       "mutations": [
-        {
-          "id": "change-active-model-definition",
-          "capability": "cad-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "change-active-model-definition",
-            "bridgeVersion": 1,
-            "variant": "ChangeActiveModelDefinition"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "cad-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "document"
-        },
         {
           "id": "change-reference-hidden",
           "capability": "cad-1-mutate",

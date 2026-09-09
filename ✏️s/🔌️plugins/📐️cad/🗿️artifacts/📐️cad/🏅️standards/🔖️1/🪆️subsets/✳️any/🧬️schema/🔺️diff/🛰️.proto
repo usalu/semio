@@ -1,49 +1,25 @@
 syntax = "proto3";
 package semio.s.cad.cad.diff;
-
-// 🧬️ CadDiff schema.
-
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message CadDiff {
-  // @state artifact
-  optional CadArtifact artifact = 1;
-  // @state artifact
+  optional semio.s.cad.cad.artifact.CadArtifact artifact = 1;
   optional string schema = 2;
-  // @state artifact
   optional string id = 3;
-  // @state artifact
-  optional CadObjectsDelta objects = 4;
-  // @state artifact
-  optional CadObjectsDelta building_objects = 5;
-  // @state artifact
-  optional CadObjectsDelta energy_objects = 6;
-  // @state artifact
-  optional CadObjectsDelta structure_classic_objects = 7;
-  // @state artifact
-  map<string, CadReferenceList> references_by_model_definition_id = 8;
-  // @state artifact
-  optional CadNodesDelta nodes = 9;
-  // @state artifact
-  optional CadGeometry shape_geometry = 10;
-  // @state artifact
-  optional CadGeometry building_geometry = 11;
-  // @state artifact
-  optional CadGeometry energy_geometry = 12;
-  // @state artifact
-  optional CadGeometry structure_classic_geometry = 13;
-  // @state artifact
-  optional string active_model_definition_id = 14;
-  // @state presence
-  // @state config
-  // @state config
+  optional semio.os.store.ArtifactChild shape_model = 4;
+  optional semio.os.store.ArtifactChild building_model = 5;
+  optional semio.os.store.ArtifactChild energy_model = 6;
+  optional semio.os.store.ArtifactChild structure_classic_model = 7;
+  optional CadDrawingChildList drawings = 8;
+  map<string, semio.s.cad.cad.artifact.CadReferenceList> references_by_model_definition_id = 9;
+  optional CadNodesDelta nodes = 10;
 }
-
-message CadObject { string id = 1; }
-message CadNode { string id = 1; }
-message CadReferenceList { repeated string values = 1; }
-message CadGeometry { string anchors_json = 1; }
-message CadCamera { double zoom = 1; }
-
-message CadStringList { repeated string values = 1; }
-message CadObjectsDelta { repeated CadObject added = 1; repeated string removed = 2; repeated CadObject patched = 3; repeated string reordered = 4; }
-message CadNodesDelta { repeated CadNode added = 1; repeated string removed = 2; repeated CadNode patched = 3; repeated string reordered = 4; }
-message CadArtifact { string schema = 1; }
+message CadDrawingChildList { repeated semio.os.store.ArtifactChild values = 1; }
+message CadNodePatch { optional string label = 1; }
+message CadNodePatchEntry { string id = 1; CadNodePatch patch = 2; }
+message CadNodesDelta {
+  repeated semio.s.cad.cad.artifact.CadNode added = 1;
+  repeated string removed = 2;
+  repeated CadNodePatchEntry patched = 3;
+  repeated string reordered = 4;
+}

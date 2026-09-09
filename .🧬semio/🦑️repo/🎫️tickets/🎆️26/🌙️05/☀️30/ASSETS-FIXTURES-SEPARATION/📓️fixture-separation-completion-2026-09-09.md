@@ -1,0 +1,55 @@
+# Fixture Separation Verification — 2026-09-09
+
+Testing-only examples have been moved to semantic-owner `🧫️fixtures` folders outside canonical test cases. Production static data has been classified under `🖼️assets`. Readers, schema coordinates, native includes, fixture URIs, build inputs and cache boundaries were updated with the moves. Handwritten test harnesses belong in canonical tests or their testkit; source-shaped sample projects remain opaque test fixtures. No compatibility aliases or modifying Git commands were used.
+
+The final full filesystem scan completed after the repairs: **114,552 authored paths inspected, zero findings**. This includes test placement, legacy filenames, fixture placement, source/module wiring and the source-level layout rules. The earlier three findings are documented with their resolution in [the final scan repair record](./📓️final-layout-repair-followup-2026-09-09.md).
+
+## Final Checks
+
+| Check | Observed result |
+| --- | --- |
+| Full physical and source layout scan | 114,552 authored paths, zero findings |
+| Package manifest dependencies | 103,272 eligible paths, 457 manifests, zero fixture dependencies |
+| Legacy fixture directory names | Zero noncanonical fixture-like roots; separate from case-placement validation |
+| Real mutation registry | 203 contributions, 76 catalogs, 1,890 scenarios, zero findings |
+| Repository-library computed readers | 98 cases, 370 resolved reads, zero missing targets |
+| Final finite framework/plugin reader review | All reported coordinates resolve; 24 direct targets and all 14 Energy asset targets verified |
+
+The physical layout guard, fixture resolver and mutation-fixture regression cases passed together: **84 tests, 194 assertions**. Their tests cover canonical fixture ownership, production dependency rejection, fixture opacity, declared test/fixture pairs, URI resolution, and path/symlink boundaries. See [platform verification](./📓️coordinator-fixture-resolution-2026-09-09.md), [layout snapshot](./📓️fixture-layout-current-2026-09-09.md), [manifest dependencies](./📓️fixture-manifest-dependencies-2026-09-09.md), and [registry verification](./📓️mutation-fixture-registry-current-2026-09-09.md).
+
+## Runtime Evidence
+
+Actual runtime checks included the JCO browser worker's four Promise/stream cases and its guest check; Rust inference cases; TypeScript and Rust fixture parity; strict Ajv oracles; independent JSON Patch, WebCrypto, URL, emoji, glob and lexer comparisons; real static-asset HTTP reads; and production catalog readers.
+
+The final root reader batch passed 21 Energy/Raster tests with 29 assertions, the Writer/Equation/Rewriting window oracles, Store group visibility, and Print's esbuild command-boundary oracle. The final registry reader correction passed all three focused deployment tests. The CAD asset reader loaded the actual 424,392-byte production JSON asset through the corrected reader coordinate. Native and browser evidence is recorded in [JCO verification](./📓️jco-browser-fixture-classification-2026-09-09.md), [framework execution](./📓️framework-fixture-separation-2026-09-09.md), [plugin follow-up](./📓️plugin-followup-fixture-fixes-2026-09-09.md), [reader repairs](./📓️computed-reader-repairs-2026-09-09.md), and [independent final review](./📓️computed-plugin-reader-final-review-2026-09-09.md).
+
+## Classification and Exact Changes
+
+Per-lane reports retain exact authored paths and byte-preserving relocation ledgers:
+
+- [Plugin fixtures and assets](./📓️plugins-fixture-separation-2026-09-09.md), [large plugin path ledger](./📓️plugins-authored-file-manifest-2026-09-09.md), and [additional plugin corpora](./📓️plugin-test-corpus-followup-2026-09-09.md).
+- [Framework fixture separation](./📓️framework-fixture-separation-2026-09-09.md), [Store and Presence corpora](./📓️framework-store-corpus-followup-2026-09-09.md), [remaining framework corpora and DSL follow-up](./📓️remaining-vector-fixture-audit-2026-09-09.md), and [framework final audit](./📓️final-framework-fixture-audit-2026-09-09.md).
+- [Repository-library classification and build inputs](./📓️repo-library-fixture-separation-2026-09-09.md), [normalization runtime catalogs](./📓️normalization-runtime-catalogs-2026-09-09.md), and [production dependency audit](./📓️final-repo-production-fixture-audit-2026-09-09.md).
+
+The normalization production planner now reads its two actual asset catalogs. Serialized catalog fields were renamed directly without legacy fallbacks. Build and cache inputs distinguish production sources from own and shared testing fixtures. Hub's GIS qualification remains a legitimate test consumer: fixture bytes are not published as component production data.
+
+The [exact closure manifest](./📓️authored-manifest-2026-09-09.md) retains the full deduplicated file ledger, including removed source paths, new destinations, modified consumers, and retained ticket evidence. Concurrent unrelated work was preserved.
+
+## Validation Limits
+
+This is fixture separation and reader verification, not a claim that the whole repository's suites pass. The recorded commands also exposed independent failures in the shared working tree:
+
+- Some unchanged publication/action-cohort fixtures disagree with current Lowpoly, Block, Draw, Mathematical, Flow and Note source expectations. Note's strict schema case passes; later route/source assertions fail.
+- CAD presence retirement passes its exact fixture schema but its later unchanged byte oracle expects a removed field. CAD renderer tests stop during artifact module initialization; the repaired asset read was independently verified.
+- Full Energy regeneration and some OS native checks stop in unrelated framework compilation; the complete normalization plan stops at an unsorted compiler-input manifest after both real catalog reads were observed.
+- The final DSL boxed-fields move preserves all 98 bytes and its sole Rust include resolves. Its bounded Nx test reached Cargo dependency compilation but was stopped before a test outcome; no DSL test pass is claimed.
+- Broader caching, repository-library and framework checks retain the precise pre-existing assertion, timeout or build limitations in their lane reports. The framework latest-wins oracle reads and validates its moved corpora before failing a retained-child source predicate.
+- After their test-runner coordinates were repaired, Dev ran seven tests (four passed; three current graph assertions failed), and AgentBridge ran 31 (30 passed; one Shell inference parity assertion failed). The codec source oracle still reports current Rust drift, and Local-interaction reaches its repaired fixture proof before a duplicate Ajv schema registration in a later section. See [framework reader results](./📓️framework-computed-reader-fixes-2026-09-09.md).
+
+No failure above was turned into a passing claim, and no unrelated production behavior was changed to make a moved fixture pass.
+
+## Ticket Lifecycle
+
+The repository MCP closure and generated-output cleanup are recorded in [ticket lifecycle completion](./📓️ticket-lifecycle-completion-2026-09-09.md). Input scripts, configurations and Markdown evidence are retained; generated logs, compiler output and temporary artifacts are removed at closure.
+
+The initial close exposed an oversized-artifact cleanup rule that also removed retained evidence. The exact Git-index recovery and ticket-private retention safeguard are documented in [closure retention recovery](./📓️closure-retention-recovery-2026-09-09.md).

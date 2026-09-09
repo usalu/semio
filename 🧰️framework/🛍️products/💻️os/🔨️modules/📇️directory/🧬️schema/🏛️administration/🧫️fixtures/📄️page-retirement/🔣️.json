@@ -1,0 +1,8 @@
+{
+  "schema": "semio.directory.administration-page-retirement-fixture.v1",
+  "cases": [
+    { "id": "older-success", "older": "author", "newer": "member", "expected": "member" },
+    { "id": "older-failure", "older": "failure", "newer": "member", "expected": "member" }
+  ],
+  "refreshDuringSubmit": { "code": "capacity", "additionalRequests": 0 }
+}

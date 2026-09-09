@@ -8,6 +8,145 @@ pub fn import_stdio_kinds() -> &'static [&'static str] {
 pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.gltf", "stdio.las", "stdio.obj", "stdio.ply", "stdio.stl", "stdio.txt"]
 }
+//#region 🔺️MeshBridge
+/// 🔺️ The one place this artifact's IO leaves turn a generation3d document into geometry and back.
+///
+/// A `s.procedural.generation3d` document is a FLOW GRAPH, not a mesh: its only geometry is what the
+/// graph EVALUATES to. Export therefore runs the same preview pipeline the editor's own 3D window
+/// runs (`crate::editor::generation3d::export_mesh_from_document`, which merges every previewed
+/// widget's tessellated output into one [`semio_framework_plugin::MeshData`]) and hands the result
+/// to `s.stdio.semio@v1/mesh`'s own tested per-format bridges
+/// (`SemioMeshToStl`/`ToObj`/`ToPly`/`ToGltf`/`ToLas`/`ToDwg`) — never a second, hand-rolled copy of
+/// any file grammar. Import is the mirror: the incoming bytes are decoded by the owning
+/// `s.stdio.<format>` codec, normalized to `s.stdio.stl@ascii` where the flow evaluator has no
+/// native operator for the source format, and planted in a three-widget fixture whose
+/// `brep.io.import*` neuron re-evaluates them into real previewable BRep geometry.
+///
+/// @see ../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🦀️.rs
+/// @see ../../../../../../../🌊️flow/🧩️extensions/📐️brep/🦀️.rs — `brep.io.importStl`/`importObj`/`importDwg`.
+pub mod mesh_bridge {
+    use crate::Generation3dSnapshot;
+    use semio_framework_artifact_flow_flow::neural::Dictionary;
+    use semio_framework_artifact_flow_flow::{CameraJson, FlowFixture, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
+    use semio_framework_plugin::MeshData;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+
+    /// 🏷️ Widget ids the import fixture plants, stable so a re-import overwrites rather than stacks.
+    pub const IMPORT_SOURCE_WIDGET: &str = "imported-source";
+    pub const IMPORT_GEOMETRY_WIDGET: &str = "imported-geometry";
+    pub const IMPORT_PREVIEW_WIDGET: &str = "imported-preview";
+    /// 🏷️ `SemioMesh` id every export carries — the merged preview, not a per-widget mesh.
+    pub const EXPORT_MESH_ID: &str = "generation3d-preview";
+
+    /// 🚨️ Every failure in this artifact's IO is a typed error carrying WHY — an empty document is
+    /// never a legal answer to bytes that did not decode.
+    pub fn io_error(message: impl Into<String>) -> store::TextError {
+        store::TextError::new(message.into(), dsl::TextSpan::at(1, 1))
+    }
+
+    /// 🔤️ Standard base64 (RFC 4648 §4, `=`-padded) — the exact spelling the brep extension's own
+    /// `decode_base64` accepts on a `brep.io.import*` node's `data` channel. Reused from the gltf
+    /// artifact's data-uri codec rather than re-derived here.
+    pub fn base64_encode(bytes: &[u8]) -> String {
+        semio_s_artifact_stdio_gltf::engine::b64_encode(bytes)
+    }
+
+    /// 🔤️ Inverse of [`base64_encode`], for reading an import fixture's planted payload back.
+    pub fn base64_decode(text: &str) -> Result<Vec<u8>, store::TextError> {
+        semio_s_artifact_stdio_gltf::engine::b64_decode(text).map_err(io_error)
+    }
+
+    /// 🔺️ The renderer's flat `MeshData` as this repo's own typed mesh document.
+    ///
+    /// `MeshData` is the tessellation wire form: flat `f32` triples plus a `u32` index buffer. A
+    /// mesh WITHOUT indices carries no face connectivity at all (a wire/point preview), so it
+    /// becomes a `Points` primitive rather than being silently reinterpreted as a triangle soup —
+    /// the format bridges that cannot represent points then refuse it by name instead of writing
+    /// invented triangles.
+    pub fn semio_mesh_from_mesh_data(mesh: &MeshData) -> Result<SemioMeshSnapshot, store::TextError> {
+        if mesh.positions.len() < 3 {
+            return Err(io_error("generation3d export: the document evaluates to no preview geometry (no positions)"));
+        }
+        if mesh.positions.len() % 3 != 0 {
+            return Err(io_error(format!("generation3d export: preview mesh has {} position floats, not a multiple of 3", mesh.positions.len())));
+        }
+        let positions: Vec<SemioPoint3> = mesh.positions.chunks_exact(3).map(|p| SemioPoint3 { x: p[0] as f64, y: p[1] as f64, z: p[2] as f64 }).collect();
+        let normals: Vec<SemioPoint3> =
+            if mesh.normals.len() == mesh.positions.len() { mesh.normals.chunks_exact(3).map(|n| SemioPoint3 { x: n[0] as f64, y: n[1] as f64, z: n[2] as f64 }).collect() } else { Vec::new() };
+        let topology = if mesh.indices.is_empty() { SemioTopology::Points } else { SemioTopology::Triangles };
+        if topology == SemioTopology::Triangles && mesh.indices.len() % 3 != 0 {
+            return Err(io_error(format!("generation3d export: preview mesh has {} indices, not a multiple of 3", mesh.indices.len())));
+        }
+        if let Some(out_of_range) = mesh.indices.iter().find(|index| **index as usize >= positions.len()) {
+            return Err(io_error(format!("generation3d export: preview mesh index {out_of_range} is out of range for {} vertices", positions.len())));
+        }
+        let primitive = SemioPrimitive { id: format!("{EXPORT_MESH_ID}-prim-0"), topology, positions, normals, uvs: Vec::new(), colors: Vec::new(), indices: mesh.indices.clone(), material_id: None };
+        Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: vec![SemioMesh { id: EXPORT_MESH_ID.into(), primitives: vec![primitive] }], materials: Vec::new(), textures: Vec::new() })
+    }
+
+    /// 👁️ Evaluates the document's flow graph and returns its merged preview mesh.
+    #[cfg(feature = "component-app-assembly")]
+    pub fn preview_semio_mesh(snapshot: &Generation3dSnapshot) -> Result<SemioMeshSnapshot, store::TextError> {
+        semio_mesh_from_mesh_data(&crate::editor::generation3d::export_mesh_from_document(snapshot))
+    }
+
+    /// 👁️ Without the flow evaluator linked there is no geometry to export, and saying so is the
+    /// only honest answer — a geometry-free file of the requested format would look like success.
+    #[cfg(not(feature = "component-app-assembly"))]
+    pub fn preview_semio_mesh(_snapshot: &Generation3dSnapshot) -> Result<SemioMeshSnapshot, store::TextError> {
+        Err(io_error("generation3d export: geometry export needs the flow evaluator (build this crate with the `component-app-assembly` feature)"))
+    }
+
+    /// 🔺️ Re-encodes any decoded mesh as ASCII STL — the normalization step for the formats whose
+    /// geometry the flow evaluator can only re-enter through `brep.io.importStl`.
+    pub fn stl_ascii_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, store::TextError> {
+        let stl = semio_framework_plugin::resolve_ready(<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl as semio_framework_plugin::ArtifactSerializer>::serialize(mesh))
+            .map_err(|error| io_error(error.to_string()))?;
+        Ok(semio_s_artifact_stdio_stl::engine::encode_stl_ascii(&stl).into_bytes())
+    }
+
+    /// 📥️ The three-widget import fixture: a note holding the payload, a `brep.io.import*` neuron
+    /// that turns it into real BRep geometry, and a preview sink. `preview: true` on the neuron is
+    /// what puts the imported mesh in the 3D window (`widget_previews`).
+    pub fn import_document(neuron_kind: &str, data_text: String) -> Generation3dSnapshot {
+        let mut layout = OrderedMap::new();
+        layout.insert(IMPORT_SOURCE_WIDGET.to_string(), WidgetLayout { x: 0.0, y: 0.0 });
+        layout.insert(IMPORT_GEOMETRY_WIDGET.to_string(), WidgetLayout { x: 260.0, y: 0.0 });
+        layout.insert(IMPORT_PREVIEW_WIDGET.to_string(), WidgetLayout { x: 520.0, y: 0.0 });
+        let fixture = FlowFixture {
+            schema: "flow.fixture".into(),
+            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+            widgets: vec![
+                Widget::InputNote { id: IMPORT_SOURCE_WIDGET.into(), text: data_text },
+                Widget::Neuron { id: IMPORT_GEOMETRY_WIDGET.into(), neuron_kind: neuron_kind.into(), params: Dictionary::new(), input_ports: Vec::new(), output_ports: Vec::new(), preview: true },
+                Widget::OutputPreview { id: IMPORT_PREVIEW_WIDGET.into(), preview: Dictionary::new(), expanded: OrderedSet::new() },
+            ],
+            synapses: vec![
+                SynapseSpec { id: "imported-data".into(), from: IMPORT_SOURCE_WIDGET.into(), to: IMPORT_GEOMETRY_WIDGET.into(), from_port: "text".into(), to_port: "data".into() },
+                SynapseSpec { id: "imported-geometry".into(), from: IMPORT_GEOMETRY_WIDGET.into(), to: IMPORT_PREVIEW_WIDGET.into(), from_port: "geometry".into(), to_port: String::new() },
+            ],
+            layout,
+        };
+        Generation3dSnapshot { fixture, ..Generation3dSnapshot::default() }
+    }
+
+    /// 🔎️ The payload an import fixture planted, and the neuron kind that consumes it.
+    pub fn imported_source(snapshot: &Generation3dSnapshot) -> Option<(&str, &str)> {
+        let text = snapshot.fixture.widgets.iter().find_map(|widget| match widget {
+            Widget::InputNote { id, text } if id == IMPORT_SOURCE_WIDGET => Some(text.as_str()),
+            _ => None,
+        })?;
+        let kind = snapshot.fixture.widgets.iter().find_map(|widget| match widget {
+            Widget::Neuron { id, neuron_kind, .. } if id == IMPORT_GEOMETRY_WIDGET => Some(neuron_kind.as_str()),
+            _ => None,
+        })?;
+        Some((kind, text))
+    }
+}
+pub use mesh_bridge::io_error;
+//#endregion 🔺️MeshBridge
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::schema::Generation3dAnalyzer;
@@ -39,8 +178,8 @@ pub mod derived_composition {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
+                        AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
+                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
                     };
                     let analysis = Generation3dAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
@@ -234,6 +373,14 @@ pub mod io_registry {
             Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
+    const EXPORT_TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
+    fn compose_export_txt(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources).await?;
+            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_TXT_DIALECT, payload: IoPayload::Text(String::from_utf8(bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?), diagnostics: Vec::new(), confidence: IoConfidence::High })
+        })
+    }
     //#endregion 🔖️ExportEntries
 
     pub fn entries() -> &'static [ComposerEntry] {
@@ -247,6 +394,7 @@ pub mod io_registry {
                     ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[GENERATION3D_DIALECT], compose: compose_export_stl },
                     ComposerEntry { writes: EXPORT_GLTF_DIALECT, reads: &[GENERATION3D_DIALECT], compose: compose_export_gltf },
                     ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[GENERATION3D_DIALECT], compose: compose_export_obj },
+                    ComposerEntry { writes: EXPORT_TXT_DIALECT, reads: &[GENERATION3D_DIALECT], compose: compose_export_txt },
                 ]
             })
             .as_slice()

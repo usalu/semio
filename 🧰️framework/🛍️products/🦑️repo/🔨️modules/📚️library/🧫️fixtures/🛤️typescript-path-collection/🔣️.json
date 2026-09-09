@@ -16,24 +16,100 @@
   "scanBoundarySchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["id", "prefix", "repeat", "count", "suffix", "expected", "maxMilliseconds"],
+    "required": [
+      "id",
+      "prefix",
+      "repeat",
+      "count",
+      "suffix",
+      "expected",
+      "maxMilliseconds"
+    ],
     "properties": {
-      "id": { "type": "string", "minLength": 1 },
-      "prefix": { "type": "string" },
-      "repeat": { "type": "string", "minLength": 1 },
-      "count": { "type": "integer", "minimum": 1, "maximum": 3000000 },
-      "suffix": { "type": "string" },
-      "expected": { "type": "boolean" },
-      "maxMilliseconds": { "type": "integer", "minimum": 1, "maximum": 2000 }
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "prefix": {
+        "type": "string"
+      },
+      "repeat": {
+        "type": "string",
+        "minLength": 1
+      },
+      "count": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3000000
+      },
+      "suffix": {
+        "type": "string"
+      },
+      "expected": {
+        "type": "boolean"
+      },
+      "maxMilliseconds": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 2000
+      }
     }
   },
   "scanBoundaryCases": [
-    { "id": "large-comment-after-real-for-of", "prefix": "for (const item of items) {}\n/*", "repeat": "x", "count": 2800000, "suffix": "*/\n", "expected": true, "maxMilliseconds": 2000 },
-    { "id": "repeated-for-with-no-of", "prefix": "", "repeat": "for (let index = 0; index < 1; index++) {}\n", "count": 40000, "suffix": "", "expected": false, "maxMilliseconds": 2000 },
-    { "id": "only-of-precedes-all-for", "prefix": "const label = 'of';\n", "repeat": "for (let index = 0; index < 1; index++) {}\n", "count": 40000, "suffix": "", "expected": false, "maxMilliseconds": 2000 },
-    { "id": "ordered-words-only-in-comment", "prefix": "/* for ", "repeat": "before office ", "count": 150000, "suffix": " of */\n", "expected": false, "maxMilliseconds": 2000 },
-    { "id": "word-fragments-not-tokens", "prefix": "/* ", "repeat": "before office ", "count": 150000, "suffix": "*/\n", "expected": false, "maxMilliseconds": 2000 },
-    { "id": "late-for-of-after-large-comment", "prefix": "/*", "repeat": "x", "count": 2800000, "suffix": "*/\nfor (const item of items) {}\n", "expected": true, "maxMilliseconds": 2000 }
+    {
+      "id": "large-comment-after-real-for-of",
+      "prefix": "for (const item of items) {}\n/*",
+      "repeat": "x",
+      "count": 2800000,
+      "suffix": "*/\n",
+      "expected": true,
+      "maxMilliseconds": 2000
+    },
+    {
+      "id": "repeated-for-with-no-of",
+      "prefix": "",
+      "repeat": "for (let index = 0; index < 1; index++) {}\n",
+      "count": 40000,
+      "suffix": "",
+      "expected": false,
+      "maxMilliseconds": 2000
+    },
+    {
+      "id": "only-of-precedes-all-for",
+      "prefix": "const label = 'of';\n",
+      "repeat": "for (let index = 0; index < 1; index++) {}\n",
+      "count": 40000,
+      "suffix": "",
+      "expected": false,
+      "maxMilliseconds": 2000
+    },
+    {
+      "id": "ordered-words-only-in-comment",
+      "prefix": "/* for ",
+      "repeat": "before office ",
+      "count": 150000,
+      "suffix": " of */\n",
+      "expected": false,
+      "maxMilliseconds": 2000
+    },
+    {
+      "id": "word-fragments-not-tokens",
+      "prefix": "/* ",
+      "repeat": "before office ",
+      "count": 150000,
+      "suffix": "*/\n",
+      "expected": false,
+      "maxMilliseconds": 2000
+    },
+    {
+      "id": "late-for-of-after-large-comment",
+      "prefix": "/*",
+      "repeat": "x",
+      "count": 2800000,
+      "suffix": "*/\nfor (const item of items) {}\n",
+      "expected": true,
+      "maxMilliseconds": 2000
+    }
   ],
   "caseSchema": {
     "type": "object",
@@ -487,7 +563,6 @@
       "expected": []
     }
   ],
-  "liveInput": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️reference-parser-profile/📜️script.ts",
   "mapBoundaryCases": [
     {
       "id": "map-only-preserved",
@@ -523,5 +598,6 @@
     "launchCommand": "bun nx run @semio-tech/repo-lib:test-typescript-path-collection --skip-nx-cache",
     "launchGroup": "4_gate",
     "launchOrder": 410.17
-  }
+  },
+  "exampleInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🛤️typescript-path-collection/🔬️mixed-template/🟦️.ts"
 }

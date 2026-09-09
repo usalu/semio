@@ -1,0 +1,5 @@
+union WiresCanvasWindowConfigMutation = SetWiresCanvasCamera
+
+type SetWiresCanvasCamera {
+  camera: WiresCanvasCamera!
+}

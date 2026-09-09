@@ -8,7 +8,7 @@ import _ from "lodash";
 
 //#region ✂️BackboneDetachOracle
 export function testBackboneDetachFixture(): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🔣️.json", testSourceUrl.href), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
   const contract = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", testSourceUrl.href), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(contract);

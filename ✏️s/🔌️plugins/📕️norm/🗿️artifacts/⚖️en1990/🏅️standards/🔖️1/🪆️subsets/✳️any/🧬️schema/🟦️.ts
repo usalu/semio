@@ -4,7 +4,7 @@ import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../
 export interface En1990Artifact {
   /** 🗿️ @state artifact */
   gK: number;
-  /** 🗿️ @state artifact */
+  /** 🗿️ @state artifact @child kind=s.stdio.semio */
   qK: ArtifactChild;
   /** 🗿️ @state artifact */
   resistanceKn: number;

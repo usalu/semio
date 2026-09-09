@@ -4,117 +4,25 @@
   "title": "PresentationArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema",
-    "source",
-    "tiles"
-  ],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "source": {
-      "$ref": "#/$defs/FigureTileSource",
-      "x-semio-state": "artifact"
+    "presentation": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
-    "tiles": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/FigureTileDraft"
-      },
-      "x-semio-state": "artifact"
+    "animation": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     }
   },
-  "$defs": {
-    "FigureTileFrame": {
-      "title": "FigureTileFrame",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "width",
-        "height"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "width": {
-          "type": "number",
-          "format": "double"
-        },
-        "height": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "FigureTileSource": {
-      "title": "FigureTileSource",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "src",
-        "kind",
-        "frame"
-      ],
-      "properties": {
-        "src": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        },
-        "frame": {
-          "$ref": "#/$defs/FigureTileFrame"
-        },
-        "sourceAspect": {
-          "type": "number",
-          "format": "double"
-        },
-        "pdfPage": {
-          "type": "integer",
-          "format": "uint32"
-        }
-      }
-    },
-    "FigureTileDraft": {
-      "title": "FigureTileDraft",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "crop"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "crop": {
-          "$ref": "#/$defs/FigureTileFrame"
-        }
-      }
-    },
-    "PresentationRetainedCommandLimits": {
-      "allOf": [
-        {
-          "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandLimits"
-        }
-      ],
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    }
-  }
+  "required": [
+    "schema",
+    "presentation",
+    "animation"
+  ]
 }

@@ -4008,6 +4008,7 @@
         "catalog",
         "cases",
         "statusCases",
+        "refreshCases",
         "draftCases"
       ],
       "properties": {
@@ -4100,6 +4101,25 @@
             { "generation": "rotated", "admitted": false },
             { "generation": "missing", "admitted": false }
           ]
+        },
+        "refreshCases": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "owner", "authority", "origin", "message", "admitted"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "owner": { "enum": ["current", "absent", "ready", "opening"] },
+              "authority": { "enum": ["current", "unavailable", "rotated-generation", "replaced-runtime"] },
+              "origin": { "enum": ["current", "replaced-session", "replaced-client", "other-document"] },
+              "message": { "enum": ["current", "replaced-request", "rotated-generation"] },
+              "admitted": { "type": "boolean" }
+            }
+          }
         },
         "draftCases": {
           "type": "array",
@@ -4202,11 +4222,24 @@
       "additionalProperties": false,
       "required": [
         "schema",
-        "cases"
+        "cases",
+        "mountCases"
       ],
       "properties": {
         "schema": {
           "const": "semio.os.artifact-creation-ready-opening/v1"
+        },
+        "mountCases": {
+          "const": [
+            { "id": "same-generation", "actions": ["current"], "accepted": [true], "outcome": "ready", "committed": true },
+            { "id": "rotated-generation", "actions": ["rotated"], "accepted": [false], "outcome": "failed", "committed": false },
+            { "id": "missing-generation", "actions": ["missing"], "accepted": [false], "outcome": "failed", "committed": false },
+            { "id": "closed-before-mount", "actions": ["close", "current"], "accepted": [false], "outcome": "failed", "committed": false },
+            { "id": "duplicate-current", "actions": ["current", "current"], "accepted": [true, true], "outcome": "ready", "committed": true },
+            { "id": "refused-before-current", "actions": ["rotated", "current"], "accepted": [false, false], "outcome": "failed", "committed": false },
+            { "id": "closed-after-mount", "actions": ["current", "close", "current"], "accepted": [true, false], "outcome": "ready", "committed": false },
+            { "id": "rebootstrap-before-port-ready", "actions": ["close"], "accepted": [], "outcome": "failed", "committed": false }
+          ]
         },
         "cases": {
           "type": "array",

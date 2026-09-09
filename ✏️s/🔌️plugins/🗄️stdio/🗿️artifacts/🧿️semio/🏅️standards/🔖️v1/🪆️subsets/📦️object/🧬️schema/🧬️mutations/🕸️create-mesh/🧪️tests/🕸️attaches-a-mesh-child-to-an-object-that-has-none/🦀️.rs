@@ -37,7 +37,7 @@ async fn attaches_the_mesh_handle_to_an_object_that_had_none() {
     let produced = mutation().diff(&base).diff().apply(&base).expect("🕸️create-mesh applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "🕸️create-mesh/attaches-a-mesh-child-to-an-object-that-has-none: applied state differs from the committed after-snapshot");
     let handle = produced.mesh.as_ref().expect("the mesh slot must be populated afterwards");
-    assert_eq!(handle.child_id, "mesh-1", "the handle keeps the payload's own child id");
+    assert_eq!(handle.child_id, "kitchen-sink-mesh", "the handle keeps the payload's own child id");
     assert_eq!(handle.target.dialect.subset, "mesh", "the handle points at a mesh-subset artifact");
     assert_eq!(produced.transform, base.transform, "🕸️create-mesh must not touch the object's placement");
     assert!(produced.brep.is_none() && produced.properties.is_none(), "🕸️create-mesh must not touch the other two child slots");

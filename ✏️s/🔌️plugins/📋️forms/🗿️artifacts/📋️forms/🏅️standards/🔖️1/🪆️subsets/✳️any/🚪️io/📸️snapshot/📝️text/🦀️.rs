@@ -21,7 +21,7 @@ fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -249,7 +249,7 @@ pub fn parse_playbook_example_dsl(text: &str) -> Result<FormsSnapshot, store::Te
     };
     let record = dsl::parse(body, &semio_framework_artifact_playbook_playbook::PlaybookSpec::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
     let spec = semio_framework_artifact_playbook_playbook::PlaybookSpec::__dsl_from_record(&record)?;
-    Ok(crate::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps))
+    Ok(crate::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, &spec.steps))
 }
 
 //#region 🧪️Tests

@@ -13,7 +13,7 @@ async fn change_exaggeration_and_change_imported_features_invert_to_the_prior_fi
 
 #[semio_framework_async_macros::async_test]
 async fn change_exaggeration_obeys_the_inverse_and_diff_absorb_laws() {
-    let base = crate::gis_terrain_snapshot_with_derived_mesh(GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into(), ..Default::default() });
+    let base = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into(), ..Default::default() };
     let mutation = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 4.0 });
     protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
@@ -23,7 +23,7 @@ async fn change_exaggeration_obeys_the_inverse_and_diff_absorb_laws() {
 
 #[semio_framework_async_macros::async_test]
 async fn change_imported_features_obeys_the_inverse_law() {
-    let base = crate::gis_terrain_snapshot_with_derived_mesh(GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: "null".into(), ..Default::default() });
+    let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: "null".into(), ..Default::default() };
     let mutation = GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: "{}".into() });
     protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
 }

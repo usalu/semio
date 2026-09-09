@@ -16,5 +16,5 @@ pub fn diff(payload: &RenameDocument, base: &ProgramSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This document already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = ArtifactRecordPatch { name: Some(payload.new_name.clone()), ..Default::default() };
-    protocol::MutationOutcome::new(ProgramDiff { documents: Some(ProgramArtifactsDelta { patched: vec![ProgramArtifactsPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { artifacts: Some(ProgramArtifactsDelta { patched: vec![ProgramArtifactsPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

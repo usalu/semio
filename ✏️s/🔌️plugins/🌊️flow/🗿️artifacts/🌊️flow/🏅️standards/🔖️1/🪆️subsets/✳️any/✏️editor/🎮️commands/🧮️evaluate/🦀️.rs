@@ -1,6 +1,8 @@
 //! 🧮️ 🧵️ Flow play app commands command — `evaluate`.
 
-use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::host_from_snapshot;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
@@ -21,7 +23,7 @@ pub fn eval_tick_effect() -> Effect {
 //#region 🔖️Arm
 /// 🧵️ Probes/arms the `flowEvalTick` chain via `FlowEvalSession::sync` — shared by `FlowCommand::Evaluate`,
 /// the `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`.
-pub fn evaluate_result(fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
+pub fn evaluate_result(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
     let host = host_from_snapshot(fixture, config, session);
     if session.sync(&host) {
         Emit { effects: vec![eval_tick_effect()], ..Default::default() }
@@ -43,8 +45,8 @@ pub fn evaluate_result(fixture: &FlowSnapshot, config: &FlowConfig, session: &mu
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct Evaluate {}
 
-pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-    Ok(evaluate_result(doc.snapshot, cfg.snapshot, session))
+pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    Ok(evaluate_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session))
 }
 
 //#region 🧪️Tests

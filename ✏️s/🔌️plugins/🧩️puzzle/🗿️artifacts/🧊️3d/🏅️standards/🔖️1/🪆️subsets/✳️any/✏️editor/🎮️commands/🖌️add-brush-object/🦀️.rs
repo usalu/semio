@@ -19,13 +19,21 @@ pub fn add_brush_object(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     };
     let before: Vec<String> = ctx.scene.fixture.objects.iter().map(|object| object.id.clone()).collect();
     let outcome = ctx.app.precompute.borrow_mut().dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload });
-    if let Ok(Puzzle3dEngineOutcome::Fixture(fixture)) = outcome {
-        if let Some(next) = fixture_from_engine_fixture(ctx.scene, &fixture) {
+    // 🧯️ The engine refuses a placement that collides or exceeds the overlap budget
+    // (`Puzzle3dError::BrushPlacementRejected`) and a fixture the app model cannot adopt is equally a
+    // non-placement — both used to fall out of an `if let Ok(Fixture(_))` with nothing on screen at all.
+    let placed_scene = match outcome {
+        Ok(Puzzle3dEngineOutcome::Fixture(fixture)) => fixture_from_engine_fixture(ctx.scene, &fixture),
+        _ => None,
+    };
+    match placed_scene {
+        Some(next) => {
             *ctx.scene = next;
             puzzle3d_rederive_all_attractions(&mut ctx.scene.fixture);
             resolve_puzzle3d_attractions(&mut ctx.scene.fixture);
             let placed: Vec<String> = ctx.scene.fixture.objects.iter().map(|object| object.id.clone()).filter(|id| !before.contains(id)).collect();
             ctx.replace_selection(PUZZLE3D_GRANULARITY_OBJECT, placed);
         }
+        None => ctx.notice(|labels| labels.placement_rejected.as_str()),
     }
 }

@@ -1,5 +1,42 @@
 use super::*;
 
+fn assert_geometry_contract<T>(input: &serde_json::Value, valid: bool)
+where
+    T: dsl::FromValue + dsl::ToValue + serde::de::DeserializeOwned + PartialEq + std::fmt::Debug,
+{
+    let text = serde_json::to_string(input).expect("fixture JSON");
+    let native = dsl::json::from_json_str::<T>(&text);
+    let oracle = serde_json::from_str::<T>(&text);
+    assert_eq!(native.is_ok(), valid, "native admission: {input}");
+    assert_eq!(oracle.is_ok(), valid, "independent admission: {input}");
+    if valid {
+        let native = native.expect("valid native geometry");
+        assert_eq!(native, oracle.expect("valid oracle geometry"));
+        let encoded = dsl::json::to_json_string(&native);
+        assert_eq!(native, serde_json::from_str::<T>(&encoded).expect("independent geometry decode"));
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn stdio_document_contract_shared_geometry_matches_independent_oracle() {
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral geometry vectors");
+    let cases = fixtures["cases"].as_array().expect("geometry cases");
+    for case in cases {
+        let input = &case["input"];
+        let valid = case["valid"].as_bool().expect("expected admission");
+        match case["type"].as_str().expect("geometry type") {
+            "SemioPoint3" => assert_geometry_contract::<SemioPoint3>(input, valid),
+            "SemioPoint2" => assert_geometry_contract::<SemioPoint2>(input, valid),
+            "SemioUv" => assert_geometry_contract::<SemioUv>(input, valid),
+            "SemioRgba" => assert_geometry_contract::<SemioRgba>(input, valid),
+            "SemioQuaternion" => assert_geometry_contract::<SemioQuaternion>(input, valid),
+            "SemioTransform" => assert_geometry_contract::<SemioTransform>(input, valid),
+            other => panic!("unknown geometry fixture type {other}"),
+        }
+    }
+    eprintln!("[DEBUG] Shared Semio geometry matched {} neutral vectors and independent Serde admission", cases.len());
+}
+
 #[semio_framework_async_macros::async_test]
 async fn identity_transform_round_trips_through_json() {
     let t = SemioTransform::identity();

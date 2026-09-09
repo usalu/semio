@@ -16,7 +16,7 @@ export function testGroupVisibilityFixtures(): void {
   const validateRead = ajv.getSchema(`${contract.$id}#/$defs/GroupReadVisibility`)!;
   const validateCursor = ajv.getSchema(`${contract.$id}#/$defs/GroupCursorVisibility`)!;
 
-  const groupRead = read("./📖️group-read.json");
+  const groupRead = read("./🧫️fixtures/📖️group-read.json");
   assert(validateRead(groupRead), JSON.stringify(validateRead.errors));
   assert.deepEqual([groupRead.maximumItems, groupRead.maximumBytes], [1, 4096]);
   assert.equal(groupRead.cases.length, 4);
@@ -39,7 +39,7 @@ export function testGroupVisibilityFixtures(): void {
   assert.notEqual(groupRead.prepared.revisionByte, groupRead.old.revisionByte);
   assert(Buffer.byteLength(JSON.stringify(groupRead.prepared)) <= groupRead.maximumBytes);
 
-  const groupCursor = read("./🎯️group-cursor.json");
+  const groupCursor = read("./🧫️fixtures/🎯️group-cursor.json");
   assert(validateCursor(groupCursor), JSON.stringify(validateCursor.errors));
   assert.deepEqual([groupCursor.maximumItems, groupCursor.maximumBytes], [1, 4096]);
   assert.deepEqual(groupCursor.laws, [

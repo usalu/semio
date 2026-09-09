@@ -15,5 +15,5 @@ pub fn diff(payload: &RenameStep, base: &FormsSnapshot) -> protocol::MutationOut
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" is already titled \"{}\".", payload.id, payload.new_title));
     }
     let patch = FormsStepPatch { title: Some(payload.new_title.clone()), ..Default::default() };
-    protocol::MutationOutcome::new(forms_diff_from_delta(FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }, base))
+    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }, base))
 }

@@ -42,7 +42,7 @@ pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiAssemblyResu
         .map(|step| {
             let label = if step.title.is_empty() { step.id.clone() } else { step.title.clone() };
             let children = step.blocks.iter().map(|block| TreeNodeView { id: format!("{}/{}", step.id, block.id), label: format!("{} ({})", block.label, block.kind), children: Vec::new() }).collect();
-            TreeNodeView { id: step.id.clone(), label, children }
+            TreeNodeView { id: step.id, label, children }
         })
         .collect();
     TreeWindowKit::render(&TreeView { roots })

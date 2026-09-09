@@ -1,42 +1,65 @@
 //! 🖌️ `register-brush-mesh` command.
 
+use crate::editor::puzzle3d::precompute::{decode_brush_mesh_page_values, Puzzle3dMeshUploadFault, PUZZLE3D_MESH_PAGE_VALUES};
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use dsl::os_pack::json::Value;
+use semio_framework::kernel::Effect;
 
 /// 🥽️ Real GLB geometry for one mesh id. Two admissible forms, and the id-only one is the normal case:
 ///
-/// - `{url}` alone — the geometry is derived from the process-wide content-addressed mesh store, so a
-///   mesh any document already uploaded costs nothing on the wire ever again.
-/// - `{url, positions, indices}` — a first upload, bounded by what one retained command can actually
-///   carry (see [`MAX_POSITIONS`]).
+/// - `{url, digest?}` alone — the geometry is derived from the process-wide content-addressed mesh
+///   store, so a mesh any document already uploaded costs nothing on the wire ever again. A supplied
+///   `digest` is verified against the resident geometry, so a stale id never adopts foreign bytes.
+/// - `{url, digest, page, pageCount, positionsB64?, indicesB64?}` — one page of a first upload. A whole
+///   document-scale mesh never fitted the shared retained command's 8 192 raw bytes (the Nakagin
+///   capsule `🧊️placeholder.glb` is 73 728 values, 64 KB as a JSON number array), so the client pages it:
+///   [`PUZZLE3D_MESH_PAGE_VALUES`] values per page as base64 of little-endian `f32`/`u32` bytes,
+///   accumulated in the precompute session's bounded staging area keyed by `(url, digest)` and
+///   committed on the last page. Positions fill each page first; the indices stream continues in
+///   whatever of the page's value budget is left.
 ///
 /// The decode itself is the `"puzzle3d.mesh-decode"` engine kernel
 /// (`✏️editor/⏳️precompute/🦀️.rs`), keyed by `(engine id, url, geometry)`, so one identity decodes once
 /// per process and every open document reads the identical derived page.
 pub fn register_brush_mesh(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
-    let Some(url) = args.and_then(|v| v.get("url")).and_then(|v| v.as_str()) else {
+    let Some(url) = args.and_then(|value| value.get("url")).and_then(Value::as_str) else {
         return;
     };
     if url.len() > MAX_LEAF_BYTES {
         return;
     }
-    let (Some(positions), Some(indices)) = (args.and_then(|v| v.get("positions")).and_then(|v| v.as_array()), args.and_then(|v| v.get("indices")).and_then(|v| v.as_array())) else {
-        ctx.app.precompute.borrow_mut().adopt_shared_mesh(url);
+    let digest = args.and_then(|value| value.get("digest")).and_then(Value::as_str);
+    let (Some(page), Some(page_count)) = (unsigned(args, "page"), unsigned(args, "pageCount")) else {
+        if !ctx.app.precompute.borrow_mut().adopt_shared_mesh(url, digest) {
+            fault(ctx, url, Puzzle3dMeshUploadFault::Digest);
+        }
         return;
     };
-    if positions.len() > MAX_POSITIONS || indices.len() > MAX_INDICES {
+    let positions = page_values(args, "positionsB64", PUZZLE3D_MESH_PAGE_VALUES).map(|values| values.iter().map(|bytes| f32::from_le_bytes(*bytes)).collect::<Vec<f32>>());
+    let indices = page_values(args, "indicesB64", PUZZLE3D_MESH_PAGE_VALUES.saturating_sub(positions.as_ref().map_or(0, Vec::len))).map(|values| values.iter().map(|bytes| u32::from_le_bytes(*bytes)).collect::<Vec<u32>>());
+    if args.and_then(|value| value.get("positionsB64")).is_some() && positions.is_none() || args.and_then(|value| value.get("indicesB64")).is_some() && indices.is_none() {
+        fault(ctx, url, Puzzle3dMeshUploadFault::Payload);
         return;
     }
-    let positions: Vec<f32> = positions.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect();
-    let indices: Vec<u32> = indices.iter().filter_map(|v| v.as_u64().map(|n| n as u32)).collect();
-    ctx.app.precompute.borrow_mut().register_mesh(url, &positions, &indices);
+    let staged = ctx.app.precompute.borrow_mut().stage_mesh_page(url, digest.unwrap_or_default(), page, page_count, &positions.unwrap_or_default(), &indices.unwrap_or_default());
+    if let Err(rejection) = staged {
+        fault(ctx, url, rejection);
+    }
+}
+
+fn unsigned(args: Option<&Value>, key: &str) -> Option<u32> {
+    args.and_then(|value| value.get(key)).and_then(Value::as_u64).and_then(|value| u32::try_from(value).ok())
+}
+
+fn page_values(args: Option<&Value>, key: &str, budget: usize) -> Option<Vec<[u8; 4]>> {
+    decode_brush_mesh_page_values(args.and_then(|value| value.get(key)).and_then(Value::as_str)?, budget)
+}
+
+/// 🚨️ A refused page is never a silent drop: without the geometry the brush utility has no collision
+/// body at all, so the shell says which identity failed and why instead of leaving placement running
+/// against nothing.
+fn fault(ctx: &mut Puzzle3dActionCtx<'_>, url: &str, rejection: Puzzle3dMeshUploadFault) {
+    ctx.effects.push(Effect::Notify { message: format!("{}: {url}", rejection.code()) });
 }
 
 const MAX_LEAF_BYTES: usize = 4 * 1024;
-/// 📏️ What one `registerBrushMesh` upload can honestly carry: the shared retained-command contract
-/// decodes at most `PUZZLE_COMMAND_DECODED_ITEMS` array items per command, and
-/// `Puzzle3dPrecomputeCommandWork::extent` already refuses anything above it. The previous 196,608
-/// promised two orders of magnitude more than the 8,192-byte wire could ever deliver; geometry larger
-/// than this reaches the engine by id through the derived-mesh store instead of by upload.
-const MAX_POSITIONS: usize = crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS;
-const MAX_INDICES: usize = crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS;

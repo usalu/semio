@@ -77,3 +77,5 @@ The physical snapshot exposed duplicate browser-broker lifecycle data and schema
   ]
 }
 ```
+
+Runtime follow-up: the actual Hub Vitest integration case passed all 10 selected quick contract tests through Bun and Nx after the composed-root corrections. Two real-server tests were excluded by the requested name filter and HUB_E2E=0. The passed checks include canonical checkpoint framing, bootstrap HMAC, typed auth, trusted catalog, authority adapter, chunk-CAS, and lag rebootstrap fixtures. No server/end-to-end pass is claimed.

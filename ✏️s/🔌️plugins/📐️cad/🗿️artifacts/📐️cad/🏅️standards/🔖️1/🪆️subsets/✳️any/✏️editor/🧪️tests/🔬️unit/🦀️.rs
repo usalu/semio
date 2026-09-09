@@ -35,7 +35,6 @@ pub(crate) fn every_command() -> Vec<CadCommand> {
         CadCommand::PatchCadPlayReference(patch_cad_play_reference::PatchCadPlayReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), field: "hidden".into(), value: None, delta: None }),
         CadCommand::EngagementSubmit(engagement_submit::EngagementSubmit { pane: Some("shape".into()) }),
         CadCommand::EngagementSubmit(engagement_submit::EngagementSubmit { pane: None }),
-        CadCommand::FocusModelDefinition(focus_model_definition::FocusModelDefinition { model_definition_id: "aec.building".into() }),
         CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "hexagonal-cut-concrete-forest-left".into() }),
         CadCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { pane: Some("shape".into()), surface_id: Some("cad.play.scene3d/shape".into()), x: Some(1.0), y: Some(2.0), z: Some(3.0) }),
         CadCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { pane: None, surface_id: None, x: None, y: None, z: None }),
@@ -103,7 +102,7 @@ fn host_contributions_resolve_to_the_event_sourced_config_lane() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
-    let fixture: Value = json::parse(include_str!("../../👥️presence/🧪️retirement.json")).unwrap();
+    let fixture: Value = json::parse(include_str!("../../👥️presence/🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
     let maximum_items = fixture["grant"]["maximumItems"].as_u64().unwrap() as usize;
     let maximum_bytes = fixture["grant"]["maximumBytes"].as_u64().unwrap() as usize;
     let envelope = store::create_document_envelope::<NoDraft, NoDraftMutation>("draft.empty", "cad-draft-close", NoDraft::default(), None);
@@ -130,7 +129,7 @@ async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_the_production_grant() {
-    let fixture: Value = json::parse(include_str!("../../../🗄️retained-jobs/🔣️.json")).expect("CAD activation fixture");
+    let fixture: Value = json::parse(include_str!("../../../🧫️fixtures/🗄️retained-jobs/🔣️.json")).expect("CAD activation fixture");
     let activation = &fixture["activation"];
     let controller = activation["controller"].as_str().expect("controller");
     let bus = semio_framework::ActionBus::new();
@@ -176,13 +175,13 @@ fn retained_config_store_preparation_is_bounded_exact_and_reversible() {
     let base = CadConfig::default();
     let mut next = base.clone();
     next.selected_node_ids.push("node-retained".into());
-    let mutation = CadConfigMutation::Snapshot { config: next.clone() };
+    let mutation = CadConfigMutation::Snapshot { config: Box::new(next.clone()) };
     let footprint = admit_cad_config_mutation(&mutation).expect("bounded CAD config mutation");
     assert_eq!(footprint.work_items, 1);
     let (post, inverse, forward) = prepare_cad_config(&base, mutation.clone()).expect("exact CAD config preparation");
     assert_eq!(post, next);
     assert_eq!(forward, mutation);
-    assert_eq!(inverse, vec![CadConfigMutation::Snapshot { config: base.clone() }]);
+    assert_eq!(inverse, vec![CadConfigMutation::Snapshot { config: Box::new(base.clone()) }]);
     let oversized = CadConfigMutation::SetContributions { json: "x".repeat(CAD_CONFIG_STORE_MAXIMUM_BYTES + 1) };
     assert!(admit_cad_config_mutation(&oversized).is_err());
 }
@@ -207,7 +206,7 @@ fn retained_artifact_store_preparation_is_bounded_exact_and_reversible() {
 
 #[test]
 fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
-    let fixture: Value = json::parse(include_str!("../../../🗄️retained-jobs/🔣️.json")).expect("CAD retained route fixture");
+    let fixture: Value = json::parse(include_str!("../../../🧫️fixtures/🗄️retained-jobs/🔣️.json")).expect("CAD retained route fixture");
     let routes = fixture.get("routes").and_then(Value::as_array).expect("route array");
     let route_ids = routes.iter().map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<std::collections::BTreeSet<_>>();
     let command_ids = every_command().iter().map(CadCommand::command_id).collect::<std::collections::BTreeSet<_>>();
@@ -780,13 +779,6 @@ async fn add_object_through_wrapper_is_a_documented_no_op() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn focus_model_definition_emits_document_operation() {
-    let mut app = new_app().await;
-    app.dispatch_typed(CadCommand::FocusModelDefinition(focus_model_definition::FocusModelDefinition { model_definition_id: "aec.building".into() }), &meta("local")).await.expect("focus model definition");
-    assert_eq!(app.snapshot().expect("snapshot").active_model_definition_id, "aec.building");
-}
-
-#[semio_framework_async_macros::async_test]
 async fn derive_transformation_populates_energy_pane() {
     // ⚠️ `apply_transformation_mutations` is a documented no-op pending the child-dispatch seam
     // (see its own doc comment in this file) — this instead exercises the real derive algorithm
@@ -840,13 +832,14 @@ async fn save_selected_emits_download_effect() {
     let app = CadPlayApp::default();
     let scene = default_document();
     let config = CadConfig::default();
-    let emit = drive_with_config(&app, &scene, "saveSelected", None, &config);
+    let emit = drive_in_window(&app, &scene, "saveSelected", None, &config, "cad-shape-secondary", shape::WINDOW_KIND_ID).expect("addressed CAD window export");
     assert!(emit.artifact_mutations.is_empty(), "export must not mutate the document");
     assert_eq!(emit.effects.len(), 1);
     match &emit.effects[0] {
         Effect::DownloadMediaExport { filename, data, .. } => {
             assert_eq!(filename, "cad.selected.spatial.dsl");
-            assert!(data.contains("activeModelDefinitionId"));
+            assert!(!data.contains("activeModelDefinitionId"));
+            assert!(data.contains("spatial.shape"));
         }
         other => panic!("expected DownloadMediaExport, got {other:?}"),
     }

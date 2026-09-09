@@ -28,6 +28,7 @@
     "check-wasm": {
       "executor": "nx:run-commands",
       "cache": true,
+      "inputs": ["nativeSources", "^nativeSources"],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-wasm",

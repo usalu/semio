@@ -17,7 +17,7 @@ type Fixture = Readonly<{ schema: string; width: number; height: number; rgba8: 
 const FIXTURES = ["🪟️solid-3x2.json", "🌈️gradient-5x3.json"] as const;
 
 async function load(name: string): Promise<Fixture> {
-  return (await Bun.file(new URL(`./🧫️fixtures/${name}`, import.meta.url)).json()) as Fixture;
+  return (await Bun.file(new URL(`../../🧫️fixtures/${name}`, import.meta.url)).json()) as Fixture;
 }
 
 describe("raster io — bmp v3 parity", () => {

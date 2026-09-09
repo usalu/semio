@@ -19,6 +19,6 @@ pub fn diff_replace_block(payload: &ReplaceBlock, base: &FormsSnapshot) -> proto
     }
     let blocks: Vec<_> = step.blocks.iter().map(|block| if block.id == payload.block.id { payload.block.clone() } else { block.clone() }).collect();
     let patch = FormsStepPatch { blocks: Some(blocks), ..Default::default() };
-    protocol::MutationOutcome::new(forms_diff_from_delta(FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: payload.step_id.clone(), patch }], ..Default::default() }, base))
+    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: payload.step_id.clone(), patch }], ..Default::default() }, base))
 }
 //#endregion 🔖️Diff

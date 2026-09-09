@@ -17,6 +17,12 @@ pub(crate) struct TestSnapshot {
     pub(crate) label: String,
 }
 
+impl semio_framework_schema::ArtifactCompositionFields for TestSnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
+}
+
 impl Clone for TestSnapshot {
     fn clone(&self) -> Self {
         if self.label.len() >= MAXIMUM_CHILD_PROBE_BYTES {
@@ -79,7 +85,7 @@ impl protocol::MutationDiff<TestSnapshot> for TestDiff {
 //#endregion 🔺️Diff
 
 //#region 🧬️Mutations
-#[path = "../../🧫️fixtures/🖥️test-app-mutations/🧬️document/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testkit/🖥️test-app-mutations/🧬️document/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{SetCount, SetLabel, TestMutation};
 //#endregion 🧬️Mutations

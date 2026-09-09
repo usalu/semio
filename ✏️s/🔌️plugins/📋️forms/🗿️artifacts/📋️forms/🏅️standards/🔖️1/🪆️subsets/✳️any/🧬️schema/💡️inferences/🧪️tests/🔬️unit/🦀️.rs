@@ -29,7 +29,7 @@ fn step_with_conditional_block() -> FormsSnapshot {
             ]
         }"#;
     let spec = dsl::os_pack::json::from_json_str::<semio_framework_artifact_playbook_playbook::PlaybookSpec>(json).expect("valid playbook spec json");
-    crate::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps)
+    crate::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, &spec.steps)
 }
 //#endregion 🧸️Fixtures
 

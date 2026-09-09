@@ -6,39 +6,15 @@
   "additionalProperties": false,
   "properties": {
     "schema": {
-      "anyOf": [
-        {
-          "type": "string",
-          "x-semio-state": "artifact"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "const": "forms.form",
       "x-semio-state": "artifact"
     },
     "id": {
-      "anyOf": [
-        {
-          "type": "string",
-          "x-semio-state": "artifact"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "string",
       "x-semio-state": "artifact"
     },
     "version": {
-      "anyOf": [
-        {
-          "type": "string",
-          "x-semio-state": "artifact"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "string",
       "x-semio-state": "artifact"
     },
     "title": {
@@ -49,30 +25,14 @@
       "x-semio-state": "artifact"
     },
     "structure": {
-      "anyOf": [
-        {
-          "$ref": "https://semio.tech/schema/os/store/child.json",
-          "x-semio-state": "artifact",
-          "x-semio-child-kind": "s.stdio.semio.value"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/value",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
     "results": {
-      "anyOf": [
-        {
-          "$ref": "https://semio.tech/schema/os/store/child.json",
-          "x-semio-state": "artifact",
-          "x-semio-child-kind": "s.stdio.semio.table"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/table",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     }
   }
 }

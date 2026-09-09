@@ -4,7 +4,7 @@
   "mesh": {
     "childId": "gisterrain-mesh-derived",
     "target": {
-      "artifactId": "gisterrain-mesh",
+      "artifactId": "gisterrain-mesh-derived",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

@@ -1,13 +1,13 @@
 {
   "useClass": "Residential",
-  "heatedAreaM2": 100.0,
+  "heatedAreaM2": 100,
   "occupants": 4,
   "hT": 92.5,
   "hV": 40.75,
   "climate": {
     "childId": "din18599-climate-fixture-zone2",
     "target": {
-      "artifactId": "din18599-climate",
+      "artifactId": "din18599-climate-fixture-zone2",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -16,10 +16,10 @@
     }
   },
   "internalGainsWM2": 3.5,
-  "solarGainsKwh": 84.0,
-  "systemLossesKwh": 450.0,
-  "renewableKwh": 1500.0,
-  "annualLimitKwh": 7500.0,
+  "solarGainsKwh": 84,
+  "systemLossesKwh": 450,
+  "renewableKwh": 1500,
+  "annualLimitKwh": 7500,
   "energyCarrier": "natural_gas",
-  "referenceQPKwh": 10000.0
+  "referenceQPKwh": 10000
 }

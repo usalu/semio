@@ -48,7 +48,7 @@ mod tests;
 /// 🕸️ Applies one parent mutation while preserving the stable drawing/value member coordinates.
 pub fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMutation) -> protocol::MutationApplyResult<()> {
     let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
-    *snapshot = crate::gis_map_snapshot_with_derived_children(next);
+    *snapshot = next;
     Ok(())
 }
 

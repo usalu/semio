@@ -1,14 +1,9 @@
+use semio_s_artifact_trinity_jack::JackWorkingScene;
 use super::*;
 use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag};
 
 fn mini_json() -> String {
-    let fixture = JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "mini".into(),
-        Some("nakagin".into()),
-        Manifest::nakagin_default(),
-        Camera::default(),
-        vec![Node {
+    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![Node {
             id: "root".into(),
             kind: "Piece".into(),
             name: "core".into(),
@@ -18,10 +13,7 @@ fn mini_json() -> String {
             height: 40.0,
             properties: PropertyBag::new(),
             ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
-        }],
-        vec![],
-        Some("root".into()),
-    );
+        }], edges: vec![] }, Some("root".into()));
     fixture.to_json().unwrap()
 }
 

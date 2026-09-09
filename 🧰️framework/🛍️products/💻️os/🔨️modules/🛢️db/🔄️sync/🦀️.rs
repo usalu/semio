@@ -138,7 +138,10 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
         loop {
             let mut transaction = match records.next_transaction_step().await? {
                 db_wal::WalCommittedStep::Transaction(transaction) => transaction,
-                db_wal::WalCommittedStep::Yield => { semio_framework_async::yield_once().await; continue; }
+                db_wal::WalCommittedStep::Yield => {
+                    semio_framework_async::yield_once().await;
+                    continue;
+                }
                 db_wal::WalCommittedStep::Done => break,
             };
             loop {
@@ -149,17 +152,25 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
                     }
                     db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::SnapshotPub { frontier, .. }) => floor_head_seq = frontier.head_seq,
                     db_wal::WalCommittedRecordStep::Record(_) => {}
-                    db_wal::WalCommittedRecordStep::Yield => { semio_framework_async::yield_once().await; continue; }
+                    db_wal::WalCommittedRecordStep::Yield => {
+                        semio_framework_async::yield_once().await;
+                        continue;
+                    }
                     db_wal::WalCommittedRecordStep::Done => break,
                 }
-                while transaction.close_record_step()? { semio_framework_async::yield_once().await; }
+                while transaction.close_record_step()? {
+                    semio_framework_async::yield_once().await;
+                }
             }
             transaction.finish()?;
             commit_seq = commit_seq.checked_add(1).ok_or(DbError::LimitExceeded("sync replay commit sequence"))?;
         }
         Ok::<(), DbError>(())
-    }.await;
-    while records.close_owner_step()? { semio_framework_async::yield_once().await; }
+    }
+    .await;
+    while records.close_owner_step()? {
+        semio_framework_async::yield_once().await;
+    }
     replay?;
     drop(records);
     let head_seq = commands.len() as u64;
@@ -730,7 +741,12 @@ fn database_sync_hello_turn_exhausted(error: &DbError) -> bool {
     matches!(error, DbError::LimitExceeded("wal cursor fuel")) || matches!(error, DbError::Unavailable(message) if message == "wal cursor deadline reached")
 }
 
-async fn database_sync_hello_read<T>(control: &mut db_wal::WalCursorControl, cancelled: &std::sync::atomic::AtomicBool, expired: &std::sync::atomic::AtomicBool, mut read: impl FnMut(&mut db_wal::WalCursorControl) -> Result<T, DbError>) -> Result<T, DbError> {
+async fn database_sync_hello_read<T>(
+    control: &mut db_wal::WalCursorControl,
+    cancelled: &std::sync::atomic::AtomicBool,
+    expired: &std::sync::atomic::AtomicBool,
+    mut read: impl FnMut(&mut db_wal::WalCursorControl) -> Result<T, DbError>,
+) -> Result<T, DbError> {
     loop {
         database_sync_hello_control(cancelled, expired)?;
         match read(control) {
@@ -989,7 +1005,10 @@ async fn replay_sync_state_retained(
                     continue;
                 }
                 Ok(db_wal::WalCommittedStep::Done) => break,
-                Err(error) if database_sync_hello_turn_exhausted(&error) => { database_sync_hello_opportunity(&cancelled, &expired).await?; continue; }
+                Err(error) if database_sync_hello_turn_exhausted(&error) => {
+                    database_sync_hello_opportunity(&cancelled, &expired).await?;
+                    continue;
+                }
                 Err(error) => return Err(error),
             };
             loop {
@@ -1006,12 +1025,20 @@ async fn replay_sync_state_retained(
                     }
                     Ok(db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::SnapshotPub { frontier, .. })) => floor_head_seq = frontier.head_seq,
                     Ok(db_wal::WalCommittedRecordStep::Record(_)) => {}
-                    Ok(db_wal::WalCommittedRecordStep::Yield) => { database_sync_hello_opportunity(&cancelled, &expired).await?; continue; }
+                    Ok(db_wal::WalCommittedRecordStep::Yield) => {
+                        database_sync_hello_opportunity(&cancelled, &expired).await?;
+                        continue;
+                    }
                     Ok(db_wal::WalCommittedRecordStep::Done) => break,
-                    Err(error) if database_sync_hello_turn_exhausted(&error) => { database_sync_hello_opportunity(&cancelled, &expired).await?; continue; }
+                    Err(error) if database_sync_hello_turn_exhausted(&error) => {
+                        database_sync_hello_opportunity(&cancelled, &expired).await?;
+                        continue;
+                    }
                     Err(error) => return Err(error),
                 }
-                while transaction.close_record_step()? { semio_framework_async::yield_once().await; }
+                while transaction.close_record_step()? {
+                    semio_framework_async::yield_once().await;
+                }
                 database_sync_hello_opportunity(&cancelled, &expired).await?;
             }
             transaction.finish()?;
@@ -1023,9 +1050,12 @@ async fn replay_sync_state_retained(
     }
     .await;
     let close = async {
-        while records.close_owner_step()? { semio_framework_async::yield_once().await; }
+        while records.close_owner_step()? {
+            semio_framework_async::yield_once().await;
+        }
         Ok::<(), DbError>(())
-    }.await;
+    }
+    .await;
     let replay = replay.and(close);
     if let Err(error) = replay {
         let mut control_error = None;
@@ -1822,11 +1852,7 @@ impl DatabaseSyncHelloFuture {
             Ok(pool_use) => pool_use,
             Err(error) => {
                 let owners = DatabaseSyncHelloOwners { storage: Some(storage), document, hello_frontier, session_id, origin, snapshot_chunk_bytes };
-                return Err(DatabaseSyncHelloRejected::new(
-                    pool,
-                    DbError::Unavailable(format!("database sync-hello WorkerPool use rejected: {error:?}")),
-                    owners,
-                ))
+                return Err(DatabaseSyncHelloRejected::new(pool, DbError::Unavailable(format!("database sync-hello WorkerPool use rejected: {error:?}")), owners));
             }
         };
         Self::try_submit_with_use(pool, pool_use, storage, document, hello_frontier, session_id, origin, snapshot_chunk_bytes)

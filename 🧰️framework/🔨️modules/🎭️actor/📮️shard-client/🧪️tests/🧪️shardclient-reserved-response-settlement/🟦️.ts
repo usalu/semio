@@ -1,30 +1,45 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, testSource: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("../../🟦️.ts").ShardClientTestDependenciesV1, testSource: TestSource): Promise<void> {
   const { ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, NO_RESIDENT_FAULT, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, shardJspiAvailable, uiResidentMetadataEnvelope } = dependencies;
-  type ActorInstanceLifecycleReceipt = any;
-  type ActorInstanceLifetime = any;
-  type InboundMessage = any;
-  type Lane = any;
-  type OutboundMessage = any;
-  type OwnedResidentAdmission = any;
-  type OwnedResidentRecord = any;
-  type OwnedUiResidentInstance = any;
-  type OwnedUiResidentPayload = any;
-  type PendingEntry = any;
-  type ResidentStep = any;
-  type ShardBudget = any;
-  type ShardClientOptions = any;
-  type ShardEnvelope = any;
-  type ShardEventEnvelope = any;
-  type ShardFrame = any;
-  type ShardInstanceLifecycleLease = any;
-  type ShardInstanceOwner = any;
-  type ShardJspiScope = any;
-  type ShardReturnAdmission = any;
-  type ShardSlot = any;
-  type ShardWorkerLike = any;
-  type UiResidentSourceProof = any;
+  type ActorInstanceLifecycleReceipt = import("../../../🚪️lifetime/🟦️.ts").ActorInstanceLifecycleReceipt;
+  type ActorInstanceLifetime = import("../../../🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
+  type InboundMessage = import("../../🟦️.ts").InboundMessage;
+  type Lane = import("../../../🤖️generated/🟦️actor.ts").Lane;
+  type OutboundMessage = import("../../🟦️.ts").OutboundMessage;
+  type OwnedResidentAdmission = import("../../../../🌱️value/💾️resident/🟦️.ts").OwnedResidentAdmission;
+  type OwnedResidentRecord = import("../../../../🌱️value/💾️resident/🟦️.ts").OwnedResidentRecord;
+  type OwnedUiResidentInstance = import("../../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentInstance;
+  type OwnedUiResidentPayload = import("../../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentPayload;
+  type PendingEntry = import("../../🟦️.ts").PendingEntry;
+  type ResidentStep = import("../../../../🌱️value/💾️resident/🟦️.ts").ResidentStep;
+  type ShardBudget = import("../../🟦️.ts").ShardBudget;
+  type ShardClientOptions = import("../../🟦️.ts").ShardClientOptions;
+  type ShardEnvelope = import("../../🟦️.ts").ShardEnvelope;
+  type ShardEventEnvelope = import("../../🟦️.ts").ShardEventEnvelope;
+  type ShardFrame = import("../../🟦️.ts").ShardFrame;
+  type ShardInstanceLifecycleLease = import("../../🟦️.ts").ShardInstanceLifecycleLease;
+  type ShardInstanceOwner = import("../../🟦️.ts").ShardInstanceOwner;
+  type ShardJspiScope = import("../../🟦️.ts").ShardJspiScope;
+  type ShardReturnAdmission = import("../../🟦️.ts").ShardReturnAdmission;
+  type ShardSlot = import("../../🟦️.ts").ShardSlot;
+  type ShardWorkerLike = import("../../🟦️.ts").ShardWorkerLike;
+  type UiResidentSourceProof = import("../../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentPayloadSourceRelease;
+  type ShardClient = import("../../🟦️.ts").ShardClient;
+  type OwnedNativeUiPatchAuthority = import("../../🟦️.ts").OwnedNativeUiPatchAuthority;
+  type OwnedNativeUiPatchSubmissionReceipt = import("../../🟦️.ts").OwnedNativeUiPatchSubmissionReceipt;
+  type OwnedShardReturn = import("../../🟦️.ts").OwnedShardReturn;
+  type OwnedShardReturnPage = import("../../🟦️.ts").OwnedShardReturnPage;
+  type OwnedActorTurnOutput = import("../../../🪪️activation/🚪️instance/📥️output/🟦️.ts").OwnedActorTurnOutput;
+  type OwnedActorTurnOutputs = import("../../../🪪️activation/🚪️instance/📥️output/🟦️.ts").OwnedActorTurnOutputs;
+  type OwnedKernelReturnContent = import("../../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts").OwnedKernelReturnContent;
+  type OwnedResidentLedger = import("../../../../🌱️value/💾️resident/🟦️.ts").OwnedResidentLedger;
+  type OwnedResidentRetirement = import("../../../../🌱️value/💾️resident/🟦️.ts").OwnedResidentRetirement;
+  type OwnedUiInstance = import("../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiInstance;
+  type OwnedUiInstanceRetirement = import("../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiInstanceRetirement;
+  type OwnedUiPatchAcknowledgement = import("../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiPatchAcknowledgement;
+  type OwnedUiPatchInputRetirement = import("../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiPatchInputRetirement;
+  type OwnedUiResidentPool = import("../../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentPool;
 
   const { describe, expect, it, vi } = vitest;
 
@@ -453,7 +468,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     let getterReads = 0; const values = new Map<string, unknown>([["null", null], ["undefined", undefined], ["false", false], ["zero", 0], ["object", { payload: new Uint8Array(8193), get message() { getterReads++; return "unread"; } }]]);
     for (const scope of row.scopes) for (const stage of row.stages) for (const name of row.values) {
       const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: peer } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 }; const fault = values.get(name);
-      const held: { cell: import("../../🌱️value/💾️resident/🟦️.ts").OwnedResidentAdmission | null; record: OwnedResidentRecord | null } = { cell: null, record: null };
+      const held: { cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null } = { cell: null, record: null };
       const count = (scope === "pool" ? fixture.poolPreparation.controllerPrepareBytes.length : 0) + (stage === "bootstrap" ? 0 : stage === "claim" ? 2 : 4); prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes.slice(0,count)); let calls = 0;
       const originalPrepare = OwnedResidentLedger.prototype.prepareAdmission; const originalClaim = OwnedResidentLedger.prototype.claimAdmission; const originalRecord = OwnedResidentLedger.prototype.reserveRecord;
       const trap = stage === "bootstrap" ? vi.spyOn(OwnedResidentLedger.prototype,"prepareAdmission").mockImplementation(function(this: OwnedResidentLedger,...args) { const result = Reflect.apply(originalPrepare,this,args); calls++; held.cell = this.preparedAdmission(client); throw fault; })
@@ -470,7 +485,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   it("ShardResidentComposition waits for exact result aliases and cell retirement before final release", async () => {
     const { default: fixture } = await import("../../../🏘️composition/🧫️fixtures/🔣️.json"); const row = fixture.aliasRetirement; const ledger = new OwnedResidentLedger(fixture.capacity); const {client} = harness(1,{residentLedger:ledger});
-    const held: { cell: import("../../🌱️value/💾️resident/🟦️.ts").OwnedResidentAdmission | null; record: OwnedResidentRecord | null } = {cell:null,record:null}; const original = OwnedResidentLedger.prototype.reserveRecord;
+    const held: { cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null } = {cell:null,record:null}; const original = OwnedResidentLedger.prototype.reserveRecord;
     const trap = vi.spyOn(OwnedResidentLedger.prototype,"reserveRecord").mockImplementation(function(this:OwnedResidentLedger,...args) { const result=Reflect.apply(original,this,args); held.cell=args[2]; held.record=result.record; return result; });
     try { prepareResidentFixture(client,ledger,fixture.poolPreparation.prepareBytes); } finally { trap.mockRestore(); }
     if(!held.cell || !held.record) throw new Error("Original resource capture absent"); const {cell,record}=held;
@@ -759,7 +774,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       for (let index = 0; index < 3; index++) expect(instance.retireUnusedReturn(fixture.grant).kind).toBe("blocked");
       expect(instance.pendingReturn).toBe(source); expect(source.page).toBe(page); expect(source.retainedResponses).toBe(1);
       expect(residentLedger.usage).toEqual(before); expect(worker.sent.length).toBe(posts);
-      expect(capturedReturnState(source).latest.responseEnvelope).toBe(response); client.disposeAll();
+      const latest = capturedReturnState(source).latest;
+      if (latest === null) throw new Error("Executed original return lost its latest response");
+      expect(latest.responseEnvelope).toBe(response); client.disposeAll();
     });
 
     it("CapturedUnusedReturnRetirement retains executing, content and construction-fault owners", async () => {
@@ -1173,7 +1190,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect([detach, settle, detached, settled].map(value => typeof value)).toEqual(["function", "function", "function", "function"]);
       const pool = await fixtureResidentPool(client, residentLedger); const scope = await fixtureResidentScope(pool, residentLedger, instance); const resident = await fixtureResidentPayload(scope, residentLedger, field);
       const held: { proof: unknown } = { proof: null }; const original = Object.freeze; const spy = vi.spyOn(Object, "freeze").mockImplementation(value => { if (value instanceof OwnedUiResidentBuilderRetirement) held.proof = value; return original(value); });
-      let builder: import("../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts").OwnedUiOperationPayloadBuilder | null = null;
+      let builder: import("../../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts").OwnedUiOperationPayloadBuilder | null = null;
       try { builder = (await fixtureResidentBuilder(residentLedger, field, resident)).builder; } finally { spy.mockRestore(); }
       if (!builder || !held.proof) throw new Error("Genuine original builder/witness missing"); expect(OwnedUiResidentBuilderRetirement.matchesBody(held.proof, builder, field)).toBe(false);
       let reads = 0; const forged = { get phase() { reads++; throw new Error("Foreign builder proof getter"); } }; const proxy = new Proxy({}, { get() { reads++; throw new Error("Foreign builder proof proxy"); } }); const before = residentLedger.usage;
@@ -2603,10 +2620,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         let thrown: unknown = null;
         try { assertShardJspiAvailable(scope); } catch (error) { thrown = error; }
         expect(thrown === null, vector.id).toBe(vector.available);
-        if (thrown) {
-          expect(thrown).toBeInstanceOf(ShardJspiUnavailableError);
-          expect((thrown as ShardJspiUnavailableError).code).toBe(fixture.jspi.faultCode);
-          expect(Object.keys((thrown as ShardJspiUnavailableError).text)).toEqual(["en", "de"]);
+        if (thrown !== null) {
+          if (!(thrown instanceof ShardJspiUnavailableError)) throw new Error("JSPI refusal did not preserve its typed fault");
+          expect(thrown.code).toBe(fixture.jspi.faultCode);
+          expect(Object.keys(thrown.text)).toEqual(["en", "de"]);
         }
         return { id: vector.id, available };
       });

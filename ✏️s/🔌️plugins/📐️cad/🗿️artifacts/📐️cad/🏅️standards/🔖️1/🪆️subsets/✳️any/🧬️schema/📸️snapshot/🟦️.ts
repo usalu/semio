@@ -1,37 +1,8 @@
-/** 🧬️ CadSnapshot schema. */
-
-export interface CadSnapshot {
-  /** @state artifact */
-  schema: string;
-  /** @state artifact */
-  id: string;
-  /** @state artifact */
-  objects: CadObject[];
-  /** @state artifact */
-  buildingObjects: CadObject[];
-  /** @state artifact */
-  energyObjects: CadObject[];
-  /** @state artifact */
-  structureClassicObjects: CadObject[];
-  /** @state artifact */
-  referencesByModelDefinitionId: Record<string, CadReferenceList>;
-  /** @state artifact */
-  nodes: CadNode[];
-  /** @state artifact */
-  shapeGeometry?: CadGeometry;
-  /** @state artifact */
-  buildingGeometry?: CadGeometry;
-  /** @state artifact */
-  energyGeometry?: CadGeometry;
-  /** @state artifact */
-  structureClassicGeometry?: CadGeometry;
-  /** @state artifact */
-  activeModelDefinitionId: string;
+/** 📸️ CAD persisted snapshot contract. */
+import { parseCadArtifact, type CadArtifact } from "../🟦️.ts";
+export type { ArtifactChild, CadNode, CadReference, CadReferenceList } from "../🟦️.ts";
+export interface CadSnapshot extends CadArtifact {}
+/** 🪪️ Parses the persisted snapshot through the same exact document boundary. */
+export function parseCadSnapshot(value: unknown, at = "$"): CadSnapshot {
+  return parseCadArtifact(value, at);
 }
-
-export interface CadObject { id: string; [key: string]: unknown }
-export interface CadNode { id: string; [key: string]: unknown }
-export interface CadReferenceList { values: unknown[] }
-export interface CadGeometry { [key: string]: unknown }
-export interface CadCamera { [key: string]: unknown }
-

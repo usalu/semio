@@ -1019,7 +1019,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                     self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::CacheRead { engine_id: engine_id.clone(), key: key.clone() }).await;
                     report.dispatched += 1;
                 }
-                Effect::InvokeExtension { req, extension_id, capability, request_json } => {
+                Effect::InvokeExtension { req, extension_id, capability, request_json, .. } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
                     self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::InvokeExtension { extension_id: extension_id.clone(), capability: capability.clone(), request_json: request_json.clone() }).await;
                     report.dispatched += 1;

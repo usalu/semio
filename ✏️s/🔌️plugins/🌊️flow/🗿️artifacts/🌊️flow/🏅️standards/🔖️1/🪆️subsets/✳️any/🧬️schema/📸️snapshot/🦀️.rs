@@ -2,15 +2,14 @@
 
 use crate::{flow_content_child_handle_and_cache, flow_working_scene, FlowContentChild};
 use framework_schema::ArtifactSchema;
-use semio_framework_artifact_flow_flow::CameraJson;
 
 //#region 🔹Snapshot
 /// 📸️ Persisted flow document snapshot (persistent fields of the artifact). Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`flow→C:flow`, the canonical editor for stdio's
 /// `flow` subset): the inline `widgets`/`synapses`/`layout` content fields are replaced by a fixed
 /// composed `s.stdio.semio@v1/flow` CHILD slot — the flow plugin no longer defines its own node-graph
-/// content model, it composes stdio's `flow` subset instead. `camera` stays inline: it is pure
-/// editor viewport state with no counterpart in `SemioFlowSnapshot`.
+/// content model, it composes stdio's `flow` subset instead. Viewport state belongs to each
+/// concrete Flow main window and never enters this document snapshot.
 ///
 /// Distinct from `semio_framework_artifact_flow_flow::FlowFixture` in `semio-framework-os-flow`, which remains the framework
 /// host/kernel document type. This plugin snapshot converts at the host boundary via
@@ -21,8 +20,6 @@ use semio_framework_artifact_flow_flow::CameraJson;
 pub struct FlowSnapshot {
     #[state(artifact)]
     pub schema: String,
-    #[state(artifact)]
-    pub camera: CameraJson,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub content: FlowContentChild,
@@ -40,7 +37,7 @@ impl FlowSnapshot {
     /// 🌊️ Builds a plugin snapshot from the framework `semio_framework_artifact_flow_flow::FlowFixture` document type — mints and
     /// caches a fresh content-addressed handle for the fixture's widgets/synapses/layout.
     pub fn from_fixture(fixture: semio_framework_artifact_flow_flow::FlowFixture) -> Self {
-        Self { schema: fixture.schema, camera: fixture.camera, content: flow_content_child_handle_and_cache(fixture.widgets, fixture.synapses, fixture.layout) }
+        Self { schema: fixture.schema, content: flow_content_child_handle_and_cache(fixture.widgets, fixture.synapses, fixture.layout) }
     }
 
     /// 🌊️ Converts this snapshot into the framework `semio_framework_artifact_flow_flow::FlowFixture` for `FlowHost` / kernel
@@ -48,8 +45,13 @@ impl FlowSnapshot {
     /// `flow_working_scene`'s doc comment for the staleness gap this bridges).
     pub fn to_fixture(&self) -> semio_framework_artifact_flow_flow::FlowFixture {
         let scene = flow_working_scene(self);
-        semio_framework_artifact_flow_flow::FlowFixture { schema: self.schema.clone(), camera: self.camera.clone(), widgets: scene.widgets, synapses: scene.synapses, layout: scene.layout }
+        semio_framework_artifact_flow_flow::FlowFixture { schema: self.schema.clone(), camera: default_window_camera(), widgets: scene.widgets, synapses: scene.synapses, layout: scene.layout }
     }
+}
+
+/// 🎥️ Deterministic viewport used only at the framework fixture boundary.
+pub fn default_window_camera() -> semio_framework_artifact_flow_flow::CameraJson {
+    semio_framework_artifact_flow_flow::CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }
 }
 
 impl From<semio_framework_artifact_flow_flow::FlowFixture> for FlowSnapshot {

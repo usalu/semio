@@ -2,7 +2,7 @@
   "document": {
     "schema": "dag.dag",
     "content": {
-      "childId": "dag-content-seeded-fixture",
+      "childId": "dag-content",
       "target": {
         "artifactId": "dag-content",
         "dialect": {
@@ -13,10 +13,7 @@
       }
     }
   },
-  "diff": {
-    "schema": null,
-    "content": null
-  },
+  "diff": {},
   "invalidDocuments": [
     {
       "schema": "dag.dag",
@@ -44,11 +41,14 @@
         }
       },
       "selectedNodeIds": [],
-      "camera": { "x": 0, "y": 0, "zoom": 1 }
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      }
     }
   ],
   "invalidDiffs": [
-    {},
     {
       "artifact": null,
       "schema": null,
@@ -63,6 +63,127 @@
       "schema": null,
       "content": {
         "childId": "dag-content"
+      }
+    }
+  ],
+  "invalidIdentityDocuments": [
+    {
+      "schema": "dag.dag",
+      "content": {
+        "childId": "different-child",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        }
+      }
+    },
+    {
+      "schema": "dag.dag",
+      "content": {
+        "childId": "dag-content",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "foreign",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        }
+      }
+    },
+    {
+      "schema": "dag.dag",
+      "content": {
+        "childId": "dag-content",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "foreign",
+            "subset": "graph"
+          }
+        }
+      }
+    },
+    {
+      "schema": "dag.dag",
+      "content": {
+        "childId": "dag-content",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "foreign"
+          }
+        }
+      }
+    },
+    {
+      "schema": "dag.dag",
+      "content": {
+        "childId": "dag-content",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        },
+        "locale": "de"
+      }
+    },
+    {
+      "schema": "foreign.document",
+      "content": {
+        "childId": "dag-content",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        }
+      }
+    }
+  ],
+  "patchCases": [
+    {
+      "name": "untouched",
+      "before": {
+        "schema": "dag.dag",
+        "content": {
+          "childId": "dag-content",
+          "target": {
+            "artifactId": "dag-content",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "graph"
+            }
+          }
+        }
+      },
+      "diff": {},
+      "after": {
+        "schema": "dag.dag",
+        "content": {
+          "childId": "dag-content",
+          "target": {
+            "artifactId": "dag-content",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "graph"
+            }
+          }
+        }
       }
     }
   ]

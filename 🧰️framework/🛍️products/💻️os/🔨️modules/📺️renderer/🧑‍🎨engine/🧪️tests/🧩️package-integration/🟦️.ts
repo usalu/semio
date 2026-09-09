@@ -9,7 +9,7 @@ import Ajv from "ajv";
 import emojiRegex from "emoji-regex";
 import ts from "typescript";
 import { loadTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import browserAuthorityFixture from "../../🎯️targets/🧊️wgpu/🧫️fixtures/🔣️browser-entry-authority.json";
+import browserAuthorityFixture from "../../🧫️fixtures/🧊️wgpu-browser-entry-authority/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json";
 import { renderFrameWorker } from "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script";
 import { assertPinnedBunVersion, decodeAstralEscapes, renderBrowserEntry } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";
@@ -22,6 +22,7 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     manifest: { pluginId: "draw", label: "Draw", version: "0.1.0", apps: [], workflows: [], examples: [] },
     createApp: async () => 1,
     destroyApp: async () => {},
+    readWindowConfigPacks: async () => [],
     handleAction: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
     handleCommand: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
     render: async () => ({ type: "text", value: "hello" }),

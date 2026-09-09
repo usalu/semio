@@ -15,9 +15,9 @@ export interface PlaybookDiff {
   version?: string | null;
   /** @state artifact */
   title?: string | null;
-  /** @state artifact */
+  /** @state artifact @child kind=s.stdio.semio */
   document?: ArtifactChild | null;
-  /** @state artifact */
+  /** @state artifact @child kind=s.stdio.semio */
   flow?: ArtifactChild | null;
 }
 

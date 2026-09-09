@@ -1,0 +1,55 @@
+{
+  "payload": {
+    "text": "λ🙂",
+    "repeat": 2048,
+    "utf8Bytes": 12288
+  },
+  "base": {
+    "editorSelection": {
+      "start": 1,
+      "end": 2
+    },
+    "lintGeneration": 3
+  },
+  "cases": [
+    {
+      "id": "selection-preserves-text",
+      "mutation": {
+        "kind": "set-editor-selection",
+        "selection": {
+          "start": 5,
+          "end": 9
+        }
+      },
+      "patch": {
+        "editorSelection": {
+          "start": 5,
+          "end": 9
+        }
+      },
+      "copiedBytes": 12288
+    },
+    {
+      "id": "lint-preserves-text",
+      "mutation": {
+        "kind": "set-lint-generation",
+        "value": 7
+      },
+      "patch": {
+        "lintGeneration": 7
+      },
+      "copiedBytes": 12288
+    },
+    {
+      "id": "input-moves-text",
+      "mutation": {
+        "kind": "set-engagement-input",
+        "value": "你好🙂"
+      },
+      "patch": {
+        "engagementInput": "你好🙂"
+      },
+      "copiedBytes": 0
+    }
+  ]
+}

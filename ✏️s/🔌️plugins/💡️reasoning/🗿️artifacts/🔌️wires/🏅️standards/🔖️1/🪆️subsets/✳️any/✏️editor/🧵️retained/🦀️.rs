@@ -219,7 +219,7 @@ impl ArtifactCanonicalJson for Projection<'_> {
             }
             [1, node, 3, 0] => N::F64(number_field(&self.candidate.nodes[*node], self.candidate.node_index[*node].x)?),
             [1, node, 3, 1] => N::F64(number_field(&self.candidate.nodes[*node], self.candidate.node_index[*node].y)?),
-            [1, node, 4] => N::Array(0),
+            [1, _, 4] => N::Array(0),
             [1, node, 5] => {
                 self.candidate.node_json.get(*node).ok_or_else(|| "wires-publication.projection-path".to_string())?;
                 N::Array(1)
@@ -233,11 +233,11 @@ impl ArtifactCanonicalJson for Projection<'_> {
                 self.candidate.edges.get(*edge).ok_or_else(|| "wires-publication.projection-path".to_string())?;
                 N::Object(5)
             }
-            [2, edge, 0 | 1 | 2] => {
+            [2, edge, 0..=2] => {
                 self.candidate.edge_index.get(*edge).ok_or_else(|| "wires-publication.projection-path".to_string())?;
                 N::Object(1)
             }
-            [2, edge, slot @ (0 | 1 | 2), 0] => {
+            [2, edge, slot @ (0..=2), 0] => {
                 let index = self.candidate.edge_index[*edge];
                 let field = match slot {
                     0 => index.id,
@@ -256,7 +256,7 @@ impl ArtifactCanonicalJson for Projection<'_> {
         let keys: &[&str] = match path {
             [] => &["schema", "nodes", "edges"],
             [1, _] => &["id", "kind", "label", "position", "ports", "properties"],
-            [1, _, 0] | [2, _, 0 | 1 | 2] => &["value"],
+            [1, _, 0] | [2, _, 0..=2] => &["value"],
             [1, _, 3] => &["x", "y"],
             [1, _, 5, 0] => &["key", "value"],
             [1, _, 5, 0, 1] => &["kind", "value"],
@@ -302,7 +302,7 @@ impl ArtifactStoreOneItemPreparationFactory<WiresSnapshot, crate::op::WiresMutat
         let crate::op::WiresMutation::MoveNode(value) = mutation else {
             return Err("Wires retained publication only admits MoveNode".into());
         };
-        if lane != HistoryLane::Artifact
+        if lane != HistoryLane::Document
             || value.node_id.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || !value.new_x.is_finite()
             || !value.new_y.is_finite()
@@ -317,7 +317,7 @@ impl ArtifactStoreOneItemPreparationFactory<WiresSnapshot, crate::op::WiresMutat
         &self,
         request: ArtifactStoreOneItemPreparationRequest<WiresSnapshot, crate::op::WiresMutation>,
     ) -> Result<Box<dyn ArtifactStoreOneItemPreparation<WiresSnapshot, crate::op::WiresMutation>>, ArtifactStoreOneItemPreparationRequest<WiresSnapshot, crate::op::WiresMutation>> {
-        if request.lane != HistoryLane::Artifact
+        if request.lane != HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
@@ -668,7 +668,7 @@ impl ArtifactStoreOneItemPreparation<WiresSnapshot, crate::op::WiresMutation> fo
                             }
                         }
                     }
-                    self.record(1, key.len())?;
+                    self.record(1, 0)?;
                 } else {
                     if self.target_node == Some(self.node_cursor) {
                         self.old_x = Some(number_field(node, self.pending_node.x)?);
@@ -708,7 +708,7 @@ impl ArtifactStoreOneItemPreparation<WiresSnapshot, crate::op::WiresMutation> fo
                         "edgeKind" => self.pending_edge.kind = field,
                         _ => {}
                     }
-                    self.record(1, key.len())?;
+                    self.record(1, 0)?;
                 } else {
                     let pending = self.pending_edge;
                     self.candidate_mut()?.edge_index.push(pending);
@@ -723,15 +723,18 @@ impl ArtifactStoreOneItemPreparation<WiresSnapshot, crate::op::WiresMutation> fo
                 self.record(1, 0)?;
             }
             Phase::Clone => {
-                let cursor = self.clone_cursor.as_mut().ok_or_else(|| "wires-publication.clone-missing".to_string())?;
-                let result = cursor.advance(DslValueCloneGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })?;
+                let result = self
+                    .clone_cursor
+                    .as_mut()
+                    .ok_or_else(|| "wires-publication.clone-missing".to_string())?
+                    .advance(DslValueCloneGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })?;
                 match result {
                     DslValueCloneStep::Blocked(_) => return Ok(ArtifactStoreOneItemPreparationStep::Blocked),
                     DslValueCloneStep::Progress { receipt, .. } => self.record(receipt.structural_items, receipt.copied_bytes)?,
                     DslValueCloneStep::Complete { receipt, checkpoint } => {
                         self.record(receipt.structural_items, receipt.copied_bytes)?;
                         self.retained_bytes = self.retained_bytes.checked_add(checkpoint.retained_bytes).filter(|bytes| *bytes <= MAXIMUM_RETAINED_BYTES).ok_or_else(|| "wires-publication.retained-limit".to_string())?;
-                        let mut value = cursor.take_value().ok_or_else(|| "wires-publication.clone-value-missing".to_string())?;
+                        let mut value = self.clone_cursor.as_mut().and_then(DslValueCloneCursor::take_value).ok_or_else(|| "wires-publication.clone-value-missing".to_string())?;
                         self.patch_target(self.clone_target.ok_or_else(|| "wires-publication.clone-target".to_string())?, &mut value)?;
                         self.pending_value = Some(value);
                         self.phase = Phase::CloneClose;
@@ -773,14 +776,18 @@ impl ArtifactStoreOneItemPreparation<WiresSnapshot, crate::op::WiresMutation> fo
                 self.record(1, 0)?;
             }
             Phase::Admission => {
-                let admission = self.admission.as_mut().ok_or_else(|| "wires-publication.admission-missing".to_string())?;
-                let processed_bytes = admission.checkpoint().processed_bytes;
-                match admission.advance(ArtifactCanonicalValueGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })? {
+                let (processed_bytes, step) = {
+                    let admission = self.admission.as_mut().ok_or_else(|| "wires-publication.admission-missing".to_string())?;
+                    let processed_bytes = admission.checkpoint().processed_bytes;
+                    let step = admission.advance(ArtifactCanonicalValueGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })?;
+                    (processed_bytes, step)
+                };
+                match step {
                     ArtifactCanonicalValueStep::Blocked => return Ok(ArtifactStoreOneItemPreparationStep::Blocked),
                     ArtifactCanonicalValueStep::Progress(checkpoint) => self.record(1, checkpoint.processed_bytes.saturating_sub(processed_bytes))?,
                     ArtifactCanonicalValueStep::Complete(checkpoint) => {
                         self.record(1, checkpoint.processed_bytes.saturating_sub(processed_bytes))?;
-                        self.canonical = admission.take_value();
+                        self.canonical = self.admission.as_mut().and_then(ArtifactCanonicalValueAdmission::take_value);
                         self.phase = Phase::AdmissionClose;
                     }
                 }
@@ -816,7 +823,8 @@ impl ArtifactStoreOneItemPreparation<WiresSnapshot, crate::op::WiresMutation> fo
             Phase::CountJson => {
                 let canonical = self.canonical.as_ref().ok_or_else(|| "wires-publication.canonical-missing".to_string())?;
                 let mut output = [0; store::ARTIFACT_CANONICAL_JSON_CHUNK_BYTES];
-                let written = self.json_cursor.encode_chunk(canonical, &mut output[..grant.maximum_bytes.min(output.len())]).map_err(|error| error.reason)?;
+                let output_length = grant.maximum_bytes.min(output.len());
+                let written = self.json_cursor.encode_chunk(canonical, &mut output[..output_length]).map_err(|error| error.reason)?;
                 if written == 0 && !self.json_cursor.is_complete() {
                     return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
                 }
@@ -846,7 +854,8 @@ impl ArtifactStoreOneItemPreparation<WiresSnapshot, crate::op::WiresMutation> fo
             Phase::FillJson => {
                 let canonical = self.canonical.as_ref().ok_or_else(|| "wires-publication.canonical-missing".to_string())?;
                 let mut output = [0; store::ARTIFACT_CANONICAL_JSON_CHUNK_BYTES];
-                let written = self.json_cursor.encode_chunk(canonical, &mut output[..grant.maximum_bytes.min(output.len())]).map_err(|error| error.reason)?;
+                let output_length = grant.maximum_bytes.min(output.len());
+                let written = self.json_cursor.encode_chunk(canonical, &mut output[..output_length]).map_err(|error| error.reason)?;
                 if written == 0 && !self.json_cursor.is_complete() {
                     return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
                 }
@@ -861,8 +870,10 @@ impl ArtifactStoreOneItemPreparation<WiresSnapshot, crate::op::WiresMutation> fo
             }
             Phase::Hash => {
                 let mut output = [0; store::ARTIFACT_CANONICAL_JSON_CHUNK_BYTES];
-                let projection = Projection { candidate: self.candidate()? };
-                let written = self.json_cursor.encode_chunk(&projection, &mut output[..grant.maximum_bytes.min(output.len())]).map_err(|error| error.reason)?;
+                let output_length = grant.maximum_bytes.min(output.len());
+                let candidate = self.candidate.as_ref().ok_or_else(|| "wires-publication.candidate-missing".to_string())?;
+                let projection = Projection { candidate };
+                let written = self.json_cursor.encode_chunk(&projection, &mut output[..output_length]).map_err(|error| error.reason)?;
                 if written == 0 && !self.json_cursor.is_complete() {
                     return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
                 }

@@ -22,7 +22,7 @@ pub mod retained_command;
 
 #[cfg(all(test, feature = "component-app-assembly"))]
 fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'static str], &'static str) {
-    ("puzzle2d", "puzzle.2d.fixture", editor::puzzle2d::PUZZLE2D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json"))
+    ("puzzle2d", "puzzle.2d.fixture", editor::puzzle2d::PUZZLE2D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
 }
 
 pub const PUZZLE_2D_SCHEMA: &str = "puzzle.2d.fixture";

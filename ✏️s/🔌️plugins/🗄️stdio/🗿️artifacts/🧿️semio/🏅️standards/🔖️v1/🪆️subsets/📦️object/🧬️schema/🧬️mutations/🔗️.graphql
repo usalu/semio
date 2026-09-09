@@ -1,6 +1,20 @@
-# 🧬️ SemioObjectMutation dispatch — real facet mirror.
-enum SemioObjectMutationKind { MOVE_OBJECT ROTATE_OBJECT SCALE_OBJECT CREATE_BREP DELETE_BREP CREATE_MESH DELETE_MESH CREATE_PROPERTIES DELETE_PROPERTIES }
-type SemioObjectMutation {
-  kind: SemioObjectMutationKind!
-  payloadWire: String!
-}
+# import SemioPoint3, SemioQuaternion from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🔗️.graphql"
+# import ArtifactRef from "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️.graphql"
+# import EmptyRecord from "🧰️framework/🔨️modules/🧬️schema/🧾️record/🔗️.graphql"
+
+type MoveObject { translation: SemioPoint3! }
+type MoveObjectMutation { MoveObject: MoveObject! }
+type RotateObject { rotation: SemioQuaternion! }
+type RotateObjectMutation { RotateObject: RotateObject! }
+type ScaleObject { scale: SemioPoint3! }
+type ScaleObjectMutation { ScaleObject: ScaleObject! }
+type CreateBrep { child_id: String! target: ArtifactRef! }
+type CreateBrepMutation { CreateBrep: CreateBrep! }
+type DeleteBrepMutation { DeleteBrep: EmptyRecord! }
+type CreateMesh { child_id: String! target: ArtifactRef! }
+type CreateMeshMutation { CreateMesh: CreateMesh! }
+type DeleteMeshMutation { DeleteMesh: EmptyRecord! }
+type CreateProperties { child_id: String! target: ArtifactRef! }
+type CreatePropertiesMutation { CreateProperties: CreateProperties! }
+type DeletePropertiesMutation { DeleteProperties: EmptyRecord! }
+union SemioObjectMutation = MoveObjectMutation | RotateObjectMutation | ScaleObjectMutation | CreateBrepMutation | DeleteBrepMutation | CreateMeshMutation | DeleteMeshMutation | CreatePropertiesMutation | DeletePropertiesMutation

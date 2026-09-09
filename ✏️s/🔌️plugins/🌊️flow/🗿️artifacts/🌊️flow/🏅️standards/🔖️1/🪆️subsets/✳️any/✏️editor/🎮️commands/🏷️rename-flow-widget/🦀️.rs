@@ -1,6 +1,7 @@
 //! 🪟️ 🧩️ Flow play app commands command — `rename-flow-widget`.
 
-use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use crate::schema::widget_id;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
@@ -58,7 +59,7 @@ fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Optio
 /// selected widget's id leaves that id stale in `graph`'s selection (pruned by `interaction_topology` on
 /// the next dispatch, same as any other deleted-then-recreated id), an accepted UX regression for this
 /// wave (mirrors note's `add-block`/`rename-flow-widget` no longer being able to steer selection).
-pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let fixture = doc.snapshot;
     match renamed_fixture(fixture, &payload.old_id, &payload.value) {
         Some(next) => Ok(Emit::mutations(crate::schema::mutations::snapshot_operations(fixture, &next))),

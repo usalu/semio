@@ -1,3 +1,4 @@
+use crate::JackWorkingScene;
 use super::*;
 use crate::empty_trinity_graph_fixture;
 
@@ -33,13 +34,7 @@ async fn dsl_round_trip_mini_fixture() {
     use crate::{Camera, Edge, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
     use std::collections::BTreeMap;
 
-    let fixture = JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "mini".into(),
-        Some("nakagin".into()),
-        Manifest::nakagin_default(),
-        Camera::default(),
-        vec![
+    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -70,8 +65,7 @@ async fn dsl_round_trip_mini_fixture() {
                 properties: PropertyBag::new(),
                 ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
             },
-        ],
-        vec![Edge {
+        ], edges: vec![Edge {
             id: "e1".into(),
             kind: "Connection".into(),
             source: "root@out-a".into(),
@@ -82,9 +76,7 @@ async fn dsl_round_trip_mini_fixture() {
                 p.insert("v".into(), PropertyValue::Number(-0.6));
                 p
             },
-        }],
-        Some("root".into()),
-    );
+        }] }, Some("root".into()));
     ::store::os_store::test_support::assert_dsl_round_trip(&fixture);
     ::store::os_store::test_support::assert_dsl_pack_equivalence(&fixture);
 }

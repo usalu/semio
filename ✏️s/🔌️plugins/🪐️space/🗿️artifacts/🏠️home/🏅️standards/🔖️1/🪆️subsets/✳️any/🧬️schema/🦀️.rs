@@ -30,7 +30,7 @@ impl SHomeArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::SHomeSnapshot) -> Self {
-        Self { schema: snapshot.schema, catalog_generation: snapshot.catalog_generation, ..Self::default() }
+        Self { schema: snapshot.schema, catalog_generation: snapshot.catalog_generation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

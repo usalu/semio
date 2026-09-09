@@ -6,7 +6,7 @@ import { WORKSPACE_ROOT, toolJobRuntimeProofQualified } from "../../../../../../
 /** 🧪️ Compares the runtime join fixture with an independent Ajv exact-authority oracle and hostile source variants. */
 export function toolJobFactoryProofJoinSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
-  const fixture = JSON.parse(readFileSync(join(base, "🔬️tool-factory-proof.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔬️tool-factory-proof.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const ajv = new Ajv({ strict: true, allErrors: true });

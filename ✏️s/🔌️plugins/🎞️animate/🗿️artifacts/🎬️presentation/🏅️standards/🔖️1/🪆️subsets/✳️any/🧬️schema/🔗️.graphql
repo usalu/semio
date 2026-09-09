@@ -1,9 +1,7 @@
-# 🧬️ Presentation artifact schema.
+# 🧬️ Presentation durable artifact composed from shared presentation and animation child identities.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type PresentationArtifact {
   schema: String! @state(class: ARTIFACT)
-  source: FigureTileSource! @state(class: ARTIFACT)
-  tiles: [FigureTileDraft!]! @state(class: ARTIFACT)
+  presentation: ArtifactChild! @state(class: ARTIFACT)
+  animation: ArtifactChild! @state(class: ARTIFACT)
 }
-type FigureTileFrame { x: Float! y: Float! width: Float! height: Float! }
-type FigureTileSource { src: String! kind: String! frame: FigureTileFrame! sourceAspect: Float pdfPage: Int }
-type FigureTileDraft { id: String! name: String! crop: FigureTileFrame! }

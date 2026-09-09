@@ -4,7 +4,7 @@
   "mesh": {
     "childId": "gisterrain-mesh-339a49f605e9ea25",
     "target": {
-      "artifactId": "gisterrain-mesh",
+      "artifactId": "gisterrain-mesh-339a49f605e9ea25",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

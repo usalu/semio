@@ -22,8 +22,8 @@ import { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 
 export { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { parseInferencePortClosedV1, parseInferencePortOpeningRequestV1, parseInferencePortOpeningResultV1, type InferencePortClosedV1, type InferencePortOpeningResultV1 } from "./🔨️modules/💡️inference/🚪️opening/🟦️.ts";
 import type { ArtifactFrontier, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, GisMapInferencePortCodeV1, GisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryEventPageV1, parseGisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, canonicalDirectoryCommandV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, parseDirectoryEventPageV1, parseGisMapInferencePortStatusV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, directoryAdministrationCommandAllowedV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
 import type { ArtifactPresencePeer, ClientFrame, ExactWireMutationEnvelope, LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryCommand, LocalInteractionQueryReply, LocalInteractionQueryToken, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
@@ -573,7 +573,7 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
  * grant, checkpoint and revalidation. A non-`react` renderer target is admitted only when the
  * worker owns a live private lease that verified those exact bytes. */
 export type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-export { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, directoryCommandErrorIsTransient, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, canonicalDirectoryCommandV1, directoryCommandErrorIsTransient, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, parseDirectoryCommandV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, sameLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 💡️ The host-owned ephemeral GIS Map inference port: its closed wire DTOs, its nine-phase state
  * machine, and its explicit EN/DE vocabulary. Nothing here is ever persisted into a document. */
@@ -737,6 +737,7 @@ export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uin
 export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerRequest {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
   if (parsed.kind === "inference-open") return parseInferencePortOpeningRequestV1(parsed);
+  if (typeof parsed.kind === "string" && parsed.kind.startsWith("directory-administration-")) return parseDirectoryAdministrationWorkerRequestV1(parsed);
   if (parsed.kind === "browser-actor-action") {
     const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
     if (clientInstanceId === null) throw new Error("backbone worker request: invalid client instance id");
@@ -813,6 +814,7 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     return { ...parseBrowserActorActionResultV1(response), clientInstanceId };
   }
   if (parsed.kind === "space-artifact-creation-status") return parseSpaceArtifactCreationStatusV1(parsed);
+  if (parsed.kind === "space-artifact-creation-catalog-refresh-required") return parseSpaceArtifactCreationCatalogRefreshRequiredV1(parsed);
   if (parsed.kind === "space-artifact-creation-catalog") return parseSpaceArtifactCreationCatalogV1(parsed);
   if (parsed.kind === "space-artifact-creation-catalog-status") return parseSpaceArtifactCreationCatalogStatusV1(parsed);
   if (parsed.kind === "browser-actor-ui-patch") {
@@ -915,6 +917,53 @@ function workerWireCreationRequestIdV1(value: unknown): string | null {
   return typeof value === "string" && /^(?!0{32}$)[0-9a-f]{32}$/u.test(value) ? value : null;
 }
 
+function workerWireCatalogGenerationIdV1(value: unknown): string | null {
+  return typeof value === "string" && /^(?!0{64}$)[0-9a-f]{64}$/u.test(value) ? value : null;
+}
+
+function parseDirectoryAdministrationWorkerRequestV1(parsed: Readonly<Record<string, unknown>>): Extract<BackboneWorkerRequest, { readonly kind: `directory-administration-${string}` }> {
+  const operationEpoch = parsed.operationEpoch;
+  if (typeof operationEpoch !== "number" || !Number.isSafeInteger(operationEpoch) || operationEpoch < 0) throw new Error("backbone worker request: invalid administration operation epoch");
+  const fields: Readonly<Record<string, readonly string[]>> = {
+    "directory-administration-open": ["kind", "operationEpoch", "spaceId"],
+    "directory-administration-refresh": ["kind", "operationEpoch", ...(parsed.cursor === undefined ? [] : ["cursor"])],
+    "directory-administration-submit": ["kind", "operationEpoch", "requestId", "command"],
+    "directory-administration-capability-request": ["kind", "operationEpoch"],
+    "directory-administration-capability-result": ["kind", "operationEpoch", "transferEpoch", "copied"],
+    "directory-administration-close": ["kind", "operationEpoch"],
+  };
+  const accepted = fields[String(parsed.kind)];
+  if (accepted === undefined || Object.keys(parsed).sort().join(",") !== [...accepted].sort().join(",")) throw new Error("backbone worker request: invalid administration fields");
+  switch (parsed.kind) {
+    case "directory-administration-open": {
+      const spaceId = typeof parsed.spaceId === "string" && new TextEncoder().encode(parsed.spaceId).length <= 256 && parsed.spaceId.length > 0 && !/\p{Cc}/u.test(parsed.spaceId) ? parsed.spaceId : null;
+      if (spaceId === null) throw new Error("backbone worker request: invalid administration space");
+      return { kind: parsed.kind, operationEpoch, spaceId };
+    }
+    case "directory-administration-refresh": {
+      if (parsed.cursor === undefined) return { kind: parsed.kind, operationEpoch };
+      if (typeof parsed.cursor !== "string" || parsed.cursor.length === 0 || parsed.cursor.length > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES || !/^[A-Za-z0-9._-]+$/u.test(parsed.cursor)) throw new Error("backbone worker request: invalid administration cursor");
+      return { kind: parsed.kind, operationEpoch, cursor: parsed.cursor };
+    }
+    case "directory-administration-submit": {
+      const requestId = workerWireCreationRequestIdV1(parsed.requestId);
+      if (requestId === null) throw new Error("backbone worker request: invalid administration request id");
+      const command = canonicalDirectoryCommandV1(parsed.command);
+      directoryCommandRequestJson(sealDirectoryCommandRequestV1(requestId, command));
+      const spaceId = command.kind === "create-space" ? undefined : command.kind === "announce-document" ? command.descriptor.spaceId : command.spaceId;
+      if (spaceId !== undefined && workerWireIdV1(spaceId) === null) throw new Error("backbone worker request: invalid administration command space");
+      return { kind: parsed.kind, operationEpoch, requestId, command };
+    }
+    case "directory-administration-capability-request": return { kind: parsed.kind, operationEpoch };
+    case "directory-administration-capability-result": {
+      if (typeof parsed.transferEpoch !== "number" || !Number.isSafeInteger(parsed.transferEpoch) || parsed.transferEpoch < 1 || typeof parsed.copied !== "boolean") throw new Error("backbone worker request: invalid administration capability result");
+      return { kind: parsed.kind, operationEpoch, transferEpoch: parsed.transferEpoch, copied: parsed.copied };
+    }
+    case "directory-administration-close": return { kind: parsed.kind, operationEpoch };
+    default: throw new Error("backbone worker request: invalid administration kind");
+  }
+}
+
 function parseSpaceArtifactCreationWorkerRequestV1(parsed: Readonly<Record<string, unknown>>): Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" | "space-artifact-create-cancel" }> {
   const create = parsed.kind === "space-artifact-create";
   const expected = create ? "expectedCatalogGenerationId,kind,kindId,name,requestId,spaceId" : "kind,requestId,spaceId";
@@ -923,11 +972,23 @@ function parseSpaceArtifactCreationWorkerRequestV1(parsed: Readonly<Record<strin
     spaceId = workerWireCreationIdentityV1(parsed.spaceId);
   if (requestId === null || spaceId === null) throw new Error("backbone worker request: invalid space artifact creation owner");
   if (!create) return { kind: "space-artifact-create-cancel", requestId, spaceId };
-  const expectedCatalogGenerationId = workerWireSha256V1(parsed.expectedCatalogGenerationId),
+  const expectedCatalogGenerationId = workerWireCatalogGenerationIdV1(parsed.expectedCatalogGenerationId),
     kindId = workerWireCreationIdentityV1(parsed.kindId),
     name = workerWireTextV1(parsed.name);
   if (expectedCatalogGenerationId === null || kindId === null || name === null) throw new Error("backbone worker request: invalid space artifact creation intent");
   return { kind: "space-artifact-create", requestId, spaceId, expectedCatalogGenerationId, kindId, name };
+}
+
+/** 🔄️ Validates the request-bound local refresh disposition emitted for an initial POST conflict. */
+export function parseSpaceArtifactCreationCatalogRefreshRequiredV1(value: unknown): SpaceArtifactCreationCatalogRefreshRequiredV1 {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("space artifact creation catalog refresh: invalid record");
+  const row = value as Readonly<Record<string, unknown>>;
+  if (Object.keys(row).sort().join(",") !== "catalogGenerationId,kind,requestId,spaceId") throw new Error("space artifact creation catalog refresh: invalid fields");
+  const requestId = workerWireCreationRequestIdV1(row.requestId),
+    spaceId = workerWireCreationIdentityV1(row.spaceId),
+    catalogGenerationId = workerWireCatalogGenerationIdV1(row.catalogGenerationId);
+  if (row.kind !== "space-artifact-creation-catalog-refresh-required" || requestId === null || spaceId === null || catalogGenerationId === null) throw new Error("space artifact creation catalog refresh: invalid owner");
+  return { kind: "space-artifact-creation-catalog-refresh-required", requestId, spaceId, catalogGenerationId };
 }
 
 /** 🛡️ Validates the exact worker-visible projection of the Hub's durable creation status. */
@@ -938,7 +999,7 @@ export function parseSpaceArtifactCreationStatusV1(value: unknown): SpaceArtifac
   const phase = phases.includes(row.phase as SpaceArtifactCreationPhaseV1) ? (row.phase as SpaceArtifactCreationPhaseV1) : null;
   const requestId = workerWireCreationRequestIdV1(row.requestId),
     spaceId = workerWireCreationIdentityV1(row.spaceId),
-    catalogGenerationId = workerWireSha256V1(row.catalogGenerationId);
+    catalogGenerationId = workerWireCatalogGenerationIdV1(row.catalogGenerationId);
   if (row.kind !== "space-artifact-creation-status" || phase === null || requestId === null || spaceId === null || catalogGenerationId === null) throw new Error("space artifact creation status: invalid owner");
   const expected = phase === "ready" ? "catalogGenerationId,kind,phase,ready,requestId,spaceId" : "catalogGenerationId,kind,phase,requestId,spaceId";
   if (Object.keys(row).sort().join(",") !== expected) throw new Error("space artifact creation status: invalid fields");
@@ -966,7 +1027,8 @@ export function parseSpaceArtifactCreationCatalogV1(value: unknown): SpaceArtifa
   if (Object.keys(row).sort().join(",") !== "catalogGenerationId,clientInstanceId,kind,kinds,spaceId") throw new Error("space artifact creation catalog: invalid fields");
   const spaceId = workerWireCreationIdentityV1(row.spaceId),
     clientInstanceId = workerWireClientInstanceIdV1(row.clientInstanceId);
-  if (row.kind !== "space-artifact-creation-catalog" || spaceId === null || clientInstanceId === null || typeof row.catalogGenerationId !== "string" || !/^(?!0{64}$)[0-9a-f]{64}$/u.test(row.catalogGenerationId) || !Array.isArray(row.kinds) || row.kinds.length === 0 || row.kinds.length > 64)
+  const catalogGenerationId = workerWireCatalogGenerationIdV1(row.catalogGenerationId);
+  if (row.kind !== "space-artifact-creation-catalog" || spaceId === null || clientInstanceId === null || catalogGenerationId === null || !Array.isArray(row.kinds) || row.kinds.length === 0 || row.kinds.length > 64)
     throw new Error("space artifact creation catalog: invalid owner");
   const kinds = row.kinds.map((value) => {
     if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("space artifact creation catalog: invalid kind");
@@ -987,7 +1049,7 @@ export function parseSpaceArtifactCreationCatalogV1(value: unknown): SpaceArtifa
     return { kindId, schema, dialect: { artifactKind, standard, subset }, label: { en, de } };
   });
   if (kinds.some((entry, index) => index > 0 && kinds[index - 1]!.kindId >= entry.kindId)) throw new Error("space artifact creation catalog: invalid order");
-  return { kind: "space-artifact-creation-catalog", clientInstanceId, spaceId, catalogGenerationId: row.catalogGenerationId, kinds };
+  return { kind: "space-artifact-creation-catalog", clientInstanceId, spaceId, catalogGenerationId, kinds };
 }
 
 /** 🗂️ Validates a catalog presentation update without granting any catalog contents. */
@@ -1040,6 +1102,7 @@ export type DirectoryAdministrationPhaseV1 =
   | "submitting"
   | "receipt"
   | "refreshing"
+  | "deleted"
   | "cancelled"
   | "denied"
   | "stale"
@@ -1072,6 +1135,15 @@ export type SpaceArtifactCreationStatusV1 = Readonly<{
   catalogGenerationId: string;
   phase: SpaceArtifactCreationPhaseV1;
   ready?: SpaceArtifactCreationReadyV1;
+}>;
+
+/** 🔄️ Local disposition for an ambiguous initial POST conflict. It requests a fresh selected
+ * catalog without asserting a Hub mismatch or retrying the completed creation request. */
+export type SpaceArtifactCreationCatalogRefreshRequiredV1 = Readonly<{
+  kind: "space-artifact-creation-catalog-refresh-required";
+  requestId: string;
+  spaceId: string;
+  catalogGenerationId: string;
 }>;
 
 /** 🗣️ One selected descriptor's exact bilingual creation presentation. */
@@ -1193,6 +1265,7 @@ export type BackboneWorkerResponse =
   | SpaceArtifactCreationCatalogV1
   | SpaceArtifactCreationCatalogStatusV1
   | SpaceArtifactCreationStatusV1
+  | SpaceArtifactCreationCatalogRefreshRequiredV1
   | { readonly kind: "socket-actor"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly actorId: string }
   | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly code: "installed-target-unavailable" | "session-mismatch" }
   /** 🪪️ Bounded execution-target install status for the React host's localized live region. It

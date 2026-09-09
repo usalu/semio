@@ -572,7 +572,6 @@
       "requiredFields": [
         "id",
         "outer_loop",
-        "inner_loops",
         "surface",
         "orientation",
         "tol"

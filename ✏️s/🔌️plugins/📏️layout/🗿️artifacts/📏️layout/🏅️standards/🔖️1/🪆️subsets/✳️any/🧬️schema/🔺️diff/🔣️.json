@@ -3,14 +3,1858 @@
   "$id": "https://semio.tech/schema/s/layout/layout/diff.json",
   "title": "LayoutDiff",
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact",
+    "schema",
+    "name",
+    "grid",
+    "paragraphStyles",
+    "characterStyles",
+    "stories",
+    "links",
+    "parentPages",
+    "spreads",
+    "pages",
+    "printTarget",
+    "dataFieldsJson",
+    "backgroundDrawing",
+    "referencedModel"
+  ],
   "properties": {
-    "schema": {
-      "type": "string",
+    "artifact": {
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/layout/layout/artifact.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
-    "value": {
-      "type": "string",
+    "schema": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
+    },
+    "name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "grid": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GridSettings"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "paragraphStyles": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutParagraphStylesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "characterStyles": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutCharacterStylesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "stories": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutStoriesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "links": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutLinksDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "parentPages": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutParentPagesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "spreads": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutSpreadsDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "pages": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutPagesDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "printTarget": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "dataFieldsJson": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "backgroundDrawing": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutDrawingChild",
+          "x-semio-child-kind": "s.stdio.semio",
+          "x-semio-child-standard": "v1",
+          "x-semio-child-subset": "drawing"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "referencedModel": {
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/link.json",
+          "x-semio-link-roles": [
+            "model"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "GridSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineGrid",
+        "baselineOffset",
+        "snapToBaseline"
+      ],
+      "properties": {
+        "baselineGrid": {
+          "type": "number"
+        },
+        "baselineOffset": {
+          "type": "number"
+        },
+        "snapToBaseline": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ParagraphStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "fontFamily",
+        "fontSize",
+        "fontWeight",
+        "leading",
+        "tracking",
+        "alignment"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "fontFamily": {
+          "type": "string"
+        },
+        "fontSize": {
+          "type": "number"
+        },
+        "fontWeight": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "leading": {
+          "type": "number"
+        },
+        "tracking": {
+          "type": "number"
+        },
+        "alignment": {
+          "type": "string"
+        }
+      }
+    },
+    "CharacterStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "fontFamily",
+        "fontSize",
+        "fontWeight",
+        "italic",
+        "color",
+        "tracking"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontFamily": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontSize": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontWeight": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "italic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tracking": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TextStyleRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "paragraphStyleId",
+        "characterStyleId"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "paragraphStyleId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "characterStyleId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TextStory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "content",
+        "styleRuns"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "styleRuns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TextStyleRun"
+          }
+        }
+      }
+    },
+    "ImageLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "path",
+        "hash",
+        "width",
+        "height",
+        "dpi",
+        "colorProfile",
+        "state",
+        "proxyDataUrl"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dpi": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "colorProfile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proxyDataUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LayoutBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h",
+        "rotation"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        },
+        "h": {
+          "type": "number"
+        },
+        "rotation": {
+          "type": "number"
+        }
+      }
+    },
+    "LayoutRect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        },
+        "h": {
+          "type": "number"
+        }
+      }
+    },
+    "PageMargins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ],
+      "properties": {
+        "top": {
+          "type": "number"
+        },
+        "right": {
+          "type": "number"
+        },
+        "bottom": {
+          "type": "number"
+        },
+        "left": {
+          "type": "number"
+        }
+      }
+    },
+    "PageColumns": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "gutter"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gutter": {
+          "type": "number"
+        }
+      }
+    },
+    "Layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "visible",
+        "locked",
+        "objectIds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "objectIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Frame": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "layerId",
+            "bounds",
+            "locked",
+            "visible",
+            "fill",
+            "stroke"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rect"
+            },
+            "id": {
+              "type": "string"
+            },
+            "layerId": {
+              "type": "string"
+            },
+            "bounds": {
+              "$ref": "#/$defs/LayoutBounds"
+            },
+            "locked": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "visible": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fill": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "stroke": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "layerId",
+            "bounds",
+            "locked",
+            "visible",
+            "storyId",
+            "threadNext",
+            "columns",
+            "inset",
+            "wrapMode"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "id": {
+              "type": "string"
+            },
+            "layerId": {
+              "type": "string"
+            },
+            "bounds": {
+              "$ref": "#/$defs/LayoutBounds"
+            },
+            "locked": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "visible": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "storyId": {
+              "type": "string"
+            },
+            "threadNext": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "columns": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "inset": {
+              "$ref": "#/$defs/LayoutRect"
+            },
+            "wrapMode": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "layerId",
+            "bounds",
+            "locked",
+            "visible",
+            "linkId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "id": {
+              "type": "string"
+            },
+            "layerId": {
+              "type": "string"
+            },
+            "bounds": {
+              "$ref": "#/$defs/LayoutBounds"
+            },
+            "locked": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "visible": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "linkId": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "PageOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objectId",
+        "bounds",
+        "visible",
+        "locked"
+      ],
+      "properties": {
+        "objectId": {
+          "type": "string"
+        },
+        "bounds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayoutBounds"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "visible": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "locked": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ParentPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "width",
+        "height",
+        "layerIds",
+        "layers",
+        "frames"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "layerIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Layer"
+          }
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Frame"
+          }
+        }
+      }
+    },
+    "Page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "spreadId",
+        "parentPageId",
+        "width",
+        "height",
+        "margins",
+        "columns",
+        "guides",
+        "layerIds",
+        "layers",
+        "frames",
+        "overrides"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "spreadId": {
+          "type": "string"
+        },
+        "parentPageId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "margins": {
+          "$ref": "#/$defs/PageMargins"
+        },
+        "columns": {
+          "$ref": "#/$defs/PageColumns"
+        },
+        "guides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutRect"
+          }
+        },
+        "layerIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Layer"
+          }
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Frame"
+          }
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageOverride"
+          }
+        }
+      }
+    },
+    "Spread": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "pageIds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pageIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "LayoutDrawingChild": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle",
+        "content"
+      ],
+      "properties": {
+        "handle": {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        "content": {
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json"
+        }
+      }
+    },
+    "ParagraphStylePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CharacterStylePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ParentPagePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SpreadPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TextStoryPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content"
+      ],
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ImageLinkPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "PageFrameAdded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frame",
+        "index",
+        "layer_id"
+      ],
+      "properties": {
+        "frame": {
+          "$ref": "#/$defs/Frame"
+        },
+        "index": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layer_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "FramePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height",
+        "fill",
+        "stroke",
+        "wrap_mode",
+        "columns"
+      ],
+      "properties": {
+        "x": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "y": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stroke": {
+          "anyOf": [
+            {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wrap_mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "columns": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "PageFramePatched": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frame_id",
+        "patch"
+      ],
+      "properties": {
+        "frame_id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/FramePatch"
+        }
+      }
+    },
+    "PagePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "width",
+        "height",
+        "margin_top",
+        "margin_right",
+        "margin_bottom",
+        "margin_left",
+        "columns_count",
+        "columns_gutter",
+        "frame_added",
+        "frame_removed",
+        "frame_patched"
+      ],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "margin_top": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "margin_right": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "margin_bottom": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "margin_left": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "columns_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "columns_gutter": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frame_added": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PageFrameAdded"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frame_removed": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frame_patched": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PageFramePatched"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LayoutPagePatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/PagePatch"
+        }
+      }
+    },
+    "LayoutPagesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Page"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutPagePatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LayoutStoryPatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/TextStoryPatch"
+        }
+      }
+    },
+    "LayoutStoriesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TextStory"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutStoryPatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LayoutLinkPatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ImageLinkPatch"
+        }
+      }
+    },
+    "LayoutLinksDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ImageLink"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutLinkPatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LayoutParagraphStylePatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ParagraphStylePatch"
+        }
+      }
+    },
+    "LayoutParagraphStylesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ParagraphStyle"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutParagraphStylePatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LayoutCharacterStylePatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/CharacterStylePatch"
+        }
+      }
+    },
+    "LayoutCharacterStylesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacterStyle"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutCharacterStylePatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LayoutParentPagePatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ParentPagePatch"
+        }
+      }
+    },
+    "LayoutParentPagesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ParentPage"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutParentPagePatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LayoutSpreadPatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/SpreadPatch"
+        }
+      }
+    },
+    "LayoutSpreadsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Spread"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutSpreadPatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

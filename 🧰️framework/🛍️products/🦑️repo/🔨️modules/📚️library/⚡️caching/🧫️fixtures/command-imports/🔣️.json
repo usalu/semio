@@ -1,8 +1,8 @@
 {
   "entry": "📜️script.ts",
   "files": {
-    "📜️script.ts": "import type { Missing } from './absent-type.ts';\nimport { type Other } from './absent-named-type.ts';\nexport type { Exported } from './absent-export-type.ts';\nexport { type Named } from './named-export-type.ts';\nimport type Alias = require('./absent-alias.cjs');\ntype Dynamic = import('./absent-dynamic-type.ts').Value;\nimport { value } from './🟦️.ts';\nimport data from './🔣️.json';\nimport './side-effect.ts';\nexport const result = value + data.value + require('./common.cjs').value;\nexport const lazy = () => import('./lazy.ts');\n// import './absent-comment.ts';\n",
-    "🟦️.ts": "export { value } from './value.ts';\n",
+    "📜️script.ts": "import type { Missing } from './absent-type.ts';\nimport { type Other } from './absent-named-type.ts';\nexport type { Exported } from './absent-export-type.ts';\nexport { type Named } from './named-export-type.ts';\nimport type Alias = require('./absent-alias.cjs');\ntype Dynamic = import('./absent-dynamic-type.ts').Value;\nimport { value } from './🟦️';\nimport data from './🔣️.json';\nimport './side-effect.ts';\nexport const result = value + data.value + require('./common.cjs').value;\nexport const lazy = () => import('./lazy.ts');\n// import './absent-comment.ts';\n",
+    "🟦️.ts": "export { value } from './value';\n",
     "value.ts": "export const value = 2;\n",
     "side-effect.ts": "globalThis.fixtureLoaded = true;\n",
     "common.cjs": "exports.value = 5;\n",

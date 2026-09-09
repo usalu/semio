@@ -1,15 +1,11 @@
 syntax = "proto3";
-// 🧬️ SemioObjectArtifact schema — real facet mirror of the Rust `🦀️.rs` sibling.
-package semio.s_stdio_semio_object.artifact;
-
-message ArtifactChildHandle {
-  string child_id = 1;
-  string target = 2;
-}
+package semio.s.stdio.semio.v1.object.artifact;
+import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message SemioObjectArtifact {
   string schema = 1;
-  bytes transform_wire = 2;
-  ArtifactChildHandle brep = 3;
-  ArtifactChildHandle mesh = 4;
-  ArtifactChildHandle properties = 5;
+  semio.s.stdio.semio.v1.base.geometry.SemioTransform transform = 2;
+  semio.os.store.ArtifactChild brep = 3;
+  semio.os.store.ArtifactChild mesh = 4;
+  semio.os.store.ArtifactChild properties = 5;
 }

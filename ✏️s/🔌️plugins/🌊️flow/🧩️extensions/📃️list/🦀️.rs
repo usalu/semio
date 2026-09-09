@@ -44,7 +44,7 @@ impl Operator for Get {
         let index = read_number(input, "index")? as usize;
         let wrap = read_bool(input, "wrap").unwrap_or(false);
         let count = read_number(input, "count").unwrap_or(1.0).max(1.0) as usize;
-        let indices = list_indices(&list);
+        let indices = list_indices(list);
         if indices.is_empty() {
             return Err(EvalError::InvalidInput("empty list".into()));
         }
@@ -85,7 +85,7 @@ impl Operator for Append {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
-        let next = list_indices(&list).len();
+        let next = list_indices(list).len();
         Ok(channel_output("list", list.clone().insert(next.to_string(), value)))
     }
 }
@@ -98,7 +98,7 @@ pub struct Size;
 impl Operator for Size {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
-        Ok(channel_output("count", number_dictionary(list_indices(&list).len() as f64)))
+        Ok(channel_output("count", number_dictionary(list_indices(list).len() as f64)))
     }
 }
 // #endregion 🔖️Size
@@ -111,7 +111,7 @@ impl Operator for Remove {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let index = read_number(input, "index")? as usize;
-        Ok(channel_output("list", remove_list_index(&list, index)))
+        Ok(channel_output("list", remove_list_index(list, index)))
     }
 }
 // #endregion 🔖️Remove
@@ -141,7 +141,7 @@ pub struct Reverse;
 impl Operator for Reverse {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
-        let indices = list_indices(&list);
+        let indices = list_indices(list);
         let mut out = Dictionary::with_schema("list");
         for (next, index) in indices.into_iter().rev().enumerate() {
             if let Some(value) = list.get(&index.to_string()) {

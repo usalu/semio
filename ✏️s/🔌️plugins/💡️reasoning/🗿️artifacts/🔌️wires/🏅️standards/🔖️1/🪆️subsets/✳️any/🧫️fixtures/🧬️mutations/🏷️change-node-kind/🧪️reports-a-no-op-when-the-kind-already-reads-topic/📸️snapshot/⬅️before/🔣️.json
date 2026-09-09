@@ -29,7 +29,7 @@
   "content": {
     "childId": "wires-content-kind-no-op-fixture",
     "target": {
-      "artifactId": "wires-content",
+      "artifactId": "wires-content-kind-no-op-fixture",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

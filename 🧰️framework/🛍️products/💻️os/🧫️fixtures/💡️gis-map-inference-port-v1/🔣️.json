@@ -48,7 +48,15 @@
       "cases": ["absent-authority-refused", "sealed-request-proof-replacement"],
       "openingCode": "inference.denied",
       "blockedOpeningCode": "inference.capacity",
-      "successorRoutes": []
+      "successorRoutes": [],
+      "physicalReopen": {
+        "oldClosed": true,
+        "absentBeforeReopen": true,
+        "differentOwner": true,
+        "differentClient": true,
+        "openingOutcome": "opened",
+        "successorOwnsFreshClient": true
+      }
     },
     "successorProof": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
     "unknownPhase": "indeterminate",

@@ -1,10 +1,11 @@
 syntax = "proto3";
-// 🔺️ SemioObjectDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
-package semio.s_stdio_semio_object.diff;
-
+package semio.s.stdio.semio.v1.object.diff;
+import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+message ChildChange { oneof operation { semio.os.store.ArtifactChild value = 1; bool clear = 2; } }
 message SemioObjectDiff {
-  bool transform_touched = 1;
-  bool brep_touched = 2;
-  bool mesh_touched = 3;
-  bool properties_touched = 4;
+  semio.s.stdio.semio.v1.base.geometry.SemioTransform transform = 1;
+  ChildChange brep = 2;
+  ChildChange mesh = 3;
+  ChildChange properties = 4;
 }

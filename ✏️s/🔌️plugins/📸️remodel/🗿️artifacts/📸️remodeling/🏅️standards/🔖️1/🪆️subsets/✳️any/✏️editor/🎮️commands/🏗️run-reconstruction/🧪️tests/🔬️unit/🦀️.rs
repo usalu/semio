@@ -8,13 +8,13 @@ use semio_framework_plugin::{ArtifactEditor, InvocationResult, PluginApp};
 #[test]
 fn raster_asset_progress_layout_matches_neutral_budget() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️inline-layout/🔣️.json")).expect("neutral raster progress layout fixture");
-    let payload: crate::mutations::CreateAsset = serde_json::from_value(fixture["mutation"].clone()).expect("independent asset JSON decoder");
-    let progress = RasterAssetProgress::Mutation(create_asset(payload.key, payload.asset).into());
-    let mutation: &RemodelingMutation = match &progress {
-        RasterAssetProgress::Mutation(mutation) => mutation,
+    let payload: CreateAsset = serde_json::from_value(fixture["mutation"].clone()).expect("independent asset JSON decoder");
+    let progress = RasterAssetProgress::CreateAsset(payload);
+    let mutation = match progress {
+        RasterAssetProgress::CreateAsset(mutation) => RemodelingMutation::CreateAsset(mutation),
         _ => panic!("asset mutation progress"),
     };
-    let actual: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(mutation)).expect("first-party mutation JSON");
+    let actual: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(&mutation)).expect("first-party mutation JSON");
     assert_eq!(actual, fixture["mutation"]);
     let inline_bytes = size_of::<RasterAssetProgress>();
     eprintln!("[DEBUG] Raster asset progress inline bytes={inline_bytes}");

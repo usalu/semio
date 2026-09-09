@@ -119,8 +119,13 @@ fn selectable_item(id: impl AsRef<str>, label: impl AsRef<str>, icon: &str, acti
     .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document action admission failed"))
 }
 
-fn flag_args(entity: &str, id: &str, flag: &str) -> UiAssemblyResult<UiValue> {
-    ui_value_map([("entity", ui_value_text(entity)?), ("flag", ui_value_text(flag)?), ("ids", ui_value_list([ui_value_text(id)?])?), ("value", ui_value_bool(true))])
+/// 🔁️ One inline row toggle's `setSelectionFlag` args. `value` is the flag state the click ASKS FOR —
+/// always the inverse of the row's current one, the same negation the context menu (`!all_hidden`) and
+/// the inspection panel (`!pressed`) already carry. A hardcoded `true` here made "Show"/"Unlock"
+/// re-apply the state the row was already in, so an outliner-hidden object could never be un-hidden
+/// from the row that hid it.
+fn flag_args(entity: &str, id: &str, flag: &str, value: bool) -> UiAssemblyResult<UiValue> {
+    ui_value_map([("entity", ui_value_text(entity)?), ("flag", ui_value_text(flag)?), ("ids", ui_value_list([ui_value_text(id)?])?), ("value", ui_value_bool(value))])
 }
 
 fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity: &str, id: &str) -> UiAssemblyResult<[RowAction; 2]> {
@@ -128,13 +133,13 @@ fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity
         RowAction {
             icon: UiText::try_from_str(if hidden { "eye-off" } else { "eye" }).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d visibility icon admission failed"))?,
             label: Some(ui_label(if hidden { labels.show.as_str() } else { labels.hide.as_str() })?),
-            action: binding(action("setSelectionFlag", Some(flag_args(entity, id, "hidden")?)))?,
+            action: binding(action("setSelectionFlag", Some(flag_args(entity, id, "hidden", !hidden)?)))?,
             placement: RowActionPlacement::Row,
         },
         RowAction {
             icon: UiText::try_from_str(if locked { "lock" } else { "lock-open" }).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d lock icon admission failed"))?,
             label: Some(ui_label(if locked { labels.unlock.as_str() } else { labels.lock.as_str() })?),
-            action: binding(action("setSelectionFlag", Some(flag_args(entity, id, "locked")?)))?,
+            action: binding(action("setSelectionFlag", Some(flag_args(entity, id, "locked", !locked)?)))?,
             placement: RowActionPlacement::Row,
         },
     ])

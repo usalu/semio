@@ -7,13 +7,9 @@
   "required": [
     "schema",
     "id",
-    "objects",
-    "buildingObjects",
-    "energyObjects",
-    "structureClassicObjects",
+    "drawings",
     "referencesByModelDefinitionId",
-    "nodes",
-    "activeModelDefinitionId"
+    "nodes"
   ],
   "properties": {
     "schema": {
@@ -24,33 +20,33 @@
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "objects": {
-      "type": "array",
-      "items": {
-        "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadObject"
-      },
-      "x-semio-state": "artifact"
+    "shapeModel": {
+      "$ref": "#/$defs/CadModelChild",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
-    "buildingObjects": {
-      "type": "array",
-      "items": {
-        "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadObject"
-      },
-      "x-semio-state": "artifact"
+    "buildingModel": {
+      "$ref": "#/$defs/CadModelChild",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
-    "energyObjects": {
-      "type": "array",
-      "items": {
-        "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadObject"
-      },
-      "x-semio-state": "artifact"
+    "energyModel": {
+      "$ref": "#/$defs/CadModelChild",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
-    "structureClassicObjects": {
+    "structureClassicModel": {
+      "$ref": "#/$defs/CadModelChild",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
+    },
+    "drawings": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadObject"
+        "$ref": "#/$defs/CadDrawingChild"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
     "referencesByModelDefinitionId": {
       "type": "object",
@@ -65,26 +61,70 @@
         "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadNode"
       },
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "CadModelChild": {
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "model"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
     },
-    "shapeGeometry": {
-      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadGeometry",
-      "x-semio-state": "artifact"
-    },
-    "buildingGeometry": {
-      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadGeometry",
-      "x-semio-state": "artifact"
-    },
-    "energyGeometry": {
-      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadGeometry",
-      "x-semio-state": "artifact"
-    },
-    "structureClassicGeometry": {
-      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadGeometry",
-      "x-semio-state": "artifact"
-    },
-    "activeModelDefinitionId": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "CadDrawingChild": {
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "drawing"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

@@ -35,6 +35,10 @@ semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
+# 🔺️ `conversion-mesh` mounts `s.stdio.semio@v1/mesh`'s own tested per-format bridges
+# (`SemioMeshTo{Stl,Obj,Ply,Gltf,Las,Dwg}` and their inverses), which every 🚪️io mesh leaf composes
+# instead of re-deriving a file grammar — ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-mesh"] }
 semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }
@@ -50,3 +54,27 @@ semio-framework-ui-styling = { workspace = true, optional = true }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+# 🔬️ Headless example-geometry harness (`[[test]] example-geometry`): the flow host + the two
+# packaged flow extensions whose operators every bundled example's `neuron-kind` chain resolves to.
+# Test-only — the artifact crate itself never links a geometry kernel.
+semio-framework-os-flow = { workspace = true }
+semio-s-plugin-flow-extension-brep = { workspace = true, default-features = false }
+semio-s-plugin-flow-extension-math = { workspace = true, default-features = false }
+# ⚖️ Third-party differential oracle for the same harness — `parry3d` recomputes every tessellated
+# example's volume, centre of mass, and bounding box from the triangle soup our kernel emitted, so a
+# committed expected-stat is never only our own arithmetic. Test-only, never a `[dependencies]`
+# entry, never reachable from a production target (same standing as `semio-framework-3d`'s).
+parry3d = "0.17"
+
+# 🧪️ Emoji file names never compile as an implicit `tests/` target, so the example-geometry lane is
+# declared with an explicit ASCII name and a package-root-relative path.
+[[test]]
+name = "example-geometry"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️geometry/🦀️.rs"
+
+# 🔁️ The 🚪️io round-trip lane: one committed unit cube through all nine format leaves, with
+# `parry3d` as the third-party check on every recovered mesh. Its per-format cases live beside the
+# leaves they exercise; this entry point only mounts them (see that file's own doc comment).
+[[test]]
+name = "io-round-trip"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🦀️.rs"

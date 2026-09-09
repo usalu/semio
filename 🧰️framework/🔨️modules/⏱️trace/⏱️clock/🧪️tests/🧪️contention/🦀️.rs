@@ -122,3 +122,59 @@ fn microsecond_telemetry_exact_verdict_survives_saturation_and_invalid_clock() {
     eprintln!("[DEBUG] exact callback verdict survives full/contended telemetry and rejects backward/missing clocks");
 }
 //#endregion 🔒️Contention
+
+//#region 📒️SustainedOverrun
+#[test]
+fn microsecond_sustained_overrun_ledger_quarantines_only_attributable_steps() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
+    assert_eq!(fixture["sustainedOverrunSteps"].as_u64().unwrap(), u64::from(SUSTAINED_OVERRUN_QUARANTINE_STEPS));
+    let operation = allocate_operation_id();
+    let generation = Generation(83);
+    for law in fixture["overruns"].as_array().unwrap() {
+        let mut ledger = StepOverrunLedger::new();
+        let mut terminal_index = None;
+        for (index, elapsed) in law["elapsedUs"].as_array().unwrap().iter().enumerate() {
+            let elapsed_us = elapsed.as_u64().unwrap();
+            let guard = Watchdog { site: "test.sustained-overrun", operation, generation, stage: InteractiveStage::InteractiveStep, start_us: Some(0), finished: true };
+            let verdict = guard.verdict_at(Some(elapsed_us));
+            assert_eq!(verdict.is_fault(), interactive_step_contract_violated(elapsed_us), "one sample stays a measurement");
+            let quarantine = ledger.admit(&verdict);
+            if quarantine.is_terminal() && terminal_index.is_none() {
+                terminal_index = Some(index);
+            }
+            assert!(
+                !quarantine.is_terminal() || matches!(quarantine, StepQuarantine::SustainedOverrun { consecutive } if consecutive >= SUSTAINED_OVERRUN_QUARANTINE_STEPS),
+                "only a sustained run may quarantine a measured step"
+            );
+        }
+        assert_eq!(terminal_index.map(|index| index as u64), law["terminalIndex"].as_u64(), "{}", law["id"]);
+        assert_eq!(u64::from(ledger.consecutive_overruns()), law["consecutive"].as_u64().unwrap(), "{}", law["id"]);
+        assert_eq!(u64::from(ledger.longest_overrun_run()), law["longestRun"].as_u64().unwrap(), "{}", law["id"]);
+        assert_eq!(u64::from(ledger.total_overruns()), law["total"].as_u64().unwrap(), "{}", law["id"]);
+        assert_eq!(ledger.worst_elapsed_us(), law["worstElapsedUs"].as_u64().unwrap(), "{}", law["id"]);
+        eprintln!(
+            "[DEBUG] sustained overrun ledger {} terminal_index={terminal_index:?} consecutive={} longest={} total={} worst={}us",
+            law["id"],
+            ledger.consecutive_overruns(),
+            ledger.longest_overrun_run(),
+            ledger.total_overruns(),
+            ledger.worst_elapsed_us()
+        );
+    }
+}
+
+#[test]
+fn microsecond_unusable_clock_reading_stays_terminal_and_resets_the_overrun_run() {
+    let operation = allocate_operation_id();
+    let generation = Generation(84);
+    let guard = Watchdog { site: "test.sustained-overrun.clock", operation, generation, stage: InteractiveStage::InteractiveStep, start_us: Some(100), finished: true };
+    let mut ledger = StepOverrunLedger::new();
+    assert!(matches!(ledger.admit(&guard.verdict_at(Some(9_000))), StepQuarantine::RecordedOverrun { consecutive: 1 }));
+    assert!(matches!(ledger.admit(&guard.verdict_at(None)), StepQuarantine::ClockFault(CallbackClockFault::Missing)));
+    assert_eq!(ledger.consecutive_overruns(), 0, "an unmeasured step cannot count toward an attribution it never supported");
+    assert!(matches!(ledger.admit(&guard.verdict_at(Some(99))), StepQuarantine::ClockFault(CallbackClockFault::Backward)));
+    let (recorded, quarantines) = step_overrun_counts();
+    assert!(recorded > 0);
+    eprintln!("[DEBUG] process overrun counters recorded={recorded} sustained_quarantines={quarantines}");
+}
+//#endregion 📒️SustainedOverrun

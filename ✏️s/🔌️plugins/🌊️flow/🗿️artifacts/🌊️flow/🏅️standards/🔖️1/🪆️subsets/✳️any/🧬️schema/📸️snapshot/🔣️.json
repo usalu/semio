@@ -4,42 +4,15 @@
   "title": "FlowSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema",
-    "camera",
-    "widgets",
-    "synapses",
-    "layout"
-  ],
+  "required": ["schema", "content"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "camera": {
-      "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/CameraJson",
-      "x-semio-state": "artifact"
-    },
-    "widgets": {
-      "type": "array",
-      "items": {
-        "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/Widget"
-      },
-      "x-semio-state": "artifact"
-    },
-    "synapses": {
-      "type": "array",
-      "items": {
-        "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/SynapseSpec"
-      },
-      "x-semio-state": "artifact"
-    },
-    "layout": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/WidgetLayout"
-      },
-      "x-semio-state": "artifact"
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "content": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio",
+      "x-semio-child-standard": "v1",
+      "x-semio-child-subset": "flow"
     }
   }
 }

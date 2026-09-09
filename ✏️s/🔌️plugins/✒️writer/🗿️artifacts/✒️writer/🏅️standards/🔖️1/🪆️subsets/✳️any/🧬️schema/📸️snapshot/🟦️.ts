@@ -10,7 +10,7 @@ export interface WriterSnapshot {
   languageId: string;
   /** @state artifact */
   uri: string;
-  /** @state artifact */
+  /** @state artifact @child kind=s.stdio.semio */
   document: ArtifactChild;
 }
 

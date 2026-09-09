@@ -1,4 +1,3 @@
-
 use super::*;
 
 async fn sample_row(name: &str, age: i64, tags: Vec<&str>) -> Value {

@@ -28,7 +28,7 @@ async fn descriptor_is_versioned_and_cacheable() {
 
 #[semio_framework_async_macros::async_test]
 async fn shared_vectors_execute_the_rust_leaf() {
-    let contract: Contract = pack::from_json_str(include_str!("../../🧪️contract/🔣️.json")).unwrap();
+    let contract: Contract = pack::from_json_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for vector in contract.vectors {
         let result = if vector.context.valid {
             let policy = super::super::super::geometry_core::policy();

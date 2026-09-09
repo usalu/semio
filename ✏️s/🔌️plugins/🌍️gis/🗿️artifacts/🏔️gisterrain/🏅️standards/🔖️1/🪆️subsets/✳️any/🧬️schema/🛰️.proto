@@ -1,12 +1,8 @@
 syntax = "proto3";
-package semio.s.gis.gisterrain.artifact;
-
-// 🧬️ GIS terrain artifact schema — every field with its state class.
-
+package semio.s.gis.gisterrain;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message GisTerrainArtifact {
-  // @state artifact
   double exaggeration = 1;
-  // @state artifact
   string imported_features_json = 2;
-  // @state config
+  optional semio.os.store.ArtifactChild mesh = 3;
 }

@@ -1,8 +1,8 @@
 # Current Artifact Field Parity
 
-The latest full report completed through Bun/Nx (`artifact-field-parity-note-11.log`, exit 0, 36.6 seconds). Its independent TypeScript AST/Ajv/fast-glob oracle passed and inspected 192 standard/subset owners. Reporting succeeds while findings remain; this is not a passing enforcement result.
+The previous full report completed through Bun/Nx (`artifact-field-parity-note-11.log`, exit 0, 36.6 seconds). Its independent TypeScript AST/Ajv/fast-glob oracle passed and inspected 192 standard/subset owners. Reporting succeeds while findings remain; this is not a passing enforcement result.
 
-There are now 25 mismatching representations, down from the last completed 36-finding report. Note, Jack and DAG have no field-set mismatch in this completed report. Remaining families are Flow, GIS Map/Terrain, Presentation, Architect Program, Layout, CAD and Procedure.
+That report found 25 mismatching representations, down from the last completed 36-finding report. Note, Jack and DAG have no field-set mismatch in this completed report. Remaining families are Flow, GIS Map/Terrain, Presentation, Architect Program, Layout, CAD and Procedure.
 
 ## Exact Findings
 
@@ -41,3 +41,7 @@ GIS Map's snapshot has drawing/value children beyond its artifact DTO; those chi
 ## OS Declaration Gate
 
 The separate OS ownership enforcement target completed (`os-owner-enforce-current-1.log`, exit 0, 5.1 seconds): 11 ownership vectors, four nested-schema vectors, three command-source vectors, and 104 artifact contract facets were checked, with zero misplaced declarations under that policy. This confirms the policy's OS preference/host-control checks. It does not resolve the 25 field mismatches above or prove that every native `[state(artifact)]` annotation is semantically correct; Flow camera is the concrete counterexample still requiring migration.
+
+## Procedure Checkpoint
+
+The newer `artifact-field-parity-procedure-1.log` completed with exit 0 in report mode (34.6 seconds): 192 owners inspected and 22 remaining mismatching representations. All three Procedure discrepancies are resolved; the earlier 25-finding list above is historical for those Procedure entries. Flow, GIS Map/Terrain, Presentation, Architect Program, Layout and CAD remain. This report is not a zero-findings enforcement result.

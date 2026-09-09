@@ -16,6 +16,6 @@ pub struct RunStage {
 
 /// ▶️ Starts the requested stage as a fresh generation on the resumable pipeline.
 pub fn handle(payload: &RunStage, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    run_reconstruction::begin_stage_reconstruction(doc, &payload.stage)
+    Ok(run_reconstruction::begin_stage_reconstruction(doc, &payload.stage))
 }
 //#endregion 🔖️RunStage

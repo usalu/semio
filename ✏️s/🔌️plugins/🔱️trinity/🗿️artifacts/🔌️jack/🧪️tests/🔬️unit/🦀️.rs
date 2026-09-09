@@ -1,3 +1,4 @@
+use crate::JackWorkingScene;
 use super::*;
 
 trait JackChildOwnerOracle {
@@ -25,18 +26,21 @@ async fn working_scene_belongs_to_the_exact_content_child() {
 
     assert_eq!(observed, SerdeJsonJackChildOwnerOracle::expected());
 }
+
+#[semio_framework_async_macros::async_test]
+async fn jack_child_restore_projection_accepts_the_exact_owned_content() {
+    let snapshot = JackSnapshot::default();
+    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Jack content child");
+    assert_eq!(projection.len(), 1);
+    assert!(projection.admits_member("content", &snapshot.content.target));
+    assert_eq!(snapshot.content.child_id, snapshot.content.target.artifact_id);
+}
 use crate::standards::v1::subsets::any::schema::mutations::text::{dispatch_trinity_graph_mutations, validate_trinity_graph_operation};
 use crate::standards::v1::subsets::any::schema::mutations::{create_edge, create_node};
 use store::ArtifactCommand;
 
 fn mini_fixture() -> JackSnapshot {
-    JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "mini".into(),
-        Some("nakagin".into()),
-        Manifest::nakagin_default(),
-        Camera::default(),
-        vec![
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -67,8 +71,7 @@ fn mini_fixture() -> JackSnapshot {
                 properties: PropertyBag::new(),
                 ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
             },
-        ],
-        vec![Edge {
+        ], edges: vec![Edge {
             id: "e1".into(),
             kind: "Connection".into(),
             source: "root@out-a".into(),
@@ -79,9 +82,7 @@ fn mini_fixture() -> JackSnapshot {
                 p.insert("v".into(), PropertyValue::Number(-0.6));
                 p
             },
-        }],
-        Some("root".into()),
-    )
+        }] }, Some("root".into()))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -134,7 +135,7 @@ async fn graph_op_dispatch_validates_create_edge_batch_incrementally() {
     while nodes.len() < 9 {
         nodes.push(Node { id: format!("pad-{}", nodes.len()), kind: "Piece".into(), name: format!("pad-{}", nodes.len()), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] });
     }
-    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
+    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges() }, fixture.root_node_id.clone());
     let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", fixture)).await.expect("valid artifact store");
     dispatch_trinity_graph_mutations(
         &mut store,
@@ -188,14 +189,14 @@ async fn from_json_rejects_wrong_schema() {
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_manifest_errors_when_missing_and_empty() {
-    let mut fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "x".into(), None, Manifest::default(), Camera::default(), vec![], vec![], None);
+    let mut fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "x".into(), None, Manifest::default(), Camera::default(), JackWorkingScene { nodes: vec![], edges: vec![] }, None);
     let err = fixture.resolve_manifest().expect_err("missing manifest");
     assert!(matches!(err, TrinityRamError::ManifestMissing));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_manifest_errors_on_unknown_id() {
-    let mut fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "x".into(), Some("nope".into()), Manifest::default(), Camera::default(), vec![], vec![], None);
+    let mut fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "x".into(), Some("nope".into()), Manifest::default(), Camera::default(), JackWorkingScene { nodes: vec![], edges: vec![] }, None);
     let err = fixture.resolve_manifest().expect_err("unknown manifest id");
     assert!(err.to_string().contains("unknown manifest id nope"));
 }
@@ -205,7 +206,7 @@ async fn graph_from_fixture_rejects_port_kind_not_declared_on_node_kind() {
     let fixture = mini_fixture();
     let mut nodes = fixture.nodes();
     nodes[0].ports.push(Port { id: "bad".into(), kind: "core circular bottom".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
-    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
+    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges() }, fixture.root_node_id.clone());
     let err = Graph::from_fixture(fixture).expect_err("undeclared port kind");
     assert!(matches!(err, TrinityRamError::PortKindNotDeclaredOnFixture { .. }));
     assert!(err.to_string().contains("root"));

@@ -8,7 +8,7 @@ export interface WiresDiff {
   artifact: WiresArtifact | null;
   /** @state artifact */
   wiresFixture: DslValue;
-  /** @state artifact */
+  /** @state artifact @child kind=s.stdio.semio */
   content: ArtifactChild | null;
   /** @state artifact */
   meta: DslValue;

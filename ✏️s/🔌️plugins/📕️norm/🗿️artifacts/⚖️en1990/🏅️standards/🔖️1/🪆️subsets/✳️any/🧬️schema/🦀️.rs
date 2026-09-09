@@ -5,7 +5,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full En1990 artifact state across the artifact and presence lanes. `q_k` mirrors
-/// `En1990Snapshot`'s composed `s.stdio.semio.table` child slot (ticket
+/// `En1990Snapshot`'s composed `s.stdio.semio`/`table` child slot (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — `to_snapshot`/`from_snapshot` copy the
 /// handle across verbatim, same as `➗️mathematical`'s `EquationArtifact`.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -17,7 +17,7 @@ pub struct En1990Artifact {
     #[state(artifact)]
     pub g_k: f64,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
     pub q_k: En1990QkChild,
     #[state(artifact)]

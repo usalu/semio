@@ -1,0 +1,1144 @@
+{
+  "snapshotCases": [
+    {
+      "input": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "locale": "de"
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "zoom": 2
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "wrong-id",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "object"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          },
+          "content": {}
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.kit",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": null,
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "valid": false
+    }
+  ],
+  "diffCases": [
+    {
+      "input": {},
+      "valid": true
+    },
+    {
+      "input": {
+        "transform": {
+          "translation": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "brep": null
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "mesh": {
+          "childId": "mesh-2",
+          "target": {
+            "artifactId": "mesh-2",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "locale": "en"
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "transform": null
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "mesh": {
+          "childId": "mesh-2",
+          "target": {
+            "artifactId": "mesh-2",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "mesh": {
+          "childId": "wrong",
+          "target": {
+            "artifactId": "mesh-2",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      },
+      "valid": false
+    }
+  ],
+  "patchCases": [
+    {
+      "before": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "diff": {},
+      "patch": [],
+      "after": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      }
+    },
+    {
+      "before": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "diff": {
+        "transform": {
+          "translation": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        }
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/transform",
+          "value": {
+            "translation": {
+              "x": 4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        }
+      ],
+      "after": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      }
+    },
+    {
+      "before": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "diff": {
+        "brep": null
+      },
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/brep"
+        }
+      ],
+      "after": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      }
+    },
+    {
+      "before": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-1",
+          "target": {
+            "artifactId": "mesh-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "diff": {
+        "mesh": {
+          "childId": "mesh-2",
+          "target": {
+            "artifactId": "mesh-2",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/mesh",
+          "value": {
+            "childId": "mesh-2",
+            "target": {
+              "artifactId": "mesh-2",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            }
+          }
+        }
+      ],
+      "after": {
+        "schema": "stdio.semio.object",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "brep": {
+          "childId": "brep-1",
+          "target": {
+            "artifactId": "brep-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        },
+        "mesh": {
+          "childId": "mesh-2",
+          "target": {
+            "artifactId": "mesh-2",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        },
+        "properties": {
+          "childId": "props-1",
+          "target": {
+            "artifactId": "props-1",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

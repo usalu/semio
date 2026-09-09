@@ -49,7 +49,10 @@ fn ui_map_value(values: impl IntoIterator<Item = (&'static str, semio_framework_
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-fn catalog_entry_label(entry: &dsl::DslValue) -> String {
+/// 🏷️ One catalog entry's display name — `label`, else `name`, else its `id`. Shared with the
+/// manifest's `addObjectKind`/"Add Object" dialog option set (`✏️editor/🦀️.rs`), which must read
+/// exactly the same catalog rows this panel renders.
+pub(crate) fn catalog_entry_label(entry: &dsl::DslValue) -> String {
     entry.get("label").and_then(|value| value.as_str()).or_else(|| entry.get("name").and_then(|value| value.as_str())).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 

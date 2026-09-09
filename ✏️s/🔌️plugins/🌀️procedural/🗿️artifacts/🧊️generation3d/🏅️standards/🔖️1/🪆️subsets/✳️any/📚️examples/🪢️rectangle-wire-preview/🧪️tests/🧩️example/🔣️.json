@@ -1,0 +1,36 @@
+{
+  "schema": "s.procedural.generation3d.example-geometry/v1",
+  "example": "rectangle-wire-preview",
+  "opChain": [
+    "brep.curve.rectangle"
+  ],
+  "preview": {
+    "node": "rect",
+    "channel": "wire",
+    "kind": "wire"
+  },
+  "tessellationTolerance": 0.05,
+  "expect": {
+    "minTriangles": 0,
+    "closed": false,
+    "volume": null,
+    "volumeTolerance": 0.0,
+    "volumeSource": "edge-only preview: a wire has no volume",
+    "edgePerimeter": 7.0,
+    "edgePerimeterTolerance": 1e-06,
+    "boundingBoxMin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "boundingBoxMax": [
+      2.0,
+      1.5,
+      0.0
+    ],
+    "boundingBoxTolerance": 1e-06,
+    "kernelVolumeNode": null,
+    "kernelVolumeChannel": null
+  },
+  "kernelStatus": "green"
+}

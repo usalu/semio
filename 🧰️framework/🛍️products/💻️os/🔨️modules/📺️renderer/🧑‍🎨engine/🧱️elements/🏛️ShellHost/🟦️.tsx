@@ -10,8 +10,9 @@
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, runDocumentOpeningAttemptV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
-import { runArtifactCreationReadyOpeningV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
+import { createArtifactCreationCatalogMountV1, runArtifactCreationReadyOpeningV1, type ArtifactCreationCatalogMountV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1, type DirectorySessionRefreshV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
+import { directoryAdministrationCommandAllowedV1 } from "../../../../📇️directory/🧬️schema/🟦️.ts";
 import { BrowserBrokerPortClientV1 } from "../../../../📇️directory/🪪️session-refresh/🌐️broker-port/🟦️.ts";
 import { SessionAuthorityNotice } from "../../../../📇️directory/🪪️session-refresh/🪪️notice/🟦️.tsx";
 import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "./🗨️dialog-origin/🎥️tutorial/🟦️.ts";
@@ -359,7 +360,7 @@ import {
   wireLabel,
 } from "../🗣️Interpreter/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
-import { SpaceAdministrationPane, spaceAdministrationCapabilities, spaceAdministrationInviteRevocable, spaceAdministrationMemberRemovable, type SpaceAdministrationIntentV1 } from "../🛂️SpaceAdministration/🟦️.tsx";
+import { SpaceAdministrationPane, spaceAdministrationCapabilities, spaceAdministrationInviteRevocable, spaceAdministrationMemberRemovable, spaceAdministrationNameValid, type SpaceAdministrationIntentV1 } from "../🛂️SpaceAdministration/🟦️.tsx";
 import { BoardSessionFactoryContext, resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, type DocumentOpeningReference, type DocumentOpeningTarget } from "./🧭️opening/🟦️.ts";
 import {
@@ -1282,6 +1283,23 @@ export function spaceArtifactCreationOwnerAcceptsStatus(
     && message.ready.parentDialect.subset === retained.parentDialect.subset;
 }
 
+/** 🔄️ Admits one catalog refresh only for the exact nonterminal creation, selected catalog and live Space-index mount. */
+export function spaceArtifactCreationCatalogRefreshRequestV1(
+  owner: SpaceArtifactCreationOwnerV1 | null,
+  authority: SpaceArtifactCreationCatalogAuthorityV1 | null,
+  origin: ShellDialogOriginV1 | null,
+  message: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog-refresh-required" }>,
+): Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-creation-catalog-open" }> | null {
+  const document = origin?.document;
+  const scope = document?.scope;
+  if (owner === null || owner.ready !== null || owner.opening || authority === null || origin === null || document === null || document === undefined || scope === null || scope === undefined
+    || message.requestId !== owner.requestId || message.spaceId !== owner.spaceId || message.catalogGenerationId !== owner.expectedCatalogGenerationId
+    || authority.runtimeKey !== owner.runtimeKey || authority.clientInstanceId !== owner.clientInstanceId || authority.spaceId !== owner.spaceId || authority.catalogGenerationId !== owner.expectedCatalogGenerationId
+    || origin.sessionInstanceId !== owner.sessionInstanceId || document.runtimeKey !== owner.runtimeKey || document.clientInstanceId !== owner.clientInstanceId
+    || scope.spaceId !== owner.spaceId || scope.documentId !== S_SPACE_INDEX_DOCUMENT_ID) return null;
+  return { kind: "space-artifact-creation-catalog-open", clientInstanceId: owner.clientInstanceId, spaceId: owner.spaceId };
+}
+
 export function spaceArtifactCreationReadyOpening(
   message: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>,
 ): Readonly<Record<string, string>> | null {
@@ -1373,7 +1391,11 @@ export function reduceShellSpaceAdministrationState(
   page: DirectorySpaceAdministrationPageV1 | null,
 ): ShellSpaceAdministrationStateV1 | null {
   if (message.operationEpoch !== operationEpoch) return current;
-  if (current !== null && current.operationEpoch !== operationEpoch) return current;
+  if (current === null || current.operationEpoch !== operationEpoch || current.spaceId !== message.spaceId) return current;
+  if (message.phase === "deleted") {
+    if ((message.outcome !== "accepted" && message.outcome !== "previously-accepted") || message.receiptSha256 === undefined || !/^[0-9a-f]{64}$/u.test(message.receiptSha256) || message.receiptSha256 === "0".repeat(64)) return current;
+    return { operationEpoch, spaceId: message.spaceId, phase: "deleted", page: null, receiptSha256: message.receiptSha256 };
+  }
   if (SHELL_SPACE_ADMINISTRATION_TERMINAL.includes(message.phase)) {
     return { operationEpoch, spaceId: message.spaceId, phase: message.phase, page: null, ...(message.code === undefined ? {} : { code: message.code }) };
   }
@@ -1402,26 +1424,35 @@ export function shellSpaceAdministrationRequest(
   if (intent.kind === "close") return { kind: "directory-administration-close", operationEpoch };
   if (intent.kind === "page") return { kind: "directory-administration-refresh", operationEpoch, cursor: intent.cursor };
   const capabilities = spaceAdministrationCapabilities(state.page);
-  if (capabilities === null || state.phase !== "ready" || state.page === null || state.page.access !== "author") return null;
+  if (capabilities === null || state.phase !== "ready" || state.page === null || state.page.access !== "author" || state.page.spaceId !== state.spaceId || state.page.space.id !== state.spaceId) return null;
   if (intent.kind === "copy-invite-capability") return state.inviteCapabilityPending === true ? { kind: "directory-administration-capability-request", operationEpoch } : null;
   const spaceId = state.spaceId;
+  const submit = (command: DirectoryCommand): BackboneWorkerRequest | null => directoryAdministrationCommandAllowedV1(state.page, spaceId, command) ? { kind: "directory-administration-submit", operationEpoch, requestId, command } : null;
+  if (intent.kind === "delete-space") return submit({ kind: "delete-space", spaceId });
+  if (intent.kind === "rename-space") {
+    if (!spaceAdministrationNameValid(intent.name)) return null;
+    return submit({ kind: "rename-space", spaceId, name: intent.name });
+  }
+  if (intent.kind === "set-visibility") {
+    if (intent.visibility !== "public" && intent.visibility !== "private") return null;
+    return submit({ kind: "set-visibility", spaceId, visibility: intent.visibility });
+  }
   if (intent.kind === "set-role") {
     const row = state.page.members.rows.find((member) => member.userId === intent.userId);
-    if (!capabilities.upsertMember || row === undefined) return null;
-    return { kind: "directory-administration-submit", operationEpoch, requestId, command: { kind: "upsert-member", spaceId, email: row.email, role: intent.role } as DirectoryCommand };
+    if (row === undefined) return null;
+    return submit({ kind: "upsert-member", spaceId, email: row.email, role: intent.role });
   }
   if (intent.kind === "remove-member") {
     const row = state.page.members.rows.find((member) => member.userId === intent.userId);
     if (row === undefined || !spaceAdministrationMemberRemovable(row, capabilities)) return null;
-    return { kind: "directory-administration-submit", operationEpoch, requestId, command: { kind: "remove-member", spaceId, userId: intent.userId } as DirectoryCommand };
+    return submit({ kind: "remove-member", spaceId, userId: intent.userId });
   }
   if (intent.kind === "create-invite") {
-    if (!capabilities.createInvite) return null;
-    return { kind: "directory-administration-submit", operationEpoch, requestId, command: { kind: "create-invite", spaceId, role: intent.role, ttlSecs: SHELL_SPACE_ADMINISTRATION_INVITE_TTL_SECS } as DirectoryCommand };
+    return submit({ kind: "create-invite", spaceId, role: intent.role, ttlSecs: SHELL_SPACE_ADMINISTRATION_INVITE_TTL_SECS });
   }
   const row = state.page.invites.rows.find((invite) => invite.inviteId === intent.inviteId);
   if (row === undefined || !spaceAdministrationInviteRevocable(row, capabilities)) return null;
-  return { kind: "directory-administration-submit", operationEpoch, requestId, command: { kind: "revoke-invite", spaceId, inviteId: intent.inviteId } as DirectoryCommand };
+  return submit({ kind: "revoke-invite", spaceId, inviteId: intent.inviteId });
 }
 
 /** ⏳️ One hour: the one invite lifetime the administration pane issues, stated once here rather
@@ -1868,13 +1899,20 @@ function FrameworkOsShellInner({
    * Conflicts panel and, for a `"degraded"` outcome, a transient notice). Set once `applyRemoteMerge`
    * itself is defined, read only from inside the worker's `onmessage` closure body. */
   const applyRemoteMergeRef = useRef<(conflicts: readonly Conflict[] | null, mergeReport: MergeReport | null) => void>(() => {});
+  /** 🧯️ Same ref-forwarding idiom as {@link applyRemoteMergeRef} — `applyHostEffects`'s `notify`
+   * branch (declared ABOVE `showTransientNotice`) is the shell end of `kernel::Effect::Notify`, the
+   * one channel a plugin has for telling the user its work was refused (e.g. puzzle3d's
+   * `addBrushObject`/`acceptSuggestion` rejecting a colliding placement). Without this branch the
+   * effect reached `wireEffectToFriendly` and was dropped, so a refusal looked exactly like nothing
+   * happening. Assigned right after `showTransientNotice` itself is defined. */
+  const showTransientNoticeRef = useRef<(message: string, kind?: Severity, code?: string) => void>(() => {});
   /** 📇️ `applyHostEffects`'s new `replayShellCommand` branch (below) needs `openDocument`/
    * `openArtifactWithAppRef`, both declared LATER in this same component (after `applyHostEffects`
    * itself) — a direct reference in `applyHostEffects`'s own dependency array would be a `const`
    * temporal-dead-zone violation at the point `useCallback` evaluates that array. Same ref-forwarding
    * idiom `onActionRef`/`dispatchDirectoryEventsRef` already use: assigned as a plain statement right
    * after each real declaration, read only from inside a later callback body, never from a deps array. */
-  type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle> & { readonly background?: boolean };
+  type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle> & { readonly background?: boolean; readonly expectedCatalogGenerationId?: string };
   type PreparedArtifactOpeningTarget = OpenDocumentSessionTarget & Readonly<{ dialect: ArtifactDialect; role: AppRole }>;
   type OpenDocumentSession = {
     session: ActiveSession;
@@ -1886,6 +1924,7 @@ function FrameworkOsShellInner({
     pending: Uint8Array[];
     pendingBytes: number;
     replacements: LatestDocumentReplacementV1<Readonly<{ pack: Uint8Array; spr: Uint8Array }>>;
+    creationMount: ArtifactCreationCatalogMountV1 | null;
     ready: Promise<void>;
     resolveReady(): void;
     rejectReady(error: Error): void;
@@ -1971,6 +2010,7 @@ function FrameworkOsShellInner({
   const spaceAdministrationRef = useRef<ShellSpaceAdministrationStateV1 | null>(null);
   spaceAdministrationRef.current = spaceAdministration;
   const spaceAdministrationEpochRef = useRef(0);
+  const spaceAdministrationMessageRef = useRef(0);
   /** 💡️ Monotonic owner of the one worker-side inference port; a stale epoch's status is ignored. */
   const inferencePortEpochRef = useRef(0);
   /** 🗂️ Exact scope and runtime owner for the current inference epoch. */
@@ -2009,6 +2049,7 @@ function FrameworkOsShellInner({
   const failDocumentBackbone = useCallback((runtimeKey: string, entry: OpenDocumentSession, failure: unknown) => {
     if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
     const error = failure instanceof Error ? failure : new Error(String(failure));
+    entry.creationMount?.close(error);
     entry.rejectReady(error);
     console.error("[DEBUG] document backbone failed", error);
     closeDocumentRef.current(runtimeKey, entry.clientInstanceId);
@@ -2209,6 +2250,10 @@ function FrameworkOsShellInner({
           { clientInstanceId: retained.clientInstanceId, scope: retained.scope, instanceId: retained.sessionInstanceId, activationGeneration: retained.activationGeneration, verifiedSurfaceId: retained.verifiedSurfaceId, revision: retained.store.getRevisionSnapshot() },
           { ...message, revision: message.uiRevision },
         )) return;
+        if (entry.creationMount !== null && !entry.creationMount.accept(message.catalogGenerationId)) {
+          failDocumentBackbone(runtimeKey, entry, new Error("artifact-creation.catalog-generation-mismatch"));
+          return;
+        }
         browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { ...retained, identity: message });
         entry.resolveReady();
         const discarded = rebootstrapDiscardedSessionsRef.current.get(runtimeKey);
@@ -2278,6 +2323,29 @@ function FrameworkOsShellInner({
         if (entry?.clientInstanceId !== message.clientInstanceId || waiter?.clientInstanceId !== message.clientInstanceId) return;
         waiter.reject(new Error(`socket actor unavailable (${message.code})`));
         if (socketActorReadyRef.current.get(runtimeKey)?.clientInstanceId === message.clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
+        return;
+      }
+      if (message.kind === "space-artifact-creation-catalog-refresh-required") {
+        const owner = spaceArtifactCreationOwnersRef.current.get(message.requestId) ?? null;
+        const origin = captureDialogOrigin(shellStateRef.current.pluginRuntime.session);
+        const authority = captureSpaceArtifactCreationCatalogAuthorityV1(
+          spaceArtifactCreationCatalogRef.current,
+          spaceArtifactCreationCatalogUiRef.current,
+          origin,
+        );
+        const request = spaceArtifactCreationCatalogRefreshRequestV1(owner, authority, origin, message);
+        if (request === null) return;
+        const loading = {
+          kind: "space-artifact-creation-catalog-status",
+          clientInstanceId: request.clientInstanceId,
+          spaceId: request.spaceId,
+          phase: "loading",
+        } as const;
+        spaceArtifactCreationCatalogRef.current = null;
+        spaceArtifactCreationCatalogUiRef.current = loading;
+        setSpaceArtifactCreationCatalog(null);
+        setSpaceArtifactCreationCatalogUi(loading);
+        worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
         return;
       }
       if (message.kind === "space-artifact-creation-status") {
@@ -2372,13 +2440,16 @@ function FrameworkOsShellInner({
       if (message.kind === "directory-administration-state") {
         const epoch = spaceAdministrationEpochRef.current;
         const administrationMessage = message;
+        if (administrationMessage.operationEpoch !== epoch || worker !== backboneWorkerRef.current || administrationMessage.spaceId !== spaceAdministrationRef.current?.spaceId) return;
+        const revision = ++spaceAdministrationMessageRef.current;
+        const verificationIsCurrent = (): boolean => epoch === spaceAdministrationEpochRef.current && revision === spaceAdministrationMessageRef.current && worker === backboneWorkerRef.current;
         if (administrationMessage.canonicalJson === undefined) {
-          setSpaceAdministration((current) => reduceShellSpaceAdministrationState(current, administrationMessage, epoch, current?.page ?? null));
+          setSpaceAdministration((current) => verificationIsCurrent() ? reduceShellSpaceAdministrationState(current, administrationMessage, epoch, current?.page ?? null) : current);
           return;
         }
         void parseDirectorySpaceAdministrationPageV1(administrationMessage.canonicalJson)
-          .then((page) => setSpaceAdministration((current) => reduceShellSpaceAdministrationState(current, administrationMessage, epoch, page)))
-          .catch(() => setSpaceAdministration((current) => reduceShellSpaceAdministrationState(current, { ...administrationMessage, phase: "failed", code: "invalid" }, epoch, null)));
+          .then((page) => setSpaceAdministration((current) => verificationIsCurrent() ? reduceShellSpaceAdministrationState(current, administrationMessage, epoch, page) : current))
+          .catch(() => setSpaceAdministration((current) => verificationIsCurrent() ? reduceShellSpaceAdministrationState(current, { ...administrationMessage, phase: "failed", code: "invalid" }, epoch, null) : current));
         return;
       }
       if (message.kind === "directory-administration-capability") {
@@ -2419,6 +2490,10 @@ function FrameworkOsShellInner({
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         if (!entry || entry.clientInstanceId !== message.clientInstanceId) return;
         setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, message));
+        if (entry.creationMount !== null && message.kind !== "artifact-bootstrap-progress") {
+          failDocumentBackbone(runtimeKey, entry, new Error(message.kind === "artifact-bootstrap-failed" ? message.message : "artifact-creation.rebootstrap-required"));
+          return;
+        }
         if (message.kind === "artifact-bootstrap-failed") {
           retireBrowserActorUi(runtimeKey, "browser-actor-action: bootstrap failed");
           entry.replacements.invalidate();
@@ -2503,6 +2578,10 @@ function FrameworkOsShellInner({
             setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "snapshot-replaced", documentId: message.documentId, ...(message.scope === undefined ? {} : { scope: message.scope }) }));
           } catch (replacementError) {
             if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== message.clientInstanceId) return;
+            if (entry.creationMount !== null) {
+              failDocumentBackbone(runtimeKey, entry, replacementError);
+              return;
+            }
             entry.rejectReady(replacementError instanceof Error ? replacementError : new Error(String(replacementError)));
             setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, {
               kind: "artifact-bootstrap-failed",
@@ -2534,7 +2613,7 @@ function FrameworkOsShellInner({
     worker.addEventListener("messageerror", failBrowserActorActions);
     backboneWorkerRef.current = worker;
     return worker;
-  }, [cancelSpaceArtifactCreationsForRuntime, failDocumentBackbone, hubEnv, loadDocumentPair, receiveDocumentBackbone, retireBrowserActorUi]);
+  }, [cancelSpaceArtifactCreationsForRuntime, captureDialogOrigin, failDocumentBackbone, hubEnv, loadDocumentPair, receiveDocumentBackbone, retireBrowserActorUi]);
 
   handleDirectoryEventPageRef.current = (message) => {
     const owner = directoryHomeOwnerRef.current;
@@ -4361,6 +4440,12 @@ function FrameworkOsShellInner({
       for (const effect of effects) {
         if (!isCurrentEffectOwner(effectOwner)) return;
         if (effect === "requestSync") continue;
+        if ("notify" in effect) {
+          // 🧯️ A plugin's own user-facing message (`kernel::Effect::Notify`) — already localized by the
+          // plugin against the host's declared locale/terminology axes, so it is shown verbatim.
+          if (effect.notify.message) showTransientNoticeRef.current(effect.notify.message, "warning");
+          continue;
+        }
         if ("setPanel" in effect) {
           nextViewState = { ...nextViewState, panelJson: effect.setPanel.panelJson };
           continue;
@@ -4821,6 +4906,8 @@ function FrameworkOsShellInner({
         surface: targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined,
       });
       const hubBinding = resolvedBindings.find((binding): binding is Extract<PersistenceBinding, { kind: "hub" }> => binding.kind === "hub");
+      if (target?.expectedCatalogGenerationId !== undefined && hubBinding === undefined) return null;
+      const creationMount = target?.expectedCatalogGenerationId === undefined ? null : createArtifactCreationCatalogMountV1(target.expectedCatalogGenerationId);
       const scope: DocumentScope | undefined = hubBinding === undefined ? undefined : { spaceId: hubBinding.spaceId, documentId: ref.documentId };
       const runtimeKey = scope === undefined ? ref.documentId : documentRuntimeKeyV1({ kind: "hub", ...scope });
       const openingAttempt = { clientInstanceId: crypto.randomUUID() };
@@ -4830,7 +4917,7 @@ function FrameworkOsShellInner({
       let resolveReady!: () => void, rejectReady!: (error: Error) => void;
       const ready = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
       void ready.catch(() => {});
-      const entry: OpenDocumentSession = { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), ready, resolveReady, rejectReady };
+      const entry: OpenDocumentSession = { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), creationMount, ready, resolveReady, rejectReady };
       openDocumentSessionsRef.current.set(runtimeKey, entry);
       const request: BackboneWorkerRequest = {
         kind: "open",
@@ -4849,7 +4936,7 @@ function FrameworkOsShellInner({
       const uri = `actor://${runtimeKey}`;
       const committed = await runDocumentOpeningAttemptV1({
         deadlineMs: 60_000,
-        current: () => openDocumentSessionsRef.current.get(runtimeKey) === entry,
+        current: () => openDocumentSessionsRef.current.get(runtimeKey) === entry && entry.creationMount?.current() !== false,
         socket: async () => {
           worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
           postBrowserActorViewState(worker, entry, targetSession);
@@ -4871,12 +4958,16 @@ function FrameworkOsShellInner({
               worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: scope.spaceId }) });
             }
           }
-          if (hubBinding || entry.replacements.pending) await entry.ready;
+          if (hubBinding || entry.replacements.pending) {
+            if (entry.creationMount === null) await entry.ready;
+            else await entry.creationMount.attach(entry.ready);
+          }
           else await documentAttachmentLane(plugin, targetSession.instanceId).attach(clientInstanceId, () => openDocumentSessionsRef.current.get(runtimeKey) === entry, async () => {
             if (entry.port === null || entry.port.closing) await bindDocumentBackbone(runtimeKey, entry);
           });
         },
         commit: () => {
+          entry.creationMount = null;
           if (target?.background) return;
           dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
           dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
@@ -4903,6 +4994,7 @@ function FrameworkOsShellInner({
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     if (!entry) return;
     if (clientInstanceId !== undefined && entry.clientInstanceId !== clientInstanceId) return;
+    entry.creationMount?.close(new Error("document closed"));
     entry.rejectReady(new Error("document closed"));
     entry.replacements.invalidate();
     const retirement = entry.port?.retire();
@@ -6376,7 +6468,8 @@ function FrameworkOsShellInner({
       prepare: async () => {
         const opening = resolveArtifactOpeningRelayRef.current("os.open-artifact", openingArgs);
         if (opening === null) return null;
-        return await openArtifactWithAppRef(opening.app, opening.dialect, opening.role, current, false);
+        const target = await openArtifactWithAppRef(opening.app, opening.dialect, opening.role, current, false);
+        return target === null ? null : { ...target, expectedCatalogGenerationId: openingOwner.expectedCatalogGenerationId };
       },
       open: (target) => openDocument(
         { documentId: openingArgs.documentId!, schema: openingArgs.schema!, spaceId: openingOwner.spaceId },
@@ -6523,6 +6616,7 @@ function FrameworkOsShellInner({
     },
     [dispatch],
   );
+  showTransientNoticeRef.current = showTransientNotice;
   /** 🧯️ `true` for a `SemioFaultError` carrying `"viewer.read-only"` — the one host-raised fault this
    * lease knows to render as a notice instead of letting it crash into `ShellFaultBoundary`. */
   const isViewerReadOnlyFault = useCallback((error: unknown): boolean => error instanceof SemioFaultError && error.fault.code === SURFACE_FAULT_CODES.ViewerReadOnly, []);

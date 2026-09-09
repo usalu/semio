@@ -3,7 +3,7 @@
   "contract": "exact-owner-current-source-revision-v1",
   "fixtureInputs": {
     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/👀️readme-reviewed-fixture-inputs/📋️manifest/🔣️.json",
-    "sha256": "b77486790235bf4cfec45a117a881d242ca275c621a0005b5c15a64f57fa369a"
+    "sha256": "583645faf0e033dd08911947b6b02e3aba49bc6ae24244aa546ef283239976b1"
   },
   "execution": {
     "target": "test-readme-current-source-revision",
@@ -16,9 +16,9 @@
     "launchOrder": 410.195
   },
   "revisionId": "testing-readme-protocol-v2-reviewed",
-  "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚖️readme-license-owner-authority/🔣️.json",
+  "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
   "catalogSha256": "2dcb31628412a9e95b4adfc8756d8fbe9dfa1b397742b3f8a47c603ad15ccc79",
-  "expectedRevisionDigest": "9065d253c4cbe1980439ad54199e2f432ed65abee52316882e379846300f6518",
+  "expectedRevisionDigest": "ac0299064894934e2a5e4c2861a8b57a9dee84a46698f224a2eb48d2e42d28ee",
   "revisions": {
     "testing-readme-protocol-v2-reviewed": {
       "catalogCaseIndex": 31,
@@ -35,8 +35,8 @@
         "size": 12511,
         "mode": "0644"
       },
-      "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🗺️testing-readme-coordinates/🔣️.json",
-      "expectationsSha256": "7c6c64ee9bb155ec4180e6bb9e476cbca84fe24752c868eb28ec53a6ee73f62c"
+      "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🗺️testing-readme-coordinates/🔣️.json",
+      "expectationsSha256": "b2a6129ad3abb7d1ea6140a7050c2200b0c29f5ab178bad7fe81f02cbcbdd0a3"
     }
   },
   "strictCompilation": {
@@ -178,8 +178,8 @@
               "size": 12511,
               "mode": "0644"
             },
-            "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🗺️testing-readme-coordinates/🔣️.json",
-            "expectationsSha256": "7c6c64ee9bb155ec4180e6bb9e476cbca84fe24752c868eb28ec53a6ee73f62c"
+            "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🗺️testing-readme-coordinates/🔣️.json",
+            "expectationsSha256": "b2a6129ad3abb7d1ea6140a7050c2200b0c29f5ab178bad7fe81f02cbcbdd0a3"
           }
         }
       ]

@@ -5,7 +5,7 @@ import { parseEn1990Fields } from "../🟦️.ts";
 export interface En1990Diff {
   /** 🗿️ @state artifact */
   gK?: number | null;
-  /** 🗿️ @state artifact */
+  /** 🗿️ @state artifact @child kind=s.stdio.semio */
   qK?: ArtifactChild | null;
   /** 🗿️ @state artifact */
   resistanceKn?: number | null;

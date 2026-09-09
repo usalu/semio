@@ -3,28 +3,11 @@
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{preview_transition_snapshot_of, reset_document_effect, CadPlayRuntime};
-use crate::mutations::change_active_model_definition::ChangeActiveModelDefinition;
 use crate::op::CadMutation;
 use crate::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_camera, forest_play_scene, CAD_EXAMPLE_FOREST_LEFT};
 use crate::CadSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-
-//#region 🔖️FocusModelDefinition
-pub mod focus_model_definition {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-    #[dsl(keyword = "focus-model-definition")]
-    pub struct FocusModelDefinition {
-        pub model_definition_id: String,
-    }
-
-    pub fn handle(payload: &FocusModelDefinition, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: payload.model_definition_id.clone() })]))
-    }
-}
-//#endregion 🔖️FocusModelDefinition
 
 //#region 🔖️SetActiveExample
 pub mod set_active_example {

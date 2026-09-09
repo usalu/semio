@@ -1,0 +1,83 @@
+{
+  "document": {
+    "schema": "layout.layout",
+    "name": "Sprachneutrales Blatt",
+    "grid": { "baselineGrid": 12, "baselineOffset": 0, "snapToBaseline": true },
+    "paragraphStyles": [],
+    "characterStyles": [],
+    "stories": [],
+    "links": [],
+    "parentPages": [],
+    "spreads": [],
+    "pages": [],
+    "printTarget": null,
+    "dataFieldsJson": "{\"project\":\"sprachneutral\"}",
+    "backgroundDrawing": {
+      "handle": {
+        "childId": "background-drawing-canonical-fixture",
+        "target": {
+          "artifactId": "background-drawing-canonical-fixture",
+          "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "drawing" }
+        }
+      },
+      "content": {
+        "schema": "stdio.semio.drawing",
+        "canvas": { "width": 420, "height": 297 },
+        "styles": [],
+        "layers": [{
+          "id": "hintergrund",
+          "name": "Hintergrund",
+          "visible": true,
+          "root": {
+            "kind": "group",
+            "transform": {
+              "translation": { "x": 0, "y": 0, "z": 0 },
+              "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
+              "scale": { "x": 1, "y": 1, "z": 1 }
+            },
+            "children": []
+          }
+        }]
+      }
+    },
+    "referencedModel": {
+      "target": {
+        "artifactId": "architect-model-fixture",
+        "dialect": { "artifactKind": "s.architect.model", "standard": "1", "subset": "*" }
+      },
+      "pin": { "kind": "head" },
+      "role": "model"
+    }
+  },
+  "diff": {
+    "artifact": null,
+    "schema": null,
+    "name": null,
+    "grid": null,
+    "paragraphStyles": null,
+    "characterStyles": null,
+    "stories": null,
+    "links": null,
+    "parentPages": null,
+    "spreads": null,
+    "pages": null,
+    "printTarget": null,
+    "dataFieldsJson": null,
+    "backgroundDrawing": {
+      "handle": {
+        "childId": "background-drawing-canonical-fixture",
+        "target": {
+          "artifactId": "background-drawing-canonical-fixture",
+          "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "drawing" }
+        }
+      },
+      "content": {
+        "schema": "stdio.semio.drawing",
+        "canvas": { "width": 420, "height": 297 },
+        "styles": [],
+        "layers": []
+      }
+    },
+    "referencedModel": null
+  }
+}

@@ -1,0 +1,2 @@
+"""🫙️ A record containing no fields; governed by the shared declared-record admission contract."""
+scalar EmptyRecord

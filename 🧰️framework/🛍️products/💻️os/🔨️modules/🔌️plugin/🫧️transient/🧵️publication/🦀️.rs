@@ -1,9 +1,9 @@
-//! 🧵️ Domain-neutral bounded publication and disposal for transient stores.
+//! 🧵️ Bounded transient publication plus lease-aware exact-store disposal.
 
 use crate::app::{ArtifactOwnedDisposer, PluginCloseStep};
 use crate::{protocol, store};
 use semio_framework::{Fault, FaultCode, FaultOrigin};
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 struct BoundedTransientPreparation<P, M> {
     request: Option<store::ArtifactEphemeralOneItemPreparationRequest<P, M>>,
@@ -138,7 +138,7 @@ where
 struct BoundedTransientStoreDisposer<P, M> {
     retired: Option<store::TransientStore<P, M>>,
     retained_bytes: usize,
-    terminal_root: Option<std::sync::Weak<P>>,
+    terminal_root: Option<Weak<P>>,
     terminal_generation: u64,
 }
 
@@ -154,7 +154,7 @@ where
     M: protocol::Mutation<P>,
 {
     fn owns_terminal(&self, owner: &store::TransientStore<P, M>) -> bool {
-        owner.generation_now() == self.terminal_generation && self.terminal_root.as_ref().and_then(std::sync::Weak::upgrade).is_some_and(|root| Arc::ptr_eq(&root, &owner.current_root()))
+        owner.generation_now() == self.terminal_generation && self.terminal_root.as_ref().and_then(Weak::upgrade).is_some_and(|root| Arc::ptr_eq(&root, &owner.current_root()))
     }
 }
 
@@ -210,4 +210,71 @@ where
     M: protocol::Mutation<P> + Send + 'static,
 {
     Box::new(BoundedTransientStoreDisposer::<P, M>::default())
+}
+
+pub struct TransientStoreDisposer<P, M> {
+    retirement: Option<store::TransientStoreRetirement<P>>,
+    terminal_root: Option<Weak<P>>,
+    terminal_generation: u64,
+    factory: Arc<dyn store::ArtifactOwnedValueRetirementFactory<P>>,
+    marker: std::marker::PhantomData<fn() -> M>,
+}
+
+impl<P, M> TransientStoreDisposer<P, M> {
+    pub fn new(factory: Arc<dyn store::ArtifactOwnedValueRetirementFactory<P>>) -> Self {
+        Self { retirement: None, terminal_root: None, terminal_generation: 0, factory, marker: std::marker::PhantomData }
+    }
+}
+
+impl<P, M> TransientStoreDisposer<P, M>
+where
+    P: Clone + Default,
+    M: protocol::Mutation<P>,
+{
+    fn owns_terminal(&self, owner: &store::TransientStore<P, M>) -> bool {
+        owner.generation_now() == self.terminal_generation && self.terminal_root.as_ref().is_some_and(|root| owner.current_matches(root))
+    }
+}
+
+impl<P, M> ArtifactOwnedDisposer<store::TransientStore<P, M>> for TransientStoreDisposer<P, M>
+where
+    P: Clone + Default + Send + Sync + 'static,
+    M: protocol::Mutation<P> + Send + 'static,
+{
+    fn close_step(&mut self, owner: &mut store::TransientStore<P, M>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if self.retirement.is_none() {
+            if self.terminal_root.is_some() {
+                return self.owns_terminal(owner).then_some(PluginCloseStep::Complete).ok_or_else(|| Fault::from("transient terminal owner or generation changed"));
+            }
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            self.retirement = Some(owner.begin_retirement(P::default(), self.factory.clone()));
+            self.terminal_root = Some(owner.current_weak());
+            self.terminal_generation = owner.generation_now();
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        let retirement = self.retirement.as_mut().expect("checked transient retirement remains present");
+        match retirement.close_step(maximum_items.min(1), maximum_bytes).map_err(Fault::from)? {
+            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+            store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "transient read remains live" }),
+            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                self.retirement = None;
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+            }
+            store::SnapshotRetirementStep::Complete => Err(Fault::from("transient retirement completed without terminal-empty ownership")),
+        }
+    }
+
+    fn terminal_is_empty(&self, owner: &store::TransientStore<P, M>) -> bool {
+        self.retirement.is_none() && self.owns_terminal(owner)
+    }
+}
+
+pub fn transient_store_disposer<P, M>(factory: Arc<dyn store::ArtifactOwnedValueRetirementFactory<P>>) -> Box<dyn ArtifactOwnedDisposer<store::TransientStore<P, M>>>
+where
+    P: Clone + Default + Send + Sync + 'static,
+    M: protocol::Mutation<P> + Send + 'static,
+{
+    Box::new(TransientStoreDisposer::<P, M>::new(factory))
 }

@@ -1,3 +1,4 @@
+use crate::JackWorkingScene;
 use super::*;
 use crate::{Edge, Node, Port, PortDirection, PropertyBag};
 use protocol::Inference;
@@ -22,16 +23,7 @@ fn edge(id: &str, source: &str, target: &str) -> Edge {
 }
 
 fn chain_snapshot() -> JackSnapshot {
-    JackSnapshot::with_content(
-        "trinity.graph".into(),
-        "chain".into(),
-        None,
-        Default::default(),
-        Default::default(),
-        vec![node("root"), node("mid"), node("leaf")],
-        vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")],
-        Some("root".into()),
-    )
+    JackSnapshot::with_content("trinity.graph".into(), "chain".into(), None, Default::default(), Default::default(), JackWorkingScene { nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")] }, Some("root".into()))
 }
 //#endregion 🧸️Fixtures
 

@@ -6,7 +6,7 @@
   "document": {
     "childId": "document-fixture-brief-body",
     "target": {
-      "artifactId": "brief-document",
+      "artifactId": "document-fixture-brief-body",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

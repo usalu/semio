@@ -23,7 +23,7 @@ pub struct WiresSnapshot {
     #[state(artifact)]
     pub wires_fixture: DslValue,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.graph")]
+    #[child(kind = "s.stdio.semio")]
     pub content: WiresContentChild,
     #[state(artifact)]
     pub meta: DslValue,

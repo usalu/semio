@@ -28,8 +28,6 @@ message CadMutation {
   optional CadGeometry energy_geometry = 11;
   // @state artifact
   optional CadGeometry structure_classic_geometry = 12;
-  // @state artifact
-  string active_model_definition_id = 13;
 }
 
 message CadObject { string id = 1; }

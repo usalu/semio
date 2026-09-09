@@ -5,8 +5,8 @@
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`playbook→C:document,flow`): the inline
 //! `steps: Vec<PlaybookStep>` field is replaced by TWO composed CHILD slots — `document` (stdio's
-//! `s.stdio.semio.document`, a narrative projection: title + per-step Heading/Paragraph) and `flow`
-//! (stdio's `s.stdio.semio.flow`, the LOSSLESS procedural source of truth: one `FlowNode` per step,
+//! `s.stdio.semio`/`document`, a narrative projection: title + per-step Heading/Paragraph) and `flow`
+//! (stdio's `s.stdio.semio`/`flow`, the LOSSLESS procedural source of truth: one `FlowNode` per step,
 //! its `blocks`/`description` JSON-encoded into params, sequential `FlowEdge`s witnessing step
 //! order) — see `🔖️ContentBridge` below.
 
@@ -57,7 +57,7 @@ pub fn flatten_playbook_blocks(snapshot: &PlaybookSnapshot) -> Vec<PlaybookBlock
 //#endregion 🔖️Types
 
 //#region 🔖️ContentBridge
-/// 🕸️ Owned CHILD handle types for the composed `s.stdio.semio.document`/`s.stdio.semio.flow`
+/// 🕸️ Owned CHILD handle types for the composed `s.stdio.semio` `document`/`flow`
 /// documents — playbook's steps now live in these composed children rather than inline on
 /// `PlaybookSnapshot`.
 pub type PlaybookDocumentChild = store::ArtifactChild<SemioDocumentSnapshot>;
@@ -99,7 +99,7 @@ pub fn steps_from_flow_content(content: &SemioFlowSnapshot) -> Vec<PlaybookStep>
         .nodes
         .iter()
         .map(|node| {
-            let blocks_json = node.params.iter().find(|param| param.key == "blocksJson").map(|param| param.value.as_str()).unwrap_or("[]");
+            let blocks_json = node.params.iter().find(|param| param.key == "blocksJson").map_or("[]", |param| param.value.as_str());
             let blocks: Vec<PlaybookBlock> = protocol::json::from_json_str(blocks_json).unwrap_or_default();
             let description = node.params.iter().find(|param| param.key == "description").map(|param| param.value.clone());
             PlaybookStep { id: node.id.clone(), title: node.label.clone(), description, blocks }
@@ -167,7 +167,7 @@ pub fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
     let content_hash = hasher.finish();
     let child_id = format!("playbook-flow-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "playbook-flow".into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
@@ -182,7 +182,7 @@ pub fn document_child_handle(title: Option<&str>, steps: &[PlaybookStep]) -> Pla
     let content_hash = hasher.finish();
     let child_id = format!("playbook-document-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "document".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "playbook-document".into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️ContentBridge
@@ -270,7 +270,8 @@ pub fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str, title
 /// `declaration()` describes the artifact (kind/schema/io/ownership), it is not engine behaviour.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    type CapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
+    let rows: &[CapabilityRow<'_>] = &[
         ("s.playbook.playbook.standard.v1", "standard", "1", &[], None),
         ("s.playbook.playbook.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.playbook.playbook.schema.artifact", "schema", "s.playbook.playbook", &[("schema", "s.playbook.playbook")], None),

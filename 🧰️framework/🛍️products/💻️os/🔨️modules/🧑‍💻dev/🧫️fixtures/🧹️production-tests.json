@@ -1,5 +1,6 @@
 {
   "productionDefinition": "undefined",
+  "deniedProductionModuleFragments": ["/🧪️tests/", "/node_modules/vitest/", "/node_modules/@vitest/", "node:", "bun:"],
   "source": "export const runtimeWitness = 'runtime-alive'; export let testWitness = null; if (import.meta.vitest) { const testOnly = await import('node:fs'); testWitness = testOnly.proof; }",
   "testModule": "export const proof = 'test-alive';",
   "assetSource": "export const runtimeUrl = new URL('./🔎️build-inspection.json', import.meta.url).href; export let testUrl = null; if (import.meta.vitest) { testUrl = new URL('./🧹️production-tests.json', import.meta.url).href; }",

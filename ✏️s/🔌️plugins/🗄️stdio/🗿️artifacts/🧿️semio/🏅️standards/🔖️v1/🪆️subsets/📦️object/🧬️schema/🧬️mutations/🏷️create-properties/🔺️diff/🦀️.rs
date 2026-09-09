@@ -9,6 +9,9 @@ pub fn diff(payload: &super::CreateProperties, base: &SemioObjectSnapshot) -> pr
     if base.properties.is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "The object already has a properties child.".to_string(), ["properties".to_string()]);
     }
+    if let Err(message) = crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&payload.child_id, &payload.target, "value") {
+        return protocol::MutationOutcome::fatal("mutation.child-identity", message, ["properties".to_string()]);
+    }
     protocol::MutationOutcome::new(SemioObjectDiff { properties: Some(Some(store::ArtifactChild::new(payload.child_id.clone(), payload.target.clone()))), ..Default::default() })
 }
 //#endregion 🔖️Diff

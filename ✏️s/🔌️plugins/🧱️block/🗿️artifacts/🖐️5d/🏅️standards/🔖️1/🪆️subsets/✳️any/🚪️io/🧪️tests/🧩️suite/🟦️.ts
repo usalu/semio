@@ -22,13 +22,13 @@ async function read(path: string): Promise<string> {
 describe("block5d io", () => {
   for (const { asset, example, fixture } of FIXTURES) {
     test(`${asset}: the TypeScript json writer is a fixed point on the Rust bytes`, async () => {
-      const expected = await read(`./🧫️fixtures/${fixture}`);
+      const expected = await read(`../../🧫️fixtures/${fixture}`);
       expect(block5dCanonicalJsonText(expected)).toBe(expected);
     });
 
     test(`${asset}: the TypeScript dsl reader + json writer reproduce the Rust bytes`, async () => {
-      const expected = await read(`./🧫️fixtures/${fixture}`);
-      const dsl = await read(`../../📚️examples/${example}/🖼️assets/${example}/🗣️.dsl.semio`);
+      const expected = await read(`../../🧫️fixtures/${fixture}`);
+      const dsl = await read(`../../../📚️examples/${example}/🖼️assets/${example}/🗣️.dsl.semio`);
       expect(block5dToJsonText(block5dFromDslText(dsl))).toBe(expected);
     });
   }

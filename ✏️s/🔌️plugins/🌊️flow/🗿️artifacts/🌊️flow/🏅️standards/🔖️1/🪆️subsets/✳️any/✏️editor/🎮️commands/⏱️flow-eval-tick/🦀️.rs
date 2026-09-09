@@ -1,10 +1,12 @@
 //! 🧮️ 🧵️ Flow play app commands command — `flow-eval-tick`.
 
-use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::host_from_snapshot;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, ExtensionInvocation, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
@@ -21,7 +23,7 @@ pub fn eval_tick_effect() -> Effect {
 //#region 🔖️Arm
 /// 🧵️ Probes/arms the `flowEvalTick` chain via `FlowEvalSession::sync` — shared by `FlowCommand::Evaluate`,
 /// the `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`.
-pub fn evaluate_result(fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
+pub fn evaluate_result(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
     let host = host_from_snapshot(fixture, config, session);
     if session.sync(&host) {
         Emit { effects: vec![eval_tick_effect()], ..Default::default() }
@@ -43,10 +45,12 @@ pub fn evaluate_result(fixture: &FlowSnapshot, config: &FlowConfig, session: &mu
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct FlowEvalTick {}
 
-pub fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-    let mut host = host_from_snapshot(doc.snapshot, cfg.snapshot, session);
+/// 🧮️ Advance evaluation with the admitted window configuration.
+pub(crate) fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
+    let mut host = host_from_snapshot(snapshot, config, session);
     let more = session.tick(&mut host);
-    let mut effects = if more { vec![eval_tick_effect()] } else { Vec::new() };
+    let effects = if more { vec![eval_tick_effect()] } else { Vec::new() };
+    let mut extension_invocations = Vec::new();
     if let Some(pending) = host.take_pending_extension_eval() {
         let request_json = serde_json::json!({
             "operatorId": pending.operator_id,
@@ -54,7 +58,11 @@ pub fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, FlowSnapshot>, cfg
             "nodeHash": pending.node_hash,
         })
         .to_string();
-        effects.push(Effect::InvokeExtension { req: semio_framework_plugin::RequestId(106), extension_id: pending.extension_id, capability: "evaluate".into(), request_json });
+        extension_invocations.push(ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve"));
     }
-    Ok(Emit { effects, ..Default::default() })
+    Emit { effects, extension_invocations, ..Default::default() }
+}
+
+pub fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    Ok(tick_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session))
 }

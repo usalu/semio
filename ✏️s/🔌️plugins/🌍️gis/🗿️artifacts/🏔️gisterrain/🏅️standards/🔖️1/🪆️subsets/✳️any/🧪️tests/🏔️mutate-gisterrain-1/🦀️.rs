@@ -1,26 +1,4 @@
-//! 🏔️ `s.gis.gisterrain` exhaustive mutation case — Rust SUBJECT adapter. Ticket
-//! 26/08/23/END-TO-END-TESTING-REFACTOR.
-//!
-//! This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` beside this file —
-//! a second implementation of the document and both typed mutations, written in Python from this
-//! subset's committed snapshot schema, mutation grammar and specification vectors. This adapter
-//! therefore registers the SUBJECT half only: keeping oracle registrations here would put this
-//! repository's answer on both sides of the comparison.
-//!
-//! Two persisted fields, an `f64` exaggeration and an opaque `imported_features_json` string, plus a
-//! `mesh` slot that is not content but a CONTENT-ADDRESSED child handle derived from exactly those
-//! two. So both mutations are root-scalar setters with a second-order effect, and the sharp check is
-//! that the handle moves with the field and converges back on undo.
-//!
-//! **What is compared across the two languages, and what is asserted in role.** The cross-language
-//! projection is the two fields `🧬️schema/📸️snapshot/🔣️.json` declares. The `mesh` handle's
-//! `childId` is a `std::hash::DefaultHasher` digest whose value the standard library leaves
-//! UNSPECIFIED, so no implementation in another language can reproduce it; it is held exactly HERE,
-//! in role, by [`subject::spec_vector`] against the committed after-snapshot, alongside the
-//! committed `🔺️diff` and `🎯️outcome` — every check this case already made, unchanged. The
-//! `.dsl.semio` carrier's fixpoint and pack-agreement laws are likewise asserted here in role, on
-//! the artifact's committed example, in [`subject::round_trip`]. No comparison profile was touched
-//! and no `ignoreKeys` was added.
+//! 🏔️ Exhaustive Terrain mutation adapter compares scalar content and durable mesh handles across languages.
 
 use semio_repo_test_host::{parse_json, Adapter, Json};
 
@@ -52,8 +30,8 @@ const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 #[cfg(feature = "sut")]
 const DERIVED_ASSET: &str = "shared://🏔️mutate-gisterrain-1/🔣️.snapshot.json";
 
-/// 🗂️ The two fields `GisTerrainSnapshot` declares — the cross-language projection.
-const FIELDS: &[&str] = &["exaggeration", "importedFeaturesJson"];
+/// 🗂️ The persisted Terrain fields compared across language implementations.
+const FIELDS: &[&str] = &["exaggeration", "importedFeaturesJson", "mesh"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -186,9 +164,7 @@ mod subject {
     //#endregion 🔖️Report
 
     //#region 🔖️Projection
-    /// 📤️ What parity compares: the two fields `GisTerrainSnapshot` declares. The `mesh` handle is
-    /// deliberately outside it — its `childId` is a `std::hash::DefaultHasher` digest the standard
-    /// library leaves unspecified — and is asserted exactly, in role, by [`spec_vector`].
+    /// 📤️ Compares exact persisted scalar values and the independently owned mesh handle.
     fn projection(document: &Json) -> Result<Json, String> {
         let mut entries = Vec::new();
         for name in FIELDS {
@@ -252,7 +228,7 @@ mod subject {
 
     /// 📐️ Replays one committed handcrafted specification vector. This is where the evidence the case
     /// carried before the conversion still lives, undiminished: the applied document is held to the
-    /// committed after-snapshot IN FULL — the re-derived `mesh` handle included — the produced delta
+    /// committed after-snapshot IN FULL — the exact persisted `mesh` handle included — the produced delta
     /// to the committed `🔺️diff`, and the diagnostics to the committed `🎯️outcome`.
     pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {

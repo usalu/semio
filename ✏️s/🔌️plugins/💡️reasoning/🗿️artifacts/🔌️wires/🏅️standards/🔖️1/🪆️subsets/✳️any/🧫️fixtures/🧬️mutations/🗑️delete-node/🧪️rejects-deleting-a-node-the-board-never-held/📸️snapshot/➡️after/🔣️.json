@@ -29,7 +29,7 @@
   "content": {
     "childId": "wires-content-delete-miss-fixture",
     "target": {
-      "artifactId": "wires-content",
+      "artifactId": "wires-content-delete-miss-fixture",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

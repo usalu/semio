@@ -7,7 +7,7 @@ use std::hash::{Hash, Hasher};
 use std::ops::Bound::{Excluded, Unbounded};
 
 const QUERY_ENTITY_MAXIMUM: usize = 16_384;
-const QUERY_OUTPUT_MAXIMUM_BYTES: usize = 1_048_576;
+pub(crate) const QUERY_OUTPUT_MAXIMUM_BYTES: usize = 1_048_576;
 const QUERY_ENTITY_COLLECTION_MAXIMUM: usize = 128;
 const QUERY_ENTITY_NESTING_MAXIMUM: usize = 16;
 
@@ -186,7 +186,7 @@ fn hash_edge(edge: &Edge, hasher: &mut impl Hasher) {
 /// 🧱 One preparation turn clones one snapshot metadata field or one working-scene entity.
 pub enum QueryPreparationStep {
     Pending,
-    Complete(QueryExecution),
+    Complete(Box<QueryExecution>),
 }
 
 /// 🧱 Incremental snapshot-to-query-workspace preparation that never clones the complete fixture.
@@ -275,7 +275,7 @@ impl QueryExecutionPreparation {
         let graph = self.graph.take().expect("query preparation graph remains owned");
         let query = self.query.take().expect("query preparation AST remains owned");
         self.terminal = true;
-        Ok(QueryPreparationStep::Complete(QueryExecution::with_metadata_output_upper_bound(graph, query, self.metadata_output_upper_bound)))
+        Ok(QueryPreparationStep::Complete(Box::new(QueryExecution::with_metadata_output_upper_bound(graph, query, self.metadata_output_upper_bound))))
     }
 
     pub fn begin_close(&mut self) {
@@ -547,7 +547,9 @@ impl ReturnExecution {
                     }
                 } else {
                     let mut content = crate::jack_content_child_handle(&[], &[]);
-                    content.child_id = format!("jack-query-result-{:016x}", self.hasher.finish());
+                    let child_id = format!("jack-query-result-{:016x}", self.hasher.finish());
+                    content.child_id = child_id.clone();
+                    content.target.artifact_id = child_id;
                     content.set_local_owner(std::sync::Arc::new(crate::JackWorkingScene { nodes: std::mem::take(&mut self.nodes), edges: std::mem::take(&mut self.edges) }));
                     let mut name = std::mem::take(&mut graph.name);
                     name.push_str(" subgraph");
@@ -983,12 +985,14 @@ impl QueryExecution {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if !self.metadata_retired {
-            let mut metadata = JackSnapshot::default();
-            metadata.name = std::mem::take(&mut self.graph.name);
-            metadata.manifest_id = self.graph.manifest_id.take();
-            metadata.manifest = std::mem::take(&mut self.graph.manifest);
-            metadata.camera = self.graph.camera.clone();
-            metadata.root_node_id = self.graph.root_node_id.take();
+            let metadata = JackSnapshot {
+                name: std::mem::take(&mut self.graph.name),
+                manifest_id: self.graph.manifest_id.take(),
+                manifest: std::mem::take(&mut self.graph.manifest),
+                camera: self.graph.camera.clone(),
+                root_node_id: self.graph.root_node_id.take(),
+                ..Default::default()
+            };
             self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackSnapshotRetirementFactory, metadata));
             self.metadata_retired = true;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });

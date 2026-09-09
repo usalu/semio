@@ -34,13 +34,13 @@ pub struct SemioObjectSnapshot {
     #[state(artifact)]
     pub transform: SemioTransform,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.brep")]
+    #[child(kind = "s.stdio.semio")]
     pub brep: Option<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.mesh")]
+    #[child(kind = "s.stdio.semio")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.value")]
+    #[child(kind = "s.stdio.semio")]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
 }
 
@@ -70,16 +70,42 @@ impl dsl::ToValue for SemioObjectSnapshot {
 }
 impl dsl::FromValue for SemioObjectSnapshot {
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let entries = dsl::DslValue::into_object(value)?;
-        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
-        Ok(Self {
-            schema: dsl::FromValue::from_value(field("schema")?)?,
-            transform: dsl::FromValue::from_value(field("transform")?)?,
-            brep: get("brep").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
-            mesh: get("mesh").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
-            properties: get("properties").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
-        })
+        let mut schema = None;
+        let mut transform = None;
+        let mut brep = None;
+        let mut mesh = None;
+        let mut properties = None;
+        for (key, value) in dsl::DslValue::into_object(value)? {
+            match key.as_str() {
+                "schema" => schema = Some(dsl::FromValue::from_value(value)?),
+                "transform" => transform = Some(dsl::FromValue::from_value(value)?),
+                "brep" => brep = Some(dsl::FromValue::from_value(value)?),
+                "mesh" => mesh = Some(dsl::FromValue::from_value(value)?),
+                "properties" => properties = Some(dsl::FromValue::from_value(value)?),
+                _ => return Err(dsl::ValueError::new(format!("unknown Object field {key}"))),
+            }
+        }
+        let snapshot = Self {
+            schema: schema.ok_or_else(|| dsl::ValueError::new("missing Object schema"))?,
+            transform: transform.ok_or_else(|| dsl::ValueError::new("missing Object transform"))?,
+            brep, mesh, properties,
+        };
+        snapshot.validate().map_err(dsl::ValueError::new)?;
+        Ok(snapshot)
+    }
+}
+
+impl SemioObjectSnapshot {
+    /// 📦️ Validates the persisted parent boundary across JSON, text and Pack ingress.
+    pub fn validate(&self) -> Result<(), String> {
+        use crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
+        if self.schema != STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA {
+            return Err("Object schema required".into());
+        }
+        if let Some(child) = &self.brep { validate_semio_child_identity(&child.child_id, &child.target, "brep")?; }
+        if let Some(child) = &self.mesh { validate_semio_child_identity(&child.child_id, &child.target, "mesh")?; }
+        if let Some(child) = &self.properties { validate_semio_child_identity(&child.child_id, &child.target, "value")?; }
+        Ok(())
     }
 }
 //#endregion 🔖️ValueCodec
@@ -305,7 +331,7 @@ impl store::ArtifactDsl for SemioObjectSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_object_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_object_snapshot_body(body).and_then(|snapshot| { snapshot.validate()?; Ok(snapshot) }).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         let body = print_object_snapshot_body(self);
@@ -327,7 +353,7 @@ impl store::ArtifactPack for SemioObjectSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_object_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_object_snapshot_binary(&inner).and_then(|snapshot| { snapshot.validate()?; Ok(snapshot) }).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -401,9 +427,9 @@ pub(crate) fn demo_object_snapshot() -> SemioObjectSnapshot {
     SemioObjectSnapshot {
         schema: STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.into(),
         transform: SemioTransform { translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, rotation: SemioQuaternion { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }, scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
-        brep: Some(store::ArtifactChild::new("brep-01".into(), store::os_io::ArtifactRef { artifact_id: "crate-brep".into(), dialect: dialect("brep") })),
-        mesh: Some(store::ArtifactChild::new("mesh-01".into(), store::os_io::ArtifactRef { artifact_id: "crate-mesh".into(), dialect: dialect("mesh") })),
-        properties: Some(store::ArtifactChild::new("props-01".into(), store::os_io::ArtifactRef { artifact_id: "crate-props".into(), dialect: dialect("value") })),
+        brep: Some(store::ArtifactChild::new("crate-brep".into(), store::os_io::ArtifactRef { artifact_id: "crate-brep".into(), dialect: dialect("brep") })),
+        mesh: Some(store::ArtifactChild::new("crate-mesh".into(), store::os_io::ArtifactRef { artifact_id: "crate-mesh".into(), dialect: dialect("mesh") })),
+        properties: Some(store::ArtifactChild::new("crate-props".into(), store::os_io::ArtifactRef { artifact_id: "crate-props".into(), dialect: dialect("value") })),
     }
 }
 //#endregion 🔖️Demo

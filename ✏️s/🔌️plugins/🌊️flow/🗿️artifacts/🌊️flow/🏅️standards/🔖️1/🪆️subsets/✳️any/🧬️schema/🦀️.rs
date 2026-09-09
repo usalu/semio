@@ -5,7 +5,7 @@ use crate::{FlowContentChild, FlowSnapshot};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Constants
-/// 🖱️ Default proximity-select distance — also `FlowConfig`'s own default (`crate::editor::flow::config`),
+/// 🖱️ Default proximity-select distance used by each concrete Flow main-window configuration,
 /// homed here rather than app-side because this schema's own `FlowArtifact::from_snapshot` needs it too
 /// and an artifact must never depend on an app.
 pub const FLOW_DEFAULT_PROXIMITY_DISTANCE: f64 = 48.0;
@@ -83,8 +83,6 @@ pub struct FlowArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    pub camera: CameraJson,
-    #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub content: FlowContentChild,
 }
@@ -100,18 +98,17 @@ impl Default for FlowArtifact {
 impl FlowArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> FlowSnapshot {
-        FlowSnapshot { schema: self.schema.clone(), camera: self.camera.clone(), content: self.content.clone() }
+        FlowSnapshot { schema: self.schema.clone(), content: self.content.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: FlowSnapshot) -> Self {
-        Self { schema: snapshot.schema, camera: snapshot.camera, content: snapshot.content }
+        Self { schema: snapshot.schema, content: snapshot.content }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: FlowSnapshot) {
         self.schema = snapshot.schema;
-        self.camera = snapshot.camera;
         self.content = snapshot.content;
     }
 }

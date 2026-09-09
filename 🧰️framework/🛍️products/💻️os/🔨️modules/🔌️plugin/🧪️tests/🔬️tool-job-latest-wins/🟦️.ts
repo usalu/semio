@@ -6,7 +6,7 @@ import { WORKSPACE_ROOT, toolJobRustBlock, toolJobPublicationFreshnessBeforeEver
 /** 🧪️ Cross-checks full-domain scope fixtures with Ajv equality and guards the active retained admission/publication seam. */
 export function toolJobLatestWinsSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
-  const fixture = JSON.parse(readFileSync(join(base, "🥇️tool-latest-wins.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🥇️tool-latest-wins.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(schema);
@@ -26,7 +26,7 @@ export function toolJobLatestWinsSelfTests(): number {
     { ...fixture, first: { ...fixture.first, inventedAuthority: true } },
   ];
   for (const hostile of hostiles) if (validate(hostile)) throw new Error("latest-wins schema accepted a forged scope or enlarged grant");
-  const integration = JSON.parse(readFileSync(join(base, "🔗️tool-latest-wins-integration.json"), "utf8"));
+  const integration = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔗️tool-latest-wins-integration.json"), "utf8"));
   const validateIntegration = ajv.compile({ $ref: schema.$id + "#/$defs/ToolLatestWinsIntegrationV1" });
   if (!validateIntegration(integration)) throw new Error(`latest-wins integration schema: ${JSON.stringify(validateIntegration.errors)}`);
   for (const law of integration.cases) {

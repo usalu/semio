@@ -477,7 +477,7 @@ async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pai
         .expect("paired query");
     }
     assert_eq!(drive_query_ownership_operations(&mut app).await.expect("paired queries"), (0, 2, 2));
-    assert_eq!(app.snapshot().expect("document after queries"), &document_before);
+    assert_eq!(app.snapshot().expect("document after queries"), document_before);
     let app_config_after = app.config_pack().await.expect("app config after");
     assert_eq!(app_config_after.pack, app_config_before.pack);
     assert_eq!(app_config_after.spr, app_config_before.spr);

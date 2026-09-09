@@ -91,7 +91,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../📐️Canvas2dHost/🟦️.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
-import { createCoalescingActionDispatcher, createInFlightSkippingInterval, isRevealCutoffHidden, registeredPuzzle3dBrushMeshes, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
+import { createCoalescingActionDispatcher, createInFlightSkippingInterval, isRevealCutoffHidden, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, registeredPuzzle3dBrushMeshes, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -4245,14 +4245,44 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [dispatch],
   );
 
+  // 🥽️ One GLB's collision geometry never fitted a single retained command: the shared puzzle contract
+  // admits 8 192 raw JSON bytes and the Concrete Forest mesh alone encoded to 64 KB, so every upload is
+  // a page run (`puzzle3dBrushMeshPages`) drained one page per macrotask — the plugin stages the pages
+  // under `(url, digest)` and installs the mesh when the last one lands. A mesh this process already
+  // paged is re-announced by `{url, digest}` alone, which the plugin serves from its own process-wide
+  // content-addressed store instead of taking the bytes again.
   const registeredBrushMeshesRef = useRef(registeredPuzzle3dBrushMeshes);
+  const brushMeshQueueRef = useRef<Puzzle3dBrushMeshPage[]>([]);
+  const brushMeshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleRegisterBrushMesh = useCallback(
     (url: string, positions: number[], indices: number[]) => {
-      if (registeredBrushMeshesRef.current.has(url)) return;
-      registeredBrushMeshesRef.current.add(url);
-      dispatch("registerBrushMesh", { url, positions, indices });
+      const digest = puzzle3dBrushMeshDigest(positions, indices);
+      if (registeredBrushMeshesRef.current.get(url) === digest) {
+        dispatch("registerBrushMesh", { url, digest });
+        return;
+      }
+      const pages = puzzle3dBrushMeshPages(url, node.surfaceId, positions, indices);
+      if (pages.length === 0) return;
+      registeredBrushMeshesRef.current.set(url, digest);
+      brushMeshQueueRef.current.push(...pages);
+      const drain = () => {
+        brushMeshTimerRef.current = null;
+        const page = brushMeshQueueRef.current.shift();
+        if (!page) return;
+        dispatch("registerBrushMesh", page);
+        if (brushMeshQueueRef.current.length > 0) brushMeshTimerRef.current = setTimeout(drain, 0);
+      };
+      if (brushMeshTimerRef.current === null) brushMeshTimerRef.current = setTimeout(drain, 0);
     },
-    [dispatch],
+    [dispatch, node.surfaceId],
+  );
+  useEffect(
+    () => () => {
+      if (brushMeshTimerRef.current !== null) clearTimeout(brushMeshTimerRef.current);
+      brushMeshTimerRef.current = null;
+      for (const page of brushMeshQueueRef.current.splice(0)) registeredBrushMeshesRef.current.delete(page.url);
+    },
+    [],
   );
 
   // 👻️ Include the live brush/suggestion ghost URL so collision precompute can register kinds that are

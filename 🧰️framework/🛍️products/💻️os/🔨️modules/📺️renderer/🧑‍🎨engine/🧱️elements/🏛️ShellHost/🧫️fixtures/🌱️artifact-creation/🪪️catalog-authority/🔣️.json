@@ -1,0 +1,45 @@
+{
+  "schema": "semio.os.space-artifact-creation-catalog-authority/v1",
+  "catalog": {
+    "runtimeKey": "hub:space-a:index",
+    "clientInstanceId": "11111111-1111-4111-8111-111111111111",
+    "spaceId": "space-a",
+    "catalogGenerationId": "3333333333333333333333333333333333333333333333333333333333333333",
+    "member": "{\"kindId\":\"s.gis.gismap\",\"schema\":\"s.gis.gismap\",\"dialect\":{\"artifactKind\":\"s.gis.gismap\",\"standard\":\"1\",\"subset\":\"*\"},\"label\":{\"en\":\"GIS Map\",\"de\":\"GIS-Karte\"}}"
+  },
+  "cases": [
+    { "id": "exact-current-member", "captured": "current", "live": "current", "choice": "member", "admitted": true },
+    { "id": "catalog-withdrawn", "captured": "current", "live": "unavailable", "choice": "member", "admitted": false },
+    { "id": "generation-rotated", "captured": "current", "live": "rotated-generation", "choice": "member", "admitted": false },
+    { "id": "mount-replaced", "captured": "current", "live": "replaced-client", "choice": "member", "admitted": false },
+    { "id": "scope-substituted", "captured": "current", "live": "other-space", "choice": "member", "admitted": false },
+    { "id": "current-nonmember", "captured": "current", "live": "current", "choice": "nonmember", "admitted": false },
+    { "id": "captured-nonmember", "captured": "without-member", "live": "current", "choice": "member", "admitted": false },
+    { "id": "no-captured-authority", "captured": "unavailable", "live": "current", "choice": "member", "admitted": false }
+  ],
+  "statusCases": [
+    { "generation": "current", "admitted": true },
+    { "generation": "rotated", "admitted": false },
+    { "generation": "missing", "admitted": false }
+  ],
+  "refreshCases": [
+    { "id": "exact-current-owner", "owner": "current", "authority": "current", "origin": "current", "message": "current", "admitted": true },
+    { "id": "owner-missing", "owner": "absent", "authority": "current", "origin": "current", "message": "current", "admitted": false },
+    { "id": "owner-ready", "owner": "ready", "authority": "current", "origin": "current", "message": "current", "admitted": false },
+    { "id": "owner-opening", "owner": "opening", "authority": "current", "origin": "current", "message": "current", "admitted": false },
+    { "id": "request-replaced", "owner": "current", "authority": "current", "origin": "current", "message": "replaced-request", "admitted": false },
+    { "id": "message-generation-rotated", "owner": "current", "authority": "current", "origin": "current", "message": "rotated-generation", "admitted": false },
+    { "id": "catalog-withdrawn", "owner": "current", "authority": "unavailable", "origin": "current", "message": "current", "admitted": false },
+    { "id": "catalog-generation-rotated", "owner": "current", "authority": "rotated-generation", "origin": "current", "message": "current", "admitted": false },
+    { "id": "catalog-runtime-replaced", "owner": "current", "authority": "replaced-runtime", "origin": "current", "message": "current", "admitted": false },
+    { "id": "origin-session-replaced", "owner": "current", "authority": "current", "origin": "replaced-session", "message": "current", "admitted": false },
+    { "id": "origin-client-replaced", "owner": "current", "authority": "current", "origin": "replaced-client", "message": "current", "admitted": false },
+    { "id": "origin-not-space-index", "owner": "current", "authority": "current", "origin": "other-document", "message": "current", "admitted": false }
+  ],
+  "draftCases": [
+    { "id": "artifact-kind-cleared", "format": "artifactKind", "clear": true },
+    { "id": "surface-choice-retained", "format": "surfaceApp", "clear": false },
+    { "id": "static-choice-retained", "format": "static", "clear": false },
+    { "id": "text-retained", "format": "text", "clear": false }
+  ]
+}

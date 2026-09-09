@@ -61,14 +61,14 @@ pub fn prepare_command(command: &Generation2dCommand, doc: &ArtifactView<'_, Gen
         }
         Generation2dCommand::UpdateGenerationValues(payload) => {
             let args = dsl::DslValue::object([
-                ("generationId".into(), payload.generation_id.clone().map(dsl::DslValue::String).unwrap_or(dsl::DslValue::Null)),
+                ("generationId".into(), payload.generation_id.clone().map_or(dsl::DslValue::Null, dsl::DslValue::String)),
                 ("questionId".into(), dsl::DslValue::String(payload.question_id.clone())),
                 ("value".into(), payload.value.clone()),
             ]);
             Some(handle_generation("updateGenerationValues", Some(&args), doc, cfg))
         }
         Generation2dCommand::SelectGeneration(payload) => {
-            let args = dsl::DslValue::object([("id".into(), payload.id.clone().map(dsl::DslValue::String).unwrap_or(dsl::DslValue::Null))]);
+            let args = dsl::DslValue::object([("id".into(), payload.id.clone().map_or(dsl::DslValue::Null, dsl::DslValue::String))]);
             Some(handle_generation("selectGeneration", Some(&args), doc, cfg))
         }
         _ => None,

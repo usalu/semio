@@ -18,5 +18,5 @@ pub fn diff(payload: &ConnectSynapse, base: &Generation3dSnapshot) -> protocol::
     if widget_index(&base.fixture, &payload.synapse.to).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse endpoint widget \"{}\" does not exist.", payload.synapse.to), [payload.synapse.to.clone()]);
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff::default(), SynapsesDiff { removed: vec![], set: vec![(payload.index, payload.synapse.clone())] }, LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(payload.index, payload.synapse.clone())] }, &LayoutDiff::default(), None, None))
 }

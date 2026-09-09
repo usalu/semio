@@ -170,14 +170,16 @@ struct FormsJobKey {
 }
 
 static TRY_VALUE_SESSIONS: OnceLock<Mutex<BTreeMap<FormsJobKey, TryValueSession>>> = OnceLock::new();
-static ACTIVE_TRY_VALUE_GENERATIONS: OnceLock<Mutex<BTreeMap<(String, String, String), u64>>> = OnceLock::new();
+type TryValueGenerations = BTreeMap<(String, String, String), u64>;
+
+static ACTIVE_TRY_VALUE_GENERATIONS: OnceLock<Mutex<TryValueGenerations>> = OnceLock::new();
 static NEXT_TRY_VALUE_REQUEST: AtomicU64 = AtomicU64::new(20_000);
 
 fn sessions() -> &'static Mutex<BTreeMap<FormsJobKey, TryValueSession>> {
     TRY_VALUE_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
 }
 
-fn active_generations() -> &'static Mutex<BTreeMap<(String, String, String), u64>> {
+fn active_generations() -> &'static Mutex<TryValueGenerations> {
     ACTIVE_TRY_VALUE_GENERATIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
 }
 
@@ -206,6 +208,7 @@ fn take_session(payload: &SetTryValueStep) -> Option<TryValueSession> {
     sessions().lock().expect("forms try-value sessions lock").remove(&job_key(payload))
 }
 
+#[expect(clippy::result_large_err, reason = "Saturated admission returns the original session owner for staged-value cleanup without allocating a rejection wrapper")]
 fn put_session(key: FormsJobKey, session: TryValueSession) -> Result<(), TryValueSession> {
     let mut live = sessions().lock().expect("forms try-value sessions lock");
     if !live.contains_key(&key) && live.len() >= MAX_LIVE_TRY_VALUE_SESSIONS {
@@ -306,7 +309,7 @@ impl ChunkedSource {
                 local_end -= 1;
             }
             if local_end == local_start {
-                local_end += chunk[local_start..].chars().next().map(char::len_utf8).unwrap_or(1);
+                local_end += chunk[local_start..].chars().next().map_or(1, char::len_utf8);
             }
             output.push(std::sync::Arc::from(&chunk[local_start..local_end]));
             *cursor = *chunk_start + local_end;
@@ -1139,7 +1142,7 @@ fn copy_text_chunk(source: &str, cursor: &mut usize, end: usize, output: &mut Ve
         next -= 1;
     }
     if next == start {
-        next = end.min(start + source[start..].chars().next().map(char::len_utf8).unwrap_or(1));
+        next = end.min(start + source[start..].chars().next().map_or(1, char::len_utf8));
     }
     output.push(std::sync::Arc::from(&source[start..next]));
     *cursor = next;
@@ -1152,8 +1155,8 @@ fn queue(payload: &SetTryValueStep) -> Effect {
     Effect::DispatchAction { req: RequestId(NEXT_TRY_VALUE_REQUEST.fetch_add(1, Ordering::Relaxed)), action: SET_TRY_VALUE_STEP_ACTION_ID.into(), args: Some(dsl::ToValue::to_value(payload)), delay_ms: 0 }
 }
 
-fn continuation_emit(generation: u64, next: SetTryValueStep) -> Emit<FormMutation, FormsConfigMutation> {
-    Emit { coalesce_key: Some(format!("setTryValue:{generation}")), effects: vec![queue(&next)], ui_scope: UiDirtyScope::None, ..Default::default() }
+fn continuation_emit(generation: u64, next: &SetTryValueStep) -> Emit<FormMutation, FormsConfigMutation> {
+    Emit { coalesce_key: Some(format!("setTryValue:{generation}")), effects: vec![queue(next)], ui_scope: UiDirtyScope::None, ..Default::default() }
 }
 
 fn stage_chunk(session: &mut TryValueSession, chunk: String) -> FormsConfigMutation {
@@ -1167,9 +1170,9 @@ fn commit_mutation(session: &TryValueSession) -> FormsConfigMutation {
     FormsConfigMutation::CommitTryValue(crate::editor::forms::config::CommitTryValue { key: session.key.clone(), staging_id: session.staging_id.clone(), content_id: content_id(session), chunk_count: session.staged_chunks })
 }
 
-fn finish_try_value(generation: u64, session: TryValueSession, mutations: Vec<FormsConfigMutation>) -> Emit<FormMutation, FormsConfigMutation> {
+fn finish_try_value(generation: u64, session: &TryValueSession, mutations: Vec<FormsConfigMutation>) -> Emit<FormMutation, FormsConfigMutation> {
     let mut mutations = mutations;
-    mutations.push(commit_mutation(&session));
+    mutations.push(commit_mutation(session));
     Emit { config_mutations: mutations, coalesce_key: Some(format!("setTryValue:{generation}")), ui_scope: UiDirtyScope::Full, ..Default::default() }
 }
 
@@ -1198,7 +1201,7 @@ fn advance_prepared(generation: u64, mut session: TryValueSession) -> Emit<FormM
     let end = session.prepared_cursor;
     let staged = stage_chunk(&mut session, chunk);
     if end == value_len {
-        return finish_try_value(generation, session, vec![staged]);
+        return finish_try_value(generation, &session, vec![staged]);
     }
     let next = next_payload(generation, &session, 0);
     let key = session_job_key(&session, generation);
@@ -1229,7 +1232,7 @@ pub fn advance_try_value(payload: &SetTryValueStep, config: &FormsConfig) -> Res
         let next = next_payload(payload.generation, &session, target_index);
         let key = session_job_key(&session, payload.generation);
         put_session(key, session).expect("taken Forms session always has admission");
-        return Ok(continuation_emit(payload.generation, next));
+        return Ok(continuation_emit(payload.generation, &next));
     }
     if session.prepared_value.is_some() {
         return Ok(advance_prepared(payload.generation, session));
@@ -1248,7 +1251,7 @@ pub fn advance_try_value(payload: &SetTryValueStep, config: &FormsConfig) -> Res
     if step.complete {
         let is_final = session.rewrite.as_ref().is_some_and(TryValueRewrite::is_final_preview);
         return Ok(match session.rewrite.as_mut().and_then(TryValueRewrite::take_output) {
-            Some(_source) if is_final => finish_try_value(payload.generation, session, mutations),
+            Some(_source) if is_final => finish_try_value(payload.generation, &session, mutations),
             Some(source) => {
                 let rewrite = session.rewrite.as_ref().expect("vector rewrite session");
                 let rewrite_checkpoint = rewrite.checkpoint();
@@ -1260,7 +1263,7 @@ pub fn advance_try_value(payload: &SetTryValueStep, config: &FormsConfig) -> Res
                 let next = next_payload(payload.generation, &session, target_index);
                 let key = session_job_key(&session, payload.generation);
                 put_session(key, session).expect("taken Forms session always has admission");
-                continuation_emit(payload.generation, next)
+                continuation_emit(payload.generation, &next)
             }
             None => Emit::default(),
         });
@@ -1351,17 +1354,16 @@ fn start_try_value(payload: &SetTryValue, operation: &semio_framework_plugin::Ap
                 digest_third: 0x9e3779b185ebca87,
                 digest_fourth: 0xc2b2ae3d27d4eb4f,
                 digest_len: 0,
-                source: current_content_id
-                    .is_none()
-                    .then(|| {
-                        let fallback = match &rewrite {
-                            TryValueRewrite::Vector(_) => "null",
-                            TryValueRewrite::Container(ContainerRewrite { edit: ContainerEdit::Option { .. }, .. }) => "[]",
-                            TryValueRewrite::Container(ContainerRewrite { edit: ContainerEdit::Object { .. }, .. }) => "{}",
-                        };
-                        ChunkedSource::from_text(fallback.into())
-                    })
-                    .unwrap_or_default(),
+                source: if current_content_id.is_none() {
+                    let fallback = match &rewrite {
+                        TryValueRewrite::Vector(_) => "null",
+                        TryValueRewrite::Container(ContainerRewrite { edit: ContainerEdit::Option { .. }, .. }) => "[]",
+                        TryValueRewrite::Container(ContainerRewrite { edit: ContainerEdit::Object { .. }, .. }) => "{}",
+                    };
+                    ChunkedSource::from_text(fallback.into())
+                } else {
+                    ChunkedSource::default()
+                },
                 source_content_id: current_content_id,
                 source_chunk_cursor: 0,
                 rewrite: Some(rewrite),
@@ -1422,7 +1424,7 @@ pub fn handle(payload: &SetTryValue, doc: &ArtifactView<'_, FormsSnapshot>, cfg:
         return Ok(Emit::default());
     }
     let operation = doc.operation()?;
-    let chunk = payload.value_json.as_ref().map(ChunkAddressableJson::owner).unwrap_or_else(|| std::sync::Arc::from("false"));
+    let chunk = payload.value_json.as_ref().map_or_else(|| std::sync::Arc::from("false"), ChunkAddressableJson::owner);
     let input_count = payload.input_count.unwrap_or(1);
     if input_count > 1 && payload.input_id.is_none() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("forms.try-value.input-id-required"), "multi-chunk Forms input requires an explicit input id"));

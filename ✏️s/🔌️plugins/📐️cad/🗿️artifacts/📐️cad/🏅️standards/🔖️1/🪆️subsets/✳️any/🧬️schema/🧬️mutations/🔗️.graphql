@@ -13,7 +13,6 @@ type CadMutation {
   buildingGeometry: CadGeometry @state(class: ARTIFACT)
   energyGeometry: CadGeometry @state(class: ARTIFACT)
   structureClassicGeometry: CadGeometry @state(class: ARTIFACT)
-  activeModelDefinitionId: String! @state(class: ARTIFACT)
 }
 
 type CadObject { id: String! }

@@ -42,17 +42,25 @@ async fn inverse_law() {
 async fn absorb_law_cartesian() {
     let b = base();
     let variants = demo_mutation_cases();
+    let mut valid_compositions = 0;
+    let mut rejected_compositions = 0;
     for m1 in &variants {
         let d1 = m1.diff(&b);
         let mid = d1.diff().apply(&b).unwrap();
         for m2 in &variants {
             let d2 = m2.diff(&mid);
-            let after = d2.diff().apply(&mid).unwrap();
+            let Ok(after) = d2.diff().apply(&mid) else {
+                rejected_compositions += 1;
+                continue;
+            };
             let mut merged = d1.diff().clone();
             merged.absorb(d2.diff().clone());
             assert_eq!(merged.apply(&b).unwrap(), after, "absorb({m1:?}, {m2:?}) mismatch");
+            valid_compositions += 1;
         }
     }
+    assert_eq!(valid_compositions, 15, "the representative matrix must exercise every valid sequential composition");
+    assert_eq!(rejected_compositions, 1, "only the deliberate short-snapshot/out-of-range splice pair is outside the algebra domain");
 }
 
 /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws (handcrafted impls over the
@@ -69,6 +77,8 @@ async fn op_text_binary_roundtrip_law() {
         let decoded = BinaryMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
         assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
     }
+    assert!(BinaryMutation::parse_op("replace-byte-range offset=1 remove-len=2 insert=\"qrvM\"").is_err());
+    assert!(BinaryMutation::parse_op("splice-extra offset=1 remove-len=2 insert=\"qrvM\"").is_err());
 }
 
 //#region 🔖️KindsCoverageLaw

@@ -12,16 +12,16 @@ use framework_schema::ArtifactSchema;
 /// `flow` and `text` subsets instead. `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s
 /// slot-table emission; never hand-written.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.imperative.procedure")]
 pub struct ProcedureSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.flow")]
+    #[child(kind = "s.stdio.semio")]
     pub flow: ProcedureFlowChild,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.text")]
+    #[child(kind = "s.stdio.semio")]
     pub text: ProcedureTextChild,
 }
 

@@ -1,6 +1,7 @@
 //! 🪟️ 🧩️ Flow play app commands command — `move-media-node`.
 
-use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::host_operations;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
@@ -14,8 +15,8 @@ pub struct MoveMediaNode {
     pub y: f64,
 }
 
-pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-    let operations = host_operations(doc.snapshot, cfg.snapshot, session, |host| {
+pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    let operations = host_operations(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, |host| {
         host.begin_change();
         host.move_widget(&payload.node_id, payload.x, payload.y).is_ok()
     });

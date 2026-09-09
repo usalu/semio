@@ -1,0 +1,12 @@
+{
+  "maximumInlineBytes": 128,
+  "restore": {
+    "phase": "restore",
+    "value": {
+      "root": {
+        "kind": "text",
+        "text": "restored"
+      }
+    }
+  }
+}

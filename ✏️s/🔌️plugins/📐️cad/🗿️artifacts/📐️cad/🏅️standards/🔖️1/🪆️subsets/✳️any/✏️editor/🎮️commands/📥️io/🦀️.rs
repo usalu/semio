@@ -2,11 +2,10 @@
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, export_solid_for_pane, export_solid_modelspace, export_spatial_json, preview_transition_snapshot_of, reset_document_effect, runtime_of, CadPlayView};
+use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, cad_pane_from_view, export_solid_for_pane, export_solid_modelspace, export_spatial_json, preview_transition_snapshot_of, reset_document_effect, runtime_of, CadPlayView};
 use crate::op::CadMutation;
 use crate::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
 use crate::CadSnapshot;
-use crate::{cad_pane_from_model_definition_id, CadPaneId};
 use protocol::DslValue;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -60,9 +59,11 @@ pub mod save_selected {
     #[dsl(keyword = "save-selected")]
     pub struct SaveSelected {}
 
-    pub fn handle(_payload: &SaveSelected, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(_payload: &SaveSelected, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let pane = cad_pane_from_view(ctx.view_state.as_ref().ok_or_else(|| Fault::from("cad.window.invalid: selected export has no host view context"))?)?;
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
-        Ok(Emit::effect(cad_spatial_export_effect(&export_spatial_json(&view, "selected"), "cad.selected.spatial.dsl")))
+        let export = export_spatial_json(&view, "selected", Some(pane))?;
+        Ok(Emit::effect(cad_spatial_export_effect(&export, "cad.selected.spatial.dsl")))
     }
 }
 //#endregion 🔖️SaveSelected
@@ -79,7 +80,7 @@ pub mod save_in_play {
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
         let effect = match export_solid_modelspace(&view, CAD_SOLID_EXPORT_DIALECT_STEP) {
             Some(export) => cad_solid_export_effect(export),
-            None => cad_spatial_export_effect(&export_spatial_json(&view, "modelspace"), "cad.modelspace.spatial.dsl"),
+            None => cad_spatial_export_effect(&export_spatial_json(&view, "modelspace", None)?, "cad.modelspace.spatial.dsl"),
         };
         Ok(Emit::effect(effect))
     }
@@ -96,18 +97,18 @@ pub mod save_current {
         pub format: Option<String>,
     }
 
-    pub fn handle(payload: &SaveCurrent, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &SaveCurrent, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let format = match payload.format.as_deref() {
             Some("obj") => CAD_SOLID_EXPORT_DIALECT_OBJ,
             Some("stl") => CAD_SOLID_EXPORT_DIALECT_STL,
             _ => CAD_SOLID_EXPORT_DIALECT_STEP,
         };
-        let pane = cad_pane_from_model_definition_id(&document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
+        let pane = cad_pane_from_view(ctx.view_state.as_ref().ok_or_else(|| Fault::from("cad.window.invalid: current export has no host view context"))?)?;
         let view = CadPlayView { document: document.clone(), runtime: runtime_of(cfg) };
         let effect = match export_solid_for_pane(&view, pane, format) {
             Some(export) => cad_solid_export_effect(export),
-            None => cad_spatial_export_effect(&export_spatial_json(&view, "current"), "cad.current.spatial.dsl"),
+            None => cad_spatial_export_effect(&export_spatial_json(&view, "current", Some(pane))?, "cad.current.spatial.dsl"),
         };
         Ok(Emit::effect(effect))
     }

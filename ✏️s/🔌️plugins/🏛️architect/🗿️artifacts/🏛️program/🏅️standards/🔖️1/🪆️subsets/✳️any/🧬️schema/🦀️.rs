@@ -8,7 +8,7 @@ use graph::{orient_endpoints, Undirected};
 //#region 🔖️Artifact
 /// 🧬️ program document artifact state.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramArtifact {
     #[state(artifact)]
@@ -144,10 +144,10 @@ pub struct ProgramArtifact {
     #[state(artifact)]
     pub templates: Vec<TemplateRecord>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     pub knowledge: crate::ProgramKnowledgeChild,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     pub benchmarks: crate::ProgramBenchmarksChild,
     #[state(artifact)]
     pub traces: Vec<TraceLink>,

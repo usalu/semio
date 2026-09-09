@@ -13,15 +13,17 @@ testBuiltTreeRetirementFixture();
 testFixtureProjectionRetirement();
 
 //#region 🧬️OwnedSchemaExports
-/** 🧬️ The subset scope's own schema module — every law this file validates is one of its named exports. */
-const flowSchemaModule = await Bun.file(new URL("../../../🧬️schema/🔣️.json", import.meta.url)).json();
-/** 🧬️ Compiles one `schema://s.flow.flow/<export>` contract with the module registered under its own `$id`. */
+/** 🧬️ Editor fixture contracts remain separate from the persisted artifact schema. */
+const flowSchemaModule = await Bun.file(new URL("../../🧫️fixtures/🧬️schema/🔣️.json", import.meta.url)).json();
+const flowChildSchema = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json", import.meta.url)).json();
+const flowIoSchema = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json", import.meta.url)).json();
+/** 🔬️ Compiles one fixture contract with its module registered under its own `$id`. */
 function flowExport(name: string) {
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-  ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
+  for (const keyword of ["x-semio-state", "x-semio-child-kind", "x-semio-child-standard", "x-semio-child-subset"]) ajv.addKeyword({ keyword, metaSchema: { type: "string" } });
   for (const numeric of ["double", "float", "int32", "int64", "uint32", "uint64"]) ajv.addFormat(numeric, true);
-  ajv.addSchema(flowSchemaModule);
+  ajv.addSchema(flowIoSchema).addSchema(flowChildSchema).addSchema(flowSchemaModule);
   return ajv.compile({ $ref: `${flowSchemaModule.$id}#/$defs/${name}` });
 }
 //#endregion 🧬️OwnedSchemaExports
@@ -197,8 +199,8 @@ for (const mutate of [
   (value: any) => { value.cases[0].grantBytes = 0; },
   (value: any) => { value.cases[0].unknown = "field"; },
   (value: any) => { value.cases[1].id = value.cases[0].id; },
-  (value: any) => { value.canonicalVariants.pop(); },
-  (value: any) => { value.canonicalVariants[0] = value.canonicalVariants[1]; },
+  (value: any) => { value.canonicalVariants = ["Snapshot"]; },
+  (value: any) => { value.cases.pop(); },
   (value: any) => { value.preparationGrantBytes = [16384]; },
 ]) {
   const mutant = structuredClone(fixture);
@@ -329,7 +331,7 @@ const preparationSource = await Bun.file(new URL("../../🧵️retained/🗿️a
 assert(contentSource.includes("artifact_id: child_id.clone()"), "Flow content target must name its exact content-addressed child");
 assert(snapshotSource.includes('#[child(kind = "s.stdio.semio")]'), "Flow child kind must be the canonical artifact kind, separate from its subset");
 assert(preparationSource.includes("3 | 4 => {"), "both retained child and target identities must use the complete paged digest spelling");
-const mutationFixtureRoot = new URL("../../../🧬️schema/🧬️mutations", import.meta.url);
+const mutationFixtureRoot = new URL("../../../🧫️fixtures/🧬️mutations/", import.meta.url);
 const snapshotPaths = [...new Bun.Glob("**/📸️snapshot/*/🔣️.json").scanSync({ cwd: fileURLToPath(mutationFixtureRoot), onlyFiles: true })];
 assert.equal(snapshotPaths.length, 20);
 const assetSnapshots = await Promise.all(snapshotPaths.map(path => Bun.file(new URL(path, mutationFixtureRoot)).json()));
@@ -370,9 +372,9 @@ const retainedIdentitySource = await Bun.file(new URL("../../🧵️retained/�
 assert(retainedIdentitySource.includes("fn retire_child_local_owner("));
 assert(retainedIdentitySource.includes("derived.child_id"));
 assert.equal((retainedIdentitySource.match(/take_local_owner::<FlowWorkingScene>/g) ?? []).length >= 2, true);
-const duplicateRoot = new URL("../../../🧬️schema/🧬️mutations/👯️duplicate-widget", import.meta.url);
+const duplicateRoot = new URL("../../../🧬️schema/🧬️mutations/👯️duplicate-widget/", import.meta.url);
 const duplicateSource = await Bun.file(new URL("🦀️.rs", duplicateRoot)).text();
-const duplicateFixture = await Bun.file(new URL("🧪️tests/🚫️rejects-duplicating-6d209e/🦠️mutation/🔣️.json", duplicateRoot)).json();
+const duplicateFixture = await Bun.file(new URL("👯️duplicate-widget/🚫️rejects-duplicating-onto-a-taken-id/🦠️mutation/🔣️.json", mutationFixtureRoot)).json();
 const duplicateModule = await Bun.file(new URL("🧬️schema/🔣️.json", duplicateRoot)).json();
 const duplicateAjv = new Ajv({ strict: true, allErrors: true });
 duplicateAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });

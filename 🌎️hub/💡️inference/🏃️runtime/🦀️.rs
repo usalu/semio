@@ -3,25 +3,25 @@
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::{
-    Arc, Mutex,
     atomic::{AtomicBool, AtomicU64, Ordering},
+    Arc, Mutex,
 };
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use tokio::sync::{OwnedSemaphorePermit, Semaphore, oneshot};
+use tokio::sync::{oneshot, OwnedSemaphorePermit, Semaphore};
 use tokio::task::JoinHandle;
 
 use directory::os_directory::{ArtifactFrontier, DocumentScope};
 
 use super::catalog::VerifiedGisMapArtifactBindingV1;
-use super::command::{CanonicalInferenceCommandPartsV1, CanonicalInferenceCommandV1, encode_server_stamped_command_v1};
+use super::command::{encode_server_stamped_command_v1, CanonicalInferenceCommandPartsV1, CanonicalInferenceCommandV1};
 use super::schema::{
-    GIS_DOCUMENT_SCHEMA, GisMapInferencePreviewV1, InferenceApprovalReceiptV1, InferenceEventPageV1, InferenceEventV1, InferenceIdentityV1, InferenceJobReceiptV1, InferenceJobReconcileResultV1, InferenceProgressV1, PROPOSAL_MAX_BYTES,
+    GisMapInferencePreviewV1, InferenceApprovalReceiptV1, InferenceEventPageV1, InferenceEventV1, InferenceIdentityV1, InferenceJobReceiptV1, InferenceJobReconcileResultV1, InferenceProgressV1, GIS_DOCUMENT_SCHEMA, PROPOSAL_MAX_BYTES,
     RESULT_MAX_BYTES,
 };
 use super::sqlite::{InferenceJobLedgerV1, InferenceReaderV1};
 use super::wal::{CommittedInferenceWalWitnessV1, InferenceDocumentFenceV1, InferenceWalTargetV1, InferenceWalVerifierV1};
-use super::{InferenceErrorV1, InferenceOperationControlV1, InferencePrivateBytesV1, sha256};
+use super::{sha256, InferenceErrorV1, InferenceOperationControlV1, InferencePrivateBytesV1};
 use crate::directory::HubDirectory;
 
 /// 🔢️ Fixed bounds every inference route enforces before it touches storage or the GIS executor.
@@ -481,15 +481,43 @@ struct GisMapAbandonedRequestTaskV1 {
     owner: Option<GisMapAbandonedRequestV1>,
 }
 
+struct GisMapMaintenanceCompletionV1 {
+    maintenance: Arc<std::sync::Mutex<std::collections::HashSet<String>>>,
+    cleanup_jobs: Arc<std::sync::Mutex<HashMap<String, u16>>>,
+    state_epoch: Arc<tokio::sync::watch::Sender<u64>>,
+    maintenance_key: String,
+    job_id: Option<String>,
+}
+
+impl GisMapMaintenanceCompletionV1 {
+    fn complete(self) {
+        self.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&self.maintenance_key);
+        if let Some(job_id) = self.job_id {
+            let mut jobs = self.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(owners) = jobs.get_mut(&job_id) {
+                if *owners == 1 {
+                    jobs.remove(&job_id);
+                } else {
+                    *owners -= 1;
+                }
+            }
+        }
+        self.state_epoch.send_modify(|epoch| *epoch = epoch.wrapping_add(1));
+    }
+}
+
 impl GisMapAbandonedRequestTaskV1 {
     fn complete(mut self) {
-        let job_id = self.owner.as_ref().map(|owner| owner.identity.job_id.clone());
+        let completion = GisMapMaintenanceCompletionV1 {
+            maintenance: self.committer.maintenance.clone(),
+            cleanup_jobs: self.committer.cleanup_jobs.clone(),
+            state_epoch: self.committer.state_epoch.clone(),
+            maintenance_key: self.maintenance_key.clone(),
+            job_id: self.owner.as_ref().map(|owner| owner.identity.job_id.clone()),
+        };
         self.owner = None;
-        self.committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&self.maintenance_key);
-        if let Some(job_id) = job_id {
-            self.committer.release_cleanup_job(&job_id);
-        }
-        self.committer.announce_state_change();
+        drop(self);
+        completion.complete();
     }
 }
 
@@ -509,13 +537,16 @@ struct GisMapPreparedApprovalTaskV1 {
 
 impl GisMapPreparedApprovalTaskV1 {
     fn complete(mut self) {
-        let job_id = self.owner.as_ref().map(|owner| owner.job_id.clone());
+        let completion = GisMapMaintenanceCompletionV1 {
+            maintenance: self.committer.maintenance.clone(),
+            cleanup_jobs: self.committer.cleanup_jobs.clone(),
+            state_epoch: self.committer.state_epoch.clone(),
+            maintenance_key: self.maintenance_key.clone(),
+            job_id: self.owner.as_ref().map(|owner| owner.job_id.clone()),
+        };
         self.owner = None;
-        self.committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&self.maintenance_key);
-        if let Some(job_id) = job_id {
-            self.committer.release_cleanup_job(&job_id);
-        }
-        self.committer.announce_state_change();
+        drop(self);
+        completion.complete();
     }
 }
 
@@ -751,7 +782,7 @@ impl RetainedGisMapApprovalCommitterV1 {
     }
 
     fn drawing_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapDrawingSnapshotV1) -> GisMapDrawingStoreV1 {
-        use directory::{ArtifactPack, os_store::MemberStoreOwner};
+        use directory::{os_store::MemberStoreOwner, ArtifactPack};
         let schema = semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
         let mut envelope = directory::os_store::create_document_envelope::<GisMapDrawingSnapshotV1, GisMapDrawingMutationV1>(schema, id, snapshot.clone(), None);
         envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() });
@@ -762,7 +793,7 @@ impl RetainedGisMapApprovalCommitterV1 {
     }
 
     fn value_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapValueSnapshotV1) -> GisMapValueStoreV1 {
-        use directory::{ArtifactPack, os_store::MemberStoreOwner};
+        use directory::{os_store::MemberStoreOwner, ArtifactPack};
         let schema = semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
         let mut envelope = directory::os_store::create_document_envelope::<GisMapValueSnapshotV1, GisMapValueMutationV1>(schema, id, snapshot.clone(), None);
         envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() });
@@ -841,7 +872,7 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     fn preflight_undo(request: &GisMapApprovalUndoCommitRequestV1<'_>) -> Result<(GisMapCommitIdentityV1, GisMapParentSnapshotV1), GisMapApprovalCommitErrorV1> {
         use directory::Inference as _;
-        use semio_s_artifact_gis_gismap::mutations::{GisMapMutation, apply_gis_map_mutation};
+        use semio_s_artifact_gis_gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
         use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
         let snapshot = <GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(request.base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let actor = request.actor.strip_prefix("user:").and_then(|value| value.split_once("#session:"));
@@ -1123,7 +1154,11 @@ impl RetainedGisMapApprovalCommitterV1 {
                         if stored != scope || !Arc::ptr_eq(&document_write.gate, &gate) {
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
-                        if Self::request_matches(document_write, &request) { PrepareTurn::Recover } else { PrepareTurn::Wait }
+                        if Self::request_matches(document_write, &request) {
+                            PrepareTurn::Recover
+                        } else {
+                            PrepareTurn::Wait
+                        }
                     }
                     Some(RetainedGisMapDocumentStateV1::Ready { owners, document_write, .. }) => {
                         if owners.scope != *scope
@@ -1155,19 +1190,31 @@ impl RetainedGisMapApprovalCommitterV1 {
                         if owners.scope != *scope || !Arc::ptr_eq(&owners.document_write, &gate) || !Arc::ptr_eq(&document_write.gate, &gate) {
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
-                        if Self::request_matches(document_write, &request) { PrepareTurn::PublishRecovered } else { PrepareTurn::Wait }
+                        if Self::request_matches(document_write, &request) {
+                            PrepareTurn::PublishRecovered
+                        } else {
+                            PrepareTurn::Wait
+                        }
                     }
                     Some(RetainedGisMapDocumentStateV1::Verification { owners, identity, document_write, .. }) | Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity, document_write, .. }) => {
                         if owners.scope != *scope || !Arc::ptr_eq(&owners.document_write, &gate) || !Arc::ptr_eq(&document_write.gate, &gate) || identity.base_frontier != base.frontier || identity.base_digest != base.digest() {
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
-                        if Self::request_matches(document_write, &request) { PrepareTurn::Ready } else { PrepareTurn::Wait }
+                        if Self::request_matches(document_write, &request) {
+                            PrepareTurn::Ready
+                        } else {
+                            PrepareTurn::Wait
+                        }
                     }
                     Some(RetainedGisMapDocumentStateV1::Assembly { scope: stored, identity, document_write, .. }) | Some(RetainedGisMapDocumentStateV1::Journal { scope: stored, identity, document_write, .. }) => {
                         if stored != scope || !Arc::ptr_eq(&identity.document_write, &gate) || identity.base_frontier != base.frontier || identity.base_digest != base.digest() {
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
-                        if Self::request_matches(document_write, &request) { PrepareTurn::Ready } else { PrepareTurn::Wait }
+                        if Self::request_matches(document_write, &request) {
+                            PrepareTurn::Ready
+                        } else {
+                            PrepareTurn::Wait
+                        }
                     }
                     Some(RetainedGisMapDocumentStateV1::Closing(_)) => PrepareTurn::Wait,
                     None => PrepareTurn::Acquire,
@@ -1230,14 +1277,14 @@ impl RetainedGisMapApprovalCommitterV1 {
         snapshot: &GisMapParentSnapshotV1,
         document_write: GisMapDocumentWriteLeaseV1,
     ) -> Result<RetainedGisMapDocumentStateV1, (GisMapApprovalCommitErrorV1, GisMapDocumentStoresV1)> {
-        use directory::Inference as _;
         use directory::os_store::durable_group::{DurableOwnedMapMemberAdmissionV1, DurableOwnedThreeStoreMapAssemblyV1};
-        use semio_s_artifact_gis_gismap::editor::gis2d::{GisMapOneItemStampV1, gis_map_drawing_stamped_one_item_preparation_factory, gis_map_parent_stamped_one_item_preparation_factory, gis_map_value_stamped_one_item_preparation_factory};
+        use directory::Inference as _;
+        use semio_s_artifact_gis_gismap::editor::gis2d::{gis_map_drawing_stamped_one_item_preparation_factory, gis_map_parent_stamped_one_item_preparation_factory, gis_map_value_stamped_one_item_preparation_factory, GisMapOneItemStampV1};
         use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
         let work = match &identity.operation {
             GisMapCommitOperationV1::Approval => GisMapInference::infer(snapshot).create_region_group_work(snapshot, &identity.job_id),
             GisMapCommitOperationV1::Undo { original_job_id, original_command, .. } => {
-                use semio_s_artifact_gis_gismap::mutations::{GisMapMutation, apply_gis_map_mutation};
+                use semio_s_artifact_gis_gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
                 let command = match CanonicalInferenceCommandV1::decode(original_command.as_slice()) {
                     Ok(command) => command,
                     Err(_) => return Err((GisMapApprovalCommitErrorV1::Rejected, owners)),
@@ -1435,13 +1482,21 @@ impl RetainedGisMapApprovalCommitterV1 {
                 let matches = Self::identity_matches(&identity, candidate);
                 let generation = owners.generation;
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Verification { owners, identity, receipt: receipt.clone(), document_write });
-                if matches { GisMapCommitTurnV1::Verify { generation, receipt } } else { GisMapCommitTurnV1::Rejected(GisMapApprovalCommitErrorV1::Conflict) }
+                if matches {
+                    GisMapCommitTurnV1::Verify { generation, receipt }
+                } else {
+                    GisMapCommitTurnV1::Rejected(GisMapApprovalCommitErrorV1::Conflict)
+                }
             }
             RetainedGisMapDocumentStateV1::Publishing { owners, identity, receipt, document_write } => {
                 let matches = Self::identity_matches(&identity, candidate);
                 let generation = owners.generation;
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Publishing { owners, identity, receipt: receipt.clone(), document_write });
-                if matches { GisMapCommitTurnV1::Verify { generation, receipt } } else { GisMapCommitTurnV1::Rejected(GisMapApprovalCommitErrorV1::Conflict) }
+                if matches {
+                    GisMapCommitTurnV1::Verify { generation, receipt }
+                } else {
+                    GisMapCommitTurnV1::Rejected(GisMapApprovalCommitErrorV1::Conflict)
+                }
             }
             RetainedGisMapDocumentStateV1::Published { owners, identity, receipt, document_write } => {
                 if Self::identity_matches(&identity, candidate) {
@@ -1491,12 +1546,20 @@ impl RetainedGisMapApprovalCommitterV1 {
             RetainedGisMapDocumentStateV1::Recovery { owner, handle, scope, generation, document_write, fence } => {
                 let matches = Self::request_matches(&document_write, request);
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Recovery { owner, handle, scope, generation, document_write, fence });
-                if matches { GisMapAbandonedTurnV1::Recover } else { GisMapAbandonedTurnV1::Complete }
+                if matches {
+                    GisMapAbandonedTurnV1::Recover
+                } else {
+                    GisMapAbandonedTurnV1::Complete
+                }
             }
             RetainedGisMapDocumentStateV1::Recovered { owners, checkpoint, document_write } => {
                 let matches = Self::request_matches(&document_write, request);
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Recovered { owners, checkpoint, document_write });
-                if matches { GisMapAbandonedTurnV1::Recovered } else { GisMapAbandonedTurnV1::Complete }
+                if matches {
+                    GisMapAbandonedTurnV1::Recovered
+                } else {
+                    GisMapAbandonedTurnV1::Complete
+                }
             }
             RetainedGisMapDocumentStateV1::Ready { owners, pending, document_write } => {
                 let matches = document_write.as_ref().is_some_and(|lease| Self::request_matches(lease, request)) && pending.as_ref().is_none_or(|identity| Self::identity_matches(identity, candidate));
@@ -1506,7 +1569,11 @@ impl RetainedGisMapApprovalCommitterV1 {
                 } else {
                     documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Ready { owners, pending, document_write });
                 }
-                if matches { GisMapAbandonedTurnV1::Aborted } else { GisMapAbandonedTurnV1::Complete }
+                if matches {
+                    GisMapAbandonedTurnV1::Aborted
+                } else {
+                    GisMapAbandonedTurnV1::Complete
+                }
             }
             RetainedGisMapDocumentStateV1::Assembly { mut owner, handle, scope, generation, identity, document_write, fence } => {
                 if !Self::request_matches(&document_write, request) || !Self::identity_matches(&identity, candidate) {
@@ -1594,7 +1661,11 @@ impl RetainedGisMapApprovalCommitterV1 {
                 let verify_identity = identity.clone();
                 let verify_receipt = receipt.clone();
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Verification { owners, identity, receipt, document_write });
-                if matches { GisMapAbandonedTurnV1::Verify { identity: verify_identity, generation, receipt: verify_receipt } } else { GisMapAbandonedTurnV1::Complete }
+                if matches {
+                    GisMapAbandonedTurnV1::Verify { identity: verify_identity, generation, receipt: verify_receipt }
+                } else {
+                    GisMapAbandonedTurnV1::Complete
+                }
             }
             RetainedGisMapDocumentStateV1::Publishing { owners, identity, receipt, document_write } => {
                 let matches = Self::request_matches(&document_write, request) && Self::identity_matches(&identity, candidate);
@@ -1602,7 +1673,11 @@ impl RetainedGisMapApprovalCommitterV1 {
                 let verify_identity = identity.clone();
                 let verify_receipt = receipt.clone();
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Publishing { owners, identity, receipt, document_write });
-                if matches { GisMapAbandonedTurnV1::Verify { identity: verify_identity, generation, receipt: verify_receipt } } else { GisMapAbandonedTurnV1::Complete }
+                if matches {
+                    GisMapAbandonedTurnV1::Verify { identity: verify_identity, generation, receipt: verify_receipt }
+                } else {
+                    GisMapAbandonedTurnV1::Complete
+                }
             }
             RetainedGisMapDocumentStateV1::Published { owners, identity, receipt, document_write } => {
                 let matches = document_write.as_ref().is_some_and(|lease| Self::request_matches(lease, request)) && Self::identity_matches(&identity, candidate);
@@ -1856,7 +1931,7 @@ impl RetainedGisMapApprovalCommitterV1 {
             let snapshot = handle.checkpoint_publication_snapshot().await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
             (Self::publication_wire_frontier(&Self::publication_frontier(&identity.scope, &snapshot).ok_or(GisMapApprovalCommitErrorV1::Conflict)?), after_base_digest)
         };
-        let (applied, undo) = match &identity.operation {
+        let (_newly_reconciled, undo) = match &identity.operation {
             GisMapCommitOperationV1::Approval => {
                 let reconciliation = self.ledger.reconcile_committed_approval(&identity.job_id, &witness, generation, &after_frontier, &identity.descriptor_digest, &after_base_digest, identity.journal_now_ms).map_err(|error| match error {
                     InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => GisMapApprovalCommitErrorV1::Conflict,
@@ -1896,7 +1971,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 return Err(GisMapApprovalCommitErrorV1::Conflict);
             }
         }
-        Ok(GisMapApprovalReceiptV1 { witness, document_generation: generation, applied, undo, frontier: after_frontier })
+        Ok(GisMapApprovalReceiptV1 { witness, document_generation: generation, applied: true, undo, frontier: after_frontier })
     }
 
     async fn commit_retained(&self, request: GisMapApprovalCommitRequestV1<'_>, mut owner: GisMapApprovalRequestOwnerV1, preflight: (GisMapCommitIdentityV1, GisMapParentSnapshotV1)) -> Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1> {
@@ -2781,7 +2856,7 @@ impl HubInferenceRuntimeV1 {
     /// ↩️ Rebuilds the original fixed-three work and stamps only its exact typed inverse.
     fn server_stamped_undo_command(&self, target: &super::sqlite::GisMapApprovalUndoTargetV1, idempotency_key: &str, base: &InferenceMapBaseV1, now_ms: u64) -> Result<GisMapPreparedUndoCommandV1, InferenceRouteErrorV1> {
         use directory::Inference as _;
-        use semio_s_artifact_gis_gismap::mutations::{GisMapMutation, apply_gis_map_mutation};
+        use semio_s_artifact_gis_gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
         use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
 
         if sha256(target.original_command.as_slice()) != target.original_command_hash {

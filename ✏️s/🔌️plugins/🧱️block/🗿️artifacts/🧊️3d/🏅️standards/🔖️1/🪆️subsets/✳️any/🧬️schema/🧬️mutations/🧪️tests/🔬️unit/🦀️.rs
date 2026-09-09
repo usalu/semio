@@ -30,7 +30,7 @@ fn seeded_snapshot() -> Block3dSnapshot {
         description: String::new(),
         attributes: vec![BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }],
     });
-    crate::set_vortex_kinds(&mut base, vec![Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() }]);
+    crate::set_vortex_kinds(&mut base, &[Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() }]);
     base.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None });
     base.compatibility.push(BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true });
     base.attributes.push(BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None });
@@ -230,7 +230,7 @@ async fn missing_target_is_error_per_verb_family() {
 async fn create_duplicate_id_is_fatal_and_never_applies() {
     let mut base = empty_block3d_snapshot();
     let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.power".into() };
-    crate::set_vortex_kinds(&mut base, vec![vortex_kind.clone()]);
+    crate::set_vortex_kinds(&mut base, &[vortex_kind.clone()]);
     let outcome = create_vortex_kind(vortex_kind).diff(&base);
     assert_fatal_never_applies(&outcome).await;
     assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));

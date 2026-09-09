@@ -1486,7 +1486,7 @@ mod plugin_builder_contract_tests {
         let runtime = super::PluginRuntime::new();
         let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
-        let acknowledgement_fixture: Value = serde_json::from_str(include_str!("../../🥇️tool-latest-wins.json")).expect("language-neutral result ACK fixture");
+        let acknowledgement_fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral result ACK fixture");
         let mut lanes = Vec::new();
         for turn in 0..100_000 {
             if let Err(error) = super::plugin_step_live_cleanup(&runtime) {
@@ -1574,20 +1574,17 @@ mod plugin_builder_contract_tests {
             let mut active = cell.instance.lock().expect("live runtime app");
             assert!(!active.app.has_pending_typed_operations());
             assert_eq!(active.app.snapshot().expect("parent snapshot").count, 9);
-            let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("live child");
-            let TestMembers::Child(child) = child;
+            let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("live child").member;
             assert_eq!(child.snapshot().expect("child snapshot").count, 9);
 
             active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("undo retained group");
             assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0);
-            let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("undone child");
-            let TestMembers::Child(child) = child;
+            let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("undone child").member;
             assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
 
             active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("redo retained group");
             assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
-            let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("redone child");
-            let TestMembers::Child(child) = child;
+            let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("redone child").member;
             assert_eq!(child.snapshot().expect("redone child snapshot").count, 9);
         }
         let retired = std::sync::Arc::downgrade(&cell);
@@ -2925,7 +2922,7 @@ mod plugin_builder_contract_tests {
     }
 
     fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str, lie_about_terminal: bool) {
-        let (_, TestMembers::Child(child)) = app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child retirement owner");
+        let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child retirement owner").member;
         child.install_snapshot_retirement_factory(std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal })).expect("install exact child snapshot retirement factory once");
     }
 
@@ -3076,9 +3073,9 @@ mod plugin_builder_contract_tests {
         assert!(member_documents.contains(&child_handle));
 
         // The child store actually applied its own op.
-        let (dialect, child_member) = app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("child stays registered after dispatch");
-        assert_eq!(dialect.artifact_kind, "s.test.child");
-        let TestMembers::Child(child_store) = child_member;
+        let entry = app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("child stays registered after dispatch");
+        assert_eq!(entry.reference.dialect.artifact_kind, "s.test.child");
+        let TestMembers::Child(child_store) = &mut entry.member;
         assert_eq!(child_store.snapshot().expect("child snapshot").count, 7);
 
         // And the command log recorded the child's edit id under the `config_edit_ids` precedent.
@@ -3213,8 +3210,7 @@ mod plugin_builder_contract_tests {
     async fn maximum_child_public_dispatch_reaches_first_continuation_without_clone_or_encode() {
         let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
         app.register_child("slot", "child-maximum", test_child_dialect().await, new_test_child("child-maximum").await.expect("construct maximum child")).await.expect("register maximum child");
-        let (_, member) = app.children.get_mut(&("slot".to_string(), "child-maximum".to_string())).expect("maximum child");
-        let TestMembers::Child(child) = member;
+        let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-maximum".to_string())).expect("maximum child").member;
         child.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) })], description: None }).await.expect("seed maximum child");
         let publication_generation = app.admit_child_content_publication().expect("admit maximum child publication");
         app.publish_child_content_member(publication_generation, "slot", "child-maximum").await.expect("publish maximum child root");
@@ -3262,8 +3258,7 @@ mod plugin_builder_contract_tests {
         // The parent reverted...
         assert_eq!(app.test_snapshot().await, before);
         // ...child-a (the real group member) reverted too...
-        let (_, child_a) = app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("child-a");
-        let TestMembers::Child(child_a_store) = child_a;
+        let TestMembers::Child(child_a_store) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("child-a").member;
         assert_eq!(child_a_store.snapshot().expect("child-a snapshot").count, 0);
         // ...and child-b — a genuine foreign tail, never touched by this group — is reported as
         // SKIPPED, not silently dropped nor allowed to abort the rest of the group.
@@ -3285,9 +3280,9 @@ mod plugin_builder_contract_tests {
 
         app.absorb_created_children(created).await.expect("absorb child and publish immutable root");
 
-        let (dialect, member) = app.children.get_mut(&("genesisSlot".to_string(), "genesis-child".to_string())).expect("genesis child absorbed into the live map under its real slot");
-        assert_eq!(dialect.artifact_kind, "s.test.child");
-        assert_eq!(member.document_id().await, "genesis-child");
+        let entry = app.children.get_mut(&("genesisSlot".to_string(), "genesis-child".to_string())).expect("genesis child absorbed into the live map under its real slot");
+        assert_eq!(entry.reference.dialect.artifact_kind, "s.test.child");
+        assert_eq!(entry.member.document_id().await, "genesis-child");
     }
     //#endregion 🔖️CompositionTests
 

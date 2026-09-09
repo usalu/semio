@@ -1488,6 +1488,130 @@ const canonicalizeGroupedSchemaCases = async () => {
   console.log(JSON.stringify({ fixtureCases, implementationCases, movedImplementations: changes.filter(({ kind }) => kind === "move").length, modifiedFiles: changes.filter(({ kind }) => kind === "modify").length, unmatched: unmatched.length }));
 };
 
+const resolveFinalPluginLayoutFindings = () => {
+  const changes: Change[] = [];
+  const move = (oldPath: string, newPath: string) => {
+    const before = readFileSync(oldPath);
+    mkdirSync(dirname(newPath), { recursive: true });
+    renameSync(oldPath, newPath);
+    const after = readFileSync(newPath);
+    changes.push({ kind: "move", oldPath: repoPath(oldPath), newPath: repoPath(newPath), bytesBefore: before.length, bytesAfter: after.length, sha256Before: sha256(before), sha256After: sha256(after), bytePreserved: before.equals(after) });
+  };
+  const modify = (path: string, transform: (text: string) => string) => {
+    const before = readFileSync(path);
+    const after = Buffer.from(transform(before.toString("utf8")));
+    if (before.equals(after)) return;
+    writeFileSync(path, after);
+    changes.push({ kind: "modify", oldPath: repoPath(path), newPath: repoPath(path), bytesBefore: before.length, bytesAfter: after.length, sha256Before: sha256(before), sha256After: sha256(after), bytePreserved: false });
+  };
+  const create = (path: string, bytes: Uint8Array) => {
+    if (existsSync(path)) throw new Error(`Destination already exists: ${repoPath(path)}`);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, bytes);
+    changes.push({ kind: "create", oldPath: repoPath(path), newPath: repoPath(path), bytesBefore: 0, bytesAfter: bytes.length, sha256Before: sha256(Buffer.alloc(0)), sha256After: sha256(bytes), bytePreserved: false });
+  };
+  const extractInlineRustTests = (path: string) => {
+    const before = readFileSync(path);
+    const text = before.toString("utf8");
+    const marker = "\n#[cfg(test)]\nmod tests {\n";
+    const markerAt = text.lastIndexOf(marker);
+    if (markerAt < 0 || text.slice(markerAt + marker.length).trimEnd().at(-1) !== "}") throw new Error(`Expected final inline test module: ${repoPath(path)}`);
+    const moduleText = text.slice(markerAt + marker.length).trimEnd();
+    const implementation = Buffer.from(`${moduleText.slice(0, -1).trim()}\n`);
+    const testPath = join(dirname(path), "🧪️tests", "🔬️unit", "🦀️.rs");
+    create(testPath, implementation);
+    const after = Buffer.from(`${text.slice(0, markerAt).trimEnd()}\n\n#[cfg(test)]\n#[path = "🧪️tests/🔬️unit/🦀️.rs"]\nmod tests;\n`);
+    writeFileSync(path, after);
+    changes.push({ kind: "modify", oldPath: repoPath(path), newPath: repoPath(path), bytesBefore: before.length, bytesAfter: after.length, sha256Before: sha256(before), sha256After: sha256(after), bytePreserved: false });
+  };
+
+  const retirement = join(scope, "🔌️plugins", "🔱️trinity", "🗿️artifacts", "♻️rewriting", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧬️schema", "♻️retirement");
+  for (const implementation of ["🦀️.rs", "🟦️.ts"]) move(join(retirement, "🧪️tests", implementation), join(retirement, "🧪️tests", "🔬️document-retirement", implementation));
+  modify(join(retirement, "🦀️.rs"), (text) => text.replace('🧪️tests/🦀️.rs', '🧪️tests/🔬️document-retirement/🦀️.rs'));
+  for (const implementation of ["🦀️.rs", "🟦️.ts"]) modify(join(retirement, "🧪️tests", "🔬️document-retirement", implementation), (text) => text.replace('../🧫️fixtures/🔣️.json', '../../🧫️fixtures/🔣️.json'));
+
+  const stdioBinary = join(scope, "🔌️plugins", "🗄️stdio", "🗿️artifacts", "🧿️semio", "🏅️standards", "🔖️v1", "🪆️subsets", "🌊️flow", "🧬️schema", "📸️snapshot", "💾️binary");
+  for (const relativePath of ["🔣️.json", join("♻️lifecycle", "🔣️.json")]) move(join(stdioBinary, "🧫️fixture", relativePath), join(stdioBinary, "🧫️fixtures", relativePath));
+  modify(join(stdioBinary, "🧪️tests", "💾️binary", "🦀️.rs"), (text) => text.replaceAll("../../🧫️fixture/", "../../🧫️fixtures/"));
+  rmSync(join(stdioBinary, "🧫️fixture"), { recursive: true, force: true });
+
+  const gisConfig = join(scope, "🔌️plugins", "🌍️gis", "🗿️artifacts", "🗺️gismap", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "✏️editor", "🎚️config", "🧬️schema", "🦀️.rs");
+  modify(gisConfig, (text) => text.replace('../../👥️presence/🧬️schema/🧫️fixtures/🔣️.json', '../../👥️presence/🧬️schema/🔣️.json'));
+
+  for (const path of [
+    join(scope, "🔌️plugins", "🔱️trinity", "🗿️artifacts", "🔌️jack", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "✏️editor", "🎮️commands", "▶️run-query", "🧵️job", "🦀️.rs"),
+    join(scope, "🔌️plugins", "🗒️note", "🗿️artifacts", "🗒️note", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "✏️editor", "🪟️window", "🦀️.rs"),
+    join(scope, "🔌️plugins", "🧩️puzzle", "🗿️artifacts", "◻️2d", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "✏️editor", "🪟️window", "🦀️.rs"),
+    join(scope, "🔌️plugins", "🧩️puzzle", "🗿️artifacts", "🖐️5d", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "✏️editor", "🪟️window", "🦀️.rs"),
+    join(scope, "🔌️plugins", "🧩️puzzle", "🗿️artifacts", "🧊️3d", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "✏️editor", "🪟️window", "🦀️.rs"),
+  ]) extractInlineRustTests(path);
+
+  const energySubset = join(scope, "🔌️plugins", "🔋️energy", "🗿️artifacts", "🔋️model", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any");
+  const malformedEnergySubset = join(scope, "🔌️plugins", "🔋️energy", "🗿️artifacts", "🔋️model", "🗿️artifacts", "🔋️model", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any");
+  for (const entry of readdirSync(join(energySubset, "📚️examples"), { withFileTypes: true }).filter((entry) => entry.isDirectory() && entry.name.startsWith("🏛️bestest-"))) {
+    const oldAsset = join(energySubset, "📚️examples", entry.name, "🖼️assets", "🗣️.dsl.semio");
+    const asset = join(energySubset, "🖼️assets", entry.name, "🗣️.dsl.semio");
+    move(oldAsset, asset);
+    const generatedAsset = readFileSync(join(malformedEnergySubset, "🖼️assets", entry.name, "🗣️.dsl.semio"));
+    const emptyAsset = readFileSync(asset);
+    writeFileSync(asset, generatedAsset);
+    changes.push({ kind: "modify", oldPath: repoPath(asset), newPath: repoPath(asset), bytesBefore: emptyAsset.length, bytesAfter: generatedAsset.length, sha256Before: sha256(emptyAsset), sha256After: sha256(generatedAsset), bytePreserved: false });
+    create(join(energySubset, "🧫️fixtures", entry.name, "🔋️model.json"), readFileSync(join(malformedEnergySubset, "🧫️fixtures", entry.name, "🔋️model.json")));
+  }
+  rmSync(join(scope, "🔌️plugins", "🔋️energy", "🗿️artifacts", "🔋️model", "🗿️artifacts"), { recursive: true, force: true });
+  const energyTest = join(scope, "🔌️plugins", "🔋️energy", "🔨️modules", "⚡️simulation", "⚙️engine", "🏛️bestest", "🧪️tests", "🔬️unit", "🦀️.rs");
+  modify(energyTest, (text) => text.replace('../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any', '../../🏅️standards/🔖️1/🪆️subsets/✳️any'));
+
+  writeReport(changes);
+  console.log(JSON.stringify({ movedFiles: changes.filter(({ kind }) => kind === "move").length, createdFiles: changes.filter(({ kind }) => kind === "create").length, modifiedFiles: changes.filter(({ kind }) => kind === "modify").length, bytePreservedMoves: changes.filter(({ kind, bytePreserved }) => kind === "move" && bytePreserved).length }));
+};
+
+const resolveRemainingFixtureUris = () => {
+  const changes: Change[] = [];
+  const move = (oldPath: string, newPath: string) => {
+    const before = readFileSync(oldPath);
+    mkdirSync(dirname(newPath), { recursive: true });
+    renameSync(oldPath, newPath);
+    const after = readFileSync(newPath);
+    changes.push({ kind: "move", oldPath: repoPath(oldPath), newPath: repoPath(newPath), bytesBefore: before.length, bytesAfter: after.length, sha256Before: sha256(before), sha256After: sha256(after), bytePreserved: before.equals(after) });
+  };
+  const gltfFixtures = join(scope, "🔌️plugins", "🗄️stdio", "🗿️artifacts", "🧊️gltf", "🏅️standards", "🔖️2.0", "🪆️subsets", "💎️material", "🧫️fixtures");
+  const scenarios: Array<[string, string]> = [
+    ["material/change-alpha", "change-material-alpha-mode-applied"],
+    ["material/change-sides", "change-material-double-sided-applied"],
+    ["material/create", "create-material-applied"],
+    ["material/delete", "delete-material-applied"],
+    ["material/move", "move-material-applied"],
+    ["material/reorder", "reorder-materials-applied"],
+    ["texture/create", "create-texture-applied"],
+    ["texture/delete", "delete-texture-applied"],
+    ["texture/move", "move-texture-applied"],
+    ["texture/reorder", "reorder-textures-applied"],
+    ["image/create", "create-image-applied"],
+    ["image/delete", "delete-image-applied"],
+    ["image/move", "move-image-applied"],
+    ["image/reorder", "reorder-images-applied"],
+    ["sampler/create", "create-sampler-applied"],
+    ["sampler/delete", "delete-sampler-applied"],
+    ["sampler/move", "move-sampler-applied"],
+    ["sampler/reorder", "reorder-samplers-applied"],
+  ];
+  for (const [from, to] of scenarios) {
+    for (const name of ["before.gltf", "after.gltf"]) move(join(gltfFixtures, ...from.split("/"), name), join(gltfFixtures, to, name));
+  }
+  for (const family of ["material", "texture", "image", "sampler"]) rmSync(join(gltfFixtures, family), { recursive: true, force: true });
+
+  const noteFeature = join(scope, "🔌️plugins", "🗒️note", "🗿️artifacts", "🗒️note", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧪️tests", "📜️mutate-note-1-a5bb7f", "🥒️.feature");
+  const before = readFileSync(noteFeature);
+  const after = Buffer.from(before.toString("utf8").replaceAll("🏷️rename-note/🧪️tests/🏷️retitles-the-document", "🏷️rename-note/🏷️retitles-the-document"));
+  writeFileSync(noteFeature, after);
+  changes.push({ kind: "modify", oldPath: repoPath(noteFeature), newPath: repoPath(noteFeature), bytesBefore: before.length, bytesAfter: after.length, sha256Before: sha256(before), sha256After: sha256(after), bytePreserved: false });
+  const noteFixtureTests = join(scope, "🔌️plugins", "🗒️note", "🗿️artifacts", "🗒️note", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧫️fixtures", "📜️mutate-note-1-a5bb7f", "🏷️rename-note", "🧪️tests");
+  rmSync(noteFixtureTests, { recursive: true, force: true });
+  writeReport(changes);
+  console.log(JSON.stringify({ movedFiles: changes.filter(({ kind }) => kind === "move").length, modifiedFiles: changes.filter(({ kind }) => kind === "modify").length, bytePreservedMoves: changes.filter(({ kind, bytePreserved }) => kind === "move" && bytePreserved).length }));
+};
+
 const [command, argument] = Bun.argv.slice(2);
 if (command === "census") census();
 else if (command === "migrate-local") migrateLocal();
@@ -1512,4 +1636,6 @@ else if (command === "clean-shared-mutation-paths") cleanSharedMutationPaths();
 else if (command === "migrate-owner-assets") migrateOwnerAssets();
 else if (command === "migrate-remaining-schema-case-data") migrateRemainingSchemaCaseData();
 else if (command === "canonicalize-grouped-schema-cases") await canonicalizeGroupedSchemaCases();
-else throw new Error("Usage: bun 📜️script.ts <census|migrate-local|clean-local-markers|rebuild-local-report|asset-census|migrate-owner-fixture-uris|migrate-schema-vector-family|migrate-all-schema-vector-families|migrate-production-assets|canonicalize-schema-fixture-cases|canonicalize-schema-implementation-cases|fixture-resolution-census|repair-missing-shared-scenario-references|migrate-scanner-test-data|move-flow-fixture-script|move-implementation-owned-fixtures|rename-production-fixture-commands|repair-ledger-relative-paths|resolve-final-fixture-gaps|clean-shared-mutation-paths|migrate-owner-assets|migrate-remaining-schema-case-data|canonicalize-grouped-schema-cases>");
+else if (command === "resolve-final-plugin-layout-findings") resolveFinalPluginLayoutFindings();
+else if (command === "resolve-remaining-fixture-uris") resolveRemainingFixtureUris();
+else throw new Error("Usage: bun 📜️script.ts <census|migrate-local|clean-local-markers|rebuild-local-report|asset-census|migrate-owner-fixture-uris|migrate-schema-vector-family|migrate-all-schema-vector-families|migrate-production-assets|canonicalize-schema-fixture-cases|canonicalize-schema-implementation-cases|fixture-resolution-census|repair-missing-shared-scenario-references|migrate-scanner-test-data|move-flow-fixture-script|move-implementation-owned-fixtures|rename-production-fixture-commands|repair-ledger-relative-paths|resolve-final-fixture-gaps|clean-shared-mutation-paths|migrate-owner-assets|migrate-remaining-schema-case-data|canonicalize-grouped-schema-cases|resolve-final-plugin-layout-findings|resolve-remaining-fixture-uris>");

@@ -23,5 +23,5 @@ pub fn diff(payload: &UpdateWidget, base: &Generation3dSnapshot) -> protocol::Mu
     if base.fixture.widgets[index] == payload.widget {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", format!("Widget \"{id}\" is already in the requested state."));
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff { removed: vec![], set: vec![(0, payload.widget.clone())] }, SynapsesDiff::default(), LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![], set: vec![(0, payload.widget.clone())] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None))
 }

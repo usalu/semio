@@ -4,10 +4,10 @@ use crate::editor::gis3d::Gis3dCommand;
 use serde_json::json;
 
 #[semio_framework_async_macros::async_test]
-async fn camera_is_config_state_and_emits_no_operations() {
+async fn camera_is_exact_window_config_and_emits_no_document_operation() {
     let mut app = app().await;
     let camera = dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: json!({ "position": [1.0, 1.0, 1.0] }).to_string() })).await;
-    assert_eq!(camera.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::Config).count(), 1, "camera publishes exactly one config operation");
+    assert_eq!(camera.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count(), 1, "camera publishes exactly one window-config operation");
     assert!(!camera.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "camera never publishes document state");
     close(&mut app);
 }

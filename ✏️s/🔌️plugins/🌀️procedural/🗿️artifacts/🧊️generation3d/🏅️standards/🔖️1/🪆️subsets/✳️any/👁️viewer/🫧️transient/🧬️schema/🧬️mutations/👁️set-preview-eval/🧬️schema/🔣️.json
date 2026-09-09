@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/procedural/3d/viewer/transient/mutation/set-preview-eval/schema.json",
+  "title": "SetPreviewEval",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["evalText"],
+  "properties": { "evalText": { "anyOf": [{ "type": "string" }, { "type": "null" }] } }
+}

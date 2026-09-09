@@ -1,0 +1,39 @@
+# 🧪 Standalone test harness for the BREP KERNEL layer of `semio-s-artifact-stdio-semio`, mounting
+# the REAL kernel sources verbatim via `#[path]` (never copying a line, so edits are picked up on
+# the next run). Deliberately NOT a member of the root workspace (`[workspace]` below with no
+# `members`) for two reasons: the root `target/` lock is permanently contended by other sessions,
+# and — the reason this harness exists at all — the kernel's own module ROOTS pull
+# `semio-framework-plugin`/`semio-framework-schema`, which neighbouring sessions routinely leave
+# mid-refactor and uncompilable for an hour at a time. The harness supplies its own module roots,
+# so the geometry can be compiled and tested against `semio-framework-os-kernel` alone.
+#
+# Successor to `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME/🔬️harness`, whose `#[path]` roots
+# (`✳️brep`, `crate::artifacts::semio::…`) no longer match the tree.
+[workspace]
+
+[package]
+name = "brep-kernel-harness"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-hash = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-mesh-engine = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
+semio-framework-number = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
+semio-framework-os-kernel = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-value-derive = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+
+[dev-dependencies]
+parry3d = "0.17"
+pack = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-framework-async-macros = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-geometry = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+
+[profile.dev]
+debug = false

@@ -456,7 +456,7 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
             K::DispatchAction { req: semio_framework::kernel::RequestId(inner.req), action: inner.params.action, args, delay_ms: inner.params.delay_ms }
         }
         E::InvokeExtension(inner) => {
-            K::InvokeExtension { req: semio_framework::kernel::RequestId(inner.req), extension_id: inner.params.extension_id, capability: inner.params.capability, request_json: String::from_utf8_lossy(&inner.params.payload).into_owned() }
+            K::invoke_extension(semio_framework::kernel::RequestId(inner.req), inner.params.extension_id, inner.params.capability, String::from_utf8_lossy(&inner.params.payload).into_owned())
         }
         E::Notify(inner) => K::Notify { message: inner.message },
         E::ClipboardWrite(inner) => K::ClipboardWrite { fragment: decode_json(&inner.fragment).await.ok_or_else(|| "clipboard-write-effect.fragment failed to decode as JSON ClipboardFragment".to_string())? },

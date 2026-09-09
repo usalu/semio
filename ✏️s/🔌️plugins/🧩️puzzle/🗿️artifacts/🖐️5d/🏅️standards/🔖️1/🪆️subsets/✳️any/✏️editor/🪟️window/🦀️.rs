@@ -147,6 +147,28 @@ impl protocol::MutationDiff<Puzzle5dWindowTransient> for Puzzle5dWindowTransient
     fn absorb(&mut self, other: Self) { *self = other; }
 }
 
+store::artifact_retire_struct!(Puzzle5dWindowTransient { engagement_input, brush_candidate_index });
+
+impl store::retirement::RetireOwned for Puzzle5dWindowTransientMutation {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        match self {
+            Self::Snapshot { transient } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(transient)]),
+        }
+    }
+}
+
+fn puzzle5d_window_transient_preflight(mutation: &Puzzle5dWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let Puzzle5dWindowTransientMutation::Snapshot { transient } = mutation;
+    let retained_bytes = std::mem::size_of::<Puzzle5dWindowTransient>().checked_add(transient.engagement_input.capacity()).ok_or_else(|| "Puzzle 5D window transient footprint overflowed".to_string())?;
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn puzzle5d_window_transient_transfer(mutation: Puzzle5dWindowTransientMutation) -> Puzzle5dWindowTransient {
+    match mutation {
+        Puzzle5dWindowTransientMutation::Snapshot { transient } => transient,
+    }
+}
+
 macro_rules! owners {
     ($config:ident, $state:ty, $mutation:ty, $schema:literal, $transient:ident, $kind:expr) => {
         pub struct $config;
@@ -165,9 +187,17 @@ macro_rules! owners {
             const WINDOW_KIND_ID: &'static str = $kind;
             type State = Puzzle5dWindowTransient;
             type Mutation = Puzzle5dWindowTransientMutation;
-            fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_transient_preparation_factory::<Self>() }
-            fn build_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::State>> { semio_framework_plugin::bounded_window_transient_root_retirement_factory::<Self>() }
-            fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_transient_store_disposer::<Self>() }
+            fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+                let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+                let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+                let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+                    puzzle5d_window_transient_preflight,
+                    puzzle5d_window_transient_transfer,
+                    state.clone(),
+                    mutation.clone(),
+                ));
+                semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+            }
         }
     };
 }
@@ -287,30 +317,5 @@ pub fn addressed_transient(view: &semio_framework_plugin::ViewModel, transient: 
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn same_kind_window_values_are_independent() {
-        let shared = crate::editor::puzzle5d::config::Puzzle5dConfig::default();
-        let first = Puzzle5dBoardWindowConfig { camera2d: Puzzle5dCamera2d { x: 9.0, y: 0.0, zoom: 1.0 }, ..Default::default() };
-        let second = Puzzle5dBoardWindowConfig { camera2d: Puzzle5dCamera2d { x: -4.0, y: 0.0, zoom: 1.0 }, ..Default::default() };
-        let first = runtime(&shared, &Puzzle5dWindowConfig { camera2d: first.camera2d, ..Default::default() }, &Puzzle5dWindowTransient::default(), "board-first");
-        let second = runtime(&shared, &Puzzle5dWindowConfig { camera2d: second.camera2d, ..Default::default() }, &Puzzle5dWindowTransient::default(), "board-second");
-        assert_eq!(first.camera2d.x, 9.0);
-        assert_eq!(second.camera2d.x, -4.0);
-    }
-
-    #[test]
-    fn app_pack_and_spr_exclude_window_and_transient_fields() {
-        let shared = crate::editor::puzzle5d::config::Puzzle5dConfig::default();
-        let spr = dsl::json::to_json_string(&shared);
-        let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
-        assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(3));
-        let pack = store::ArtifactPack::encode_pack(&shared);
-        for forbidden in ["camera2d", "camera3d", "engagementInput", "brushCandidateIndex", "fillCount", "sun"] {
-            assert!(!spr.contains(forbidden));
-            assert!(!pack.windows(forbidden.len()).any(|bytes| bytes == forbidden.as_bytes()));
-        }
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

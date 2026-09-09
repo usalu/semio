@@ -188,19 +188,32 @@ async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_
     assert_eq!(raw_http_request(addr, "GET", &route, &[], &[]).await.status, 401);
     assert_eq!(raw_http_request(addr, "GET", &route, &[("Authorization", spectator_bearer.as_str())], &[]).await.status, 403);
 
-    let request = SpaceArtifactCreateV1 { schema: "semio.hub.space-artifact-create/v1".into(), request_id: "1234567890abcdef1234567890abcdef".into(), kind_id: "s.gis.gismap".into(), name: "Shared Map".into() };
+    let request = SpaceArtifactCreateV1 {
+        schema: "semio.hub.space-artifact-create/v1".into(),
+        request_id: "1234567890abcdef1234567890abcdef".into(),
+        expected_catalog_generation_id: catalog.catalog_generation_id.clone(),
+        kind_id: "s.gis.gismap".into(),
+        name: "Shared Map".into(),
+    };
     let body = directory::os_pack::json::to_json_string(&request);
     let malformed = body.replacen("{", "{\"documentId\":\"caller-owned\",", 1);
     assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], malformed.as_bytes()).await.status, 400);
     let unknown = SpaceArtifactCreateV1 { request_id: "2234567890abcdef1234567890abcdef".into(), kind_id: "s.gis.unknown".into(), ..request.clone() };
     assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], directory::os_pack::json::to_json_string(&unknown).as_bytes()).await.status, 409);
+    let stale_generation = SpaceArtifactCreateV1 { request_id: "3234567890abcdef1234567890abcdef".into(), expected_catalog_generation_id: "9".repeat(64), ..request.clone() };
+    assert_ne!(stale_generation.expected_catalog_generation_id, catalog.catalog_generation_id);
+    let directory_head = state.directory.head_seq().await.expect("directory head before stale catalog creation");
+    assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], directory::os_pack::json::to_json_string(&stale_generation).as_bytes()).await.status, 409);
+    assert!(state.directory.read_artifact_creation(&author.user_id, &stale_generation.request_id).await.expect("stale catalog creation facts").is_empty());
+    assert_eq!(state.directory.head_seq().await.expect("directory head after stale catalog creation"), directory_head, "a stale catalog generation cannot claim an operation or append directory events");
     let first = raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], body.as_bytes());
     let duplicate = raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], body.as_bytes());
     let (first, duplicate) = tokio::join!(first, duplicate);
     assert!([200, 202].contains(&first.status) && [200, 202].contains(&duplicate.status), "exact concurrent duplicate never reports capacity or owns a second factory");
     for response in [&first, &duplicate] {
         let source = std::str::from_utf8(&response.body).expect("creation acceptance UTF-8");
-        assert!(SpaceArtifactCreationStatusV1::parse_canonical_json(source).is_some(), "creation acceptance is canonical");
+        let status = SpaceArtifactCreationStatusV1::parse_canonical_json(source).expect("creation acceptance is canonical");
+        assert_eq!(status.catalog_generation_id, request.expected_catalog_generation_id);
     }
     let facts = state.directory.read_artifact_creation(&author.user_id, &request.request_id).await.expect("durable creation facts");
     let operation = ArtifactCreationOperationV1::fold(&facts).expect("one durable creation operation");
@@ -213,6 +226,7 @@ async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_
         let response = raw_http_request(addr, "GET", &status_route, &[("Authorization", author_bearer.as_str())], &[]).await;
         assert_eq!(response.status, 200);
         let status = SpaceArtifactCreationStatusV1::parse_canonical_json(std::str::from_utf8(&response.body).expect("creation status UTF-8")).expect("canonical creation status");
+        assert_eq!(status.catalog_generation_id, request.expected_catalog_generation_id);
         if status.phase == SpaceArtifactCreationPhaseV1::Ready {
             break status;
         }
@@ -221,6 +235,7 @@ async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_
         tokio::time::sleep(std::time::Duration::from_millis(10)).await;
     };
     let ready_scope = DocumentScope::new(&space_id, &ready.ready.as_ref().expect("Ready coordinates").document_id);
+    assert_eq!(ready.catalog_generation_id, request.expected_catalog_generation_id);
     assert_eq!(ready_scope.document_id, created_document_id, "both concurrent requests retain one server-minted document");
     assert!(state.directory.get_document_descriptor(&ready_scope).await.expect("created descriptor read").is_some());
     assert!(state.directory.get_active_artifact_checkpoint(&ready_scope).await.expect("created checkpoint read").is_some_and(|checkpoint| checkpoint.baseline_frontier.is_genesis_for(&ready_scope)));
@@ -764,6 +779,7 @@ async fn publish_genesis_checkpoint_for_test(
     let request = SpaceArtifactCreateV1 {
         schema: "semio.hub.space-artifact-create/v1".into(),
         request_id: scope.document_id.strip_prefix("artifact-").expect("creation-owned document id").into(),
+        expected_catalog_generation_id: catalog_generation.clone(),
         kind_id: descriptor.artifact_kind.clone(),
         name: "Checkpoint publication fixture".into(),
     };

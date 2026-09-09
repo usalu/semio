@@ -1,0 +1,11 @@
+# PDF27 Composition Trait Repair Audit
+
+Captured 2026-09-09T15:34:38+02:00. Read-only source and manifest inspection only; no build or cache acceptance is asserted.
+
+The corrected bound at `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:7542` is correct: `semio_framework_schema::ArtifactCompositionFields` is the canonical public schema name, and it is a direct reexport of `semio_framework_os_kernel::os_schema_composition::ArtifactCompositionFields` from `🧰️framework/🔨️modules/🧬️schema/⚛️component.rs:154`. It is therefore the same trait required by `store::ChildRestoreProjection::from_snapshot`, rather than a competing trait that could leave the line 7567 call unsatisfied. The prior `crate::os_schema_composition` name has no plugin-root module and was the PDF27 `E0433` cause.
+
+The production dependency path is present without a feature gate. `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml:46` declares `semio-framework-schema` unconditionally; the schema crate itself depends on the OS kernel and exports that trait. The PDF artifact's default feature set is empty, but its manifest unconditionally depends on `semio-framework-plugin` at `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/Cargo.toml:24`, so the trait crate is available under the minimal PDF production build. Its separate direct schema dependency is also unconditional at line 26.
+
+`DocumentClosureSourceView` meets `OwnedDocumentClosureSource`'s adjacent authority contract. It returns one stable source generation, the borrowed loaded root reference, and the registry's dense ordinal entries consistently for member count, references, and owners. The root projection is derived from the borrowed typed root snapshot; child projections delegate to each retained member's `SpaceMember::child_restore_projection`. The closure algorithm rechecks source generation and member count on every step, validates each member identity and owner relationship, and validates projections before walking, so this implementation does not weaken closure staleness, ownership, or bounded-restoration checks.
+
+No remaining trait-owner qualification or feature-availability compile-bound issue was found in this static audit. PDF35 runtime acceptance remains pending.

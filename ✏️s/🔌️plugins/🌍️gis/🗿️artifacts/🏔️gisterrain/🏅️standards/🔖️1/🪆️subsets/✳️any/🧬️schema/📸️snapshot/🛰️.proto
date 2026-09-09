@@ -1,11 +1,8 @@
 syntax = "proto3";
-package semio.s.gis.gisterrain.snapshot;
-
-// 🧬️ GIS terrain snapshot schema — artifact-lane fields only.
-
+package semio.s.gis.gisterrain;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message GisTerrainSnapshot {
-  // @state artifact
   double exaggeration = 1;
-  // @state artifact
   string imported_features_json = 2;
+  optional semio.os.store.ArtifactChild mesh = 3;
 }

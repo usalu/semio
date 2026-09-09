@@ -1,7 +1,32 @@
 use super::*;
-use crate::editor::generation3d::testkit::{app, app_with_registry, drain_flow_eval_ticks};
+use crate::editor::generation3d::testkit::{app, app_with_registry, drain_flow_eval_ticks, drain_flow_eval_ticks_with_view, preview_views};
 use semio_framework_plugin::PluginApp;
 use serde_json::json;
+
+#[semio_framework_async_macros::async_test]
+async fn preview_eval_exact_window_transient_isolates_and_resets_in_the_registered_app() {
+    use crate::editor::generation3d::modes::edit::windows::preview::transient::Generation3dPreviewWindowTransientOwner;
+    let _serial = crate::editor::generation3d::test_support::lock();
+    let mut app = Box::new(app_with_registry().await);
+    let (left, right) = preview_views("generation3d-preview-left", "generation3d-preview-right");
+    let config_before = app.config_pack().await.expect("Generation3d app config before preview evaluation");
+    drain_flow_eval_ticks_with_view(&mut app, &left).await;
+    let left_state = app.window_transient_snapshot(&left).expect("left preview transient snapshot").expect("left preview owner");
+    let right_state = app.window_transient_snapshot(&right).expect("right preview transient snapshot").expect("right preview owner");
+    assert!(left_state.get::<Generation3dPreviewWindowTransientOwner>().and_then(|state| state.preview_eval_text.as_deref()).is_some_and(|text| !text.is_empty()));
+    assert!(right_state.get::<Generation3dPreviewWindowTransientOwner>().is_some_and(|state| state.preview_eval_text.is_none()));
+    let config_after = app.config_pack().await.expect("Generation3d app config after preview evaluation");
+    assert_eq!((config_after.pack, config_after.spr), (config_before.pack, config_before.spr));
+    drain_flow_eval_ticks_with_view(&mut app, &right).await;
+    assert!(app.window_transient_snapshot(&right).expect("right evaluated snapshot").and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().cloned()).is_some_and(|state| state.preview_eval_text.is_some()));
+    let document = app.document_pack().await.expect("Generation3d document before reload");
+    app.load_document_pack(&document).await.expect("same document reload resets preview window transient");
+    for view in [&left, &right] {
+        assert!(app.window_transient_snapshot(view).expect("reset preview snapshot").and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().cloned()).is_some_and(|state| state.preview_eval_text.is_none()));
+    }
+    semio_framework_plugin::testkit::close_registered_fixture_app(&mut app);
+    eprintln!("[DEBUG] Generation3d registered runtime isolated two preview evaluations, preserved app config bytes, reset both ephemeral windows on document reload, and closed terminal-empty");
+}
 fn production_initial_snapshot(label: &str) -> Generation3dSnapshot {
     let mut snapshot = Generation3dSnapshot::default();
     snapshot.fixture.schema = label.into();
@@ -115,16 +140,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation3dSnapshot, [u8;
 fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P3 production ingress credits");
-    crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_admit_publication_authority(
-        handle.operation,
-        handle.generation,
-        handle.generation.0,
-        handle.generation.0,
-        handle.generation.0,
-        8_192,
-        crate::standards::v1::subsets::any::schema::mutations::binary::GENERATION3D_MOUNTED_OUTPUT_CHANNELS,
-        crate::standards::v1::subsets::any::schema::mutations::binary::GENERATION3D_MOUNTED_CONTROL_CREDITS,
-    )
+    crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, crate::standards::v1::subsets::any::schema::mutations::binary::Generation3dPublicationCredits { maximum_items: 8_192, maximum_output_pages: crate::standards::v1::subsets::any::schema::mutations::binary::GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::standards::v1::subsets::any::schema::mutations::binary::GENERATION3D_MOUNTED_CONTROL_CREDITS })
     .expect("P3 production publication authority");
     for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
         let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
@@ -204,10 +220,10 @@ fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 27, "every Generation3dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 29, "every Generation3dCommand row must be covered by every_command()");
 }
 
-/// ⚖️ LAW: every one of the 27 declared `Generation3dCommand` rows is retained-owned by
+/// ⚖️ LAW: every one of the 29 declared `Generation3dCommand` rows is retained-owned by
 /// `Generation3dBoundedCommandJobFactory`, with an exact, nonempty publication-lane contract —
 /// the shape `ArtifactToolFactoryRegistry::register` itself enforces
 /// (`🧰️framework/…/🔌️plugin/🦀️.rs:12736-12748`), asserted here so a future command addition that
@@ -219,9 +235,9 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     let _serial = test_support::lock();
-    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 27);
-    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 27);
-    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 27);
+    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 29);
+    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 29);
+    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 29);
     assert_eq!(generation3d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(generation3d_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
     assert!(GENERATION3D_RETAINED_TOOL_IDS.iter().all(|tool_id| Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
@@ -347,6 +363,8 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "camera",
         "select-generation",
         "flow-eval-tick",
+        "flow-eval-resolve",
+        "flow-tessellate-resolve",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -386,6 +404,8 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::SetCamera(set_camera::SetCamera { camera: crate::editor::generation3d::config::Generation3dPreviewCamera::default() }),
         Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: "generation-1".into() }),
         Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
+        Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 7, output_json: "{}".into() }),
+        Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve { node_hash: 9, output_json: "{}".into() }),
     ]
 }
 //#endregion 🔖️CommandSurface

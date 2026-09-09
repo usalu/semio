@@ -1,5 +1,6 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `patch-nodes`.
 
+use semio_s_artifact_trinity_jack::JackWorkingScene;
 use crate::rewriting_snapshot_mutations;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::RewritingSnapshot;
@@ -20,7 +21,7 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
             _ => {}
         }
     }
-    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id);
+    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges() }, fixture.root_node_id);
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 

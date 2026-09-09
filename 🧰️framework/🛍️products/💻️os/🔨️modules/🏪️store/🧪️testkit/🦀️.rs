@@ -1,12 +1,12 @@
 use super::tests::{assert_fixture_descriptor, DemoDiff, DemoSnapshot, LossyDiff};
 
-#[path = "../🧫️fixtures/🧮️demo/🧬️mutations/🦀️.rs"]
+#[path = "🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs"]
 pub mod demo;
-#[path = "../🧫️fixtures/🪤️lossy/🧬️mutations/🦀️.rs"]
+#[path = "🧬️mutations/🪤️lossy/🧬️mutations/🦀️.rs"]
 pub mod lossy;
-#[path = "../🧫️fixtures/🚦️severity/🧬️mutations/🦀️.rs"]
+#[path = "🧬️mutations/🚦️severity/🧬️mutations/🦀️.rs"]
 pub mod severity;
-#[path = "../🧫️fixtures/⏱️timestamped/🧬️mutations/🦀️.rs"]
+#[path = "🧬️mutations/⏱️timestamped/🧬️mutations/🦀️.rs"]
 pub mod timestamped;
-#[path = "../🧫️fixtures/🛂️validated/🧬️mutations/🦀️.rs"]
+#[path = "🧬️mutations/🛂️validated/🧬️mutations/🦀️.rs"]
 pub mod validated;

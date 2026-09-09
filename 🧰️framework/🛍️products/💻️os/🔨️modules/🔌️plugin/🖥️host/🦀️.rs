@@ -2464,7 +2464,7 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
             };
             Effect::DispatchAction { req: RequestId(inner.req), action: inner.params.action, args, delay_ms: inner.params.delay_ms }
         }
-        E::InvokeExtension(inner) => Effect::InvokeExtension { req: RequestId(inner.req), extension_id: inner.params.extension_id, capability: inner.params.capability, request_json: String::from_utf8_lossy(&inner.params.payload).into_owned() },
+        E::InvokeExtension(inner) => Effect::invoke_extension(RequestId(inner.req), inner.params.extension_id, inner.params.capability, String::from_utf8_lossy(&inner.params.payload).into_owned()),
         E::Notify(inner) => Effect::Notify { message: inner.message },
         E::ClipboardWrite(inner) => Effect::ClipboardWrite { fragment: decode_json(&inner.fragment).await.ok_or_else(|| PluginHostError::Plugin("clipboard-write-effect.fragment failed to decode as JSON ClipboardFragment".to_string()))? },
         E::Navigate(inner) => Effect::Navigate { uri: inner.uri },

@@ -5,7 +5,7 @@
     "version": "1",
     "title": "Site Survey",
     "structure": {
-      "childId": "forms-structure",
+      "childId": "forms-value",
       "target": {
         "artifactId": "forms-value",
         "dialect": {
@@ -16,7 +16,7 @@
       }
     },
     "results": {
-      "childId": "forms-results",
+      "childId": "forms-table",
       "target": {
         "artifactId": "forms-table",
         "dialect": {
@@ -52,6 +52,380 @@
         "dialect": {
           "artifactKind": "x",
           "standard": "1"
+        }
+      }
+    }
+  ],
+  "invalidIdentityDocuments": [
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "different-child",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "foreign",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "foreign",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "foreign"
+          }
+        }
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        },
+        "locale": "de"
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "different-child",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "foreign",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "foreign",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "foreign"
+          }
+        }
+      }
+    },
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        },
+        "locale": "de"
+      }
+    },
+    {
+      "schema": "foreign.document",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    }
+  ],
+  "patchCases": [
+    {
+      "name": "untouched",
+      "before": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "title": "Site Survey",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      },
+      "diff": {},
+      "after": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "title": "Site Survey",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
         }
       }
     }

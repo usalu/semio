@@ -1,20 +1,20 @@
-//! 🦀️ gis3d editor-config mutation case for the `set-camera` kind declared by
-//! `../../✏️editor/🎚️config/🔮️oracle/🔣️.json`. No third-party implementation
+//! 🦀️ GIS Terrain window-config mutation case for the `set-camera` kind declared by
+//! `../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/⚙️config/🔮️oracle/🔣️.json`. No third-party implementation
 //! could adjudicate it (`gis-gisterrain-config-mutation-semantics` no-oracle decision, same file),
 //! so this case registers the SUBJECT role only — no `.oracle(...)` handler, matching
 //! `os.config.opening`'s own precedent (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/
 //! 🧪️tests/mutate-os-config-opening/🥒️.feature`).
 //!
-//! `gis3d_config_mutation_report_json` (`../../✏️editor/🎚️config/🦀️.rs`) is the whole surface this adapter needs —
-//! every field of `Gis3dConfig` is a plain `String`, so this bridge never needs
-//! `serde_json::from_str::<Gis3dConfig>` (unreachable from a `sut`-feature adapter crate, which
+//! `gis_terrain_window_config_mutation_report_json` (`../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/⚙️config/🦀️.rs`) is the whole surface this adapter needs —
+//! every field of `GisTerrainWindowConfig` is a plain `String`, so this bridge never needs
+//! `serde_json::from_str::<GisTerrainWindowConfig>` (unreachable from a `sut`-feature adapter crate, which
 //! links `semio-s-plugin-gis` as an ordinary dependency, not under `cfg(test)`) — it reaches the
-//! REAL, unconditional `Mutation<Gis3dConfig>`/`MutationDiff<Gis3dConfig>` trait chain directly and
+//! REAL, unconditional `Mutation<GisTerrainWindowConfig>`/`MutationDiff<GisTerrainWindowConfig>` trait chain directly and
 //! reports `{base, snapshot, inverseSnapshot}` as a JSON string, parsed here through this host's own
 //! dependency-free `parse_json`.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use crate::editor::gis3d::config::gis3d_config_mutation_report_json;
+use crate::editor::gis3d::modes::view::windows::terrain::config::gis_terrain_window_config_mutation_report_json;
 
 //#region 🔖️Kinds
 const KINDS: &[&str] = &["set-camera"];
@@ -23,14 +23,14 @@ const KINDS: &[&str] = &["set-camera"];
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{gis3d_config_mutation_report_json, parse_json, Context, Json, Outcome};
+    use super::{gis_terrain_window_config_mutation_report_json, parse_json, Context, Json, Outcome};
 
     fn report(ctx: &Context) -> Result<(Json, Json, Json), String> {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let base_camera = spec.str("baseCameraJson");
         let value = spec.str("value");
-        let text = gis3d_config_mutation_report_json(&base_camera, &kind, &value)?;
+        let text = gis_terrain_window_config_mutation_report_json(&base_camera, &kind, &value)?;
         let parsed = parse_json(&text)?;
         let base = parsed.get("base").cloned().ok_or("report carries no base")?;
         let snapshot = parsed.get("snapshot").cloned().ok_or("report carries no snapshot")?;
@@ -49,7 +49,7 @@ mod subject {
         Ok(Outcome::with_raw(raw, snapshot))
     }
 
-    /// ↩️ The inverse law: the kind's own computed inverse (`gis3d_config_mutation_report_json`'s
+    /// ↩️ The inverse law: the kind's own computed inverse (`gis_terrain_window_config_mutation_report_json`'s
     /// own `inverseSnapshot`, produced by applying `Mutation::inverse`'s own steps) must restore the
     /// exact pre-mutation record, field for field.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {

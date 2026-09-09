@@ -9,6 +9,7 @@ if (listed.status !== 0) throw new Error(listed.stderr);
 const paths = listed.stdout.trim().split("\n").filter(path => !isExcludedTestPath(root, path));
 const taxonomy = testTaxonomy(root);
 const legacy = new Map<string, number>();
+const namedCases = new Map<string, number>();
 for (const path of paths) {
   const parts = path.split("/");
   for (let index = 0; index < parts.length - 1; index++) {
@@ -16,12 +17,13 @@ for (const path of paths) {
     if (part === taxonomy.testFixturesDirName) break;
     if (["fixture", "fixtures", "testfixture", "testfixtures", "testdata"].includes(part.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase())) {
       const owner = parts.slice(0, index + 1).join("/");
-      legacy.set(owner, (legacy.get(owner) ?? 0) + 1);
+      const collection = parts[index - 1] === taxonomy.testsDirName ? namedCases : legacy;
+      collection.set(owner, (collection.get(owner) ?? 0) + 1);
       break;
     }
   }
 }
-writeFileSync(join(ticket, "📓️legacy-fixture-directory-census-2026-09-09.md"), "# Legacy Fixture Directory Census\n\nThe first fixture-like directory in each eligible authored path is counted; interiors of canonical opaque fixture examples are excluded.\n\n```json\n" + JSON.stringify([...legacy].sort(), null, 2) + "\n```\n");
+writeFileSync(join(ticket, "📓️legacy-fixture-directory-census-2026-09-09.md"), "# Legacy Fixture Directory Census\n\nThe first fixture-like directory in each eligible authored path is counted; interiors of canonical opaque fixture examples are excluded. Canonical test-case names are reported separately from misplaced fixture directories.\n\n```json\n" + JSON.stringify({ legacyRoots: [...legacy].sort(), namedCases: [...namedCases].sort() }, null, 2) + "\n```\n");
 console.log(`[DEBUG] ${legacy.size} noncanonical fixture-like roots`);
 
 let manifests = 0;

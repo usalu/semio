@@ -68,6 +68,23 @@ pub fn drive_with_operation(app: &CadPlayApp, scene: &CadSnapshot, action: &str,
     command.dispatch(&doc, &cfg, &mut ctx)
 }
 
+/// 🪟️ Dispatches one command with a host-authenticated concrete CAD window instance.
+pub fn drive_in_window(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig, window_id: &str, window_kind_id: &str) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    let _ = app;
+    let history = empty_history();
+    let doc = ArtifactView::new(scene, &history);
+    let cfg = ConfigView { snapshot: config, window: None };
+    let command = command_from_action(action, args.as_ref());
+    let view_state = ViewModel {
+        window_id: Some(window_id.into()),
+        active_window_kind_id: Some(window_kind_id.into()),
+        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_kind_id.into() }],
+        ..ViewModel::default()
+    };
+    let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: None, view_state: Some(view_state) };
+    command.dispatch(&doc, &cfg, &mut ctx)
+}
+
 pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let cfg = ConfigView { snapshot: config, window: None };
     CadPlayApp::render(body_key, doc, &cfg, view_state).map(|tree| tree.root)

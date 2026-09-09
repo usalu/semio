@@ -9,6 +9,130 @@
     }
   },
   "targets": {
+  "stdio-document-contract": {
+    "executor": "nx:run-commands",
+    "cache": false,
+    "options": {
+      "command": "bun ./📜️script.ts verify stdio-document-contract"
+    }
+  },
+  "stdio-document-contract-native": {
+    "executor": "nx:run-commands",
+    "cache": false,
+    "options": {
+      "command": "bun ./📜️script.ts verify stdio-document-contract native"
+    }
+  },
+    "host-ownership-native-test": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify host-ownership native" }
+    },
+    "owned-document-closure": {"executor": "nx:run-commands", "cache": false, "options": {"command": "bun ./📜️script.ts verify owned-document-closure"}},
+    "owned-document-closure-native": {"executor": "nx:run-commands", "cache": false, "options": {"command": "bun ./📜️script.ts verify owned-document-closure native"}},
+    "map-document-contract": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify map-document-contract" }
+    },
+    "map-document-contract-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify map-document-contract native" }
+    },
+    "terrain-document-contract": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify terrain-document-contract" }
+    },
+    "terrain-document-contract-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify terrain-document-contract native" }
+    },
+    "program-document-contract": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify program-document-contract" }
+    },
+    "program-document-contract-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify program-document-contract native" }
+    },
+    "layout-document-contract": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify layout-document-contract" }
+    },
+    "layout-document-contract-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify layout-document-contract native" }
+    },
+    "cad-document-contract": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify cad-document-contract" }
+    },
+    "cad-document-contract-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify cad-document-contract native" }
+    },
+    "generation3d-preview-window-transient": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify generation3d-preview-window-transient" }
+    },
+    "generation3d-preview-window-transient-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify generation3d-preview-window-transient native" }
+    },
+    "gis-terrain-window-config": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify gis-terrain-window-config" }
+    },
+    "gis-terrain-window-config-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify gis-terrain-window-config native" }
+    },
+    "flow-window-ownership-oracle": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify flow-window-ownership oracle" }
+    },
+    "flow-window-ownership-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify flow-window-ownership check" }
+    },
+    "flow-window-ownership-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify flow-window-ownership native" }
+    },
+    "store-reload-publication-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify store-reload-publication native" }
+    },
+    "writer-window-state-oracle": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify writer-window-state oracle" }
+    },
+    "writer-window-state-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify writer-window-state native" }
+    },
+    "block3d-window-transient-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify block3d-window-transient native" }
+    },
+    "ephemeral-transfer-preparation-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify ephemeral-transfer-preparation native" }
+    },
+    "presentation-document-contract": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify presentation-document-contract" }
+    },
+    "presentation-document-contract-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify presentation-document-contract native" }
+    },
+    "procedure-document-contract": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify procedure-document-contract" }
+    },
+    "procedure-document-contract-native": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify procedure-document-contract native" }
+    },
     "dag-demo-ownership": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1450,6 +1574,14 @@
       "cache": true,
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify shared-map-delta oracle"
+      },
+      "outputs": []
+    },
+    "jack-results-window-transient": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify jack-results-window-transient"
       },
       "outputs": []
     },

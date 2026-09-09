@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "projectName": "@semio-tech/framework-os",
+  "projectRoot": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+  "nativeProject": {
+    "name": "@semio-tech/value-resident-rs",
+    "root": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
+    "fixturePath": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧫️fixtures/🔣️.json"
+  },
+  "samples": [
+    {
+      "id": "project-fixture",
+      "role": "fixture",
+      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧵️browser-actor-reservation-v1.json",
+      "production": false,
+      "test": true
+    },
+    {
+      "id": "shared-runner-fixture",
+      "role": "fixture",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔏️inputs/🧫️fixtures/🔏️receipt/🔣️.json",
+      "production": false,
+      "test": true
+    },
+    {
+      "id": "project-test",
+      "role": "test",
+      "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️effectbackbone-capability-gating/🟦️.ts",
+      "production": false,
+      "test": true
+    },
+    {
+      "id": "production-asset",
+      "role": "asset",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/💉️ticket-important-exact-mutations/🔣️.json",
+      "production": true,
+      "test": true
+    },
+    {
+      "id": "project-code",
+      "role": "code",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+      "production": true,
+      "test": true
+    }
+  ]
+}

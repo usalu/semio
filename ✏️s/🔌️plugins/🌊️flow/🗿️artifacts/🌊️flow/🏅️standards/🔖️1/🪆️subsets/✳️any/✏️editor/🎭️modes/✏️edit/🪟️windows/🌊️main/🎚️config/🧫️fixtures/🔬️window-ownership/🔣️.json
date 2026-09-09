@@ -1,0 +1,115 @@
+{
+  "schema": "semio.flow.window-ownership/v1",
+  "document": {
+    "schema": "flow.fixture",
+    "content": {
+      "childId": "flow-content-sha256-fixture",
+      "target": {
+        "artifactId": "flow-content-sha256-fixture",
+        "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "flow" }
+      }
+    }
+  },
+  "windowInstances": [
+    { "id": "flow-main-left", "windowKindId": "flow-main" },
+    { "id": "flow-main-right", "windowKindId": "flow-main" },
+    { "id": "flow-compiled-1", "windowKindId": "flow-compiled-dag" },
+    { "id": "flow-generations-1", "windowKindId": "flow-generations" }
+  ],
+  "baseConfig": {
+    "previewOffNodeIds": [],
+    "camera": { "x": 0, "y": 0, "zoom": 1 },
+    "lodMode": "automatic",
+    "proximityDistance": 48,
+    "gridVisible": true,
+    "gridSnapEnabled": false,
+    "gridFactor": 10,
+    "catalogueSectionsJson": "[]",
+    "automationEnabledJson": "{}"
+  },
+  "baseTransient": { "generationJson": "", "duplicateWidgetProgressJson": "" },
+  "configMutations": [
+    {
+      "windowId": "flow-main-left",
+      "windowKindId": "flow-main",
+      "mutation": {
+        "kind": "snapshot",
+        "config": {
+          "previewOffNodeIds": ["node-a"],
+          "camera": { "x": 12, "y": -8, "zoom": 2 },
+          "lodMode": "detail",
+          "proximityDistance": 32,
+          "gridVisible": false,
+          "gridSnapEnabled": true,
+          "gridFactor": 8,
+          "catalogueSectionsJson": "[{\"id\":\"left\"}]",
+          "automationEnabledJson": "{\"extension.left\":true}"
+        }
+      }
+    },
+    {
+      "windowId": "flow-main-right",
+      "windowKindId": "flow-main",
+      "mutation": {
+        "kind": "snapshot",
+        "config": {
+          "previewOffNodeIds": ["node-b"],
+          "camera": { "x": -21, "y": 5, "zoom": 0.75 },
+          "lodMode": "overview",
+          "proximityDistance": 80,
+          "gridVisible": true,
+          "gridSnapEnabled": false,
+          "gridFactor": 20,
+          "catalogueSectionsJson": "[{\"id\":\"right\"}]",
+          "automationEnabledJson": "{\"extension.right\":true}"
+        }
+      }
+    }
+  ],
+  "transientMutations": [
+    {
+      "windowId": "flow-main-left",
+      "windowKindId": "flow-main",
+      "mutation": { "kind": "snapshot", "transient": { "generationJson": "{\"selectedGenerationId\":\"left\"}", "duplicateWidgetProgressJson": "{\"generation\":1,\"cursor\":2}" } }
+    },
+    {
+      "windowId": "flow-generations-1",
+      "windowKindId": "flow-generations",
+      "mutation": { "kind": "snapshot", "transient": { "generationJson": "{\"selectedGenerationId\":\"generate\"}", "duplicateWidgetProgressJson": "" } }
+    }
+  ],
+  "expectedConfig": {
+    "flow-main-left": {
+      "previewOffNodeIds": ["node-a"],
+      "camera": { "x": 12, "y": -8, "zoom": 2 },
+      "lodMode": "detail",
+      "proximityDistance": 32,
+      "gridVisible": false,
+      "gridSnapEnabled": true,
+      "gridFactor": 8,
+      "catalogueSectionsJson": "[{\"id\":\"left\"}]",
+      "automationEnabledJson": "{\"extension.left\":true}"
+    },
+    "flow-main-right": {
+      "previewOffNodeIds": ["node-b"],
+      "camera": { "x": -21, "y": 5, "zoom": 0.75 },
+      "lodMode": "overview",
+      "proximityDistance": 80,
+      "gridVisible": true,
+      "gridSnapEnabled": false,
+      "gridFactor": 20,
+      "catalogueSectionsJson": "[{\"id\":\"right\"}]",
+      "automationEnabledJson": "{\"extension.right\":true}"
+    }
+  },
+  "expectedTransient": {
+    "flow-main-left": { "generationJson": "{\"selectedGenerationId\":\"left\"}", "duplicateWidgetProgressJson": "{\"generation\":1,\"cursor\":2}" },
+    "flow-generations-1": { "generationJson": "{\"selectedGenerationId\":\"generate\"}", "duplicateWidgetProgressJson": "" }
+  },
+  "rejections": [
+    { "windowId": "lost-window", "claimedWindowKindId": "flow-main", "code": "flow-window-stale" },
+    { "windowId": "flow-compiled-1", "claimedWindowKindId": "flow-main", "code": "flow-main-window-kind-required" },
+    { "windowId": "flow-main-left", "claimedWindowKindId": "flow-generations", "code": "flow-window-kind-mismatch" }
+  ],
+  "hostContext": { "programContributions": [{ "id": "host.extension", "kind": "flow.extension" }] }
+}

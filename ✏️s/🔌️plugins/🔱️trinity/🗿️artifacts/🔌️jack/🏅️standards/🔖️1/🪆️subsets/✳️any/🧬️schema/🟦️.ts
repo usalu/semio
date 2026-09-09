@@ -7,7 +7,7 @@ export interface JackArtifact {
   /** @state artifact */ manifestId?: string;
   /** @state artifact */ manifest: Manifest;
   /** @state artifact */ camera: Camera;
-  /** @state artifact @child kind=s.stdio.semio.graph */ content: ArtifactChild;
+  /** @state artifact @child kind=s.stdio.semio */ content: ArtifactChild;
   /** @state artifact */ rootNodeId?: string;
 }
 

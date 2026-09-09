@@ -89,22 +89,7 @@ fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Opt
 impl GisMapDiff {
     /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &GisMapArtifact) -> protocol::MutationApplyResult<GisMapArtifact> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok((**replacement).clone());
-            }
-            let mut next = artifact.clone();
-            if let Some(delta) = &self.positions {
-                next.positions = apply_features_delta(&next.positions, delta).map_err(|error| error.under(["positions"]))?;
-            }
-            if let Some(delta) = &self.routes {
-                next.routes = apply_features_delta(&next.routes, delta).map_err(|error| error.under(["routes"]))?;
-            }
-            if let Some(delta) = &self.regions {
-                next.regions = apply_features_delta(&next.regions, delta).map_err(|error| error.under(["regions"]))?;
-            }
-            next
-        })
+        self.apply(&artifact.to_snapshot()).map(GisMapArtifact::from_snapshot)
     }
 }
 
@@ -124,9 +109,6 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
             if let Some(delta) = &self.regions {
                 next.regions = apply_features_delta(&next.regions, delta).map_err(|error| error.under(["regions"]))?;
             }
-            // 🕸️ Keep `drawing`/`value` a pure function of `(positions, routes, regions)` — mirrors
-            // `apply_gis_map_mutation`'s identical re-derivation (see `GisMapSnapshot`'s doc comment).
-            next = crate::gis_map_snapshot_with_derived_children(next);
             next
         })
     }

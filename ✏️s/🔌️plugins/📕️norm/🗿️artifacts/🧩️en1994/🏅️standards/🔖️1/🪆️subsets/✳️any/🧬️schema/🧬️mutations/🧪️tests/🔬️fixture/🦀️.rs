@@ -1,7 +1,6 @@
-
 #[path = "../../🌍️change-annex/🧪️tests/🌐️switches-national-annex-to-en/🦀️.rs"]
 mod tests_change_annex_switches_national_annex_to_en;
-#[path = "../../⭕️change-d-mm/⭕️thickens-stud-shank-to-22-mm/🦀️.rs"]
+#[path = "../../⭕️change-d-mm/🧪️tests/⭕️thickens-stud-shank-to-22-mm/🦀️.rs"]
 mod tests_change_d_mm_thickens_stud_shank_to_22_mm;
 #[path = "../../🪜️change-deck-type/🧪️tests/↩️switches-deck-to-re-entrant/🦀️.rs"]
 mod tests_change_deck_type_switches_deck_to_re_entrant;
@@ -23,7 +22,7 @@ mod tests_change_fire_rating_upgrades_fire_rating_to_r90;
 mod tests_change_fu_mpa_upgrades_stud_ultimate_strength_to_500_mpa;
 #[path = "../../🏋️change-fy-mpa/🧪️tests/🏋️upgrades-steel-yield-to-460-mpa/🦀️.rs"]
 mod tests_change_fy_mpa_upgrades_steel_yield_to_460_mpa;
-#[path = "../../↕️change-h-sc-mm/📏️lengthens-stud-to-125-mm/🦀️.rs"]
+#[path = "../../↕️change-h-sc-mm/🧪️tests/📏️lengthens-stud-to-125-mm/🦀️.rs"]
 mod tests_change_h_sc_mm_lengthens_stud_to_125_mm;
 #[path = "../../🧯️change-insulation-thickness-mm/🧪️tests/🧣️thickens-fire-insulation-to-40-mm/🦀️.rs"]
 mod tests_change_insulation_thickness_mm_thickens_fire_insulation_to_40_mm;
@@ -35,7 +34,7 @@ mod tests_change_m_pl_rd_raises_plastic_moment_resistance_to_375_knm;
 mod tests_change_m_pla_raises_steel_plastic_moment_to_128_knm;
 #[path = "../../🔄️change-n-cycles-stud/🧪️tests/🔢️raises-stud-cycle-count-to-5000000/🦀️.rs"]
 mod tests_change_n_cycles_stud_raises_stud_cycle_count_to_5000000;
-#[path = "../../📏️change-span-m/📏️lengthens-span-to-12-m/🦀️.rs"]
+#[path = "../../📏️change-span-m/🧪️tests/📏️lengthens-span-to-12-m/🦀️.rs"]
 mod tests_change_span_m_lengthens_span_to_12_m;
 #[path = "../../✂️change-v-ed-kn/🧪️tests/⬆️raises-design-shear-to-225-kn/🦀️.rs"]
 mod tests_change_v_ed_kn_raises_design_shear_to_225_kn;

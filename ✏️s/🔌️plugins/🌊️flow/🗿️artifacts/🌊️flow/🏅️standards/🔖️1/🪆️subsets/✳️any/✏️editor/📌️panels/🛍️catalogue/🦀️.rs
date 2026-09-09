@@ -1,7 +1,7 @@
 //! 🛍️ Flow play app panel — the catalogue: draggable widget/operator palette plus the extension sections.
 
 use crate::editor::flow::commands::run_extension_action::FLOW_AUTOMATIONS;
-use crate::editor::flow::config::FlowConfig;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::host_from_snapshot;
 use crate::editor::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
 use crate::editor::flow::{flow_action, ui_node_list, ui_value_bool, ui_value_map, ui_value_text};
@@ -54,7 +54,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let host = host_from_snapshot(fixture, config, session);
     let raw = host.catalogue_json().map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
     let catalogue: Value = serde_json::from_str(&raw).map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
@@ -84,7 +84,7 @@ pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSes
 }
 
 /// 🧩️ Installed/enabled extension palette plus actions surfaced by active extensions.
-fn append_extension_sections(mut builder: PanelTreeBuilder, config: &FlowConfig, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<PanelTreeBuilder> {
+fn append_extension_sections(mut builder: PanelTreeBuilder, config: &FlowMainWindowConfig, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<PanelTreeBuilder> {
     let extension_enabled = config.automation_enabled();
     let installed = ui_node_list(FLOW_AUTOMATIONS.iter().map(|(id, name, _, _, _)| {
         let enabled = extension_enabled.get(*id).copied().unwrap_or(false);

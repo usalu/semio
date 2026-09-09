@@ -167,8 +167,8 @@ for (const compiler of compilers) test(compiler.name + " proves exact immutable 
   }
 });
 
-test("the exact live mixed-template collection is admitted without reading or executing its inputs", () => {
-  const path = join(root, vector.liveInput), bytes = readFileSync(path), content = bytes.toString("utf8"), expected = oracle(content);
+test("the mixed-template source fixture is admitted without reading or executing its referenced inputs", () => {
+  const path = join(root, vector.exampleInput), bytes = readFileSync(path), content = bytes.toString("utf8"), expected = oracle(content);
   expect(expected).toHaveLength(2);
   expect(expected.some((row) => row.value.endsWith("/🧬️mutations/🦀️.rs"))).toBe(true);
   for (const compiler of compilers) expect(implementation(compiler).authority(content).map(({ value, start, end, physicalTargets }: Token) => ({ value, start, end, physicalTargets }))).toEqual(expected);

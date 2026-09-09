@@ -55,21 +55,22 @@ pub use mutations::*;
 
 pub struct WriterMainWindowTransientOwner;
 
+#[path = "📢️publication/🦀️.rs"]
+mod publication;
+
 impl semio_framework_plugin::WindowTransientOwner for WriterMainWindowTransientOwner {
     const WINDOW_KIND_ID: &'static str = super::WRITER_PLAY_WINDOW_KIND;
     type State = WriterMainWindowTransient;
     type Mutation = WriterMainWindowTransientMutation;
 
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::State, Self::Mutation>> {
-        semio_framework_plugin::bounded_window_transient_preparation_factory::<Self>()
-    }
-    fn build_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::State>> {
-        semio_framework_plugin::bounded_window_transient_root_retirement_factory::<Self>()
-    }
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::State, Self::Mutation>>> {
-        semio_framework_plugin::bounded_window_transient_store_disposer::<Self>()
+    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+        publication::owners()
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧩️partial-construction/🦀️.rs"]
+mod preparation_tests;
 
 pub fn current<'a, T>(view: &'a semio_framework_plugin::TransientView<'_, T>) -> Option<&'a WriterMainWindowTransient> {
     view.window::<WriterMainWindowTransientOwner>()

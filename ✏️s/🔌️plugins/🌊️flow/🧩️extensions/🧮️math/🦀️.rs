@@ -357,7 +357,7 @@ fn random_unit(seed: u64) -> f64 {
 
 fn entropy_seed() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
-    SystemTime::now().duration_since(UNIX_EPOCH).map(|duration| duration.as_nanos() as u64).unwrap_or(0xC0FF_EE00_D15E_A5E)
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|duration| duration.as_nanos() as u64).unwrap_or(0x0C0F_FEE0_0D15_EA5E)
 }
 
 fn next_random_unit(explicit_seed: Option<u64>) -> f64 {
@@ -489,7 +489,7 @@ pub fn register(registry: &mut Registry) {
     let scalar = vec![number_channel("a", "math.add"), number_channel("b", "math.add")];
     let sum_output = vec![sum_out()];
     registry.register_operator(
-        operator_info("math.add", "Add", "Add", "Adds numbers, points, or vectors", scalar.clone(), sum_output.clone()),
+        operator_info("math.add", "Add", "Add", "Adds numbers, points, or vectors", scalar, sum_output.clone()),
         vec![
             OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(Add) },
             OperatorImpl { schemas: vec!["point".into(), "point".into()], operator: Box::new(Add) },
@@ -508,7 +508,7 @@ pub fn register(registry: &mut Registry) {
     );
     let subtract_scalar = vec![number_channel("a", "math.subtract"), number_channel("b", "math.subtract")];
     registry.register_operator(
-        operator_info("math.subtract", "Subtract", "Sub", "Subtracts numbers, points, or vectors", subtract_scalar.clone(), vec![difference_out()]),
+        operator_info("math.subtract", "Subtract", "Sub", "Subtracts numbers, points, or vectors", subtract_scalar, vec![difference_out()]),
         vec![
             OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(Subtract) },
             OperatorImpl { schemas: vec!["point".into(), "point".into()], operator: Box::new(Subtract) },
@@ -566,7 +566,7 @@ pub fn register(registry: &mut Registry) {
         vec!["number", "number", "number"],
         &["number"],
     );
-    register_simple(registry, operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list", &["math.sum"])], sum_output.clone()), Sum, vec!["list"], &["number"]);
+    register_simple(registry, operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list", &["math.sum"])], sum_output), Sum, vec!["list"], &["number"]);
     registry.register_operator(
         operator_info("math.move", "Move", "Move", "Moves a point or vector by a vector", vec![ChannelSpec::requires("subject", &["math.move"]), ChannelSpec::requires("vector", &["math.move"])], move_out()),
         vec![OperatorImpl { schemas: vec!["point".into(), "vector".into()], operator: Box::new(Move) }, OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operator: Box::new(Move) }],

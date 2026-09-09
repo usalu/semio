@@ -11,13 +11,23 @@
   "properties": {
     "exaggeration": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "importedFeaturesJson": {
       "type": "string",
-      "contentMediaType": "application/json",
       "x-semio-state": "artifact"
+    },
+    "mesh": {
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     }
   }
 }

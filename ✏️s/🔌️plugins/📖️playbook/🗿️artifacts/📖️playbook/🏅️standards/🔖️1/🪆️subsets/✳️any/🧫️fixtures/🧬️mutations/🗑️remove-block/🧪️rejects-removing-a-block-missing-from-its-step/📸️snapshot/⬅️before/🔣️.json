@@ -6,7 +6,7 @@
   "document": {
     "childId": "playbook-document-remove-block-missing-block",
     "target": {
-      "artifactId": "playbook-document",
+      "artifactId": "playbook-document-remove-block-missing-block",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -17,7 +17,7 @@
   "flow": {
     "childId": "playbook-flow-remove-block-missing-block",
     "target": {
-      "artifactId": "playbook-flow",
+      "artifactId": "playbook-flow-remove-block-missing-block",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

@@ -1166,7 +1166,7 @@ where
     failure: Option<DurableOwnedThreeStoreMapAssemblyFailureV1>,
 }
 
-fn close_assembly_publication<P, Mutation>(publication: &mut Option<super::ArtifactStoreBatchPublication<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
+fn close_assembly_publication<P: Send + Sync + 'static, Mutation>(publication: &mut Option<super::ArtifactStoreBatchPublication<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
     let Some(owner) = publication.as_mut() else { return Ok(true) };
     owner.begin_close();
     match owner.close_step(super::ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(DurableOwnedGroupDecisionError::Codec)? {

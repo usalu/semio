@@ -1,0 +1,16 @@
+{
+  "payload": {
+    "text": "résultat-Δ",
+    "repeat": 1024,
+    "minimumUtf8Bytes": 4096
+  },
+  "published": {
+    "queryExecutionId": "execution-large",
+    "kind": "table",
+    "column": "value"
+  },
+  "grants": {
+    "blocked": { "maximumItems": 0, "maximumBytes": 4096 },
+    "advance": { "maximumItems": 1, "maximumBytes": 1 }
+  }
+}

@@ -41,7 +41,7 @@ pub fn app_schema_descriptor() -> ::semio_framework_schema::AppSchemaDescriptor 
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),
-            json_schema: include_str!("../../👥️presence/🧬️schema/🧫️fixtures/🔣️.json"),
+            json_schema: include_str!("../../👥️presence/🧬️schema/🔣️.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️.proto"),
         },
     }

@@ -509,7 +509,10 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                 cx.set_stage("puzzle-command-decode");
                 let decoded = match <A::Command as protocol::OpBinary>::decode_op(&self.raw[..self.raw_len]) {
                     Ok(command) => command,
-                    Err(_) => return self.fault(cx, b"puzzle command wire payload is malformed"),
+                    Err(error) => {
+                        eprintln!("[DEBUG] puzzle command wire malformed: raw_len={} pages={} scan={} error={error:?} head={:?}", self.raw_len, self.raw_page_cursor, self.raw_scan_cursor, String::from_utf8_lossy(&self.raw[..self.raw_len.min(160)]));
+                        return self.fault(cx, b"puzzle command wire payload is malformed");
+                    }
                 };
                 let Some(work) = self.work.as_ref() else { return self.fault(cx, b"puzzle command work owner is absent") };
                 if (self.command_id)(&decoded) != work.tool_id() {

@@ -1,0 +1,14 @@
+syntax = "proto3";
+package semio.app.reasoning.wires.canvas_window.config.mutations;
+
+import "wires_canvas_window_config.proto";
+
+message SetCamera {
+  semio.app.reasoning.wires.canvas_window.config.WiresCanvasCamera camera = 1;
+}
+
+message WiresCanvasWindowConfigMutation {
+  oneof mutation {
+    SetCamera set_camera = 1;
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "document": {
+    "schema": "animate.presentation",
+    "presentation": {
+      "childId": "presentation-fixture",
+      "target": {
+        "artifactId": "presentation-fixture",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "presentation"
+        }
+      }
+    },
+    "animation": {
+      "childId": "animation-fixture",
+      "target": {
+        "artifactId": "animation-fixture",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "animation"
+        }
+      }
+    }
+  },
+  "diff": {
+    "artifact": {
+      "schema": "animate.presentation",
+      "presentation": {
+        "childId": "presentation-fixture",
+        "target": {
+          "artifactId": "presentation-fixture",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "presentation"
+          }
+        }
+      },
+      "animation": {
+        "childId": "animation-fixture",
+        "target": {
+          "artifactId": "animation-fixture",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "animation"
+          }
+        }
+      }
+    },
+    "schema": "animate.presentation",
+    "presentation": {
+      "childId": "presentation-fixture",
+      "target": {
+        "artifactId": "presentation-fixture",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "presentation"
+        }
+      }
+    }
+  },
+  "invalidDocuments": [
+    {
+      "schema": "animate.presentation",
+      "source": {
+        "src": "sample.svg",
+        "kind": "image",
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1
+        }
+      },
+      "tiles": []
+    },
+    {
+      "schema": "animate.presentation",
+      "presentation": {
+        "childId": "presentation-fixture",
+        "target": {
+          "artifactId": "presentation-fixture",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "presentation"
+          }
+        }
+      },
+      "animation": {
+        "childId": "animation-fixture",
+        "target": {
+          "artifactId": "animation-fixture",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "animation"
+          }
+        }
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      }
+    },
+    {
+      "schema": "animate.presentation",
+      "presentation": {
+        "childId": "presentation-fixture",
+        "target": {
+          "artifactId": "presentation-fixture",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "presentation"
+          }
+        }
+      }
+    },
+    {
+      "schema": "animate.presentation",
+      "presentation": {
+        "childId": "presentation-fixture",
+        "target": {
+          "artifactId": "presentation-fixture",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "presentation"
+          }
+        },
+        "tiles": []
+      },
+      "animation": {
+        "childId": "animation-fixture",
+        "target": {
+          "artifactId": "animation-fixture",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "animation"
+          }
+        }
+      }
+    }
+  ],
+  "invalidDiffs": [
+    {
+      "tiles": []
+    },
+    {
+      "source": {}
+    },
+    {
+      "animation": {
+        "childId": "animation-fixture",
+        "target": {
+          "artifactId": "animation-fixture",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "animation"
+          }
+        }
+      }
+    },
+    {
+      "artifact": {
+        "schema": "animate.presentation",
+        "source": {
+          "src": "sample.svg",
+          "kind": "image",
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        "tiles": []
+      }
+    }
+  ]
+}

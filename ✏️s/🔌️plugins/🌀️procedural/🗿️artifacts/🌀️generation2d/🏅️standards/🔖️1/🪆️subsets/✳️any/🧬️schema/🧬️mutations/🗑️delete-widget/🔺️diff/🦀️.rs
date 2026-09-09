@@ -8,7 +8,7 @@ pub fn diff(payload: &super::DeleteWidget, base: &Generation2dSnapshot) -> proto
     if !base.fixture.widgets.iter().any(|widget| widget_id(widget) == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
-    let outcome = protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff { removed: vec![payload.id.clone()], set: vec![] }, SynapsesDiff::default(), LayoutDiff::default(), None, None));
+    let outcome = protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![payload.id.clone()], set: vec![] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None));
     let cascaded_synapse_ids: Vec<String> = base.fixture.synapses.iter().filter(|synapse| synapse.from == payload.id || synapse.to == payload.id).map(|synapse| synapse.id.clone()).collect();
     if cascaded_synapse_ids.is_empty() {
         outcome

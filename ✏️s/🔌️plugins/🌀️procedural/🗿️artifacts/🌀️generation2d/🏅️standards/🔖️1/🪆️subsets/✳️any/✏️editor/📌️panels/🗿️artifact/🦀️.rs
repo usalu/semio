@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). Clicks/selection are the framework's now — no
 /// per-item action needed, and `_config` is unused (kept for call-site symmetry with `inspection`).
 pub fn render(document: &Generation2dSnapshot, _config: &Generation2dConfig, labels: &Generation2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let widget_items = crate::ui_node_list(document.fixture.widgets.iter().map(|widget| tree_item(widget_id(widget).to_string(), widget_id(widget).to_string())))?;
+    let widget_items = crate::ui_node_list(document.fixture.widgets.iter().map(|widget| tree_item(widget_id(widget), widget_id(widget).to_string())))?;
     PanelTreeBuilder::new("procedural2d-play-document")?
         .section_or_placeholder("procedural2d-play-document.widgets", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, widget_items, labels.none.as_str())?
         .interaction_domain("graph")?

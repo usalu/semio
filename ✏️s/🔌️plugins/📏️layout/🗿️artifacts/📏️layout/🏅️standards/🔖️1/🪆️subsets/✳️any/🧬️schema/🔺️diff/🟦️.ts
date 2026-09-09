@@ -1,460 +1,115 @@
-/** 🧬️ Layout diff schema — sparse field delta over the artifact, mirrors `🔺️diff/🦀️.rs`'s
- *  `LayoutDiff` field-for-field. */
+/** 🔺️ Canonical Layout diff with every native `ToValue` field present and nullable. */
+import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import {
+  parseCharacterStyle, parseFrame, parseGridSettings, parseImageLink, parseLayoutArtifact, parseLayoutDrawingChild,
+  parsePage, parseParagraphStyle, parseParentPage, parseSpread, parseTextStory,
+  type ArtifactLink, type CharacterStyle, type Frame, type GridSettings, type ImageLink,
+  type LayoutArtifact, type LayoutDrawingChild, type Page, type ParagraphStyle, type ParentPage,
+  type Spread, type TextStory,
+} from "../🟦️.ts";
+import { parseArtifactLink } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+export * from "../🟦️.ts";
 
+export interface ParagraphStylePatch { name: string | null }
+export interface CharacterStylePatch { name: string | null }
+export interface ParentPagePatch { name: string | null }
+export interface SpreadPatch { name: string | null }
+export interface TextStoryPatch { content: string | null }
+export interface ImageLinkPatch { path: string | null }
+export interface FramePatch { x: number | null; y: number | null; width: number | null; height: number | null; fill: [number, number, number, number] | null; stroke: [number, number, number, number] | null; wrap_mode: string | null; columns: number | null }
+export interface PageFrameAdded { frame: Frame; index: number | null; layer_id: string | null }
+export interface PageFramePatched { frame_id: string; patch: FramePatch }
+export interface PagePatch { name: string | null; width: number | null; height: number | null; margin_top: number | null; margin_right: number | null; margin_bottom: number | null; margin_left: number | null; columns_count: number | null; columns_gutter: number | null; frame_added: PageFrameAdded | null; frame_removed: string | null; frame_patched: PageFramePatched | null }
+export interface LayoutPagePatchEntry { id: string; patch: PagePatch }
+export interface LayoutStoryPatchEntry { id: string; patch: TextStoryPatch }
+export interface LayoutLinkPatchEntry { id: string; patch: ImageLinkPatch }
+export interface LayoutParagraphStylePatchEntry { id: string; patch: ParagraphStylePatch }
+export interface LayoutCharacterStylePatchEntry { id: string; patch: CharacterStylePatch }
+export interface LayoutParentPagePatchEntry { id: string; patch: ParentPagePatch }
+export interface LayoutSpreadPatchEntry { id: string; patch: SpreadPatch }
+export interface LayoutPagesDelta { added: Page[]; removed: string[]; patched: LayoutPagePatchEntry[]; reordered: string[] | null }
+export interface LayoutStoriesDelta { added: TextStory[]; removed: string[]; patched: LayoutStoryPatchEntry[]; reordered: string[] | null }
+export interface LayoutLinksDelta { added: ImageLink[]; removed: string[]; patched: LayoutLinkPatchEntry[]; reordered: string[] | null }
+export interface LayoutParagraphStylesDelta { added: ParagraphStyle[]; removed: string[]; patched: LayoutParagraphStylePatchEntry[]; reordered: string[] | null }
+export interface LayoutCharacterStylesDelta { added: CharacterStyle[]; removed: string[]; patched: LayoutCharacterStylePatchEntry[]; reordered: string[] | null }
+export interface LayoutParentPagesDelta { added: ParentPage[]; removed: string[]; patched: LayoutParentPagePatchEntry[]; reordered: string[] | null }
+export interface LayoutSpreadsDelta { added: Spread[]; removed: string[]; patched: LayoutSpreadPatchEntry[]; reordered: string[] | null }
 export interface LayoutDiff {
-  /** @state artifact */
-  artifact?: LayoutArtifact;
-  /** @state artifact */
-  schema?: string;
-  /** @state artifact */
-  name?: string;
-  /** @state artifact */
-  grid?: GridSettings;
-  /** @state artifact */
-  paragraphStyles?: LayoutParagraphStylesDelta;
-  /** @state artifact */
-  characterStyles?: LayoutCharacterStylesDelta;
-  /** @state artifact */
-  stories?: LayoutStoriesDelta;
-  /** @state artifact */
-  links?: LayoutLinksDelta;
-  /** @state artifact */
-  parentPages?: LayoutParentPagesDelta;
-  /** @state artifact */
-  spreads?: LayoutSpreadsDelta;
-  /** @state artifact */
-  pages?: LayoutPagesDelta;
-  /** @state artifact */
-  printTarget?: string | null;
-  /** @state artifact */
-  dataFieldsJson?: string | null;
-  /** @state artifact @child kind=s.stdio.semio.drawing */
-  backgroundDrawing?: LayoutDrawingChild | null;
-  /** @state artifact @link_slot roles=model */
-  referencedModel?: ArtifactLink | null;
+  /** @state artifact */ artifact: LayoutArtifact | null;
+  /** @state artifact */ schema: string | null;
+  /** @state artifact */ name: string | null;
+  /** @state artifact */ grid: GridSettings | null;
+  /** @state artifact */ paragraphStyles: LayoutParagraphStylesDelta | null;
+  /** @state artifact */ characterStyles: LayoutCharacterStylesDelta | null;
+  /** @state artifact */ stories: LayoutStoriesDelta | null;
+  /** @state artifact */ links: LayoutLinksDelta | null;
+  /** @state artifact */ parentPages: LayoutParentPagesDelta | null;
+  /** @state artifact */ spreads: LayoutSpreadsDelta | null;
+  /** @state artifact */ pages: LayoutPagesDelta | null;
+  /** @state artifact */ printTarget: string | null;
+  /** @state artifact */ dataFieldsJson: string | null;
+  /** @state artifact @child kind=s.stdio.semio */ backgroundDrawing: LayoutDrawingChild | null;
+  /** @state artifact @link_slot roles=model */ referencedModel: ArtifactLink | null;
 }
 
-/** 🌉️ Opaque mirror of the full `LayoutArtifact` aggregate (artifact + presence + config lanes) —
- *  out of this facet's own scope (the diff's `artifact` field carries a whole-artifact replace,
- *  distinct from every other sparse per-field entry below it). */
-export interface LayoutArtifact { [key: string]: unknown; }
-
-export interface LayoutDropPreviewState {
-  kind: string;
-  x: number;
-  y: number;
-}
-
-export interface LayoutStringList {
-  values: string[];
-}
-
-export interface GridSettings {
-  baselineGrid: number;
-  baselineOffset: number;
-  snapToBaseline: boolean;
-}
-
-export interface ParagraphStyle {
-  id: string;
-  name: string;
-  fontFamily: string;
-  fontSize: number;
-  fontWeight: number;
-  leading: number;
-  tracking: number;
-  alignment: string;
-}
-
-export interface CharacterStyle {
-  id: string;
-  name?: string;
-  fontFamily?: string;
-  fontSize?: number;
-  fontWeight?: number;
-  italic?: boolean;
-  color?: [number, number, number, number];
-  tracking?: number;
-}
-
-export interface TextStyleRun {
-  start: number;
-  end: number;
-  paragraphStyleId?: string;
-  characterStyleId?: string;
-}
-
-export interface TextStory {
-  id: string;
-  content: string;
-  styleRuns: TextStyleRun[];
-}
-
-export interface ImageLink {
-  id: string;
-  path: string;
-  hash: string;
-  width: number;
-  height: number;
-  dpi: number;
-  colorProfile?: string;
-  state?: string;
-  proxyDataUrl?: string;
-}
-
-export interface LayoutBounds {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  rotation: number;
-}
-
-export interface LayoutRect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-export interface PageMargins {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-}
-
-export interface PageColumns {
-  count: number;
-  gutter: number;
-}
-
-export interface Layer {
-  id: string;
-  name: string;
-  visible: boolean;
-  locked: boolean;
-  objectIds: string[];
-}
-
-export type Frame = FrameRect | FrameText | FrameImage;
-
-export interface FrameRect {
-  kind: "rect";
-  id: string;
-  layerId: string;
-  bounds: LayoutBounds;
-  locked?: boolean;
-  visible?: boolean;
-  fill?: [number, number, number, number];
-  stroke?: [number, number, number, number];
-}
-
-export interface FrameText {
-  kind: "text";
-  id: string;
-  layerId: string;
-  bounds: LayoutBounds;
-  locked?: boolean;
-  visible?: boolean;
-  storyId: string;
-  threadNext?: string;
-  columns: number;
-  inset: LayoutRect;
-  wrapMode: string;
-}
-
-export interface FrameImage {
-  kind: "image";
-  id: string;
-  layerId: string;
-  bounds: LayoutBounds;
-  locked?: boolean;
-  visible?: boolean;
-  linkId: string;
-}
-
-export interface ParentPage {
-  id: string;
-  name: string;
-  width: number;
-  height: number;
-  layerIds: string[];
-  layers: Layer[];
-  frames: Frame[];
-}
-
-export interface PageOverride {
-  objectId: string;
-  bounds?: LayoutBounds;
-  visible?: boolean;
-  locked?: boolean;
-}
-
-export interface Page {
-  id: string;
-  name: string;
-  spreadId: string;
-  parentPageId?: string;
-  width: number;
-  height: number;
-  margins: PageMargins;
-  columns: PageColumns;
-  guides: LayoutRect[];
-  layerIds: string[];
-  layers: Layer[];
-  frames: Frame[];
-  overrides: PageOverride[];
-}
-
-export interface Spread {
-  id: string;
-  name: string;
-  pageIds: string[];
-}
-
-/** 🌉️ Opaque mirror of `store::os_io::ArtifactRef` — a cross-cutting framework identity type, out of
- *  this facet's own domain. */
-export interface ArtifactDialect {
-  artifactKind: string;
-  standard: string;
-  subset: string;
-}
-
-export interface ArtifactRef {
-  artifactId: string;
-  dialect: ArtifactDialect;
-}
-
-/** 🌉️ Mirrors `store::ArtifactChild<S>` (`#[serde(rename_all = "camelCase")]`, `child_id`/`target`
- *  fields only — the `local_owner`/`PhantomData<S>` fields are `#[serde(skip)]`). */
-export interface ArtifactChildHandle {
-  childId: string;
-  target: ArtifactRef;
-}
-
-/** 🌉️ Opaque mirror of `store::LinkPin` — a tagged enum (`Head` / `Checkpoint{id}` /
- *  `Snapshot{blob}`), out of this facet's own domain. */
-export interface LinkPin { [key: string]: unknown; }
-
-/** 🌉️ Mirrors `store::ArtifactLink` (`target`/`pin`/`role`). */
-export interface ArtifactLink {
-  target: ArtifactRef;
-  pin: LinkPin;
-  role: string;
-}
-
-/** 🌉️ Opaque mirror of stdio's `SemioDrawingSnapshot` — a composed child subset from a different
- *  plugin, out of this facet's own domain. */
-export interface LayoutSemioDrawingSnapshot { [key: string]: unknown; }
-
-/** 🌉️ Mirrors `crate::artifacts::layout::LayoutDrawingChild` (`handle`/`content`). */
-export interface LayoutDrawingChild {
-  handle: ArtifactChildHandle;
-  content: LayoutSemioDrawingSnapshot;
-}
-
-export interface LayoutPagesDelta {
-  added: Page[];
-  removed: string[];
-  patched: LayoutPagePatchEntry[];
-  reordered?: string[];
-}
-
-export interface LayoutPagePatchEntry {
-  id: string;
-  patch: PagePatch;
-}
-
-export interface LayoutStoriesDelta {
-  added: TextStory[];
-  removed: string[];
-  patched: LayoutStoryPatchEntry[];
-  reordered?: string[];
-}
-
-export interface LayoutStoryPatchEntry {
-  id: string;
-  patch: TextStoryPatch;
-}
-
-export interface LayoutLinksDelta {
-  added: ImageLink[];
-  removed: string[];
-  patched: LayoutLinkPatchEntry[];
-  reordered?: string[];
-}
-
-export interface LayoutLinkPatchEntry {
-  id: string;
-  patch: ImageLinkPatch;
-}
-
-export interface LayoutParagraphStylesDelta {
-  added: ParagraphStyle[];
-  removed: string[];
-  patched: LayoutParagraphStylePatchEntry[];
-  reordered?: string[];
-}
-
-export interface LayoutParagraphStylePatchEntry {
-  id: string;
-  patch: ParagraphStylePatch;
-}
-
-export interface LayoutCharacterStylesDelta {
-  added: CharacterStyle[];
-  removed: string[];
-  patched: LayoutCharacterStylePatchEntry[];
-  reordered?: string[];
-}
-
-export interface LayoutCharacterStylePatchEntry {
-  id: string;
-  patch: CharacterStylePatch;
-}
-
-export interface LayoutParentPagesDelta {
-  added: ParentPage[];
-  removed: string[];
-  patched: LayoutParentPagePatchEntry[];
-  reordered?: string[];
-}
-
-export interface LayoutParentPagePatchEntry {
-  id: string;
-  patch: ParentPagePatch;
-}
-
-export interface LayoutSpreadsDelta {
-  added: Spread[];
-  removed: string[];
-  patched: LayoutSpreadPatchEntry[];
-  reordered?: string[];
-}
-
-export interface LayoutSpreadPatchEntry {
-  id: string;
-  patch: SpreadPatch;
-}
-
-export interface ParagraphStylePatch {
-  name?: string;
-}
-
-export interface CharacterStylePatch {
-  name?: string;
-}
-
-export interface ParentPagePatch {
-  name?: string;
-}
-
-export interface SpreadPatch {
-  name?: string;
-}
-
-export interface TextStoryPatch {
-  content?: string;
-}
-
-export interface ImageLinkPatch {
-  path?: string;
-}
-
-/** 🩹️ `PagePatch`'s Rust struct has no `#[serde(rename_all = "camelCase")]`, so its wire field names
- *  stay snake_case — mirrored verbatim, not camelCased. */
-export interface PagePatch {
-  name?: string;
-  width?: number;
-  height?: number;
-  margin_top?: number;
-  margin_right?: number;
-  margin_bottom?: number;
-  margin_left?: number;
-  columns_count?: number;
-  columns_gutter?: number;
-  frame_added?: PageFrameAdded;
-  frame_removed?: string;
-  frame_patched?: PageFramePatched;
-}
-
-/** 🌱️ Same no-`rename_all` snake_case wire shape as `PagePatch` itself. */
-export interface PageFrameAdded {
-  frame: Frame;
-  index?: number;
-  layer_id?: string;
-}
-
-/** 🩹️ Same no-`rename_all` snake_case wire shape as `PagePatch` itself. */
-export interface PageFramePatched {
-  frame_id: string;
-  patch: FramePatch;
-}
-
-/** 🖼️ Same no-`rename_all` snake_case wire shape as `PagePatch` itself. */
-export interface FramePatch {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  fill?: [number, number, number, number] | null;
-  stroke?: [number, number, number, number] | null;
-  wrap_mode?: string;
-  columns?: number;
-}
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class layoutLayoutDiffGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
-}
-
-const layoutLayoutDiffGuardReject = (at: string, why: string): never => {
-  throw new layoutLayoutDiffGuardRefusal(at, why);
+const required = (row: Record<string, unknown>, keys: readonly string[], at: string): Record<string, unknown> => {
+  const exact = parseSchemaRecord(row, keys, at), missing = keys.find((key) => !Object.hasOwn(exact, key));
+  if (missing !== undefined) throw new Error(`${at}: missing field ${missing}`);
+  return exact;
 };
+const record = (value: unknown, keys: readonly string[], at: string): Record<string, unknown> => required(parseSchemaRecord(value, keys, at), keys, at);
+const string = (value: unknown, at: string): string => { if (typeof value !== "string") throw new Error(`${at}: string required`); return value; };
+const number = (value: unknown, at: string): number => { if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${at}: finite number required`); return value; };
+const integer = (value: unknown, at: string): number => { const result = number(value, at); if (!Number.isSafeInteger(result) || result < 0) throw new Error(`${at}: unsigned integer required`); return result; };
+const array = (value: unknown, at: string): unknown[] => { if (!Array.isArray(value)) throw new Error(`${at}: array required`); return value; };
+const strings = (value: unknown, at: string): string[] => array(value, at).map((item, index) => string(item, `${at}[${index}]`));
+const nullable = <T>(value: unknown, parse: (value: unknown, at: string) => T, at: string): T | null => value === null ? null : parse(value, at);
+const rgba = (value: unknown, at: string): [number, number, number, number] => { const items = array(value, at).map((item, index) => number(item, `${at}[${index}]`)); if (items.length !== 4) throw new Error(`${at}: four numbers required`); return items as [number, number, number, number]; };
 
-type layoutLayoutDiffGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type layoutLayoutDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type layoutLayoutDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+const simplePatch = <K extends "name" | "content" | "path">(value: unknown, key: K, at: string): Record<K, string | null> => {
+  const row = record(value, [key], at);
+  return { [key]: nullable(row[key], string, `${at}.${key}`) } as Record<K, string | null>;
+};
+export const parseParagraphStylePatch = (value: unknown, at = "$" ): ParagraphStylePatch => simplePatch(value, "name", at);
+export const parseCharacterStylePatch = (value: unknown, at = "$" ): CharacterStylePatch => simplePatch(value, "name", at);
+export const parseParentPagePatch = (value: unknown, at = "$" ): ParentPagePatch => simplePatch(value, "name", at);
+export const parseSpreadPatch = (value: unknown, at = "$" ): SpreadPatch => simplePatch(value, "name", at);
+export const parseTextStoryPatch = (value: unknown, at = "$" ): TextStoryPatch => simplePatch(value, "content", at);
+export const parseImageLinkPatch = (value: unknown, at = "$" ): ImageLinkPatch => simplePatch(value, "path", at);
+export function parseFramePatch(value: unknown, at = "$" ): FramePatch {
+  const keys = ["x", "y", "width", "height", "fill", "stroke", "wrap_mode", "columns"], row = record(value, keys, at);
+  return { x: nullable(row.x, number, `${at}.x`), y: nullable(row.y, number, `${at}.y`), width: nullable(row.width, number, `${at}.width`), height: nullable(row.height, number, `${at}.height`), fill: nullable(row.fill, rgba, `${at}.fill`), stroke: nullable(row.stroke, rgba, `${at}.stroke`), wrap_mode: nullable(row.wrap_mode, string, `${at}.wrap_mode`), columns: nullable(row.columns, integer, `${at}.columns`) };
+}
+export function parsePageFrameAdded(value: unknown, at = "$" ): PageFrameAdded {
+  const keys = ["frame", "index", "layer_id"], row = record(value, keys, at);
+  return { frame: parseFrame(row.frame, `${at}.frame`), index: nullable(row.index, integer, `${at}.index`), layer_id: nullable(row.layer_id, string, `${at}.layer_id`) };
+}
+export function parsePagePatch(value: unknown, at = "$" ): PagePatch {
+  const keys = ["name", "width", "height", "margin_top", "margin_right", "margin_bottom", "margin_left", "columns_count", "columns_gutter", "frame_added", "frame_removed", "frame_patched"], row = record(value, keys, at);
+  let framePatched: PageFramePatched | null = null;
+  if (row.frame_patched !== null) { const nested = record(row.frame_patched, ["frame_id", "patch"], `${at}.frame_patched`); framePatched = { frame_id: string(nested.frame_id, `${at}.frame_patched.frame_id`), patch: parseFramePatch(nested.patch, `${at}.frame_patched.patch`) }; }
+  return { name: nullable(row.name, string, `${at}.name`), width: nullable(row.width, number, `${at}.width`), height: nullable(row.height, number, `${at}.height`), margin_top: nullable(row.margin_top, number, `${at}.margin_top`), margin_right: nullable(row.margin_right, number, `${at}.margin_right`), margin_bottom: nullable(row.margin_bottom, number, `${at}.margin_bottom`), margin_left: nullable(row.margin_left, number, `${at}.margin_left`), columns_count: nullable(row.columns_count, integer, `${at}.columns_count`), columns_gutter: nullable(row.columns_gutter, number, `${at}.columns_gutter`), frame_added: nullable(row.frame_added, parsePageFrameAdded, `${at}.frame_added`), frame_removed: nullable(row.frame_removed, string, `${at}.frame_removed`), frame_patched: framePatched };
+}
 
-export const layoutLayoutDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : layoutLayoutDiffGuardReject(at, "value is not an object");
-export const layoutLayoutDiffGuardArray = (value: unknown, at: string, bounds: layoutLayoutDiffGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return layoutLayoutDiffGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) layoutLayoutDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) layoutLayoutDiffGuardReject(at, `array has more than ${bounds.maxItems} items`);
-  return value;
+type Delta<T, P> = { added: T[]; removed: string[]; patched: P[]; reordered: string[] | null };
+const parseDelta = <T, P>(value: unknown, parseItem: (value: unknown, at: string) => T, parsePatch: (value: unknown, at: string) => P, at: string): Delta<T, { id: string; patch: P }> => {
+  const keys = ["added", "removed", "patched", "reordered"], row = record(value, keys, at);
+  return { added: array(row.added, `${at}.added`).map((item, index) => parseItem(item, `${at}.added[${index}]`)), removed: strings(row.removed, `${at}.removed`), patched: array(row.patched, `${at}.patched`).map((item, index) => { const path = `${at}.patched[${index}]`, entry = record(item, ["id", "patch"], path); return { id: string(entry.id, `${path}.id`), patch: parsePatch(entry.patch, `${path}.patch`) }; }), reordered: nullable(row.reordered, strings, `${at}.reordered`) };
 };
-export const layoutLayoutDiffGuardString = (value: unknown, at: string, bounds: layoutLayoutDiffGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return layoutLayoutDiffGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) layoutLayoutDiffGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) layoutLayoutDiffGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) layoutLayoutDiffGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const layoutLayoutDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : layoutLayoutDiffGuardReject(at, "value is not a boolean"));
-export const layoutLayoutDiffGuardNumber = (value: unknown, at: string, bounds: layoutLayoutDiffGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return layoutLayoutDiffGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) layoutLayoutDiffGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) layoutLayoutDiffGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const layoutLayoutDiffGuardInteger = (value: unknown, at: string, bounds: layoutLayoutDiffGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? layoutLayoutDiffGuardNumber(value, at, bounds) : layoutLayoutDiffGuardReject(at, "value is not an integer");
-export const layoutLayoutDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : layoutLayoutDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const layoutLayoutDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : layoutLayoutDiffGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
+export const parseLayoutPagesDelta = (value: unknown, at = "$" ): LayoutPagesDelta => parseDelta(value, parsePage, parsePagePatch, at);
+export const parseLayoutStoriesDelta = (value: unknown, at = "$" ): LayoutStoriesDelta => parseDelta(value, parseTextStory, parseTextStoryPatch, at);
+export const parseLayoutLinksDelta = (value: unknown, at = "$" ): LayoutLinksDelta => parseDelta(value, parseImageLink, parseImageLinkPatch, at);
+export const parseLayoutParagraphStylesDelta = (value: unknown, at = "$" ): LayoutParagraphStylesDelta => parseDelta(value, parseParagraphStyle, parseParagraphStylePatch, at);
+export const parseLayoutCharacterStylesDelta = (value: unknown, at = "$" ): LayoutCharacterStylesDelta => parseDelta(value, parseCharacterStyle, parseCharacterStylePatch, at);
+export const parseLayoutParentPagesDelta = (value: unknown, at = "$" ): LayoutParentPagesDelta => parseDelta(value, parseParentPage, parseParentPagePatch, at);
+export const parseLayoutSpreadsDelta = (value: unknown, at = "$" ): LayoutSpreadsDelta => parseDelta(value, parseSpread, parseSpreadPatch, at);
 
-export function parseLayoutDiff(value: unknown, at = "$"): LayoutDiff {
-  const row = layoutLayoutDiffGuardObject(value, at);
+/** 🔺️ Parses the exact, full native diff record and rejects stale wrapper or window fields. */
+export function parseLayoutDiff(value: unknown, at = "$" ): LayoutDiff {
+  const keys = ["artifact", "schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "dataFieldsJson", "backgroundDrawing", "referencedModel"], row = record(value, keys, at);
   return {
-    schema: row["schema"] === undefined ? undefined : layoutLayoutDiffGuardString(row["schema"], `${at}.schema`),
-    value: row["value"] === undefined ? undefined : layoutLayoutDiffGuardString(row["value"], `${at}.value`),
+    artifact: nullable(row.artifact, parseLayoutArtifact, `${at}.artifact`), schema: nullable(row.schema, string, `${at}.schema`), name: nullable(row.name, string, `${at}.name`), grid: nullable(row.grid, parseGridSettings, `${at}.grid`),
+    paragraphStyles: nullable(row.paragraphStyles, parseLayoutParagraphStylesDelta, `${at}.paragraphStyles`), characterStyles: nullable(row.characterStyles, parseLayoutCharacterStylesDelta, `${at}.characterStyles`), stories: nullable(row.stories, parseLayoutStoriesDelta, `${at}.stories`), links: nullable(row.links, parseLayoutLinksDelta, `${at}.links`), parentPages: nullable(row.parentPages, parseLayoutParentPagesDelta, `${at}.parentPages`), spreads: nullable(row.spreads, parseLayoutSpreadsDelta, `${at}.spreads`), pages: nullable(row.pages, parseLayoutPagesDelta, `${at}.pages`),
+    printTarget: nullable(row.printTarget, string, `${at}.printTarget`), dataFieldsJson: nullable(row.dataFieldsJson, string, `${at}.dataFieldsJson`), backgroundDrawing: nullable(row.backgroundDrawing, parseLayoutDrawingChild, `${at}.backgroundDrawing`), referencedModel: nullable(row.referencedModel, parseArtifactLink, `${at}.referencedModel`),
   };
 }

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/shell/space-administration-delete-space-fixture-v1.json",
+  "title": "Space Administration Delete Space Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "spaceId", "acceptedOutcomes", "refusedPhases", "locales"],
+  "properties": {
+    "schema": { "const": "semio.shell.space-administration-delete-space-fixture.v1" },
+    "spaceId": { "type": "string", "minLength": 1 },
+    "acceptedOutcomes": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "enum": ["accepted", "previously-accepted"] }
+    },
+    "refusedPhases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": { "enum": ["loading", "submitting", "receipt", "refreshing", "cancelled", "denied", "stale", "failed", "deleted"] }
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["locale", "delete", "warning", "confirm", "cancel", "deleted"],
+        "properties": {
+          "locale": { "enum": ["en", "de"] },
+          "delete": { "type": "string", "minLength": 1 },
+          "warning": { "type": "string", "minLength": 1 },
+          "confirm": { "type": "string", "minLength": 1 },
+          "cancel": { "type": "string", "minLength": 1 },
+          "deleted": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

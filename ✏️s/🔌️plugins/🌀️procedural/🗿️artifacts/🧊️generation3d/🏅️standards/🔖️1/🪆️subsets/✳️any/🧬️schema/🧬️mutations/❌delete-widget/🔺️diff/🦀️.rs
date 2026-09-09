@@ -11,5 +11,5 @@ pub fn diff(payload: &DeleteWidget, base: &Generation3dSnapshot) -> protocol::Mu
     if widget_index(&base.fixture, &payload.id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff { removed: vec![payload.id.clone()], set: vec![] }, SynapsesDiff::default(), LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![payload.id.clone()], set: vec![] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None))
 }

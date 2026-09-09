@@ -2,6 +2,16 @@
 
 This ledger records the exact 47 implementation, schema, test, oracle, and downstream payload paths and all 65 centralized mutation fixture documents changed for the tolerance repair. It excludes the broader concurrent BREP fixture relocation and artifact-packaging changes.
 
+## Post-audit follow-up paths
+
+The post-audit extension changed exactly these five paths, all already present in the complete ledger below:
+
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧫️fixtures/📏️tolerance/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🔗️.graphql`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🛰️.proto`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`
+
 ## Implementation, schema, test, oracle, and downstream payload paths
 
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📋️project.json`

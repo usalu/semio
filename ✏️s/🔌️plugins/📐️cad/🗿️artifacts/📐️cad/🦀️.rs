@@ -66,6 +66,28 @@ pub type CadModelChild = store::ArtifactChild<SemioModelSnapshot>;
 /// `create-drawing`/`delete-drawing` once a caller actually attaches one.
 pub type CadDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 
+/// 🪪️ Parses and validates one exact CAD child handle before it enters a parent diff.
+pub fn cad_child_from_uri<S>(child_id: &str, target_uri: &str, expected_subset: &str) -> Result<store::ArtifactChild<S>, String> {
+    let target = store::os_io::ArtifactRef::parse_uri(target_uri).map_err(|error| format!("CAD child target is not an artifact URI: {error}"))?;
+    if child_id != target.artifact_id {
+        return Err(format!("CAD child id `{child_id}` does not equal target artifact id `{}`", target.artifact_id));
+    }
+    if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != expected_subset {
+        return Err(format!("CAD child target must use s.stdio.semio@v1/{expected_subset}"));
+    }
+    Ok(store::ArtifactChild::new(child_id.to_string(), target))
+}
+
+/// 🧩️ Validates a composed model child handle.
+pub fn cad_model_child_from_uri(child_id: &str, target_uri: &str) -> Result<CadModelChild, String> {
+    cad_child_from_uri(child_id, target_uri, "model")
+}
+
+/// 📐️ Validates a composed drawing child handle.
+pub fn cad_drawing_child_from_uri(child_id: &str, target_uri: &str) -> Result<CadDrawingChild, String> {
+    cad_child_from_uri(child_id, target_uri, "drawing")
+}
+
 //#region 🔖️WorkingScene
 /// 🧱 EPHEMERAL, per-invocation working representation of the document's per-pane object content —
 /// never persisted, never a `CadSnapshot` field (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
@@ -131,7 +153,7 @@ pub fn cad_model_child_handle(pane: CadPaneId, content_json: &str) -> CadModelCh
     let slug = cad_model_child_pane_slug(pane);
     let child_id = format!("{slug}-model-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: format!("cad-{slug}-model"), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
@@ -301,10 +323,6 @@ pub fn cad_pane_model_mut(scene: &mut CadSnapshot, pane: CadPaneId) -> &mut Opti
     }
 }
 
-fn default_model_definition_id() -> String {
-    "spatial.shape".into()
-}
-
 pub fn empty_cad_snapshot() -> CadSnapshot {
     CadSnapshot {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
@@ -316,7 +334,6 @@ pub fn empty_cad_snapshot() -> CadSnapshot {
         drawings: Vec::new(),
         references_by_model_definition_id: BTreeMap::new(),
         nodes: Vec::new(),
-        active_model_definition_id: default_model_definition_id(),
     }
 }
 
@@ -806,19 +823,6 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/🧪️tests/🚫️removes-drawing-1/🦀️.rs"]
                             mod tests_removes_drawing_1;
-                        }
-                        #[path = "."]
-                        pub mod change_active_model_definition {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-active-model-definition/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-active-model-definition/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-active-model-definition/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-active-model-definition/🧪️tests/🏗️switches-the-active-pane-to-the-building-model/🦀️.rs"]
-                            mod tests_switches_the_active_pane_to_the_building_model;
                         }
                     }
                 }

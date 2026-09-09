@@ -116,7 +116,7 @@ function sourceOracle(fixture: Fixture, source: string): boolean {
     && source.split("grant.maximum_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES").length - 1 === 2
     && source.includes("authority.prepare_one_item(edit")
     && source.includes("request.base_revision != request.authority.base_revision()")
-    && source.includes("ToolCancellationPolicy::PerOperation")
+    && source.split("fn cancel(&mut self)").length - 1 === 2
     && !source.includes("BatchOnlyPendingRewrite")
     && !source.includes("PROCESS3D_BATCH_ONLY_TOOL_IDS")
     && !source.includes("process3d-command-scan")
@@ -130,7 +130,7 @@ class TestScript extends BundleScript {
     runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const pluginRoot = resolve(this.root, "../..");
-    const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/⚖️retained-route-laws.json")).json() as Fixture;
+    const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧫️fixtures/⚖️retained-route-laws.json")).json() as Fixture;
     const module = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json")).json();
     const ajv = new Ajv({ allErrors: true, strict: false, validateFormats: false });
     ajv.addSchema(module);

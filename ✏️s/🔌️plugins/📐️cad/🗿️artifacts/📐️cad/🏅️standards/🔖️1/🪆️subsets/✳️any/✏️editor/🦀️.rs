@@ -9,7 +9,7 @@ use crate::editor::cad::commands::camera::{set_camera, set_projection, set_proje
 use crate::editor::cad::commands::contribution::set_contributions;
 use crate::editor::cad::commands::engagement::{engagement_abort, engagement_input, engagement_possible_select, engagement_repeat_last, engagement_submit, world_pointer_down, world_pointer_move};
 use crate::editor::cad::commands::io::{import_cad_file, load_raw_request, save_current, save_in_play, save_selected};
-use crate::editor::cad::commands::model_definition::{focus_model_definition, set_active_example};
+use crate::editor::cad::commands::model_definition::set_active_example;
 use crate::editor::cad::commands::node::{add_node, rename_node, set_node_selection};
 use crate::editor::cad::commands::object::{add_object, delete_object, duplicate_object, patch_object, patch_selection};
 use crate::editor::cad::commands::reference::{patch_cad_play_reference, reference_hover, set_reference_selection};
@@ -34,7 +34,7 @@ use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
+    tree_item as framework_tree_item, tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
     MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiText, UiValue, UtilityCategory, UtilityDefinition, ViewModel, WindowEngagement, WindowMeasure, WorldSunConfig,
 };
@@ -396,6 +396,18 @@ pub fn cad_tree_item(id: impl Into<String>, label: impl AsRef<str>, icon_id: Opt
     Ok(item)
 }
 
+/// 🌳️ Builds a presentational CAD tree item without inventing a plugin focus command.
+pub fn cad_tree_item_static(id: impl Into<String>, label: impl AsRef<str>, icon_id: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut item = framework_tree_item(id.into(), ui_label(label)?)?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+        props.icon = match icon_id {
+            Some(value) => Some(UiText::try_from_str(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad tree icon admission failed"))?),
+            None => None,
+        };
+    }
+    Ok(item)
+}
+
 /// 🪟️ Maps a pane to the window-KIND id whose Dislocate options it owns — the typed-command
 /// counterpart of the pre-B1 `view_state.window_id` resolution.
 pub fn cad_window_id_for_pane(pane: CadPaneId) -> &'static str {
@@ -404,6 +416,24 @@ pub fn cad_window_id_for_pane(pane: CadPaneId) -> &'static str {
         CadPaneId::Building => building::WINDOW_KIND_ID,
         CadPaneId::Energy => energy::WINDOW_KIND_ID,
         CadPaneId::StructureClassic => structure_classic::WINDOW_KIND_ID,
+    }
+}
+
+/// 🎯️ Resolves the addressed CAD pane from the host's concrete window instance.
+pub fn cad_pane_from_view(view: &ViewModel) -> Result<CadPaneId, Fault> {
+    let window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("cad.window.invalid: command has no addressed window instance"))?;
+    let window_kind_id = view
+        .window_instances
+        .iter()
+        .find(|window| window.id == window_id)
+        .map(|window| window.window_kind_id.as_str())
+        .ok_or_else(|| Fault::from("cad.window.invalid: addressed window instance is not open"))?;
+    match window_kind_id {
+        shape::WINDOW_KIND_ID => Ok(CadPaneId::Shape),
+        building::WINDOW_KIND_ID => Ok(CadPaneId::Building),
+        energy::WINDOW_KIND_ID => Ok(CadPaneId::Energy),
+        structure_classic::WINDOW_KIND_ID => Ok(CadPaneId::StructureClassic),
+        _ => Err(Fault::from("cad.window.invalid: addressed window kind is not a CAD pane")),
     }
 }
 
@@ -419,7 +449,7 @@ pub fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> Result<CadConf
     if config.engagement_session_json != base.engagement_session_json {
         return Err(Fault::from("cad.preview.invalid: engagement checkpoint transition requires operation-aware persistence"));
     }
-    Ok(CadConfigMutation::Snapshot { config })
+    Ok(CadConfigMutation::Snapshot { config: Box::new(config) })
 }
 
 /// 🪪️ The sole engagement-checkpoint persistence authority: it stamps one exact public-operation
@@ -434,7 +464,7 @@ pub fn preview_transition_snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig
         config.engagement_preview_generation = base.engagement_preview_generation.checked_add(1).ok_or_else(|| Fault::from("cad.preview.conflict: engagement preview generation exhausted"))?;
         config.engagement_preview_operation_json = Some(json_string_of(operation));
     }
-    Ok(CadConfigMutation::Snapshot { config })
+    Ok(CadConfigMutation::Snapshot { config: Box::new(config) })
 }
 //#endregion 🔖️Runtime
 
@@ -501,25 +531,25 @@ pub fn cad_spatial_export_effect(value: &protocol::DslValue, filename: &str) -> 
 /// inside composed `s.stdio.semio.model` CHILD documents (unresolved at this boundary — see
 /// `🔖️Composition` in `🏪️store/🦀️.rs`). Returns an empty `objects` array per pane;
 /// documented reduced-fidelity gap, not silently wrong.
-pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> protocol::DslValue {
+pub fn export_spatial_json(_envelope: &CadPlayView, mode: &str, pane: Option<CadPaneId>) -> Result<protocol::DslValue, Fault> {
     let object = |entries: Vec<(&str, protocol::DslValue)>| protocol::DslValue::object(entries.into_iter().map(|(key, value)| (key.to_string(), value)));
     let text = |value: &str| protocol::DslValue::String(value.to_string());
     let empty_model = || object(vec![("schema", text("spatial.model")), ("revision", protocol::DslValue::uint(1)), ("objects", protocol::DslValue::Array(Vec::new()))]);
     let models: Vec<protocol::DslValue> = CadPaneId::all().into_iter().map(|pane| object(vec![("id", text(pane.model_definition_id())), ("model", empty_model())])).collect();
-    match mode {
+    Ok(match mode {
         "selected" => {
-            let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
+            let pane = pane.ok_or_else(|| Fault::from("cad.window.invalid: selected export requires an addressed CAD pane"))?;
             let model = empty_model();
             let model_space =
                 object(vec![("schema", text("spatial.modelspace")), ("revision", protocol::DslValue::uint(1)), ("models", protocol::DslValue::Array(vec![object(vec![("id", text(pane.model_definition_id())), ("model", model.clone())])]))]);
-            object(vec![("model", model), ("modelSpace", model_space), ("activeModelDefinitionId", text(pane.model_definition_id()))])
+            object(vec![("model", model), ("modelSpace", model_space)])
         }
         "current" => {
-            let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
+            let pane = pane.ok_or_else(|| Fault::from("cad.window.invalid: current export requires an addressed CAD pane"))?;
             object(vec![("schema", text("spatial.model")), ("revision", protocol::DslValue::uint(1)), ("modelDefinitionId", text(pane.model_definition_id())), ("objects", protocol::DslValue::Array(Vec::new()))])
         }
-        _ => object(vec![("schema", text("spatial.modelspace")), ("revision", protocol::DslValue::uint(1)), ("activeModelDefinitionId", text(&envelope.document.active_model_definition_id)), ("models", protocol::DslValue::Array(models))]),
-    }
+        _ => object(vec![("schema", text("spatial.modelspace")), ("revision", protocol::DslValue::uint(1)), ("models", protocol::DslValue::Array(models))]),
+    })
 }
 
 /// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE history —
@@ -866,7 +896,6 @@ semio_framework_plugin::app_commands! {
         "importCadFile" as "import-cad-file" => import_cad_file::ImportCadFile,
         "patchCadPlayReference" as "patch-cad-play-reference" => patch_cad_play_reference::PatchCadPlayReference,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
-        "focusModelDefinition" as "focus-model-definition" => focus_model_definition::FocusModelDefinition,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
 
@@ -954,7 +983,6 @@ fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> R
         "duplicateObject" => CadCommand::DuplicateObject(duplicate_object::DuplicateObject { object_id: str_field("objectId").unwrap_or_default() }),
         "addNode" => CadCommand::AddNode(add_node::AddNode { kind: str_field("kind").unwrap_or_else(|| "solid".into()) }),
         "renameNode" => CadCommand::RenameNode(rename_node::RenameNode { node_id: str_field("nodeId").unwrap_or_default(), value: str_field("value").unwrap_or_default() }),
-        "focusModelDefinition" => CadCommand::FocusModelDefinition(focus_model_definition::FocusModelDefinition { model_definition_id: str_field("modelDefinitionId").unwrap_or_default() }),
         "applyTransformation" => CadCommand::ApplyTransformation(apply_transformation::ApplyTransformation { qid: str_field("qid").unwrap_or_default() }),
         "saveSelected" => CadCommand::SaveSelected(save_selected::SaveSelected {}),
         "saveInPlay" => CadCommand::SaveInPlay(save_in_play::SaveInPlay {}),
@@ -1019,7 +1047,7 @@ impl CadPlayApp {
 }
 
 //#region 🧵️RetainedCommands
-const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "focusModelDefinition"];
+const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference"];
 const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setProjection",
@@ -1043,7 +1071,6 @@ const CAD_RETAINED_TOOL_IDS: &[&str] = &[
     "addNode",
     "renameNode",
     "patchCadPlayReference",
-    "focusModelDefinition",
     "setCamera",
     "setProjection",
     "setProjectionParam",
@@ -1073,7 +1100,6 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "renameNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchCadPlayReference", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "focusModelDefinition", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setProjection", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -1440,7 +1466,7 @@ fn cad_snapshot_retained_bytes(snapshot: &CadSnapshot) -> usize {
         references.iter().fold(bytes.saturating_add(model_definition_id.len()), |bytes, reference| bytes.saturating_add(reference.id.len()).saturating_add(reference.source_url.len()).saturating_add(reference.media_kind.len()))
     });
     let node_bytes = snapshot.nodes.iter().fold(0usize, |bytes, node| bytes.saturating_add(node.id.len()).saturating_add(node.label.len()).saturating_add(node.kind.len()));
-    snapshot.schema.len().saturating_add(snapshot.id.len()).saturating_add(snapshot.active_model_definition_id.len()).saturating_add(fixed_children).saturating_add(drawing_bytes).saturating_add(reference_bytes).saturating_add(node_bytes)
+    snapshot.schema.len().saturating_add(snapshot.id.len()).saturating_add(fixed_children).saturating_add(drawing_bytes).saturating_add(reference_bytes).saturating_add(node_bytes)
 }
 
 fn cad_snapshot_items(snapshot: &CadSnapshot) -> usize {
@@ -1711,8 +1737,7 @@ impl ArtifactEditor for CadPlayApp {
             "addNode",
             "renameNode",
             "patchCadPlayReference",
-            "focusModelDefinition",
-            "setCamera",
+                    "setCamera",
             "setProjection",
             "setProjectionParam",
             "setDislocateOption",
@@ -2018,7 +2043,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"), ActionKind::View, "scan"))
             .action_with(ActionDefinition::new("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"), ActionKind::View, "scan"))
-            .mutation("focusModelDefinition", LocalizedLabel::native("Focus Model Definition", "Modelldefinition fokussieren"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_with(ActionDefinition::bounded_catalog("setNodeSelection", LocalizedLabel::native("Set Node Selection", "Knotenauswahl festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("setReferenceSelection", LocalizedLabel::native("Set Reference Selection", "Referenzauswahl festlegen"), ActionKind::View).in_palette(false))
@@ -2043,12 +2067,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgOption::new("obj", LocalizedLabel::native("OBJ", "OBJ")),
                 ActionArgOption::new("stl", LocalizedLabel::native("STL", "STL")),
             ]).default_value(&"step")])
-            .action_args("focusModelDefinition", vec![ActionArgDef::select("modelDefinitionId", LocalizedLabel::native("Model Definition", "Modelldefinition"), vec![
-                ActionArgOption::new(CAD_MODEL_DEFINITION_SHAPE, LocalizedLabel::native("Shape", "Form")),
-                ActionArgOption::new(CAD_MODEL_DEFINITION_BUILDING, LocalizedLabel::native("Building", "Gebäude")),
-                ActionArgOption::new(CAD_MODEL_DEFINITION_ENERGY, LocalizedLabel::native("Energy", "Energie")),
-                ActionArgOption::new(CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, LocalizedLabel::native("Structure Classic", "Tragwerk Klassisch")),
-            ]).required()])
             .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                 ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links")),
             ]).required()])
@@ -2092,7 +2110,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("importCadFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("patchCadPlayReference", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("focusModelDefinition", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("worldPointerDown", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)

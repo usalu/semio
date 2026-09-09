@@ -157,8 +157,8 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 if let Err(error) = &outcome {
                     eprintln!("[DEBUG] Writer exact-window runtime failure before close: {error}");
                 }
-                testkit::close_registered_fixture_app(&mut reopened);
-                testkit::close_registered_fixture_app(&mut app);
+                testkit::close_registered_fixture_app(reopened.as_mut());
+                testkit::close_registered_fixture_app(app.as_mut());
                 outcome.expect("retained Writer exact-window ownership and persistence");
                 eprintln!("[DEBUG] two Writer windows published config/transient state independently, preserved document/app config, and reloaded only persisted config");
             })

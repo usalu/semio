@@ -49,7 +49,7 @@
   "validations": null,
   "performance": null,
   "quality": null,
-  "documents": null,
+  "artifacts": null,
   "assumptions": null,
   "constraints": null,
   "complianceRecords": null,
@@ -69,7 +69,7 @@
   "knowledge": {
     "childId": "architect-knowledge-b3743ce016d5422b",
     "target": {
-      "artifactId": "architect-program-knowledge",
+      "artifactId": "architect-knowledge-b3743ce016d5422b",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

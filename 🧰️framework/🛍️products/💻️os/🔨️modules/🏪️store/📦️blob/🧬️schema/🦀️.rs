@@ -15,4 +15,3 @@ pub struct BlobRef {
     pub size: u64,
     pub media_type: String,
 }
-

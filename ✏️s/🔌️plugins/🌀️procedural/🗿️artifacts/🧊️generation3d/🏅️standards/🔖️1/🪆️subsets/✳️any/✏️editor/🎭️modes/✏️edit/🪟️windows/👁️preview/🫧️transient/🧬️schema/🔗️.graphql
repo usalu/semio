@@ -1,0 +1,7 @@
+type Generation3dPreviewWindowTransient {
+  previewEvalText: String @state(class: EPHEMERAL_LOCAL_WINDOW)
+}
+
+input SetGeneration3dPreviewWindowEvaluation {
+  evalText: String
+}

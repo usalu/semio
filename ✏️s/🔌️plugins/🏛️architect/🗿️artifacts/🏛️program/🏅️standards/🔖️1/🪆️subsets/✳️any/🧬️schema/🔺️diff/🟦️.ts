@@ -1,940 +1,929 @@
 /** 🧬️ ProgramSnapshot diff schema — sparse field delta. */
 
+import { architectProgramArtifactGuardExactObject, parseArtifactChild, parseProgramArtifact, PROGRAM_ARTIFACT_FIELDS, type ArtifactChild } from "../🟦️.ts";
+import type { AccessRule, AccessibilityRequirement, Activity, Adjacency, AnalysisRecord, ApprovalRecord, ArtifactRecord, Assumption, AuditEvent, ChangeRecord, CollaborationRecord, CommunicationRequirement, ComplianceRecord, Conflict, ConstraintRecord, CostRequirement, Decision, DeliveryConstraint, EnvironmentalRequirement, Equipment, FlexibilityRequirement, FlowRequirement, Function, Governance, GrowthPlan, HumanFactorRequirement, InformationRequirement, InfrastructureRequirement, Issue, MeetingRecord, OperationalRequirement, OptionEvaluation, OrganizationalRequirement, PerformanceCriterion, PriorityRecord, PrivacyRequirement, Process, ProgramArtifact, ProgramElement, ProgramMeta, ProjectDefinition, QualityRecord, QuantityRequirement, RegulatoryRequirement, Relationship, ReportRecord, Requirement, ResilienceRequirement, Resource, Risk, SafetyRequirement, Scenario, ScheduleRequirement, SearchFilter, SecurityRequirement, ServiceRequirement, SiteContext, Stakeholder, StatusRecord, StorageRequirement, Survey, SustainabilityRequirement, TemplateRecord, TraceLink, UserProfile, ValidationRecord, WayfindingRequirement, Workshop } from "../🟦️.ts";
+
 export interface ProgramDiff {
   /** @state artifact */
-  artifact?: ProgramArtifact;
+  artifact: ProgramArtifact | null;
   /** @state artifact */
-  schema?: string;
+  schema: string | null;
   /** @state artifact */
-  meta?: ProgramMeta;
+  meta: ProgramMeta | null;
   /** @state artifact */
-  project?: ProjectDefinition;
+  project: ProjectDefinition | null;
   /** @state artifact */
-  stakeholders?: ProgramStakeholdersDelta;
+  stakeholders: ProgramStakeholdersDelta | null;
   /** @state artifact */
-  users?: ProgramUsersDelta;
+  users: ProgramUsersDelta | null;
   /** @state artifact */
-  activities?: ProgramActivitiesDelta;
+  activities: ProgramActivitiesDelta | null;
   /** @state artifact */
-  functions?: ProgramFunctionsDelta;
+  functions: ProgramFunctionsDelta | null;
   /** @state artifact */
-  elements?: ProgramElementsDelta;
+  elements: ProgramElementsDelta | null;
   /** @state artifact */
-  quantities?: ProgramQuantitiesDelta;
+  quantities: ProgramQuantitiesDelta | null;
   /** @state artifact */
-  relationships?: ProgramRelationshipsDelta;
+  relationships: ProgramRelationshipsDelta | null;
   /** @state artifact */
-  adjacencies?: ProgramAdjacenciesDelta;
+  adjacencies: ProgramAdjacenciesDelta | null;
   /** @state artifact */
-  processes?: ProgramProcessesDelta;
+  processes: ProgramProcessesDelta | null;
   /** @state artifact */
-  flows?: ProgramFlowsDelta;
+  flows: ProgramFlowsDelta | null;
   /** @state artifact */
-  accessRules?: ProgramAccessRulesDelta;
+  accessRules: ProgramAccessRulesDelta | null;
   /** @state artifact */
-  operations?: ProgramOperationsDelta;
+  operations: ProgramOperationsDelta | null;
   /** @state artifact */
-  equipment?: ProgramEquipmentDelta;
+  equipment: ProgramEquipmentDelta | null;
   /** @state artifact */
-  resources?: ProgramResourcesDelta;
+  resources: ProgramResourcesDelta | null;
   /** @state artifact */
-  storage?: ProgramStorageDelta;
+  storage: ProgramStorageDelta | null;
   /** @state artifact */
-  environmental?: ProgramEnvironmentalDelta;
+  environmental: ProgramEnvironmentalDelta | null;
   /** @state artifact */
-  humanFactors?: ProgramHumanFactorsDelta;
+  humanFactors: ProgramHumanFactorsDelta | null;
   /** @state artifact */
-  accessibility?: ProgramAccessibilityDelta;
+  accessibility: ProgramAccessibilityDelta | null;
   /** @state artifact */
-  privacy?: ProgramPrivacyDelta;
+  privacy: ProgramPrivacyDelta | null;
   /** @state artifact */
-  safety?: ProgramSafetyDelta;
+  safety: ProgramSafetyDelta | null;
   /** @state artifact */
-  security?: ProgramSecurityDelta;
+  security: ProgramSecurityDelta | null;
   /** @state artifact */
-  regulatory?: ProgramRegulatoryDelta;
+  regulatory: ProgramRegulatoryDelta | null;
   /** @state artifact */
-  siteContext?: ProgramSiteContextDelta;
+  siteContext: ProgramSiteContextDelta | null;
   /** @state artifact */
-  organizational?: ProgramOrganizationalDelta;
+  organizational: ProgramOrganizationalDelta | null;
   /** @state artifact */
-  services?: ProgramServicesDelta;
+  services: ProgramServicesDelta | null;
   /** @state artifact */
-  infrastructure?: ProgramInfrastructureDelta;
+  infrastructure: ProgramInfrastructureDelta | null;
   /** @state artifact */
-  information?: ProgramInformationDelta;
+  information: ProgramInformationDelta | null;
   /** @state artifact */
-  communication?: ProgramCommunicationDelta;
+  communication: ProgramCommunicationDelta | null;
   /** @state artifact */
-  wayfinding?: ProgramWayfindingDelta;
+  wayfinding: ProgramWayfindingDelta | null;
   /** @state artifact */
-  schedules?: ProgramSchedulesDelta;
+  schedules: ProgramSchedulesDelta | null;
   /** @state artifact */
-  flexibility?: ProgramFlexibilityDelta;
+  flexibility: ProgramFlexibilityDelta | null;
   /** @state artifact */
-  growth?: ProgramGrowthDelta;
+  growth: ProgramGrowthDelta | null;
   /** @state artifact */
-  sustainability?: ProgramSustainabilityDelta;
+  sustainability: ProgramSustainabilityDelta | null;
   /** @state artifact */
-  resilience?: ProgramResilienceDelta;
+  resilience: ProgramResilienceDelta | null;
   /** @state artifact */
-  costs?: ProgramCostsDelta;
+  costs: ProgramCostsDelta | null;
   /** @state artifact */
-  delivery?: ProgramDeliveryDelta;
+  delivery: ProgramDeliveryDelta | null;
   /** @state artifact */
-  risks?: ProgramRisksDelta;
+  risks: ProgramRisksDelta | null;
   /** @state artifact */
-  conflicts?: ProgramConflictsDelta;
+  conflicts: ProgramConflictsDelta | null;
   /** @state artifact */
-  requirements?: ProgramRequirementsDelta;
+  requirements: ProgramRequirementsDelta | null;
   /** @state artifact */
-  priorities?: ProgramPrioritiesDelta;
+  priorities: ProgramPrioritiesDelta | null;
   /** @state artifact */
-  scenarios?: ProgramScenariosDelta;
+  scenarios: ProgramScenariosDelta | null;
   /** @state artifact */
-  options?: ProgramOptionsDelta;
+  options: ProgramOptionsDelta | null;
   /** @state artifact */
-  decisions?: ProgramDecisionsDelta;
+  decisions: ProgramDecisionsDelta | null;
   /** @state artifact */
-  validations?: ProgramValidationsDelta;
+  validations: ProgramValidationsDelta | null;
   /** @state artifact */
-  performance?: ProgramPerformanceDelta;
+  performance: ProgramPerformanceDelta | null;
   /** @state artifact */
-  quality?: ProgramQualityDelta;
+  quality: ProgramQualityDelta | null;
   /** @state artifact */
-  documents?: ProgramDocumentsDelta;
+  artifacts: ProgramArtifactsDelta | null;
   /** @state artifact */
-  assumptions?: ProgramAssumptionsDelta;
+  assumptions: ProgramAssumptionsDelta | null;
   /** @state artifact */
-  constraints?: ProgramConstraintsDelta;
+  constraints: ProgramConstraintsDelta | null;
   /** @state artifact */
-  complianceRecords?: ProgramComplianceRecordsDelta;
+  complianceRecords: ProgramComplianceRecordsDelta | null;
   /** @state artifact */
-  approvals?: ProgramApprovalsDelta;
+  approvals: ProgramApprovalsDelta | null;
   /** @state artifact */
-  meetings?: ProgramMeetingsDelta;
+  meetings: ProgramMeetingsDelta | null;
   /** @state artifact */
-  changes?: ProgramChangesDelta;
+  changes: ProgramChangesDelta | null;
   /** @state artifact */
-  collaboration?: ProgramCollaborationDelta;
+  collaboration: ProgramCollaborationDelta | null;
   /** @state artifact */
-  analyses?: ProgramAnalysesDelta;
+  analyses: ProgramAnalysesDelta | null;
   /** @state artifact */
-  reports?: ProgramReportsDelta;
+  reports: ProgramReportsDelta | null;
   /** @state artifact */
-  searchFilters?: ProgramSearchFiltersDelta;
+  searchFilters: ProgramSearchFiltersDelta | null;
   /** @state artifact */
-  statusRecords?: ProgramStatusRecordsDelta;
+  statusRecords: ProgramStatusRecordsDelta | null;
   /** @state artifact */
-  workshops?: ProgramWorkshopsDelta;
+  workshops: ProgramWorkshopsDelta | null;
   /** @state artifact */
-  surveys?: ProgramSurveysDelta;
+  surveys: ProgramSurveysDelta | null;
   /** @state artifact */
-  issues?: ProgramIssuesDelta;
+  issues: ProgramIssuesDelta | null;
   /** @state artifact */
-  auditEvents?: ProgramAuditEventsDelta;
+  auditEvents: ProgramAuditEventsDelta | null;
   /** @state artifact */
-  templates?: ProgramTemplatesDelta;
+  templates: ProgramTemplatesDelta | null;
   /** @state artifact */
-  knowledge?: ProgramKnowledgeDelta;
+  knowledge: ArtifactChild | null;
   /** @state artifact */
-  benchmarks?: ProgramBenchmarksDelta;
+  benchmarks: ArtifactChild | null;
   /** @state artifact */
-  traces?: ProgramTracesDelta;
+  traces: ProgramTracesDelta | null;
   /** @state artifact */
-  governance?: Governance;
+  governance: Governance | null;
+}
+
+export const PROGRAM_DIFF_FIELDS = ["artifact", ...PROGRAM_ARTIFACT_FIELDS] as const;
+
+export function parseProgramDiff(value: unknown, at = "$"): ProgramDiff {
+  const row = architectProgramArtifactGuardExactObject(value, at, PROGRAM_DIFF_FIELDS);
+  if (row.artifact !== null) parseProgramArtifact(row.artifact, `${at}.artifact`);
+  if (row.knowledge !== null) parseArtifactChild(row.knowledge);
+  if (row.benchmarks !== null) parseArtifactChild(row.benchmarks);
+  return row as unknown as ProgramDiff;
 }
 
 export interface ProgramStakeholdersDelta {
   added: Stakeholder[];
   removed: string[];
   patched: ProgramStakeholdersPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramStakeholdersPatchEntry {
   id: string;
-  item: Stakeholder;
+  patch: StakeholderPatch;
 }
 
 export interface ProgramUsersDelta {
   added: UserProfile[];
   removed: string[];
   patched: ProgramUsersPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramUsersPatchEntry {
   id: string;
-  item: UserProfile;
+  patch: UserProfilePatch;
 }
 
 export interface ProgramActivitiesDelta {
   added: Activity[];
   removed: string[];
   patched: ProgramActivitiesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramActivitiesPatchEntry {
   id: string;
-  item: Activity;
+  patch: ActivityPatch;
 }
 
 export interface ProgramFunctionsDelta {
   added: Function[];
   removed: string[];
   patched: ProgramFunctionsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramFunctionsPatchEntry {
   id: string;
-  item: Function;
+  patch: FunctionPatch;
 }
 
 export interface ProgramElementsDelta {
   added: ProgramElement[];
   removed: string[];
   patched: ProgramElementsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramElementsPatchEntry {
   id: string;
-  item: ProgramElement;
+  patch: ProgramElementPatch;
 }
 
 export interface ProgramQuantitiesDelta {
   added: QuantityRequirement[];
   removed: string[];
   patched: ProgramQuantitiesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramQuantitiesPatchEntry {
   id: string;
-  item: QuantityRequirement;
+  patch: QuantityRequirementPatch;
 }
 
 export interface ProgramRelationshipsDelta {
   added: Relationship[];
   removed: string[];
   patched: ProgramRelationshipsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramRelationshipsPatchEntry {
   id: string;
-  item: Relationship;
+  patch: RelationshipPatch;
 }
 
 export interface ProgramAdjacenciesDelta {
   added: Adjacency[];
   removed: string[];
   patched: ProgramAdjacenciesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramAdjacenciesPatchEntry {
   id: string;
-  item: Adjacency;
+  patch: AdjacencyPatch;
 }
 
 export interface ProgramProcessesDelta {
   added: Process[];
   removed: string[];
   patched: ProgramProcessesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramProcessesPatchEntry {
   id: string;
-  item: Process;
+  patch: ProcessPatch;
 }
 
 export interface ProgramFlowsDelta {
   added: FlowRequirement[];
   removed: string[];
   patched: ProgramFlowsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramFlowsPatchEntry {
   id: string;
-  item: FlowRequirement;
+  patch: FlowRequirementPatch;
 }
 
 export interface ProgramAccessRulesDelta {
   added: AccessRule[];
   removed: string[];
   patched: ProgramAccessRulesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramAccessRulesPatchEntry {
   id: string;
-  item: AccessRule;
+  patch: AccessRulePatch;
 }
 
 export interface ProgramOperationsDelta {
   added: OperationalRequirement[];
   removed: string[];
   patched: ProgramOperationsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramOperationsPatchEntry {
   id: string;
-  item: OperationalRequirement;
+  patch: OperationalRequirementPatch;
 }
 
 export interface ProgramEquipmentDelta {
   added: Equipment[];
   removed: string[];
   patched: ProgramEquipmentPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramEquipmentPatchEntry {
   id: string;
-  item: Equipment;
+  patch: EquipmentPatch;
 }
 
 export interface ProgramResourcesDelta {
   added: Resource[];
   removed: string[];
   patched: ProgramResourcesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramResourcesPatchEntry {
   id: string;
-  item: Resource;
+  patch: ResourcePatch;
 }
 
 export interface ProgramStorageDelta {
   added: StorageRequirement[];
   removed: string[];
   patched: ProgramStoragePatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramStoragePatchEntry {
   id: string;
-  item: StorageRequirement;
+  patch: StorageRequirementPatch;
 }
 
 export interface ProgramEnvironmentalDelta {
   added: EnvironmentalRequirement[];
   removed: string[];
   patched: ProgramEnvironmentalPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramEnvironmentalPatchEntry {
   id: string;
-  item: EnvironmentalRequirement;
+  patch: EnvironmentalRequirementPatch;
 }
 
 export interface ProgramHumanFactorsDelta {
   added: HumanFactorRequirement[];
   removed: string[];
   patched: ProgramHumanFactorsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramHumanFactorsPatchEntry {
   id: string;
-  item: HumanFactorRequirement;
+  patch: HumanFactorRequirementPatch;
 }
 
 export interface ProgramAccessibilityDelta {
   added: AccessibilityRequirement[];
   removed: string[];
   patched: ProgramAccessibilityPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramAccessibilityPatchEntry {
   id: string;
-  item: AccessibilityRequirement;
+  patch: AccessibilityRequirementPatch;
 }
 
 export interface ProgramPrivacyDelta {
   added: PrivacyRequirement[];
   removed: string[];
   patched: ProgramPrivacyPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramPrivacyPatchEntry {
   id: string;
-  item: PrivacyRequirement;
+  patch: PrivacyRequirementPatch;
 }
 
 export interface ProgramSafetyDelta {
   added: SafetyRequirement[];
   removed: string[];
   patched: ProgramSafetyPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramSafetyPatchEntry {
   id: string;
-  item: SafetyRequirement;
+  patch: SafetyRequirementPatch;
 }
 
 export interface ProgramSecurityDelta {
   added: SecurityRequirement[];
   removed: string[];
   patched: ProgramSecurityPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramSecurityPatchEntry {
   id: string;
-  item: SecurityRequirement;
+  patch: SecurityRequirementPatch;
 }
 
 export interface ProgramRegulatoryDelta {
   added: RegulatoryRequirement[];
   removed: string[];
   patched: ProgramRegulatoryPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramRegulatoryPatchEntry {
   id: string;
-  item: RegulatoryRequirement;
+  patch: RegulatoryRequirementPatch;
 }
 
 export interface ProgramSiteContextDelta {
   added: SiteContext[];
   removed: string[];
   patched: ProgramSiteContextPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramSiteContextPatchEntry {
   id: string;
-  item: SiteContext;
+  patch: SiteContextPatch;
 }
 
 export interface ProgramOrganizationalDelta {
   added: OrganizationalRequirement[];
   removed: string[];
   patched: ProgramOrganizationalPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramOrganizationalPatchEntry {
   id: string;
-  item: OrganizationalRequirement;
+  patch: OrganizationalRequirementPatch;
 }
 
 export interface ProgramServicesDelta {
   added: ServiceRequirement[];
   removed: string[];
   patched: ProgramServicesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramServicesPatchEntry {
   id: string;
-  item: ServiceRequirement;
+  patch: ServiceRequirementPatch;
 }
 
 export interface ProgramInfrastructureDelta {
   added: InfrastructureRequirement[];
   removed: string[];
   patched: ProgramInfrastructurePatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramInfrastructurePatchEntry {
   id: string;
-  item: InfrastructureRequirement;
+  patch: InfrastructureRequirementPatch;
 }
 
 export interface ProgramInformationDelta {
   added: InformationRequirement[];
   removed: string[];
   patched: ProgramInformationPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramInformationPatchEntry {
   id: string;
-  item: InformationRequirement;
+  patch: InformationRequirementPatch;
 }
 
 export interface ProgramCommunicationDelta {
   added: CommunicationRequirement[];
   removed: string[];
   patched: ProgramCommunicationPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramCommunicationPatchEntry {
   id: string;
-  item: CommunicationRequirement;
+  patch: CommunicationRequirementPatch;
 }
 
 export interface ProgramWayfindingDelta {
   added: WayfindingRequirement[];
   removed: string[];
   patched: ProgramWayfindingPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramWayfindingPatchEntry {
   id: string;
-  item: WayfindingRequirement;
+  patch: WayfindingRequirementPatch;
 }
 
 export interface ProgramSchedulesDelta {
   added: ScheduleRequirement[];
   removed: string[];
   patched: ProgramSchedulesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramSchedulesPatchEntry {
   id: string;
-  item: ScheduleRequirement;
+  patch: ScheduleRequirementPatch;
 }
 
 export interface ProgramFlexibilityDelta {
   added: FlexibilityRequirement[];
   removed: string[];
   patched: ProgramFlexibilityPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramFlexibilityPatchEntry {
   id: string;
-  item: FlexibilityRequirement;
+  patch: FlexibilityRequirementPatch;
 }
 
 export interface ProgramGrowthDelta {
   added: GrowthPlan[];
   removed: string[];
   patched: ProgramGrowthPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramGrowthPatchEntry {
   id: string;
-  item: GrowthPlan;
+  patch: GrowthPlanPatch;
 }
 
 export interface ProgramSustainabilityDelta {
   added: SustainabilityRequirement[];
   removed: string[];
   patched: ProgramSustainabilityPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramSustainabilityPatchEntry {
   id: string;
-  item: SustainabilityRequirement;
+  patch: SustainabilityRequirementPatch;
 }
 
 export interface ProgramResilienceDelta {
   added: ResilienceRequirement[];
   removed: string[];
   patched: ProgramResiliencePatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramResiliencePatchEntry {
   id: string;
-  item: ResilienceRequirement;
+  patch: ResilienceRequirementPatch;
 }
 
 export interface ProgramCostsDelta {
   added: CostRequirement[];
   removed: string[];
   patched: ProgramCostsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramCostsPatchEntry {
   id: string;
-  item: CostRequirement;
+  patch: CostRequirementPatch;
 }
 
 export interface ProgramDeliveryDelta {
   added: DeliveryConstraint[];
   removed: string[];
   patched: ProgramDeliveryPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramDeliveryPatchEntry {
   id: string;
-  item: DeliveryConstraint;
+  patch: DeliveryConstraintPatch;
 }
 
 export interface ProgramRisksDelta {
   added: Risk[];
   removed: string[];
   patched: ProgramRisksPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramRisksPatchEntry {
   id: string;
-  item: Risk;
+  patch: RiskPatch;
 }
 
 export interface ProgramConflictsDelta {
   added: Conflict[];
   removed: string[];
   patched: ProgramConflictsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramConflictsPatchEntry {
   id: string;
-  item: Conflict;
+  patch: ConflictPatch;
 }
 
 export interface ProgramRequirementsDelta {
   added: Requirement[];
   removed: string[];
   patched: ProgramRequirementsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramRequirementsPatchEntry {
   id: string;
-  item: Requirement;
+  patch: RequirementPatch;
 }
 
 export interface ProgramPrioritiesDelta {
   added: PriorityRecord[];
   removed: string[];
   patched: ProgramPrioritiesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramPrioritiesPatchEntry {
   id: string;
-  item: PriorityRecord;
+  patch: PriorityRecordPatch;
 }
 
 export interface ProgramScenariosDelta {
   added: Scenario[];
   removed: string[];
   patched: ProgramScenariosPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramScenariosPatchEntry {
   id: string;
-  item: Scenario;
+  patch: ScenarioPatch;
 }
 
 export interface ProgramOptionsDelta {
   added: OptionEvaluation[];
   removed: string[];
   patched: ProgramOptionsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramOptionsPatchEntry {
   id: string;
-  item: OptionEvaluation;
+  patch: OptionEvaluationPatch;
 }
 
 export interface ProgramDecisionsDelta {
   added: Decision[];
   removed: string[];
   patched: ProgramDecisionsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramDecisionsPatchEntry {
   id: string;
-  item: Decision;
+  patch: DecisionPatch;
 }
 
 export interface ProgramValidationsDelta {
   added: ValidationRecord[];
   removed: string[];
   patched: ProgramValidationsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramValidationsPatchEntry {
   id: string;
-  item: ValidationRecord;
+  patch: ValidationRecordPatch;
 }
 
 export interface ProgramPerformanceDelta {
   added: PerformanceCriterion[];
   removed: string[];
   patched: ProgramPerformancePatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramPerformancePatchEntry {
   id: string;
-  item: PerformanceCriterion;
+  patch: PerformanceCriterionPatch;
 }
 
 export interface ProgramQualityDelta {
   added: QualityRecord[];
   removed: string[];
   patched: ProgramQualityPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramQualityPatchEntry {
   id: string;
-  item: QualityRecord;
+  patch: QualityRecordPatch;
 }
 
-export interface ProgramDocumentsDelta {
-  added: DocumentRecord[];
+export interface ProgramArtifactsDelta {
+  added: ArtifactRecord[];
   removed: string[];
-  patched: ProgramDocumentsPatchEntry[];
-  reordered?: string[];
+  patched: ProgramArtifactsPatchEntry[];
+  reordered: string[] | null;
 }
 
-export interface ProgramDocumentsPatchEntry {
+export interface ProgramArtifactsPatchEntry {
   id: string;
-  item: DocumentRecord;
+  patch: ArtifactRecordPatch;
 }
 
 export interface ProgramAssumptionsDelta {
   added: Assumption[];
   removed: string[];
   patched: ProgramAssumptionsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramAssumptionsPatchEntry {
   id: string;
-  item: Assumption;
+  patch: AssumptionPatch;
 }
 
 export interface ProgramConstraintsDelta {
   added: ConstraintRecord[];
   removed: string[];
   patched: ProgramConstraintsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramConstraintsPatchEntry {
   id: string;
-  item: ConstraintRecord;
+  patch: ConstraintRecordPatch;
 }
 
 export interface ProgramComplianceRecordsDelta {
   added: ComplianceRecord[];
   removed: string[];
   patched: ProgramComplianceRecordsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramComplianceRecordsPatchEntry {
   id: string;
-  item: ComplianceRecord;
+  patch: ComplianceRecordPatch;
 }
 
 export interface ProgramApprovalsDelta {
   added: ApprovalRecord[];
   removed: string[];
   patched: ProgramApprovalsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramApprovalsPatchEntry {
   id: string;
-  item: ApprovalRecord;
+  patch: ApprovalRecordPatch;
 }
 
 export interface ProgramMeetingsDelta {
   added: MeetingRecord[];
   removed: string[];
   patched: ProgramMeetingsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramMeetingsPatchEntry {
   id: string;
-  item: MeetingRecord;
+  patch: MeetingRecordPatch;
 }
 
 export interface ProgramChangesDelta {
   added: ChangeRecord[];
   removed: string[];
   patched: ProgramChangesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramChangesPatchEntry {
   id: string;
-  item: ChangeRecord;
+  patch: ChangeRecordPatch;
 }
 
 export interface ProgramCollaborationDelta {
   added: CollaborationRecord[];
   removed: string[];
   patched: ProgramCollaborationPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramCollaborationPatchEntry {
   id: string;
-  item: CollaborationRecord;
+  patch: CollaborationRecordPatch;
 }
 
 export interface ProgramAnalysesDelta {
   added: AnalysisRecord[];
   removed: string[];
   patched: ProgramAnalysesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramAnalysesPatchEntry {
   id: string;
-  item: AnalysisRecord;
+  patch: AnalysisRecordPatch;
 }
 
 export interface ProgramReportsDelta {
   added: ReportRecord[];
   removed: string[];
   patched: ProgramReportsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramReportsPatchEntry {
   id: string;
-  item: ReportRecord;
+  patch: ReportRecordPatch;
 }
 
 export interface ProgramSearchFiltersDelta {
   added: SearchFilter[];
   removed: string[];
   patched: ProgramSearchFiltersPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramSearchFiltersPatchEntry {
   id: string;
-  item: SearchFilter;
+  patch: SearchFilterPatch;
 }
 
 export interface ProgramStatusRecordsDelta {
   added: StatusRecord[];
   removed: string[];
   patched: ProgramStatusRecordsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramStatusRecordsPatchEntry {
   id: string;
-  item: StatusRecord;
+  patch: StatusRecordPatch;
 }
 
 export interface ProgramWorkshopsDelta {
   added: Workshop[];
   removed: string[];
   patched: ProgramWorkshopsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramWorkshopsPatchEntry {
   id: string;
-  item: Workshop;
+  patch: WorkshopPatch;
 }
 
 export interface ProgramSurveysDelta {
   added: Survey[];
   removed: string[];
   patched: ProgramSurveysPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramSurveysPatchEntry {
   id: string;
-  item: Survey;
+  patch: SurveyPatch;
 }
 
 export interface ProgramIssuesDelta {
   added: Issue[];
   removed: string[];
   patched: ProgramIssuesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramIssuesPatchEntry {
   id: string;
-  item: Issue;
+  patch: IssuePatch;
 }
 
 export interface ProgramAuditEventsDelta {
   added: AuditEvent[];
   removed: string[];
   patched: ProgramAuditEventsPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramAuditEventsPatchEntry {
   id: string;
-  item: AuditEvent;
+  patch: AuditEventPatch;
 }
 
 export interface ProgramTemplatesDelta {
   added: TemplateRecord[];
   removed: string[];
   patched: ProgramTemplatesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramTemplatesPatchEntry {
   id: string;
-  item: TemplateRecord;
-}
-
-export interface ProgramKnowledgeDelta {
-  added: KnowledgeRecord[];
-  removed: string[];
-  patched: ProgramKnowledgePatchEntry[];
-  reordered?: string[];
-}
-
-export interface ProgramKnowledgePatchEntry {
-  id: string;
-  item: KnowledgeRecord;
-}
-
-export interface ProgramBenchmarksDelta {
-  added: BenchmarkRecord[];
-  removed: string[];
-  patched: ProgramBenchmarksPatchEntry[];
-  reordered?: string[];
-}
-
-export interface ProgramBenchmarksPatchEntry {
-  id: string;
-  item: BenchmarkRecord;
+  patch: TemplateRecordPatch;
 }
 
 export interface ProgramTracesDelta {
   added: TraceLink[];
   removed: string[];
   patched: ProgramTracesPatchEntry[];
-  reordered?: string[];
+  reordered: string[] | null;
 }
 
 export interface ProgramTracesPatchEntry {
   id: string;
-  item: TraceLink;
+  patch: TraceLinkPatch;
 }
 
 //#region 🚪️Parsers
@@ -1639,17 +1628,17 @@ export function parseProgramQualityPatchEntry(value: unknown, at = "$"): Program
   };
 }
 
-export type DocumentRecordPatch = Readonly<Record<string, unknown>>;
+export type ArtifactRecordPatch = Readonly<Record<string, unknown>>;
 
-export function parseDocumentRecordPatch(value: unknown, at = "$"): DocumentRecordPatch {
+export function parseArtifactRecordPatch(value: unknown, at = "$"): ArtifactRecordPatch {
   return architectProgramDiffGuardObject(value, `${at}`);
 }
 
-export function parseProgramDocumentsPatchEntry(value: unknown, at = "$"): ProgramDocumentsPatchEntry {
+export function parseProgramArtifactsPatchEntry(value: unknown, at = "$"): ProgramArtifactsPatchEntry {
   const row = architectProgramDiffGuardObject(value, at);
   return {
     id: architectProgramDiffGuardString(row["id"], `${at}.id`),
-    patch: parseDocumentRecordPatch(row["patch"], `${at}.patch`),
+    patch: parseArtifactRecordPatch(row["patch"], `${at}.patch`),
   };
 }
 
@@ -1874,34 +1863,6 @@ export function parseProgramTemplatesPatchEntry(value: unknown, at = "$"): Progr
   return {
     id: architectProgramDiffGuardString(row["id"], `${at}.id`),
     patch: parseTemplateRecordPatch(row["patch"], `${at}.patch`),
-  };
-}
-
-export type KnowledgeRecordPatch = Readonly<Record<string, unknown>>;
-
-export function parseKnowledgeRecordPatch(value: unknown, at = "$"): KnowledgeRecordPatch {
-  return architectProgramDiffGuardObject(value, `${at}`);
-}
-
-export function parseProgramKnowledgePatchEntry(value: unknown, at = "$"): ProgramKnowledgePatchEntry {
-  const row = architectProgramDiffGuardObject(value, at);
-  return {
-    id: architectProgramDiffGuardString(row["id"], `${at}.id`),
-    patch: parseKnowledgeRecordPatch(row["patch"], `${at}.patch`),
-  };
-}
-
-export type BenchmarkRecordPatch = Readonly<Record<string, unknown>>;
-
-export function parseBenchmarkRecordPatch(value: unknown, at = "$"): BenchmarkRecordPatch {
-  return architectProgramDiffGuardObject(value, `${at}`);
-}
-
-export function parseProgramBenchmarksPatchEntry(value: unknown, at = "$"): ProgramBenchmarksPatchEntry {
-  const row = architectProgramDiffGuardObject(value, at);
-  return {
-    id: architectProgramDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBenchmarkRecordPatch(row["patch"], `${at}.patch`),
   };
 }
 

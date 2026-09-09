@@ -8,7 +8,7 @@ use framework_schema::ArtifactSchema;
 
 /// 📸️ Persisted En1990 document snapshot. Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2
 /// (`norm→C:table` on `en1990.q_k`): the inline `Vec<En1990QkEntry>` variable-action table is
-/// replaced by a fixed composed `s.stdio.semio.table` CHILD slot — see `🗿️artifacts/⚖️en1990/🦀️.rs`'s
+/// replaced by a fixed composed `s.stdio.semio`/`table` CHILD slot — see `🗿️artifacts/⚖️en1990/🦀️.rs`'s
 /// `🔖️Composition` region for the converters/working-scene cache. `#[child(...)]` drives
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -20,7 +20,7 @@ pub struct En1990Snapshot {
     #[state(artifact)]
     pub g_k: f64,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
     pub q_k: En1990QkChild,
     #[state(artifact)]

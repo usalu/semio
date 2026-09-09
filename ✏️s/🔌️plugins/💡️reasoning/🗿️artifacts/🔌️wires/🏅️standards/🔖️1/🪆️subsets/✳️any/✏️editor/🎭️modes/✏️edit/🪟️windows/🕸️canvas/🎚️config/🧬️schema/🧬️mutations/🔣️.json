@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/reasoning/wires/canvas-window/config/mutations.json",
+  "title": "WiresCanvasWindowConfigMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "camera"],
+      "properties": {
+        "kind": { "const": "set-camera" },
+        "camera": { "$ref": "schema.json#/properties/camera" }
+      }
+    }
+  ]
+}

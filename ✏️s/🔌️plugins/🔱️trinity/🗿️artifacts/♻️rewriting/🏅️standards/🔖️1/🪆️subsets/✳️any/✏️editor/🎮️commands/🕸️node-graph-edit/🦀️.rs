@@ -1,5 +1,6 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `node-graph-edit`.
 
+use semio_s_artifact_trinity_jack::JackWorkingScene;
 use crate::standards::v1::subsets::any::schema;
 
 use crate::rewriting_snapshot_mutations;
@@ -140,7 +141,7 @@ fn apply_rewriting_node_graph_edit_operations(state: &mut RewritingSnapshot, sel
                             let to = semio_s_artifact_trinity_jack::port_node_id(&edge.target).unwrap_or(&edge.target);
                             !selected_node_ids.iter().any(|id| id == from || id == to)
                         });
-                        let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, edges, fixture.root_node_id.clone());
+                        let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: edges }, fixture.root_node_id.clone());
                         if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
                             state.before_fixture_json = json;
                             changed = true;

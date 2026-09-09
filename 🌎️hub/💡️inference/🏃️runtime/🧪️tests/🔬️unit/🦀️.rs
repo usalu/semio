@@ -1,5 +1,5 @@
 use super::*;
-use crate::inference::schema::{INPUT_MAX_BYTES, InferenceIdentityV1 as Identity, PROGRESS_MAX_CURSOR};
+use crate::inference::schema::{InferenceIdentityV1 as Identity, INPUT_MAX_BYTES, PROGRESS_MAX_CURSOR};
 use std::future::Future;
 
 fn fixture() -> serde_json::Value {
@@ -562,7 +562,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     drop(close);
     publisher_release.notify_one();
     let terminal = tokio::time::timeout(std::time::Duration::from_secs(5), &mut retry).await.expect("fresh retry observes retained publication").expect("fresh request joins the one publication");
-    assert!(!terminal.applied, "the joining request observes the already-applied terminal state");
+    assert!(terminal.applied, "a successful committed-witness reconciliation reports the durable approval as applied");
     assert_eq!(terminal.document_generation, 0, "the committed witness retains the live initial actor generation");
     assert_eq!(terminal.frontier.head_edit_ordinal, base.frontier.head_edit_ordinal + undo_contract["firstCommandOrdinalDelta"].as_u64().expect("first command delta"), "the first real command is the first history edit",);
     drop(retry);
@@ -691,6 +691,9 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     ));
 
     committer.close().await.expect("committer close");
+    assert_eq!(Arc::strong_count(&committer.documents), 1, "close joins every maintenance task after its full retained committer owner is physically dropped");
+    assert!(committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+    assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
     assert_eq!(
         ledger.reconcile_committed_approval(&accepted.job_id, &terminal.witness, terminal.document_generation, &terminal.frontier, &identity.descriptor_digest, &"11".repeat(32), 1_008,).map(|value| value.applied),
         Err(InferenceErrorV1::Conflict),

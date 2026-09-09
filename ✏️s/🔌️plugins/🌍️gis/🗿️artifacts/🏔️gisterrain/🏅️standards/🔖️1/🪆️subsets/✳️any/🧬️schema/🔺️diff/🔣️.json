@@ -4,40 +4,31 @@
   "title": "GisTerrainDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
     "artifact": {
-      "title": "GisTerrainArtifact",
-      "type": "object",
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/gis/gisterrain/artifact.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "exaggeration": {
-      "type": "number",
-      "format": "double",
+      "type": [
+        "number",
+        "null"
+      ],
       "x-semio-state": "artifact"
     },
     "importedFeaturesJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "GisTerrainStringList": {
-      "title": "GisTerrainStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
+      "type": [
+        "string",
+        "null"
       ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
+      "x-semio-state": "artifact"
     }
   }
 }

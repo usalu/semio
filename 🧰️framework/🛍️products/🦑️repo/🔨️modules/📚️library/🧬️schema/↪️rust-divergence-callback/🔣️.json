@@ -243,7 +243,7 @@
     "oracle": {
       "const": {
         "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧲️rust-physical-reference-context/🔮️oracle/⚙️.toml",
-        "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️rust-divergence-callback.rs"
+        "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/↪️rust-divergence-callback/🦀️.rs"
       }
     },
     "retention": {

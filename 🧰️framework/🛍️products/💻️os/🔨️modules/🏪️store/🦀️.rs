@@ -20,14 +20,26 @@
 #[path = "♻️retirement/🦀️.rs"]
 pub mod retirement;
 
+#[path = "🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs"]
+mod ephemeral_transfer;
+pub use ephemeral_transfer::{ArtifactEphemeralTransferPreparationFactory, ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES};
+
+#[path = "🫧️ephemeral/📢️publication/🧩️preparation/🦀️.rs"]
+mod ephemeral_preparation;
+pub use ephemeral_preparation::{ArtifactEphemeralPreparationTask, ArtifactEphemeralPreparationTaskStep, ArtifactEphemeralTaskPreparationFactory};
+
 #[path = "🧩️composition/🌱️initial/🪪️identity/🦀️.rs"]
 mod initial_child_identity;
+
+#[path = "🧩️composition/🌳️closure/🦀️.rs"]
+mod owned_document_closure;
+pub use owned_document_closure::{OwnedDocumentClosure, OwnedDocumentClosureDiagnostic, OwnedDocumentClosureProgress, OwnedDocumentClosureSource, OwnedDocumentClosureStep, OWNED_DOCUMENT_MAXIMUM_MEMBERS};
 
 #[path = "🧩️composition/🚪️open/🦀️.rs"]
 pub mod member_open;
 pub use member_open::{
     InitialMemberStoreOpen, MemberOpenAdmissionError, MemberOpenDeclaration, MemberOpenDiagnostic, MemberOpenFrame, MemberOpenInputStep, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep,
-    MemberSnapshotOpenOperation, MemberSnapshotOpenStep, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen,
+    MemberSnapshotOpenOperation, MemberSnapshotOpenStep, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen, MEMBER_OPEN_IDENTITY_BYTES,
 };
 
 #[path = "🧩️composition/🗄️durable-group/🦀️.rs"]
@@ -336,6 +348,11 @@ impl ErasedSnapshotRead {
 
     pub fn typed<T: Send + Sync + 'static>(&self) -> Option<SnapshotReadRef<'_, T>> {
         self.owner.as_deref()?.downcast_ref::<T>().map(|owner| SnapshotReadRef { owner })
+    }
+
+    /// 👁️ Borrows one exact concrete owner without exposing or cloning its retained `Arc`.
+    pub fn get<T: Send + Sync + 'static>(&self) -> Option<&T> {
+        self.owner.as_deref()?.downcast_ref::<T>()
     }
 
     fn into_typed<T: Send + Sync + 'static>(mut self, registry: &Arc<SnapshotReadLeaseRegistry>) -> Result<Arc<T>, Self> {
@@ -1553,6 +1570,41 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ReturnedSnapshotRead
 impl<P: Send + Sync + 'static> Drop for ReturnedSnapshotReadRetirement<P> {
     fn drop(&mut self) {
         assert!(self.terminal_is_empty(), "returned snapshot read retired before terminal-empty ownership");
+    }
+}
+
+fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
+    registry: &SnapshotReadLeaseRegistry,
+    active: &mut Option<Box<dyn ErasedSnapshotRetirement>>,
+    factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
+    maximum_items: usize,
+    maximum_bytes: usize,
+) -> Result<SnapshotRetirementStep, String> {
+    if maximum_items == 0 {
+        return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    }
+    if let Some(owner) = active.as_mut() {
+        return match owner.close_step(maximum_items.min(1), maximum_bytes)? {
+            SnapshotRetirementStep::Complete if owner.terminal_is_empty() => {
+                drop(active.take());
+                Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+            }
+            SnapshotRetirementStep::Complete => Err("returned transient read completed without its exact empty witness".into()),
+            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("returned transient read exceeded its exact grant".into()),
+            step => Ok(step),
+        };
+    }
+    if !registry.has_returned() {
+        return Ok(SnapshotRetirementStep::Complete);
+    }
+    match registry.try_take_one_returned::<P>() {
+        Ok(Some(root)) => {
+            *active = Some(Box::new(ReturnedSnapshotReadRetirement::new(root, factory.clone())));
+            Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+        }
+        Ok(None) => Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }),
+        Err(reason) if reason == "snapshot read lease registry is busy" => Ok(SnapshotRetirementStep::Blocked),
+        Err(reason) => Err(reason),
     }
 }
 
@@ -2963,6 +3015,11 @@ impl<'a> ChildRestoreProjection<'a> {
         self.length == 0
     }
 
+    /// 🌿️ Reads one admitted typed child row without copying handles or payload owners.
+    pub fn get(&self, index: usize) -> Option<(&'static str, crate::os_schema_composition::ChildRefFields<'a>)> {
+        self.rows.get(index).copied().flatten()
+    }
+
     /// 🪪️ Checks one member against the actual loaded parent, without treating it as a full batch.
     pub fn admits_member(&self, slot: &str, expected: &crate::os_io::ArtifactRef) -> bool {
         self.rows[..self.length].iter().flatten().any(|(name, fields)| {
@@ -3035,13 +3092,9 @@ impl<'a> crate::os_schema_composition::ChildRefVisitor<'a> for ChildRestoreProje
 /// the parent's `ArtifactChild` handle), so ownership is queryable directly from the child side —
 /// e.g. "is this document embeddable standalone, or does deleting it require going through its
 /// owner". `child_id` matches the owning `ArtifactChild<S>.child_id`/`ChildRef.child_id` exactly.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct OwnerRef {
-    pub parent: crate::os_io::ArtifactRef,
-    pub slot: String,
-    pub child_id: String,
-}
+#[path = "🪆️child/🏠️owner/🧬️schema/🦀️.rs"]
+mod artifact_child_owner_schema;
+pub use artifact_child_owner_schema::OwnerRef;
 
 #[path = "🔗️link/🧬️schema/🦀️.rs"]
 mod artifact_link_schema;
@@ -3654,11 +3707,15 @@ pub struct ArtifactEphemeralOneItemPrepared<P> {
     pub next_root: Arc<P>,
 }
 
-pub struct ArtifactEphemeralBaseRead<P>(ArtifactEphemeralBaseOwner<P>);
+pub struct ArtifactEphemeralBaseRead<P>(pub ArtifactEphemeralBaseOwner<P>);
 
-enum ArtifactEphemeralBaseOwner<P> {
+/// 🫧️ Which owner a preparation's base came from. Public so an app can build the exact request its
+/// own registered ephemeral preparation factory receives, and drive it directly in a conformance
+/// test, without standing up the whole presence/transient store around it.
+pub enum ArtifactEphemeralBaseOwner<P> {
     Presence(SnapshotRead<P>),
     Transient(Arc<P>),
+    TransientRead(SnapshotRead<P>),
 }
 
 impl<P> AsRef<P> for ArtifactEphemeralBaseRead<P> {
@@ -3666,6 +3723,7 @@ impl<P> AsRef<P> for ArtifactEphemeralBaseRead<P> {
         match &self.0 {
             ArtifactEphemeralBaseOwner::Presence(read) => read.get(),
             ArtifactEphemeralBaseOwner::Transient(root) => root.as_ref(),
+            ArtifactEphemeralBaseOwner::TransientRead(read) => read.get(),
         }
     }
 }
@@ -3719,6 +3777,9 @@ pub struct ArtifactEphemeralOneItemPublication<P, Mutation> {
     preparation: Option<Box<dyn ArtifactEphemeralOneItemPreparation<P, Mutation>>>,
     displaced_root_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
     root_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
+    returned_read_registry: Option<Arc<SnapshotReadLeaseRegistry>>,
+    returned_read_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
+    owned_retirement_factory: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,
     receipt: Option<LaneItemReceipt>,
     attempts: u8,
     published: bool,
@@ -3743,6 +3804,21 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
 
     pub fn fault(&self) -> Option<&str> {
         self.fault.as_deref()
+    }
+
+    fn advance_preparation(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+        let result = self.preparation.as_mut().ok_or_else(|| "ephemeral publication lost its preparation owner".to_string()).and_then(|owner| {
+            let step = owner.advance(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })?;
+            if matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(_)) && owner.prepared().is_none() {
+                return Err("ephemeral preparation reported Prepared without its root".into());
+            }
+            Ok(step)
+        });
+        if let Err(reason) = &result {
+            self.fault = Some(reason.clone());
+            self.begin_close();
+        }
+        result
     }
 
     pub fn retry(&mut self) -> bool {
@@ -3777,7 +3853,10 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
         }
     }
 
-    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>
+    where
+        P: Send + Sync + 'static,
+    {
         self.begin_close();
         if let Some(owner) = self.preparation.as_mut() {
             let step = owner.close_step(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })?;
@@ -3789,6 +3868,12 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
             }
             self.preparation = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let (Some(registry), Some(factory)) = (self.returned_read_registry.as_ref(), self.owned_retirement_factory.as_ref()) {
+            let step = advance_returned_snapshot_read(registry, &mut self.returned_read_retirement, factory, grant.maximum_items.min(1), grant.maximum_bytes)?;
+            if step != SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
         }
         if let Some(owner) = self.displaced_root_retirement.as_mut() {
             let step = owner.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
@@ -3802,6 +3887,8 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         self.root_retirement_factory = None;
+        self.returned_read_registry = None;
+        self.owned_retirement_factory = None;
         if grant.maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -3822,7 +3909,15 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.displaced_root_retirement.is_none() && self.root_retirement_factory.is_none() && self.receipt.is_none() && self.fault.is_none()
+        self.phase == ArtifactStoreOneItemPublicationPhase::Complete
+            && self.preparation.is_none()
+            && self.displaced_root_retirement.is_none()
+            && self.root_retirement_factory.is_none()
+            && self.returned_read_registry.is_none()
+            && self.returned_read_retirement.is_none()
+            && self.owned_retirement_factory.is_none()
+            && self.receipt.is_none()
+            && self.fault.is_none()
     }
 }
 
@@ -4456,6 +4551,9 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
             preparation: Some(preparation),
             displaced_root_retirement: None,
             root_retirement_factory: Some(root_retirement_factory),
+            returned_read_registry: None,
+            returned_read_retirement: None,
+            owned_retirement_factory: None,
             receipt: None,
             attempts: 0,
             published: false,
@@ -4495,13 +4593,9 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
         }
         match publication.phase {
             ArtifactStoreOneItemPublicationPhase::Preparing => {
-                let owner = publication.preparation.as_mut().ok_or_else(|| "presence publication lost its preparation owner".to_string())?;
-                match owner.advance(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })? {
+                match publication.advance_preparation(grant)? {
                     ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
                     ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
-                        if owner.prepared().is_none() {
-                            return Err("presence preparation reported Prepared without its root".into());
-                        }
                         publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
                         Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
                     }
@@ -4644,9 +4738,10 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
 /// fields, given a typed home so it can be reached only through `Emit`/`Lanes` like every other
 /// lane. If a value must survive a reload it belongs in `config`; if a peer must see it, in
 /// `presence`; if it is document content, in the artifact (or its draft).
-#[derive(Clone, Debug)]
 pub struct TransientStore<P, Mutation> {
     current: Arc<P>,
+    reads: Arc<SnapshotReadLeaseRegistry>,
+    active_returned_read: Option<Box<dyn ErasedSnapshotRetirement>>,
     generation: u64,
     _mutation: PhantomData<fn() -> Mutation>,
 }
@@ -4661,7 +4756,7 @@ impl<P: Clone + Default, Mutation: self::Mutation<P>> Default for TransientStore
 impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
     // 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(current: P) -> Self {
-        Self { current: Arc::new(current), generation: 0, _mutation: PhantomData }
+        Self { current: Arc::new(current), reads: Arc::new(SnapshotReadLeaseRegistry::new()), active_returned_read: None, generation: 0, _mutation: PhantomData }
     }
 
     pub async fn current(&self) -> &P {
@@ -4671,6 +4766,46 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
     /// 🧵️ Captures the event-maintained transient root without cloning its payload.
     pub fn current_root(&self) -> Arc<P> {
         self.current.clone()
+    }
+
+    /// 🧵️ Captures one tracked transient root capability for retained work.
+    pub fn current_read(&self) -> Result<SnapshotRead<P>, String>
+    where
+        P: Send + Sync + 'static,
+    {
+        let owner = Arc::clone(&self.current);
+        let lease = self.reads.try_issue(owner.clone()).map_err(|_| "transient read registry is busy or exhausted".to_string())?;
+        Ok(SnapshotRead::new(owner, lease))
+    }
+
+    /// 🧰️ Captures the same tracked capability across a heterogeneous owner registry.
+    pub fn current_read_erased(&self) -> Result<ErasedSnapshotRead, String>
+    where
+        P: Send + Sync + 'static,
+    {
+        let owner = Arc::clone(&self.current);
+        let lease = self.reads.try_issue(owner.clone()).map_err(|_| "transient read registry is busy or exhausted".to_string())?;
+        Ok(ErasedSnapshotRead::new(owner, lease))
+    }
+
+    /// 🧹️ Advances one returned read through its exact owned-value retirement authority.
+    pub fn maintenance_returned_reads_step(&mut self, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>
+    where
+        P: Send + Sync + 'static,
+    {
+        advance_returned_snapshot_read(&self.reads, &mut self.active_returned_read, factory, maximum_items, maximum_bytes)
+    }
+
+    pub fn returned_reads_terminal_is_empty(&self) -> bool {
+        self.active_returned_read.is_none() && self.reads.terminal_is_empty()
+    }
+
+    pub fn current_weak(&self) -> std::sync::Weak<P> {
+        Arc::downgrade(&self.current)
+    }
+
+    pub fn current_matches(&self, root: &std::sync::Weak<P>) -> bool {
+        root.upgrade().is_some_and(|root| Arc::ptr_eq(&root, &self.current))
     }
 
     /// ✍️ Applies transient operations atomically, without history.
@@ -4722,6 +4857,9 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
             preparation: Some(preparation),
             displaced_root_retirement: None,
             root_retirement_factory: Some(root_retirement_factory),
+            returned_read_registry: None,
+            returned_read_retirement: None,
+            owned_retirement_factory: None,
             receipt: None,
             attempts: 0,
             published: false,
@@ -4732,7 +4870,61 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
         })
     }
 
-    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String> {
+    /// 📬️ Begins one transient publication from a tracked base read. Displaced roots use
+    /// unique-or-release retirement so a still-live tool read cannot create a close cycle.
+    pub fn begin_publish_one_leased(
+        &self,
+        operation: semio_framework_job::OperationId,
+        expected_generation: u64,
+        mutation: Mutation,
+        factory: &dyn ArtifactEphemeralOneItemPreparationFactory<P, Mutation>,
+        owned_retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
+    ) -> Result<ArtifactEphemeralOneItemPublication<P, Mutation>, ArtifactEphemeralOneItemAdmissionRejected<Mutation>>
+    where
+        P: Send + Sync + 'static,
+    {
+        let reject = |reason: String, mutation: Mutation| ArtifactEphemeralOneItemAdmissionRejected { reason, mutation };
+        if self.generation != expected_generation {
+            return Err(reject("transient publication generation is stale".into(), mutation));
+        }
+        let footprint = match factory.preflight(&mutation) {
+            Ok(footprint) if footprint.is_admissible() => footprint,
+            Ok(_) => return Err(reject("transient publication footprint exceeds its fixed item or byte capacity".into(), mutation)),
+            Err(reason) => return Err(reject(reason, mutation)),
+        };
+        let base = match self.current_read() {
+            Ok(read) => ArtifactEphemeralBaseRead(ArtifactEphemeralBaseOwner::TransientRead(read)),
+            Err(reason) => return Err(reject(reason, mutation)),
+        };
+        let request = ArtifactEphemeralOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base, mutation };
+        let preparation = match factory.begin(request) {
+            Ok(preparation) => preparation,
+            Err(request) => return Err(reject("transient preparation factory rejected its exact owner bundle".into(), request.mutation)),
+        };
+        Ok(ArtifactEphemeralOneItemPublication {
+            operation,
+            expected_generation,
+            footprint,
+            preparation: Some(preparation),
+            displaced_root_retirement: None,
+            root_retirement_factory: None,
+            returned_read_registry: Some(self.reads.clone()),
+            returned_read_retirement: None,
+            owned_retirement_factory: Some(owned_retirement_factory),
+            receipt: None,
+            attempts: 0,
+            published: false,
+            cancel_requested: false,
+            close_started: false,
+            fault: None,
+            phase: ArtifactStoreOneItemPublicationPhase::Preparing,
+        })
+    }
+
+    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String>
+    where
+        P: Send + Sync + 'static,
+    {
         if publication.phase == ArtifactStoreOneItemPublicationPhase::Complete {
             return Ok(ArtifactStoreOneItemAdvance::Complete);
         }
@@ -4757,13 +4949,9 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
         }
         match publication.phase {
             ArtifactStoreOneItemPublicationPhase::Preparing => {
-                let owner = publication.preparation.as_mut().ok_or_else(|| "transient publication lost its preparation owner".to_string())?;
-                match owner.advance(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })? {
+                match publication.advance_preparation(grant)? {
                     ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
                     ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
-                        if owner.prepared().is_none() {
-                            return Err("transient preparation reported Prepared without its root".into());
-                        }
                         publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
                         Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
                     }
@@ -4788,8 +4976,11 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
                 let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| "transient publication lost its prepared root".to_string())?;
                 let generation_before = self.generation;
                 let previous = std::mem::replace(&mut self.current, prepared.next_root);
-                let retirement_factory = publication.root_retirement_factory.as_ref().ok_or_else(|| "transient publication lost its local-root retirement factory".to_string())?;
-                publication.displaced_root_retirement = Some(retirement_factory.retire(previous));
+                publication.displaced_root_retirement = Some(if let Some(factory) = publication.owned_retirement_factory.as_ref() {
+                    Box::new(ReturnedSnapshotReadRetirement::new(previous, factory.clone()))
+                } else {
+                    publication.root_retirement_factory.as_ref().ok_or_else(|| "transient publication lost its local-root retirement factory".to_string())?.retire(previous)
+                });
                 self.generation += 1;
                 let receipt = LaneItemReceipt { generation_before, generation_after: self.generation };
                 publication.expected_generation = self.generation;
@@ -4841,6 +5032,93 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
     /// 🪪️ Reads the event-maintained transient generation without suspension.
     pub fn generation_now(&self) -> u64 {
         self.generation
+    }
+
+    /// ♻️ Detaches this store's exact root/read registry and installs a fresh terminal root.
+    pub fn begin_retirement(&mut self, terminal: P, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>) -> TransientStoreRetirement<P>
+    where
+        P: Send + Sync + 'static,
+    {
+        let next_generation = self.generation.wrapping_add(1);
+        let displaced = std::mem::replace(self, Self::new(terminal));
+        self.generation = next_generation;
+        TransientStoreRetirement::new(displaced, factory)
+    }
+}
+
+/// ♻️ Detached transient root plus every returned/live tracked read.
+pub struct TransientStoreRetirement<P> {
+    root: std::mem::ManuallyDrop<Option<Arc<P>>>,
+    reads: std::mem::ManuallyDrop<Option<Arc<SnapshotReadLeaseRegistry>>>,
+    active_returned: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    active_root: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    factory: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,
+}
+
+impl<P> TransientStoreRetirement<P> {
+    fn new<Mutation>(store: TransientStore<P, Mutation>, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>) -> Self {
+        let store = std::mem::ManuallyDrop::new(store);
+        Self {
+            root: std::mem::ManuallyDrop::new(Some(unsafe { std::ptr::read(&store.current) })),
+            reads: std::mem::ManuallyDrop::new(Some(unsafe { std::ptr::read(&store.reads) })),
+            active_returned: std::mem::ManuallyDrop::new(unsafe { std::ptr::read(&store.active_returned_read) }),
+            active_root: std::mem::ManuallyDrop::new(None),
+            factory: Some(factory),
+        }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.root.is_none() && self.reads.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.factory.is_none()
+    }
+}
+
+impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(reads) = self.reads.as_ref() {
+            if self.active_returned.is_some() || reads.has_returned() {
+                return advance_returned_snapshot_read(reads, &mut self.active_returned, self.factory.as_ref().ok_or_else(|| "transient retirement lost its owned factory".to_string())?, 1, maximum_bytes);
+            }
+        }
+        if let Some(active) = self.active_root.as_mut() {
+            return match active.close_step(1, maximum_bytes)? {
+                SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
+                    drop(self.active_root.take());
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                SnapshotRetirementStep::Complete => Err("transient root completed without its exact empty witness".into()),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("transient root exceeded its exact grant".into()),
+                step => Ok(step),
+            };
+        }
+        if let Some(root) = self.root.take() {
+            *self.active_root = Some(Box::new(ReturnedSnapshotReadRetirement::new(root, self.factory.as_ref().ok_or_else(|| "transient retirement lost its owned factory".to_string())?.clone())));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.reads.as_ref().is_some_and(|reads| !reads.terminal_is_empty()) {
+            return Ok(SnapshotRetirementStep::Blocked);
+        }
+        if self.reads.take().is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.factory.take().is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(SnapshotRetirementStep::Complete)
+    }
+}
+
+impl<P> Drop for TransientStoreRetirement<P> {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "transient store retirement reached Drop before terminal-empty ownership");
+        unsafe {
+            std::mem::ManuallyDrop::drop(&mut self.root);
+            std::mem::ManuallyDrop::drop(&mut self.reads);
+            std::mem::ManuallyDrop::drop(&mut self.active_returned);
+            std::mem::ManuallyDrop::drop(&mut self.active_root);
+        }
     }
 }
 
@@ -12317,7 +12595,8 @@ impl CursorRevisionAccumulator {
 
     fn new<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, initial_digest: [u8; 32]) -> Self {
         let identity_digest = Self::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
-        Self { identity_digest, applied: Vec::new(), redo: Vec::new() }
+        let capacity = crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY;
+        Self { identity_digest, applied: Vec::with_capacity(capacity), redo: Vec::with_capacity(capacity) }
     }
 
     fn edit_digest<Mutation: ToValue>(edit: &Edit<Mutation>) -> [u8; 32] {
@@ -12379,6 +12658,12 @@ pub struct ArtifactStoreInitializationOwnerCatalog {
 }
 
 impl ArtifactStoreInitializationOwnerCatalog {
+    fn retain_id_capacity(mut ids: Vec<String>) -> Vec<String> {
+        let capacity = crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY;
+        if ids.capacity() < capacity { ids.reserve_exact(capacity.saturating_sub(ids.len())); }
+        ids
+    }
+
     pub fn try_new() -> Result<Self, &'static str> {
         let capacity = crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY;
         let mut applied_edit_ids = Vec::new();
@@ -13049,8 +13334,8 @@ impl Drop for ArtifactEditMessageLedger {
 #[path = "🧵️canonical-edit/🦀️.rs"]
 mod canonical_edit;
 pub use canonical_edit::{
-    ArtifactCanonicalValue, ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCheckpoint, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits, ArtifactCanonicalValueStep,
     ArtifactCanonicalJson, ArtifactCanonicalJsonArray, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonEncodeError, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue,
+    ArtifactCanonicalValue, ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCheckpoint, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits, ArtifactCanonicalValueStep,
     ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer, ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ARTIFACT_CANONICAL_JSON_DEPTH,
 };
 
@@ -13763,7 +14048,10 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         }
     }
 
-    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>
+    where
+        P: Send + Sync + 'static,
+    {
         self.begin_close();
         if let Some(owner) = self.preparation.as_mut() {
             let step = owner.close_step(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })?;
@@ -13826,13 +14114,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == ArtifactStoreOneItemPublicationPhase::Complete
-            && self.preparation.is_none()
-            && self.source.is_none()
-            && self.stage.is_none()
-            && self.authority.is_none()
-            && self.receipt.is_none()
-            && self.fault.is_none()
+        self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.source.is_none() && self.stage.is_none() && self.authority.is_none() && self.receipt.is_none() && self.fault.is_none()
     }
 }
 
@@ -14560,6 +14842,8 @@ where
         validate_durable_history(&envelope).await?;
         validate_history_lanes(&envelope, &applied_edit_ids, &redo_edit_ids).await?;
         let current = Self::fold_history(&envelope, &applied_edit_ids).await?;
+        let applied_edit_ids = ArtifactStoreInitializationOwnerCatalog::retain_id_capacity(applied_edit_ids);
+        let redo_edit_ids = ArtifactStoreInitializationOwnerCatalog::retain_id_capacity(redo_edit_ids);
         let initial_digest = *semio_framework_hash::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
         let revision_accumulator = CursorRevisionAccumulator::new(&envelope, initial_digest);
         let current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
@@ -14860,6 +15144,7 @@ where
     }
 
     fn replace_applied_edit_ids_retained(&mut self, next: Vec<String>) -> Result<(), VcsError> {
+        let next = ArtifactStoreInitializationOwnerCatalog::retain_id_capacity(next);
         self.displaced_retirements.reserve(Self::string_vector_owner_slots(&self.applied_edit_ids))?;
         if let Some(owner) = Self::take_string_vector_replacement(&mut self.applied_edit_ids, next) {
             self.displaced_retirements.push_reserved(owner);
@@ -14868,6 +15153,7 @@ where
     }
 
     fn replace_redo_edit_ids_retained(&mut self, next: Vec<String>) -> Result<(), VcsError> {
+        let next = ArtifactStoreInitializationOwnerCatalog::retain_id_capacity(next);
         self.displaced_retirements.reserve(Self::string_vector_owner_slots(&self.redo_edit_ids))?;
         if let Some(owner) = Self::take_string_vector_replacement(&mut self.redo_edit_ids, next) {
             self.displaced_retirements.push_reserved(owner);
@@ -15072,7 +15358,8 @@ where
         self.displaced_retirements.terminal_is_empty()
     }
 
-    fn close_owned_store_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    /// 🧹️ Advances the exact store disposer under the caller's retirement grant.
+    pub fn close_owned_store_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         if self.owned_disposer_terminal {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -15095,6 +15382,22 @@ where
                 result
             }
         }
+    }
+
+    /// 🪹️ Confirms both the store disposer and retained snapshot reads have closed.
+    pub fn close_owned_store_terminal_is_empty(&self) -> bool {
+        self.owned_disposer_terminal && self.snapshot_read_leases_terminal_is_empty()
+    }
+
+    /// 🧹️ Advances owned-store disposal without requiring this store to be a composed
+    /// [`SpaceMember`]. Local lanes use the same exact disposer authority.
+    pub fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        self.close_owned_store_step(maximum_items, maximum_bytes)
+    }
+
+    /// 🧺️ Confirms owned-store disposal for document and local lane snapshots alike.
+    pub fn close_owned_terminal_is_empty(&self) -> bool {
+        self.close_owned_store_terminal_is_empty()
     }
 
     pub fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError>
@@ -15815,14 +16118,7 @@ where
                     }
                     let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its live authority".into()))?);
                     let base = self.batch_item_base(staged_root.as_ref())?;
-                    let request = ArtifactStoreBatchItemRequest {
-                        operation: publication.operation,
-                        generation: authority.generation,
-                        base_revision: authority.base_revision,
-                        lane: publication.lane,
-                        authority,
-                        base,
-                    };
+                    let request = ArtifactStoreBatchItemRequest { operation: publication.operation, generation: authority.generation, base_revision: authority.base_revision, lane: publication.lane, authority, base };
                     let source = publication.source.as_mut().expect("validated batched publication item source");
                     let preparation = source.begin_next(request).map_err(VcsError::ValidationFailed)?;
                     publication.preparation = Some(preparation);
@@ -15958,11 +16254,7 @@ where
     /// the still-closing item preparation holds the exact registry lease otherwise.
     fn fold_batch_item(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) -> Result<(), VcsError> {
         let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched fold lost its live authority".into()))?);
-        let candidate = publication
-            .preparation
-            .as_ref()
-            .and_then(|owner| owner.prepared())
-            .ok_or_else(|| VcsError::ValidationFailed("batched fold lost its prepared candidate before validation".into()))?;
+        let candidate = publication.preparation.as_ref().and_then(|owner| owner.prepared()).ok_or_else(|| VcsError::ValidationFailed("batched fold lost its prepared candidate before validation".into()))?;
         authority.validate_prepared(candidate).map_err(VcsError::ValidationFailed)?;
         if candidate.edit.id.is_empty()
             || candidate.edit.id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES
@@ -18205,6 +18497,8 @@ pub trait SpaceMember {
     async fn document_id(&self) -> &str;
     fn artifact_ref(&self) -> Option<crate::os_io::ArtifactRef>;
     fn owner_ref(&self) -> Option<OwnerRef>;
+    /// 🌳️ Borrows the exact typed snapshot's declared child references for recursive restore.
+    fn child_restore_projection(&self) -> Result<ChildRestoreProjection<'_>, ChildRestoreProjectionError>;
     fn one_item_publication_identity(&self) -> (u64, [u8; 32]);
     fn one_item_wire_publication_supported(&self) -> bool;
     fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>>;
@@ -18212,6 +18506,7 @@ pub trait SpaceMember {
     fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
     fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
     /// 🧵️ The live typed snapshot behind an opaque immutable ownership boundary.
+    fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String>;
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String>;
     fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected>;
     fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String>;
@@ -18220,6 +18515,7 @@ pub trait SpaceMember {
     fn close_owned_terminal_is_empty(&self) -> bool;
     /// 🧬️ Fixed-size, restart-stable identity for the member's current history cursor.
     /// Implementations must not serialize or clone the materialized snapshot to answer this read.
+    fn content_revision_now(&self) -> [u8; 32];
     async fn content_revision(&self) -> [u8; 32];
     /// @emoji 🩸️ Whether this member has edits applied since its last checkpoint (mirrors the
     /// `CommitCheckpoint` dispatch's own "nothing to commit" check via `uncommitted_edit_ids`).
@@ -18363,7 +18659,7 @@ pub trait SpaceMember {
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     async fn document_id(&self) -> &str {
@@ -18376,6 +18672,10 @@ where
 
     fn owner_ref(&self) -> Option<OwnerRef> {
         self.envelope().owner.clone()
+    }
+
+    fn child_restore_projection(&self) -> Result<ChildRestoreProjection<'_>, ChildRestoreProjectionError> {
+        ChildRestoreProjection::from_snapshot(self.snapshot_ref())
     }
 
     fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
@@ -18471,13 +18771,17 @@ where
         publication.close_step(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })
     }
 
-    async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
+    fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String> {
         if !self.snapshot_read_leases.publish_authority(self.generation(), self.content_revision()) {
             return Err("snapshot read commit authority is busy or exhausted".into());
         }
         let owner = self.snapshot_owner();
         let lease = self.snapshot_read_leases.try_issue(owner.clone()).map_err(|_| "snapshot read lease registry is busy, saturated, or exhausted".to_string())?;
         Ok(ErasedSnapshotRead::new(owner, lease))
+    }
+
+    async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
+        self.snapshot_read_erased_now()
     }
 
     fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected> {
@@ -18502,7 +18806,11 @@ where
     }
 
     fn close_owned_terminal_is_empty(&self) -> bool {
-        self.owned_disposer_terminal && self.snapshot_read_leases_terminal_is_empty()
+        self.close_owned_store_terminal_is_empty()
+    }
+
+    fn content_revision_now(&self) -> [u8; 32] {
+        self.content_revision()
     }
 
     async fn content_revision(&self) -> [u8; 32] {
@@ -18695,7 +19003,7 @@ where
 /// [`space_members!`] binds each coordinate to its exact schema and typed store.
 pub trait MemberFactory: Sized {
     const OPEN_DECLARATIONS: &'static [MemberOpenDeclaration];
-    type Open: MemberOpenOperation<Member = Self>;
+    type Open: MemberOpenOperation<Member = Self> + Send;
     fn begin_open(request: MemberOpenRequest) -> Result<Self::Open, MemberOpenAdmissionError>;
     async fn create(id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError>;
     async fn open(expected: &crate::os_io::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8]) -> Result<Self, VcsError>;
@@ -18716,6 +19024,10 @@ impl SpaceMember for NoMembers {
     }
 
     fn owner_ref(&self) -> Option<OwnerRef> {
+        match *self {}
+    }
+
+    fn child_restore_projection(&self) -> Result<ChildRestoreProjection<'_>, ChildRestoreProjectionError> {
         match *self {}
     }
 
@@ -18743,6 +19055,10 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
+    fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String> {
+        match *self {}
+    }
+
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
         match *self {}
     }
@@ -18764,6 +19080,10 @@ impl SpaceMember for NoMembers {
     }
 
     fn close_owned_terminal_is_empty(&self) -> bool {
+        match *self {}
+    }
+
+    fn content_revision_now(&self) -> [u8; 32] {
         match *self {}
     }
 
@@ -18894,8 +19214,8 @@ impl MemberFactory for NoMembers {
 ///     }
 /// }
 /// ```
-/// expands to the enum, `impl SpaceMember for NoteMembers` (match-delegation over all 22 non-default
-/// methods), and `impl MemberFactory for NoteMembers` with an exact coordinate per typed store.
+/// expands to the enum, `impl SpaceMember for NoteMembers` (match-delegation over every required
+/// method), and `impl MemberFactory for NoteMembers` with an exact coordinate per typed store.
 #[macro_export]
 macro_rules! space_members {
     (pub enum $enum_name:ident, $open_name:ident { $($variant:ident($kind:literal, $standard:literal, $subset:literal, $schema:literal) => ($snapshot:ty, $mutation:ty)),+ $(,)? }) => {
@@ -18939,6 +19259,9 @@ macro_rules! space_members {
             fn owner_ref(&self) -> Option<$crate::os_store::OwnerRef> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::owner_ref(m)),+ }
             }
+            fn child_restore_projection(&self) -> Result<$crate::os_store::ChildRestoreProjection<'_>, $crate::os_store::ChildRestoreProjectionError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::child_restore_projection(m)),+ }
+            }
             fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_publication_identity(m)),+ }
             }
@@ -18957,6 +19280,9 @@ macro_rules! space_members {
             fn abort_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::SnapshotRetirementStep, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::abort_one_item_publication(m, publication, grant)),+ }
             }
+            fn snapshot_read_erased_now(&self) -> Result<$crate::os_store::ErasedSnapshotRead, String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased_now(m)),+ }
+            }
             async fn snapshot_read_erased(&self) -> Result<$crate::os_store::ErasedSnapshotRead, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased(m).await),+ }
             }
@@ -18974,6 +19300,9 @@ macro_rules! space_members {
             }
             fn close_owned_terminal_is_empty(&self) -> bool {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_terminal_is_empty(m)),+ }
+            }
+            fn content_revision_now(&self) -> [u8; 32] {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::content_revision_now(m)),+ }
             }
             async fn content_revision(&self) -> [u8; 32] {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::content_revision(m).await),+ }
@@ -19607,6 +19936,31 @@ impl CompositionGraph {
         Self::default()
     }
 
+    /// 🌳️ Pre-admits the exact ownership-edge count for a closure already validated by
+    /// [`OwnedDocumentClosure`]. No member payload or projection is retained here.
+    pub fn try_for_owned_closure(member_count: usize) -> Result<Self, String> {
+        if member_count > OWNED_DOCUMENT_MAXIMUM_MEMBERS {
+            return Err("owned closure graph exceeds its fixed member limit".into());
+        }
+        let mut graph = Self::default();
+        graph.owns.try_reserve(member_count).map_err(|_| "owned closure graph allocation was not admitted".to_string())?;
+        Ok(graph)
+    }
+
+    /// 🔗️ Adds one exact ownership row from an already validated immutable closure source.
+    pub fn insert_validated_owned(&mut self, parent_id: &str, slot: &str, child_id: &str) -> Result<(), String> {
+        if self.owns.contains_key(child_id) {
+            return Err("validated owned closure attempted a duplicate child edge".into());
+        }
+        if self.owns.len() >= OWNED_DOCUMENT_MAXIMUM_MEMBERS || self.owns.len() == self.owns.capacity() {
+            return Err("validated owned closure exceeded its pre-admitted graph capacity".into());
+        }
+        let generation = self.owns_generation.checked_add(1).ok_or_else(|| "composition ownership generation exhausted".to_string())?;
+        self.owns.insert(child_id.to_string(), (parent_id.to_string(), slot.to_string()));
+        self.owns_generation = generation;
+        Ok(())
+    }
+
     /// 🔎️ The owning parent's artifact id, if `child_id` is currently tracked as owned.
     pub async fn owner_of(&self, child_id: &str) -> Option<&str> {
         self.owns.get(child_id).map(|(parent_id, _slot)| parent_id.as_str())
@@ -19779,8 +20133,8 @@ impl CompositionGraph {
         if maximum_items == 0 {
             return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if let Some(child) = self.owns.keys().next() {
-            let bytes = child.len();
+        if let Some((child, (parent, slot))) = self.owns.iter().next() {
+            let bytes = child.len().saturating_add(parent.len()).saturating_add(slot.len());
             if bytes > maximum_bytes {
                 return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
             }
@@ -19996,6 +20350,17 @@ pub type CompositionCoordinator = TransactionCoordinator;
 impl TransactionCoordinator {
     pub async fn new() -> Self {
         Self::default()
+    }
+
+    /// 🌳️ Creates an empty coordinator whose ownership map can receive the validated
+    /// closure without allocating during retained preparation.
+    pub fn try_for_owned_closure(member_count: usize) -> Result<Self, String> {
+        Ok(Self { graph: CompositionGraph::try_for_owned_closure(member_count)? })
+    }
+
+    /// 🔗️ Adds one exact ownership row after the shared closure cursor accepted it.
+    pub fn insert_validated_owned(&mut self, parent_id: &str, slot: &str, child_id: &str) -> Result<(), String> {
+        self.graph.insert_validated_owned(parent_id, slot, child_id)
     }
 
     pub async fn graph(&self) -> &CompositionGraph {

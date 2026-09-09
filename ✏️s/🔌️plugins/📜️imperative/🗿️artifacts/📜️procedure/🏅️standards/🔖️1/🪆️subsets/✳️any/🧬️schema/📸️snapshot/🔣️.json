@@ -1,27 +1,28 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/imperative/imperative/snapshot.json",
+  "$id": "https://semio.tech/schema/s/imperative/procedure/snapshot.json",
   "title": "ProcedureSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema",
-    "path",
-    "seed"
-  ],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "path": {
-      "$ref": "https://semio.tech/schema/s/imperative/imperative/artifact.json#/$defs/ProcedurePath",
-      "x-semio-state": "artifact"
+    "flow": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
-    "seed": {
-      "type": "object",
-      "additionalProperties": true,
-      "x-semio-state": "artifact"
+    "text": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     }
-  }
+  },
+  "required": [
+    "schema",
+    "flow",
+    "text"
+  ]
 }

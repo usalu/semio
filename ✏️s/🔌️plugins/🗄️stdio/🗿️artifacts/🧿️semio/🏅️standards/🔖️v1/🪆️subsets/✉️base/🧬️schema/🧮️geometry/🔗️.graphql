@@ -1,0 +1,6 @@
+type SemioPoint3 { x: Float! y: Float! z: Float! }
+type SemioPoint2 { x: Float! y: Float! }
+type SemioUv { u: Float! v: Float! }
+type SemioRgba { r: Float! g: Float! b: Float! a: Float! }
+type SemioQuaternion { x: Float! y: Float! z: Float! w: Float! }
+type SemioTransform { translation: SemioPoint3! rotation: SemioQuaternion! scale: SemioPoint3! }

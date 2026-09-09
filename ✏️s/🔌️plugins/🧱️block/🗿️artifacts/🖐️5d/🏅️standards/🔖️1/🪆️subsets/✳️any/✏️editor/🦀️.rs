@@ -174,6 +174,7 @@ fn block5d_retained_extent(command: &Block5dCommand, snapshot: &Block5dSnapshot,
     (items <= BLOCK5D_RETAINED_WORK_ITEMS).then_some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "ArtifactCommandReducer requires the eight operation, document, configuration, history, and interaction inputs.")]
 fn block5d_retained_reduce(
     command: &Block5dCommand,
     snapshot: &Block5dSnapshot,

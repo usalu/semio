@@ -18,6 +18,6 @@ pub fn diff_create_step(payload: &CreateStep, base: &FormsSnapshot) -> protocol:
         order.insert(at, payload.step.id.clone());
         delta.reordered = Some(order);
     }
-    protocol::MutationOutcome::new(forms_diff_from_delta(delta, base))
+    protocol::MutationOutcome::new(forms_diff_from_delta(&delta, base))
 }
 //#endregion 🔖️Diff

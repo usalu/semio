@@ -57,28 +57,28 @@ test("mutation vector discovery audits exact grouped owners and declared scenari
   const other = { ...catalog, id: "node", subsetDirectoryName: "✳️any", kinds: ["create-node"], vectors: [node] };
   const registry = { contributions: [{ owner: contract.catalog, manifestPath: `${contract.catalog}/🔮️oracle/🔣️.json`, mutationCatalogs: [catalog] }, { owner: contract.source, manifestPath: `${contract.source}/🔮️oracle/🔣️.json`, mutationCatalogs: [other] }] };
   const sourceCases = [`${sourceRoot}/🎥️camera/🌱️create/🧪️tests/✅️applied`, `${sourceRoot}/🌳️node/🌱️create/🧪️tests/🌱️applied`];
+  const fixtureCases = [`${contract.source}/🧫️fixtures/🧬️mutations/🎥️camera/🌱️create/✅️applied`, `${contract.source}/🧫️fixtures/🧬️mutations/🌳️node/🌱️create/🌱️applied`];
   for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
-    const nodes = new Set(sourceCases.flatMap((path) => path.split("/").map((_part, index, parts) => parts.slice(0, index + 1).join("/"))));
+    const nodes = new Set([...sourceCases, ...fixtureCases].flatMap((path) => path.split("/").map((_part, index, parts) => parts.slice(0, index + 1).join("/"))));
+    for (const path of sourceCases) nodes.add(`${path}/🦀️.rs`);
     const checked: string[] = [];
-    const support = { join, relative, sep: "/", basename, PROFILE_MARKER: "/🏅️standards/", testTaxonomy: () => taxonomy, mutationCatalogProblems, mutationCatalogSourceOwner, mutationOwnerRelativePath, childDirectories: (path: string) => [...nodes].filter((node) => dirname(node) === path).map((node) => basename(node)), bundleBreach: (path: string) => { checked.push(path); return null; }, breach: (_statute: string, id: string, scope: string) => ({ id, scope }) };
+    const support = { join, relative, sep: "/", basename, testTaxonomy: () => taxonomy, testImplementationFilenames: () => ["🦀️.rs"], mutationCatalogProblems, mutationCatalogSourceOwner, mutationOwnerRelativePath, existsSync: (path: string) => nodes.has(path), lstatSync: (path: string) => ({ isDirectory: () => nodes.has(path) && !path.endsWith("/🦀️.rs") }), readdirSync: (path: string) => sourceCases.includes(path) ? [{ name: "🦀️.rs", isFile: () => true }] : [], childDirectories: (path: string) => [...nodes].filter((node) => dirname(node) === path && !node.endsWith("/🦀️.rs")).map((node) => basename(node)), bundleBreach: (path: string) => { checked.push(path); return null; }, breach: (_statute: string, id: string, scope: string) => ({ id, scope }) };
     const audit = new Function(...Object.keys(support), `${compile(definition.getText(syntax).replace(/^export /u, ""))}\nreturn mutationVectorRegistryBreaches;`)(...Object.values(support));
     expect(audit(".", registry, taxonomy)).toEqual([]);
-    expect(checked.sort()).toEqual(sourceCases.sort());
-    nodes.add(`${sourceRoot}/🎥️camera/🛸️unregistered/🧪️tests/🛸️applied`);
-    nodes.add(`${sourceRoot}/🎥️camera/🛸️unregistered/🧪️tests`);
-    nodes.add(`${sourceRoot}/🎥️camera/🛸️unregistered`);
+    expect(checked.sort()).toEqual(fixtureCases.sort());
+    const unregisteredFixture = `${contract.source}/🧫️fixtures/🧬️mutations/🎥️camera/🛸️unregistered/🛸️applied`;
+    for (const path of unregisteredFixture.split("/").map((_part, index, parts) => parts.slice(0, index + 1).join("/"))) nodes.add(path);
     expect(audit(".", registry, taxonomy).some((row: { id: string }) => row.id === "mutation-vector-unregistered")).toBe(true);
     nodes.delete(sourceCases[0]);
     expect(audit(".", registry, taxonomy).some((row: { id: string }) => row.id === "mutation-vector-missing")).toBe(true);
   }
-});
-
-test("normalization reads explicit cross-subset catalogs without searching unrelated ancestors", () => {
+}, 30_000);
+test("normalization reads explicit catalogs and canonicalizes both mutation pair roots", () => {
   const contract = fixture.mutationCatalogSourceOwnership, sourceRoot = `${contract.source}/🧬️schema/🧬️mutations`;
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [sourceRoot]: contract.domains }, mutationCatalogSourceOwners: { [contract.catalog]: contract.source } };
   const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
   const syntax = ts.createSourceFile("normalization.ts", source, ts.ScriptTarget.Latest, true);
-  const names = ["projectionCatalogVectors", "projectionCatalogEntryForSubset", "projectionCatalogsForMutationSource", "canonicalProjectedMutationOwner"];
+  const names = ["projectionCatalogVectors", "projectionCatalogEntryForSubset", "projectionCatalogsForMutationSource", "canonicalProjectedMutationOwner", "normalizeMutationCasePairs"];
   const definitions = names.map((name) => syntax.statements.filter(ts.isFunctionDeclaration).find((node) => node.name?.text === name));
   expect(definitions.every(Boolean)).toBe(true);
   const entries = new Map<string, any>(), documents = new Map<string, string>();
@@ -87,20 +87,35 @@ test("normalization reads explicit cross-subset catalogs without searching unrel
     entries.set(path, { sourcePath: path, normalizedPath: path, nodeKind: "file", fileKind: "json", violations: [] });
     documents.set(path, JSON.stringify({ mutationCatalogs: [{ id: mutationId, capability: "mutation", standardDirectoryName: "🔖️1", subsetDirectoryName: basename(owner), kinds: [mutationId], vectors: [{ mutationId, sourceMutationDirectoryName: "🌱️create", mutationDirectoryName: "🌱️create", scenarios: [{ id: "applied", directoryName: "✅️applied" }] }] }] }));
   }
-  const support = { basename, dirname, mutationOwnerRelativePath, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, absolutePath: (_root: string, path: string) => path, readFileSync: (path: string) => documents.get(path), record: (value: unknown) => value, requiredString: (value: unknown) => { if (typeof value !== "string" || !value) throw new Error("string required"); return value; }, stringArray: (value: unknown) => value };
+  const scenarioSources = [
+    { mutationId: "create-camera", owner: "🎥️camera/🌱️create" },
+    { mutationId: "create-node", owner: "🌳️node/🌱️create" },
+  ].map((row) => ({ artifactRoot: "🗿️sample", artifactId: "sample", standardVersion: "1", standardDirectoryName: "🔖️1", subsetId: "any", subsetDirectoryName: "✳️any", mutationId: row.mutationId, mutationDirectoryName: "🌱️create", sourceScenarioId: "sample", sourceScenarioDirectoryName: "📨️sample", subsetRoot: contract.source, mutationRoot: `${sourceRoot}/${row.owner}`, scenarioRoot: `${sourceRoot}/${row.owner}/🧪️tests/📨️sample`, fixtureSourceRoot: `${contract.source}/🧫️fixtures/🧬️mutations/${row.owner}/📨️sample`, expectedImplementationRoot: `${sourceRoot}/${row.owner}/🧪️tests/✅️applied`, expectedFixtureRoot: `${contract.source}/🧫️fixtures/🧬️mutations/${row.owner}/✅️applied` }));
+  for (const row of scenarioSources) for (const [path, nodeKind, fileKind] of [[row.mutationRoot, "directory", null], [row.scenarioRoot, "directory", null], [`${row.scenarioRoot}/🦀️.rs`, "file", "rust-source"], [row.fixtureSourceRoot, "directory", null], [`${row.fixtureSourceRoot}/🔣️.json`, "file", "json"]] as const) entries.set(path, { sourcePath: path, normalizedPath: path, nodeKind, fileKind, violations: [] });
+  const inspectedRoots: string[] = [];
+  const support = { basename, dirname, Buffer, splitLeadingEmoji: leadingEmojiIdentity, mutationOwnerRelativePath, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, absolutePath: (_root: string, path: string) => path, readFileSync: (path: string) => documents.get(path), record: (value: unknown) => value, requiredString: (value: unknown) => { if (typeof value !== "string" || !value) throw new Error("string required"); return value; }, stringArray: (value: unknown) => value, canonicalProjectedMemberName: (name: string) => name, projectionSourceAt: (path: string) => scenarioSources.find((row) => row.scenarioRoot === path) ?? null, mutationDescendantContract: () => ({ pathBudgetReserve: { bytes: 0 } }), projectionBundleProblem: (row: { scenarioRoot: string }) => { inspectedRoots.push(row.scenarioRoot); return null; }, setProjectedPath: (entry: any, path: string) => { entry.normalizedPath = path; }, violation: (code: string, path: string, detail: string) => ({ code, path, detail }) };
   for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
-    const readers = new Function(...Object.keys(support), `${compile(definitions.map((node) => node!.getText(syntax)).join("\n"))}\nreturn {catalogs: projectionCatalogsForMutationSource, owner: canonicalProjectedMutationOwner};`)(...Object.values(support));
+    inspectedRoots.length = 0;
+    const readers = new Function(...Object.keys(support), `${compile(definitions.map((node) => node!.getText(syntax)).join("\n"))}\nreturn {catalogs: projectionCatalogsForMutationSource, owner: canonicalProjectedMutationOwner, normalize: normalizeMutationCasePairs};`)(...Object.values(support));
     const catalogs = readers.catalogs(".", entries, contract.source, { discoverySchema: taxonomy });
     expect(catalogs.map((catalog: any) => catalog.owner).sort()).toEqual([contract.source, contract.catalog].sort());
     expect(catalogs.flatMap((catalog: any) => catalog.vectors).map((vector: any) => vector.mutationId).sort()).toEqual(["create-camera", "create-node"]);
     expect(catalogs.every((catalog: any) => !catalog.error)).toBe(true);
+    const normalized = structuredClone(entries);
+    readers.normalize(".", "🗿️sample", normalized, new Map(), { schema: taxonomy, discoverySchema: taxonomy });
+    for (const row of scenarioSources) {
+      expect(normalized.get(row.scenarioRoot).normalizedPath).toBe(row.expectedImplementationRoot);
+      expect(normalized.get(row.fixtureSourceRoot).normalizedPath).toBe(row.expectedFixtureRoot);
+    }
+    expect(inspectedRoots.sort()).toEqual(scenarioSources.flatMap((row) => [row.scenarioRoot, row.fixtureSourceRoot]).sort());
+    expect([...normalized.values()].flatMap((entry: any) => entry.violations)).toEqual([]);
     expect(readers.owner("🌱️create", "create-camera", contract.catalog, { discoverySchema: taxonomy })).toBe("🎥️camera/🌱️create");
     expect(readers.owner("🌱️create", "create-unknown", contract.catalog, { discoverySchema: taxonomy })).toBeNull();
     expect(readers.catalogs(".", new Map(), contract.source, { discoverySchema: taxonomy }).every((catalog: any) => Boolean(catalog.error))).toBe(true);
     const malformed = { ...taxonomy, mutationCatalogSourceOwners: { [contract.catalog]: `${contract.source}/✏️editor` } };
     expect(() => readers.catalogs(".", entries, contract.source, { discoverySchema: malformed })).toThrow();
   }
-});
+}, 30_000);
 
 test("glTF generator follows exact fixture-manifest roles and handpicked file coordinates", () => {
   const contract = fixture.gltfFixtureCoordinates, repoRoot = resolve(root, "../../../../../../..");
@@ -380,7 +395,7 @@ test("mutation catalogs declare one canonical implementation and fixture bundle 
   expect(implementation.requiredNodes.map((node) => node.nodeType)).toEqual(["directory", "file"]);
   expect(fixtureBundle.realizedNodeCount).toBe(12);
   expect(fixtureBundle.requiredNodes).toHaveLength(11);
-  expect(fixtureBundle.exclusiveAlternatives).toEqual([{ id: "diff-leaf", nodes: [{ nodeType: "file", pathSegments: [{ literal: "🔺️diff" }], kindId: "json" }, { nodeType: "file", pathSegments: [{ literal: "🔺️diff" }], kindId: "absent" }] }]);
+  expect(fixtureBundle.exclusiveAlternatives.map((alternative) => ({ id: alternative.id, mode: alternative.mode, kinds: alternative.nodes.map((node) => node.kindId), paths: alternative.nodes.map((node) => node.pathSegments.map((segment) => segment.literal)) }))).toEqual([{ id: "diff-leaf", mode: "exactly-one", kinds: ["json", "absence-marker"], paths: [["🔺️diff"], ["🔺️diff"]] }]);
   expect(validateTaxonomy(taxonomy)).toEqual([]);
 });
 
@@ -551,10 +566,10 @@ test("Storybook discovers every handpicked UI story by its semantic suffix", () 
   }
 });
 
-test("graph manifest discovery uses its semantic filename rather than one shared emoji", () => {
+test("graph manifest discovery uses its semantic filename without a package build watcher", () => {
   const source = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts"), "utf8");
-  const watcher = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/build.rs"), "utf8");
-  expect(/else if ([^\n]+) \{\n\s+println!\("cargo:rerun-if-changed=/u.exec(watcher)?.[1]).toBe('name.ends_with("manifest.json")');
+  const cargo = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/Cargo.toml"), "utf8");
+  expect(cargo).toMatch(/^build = false$/mu);
   const expression = /else if \(([^\n]+)\) \{\n\s+out\.push\(path\)/u.exec(source)?.[1];
   expect(expression).toBeDefined();
   const accepts = new Function("name", `return ${expression};`);

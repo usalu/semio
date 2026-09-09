@@ -137,3 +137,23 @@ The full current layout regression suite passed 59 tests with 133 assertions, in
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/ASSETS-FIXTURES-SEPARATION/🧑‍💻coordination/🧫️nx-fixture/project.json"
 ]
 ```
+
+## Fixture Directory Spelling and Follow-up Validation
+
+The taxonomy now declares prohibited legacy fixture-directory spellings through testFixtureLegacyDirectoryNames, validated by discovery and the test taxonomy loader. The scanner rejects old directories while preserving canonical case names and opaque fixture internals. Five language-neutral vectors went from 3 failures / 2 passes to 5 passes. A minimatch oracle independently checks the spelling vectors. The complete layout case passed 65 tests / 145 assertions.
+
+The latest whole-repository scan inspected 114,137 authored paths and recorded 87 remaining findings; scoped residuals were handed to their implementation agents. This is a progress snapshot, not a clean final audit.
+
+New supporting reports: 📓️nakagin-fixture-separation-2026-09-09.md; 📓️computed-fixture-read-audit-2026-09-09.md; 📓️historical-output-and-computed-fixture-consumers-2026-09-09.md.
+
+Final library read follow-up: 95 canonical TypeScript case files yielded 362 statically resolved literal, composed and JSON-property file reads with zero missing paths after the runtime asset moves. The audit remains bounded to supported expressions; indirect production dependencies are covered by the separate final audit. Production catalog loading and README identity evidence are retained in 📓️runtime-taxonomy-assets-2026-09-09.md.
+
+## Final Registry and Read Follow-up
+
+The real registry initially exposed ordinary canonical unit tests being mistaken for undeclared mutation fixture vectors. Catalog declarations still require an implementation and their exact five-leaf fixture bundle, and physical undeclared fixture bundles still fail. An ordinary canonical test without a fixture bundle does not claim to be a catalog vector. Two additional neutral cases and the Ajv closed-file-set oracle distinguish those cases. The focused suite passed 8 tests and 15 assertions.
+
+The actual registry loader and pair validator subsequently passed all 76 inspected catalogs and 1,890 scenarios across 203 contributions, with zero findings. The durable result is in `📓️mutation-fixture-registry-current-2026-09-09.md`.
+
+After the two additional normalization catalog asset moves, the computed-read audit inspected 97 canonical TypeScript case files and resolved 365 supported reads with zero missing paths. See `📓️normalization-runtime-catalogs-2026-09-09.md` for the 8 passing consumer tests and observed production planner reads; that report also distinguishes the unrelated later compiler-manifest failure.
+
+The final combined fixture-resolution, physical-layout, and mutation-pair regression run passed all 84 tests and 194 assertions through Bun/Nx. This includes native Rust and TypeScript checks, filesystem execution, Nx input/discovery behavior, and the independent Ajv, minimatch and TOML oracles.

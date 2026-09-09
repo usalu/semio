@@ -5,7 +5,6 @@ type Generation3dConfig {
   previewCamera: Generation3dPreviewCamera! @state(class: CONFIG)
   sunJson: String! @state(class: CONFIG)
   selectedGenerationId: String @state(class: CONFIG)
-  previewEvalText: String @state(class: CONFIG)
 }
 type CameraJson {
   x: Float!

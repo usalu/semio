@@ -2,29 +2,45 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/semio/v1/object/diff.json",
   "title": "SemioObjectDiff",
-  "description": "Sparse per-field diff over SemioObjectSnapshot — transform/brep/mesh/properties, each present only when touched.",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "transform": {
-      "type": "object"
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/geometry.json",
+      "x-semio-state": "artifact"
     },
     "brep": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/brep"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "mesh": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/mesh"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "properties": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/value"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     }
   }
 }

@@ -1,9 +1,8 @@
-
 #[path = "../../🎚️change-alpha-s/🧪️tests/🎚️lowers-the-shaft-resistance-factor-to-0-5/🦀️.rs"]
 mod tests_change_alpha_s_lowers_the_shaft_resistance_factor_to_0_5;
 #[path = "../../🌍️change-annex/🧪️tests/🌍️switches-from-the-german-na-to-the-recommended-en-annex/🦀️.rs"]
 mod tests_change_annex_switches_from_the_german_na_to_the_recommended_en_annex;
-#[path = "../../↔️change-bm/↔️widens-the-footing-to-2-5-m/🦀️.rs"]
+#[path = "../../↔️change-bm/🧪️tests/↔️widens-the-footing-to-2-5-m/🦀️.rs"]
 mod tests_change_bm_widens_the_footing_to_2_5_m;
 #[path = "../../🧲️change-c-kpa/🧪️tests/🧲️gives-the-drained-sand-12-5-kpa-of-effective-cohesion/🦀️.rs"]
 mod tests_change_c_kpa_gives_the_drained_sand_12_5_kpa_of_effective_cohesion;
@@ -21,7 +20,7 @@ mod tests_change_gamma_kn_m3_raises_the_soil_unit_weight_to_20_kn_m3;
 mod tests_change_h_ed_kn_raises_the_design_horizontal_load_to_120_kn;
 #[path = "../../🏗️change-n-pile-ed-kn/🧪️tests/🏗️raises-the-design-pile-axial-load-to-1200-kn/🦀️.rs"]
 mod tests_change_n_pile_ed_kn_raises_the_design_pile_axial_load_to_1200_kn;
-#[path = "../../🧮️change-nu/🧮️raises-poissons-ratio-to-0-375/🦀️.rs"]
+#[path = "../../🧮️change-nu/🧪️tests/🧮️raises-poissons-ratio-to-0-375/🦀️.rs"]
 mod tests_change_nu_raises_poissons_ratio_to_0_375;
 #[path = "../../📐️change-phi-deg/🧪️tests/📐️raises-the-friction-angle-to-35-degrees/🦀️.rs"]
 mod tests_change_phi_deg_raises_the_friction_angle_to_35_degrees;
@@ -29,7 +28,7 @@ mod tests_change_phi_deg_raises_the_friction_angle_to_35_degrees;
 mod tests_change_pile_base_area_m2_doubles_the_pile_base_area_to_0_5_m2;
 #[path = "../../⭕️change-pile-dm/🧪️tests/⭕️enlarges-the-pile-diameter-to-0-75-m/🦀️.rs"]
 mod tests_change_pile_dm_enlarges_the_pile_diameter_to_0_75_m;
-#[path = "../../📏️change-pile-lm/📏️lengthens-the-pile-to-15-m/🦀️.rs"]
+#[path = "../../📏️change-pile-lm/🧪️tests/📏️lengthens-the-pile-to-15-m/🦀️.rs"]
 mod tests_change_pile_lm_lengthens_the_pile_to_15_m;
 #[path = "../../🗺️change-pile-n-profiles/🧪️tests/🗺️adds-a-third-investigated-ground-profile/🦀️.rs"]
 mod tests_change_pile_n_profiles_adds_a_third_investigated_ground_profile;

@@ -180,10 +180,8 @@ fn direct_store_fixture_lossy_oracle() {
     }
 }
 
-const ONE_ITEM_PUBLICATION_FIXTURE: &str =
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🏪️store/🧫️fixtures/artifact-store-one-item-publication-v1/🔣️.json"));
-const EPHEMERAL_ONE_ITEM_PUBLICATION_FIXTURE: &str =
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🏪️store/🧫️fixtures/artifact-ephemeral-one-item-publication-v1/🔣️.json"));
+const ONE_ITEM_PUBLICATION_FIXTURE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🏪️store/🧫️fixtures/artifact-store-one-item-publication-v1/🔣️.json"));
+const EPHEMERAL_ONE_ITEM_PUBLICATION_FIXTURE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🏪️store/🧫️fixtures/artifact-ephemeral-one-item-publication-v1/🔣️.json"));
 
 struct SerdeOneItemPublicationOracle {
     maximum_items: usize,
@@ -1364,7 +1362,7 @@ where
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     async fn document_id(&self) -> &str {
@@ -1375,6 +1373,9 @@ where
     }
     fn owner_ref(&self) -> Option<OwnerRef> {
         SpaceMember::owner_ref(&self.0)
+    }
+    fn child_restore_projection(&self) -> Result<ChildRestoreProjection<'_>, ChildRestoreProjectionError> {
+        SpaceMember::child_restore_projection(&self.0)
     }
     fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
         SpaceMember::one_item_publication_identity(&self.0)
@@ -1394,6 +1395,9 @@ where
     fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
         SpaceMember::abort_one_item_publication(&mut self.0, publication, grant)
     }
+    fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String> {
+        SpaceMember::snapshot_read_erased_now(&self.0)
+    }
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
         SpaceMember::snapshot_read_erased(&self.0).await
     }
@@ -1411,6 +1415,9 @@ where
     }
     fn close_owned_terminal_is_empty(&self) -> bool {
         SpaceMember::close_owned_terminal_is_empty(&self.0)
+    }
+    fn content_revision_now(&self) -> [u8; 32] {
+        SpaceMember::content_revision_now(&self.0)
     }
     async fn content_revision(&self) -> [u8; 32] {
         SpaceMember::content_revision(&self.0).await
@@ -1528,6 +1535,12 @@ fixture_member_factory!(SeverityMutation);
 #[dsl(id = "demo.doc", extension = "demo")]
 pub(crate) struct DemoSnapshot {
     pub(super) n: Option<i32>,
+}
+
+impl crate::os_schema_composition::ArtifactCompositionFields for DemoSnapshot {
+    fn visit_child_refs<'a, V: crate::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
 }
 
 impl Default for DemoSnapshot {
@@ -1914,7 +1927,7 @@ crate::space_members! {
 }
 
 fn member_publication_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../📢️member-publication.json")).expect("language-neutral member publication fixture")
+    serde_json::from_str(include_str!("../../🧫️fixtures/📢️member-publication.json")).expect("language-neutral member publication fixture")
 }
 
 fn member_dialect_fixture() -> serde_json::Value {
@@ -1983,6 +1996,7 @@ async fn member_factory_closed_dialect_matches_neutral_admission_corpus() {
             assert_eq!(serde_json::to_value(restored).unwrap(), serde_json::to_value(&seed).unwrap());
             assert_eq!(member.artifact_ref().as_ref(), Some(&expected));
             assert_eq!(member.owner_ref(), None);
+            assert!(member.child_restore_projection().expect("member exposes its exact typed snapshot projection").is_empty());
             close_member_dialect_fixture(&mut member);
         }
     }
@@ -2994,6 +3008,27 @@ async fn publish_demo_batch(
     panic!("batched publication never reached its receipt inside its bounded turn budget");
 }
 
+#[semio_framework_async_macros::async_test]
+async fn artifact_store_reset_preserves_capacity_for_retained_batch_publication() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️reset-publication/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let initial = row["initial"].as_i64().unwrap() as i32;
+        let after = row["after"].as_i64().unwrap() as i32;
+        let fresh = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "reset-publication", DemoSnapshot { n: Some(initial) }, None);
+        let mut store = ArtifactStore::new(fresh()).await;
+        store.install_member_store_owners_exact(demo_closable_store_owners());
+        store.reset(fresh(), Vec::new(), Vec::new()).await.expect("empty-history reset");
+        let (mut publication, receipt) = publish_demo_batch(&mut store, 41, vec![DemoMutation::SetN(SetN { n: after })], None).await;
+        assert!(publication.acknowledge() || receipt.is_err());
+        publication.begin_close();
+        close_durable_publication(&mut publication);
+        let outcome = receipt.map(|_| serde_json::to_value(store.snapshot_ref().n).unwrap());
+        close_demo_artifact_store(&mut store);
+        assert_eq!(outcome.unwrap(), row["after"]);
+    }
+    eprintln!("[DEBUG] Store reset: two neutral empty-history reloads accept a retained durable batch and match serde projections");
+}
+
 /// 🧺️ ONE gesture of 200 mutations is ONE `Edit` in ONE ledger slot and ONE undo step — the
 /// `ARTIFACT_HISTORY_LEDGER_CAPACITY = 64` ceiling that used to fault a `setActiveExample` load at
 /// its 65th mutation is structurally out of reach, and the staged edit is byte-for-byte the edit
@@ -3080,12 +3115,7 @@ async fn artifact_store_batch_rejection_mid_batch_leaves_no_partial_edit_and_sti
     let generation = store.generation_now();
     let revision = store.content_revision_now();
     let root = store.snapshot_root();
-    let mutations = vec![
-        DemoMutation::SetN(SetN { n: 1 }),
-        DemoMutation::AddN(AddN { delta: 2 }),
-        DemoMutation::DeleteN(DeleteN {}),
-        DemoMutation::SetN(SetN { n: 5 }),
-    ];
+    let mutations = vec![DemoMutation::SetN(SetN { n: 1 }), DemoMutation::AddN(AddN { delta: 2 }), DemoMutation::DeleteN(DeleteN {}), DemoMutation::SetN(SetN { n: 5 })];
     let (mut publication, outcome) = publish_demo_batch(&mut store, 3, mutations, None).await;
     let error = outcome.expect_err("the fourth mutation cannot prepare against a deleted target");
     assert!(error.to_string().contains("demo retained mutation rejected against its base"), "{error}");
@@ -3110,16 +3140,7 @@ async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_witho
     let root = store.snapshot_root();
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
     let mut publication = store
-        .begin_apply_batch(
-            semio_framework_job::OperationId(4),
-            generation,
-            store.content_revision_now(),
-            "retained-test".into(),
-            (0..32).map(|_| DemoMutation::AddN(AddN { delta: 1 })).collect(),
-            None,
-            HistoryLane::Document,
-            Some(&factory),
-        )
+        .begin_apply_batch(semio_framework_job::OperationId(4), generation, store.content_revision_now(), "retained-test".into(), (0..32).map(|_| DemoMutation::AddN(AddN { delta: 1 })).collect(), None, HistoryLane::Document, Some(&factory))
         .expect("a thirty-two item gesture admits");
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
     while publication.staged_items() < 3 {
@@ -3137,7 +3158,7 @@ async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_witho
 
 #[semio_framework_async_macros::async_test]
 async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for_next_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔌️plugin/🔗️tool-latest-wins-integration.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔌️plugin/🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "cold-retained-rebase", DemoSnapshot { n: Some(0) }, None)).await;
     store.install_member_store_owners_exact(demo_closable_store_owners());
     let capacity = store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity();
@@ -3171,16 +3192,7 @@ async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_fo
     let root = store.snapshot_root();
     let forged: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::forged_digest());
     let mut publication = store
-        .begin_apply_batch(
-            semio_framework_job::OperationId(11),
-            generation,
-            revision,
-            "retained-test".into(),
-            vec![DemoMutation::SetN(SetN { n: 12 })],
-            Some("forged digest".into()),
-            HistoryLane::Document,
-            Some(&forged),
-        )
+        .begin_apply_batch(semio_framework_job::OperationId(11), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 12 })], Some("forged digest".into()), HistoryLane::Document, Some(&forged))
         .expect("Store-minted immutable authority admits the domain owner");
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
     while publication.preparation.as_ref().and_then(|owner| owner.prepared()).is_none() {
@@ -3215,9 +3227,8 @@ async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generati
     let stale = store.begin_apply_batch(semio_framework_job::OperationId(2), generation + 1, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 9 })], None, HistoryLane::Document, Some(&admissible));
     assert!(stale.is_err());
 
-    let mut cancelled = store
-        .begin_apply_batch(semio_framework_job::OperationId(3), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 8 })], None, HistoryLane::Document, Some(&admissible))
-        .expect("fresh publication admits");
+    let mut cancelled =
+        store.begin_apply_batch(semio_framework_job::OperationId(3), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 8 })], None, HistoryLane::Document, Some(&admissible)).expect("fresh publication admits");
     assert!(store.cancel_apply_batch(&mut cancelled));
     close_durable_publication(&mut cancelled);
     assert_eq!(store.generation_now(), generation);
@@ -3240,6 +3251,78 @@ async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generati
     assert_eq!(store.content_revision_now(), revision);
     assert!(Arc::ptr_eq(&root, &store.snapshot_root()));
     close_demo_artifact_store(&mut store);
+}
+
+struct FaultingEphemeralTask {
+    invalid_receipt: bool,
+    closing: bool,
+}
+
+impl ArtifactEphemeralPreparationTask<DemoSnapshot, DemoMutation> for FaultingEphemeralTask {
+    fn advance(&mut self, _: &DemoSnapshot, _: &mut Option<DemoMutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactEphemeralPreparationTaskStep<DemoSnapshot>, String> {
+        if !self.invalid_receipt {
+            return Err("injected construction failure".into());
+        }
+        Ok(ArtifactEphemeralPreparationTaskStep::Prepared { root: DemoSnapshot { n: Some(99) }, checkpoint: ArtifactStoreOneItemCheckpoint { completed_items: 1, completed_bytes: grant.maximum_bytes as u64 + 1, ..Default::default() } })
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+    fn close_step(&mut self, _: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+        assert!(self.closing);
+        Ok(SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+    }
+}
+
+#[test]
+fn ephemeral_transfer_preparation_faults_close_presence_and_transient_owners() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🫧️preparation-fault/🔣️.json")).unwrap();
+    let factory = ArtifactEphemeralTaskPreparationFactory::new(
+        |_| Ok(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 64 }),
+        |_, mutation| Ok(Box::new(FaultingEphemeralTask { invalid_receipt: matches!(mutation, DemoMutation::SetN(SetN { n: 1 })), closing: false })),
+        Arc::new(DemoInitialSnapshotRetirementFactory),
+        Arc::new(DemoMutationRetirementFactory),
+    );
+    for row in fixture["cases"].as_array().unwrap() {
+        let mutation = || DemoMutation::SetN(SetN { n: row["mutation"].as_i64().unwrap() as i32 });
+        let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 };
+        let mut presence = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
+        let presence_root_factory: Arc<dyn SnapshotRetirementFactory<DemoSnapshot>> = Arc::new(DemoSnapshotRetirementFactory);
+        presence.install_local_retirement_factory(presence_root_factory.clone()).unwrap();
+        let mut presence_publication = presence.begin_publish_one(semio_framework_job::OperationId(1), 0, mutation(), Some(&factory), Some(presence_root_factory)).unwrap();
+        let mut transient = TransientStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
+        let mut transient_publication = transient.begin_publish_one_leased(semio_framework_job::OperationId(2), 0, mutation(), &factory, Arc::new(DemoInitialSnapshotRetirementFactory)).unwrap();
+        let presence_error = presence.advance_publish_one(&mut presence_publication, grant).unwrap_err();
+        let transient_error = transient.advance_publish_one(&mut transient_publication, grant).unwrap_err();
+        assert_eq!(presence_error, row["fault"].as_str().unwrap());
+        assert_eq!(transient_error, presence_error);
+        for publication in [&mut presence_publication, &mut transient_publication] {
+            assert_eq!(publication.fault(), Some(presence_error.as_str()));
+            assert_eq!(format!("{:?}", publication.phase()), fixture["phase"].as_str().unwrap());
+            assert_eq!(publication.close_step(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 }).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            for _ in 0..256 {
+                match publication.close_step(grant).unwrap() {
+                    SnapshotRetirementStep::Complete => break,
+                    SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 7),
+                    SnapshotRetirementStep::Blocked => panic!("isolated fault owner must close"),
+                }
+            }
+            assert!(publication.terminal_is_empty());
+        }
+        assert_eq!(serde_json::to_value(presence.local().n).unwrap(), fixture["initial"]);
+        assert_eq!(serde_json::to_value(transient.current_root().n).unwrap(), fixture["initial"]);
+        let mut retirement = presence.begin_retirement(Arc::new(DemoSnapshot { n: Some(0) }), |value| value.n == Some(0)).ok().unwrap();
+        for _ in 0..256 {
+            if retirement.close_step(1, 7).unwrap() == SnapshotRetirementStep::Complete {
+                break;
+            }
+        }
+        assert!(retirement.terminal_is_empty());
+    }
+    eprintln!("[DEBUG] ephemeral preparation faults: task errors and invalid prepared receipts close both presence and transient owners while preserving neutral state");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -3413,7 +3496,7 @@ fn close_group_read_fixture(envelope: ArtifactEnvelope<GroupReadTriggerSnapshot,
 
 #[test]
 fn retained_group_envelope_read_captures_history_and_cursor_before_serializer_commit() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📖️group-read.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📖️group-read.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let owner = Arc::new(Mutex::new(crate::os_vcs::ArtifactGroupVisibilityOwner::new()));
         let view = owner.lock().unwrap().view();
@@ -3487,7 +3570,7 @@ fn retained_group_envelope_read_rejects_foreign_cursor_visibility_before_seriali
 
 #[semio_framework_async_macros::async_test]
 async fn retained_group_cursor_shares_history_visibility_and_retires_displaced_roots() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎯️group-cursor.json")).expect("group cursor fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️group-cursor.json")).expect("group cursor fixture");
     let mut cursor: ArtifactCursor = serde_json::from_value(fixture["before"].clone()).expect("independent old cursor");
     let next: ArtifactCursorOwners = serde_json::from_value(fixture["after"].clone()).expect("independent next cursor");
     let mut owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
@@ -3541,7 +3624,7 @@ async fn retained_group_cursor_shares_history_visibility_and_retires_displaced_r
 
 #[semio_framework_async_macros::async_test]
 async fn retained_group_cursor_empty_base_and_dropped_publisher_return_every_staged_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎯️group-cursor.json")).expect("group cursor fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️group-cursor.json")).expect("group cursor fixture");
     let mut cursor = ArtifactCursor::default();
     let mut history = ArtifactHistoryLedger::<String>::new();
     let owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
@@ -3574,7 +3657,7 @@ async fn retained_group_cursor_empty_base_and_dropped_publisher_return_every_sta
 
 #[semio_framework_async_macros::async_test]
 async fn canonical_runtime_seed_retains_duplicate_owners_and_preflights_before_building() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🌱️runtime-seed.json")).expect("runtime seed fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌱️runtime-seed.json")).expect("runtime seed fixture");
     let ids: Vec<MutationId> = serde_json::from_value::<Vec<String>>(fixture["identities"].clone()).expect("fixture identities").into_iter().map(MutationId).collect();
     let expected: Vec<String> = serde_json::from_value(fixture["applied"].clone()).expect("independent fixture applied identities");
     let retired: Vec<String> = serde_json::from_value(fixture["retired"].clone()).expect("independent fixture duplicate identities");

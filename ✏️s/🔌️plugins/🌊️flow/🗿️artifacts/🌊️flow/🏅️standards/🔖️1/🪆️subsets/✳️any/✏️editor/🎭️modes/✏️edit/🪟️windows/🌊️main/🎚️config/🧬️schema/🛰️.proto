@@ -1,0 +1,14 @@
+syntax = "proto3";
+package semio.s.flow.flow.main_window_config;
+message FlowMainWindowCamera { double x = 1; double y = 2; double zoom = 3; }
+message FlowMainWindowConfig {
+  repeated string preview_off_node_ids = 1;
+  FlowMainWindowCamera camera = 2;
+  string lod_mode = 3;
+  double proximity_distance = 4;
+  bool grid_visible = 5;
+  bool grid_snap_enabled = 6;
+  double grid_factor = 7;
+  string catalogue_sections_json = 8;
+  string automation_enabled_json = 9;
+}

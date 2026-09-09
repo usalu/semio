@@ -77,17 +77,17 @@ pub fn compute_playbook_topology(steps: &[PlaybookStep]) -> PlaybookTopology {
         }
     }
 
-    topological_sort(nodes, edges)
+    topological_sort(&nodes, &edges)
 }
 
 /// 🧮️ Kahn's algorithm: a stable (declaration-order-first) topological sort that also yields each
 /// node's longest-path depth from a root, and reports `cycleFree = false` when the queue drains
 /// before every node is visited (the unvisited remainder is exactly the cyclic subgraph).
-fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> PlaybookTopology {
+fn topological_sort(nodes: &[String], edges: &[(String, String)]) -> PlaybookTopology {
     let node_count = nodes.len() as u32;
     let mut indegree: HashMap<String, u32> = nodes.iter().map(|id| (id.clone(), 0)).collect();
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
-    for (from, to) in &edges {
+    for (from, to) in edges {
         if indegree.contains_key(from) && indegree.contains_key(to) {
             *indegree.get_mut(to).expect("checked above") += 1;
             adjacency.entry(from.clone()).or_default().push(to.clone());
@@ -96,7 +96,7 @@ fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> Playboo
 
     let mut depth: BTreeMap<String, u32> = BTreeMap::new();
     let mut queue: VecDeque<String> = VecDeque::new();
-    for id in &nodes {
+    for id in nodes {
         if indegree.get(id).copied().unwrap_or(0) == 0 {
             depth.insert(id.clone(), 0);
             queue.push_back(id.clone());

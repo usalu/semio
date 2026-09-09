@@ -526,8 +526,15 @@ pub enum Effect {
         #[value(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
     },
-    /// @emoji 🔁️ Asks the shell to invoke an extension capability — the SDK resumes the awaiting
-    /// future on `Event::Completed { req, .. }` instead of a `response_action` redispatch.
+    /// @emoji 🔁️ Asks the shell to invoke an extension capability. `req` is MINTED by the guest
+    /// request registry (`semio-framework-plugin`'s `RequestRegistry`) and is meaningless — a
+    /// silently discarded result — when it is written by hand: `Event::Completed { req, .. }` is
+    /// routed exclusively through that registry, and an id with no registry slot resolves nothing.
+    /// The variant is therefore `#[non_exhaustive]`: no crate outside this one can write the struct
+    /// literal, and the only in-repo constructor is [`Effect::invoke_extension`], called from the
+    /// three registry/host lift sites that legitimately own a minted id. Application code reaches
+    /// this effect exclusively through `Emit::extension_invocations`.
+    #[non_exhaustive]
     InvokeExtension {
         req: RequestId,
         extension_id: String,
@@ -674,6 +681,16 @@ pub enum Effect {
     RequestInferenceProposal {
         kind: InferenceProposalKind,
     },
+}
+
+impl Effect {
+    /// 🔁️ The single constructor for the `#[non_exhaustive]` [`Effect::InvokeExtension`] variant —
+    /// `req` MUST come from the guest `RequestRegistry` (`RequestRegistry::request_continuation`)
+    /// or from a host-side WIT lift of an id the guest already minted. Hand-written ids resolve
+    /// nothing, which is exactly the foot-gun the variant's `#[non_exhaustive]` closes.
+    pub fn invoke_extension(req: RequestId, extension_id: String, capability: String, request_json: String) -> Self {
+        Self::InvokeExtension { req, extension_id, capability, request_json }
+    }
 }
 
 /// 💡️ The closed set of host-owned inference proposals a program may ask its shell to open. It is

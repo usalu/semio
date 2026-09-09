@@ -18,7 +18,7 @@ pub struct UpdateGenerationValues {
 
 pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let args = dsl::DslValue::object([
-        ("generationId".into(), payload.generation_id.clone().map(dsl::DslValue::String).unwrap_or(dsl::DslValue::Null)),
+        ("generationId".into(), payload.generation_id.clone().map_or(dsl::DslValue::Null, dsl::DslValue::String)),
         ("questionId".into(), dsl::DslValue::String(payload.question_id.clone())),
         ("value".into(), payload.value.clone()),
     ]);

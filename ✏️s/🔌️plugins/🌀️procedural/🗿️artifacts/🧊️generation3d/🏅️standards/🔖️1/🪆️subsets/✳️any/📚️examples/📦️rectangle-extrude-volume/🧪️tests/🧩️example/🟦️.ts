@@ -1,10 +1,28 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "bun:test";
+import { assertExpectedBoundingBox, assertExpectedPerimeter, assertExpectedVolume, assertFixtureContract, assertOpChainDeclared, loadExample, simpson, sliders } from "../../../🧪️tests/🧩️geometry/🟦️.ts";
+
 const here = dirname(fileURLToPath(import.meta.url));
+const { dsl, fixture } = loadExample(here, "📦️rectangle-extrude-volume", "rectangle-extrude-volume");
+const knob = sliders(dsl);
+
 describe("rectangle-extrude-volume", () => {
   it("ships primary asset", () => {
-    expect(readFileSync(join(here, "../../🖼️assets/📦️rectangle-extrude-volume/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
+    expect(dsl.length).toBeGreaterThan(8);
+  });
+
+  it("commits a well-formed expected-geometry fixture", () => {
+    assertFixtureContract(fixture, "rectangle-extrude-volume");
+  });
+
+  it("declares exactly the op chain its dsl wires", () => {
+    assertOpChainDeclared(dsl, fixture);
+  });
+
+  it("recomputes the committed prism volume and extent from the dsl sliders", () => {
+    assertExpectedVolume(fixture, knob.width * knob.height * knob.distance);
+    assertExpectedBoundingBox(fixture, [0, 0, 0], [knob.width, knob.height, knob.distance]);
+    expect(fixture.expect.kernelVolumeNode).toBe("volume");
   });
 });

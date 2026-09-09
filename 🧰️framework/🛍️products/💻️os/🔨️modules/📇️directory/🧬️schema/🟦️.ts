@@ -577,17 +577,77 @@ function directoryCommandRequestId(value: unknown): string {
   return value;
 }
 
-function directoryCommandCanonicalCommand(value: unknown): DirectoryCommand {
+/** 🧭 Reconstructs one closed command in declaration order after an order-independent carrier. */
+export function canonicalDirectoryCommandV1(value: unknown): DirectoryCommand {
   const command = directoryEventPageObject(value, ["kind"], Object.values(DIRECTORY_COMMAND_FIELDS).flat());
   const fields = typeof command.kind === "string" ? DIRECTORY_COMMAND_FIELDS[command.kind] : undefined;
   if (!fields) throw new Error("directory-command.invalid-kind");
   directoryEventPageObject(command, fields);
   const canonical: Record<string, unknown> = {};
   for (const field of fields) canonical[field] = command[field];
-  if (JSON.stringify(canonical) !== JSON.stringify(command)) throw new Error("directory-command.noncanonical-command");
-  if (command.kind === "create-invite") directoryEventPageInteger(command.ttlSecs, true);
   if (directoryEventPageHasControl(command)) throw new Error("directory-command.control-character");
+  const text = (field: string): string => {
+    const value = command[field];
+    if (typeof value !== "string") throw new Error(`directory-command.invalid-${field}`);
+    return value;
+  };
+  const role = (value: unknown): DirectorySpaceRole => {
+    if (value !== "author" && value !== "spectator") throw new Error("directory-command.invalid-role");
+    return value;
+  };
+  const visibility = (value: unknown): DirectorySpaceVisibility => {
+    if (value !== "private" && value !== "public") throw new Error("directory-command.invalid-visibility");
+    return value;
+  };
+  switch (command.kind) {
+    case "create-space":
+      text("name");
+      if (command.spaceKind !== "atelier" && command.spaceKind !== "studio" && command.spaceKind !== "archive") throw new Error("directory-command.invalid-space-kind");
+      visibility(command.visibility);
+      break;
+    case "rename-space": text("spaceId"); text("name"); break;
+    case "set-visibility": text("spaceId"); visibility(command.visibility); break;
+    case "archive-space":
+    case "delete-space": text("spaceId"); break;
+    case "upsert-member": text("spaceId"); text("email"); role(command.role); break;
+    case "remove-member": text("spaceId"); text("userId"); break;
+    case "create-invite": text("spaceId"); role(command.role); directoryEventPageInteger(command.ttlSecs, true); break;
+    case "revoke-invite": text("spaceId"); text("inviteId"); break;
+    case "announce-document": {
+      directoryEventPageNestedShapes({ kind: "document.announced", descriptor: command.descriptor });
+      const descriptor = command.descriptor as Record<string, unknown>;
+      const owner = descriptor.owner as Record<string, unknown>;
+      const frontier = descriptor.bootstrapFrontier as Record<string, unknown>;
+      for (const [field, candidate] of [
+        ["spaceId", descriptor.spaceId], ["documentId", descriptor.documentId], ["artifactKind", descriptor.artifactKind], ["artifactSchema", descriptor.artifactSchema],
+        ["owner.pluginId", owner.pluginId], ["owner.packageId", owner.packageId], ["owner.version", owner.version],
+      ] as const) if (typeof candidate !== "string" || candidate.trim().length === 0) throw new Error(`directory-command.invalid-${field}`);
+      for (const [field, candidate] of [["owner.packageHash", owner.packageHash], ["packSchemaHash", descriptor.packSchemaHash], ["bootstrapSnapshotHash", descriptor.bootstrapSnapshotHash]] as const) {
+        if (typeof candidate !== "string" || !/^(?!0{64}$)[0-9a-f]{64}$/u.test(candidate)) throw new Error(`directory-command.invalid-${field}`);
+      }
+      if ((frontier.commitSeq as number) > (frontier.headSeq as number)) throw new Error("directory-command.invalid-bootstrap-frontier");
+      canonical.descriptor = {
+        spaceId: descriptor.spaceId,
+        documentId: descriptor.documentId,
+        artifactKind: descriptor.artifactKind,
+        artifactSchema: descriptor.artifactSchema,
+        owner: { pluginId: owner.pluginId, packageId: owner.packageId, version: owner.version, packageHash: owner.packageHash },
+        packSchemaHash: descriptor.packSchemaHash,
+        bootstrapVersion: descriptor.bootstrapVersion,
+        bootstrapFrontier: { headSeq: frontier.headSeq, commitSeq: frontier.commitSeq, epoch: frontier.epoch },
+        bootstrapSnapshotHash: descriptor.bootstrapSnapshotHash,
+      };
+      break;
+    }
+  }
   return canonical as unknown as DirectoryCommand;
+}
+
+/** 🛡️ Decodes one declaration-ordered canonical command and validates every scalar. */
+export function parseDirectoryCommandV1(value: unknown): DirectoryCommand {
+  const canonical = canonicalDirectoryCommandV1(value);
+  if (JSON.stringify(canonical) !== JSON.stringify(value)) throw new Error("directory-command.noncanonical-command");
+  return canonical;
 }
 
 function directoryCommandCanonicalResult(value: unknown): DirectoryCommandResultV1 {
@@ -610,7 +670,7 @@ export async function directoryCommandSha256(command: DirectoryCommand): Promise
 
 /** 🆕️ Seals one request around an already-minted correlation id. */
 export function sealDirectoryCommandRequestV1(requestId: string, command: DirectoryCommand): DirectoryCommandRequestV1 {
-  return { schema: "semio.directory.command-request.v1", requestId: directoryCommandRequestId(requestId), command: directoryCommandCanonicalCommand(command) };
+  return { schema: "semio.directory.command-request.v1", requestId: directoryCommandRequestId(requestId), command: parseDirectoryCommandV1(command) };
 }
 
 /** 🧾️ Returns the canonical UTF-8 JSON both peers hash and count bytes over. */
@@ -626,7 +686,7 @@ export function parseDirectoryCommandRequestV1(source: string): DirectoryCommand
   if (new TextEncoder().encode(source).length > DIRECTORY_COMMAND_REQUEST_MAX_BYTES) throw new Error("directory-command.request-too-large");
   const object = directoryEventPageObject(JSON.parse(source), ["schema", "requestId", "command"]);
   if (object.schema !== "semio.directory.command-request.v1") throw new Error("directory-command.invalid-envelope");
-  const request: DirectoryCommandRequestV1 = { schema: object.schema, requestId: directoryCommandRequestId(object.requestId), command: directoryCommandCanonicalCommand(object.command) };
+  const request: DirectoryCommandRequestV1 = { schema: object.schema, requestId: directoryCommandRequestId(object.requestId), command: parseDirectoryCommandV1(object.command) };
   if (JSON.stringify(request) !== source) throw new Error("directory-command.noncanonical");
   return request;
 }
@@ -902,6 +962,24 @@ export type DirectorySpaceAdministrationPageV1 =
       capabilities: DirectorySpaceAdministrationCapabilitiesV1;
       receiptSha256: string;
     };
+
+/** 🛂️ Binds an administration command to its verified page and declared capability, before sealing. */
+export function directoryAdministrationCommandAllowedV1(page: DirectorySpaceAdministrationPageV1 | null, spaceId: string, command: unknown): boolean {
+  if (page?.access !== "author" || page.spaceId !== spaceId || page.space.id !== spaceId) return false;
+  let canonical: DirectoryCommand;
+  try { canonical = parseDirectoryCommandV1(command); } catch { return false; }
+  if (!("spaceId" in canonical) || canonical.spaceId !== spaceId) return false;
+  switch (canonical.kind) {
+    case "rename-space": return page.capabilities.renameSpace === true;
+    case "set-visibility": return page.capabilities.setVisibility === true;
+    case "delete-space": return page.capabilities.deleteSpace === true;
+    case "upsert-member": return page.capabilities.upsertMember === true;
+    case "remove-member": return page.capabilities.removeMember === true;
+    case "create-invite": return page.capabilities.createInvite === true;
+    case "revoke-invite": return page.capabilities.revokeInvite === true;
+    default: return false;
+  }
+}
 
 function administrationObject(value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("space-administration-page.invalid-object");

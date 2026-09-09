@@ -21,3 +21,7 @@ A coordinator read-only `rg` census of CreateVertex/CreateEdge/CreateFace and Br
 ## Current TypeScript Package Acceptance
 
 The ordinary current `@semio-tech/stdio-semio:check` and `:test` targets both exited 0 after the BREP schema mirrors settled. Check took 9.3 seconds; test rebuilt three package outputs and verified its single public export in 9.8 seconds. These are TypeScript/package receipts, not native BREP law acceptance. The later independent audit requested additional neutral inverse/parser coverage; that follow-up is active and does not invalidate this result unless the TS API changes. Raw receipts: `🗑️generated/stdio-semio-ts-final-check.txt`, `🗑️generated/stdio-semio-ts-final-test.txt` and `🗑️generated/stdio-semio-ts-final.tsv`.
+
+## Consolidated Current Native Acceptance
+
+The failed defaults invocation executed zero tests because a Text fixture module omitted the moved tests directory. The executor repaired Text, Table and Kit fixture routers, then resolved all3,546 literal compile-time paths across1,613 Semio Rust sources with zero missing or dynamic references. A single ordinary Nx full-library run with fail-fast disabled is now active, using the shared ticket Cargo target and private Nx state. Its result will include the repaired defaults, Document/Drawing laws, all BREP tolerance laws and the current complete failure census. This supersedes the prepared separate focused BREP rerun and avoids duplicate compilation. Raw receipt: 🗑️generated/stdio-semio-full-final-recovery.txt.

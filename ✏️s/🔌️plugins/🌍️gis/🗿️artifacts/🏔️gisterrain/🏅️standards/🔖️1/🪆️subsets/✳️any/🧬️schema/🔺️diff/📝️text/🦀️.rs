@@ -13,19 +13,7 @@ use protocol::MutationDiff;
 impl GisTerrainDiff {
     /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> protocol::MutationApplyResult<GisTerrainArtifact> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok((**replacement).clone());
-            }
-            let mut next = artifact.clone();
-            if let Some(value) = self.exaggeration {
-                next.exaggeration = value;
-            }
-            if let Some(value) = &self.imported_features_json {
-                next.imported_features_json = value.clone();
-            }
-            next
-        })
+        self.apply(&artifact.to_snapshot()).map(GisTerrainArtifact::from_snapshot)
     }
 }
 
@@ -42,9 +30,6 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
             if let Some(value) = &self.imported_features_json {
                 next.imported_features_json = value.clone();
             }
-            // 🕸️ Keep `mesh` a pure function of the two fields above — mirrors
-            // `apply_gis_terrain_mutation`'s identical re-derivation (see `GisTerrainSnapshot.mesh`'s doc).
-            next = crate::gis_terrain_snapshot_with_derived_mesh(next);
             next
         })
     }

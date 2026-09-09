@@ -291,6 +291,7 @@ fn block3d_retained_extent(command: &Block3dCommand, snapshot: &Block3dSnapshot,
     (items <= BLOCK3D_RETAINED_WORK_ITEMS).then_some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
 fn block3d_retained_reduce(
     command: &Block3dCommand,
     snapshot: &Block3dSnapshot,

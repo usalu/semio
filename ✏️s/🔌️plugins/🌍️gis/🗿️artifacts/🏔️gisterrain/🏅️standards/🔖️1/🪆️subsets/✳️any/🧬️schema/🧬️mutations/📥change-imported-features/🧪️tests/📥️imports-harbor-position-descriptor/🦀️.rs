@@ -1,26 +1,8 @@
-//! 🧪️ `change-imported-features` fixture — `📥️imports-harbor-position-descriptor`.
-//!
-//! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
-//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
-//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`, never here.
-//!
-//! 📥️ `change-imported-features` is the `map:in` insertion point: it replaces the last-imported `2d.map`
-//! descriptor as an OPAQUE STRING — the terrain never parses it here, so the field is swapped whole, from the
-//! literal `"null"` to a real descriptor document. Its diff leaves `exaggeration` `None`, and its inverse is
-//! BASE-derived: the prior string.
-//!
-//! 🕸️ `GisTerrainSnapshot` carries one DERIVED composed child, `mesh`, whose `child_id` is a
-//! `std::collections::hash_map::DefaultHasher` digest of
-//! `gis_terrain_mesh_content_key(exaggeration, imported_features_json)` — the terrain's only two
-//! persisted fields, so EVERY verb in this vocabulary re-mints it. `std` leaves that digest
-//! deliberately unspecified, so it is never frozen into a fixture file: both committed snapshots
-//! carry the readable placeholder `gisterrain-mesh-derived`, and `before()`/`expected_after()`
-//! re-mint it through gis's own `gis_terrain_snapshot_with_derived_mesh` — the identical call
-//! `apply_gis_terrain_mutation` and `GisTerrainDiff::apply` each make after every edit.
+//! 🪪️ Committed Terrain mutation vectors preserve exact owned mesh identity.
 
 use crate::diff::GisTerrainDiff;
 use crate::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation, GisTerrainMutation};
-use crate::{gis_terrain_snapshot_with_derived_mesh, GisTerrainSnapshot};
+use crate::GisTerrainSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports-harbor-position-descriptor/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports-harbor-position-descriptor/📸️snapshot/➡️after/🔣️.json");
@@ -28,33 +10,30 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports-harbor-position-descriptor/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports-harbor-position-descriptor/🎯️outcome/🔣️.json");
 
-/// 🏔️ The committed `⬅️before`, with its DERIVED mesh handle minted by the artifact's own
-/// composition funnel (see this file's module doc) rather than read from the placeholder JSON.
+/// 🪆️ Verifies the declared parent edit while retaining the committed mesh handle.
 fn before() -> GisTerrainSnapshot {
-    gis_terrain_snapshot_with_derived_mesh(dsl::json::from_json_str(BEFORE).expect("before snapshot decodes"))
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
-/// 🏔️ The committed `➡️after`, funnelled through the identical derivation.
+/// 🪆️ Verifies the declared parent edit while retaining the committed mesh handle.
 fn expected_after() -> GisTerrainSnapshot {
-    gis_terrain_snapshot_with_derived_mesh(dsl::json::from_json_str(AFTER).expect("after snapshot decodes"))
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> GisTerrainMutation {
     dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
-/// ▶️ `change-imported-features` carries `before` to exactly the committed `after`, and — because the field it
-/// edits is half of the mesh child's content key — re-mints the composed `mesh` handle.
+/// 🪆️ Verifies the declared parent edit while retaining the committed mesh handle.
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let base = before();
     let mut snapshot = base.clone();
     apply_gis_terrain_mutation(&mut snapshot, &mutation()).expect("change-imported-features applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-imported-features/imports-harbor-position-descriptor: applied state differs from committed after-snapshot");
-    assert_ne!(snapshot.mesh, base.mesh, "change-imported-features/imports-harbor-position-descriptor: editing a content-key field must re-mint the derived mesh handle");
+    assert_eq!(snapshot.mesh, base.mesh, "parent scalar edits preserve owned mesh identity");
     assert!(snapshot.mesh.is_some(), "change-imported-features/imports-harbor-position-descriptor: the terrain always owns a mesh child — the slot is never emptied by an edit");
 }
 
-/// ↩️ Applying `change-imported-features` then its inverse restores `before` exactly — including the derived mesh
-/// handle, which converges again only because both content-key fields did.
+/// 🪆️ Verifies the declared parent edit while retaining the committed mesh handle.
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();
@@ -115,9 +94,7 @@ async fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "change-imported-features/imports-harbor-position-descriptor: committed diff JSON is not canonical");
 }
 
-/// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is
-/// a complete description of the change, not a summary of it. `GisTerrainDiff::apply` re-derives
-/// the composed mesh itself, exactly as `apply_gis_terrain_mutation` does.
+/// 🪆️ Verifies the declared parent edit while retaining the committed mesh handle.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: GisTerrainDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
@@ -125,10 +102,7 @@ async fn committed_diff_applies_to_after() {
     assert_eq!(produced, expected_after(), "change-imported-features/imports-harbor-position-descriptor: committed diff did not carry before to after");
 }
 
-/// 📥️ `change-imported-features` is the `map:in` insertion point: it replaces the last-imported `2d.map`
-/// descriptor as an OPAQUE STRING — the terrain never parses it here, so the field is swapped whole, from the
-/// literal `"null"` to a real descriptor document. Its diff leaves `exaggeration` `None`, and its inverse is
-/// BASE-derived: the prior string.
+/// 🪆️ Verifies the declared parent edit while retaining the committed mesh handle.
 #[semio_framework_async_macros::async_test]
 async fn changes_only_the_imported_descriptor_string_and_inverts_to_the_base_string() {
     let base = before();

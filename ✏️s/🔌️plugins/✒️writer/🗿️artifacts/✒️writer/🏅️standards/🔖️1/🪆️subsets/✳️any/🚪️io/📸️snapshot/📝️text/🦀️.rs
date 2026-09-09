@@ -114,7 +114,7 @@ pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️
 pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🧪️dag-example/🗣️.dsl.semio");
 
 /// ✍️ The `jack`/`dag.jack` examples' real query text. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`:
-/// `WriterSnapshot::document` is a composed `s.stdio.semio.document` CHILD HANDLE now, so
+/// `WriterSnapshot::document` is a composed `s.stdio.semio`/`document` CHILD HANDLE now, so
 /// `JACK_EXAMPLE_TEXT`/`DAG_JACK_EXAMPLE_TEXT` themselves only carry the opaque
 /// `document=[childId,target]` pair (content-addressed, matching every other composed-child DSL
 /// fixture in this ticket — cad's `shapeModel=`/lowpoly's `mesh=` lines are equally opaque). These

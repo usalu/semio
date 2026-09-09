@@ -11,7 +11,7 @@ async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production
             for cancel in [None, Some(0), Some(131), Some(5001)] {
                 let scene = super::super::recipe::tests::source(&label);
                 let content = crate::flow_content_child_handle_and_cache(scene.widgets, scene.synapses, scene.layout);
-                let initial = FlowSnapshot { schema: "flow".into(), camera: semio_framework_artifact_flow_flow::CameraJson::default(), content };
+                let initial = FlowSnapshot { schema: "flow".into(), content };
                 let initial_scene = initial.content.local_owner::<FlowWorkingScene>().unwrap();
                 let baseline = serde_json::Value::from(dsl::ToValue::to_value(&*initial_scene));
                 drop(initial_scene);

@@ -13,6 +13,7 @@
     "request": {
       "schema": "semio.hub.space-artifact-create/v1",
       "requestId": "11223344556677889900aabbccddeeff",
+      "expectedCatalogGenerationId": "6666666666666666666666666666666666666666666666666666666666666666",
       "kindId": "s.gis.map",
       "name": "New Map"
     },
@@ -30,7 +31,7 @@
       "standard": "1",
       "subset": "any"
     },
-    "commandSha256": "b092ed4523d12ce0239da1346831df3deb48dd8f8ef7e6b99d63316ba3e419e3",
+    "commandSha256": "582b559a44127864370e854b3c8a33e0d31e27bb40668739b982b8a8b7eccdf2",
     "acceptedAtMs": 1000,
     "deadlineMs": 31000
   },

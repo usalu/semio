@@ -237,3 +237,11 @@ bun x nx run workspace:norm-document-contract --output-style=stream --skip-nx-ca
 ```
 
 Result: session `79144` exited 0. The independent oracle matched EN 1990's 20 native snapshots and 6 committed diffs, DIN 18599's 26 native snapshots and 12 committed diffs, and both domains' independent owner/child rejection vectors. Nx completed the target in 7.3 seconds. Durable log: `🗑️generated/norm-document-contract-final-2.txt`.
+
+## Taxonomy router recovery
+
+The current Norm source inventory exposed 23 moved fixture modules whose `#[path]` registrations still skipped the committed `🧪️tests` directory. The exact repair updates six aggregate fixture routers: EN 1991 (2 registrations), EN 1994 (3), EN 1995 (2), EN 1997 (3), EN 1998 (9), and EN 1999 (4). Every registration now resolves to its existing case source; no fixture body or expectation changed.
+
+A post-repair read-only census parsed all literal `#[path]`, `include_str!`, and `include_bytes!` references below the Norm source root. It resolved 7,312 references with zero missing targets. The durable receipt is `🗑️generated/norm-rust-literal-path-census-after-repair.txt`; the pre-repair failure inventory is retained in `🗑️generated/norm-rust-path-census-before-repair.txt`. Exact-file rustfmt and scoped diff checks passed for the six routers.
+
+The independent surface inventory also passes on the current tree: 15 variants, 30 apps, 120 declared bodies, AJV validation, and five hostile vectors. Receipt: `🗑️generated/norm-surface-render-source-final-2.txt`. Native surface execution and the focused two-row report identity law remain pending the serialized Cargo queue; no native pass is inferred from these source checks.

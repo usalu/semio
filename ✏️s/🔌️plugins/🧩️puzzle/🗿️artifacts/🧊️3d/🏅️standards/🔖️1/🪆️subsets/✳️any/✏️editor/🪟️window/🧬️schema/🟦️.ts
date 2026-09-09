@@ -60,6 +60,7 @@ export interface Puzzle3dWindowConfig {
   transformRotate: boolean;
   vortexShow: string;
   vortexDirection: string;
+  selectionMethod: "pick" | "rectangle" | "lasso";
   sun: WorldSunConfig;
   camera: Puzzle3dCamera;
 }
@@ -68,4 +69,6 @@ export interface Puzzle3dWindowTransient {
   suggestionMenu?: Puzzle3dSuggestionMenu | null;
   engagementInput: string;
   brushCandidateIndex: number;
+  /** The host activation (active tool, else the window's active utility) this scratch was captured under; scratch whose activation has moved on is never read back. */
+  activation: string;
 }

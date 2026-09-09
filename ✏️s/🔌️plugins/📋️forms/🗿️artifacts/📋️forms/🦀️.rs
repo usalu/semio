@@ -36,29 +36,7 @@ pub use crate::schema::snapshot::FormsSnapshot;
 //#endregion 🔖️Types
 
 //#region 🔖️Composition
-/// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`forms→C:value,table`): the document's
-/// `steps: Vec<FormStep>` tree (each step's id-keyed `blocks`, each block a `FormQuestion` with
-/// 15+ optional config fields plus a recursive `condition` expression tree) is no longer an inline
-/// `FormsSnapshot` field — it composes stdio's `s.stdio.semio.value`/`table` subsets as two fixed
-/// child slots (`structure`/`results`). `structure` (`value`) is the LOSSLESS source of truth: the
-/// full step/block tree folded into one structured `SemioValue::Map`, honestly reflecting that a
-/// form question's config (`default`/`params`/`condition`/`options`/`fields`) is exactly
-/// "structured/computed values," not prose or a flat table. `results` (`table`) is a DERIVED,
-/// non-reconstructive projection — one row per block, flattened in step order (`id`/`stepId`/
-/// `label`/`kind`/`required`) — for tabular scan/display convenience; it is always regenerated
-/// alongside `structure` from the SAME steps (never an independent source), so the two never
-/// diverge. Reconstruction (`forms_steps_from_structure`) reads `structure` only.
-///
-/// Per this ticket's own corrected precedent (norm/mathematical round 2): composing these two
-/// children does NOT regress this plugin's already-granular per-field mutation triads
-/// (`create-step`/`delete-step`/`reorder-step`/`rename-step`/`change-step-description`/
-/// `create-block`/`delete-block`/`move-block-to-step`/`replace-block`/`change-form-title`) into a
-/// whole-blob replace. Every triad's mutation PAYLOAD shape is untouched; `FormsStepsDelta`/
-/// `FormsStepPatch` (`🔺️diff/🦀️.rs`) stay the id-keyed sparse delta types they always
-/// were, applied via `apply_steps_delta` against the WORKING-SCENE steps (`forms_steps`, not a
-/// snapshot field) — only the diff's own OUTER wire representation of "what changed" becomes a
-/// pair of regenerated content-addressed child handles, exactly like every other composed plugin.
-
+/// 🧩️ Owns the form's complete step and question structure; results are a derived table projection.
 //#region 🔖️ChildTypes
 pub type FormsStructureChild = store::ArtifactChild<SemioValueSnapshot>;
 pub type FormsResultsChild = store::ArtifactChild<SemioTableSnapshot>;
@@ -148,7 +126,7 @@ fn semio_value_from_expr(expr: &FormExpr) -> SemioValue {
 fn expr_from_semio_value(value: &SemioValue) -> Option<FormExpr> {
     let kind = semio_str(semio_value_map_get(value, "kind"))?;
     match kind.as_str() {
-        "const" => Some(FormExpr::Const { value: semio_value_map_get(value, "value").map(dsl_from_semio_value).unwrap_or(dsl::DslValue::Null) }),
+        "const" => Some(FormExpr::Const { value: semio_value_map_get(value, "value").map_or(dsl::DslValue::Null, dsl_from_semio_value) }),
         "var" => Some(FormExpr::Var { name: semio_str(semio_value_map_get(value, "name")).unwrap_or_default() }),
         "eq" => {
             let left = expr_from_semio_value(semio_value_map_get(value, "left")?)?;
@@ -422,8 +400,8 @@ pub fn forms_artifact_steps(artifact: &schema::FormsArtifact) -> Vec<FormStep> {
 
 /// 🏗️ Builds a full `FormsSnapshot` from a literal `steps` tree — the standard fixture/import
 /// constructor replacing the old struct literal with an inline `steps: Vec<FormStep>` field.
-pub fn forms_snapshot_with_state(schema: String, id: String, version: String, title: Option<String>, steps: Vec<FormStep>) -> FormsSnapshot {
-    let (structure, results) = forms_children_from_steps(&steps);
+pub fn forms_snapshot_with_state(schema: String, id: String, version: String, title: Option<String>, steps: &[FormStep]) -> FormsSnapshot {
+    let (structure, results) = forms_children_from_steps(steps);
     FormsSnapshot { schema, id, version, title, structure, results }
 }
 //#endregion 🔖️WorkingScene
@@ -465,7 +443,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `.semio` assets themselves are untouched and still compiled into their own facet files.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    type CapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
+    let rows: &[CapabilityRow<'_>] = &[
         ("s.forms.forms.standard.v1", "standard", "1", &[], None),
         ("s.forms.forms.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.forms.forms.schema.artifact", "schema", "s.forms.forms", &[("schema", "s.forms.forms")], None),

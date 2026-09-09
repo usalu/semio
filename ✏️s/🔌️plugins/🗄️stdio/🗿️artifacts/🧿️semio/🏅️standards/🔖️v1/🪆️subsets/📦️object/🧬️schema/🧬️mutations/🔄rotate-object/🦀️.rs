@@ -7,6 +7,7 @@ use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(deny_unknown_fields)]
 pub struct RotateObject {
     pub rotation: SemioQuaternion,
 }

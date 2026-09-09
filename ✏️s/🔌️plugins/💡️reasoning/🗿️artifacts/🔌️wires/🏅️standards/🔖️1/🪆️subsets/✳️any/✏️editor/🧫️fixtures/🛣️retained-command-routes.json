@@ -63,6 +63,12 @@
         "window-transient"
       ],
       "reason": "Release scans the current target, rebases the frozen total delta, and atomically publishes one durable move with the exact-window clear."
+    },
+    {
+      "id": "nodeGraphViewport",
+      "disposition": "batch-only-pending-rewrite",
+      "lanes": [],
+      "reason": "The viewport routes synchronously to the exact canvas WindowConfig owner pending a retained scalar command cursor."
     }
   ]
 }

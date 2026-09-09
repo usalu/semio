@@ -23,6 +23,11 @@ use std::task::{Context, Poll, Waker};
 enum Slot {
     Pending { waker: Option<Waker>, partial: Vec<u8> },
     Ready { result: Result<Vec<u8>, Fault> },
+    /// 🔁️ A REDISPATCH slot instead of a parked future: no `Waker`, no `RequestFuture`, no task.
+    /// `Event::Completed { req, .. }` for this id is answered by dispatching `response_action` back
+    /// into the owning app instance with the outcome, not by waking anything — see
+    /// `RequestRegistry::request_continuation`.
+    Continuation { response_action: String, request_json: String },
 }
 
 const REQUEST_SLOTS: usize = 1_024;
@@ -159,6 +164,15 @@ impl Default for RequestRegistry {
     }
 }
 
+/// 🔁️ What `RequestRegistry::take_continuation` hands back: the app instance that asked for the
+/// extension invocation, the app command its outcome must be dispatched into, and the request
+/// object that was sent (the app's only correlation handle).
+pub struct ExtensionContinuation {
+    pub instance: u32,
+    pub response_action: String,
+    pub request_json: String,
+}
+
 pub struct RequestCloseCursor {
     instance: u32,
     index: usize,
@@ -201,6 +215,50 @@ impl RequestRegistry {
         inner.insert_admitted(SlotEntry { id: raw, instance: self.instance, value: Slot::Pending { waker: None, partial: Vec::new() } });
         inner.outbound.push_back((self.instance, effect));
         RequestFuture { registry: self.inner.clone(), id: raw, admission_failed: false }
+    }
+
+    /// 🔁️ The REDISPATCH twin of [`RequestRegistry::request`]: allocates a `RequestId` from the
+    /// SAME counter (so a continuation id can never collide with a parked future's), calls
+    /// `build(id)` to construct the effect, queues it for the next `turn-result.effects` drain, and
+    /// records `response_action`/`request_json` against the id instead of parking a future.
+    ///
+    /// 🎯️ Why this exists rather than `request(..).await` inside a guest task: `ArtifactApp::handle`
+    /// is a pure synchronous reducer and the `AsyncTask` lane it would need is fail-closed
+    /// (`dispatch_emit` rejects a non-empty `Emit::tasks`), so a plugin has no place to hold a
+    /// `RequestFuture` across turns. The continuation carries the SAME semantics — one effect out,
+    /// one `Event::Completed` back, exactly once — with the resumption expressed as a follow-up
+    /// dispatch (Elm's Msg-from-Cmd) instead of a parked waker.
+    ///
+    /// `request_json` is retained because it is the ONLY correlation the app gets: the response
+    /// action is dispatched with the original request object's own fields (a `nodeHash`, a handle,
+    /// an operator id) merged with the outcome — see `reactor::extension_response_args`.
+    pub fn request_continuation(&self, response_action: String, request_json: String, build: impl FnOnce(RequestId) -> Effect) -> Result<RequestId, Fault> {
+        let mut inner = self.inner.borrow_mut();
+        inner.next_id = inner.next_id.saturating_add(1);
+        let raw = inner.next_id;
+        if !inner.allocation_admitted || inner.outbound.len() >= REQUEST_OUTBOUND_SLOTS || inner.occupied(Inner::index(raw)) {
+            return Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.capacity"), "fixed request authority is saturated"));
+        }
+        let effect = build(RequestId(raw));
+        inner.insert_admitted(SlotEntry { id: raw, instance: self.instance, value: Slot::Continuation { response_action, request_json } });
+        inner.outbound.push_back((self.instance, effect));
+        Ok(RequestId(raw))
+    }
+
+    /// 🔁️ Removes and returns `id`'s continuation, if it has one. `None` for a parked-future slot,
+    /// an already-taken continuation, an unknown id, or one swept by `cancel_instance_step` — all
+    /// of which the caller answers by falling through to the ordinary `resolve` path.
+    pub fn take_continuation(&self, id: RequestId) -> Option<ExtensionContinuation> {
+        let mut inner = self.inner.borrow_mut();
+        if !matches!(inner.get(id.0).map(|entry| &entry.value), Some(Slot::Continuation { .. })) {
+            return None;
+        }
+        let entry = inner.take(id.0)?;
+        let instance = entry.instance;
+        match entry.value {
+            Slot::Continuation { response_action, request_json } => Some(ExtensionContinuation { instance, response_action, request_json }),
+            _ => None,
+        }
     }
 
     /// ✅️ Called from `poll`'s event-routing step when `Event::Completed{req, result}` (or an
@@ -357,6 +415,13 @@ impl Future for RequestFuture {
             Some(SlotEntry { instance, value: Slot::Pending { partial, .. }, .. }) => {
                 inner.insert_admitted(SlotEntry { id: self.id, instance, value: Slot::Pending { waker: Some(cx.waker().clone()), partial } });
                 Poll::Pending
+            }
+            // 🔁️ Unreachable by construction — `request_continuation` returns a bare `RequestId` and
+            // never a future, so no `RequestFuture` can name a continuation slot. Reinstated rather
+            // than consumed: taking it here would silently cancel a live redispatch someone else owns.
+            Some(entry @ SlotEntry { value: Slot::Continuation { .. }, .. }) => {
+                inner.insert_admitted(entry);
+                Poll::Ready(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.continuation"), "a redispatch continuation id can never back a parked future".to_string())))
             }
             None => Poll::Ready(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry"), "request already consumed or unknown".to_string()))),
         }

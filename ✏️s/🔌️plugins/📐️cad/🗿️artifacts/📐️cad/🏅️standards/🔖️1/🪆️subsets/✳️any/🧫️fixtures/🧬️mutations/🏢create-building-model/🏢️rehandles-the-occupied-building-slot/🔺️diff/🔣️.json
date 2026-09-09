@@ -4,7 +4,7 @@
   "id": null,
   "shapeModel": null,
   "buildingModel": {
-    "childId": "building-model-2",
+    "childId": "cad-building-2",
     "target": {
       "artifactId": "cad-building-2",
       "dialect": {
@@ -18,6 +18,5 @@
   "structureClassicModel": null,
   "drawings": null,
   "referencesByModelDefinitionId": null,
-  "nodes": null,
-  "activeModelDefinitionId": null
+  "nodes": null
 }

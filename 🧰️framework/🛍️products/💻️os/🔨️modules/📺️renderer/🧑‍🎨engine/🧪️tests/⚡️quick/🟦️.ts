@@ -11,7 +11,7 @@ import {
   resolveRequiredHostApps,
   type BootstrapUiStatus,
 } from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx";
-import hostBootstrapFixture from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🔣️.json";
+import hostBootstrapFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🪪️host-bootstrap/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import valueResidentSchema from "../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json" with { type: "json" };
 

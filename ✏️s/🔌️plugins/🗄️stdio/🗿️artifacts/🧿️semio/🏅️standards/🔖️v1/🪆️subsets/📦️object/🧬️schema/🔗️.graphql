@@ -1,8 +1,9 @@
-# 🧬️ SemioObjectArtifact schema — real facet mirror of the Rust `🦀️.rs` sibling.
+# import SemioTransform from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type SemioObjectArtifact {
   schema: String! @state(class: ARTIFACT)
-  transformWire: String! @state(class: ARTIFACT)
-  brep: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.brep")
-  mesh: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.mesh")
-  properties: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.value")
+  transform: SemioTransform! @state(class: ARTIFACT)
+  brep: ArtifactChild @state(class: ARTIFACT)
+  mesh: ArtifactChild @state(class: ARTIFACT)
+  properties: ArtifactChild @state(class: ARTIFACT)
 }

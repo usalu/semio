@@ -1,6 +1,7 @@
 //! 🔄️ 🔄️ Flow play app commands command — `reorganize`.
 
-use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::host_operations;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
@@ -14,15 +15,15 @@ pub const REORGANIZE_OPTIONS_JSON: &str = r#"{"orientation":"leftRight"}"#;
 
 /// 🔄️ The reorganize document operations, extracted so the extension action can reuse them without
 /// round-tripping through the command enum.
-pub fn reorganize_operations(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Vec<FlowMutation> {
-    host_operations(doc.snapshot, cfg.snapshot, session, |host| host.reorganize(REORGANIZE_OPTIONS_JSON).is_ok())
+pub fn reorganize_operations(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Vec<FlowMutation> {
+    host_operations(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, |host| host.reorganize(REORGANIZE_OPTIONS_JSON).is_ok())
 }
 //#endregion 🔖️Reorganize
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct Reorganize {}
 
-pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(reorganize_operations(doc, cfg, session)))
 }
 

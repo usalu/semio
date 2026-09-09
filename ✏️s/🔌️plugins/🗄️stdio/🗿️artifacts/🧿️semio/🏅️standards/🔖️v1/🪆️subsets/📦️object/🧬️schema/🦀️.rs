@@ -8,6 +8,10 @@ use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot
 use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
+#[cfg(test)]
+#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+mod document_contract;
+
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.stdio.semio.object")]
 pub struct SemioObjectArtifact {
@@ -16,13 +20,13 @@ pub struct SemioObjectArtifact {
     #[state(artifact)]
     pub transform: SemioTransform,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.brep")]
+    #[child(kind = "s.stdio.semio")]
     pub brep: Option<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.mesh")]
+    #[child(kind = "s.stdio.semio")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.value")]
+    #[child(kind = "s.stdio.semio")]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
 }
 
@@ -51,16 +55,7 @@ impl dsl::ToValue for SemioObjectArtifact {
 }
 impl dsl::FromValue for SemioObjectArtifact {
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let entries = dsl::DslValue::into_object(value)?;
-        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
-        Ok(Self {
-            schema: dsl::FromValue::from_value(field("schema")?)?,
-            transform: dsl::FromValue::from_value(field("transform")?)?,
-            brep: get("brep").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
-            mesh: get("mesh").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
-            properties: get("properties").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
-        })
+        <SemioObjectSnapshot as dsl::FromValue>::from_value(value).map(Self::from_snapshot)
     }
 }
 //#endregion 🔖️ValueCodec
@@ -141,9 +136,11 @@ pub mod derived_construction {
         }
         /// 🧱️ Attaches an owned brep CHILD handle (never embedded content).
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        pub fn with_brep(mut self, child_id: impl Into<String>, target: store::os_io::ArtifactRef) -> Self {
-            self.snapshot.brep = Some(store::ArtifactChild::new(child_id.into(), target));
-            self
+        pub fn with_brep(mut self, child_id: impl Into<String>, target: store::os_io::ArtifactRef) -> Result<Self, String> {
+            let child_id = child_id.into();
+            crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&child_id, &target, "brep")?;
+            self.snapshot.brep = Some(store::ArtifactChild::new(child_id, target));
+            Ok(self)
         }
     }
     //#endregion 🔖️TypedConstructors
@@ -173,6 +170,7 @@ pub mod derived_construction {
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            self.snapshot.validate().map_err(|message| vec![dsl::Diagnostic::error("object.document", dsl::TextSpan::at(1, 1), message)])?;
             Ok(self.snapshot)
         }
     }

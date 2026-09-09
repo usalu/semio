@@ -1,0 +1,21 @@
+{
+  "$comment": "🧊️ The one committed geometry every 🚪️io round-trip test is driven from: an axis-aligned unit cube on [0,1]³ with 8 shared vertices and 12 triangles, wound counter-clockwise when seen from outside so its signed volume is +1. Chosen because every quantity a mesh format can lose is independently checkable on it — triangle count (12), vertex count (8), bounding box ([0,0,0]..[1,1,1]) and enclosed volume (1.0) — and because 1.0 is exact in binary floating point, so no format's f32 storage introduces a tolerance of its own. Laid out exactly as the renderer's own MeshData wire form (flat f32 triples, u32 index buffer), which is what crosses the mesh bridge.",
+  "positions": [
+    0.0, 0.0, 0.0,
+    1.0, 0.0, 0.0,
+    1.0, 1.0, 0.0,
+    0.0, 1.0, 0.0,
+    0.0, 0.0, 1.0,
+    1.0, 0.0, 1.0,
+    1.0, 1.0, 1.0,
+    0.0, 1.0, 1.0
+  ],
+  "indices": [
+    0, 2, 1, 0, 3, 2,
+    4, 5, 6, 4, 6, 7,
+    0, 1, 5, 0, 5, 4,
+    1, 2, 6, 1, 6, 5,
+    2, 3, 7, 2, 7, 6,
+    3, 0, 4, 3, 4, 7
+  ]
+}

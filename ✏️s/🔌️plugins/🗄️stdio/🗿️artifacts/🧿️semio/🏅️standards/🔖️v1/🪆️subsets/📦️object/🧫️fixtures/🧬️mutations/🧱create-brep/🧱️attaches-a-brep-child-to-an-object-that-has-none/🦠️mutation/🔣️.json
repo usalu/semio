@@ -1,6 +1,6 @@
 {
   "CreateBrep": {
-    "child_id": "brep-1",
+    "child_id": "kitchen-sink-brep",
     "target": {
       "artifactId": "kitchen-sink-brep",
       "dialect": {

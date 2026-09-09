@@ -35,8 +35,8 @@ process.stdout.write(Buffer.from(bytes).toString("base64"));
 
 /** 🔏️ Uses the same native pack self-hash convention for the genuine guest descriptor. */
 export function finalizePluginDescriptor(bytes: Uint8Array, pluginId: string, wasmSha256: string, coreWasmSha256: string): { pack: Uint8Array; json: string } {
-  const descriptor = decodePackValue(bytes) as unknown as { manifest?: { pluginId?: string }; hashes?: Record<string, string> };
-  if (descriptor?.manifest?.pluginId === "assembly-failed") throw new Error("Plugin descriptor assembly failed");
+  const descriptor = decodePackValue(bytes) as unknown as { manifest?: { pluginId?: string; label?: string }; hashes?: Record<string, string> };
+  if (descriptor?.manifest?.pluginId === "assembly-failed") throw new Error(`Plugin descriptor assembly failed: ${descriptor.manifest.label ?? "no fault message"}`);
   if (descriptor?.manifest?.pluginId !== pluginId || !descriptor.hashes) throw new Error("Plugin descriptor identity mismatch");
   if (![wasmSha256, coreWasmSha256].every((hash) => /^[a-f0-9]{64}$/.test(hash))) throw new Error("Invalid plugin artifact digest");
   descriptor.hashes.wasmSha256 = wasmSha256;

@@ -1,0 +1,37 @@
+{
+  "schema": "s.procedural.generation3d.example-geometry/v1",
+  "example": "box-fillet-preview",
+  "opChain": [
+    "brep.prim3d.box",
+    "brep.solid.fillet"
+  ],
+  "preview": {
+    "node": "fillet",
+    "channel": "solid",
+    "kind": "solid"
+  },
+  "tessellationTolerance": 0.01,
+  "expect": {
+    "minTriangles": 24,
+    "closed": true,
+    "volume": 7.888634923940582,
+    "volumeTolerance": 0.005,
+    "volumeSource": "analytic rounded box: Minkowski sum of a (2-2r)^3 cube with a ball of r=0.15",
+    "edgePerimeter": null,
+    "edgePerimeterTolerance": 0.0,
+    "boundingBoxMin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "boundingBoxMax": [
+      2.0,
+      2.0,
+      2.0
+    ],
+    "boundingBoxTolerance": 0.001,
+    "kernelVolumeNode": null,
+    "kernelVolumeChannel": null
+  },
+  "kernelStatus": "green"
+}

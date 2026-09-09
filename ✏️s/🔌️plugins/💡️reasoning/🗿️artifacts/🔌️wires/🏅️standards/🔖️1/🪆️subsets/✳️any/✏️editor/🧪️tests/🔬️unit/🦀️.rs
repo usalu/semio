@@ -13,9 +13,11 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
     let migrated = routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("migrated")).map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<Vec<_>>();
     assert_eq!(migrated, WIRES_RETAINED_TOOL_IDS);
-    assert_eq!(routes.len(), 9);
+    assert_eq!(routes.len(), 10);
     assert_eq!(<WiresRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, WIRES_RETAINED_PUBLICATION_CONTRACTS);
-    assert!(WIRES_RETAINED_PUBLICATION_CONTRACTS.iter().all(|row| row.lanes == [ArtifactToolPublicationLane::Config]));
+    assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[0].lanes, [ArtifactToolPublicationLane::WindowTransient]);
+    assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[1].lanes, [ArtifactToolPublicationLane::WindowTransient]);
+    assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[2].lanes, [ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient]);
     assert!(routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("batch-only-pending-rewrite")).all(|route| route.get("lanes").and_then(Value::as_array).is_some_and(Vec::is_empty)));
 }
 
@@ -30,7 +32,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 9, "every WiresCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 10, "every WiresCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -58,6 +60,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         ("canvasPointerMove", "pointer-move"),
         ("canvasPointerDown", "pointer-down"),
         ("canvasPointerUp", "pointer-up"),
+        ("nodeGraphViewport", "node-graph-viewport"),
     ];
     for command in every_command() {
         let id = command.command_id();
@@ -98,6 +101,7 @@ pub(super) fn every_command() -> Vec<WiresCommand> {
         WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5 }),
         WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
         WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
+        WiresCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: edit::windows::canvas::config::WiresCanvasCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
     ]
 }
 //#endregion 🔖️CommandSurface
@@ -240,10 +244,10 @@ async fn reset_document_ownership_wires_preserves_pack_with_an_edit_free_history
     let expected: Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
     let source = crate::empty_wires_snapshot();
     let before = serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&source)).unwrap();
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = reset_wires_document_effect(&source) else {
+    let Effect::LoadDocument { pack, spr } = reset_wires_document_effect(&source) else {
         panic!("reset must load a document");
     };
-    let decoded = <crate::WiresSnapshot as ArtifactPack>::decode_pack(&pack).unwrap();
+    let decoded = <WiresSnapshot as ArtifactPack>::decode_pack(&pack).unwrap();
     assert_eq!(serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&decoded)).unwrap(), before);
     assert_eq!(serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&source)).unwrap(), before);
     let history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.unwrap();

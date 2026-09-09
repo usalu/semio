@@ -2,7 +2,7 @@
   "schema": "cad.document",
   "id": "cad-fixture",
   "shapeModel": {
-    "childId": "shape-model-1",
+    "childId": "cad-shape-1",
     "target": {
       "artifactId": "cad-shape-1",
       "dialect": {
@@ -13,7 +13,7 @@
     }
   },
   "buildingModel": {
-    "childId": "building-model-1",
+    "childId": "cad-building-1",
     "target": {
       "artifactId": "cad-building-1",
       "dialect": {
@@ -24,7 +24,7 @@
     }
   },
   "energyModel": {
-    "childId": "energy-model-1",
+    "childId": "cad-energy-1",
     "target": {
       "artifactId": "cad-energy-1",
       "dialect": {
@@ -35,7 +35,7 @@
     }
   },
   "structureClassicModel": {
-    "childId": "structure-classic-model-1",
+    "childId": "cad-structure-1",
     "target": {
       "artifactId": "cad-structure-1",
       "dialect": {
@@ -77,6 +77,5 @@
       "label": "Base Plate",
       "kind": "solid"
     }
-  ],
-  "activeModelDefinitionId": "spatial.shape"
+  ]
 }

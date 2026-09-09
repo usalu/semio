@@ -45,15 +45,6 @@ fn config_set_selected_generation_round_trips() {
 }
 
 #[test]
-fn config_set_preview_eval_round_trips() {
-    let base = Generation3dConfig::default();
-    let next = config_round_trip(&base, &Generation3dConfigMutation::SetPreviewEval { eval_text: Some(r#"{"extrude":{}}"#.into()) });
-    assert_eq!(next.preview_eval_text, Some(r#"{"extrude":{}}"#.to_string()));
-    let cleared = config_round_trip(&next, &Generation3dConfigMutation::SetPreviewEval { eval_text: None });
-    assert_eq!(cleared.preview_eval_text, None);
-}
-
-#[test]
 fn config_op_text_round_trips_every_variant() {
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetLodMode { value: "coarse".into() });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetShowMode { value: "wireframe".into() });
@@ -61,6 +52,5 @@ fn config_op_text_round_trips_every_variant() {
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetPreviewCamera { camera: Generation3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 } });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSun { json: "{}".into() });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSelectedGeneration { selected_generation_id: Some("g1".into()) });
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetPreviewEval { eval_text: Some("{}".into()) });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::Snapshot { config: Generation3dConfig::default() });
 }

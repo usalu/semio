@@ -11,7 +11,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.generation3d")]
-
 pub struct Generation3dSnapshot {
     #[state(artifact)]
     pub fixture: FlowFixture,

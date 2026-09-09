@@ -118,7 +118,7 @@
           "minLength": 1
         },
         "routeCount": {
-          "const": 33
+          "const": 31
         },
         "migratedCount": {
           "type": "integer",

@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn sample_frontier(document: &str, head_seq: u64) -> Frontier {

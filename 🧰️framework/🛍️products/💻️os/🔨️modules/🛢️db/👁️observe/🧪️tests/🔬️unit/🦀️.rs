@@ -1,4 +1,3 @@
-
 use super::*;
 
 async fn hash(byte: u8) -> ContentHash {

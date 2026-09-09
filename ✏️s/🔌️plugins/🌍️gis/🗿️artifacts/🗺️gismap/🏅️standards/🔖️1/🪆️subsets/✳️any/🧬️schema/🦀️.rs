@@ -1,9 +1,16 @@
 //! 🧬️ GIS map artifact schema — every field of the artifact with its state class.
 
+#[path = "📍️feature/🦀️.rs"]
+pub mod feature;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+mod document_contract_tests;
+
 use crate::document_dsl::REUSE_MAP_EXAMPLE_TEXT;
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
 use crate::op::GisMapMutation;
-use crate::{gis_map_snapshot_with_derived_children, GisMapImageChild, GisMapSnapshot, MapFeature};
+use crate::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapImageChild, GisMapSnapshot, GisMapValueChild, MapFeature};
 use ::semio_framework_schema::ArtifactSchema;
 use dsl::{FromValue, ToValue};
 use semio_framework_plugin::{io_dispatch, resolve_ready, ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
@@ -17,9 +24,8 @@ use std::collections::HashSet;
 //#region 🔹Artifact
 /// 🧬️ GIS map document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.gis.gismap")]
-#[derive(Default)]
 pub struct GisMapArtifact {
     #[state(artifact)]
     pub positions: Vec<MapFeature>,
@@ -27,31 +33,43 @@ pub struct GisMapArtifact {
     pub routes: Vec<MapFeature>,
     #[state(artifact)]
     pub regions: Vec<MapFeature>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio")]
+    pub drawing: GisMapDrawingChild,
     /// 🕸️ Mirrors `GisMapSnapshot.image` — see that field's own doc comment and
     /// `crate::🦀️.rs`'s `🔖️Composition` region. Carried verbatim (never
     /// derived) since, unlike `drawing`/`value`, nothing in this plugin can rebuild it from
     /// `positions`/`routes`/`regions` — dropping it silently on `from_snapshot`/`to_snapshot` would
     /// be a real, undocumented data loss the moment a future basemap-capture path populates it.
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.image")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio")]
+    pub value: GisMapValueChild,
 }
 //#endregion 🔹Artifact
 
 //#region 🔹Conversions
 
 
+impl Default for GisMapArtifact {
+    fn default() -> Self {
+        Self::from_snapshot(GisMapSnapshot::default())
+    }
+}
+
 impl GisMapArtifact {
     /// 📸️ Persisted subset with stable drawing/value member coordinates; their content is emitted
     /// as typed child work while `image` carries straight through.
     pub fn to_snapshot(&self) -> GisMapSnapshot {
-        gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: self.positions.clone(), routes: self.routes.clone(), regions: self.regions.clone(), image: self.image.clone(), ..Default::default() })
+        GisMapSnapshot { positions: self.positions.clone(), routes: self.routes.clone(), regions: self.regions.clone(), drawing: self.drawing.clone(), image: self.image.clone(), value: self.value.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: GisMapSnapshot) -> Self {
-        Self { positions: snapshot.positions, routes: snapshot.routes, regions: snapshot.regions, image: snapshot.image }
+        Self { positions: snapshot.positions, routes: snapshot.routes, regions: snapshot.regions, drawing: snapshot.drawing, image: snapshot.image, value: snapshot.value }
     }
 
     /// Writes persistent fields from a snapshot into this artifact.
@@ -59,7 +77,9 @@ impl GisMapArtifact {
         self.positions = snapshot.positions;
         self.routes = snapshot.routes;
         self.regions = snapshot.regions;
+        self.drawing = snapshot.drawing;
         self.image = snapshot.image;
+        self.value = snapshot.value;
     }
 }
 //#endregion 🔹Conversions

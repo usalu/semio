@@ -1,6 +1,77 @@
 # Current Renderer Typecheck Frontier
 
+## 2026-09-09 14:00 UTC Renderer Fixture Moves Qualified
+
+The prior renderer93766 engine-contract load failure used a compiler snapshot
+from before eight ShellHost neutral fixtures moved into the canonical
+`ShellHost/🧫️fixtures` taxonomy. Current engine-contract imports resolve the
+dialog origin, admitted instance, artifact creation progress/catalog/ready
+opening, and tutorial run/seek/serial corpora from that tree. Every resolved file
+exists and parses as JSON; no fallback or schema substitution was introduced.
+
+Registered renderer `test-long` session43590 is GREEN712/712 across 19 files,
+exit0. It includes engine-contract and package-integration against current source.
+Exact evidence is `🗑️generated/renderer-fixture-moves-full-current.log`.
+Session52242 was stopped after six seconds because its shorthand log directory
+did not exist; it produced no test evidence and is not an acceptance result.
+
+## 2026-09-09 11:31 UTC Owned Runtime Seam Qualified
+
+Current PluginRuntime laws25447 are GREEN76/76 after the complete schema-shaped
+menu/surface/layout fixture corrections. Type28976 remains RED950 globally, but
+has no diagnostic in PluginRuntime or its extracted test. Earlier78225 was
+RED865 during concurrent extraction and exposed those incomplete fixture fields;
+global counts are snapshots of changing source, not a monotonic metric.
+
+Root also supplied the required empty window-config read in the package-integration
+fake and corrected the engine-contract raw kernel fake's disposal to Promise<void>.
+These two latest fixture-only edits await their targeted runtime rerun. Broad
+type checking is unchanged, with no suppressed errors or omitted test scope.
+
+The targeted two-file runtime rerun28597 failed during Nx graph discovery on
+extensionless Writer test imports, before any test executed. The exact mutation
+files exist. WGPU owns the two ESM suffix corrections and the test's four schema
+URLs that were incorrectly rewritten to fixture locations; root made no Writer
+edit. The renderer fixture rerun follows once that shared graph input is coherent.
+
+## Extracted Test Type Recovery, 2026-09-09 11:02 UTC
+
+Current renderer80331 is terminal RED946 diagnostics, not the earlier321 snapshot.
+Its full log is `🗑️generated/root-creation-current-renderer-type.log`. WGPU found
+the extracted creation harness lost contextual function signatures and repaired
+the fetch/post seams using owned contracts instead of mass-any annotations.
+
+Root corrected the separate Ready-opening test owner's newly required expected
+catalog generation by reading the same neutral catalog fixture. The extracted
+plugin-runtime test file also lost its type imports; root restored references to
+the existing framework, replication, kernel, shard and Shell types. Two existing
+PluginRuntime wire types are now explicit type-only exports for those tests.
+No runtime code or wire shape changed.82763 is the current registered renderer
+type rerun, in `🗑️generated/root-extracted-runtime-type-current.log`.
+
+The broader type gate still includes transitive root script/test registries
+without Bun declarations. Terra is auditing the exact boundary; no error
+suppression, blanket exclusion, missing-runtime global declaration or dependency
+installation has been introduced. Independent full renderer runtime tests are
+GREEN711/711 before the latest private mount retirement refinement.
+
 ## Owned Build Hook Correction, 2026-09-09 09:23 UTC
+
+### 2026-09-09 11:14 UTC Exact Runtime Test Dependency Seam
+
+The initial import-only rerun82763 is RED990 globally with no missing type names
+remaining in the plugin-runtime test. Root then replaced its untyped dependency
+dictionary with the ReturnType of a lazy factory that returns the identical
+private functions and live state cells.23215 is RED959 globally; only eight
+concrete extracted plugin-runtime fixture/helper diagnostics remained, plus the
+unused Bun-only source directory carrier.
+
+Root narrowed the context-menu helper to its actual owned method requirement,
+retained inferred surface-event payload types, corrected the padding fixture to
+the existing EdgeSpace all variant, and explicitly checked the built root before
+using it. The test source carrier now contains only its consumed standard URL.
+Current registered type and PluginRuntime runtime law reruns are active. The
+existing broad type gate is preserved; no test scope was silently removed.
 
 The owned adapter now explicitly types config, HTML transform/context/tag/results,
 and pre/post middleware registration results. No external Vite type is exported.

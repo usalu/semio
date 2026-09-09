@@ -6,7 +6,7 @@
   "document": {
     "childId": "playbook-document-update-step-unchanged",
     "target": {
-      "artifactId": "playbook-document",
+      "artifactId": "playbook-document-update-step-unchanged",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -17,7 +17,7 @@
   "flow": {
     "childId": "playbook-flow-update-step-unchanged",
     "target": {
-      "artifactId": "playbook-flow",
+      "artifactId": "playbook-flow-update-step-unchanged",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

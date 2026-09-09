@@ -5,7 +5,7 @@ use super::history::factory::{MemberFactorySelection, MemberFactorySelectionStep
 use super::history::{MemberHistoryInputStep, MemberHistoryVerification};
 use super::{ErasedSnapshotRetirement, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep, SnapshotRetirementStep};
 use crate::os_spr::format::retained::RetainedSprLimits;
-use crate::os_store::{ArtifactPack, ArtifactStore, MemberFactory, MemberStoreOwner, SpaceMember};
+use crate::os_store::{ArtifactPack, ArtifactStore, MemberFactory, MemberStoreOwner};
 use crate::{FromValue, Mutation, OpBinary, OpText, ToValue};
 use semio_framework_job::StepContext;
 use std::{marker::PhantomData, mem::ManuallyDrop};
@@ -126,7 +126,7 @@ enum Phase {
 pub struct InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M>,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
     snapshot_open: ManuallyDrop<Option<P::SnapshotOpen>>,
@@ -144,7 +144,7 @@ where
 impl<F, P, M> InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
@@ -335,7 +335,7 @@ where
 impl<F, P, M> ErasedSnapshotRetirement for InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
@@ -353,8 +353,8 @@ where
             };
         }
         if let Some(member) = self.member.as_mut() {
-            let step = member.close_owned_step(items, bytes)?;
-            if matches!(step, SnapshotRetirementStep::Complete) && member.close_owned_terminal_is_empty() {
+            let step = crate::os_store::SpaceMember::close_owned_step(member, items, bytes)?;
+            if matches!(step, SnapshotRetirementStep::Complete) && crate::os_store::SpaceMember::close_owned_terminal_is_empty(member) {
                 self.member.take();
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -392,7 +392,7 @@ where
 impl<F, P, M> MemberOpenOperation for InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     type Member = ArtifactStore<P, M>;
@@ -413,7 +413,7 @@ where
 impl<F, P, M> Drop for InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M>,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
     fn drop(&mut self) {

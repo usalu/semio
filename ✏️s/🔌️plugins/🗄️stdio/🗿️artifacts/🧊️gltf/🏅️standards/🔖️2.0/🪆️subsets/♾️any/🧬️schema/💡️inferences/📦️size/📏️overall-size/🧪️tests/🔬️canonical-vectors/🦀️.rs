@@ -9,7 +9,7 @@ struct Contract {
 }
 #[semio_framework_async_macros::async_test]
 async fn shared_analytic_unavailable_and_deterministic_vectors_are_typed() {
-    let contract: Contract = pack::from_json_str(include_str!("../../🧪️contract/🔣️.json")).unwrap();
+    let contract: Contract = pack::from_json_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(contract.vectors[0].value, Some(5.0));
     assert_eq!(contract.vectors[0].availability, "available");
     assert_eq!(contract.vectors[1].value, None);

@@ -1,4 +1,5 @@
 # 🧬️ Program snapshot schema — artifact-lane fields only.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 
 type ProgramSnapshot {
   schema: String! @state(class: ARTIFACT)
@@ -50,7 +51,7 @@ type ProgramSnapshot {
   validations: [ValidationRecord!]! @state(class: ARTIFACT)
   performance: [PerformanceCriterion!]! @state(class: ARTIFACT)
   quality: [QualityRecord!]! @state(class: ARTIFACT)
-  documents: [DocumentRecord!]! @state(class: ARTIFACT)
+  artifacts: [ArtifactRecord!]! @state(class: ARTIFACT)
   assumptions: [Assumption!]! @state(class: ARTIFACT)
   constraints: [ConstraintRecord!]! @state(class: ARTIFACT)
   complianceRecords: [ComplianceRecord!]! @state(class: ARTIFACT)
@@ -67,9 +68,8 @@ type ProgramSnapshot {
   issues: [Issue!]! @state(class: ARTIFACT)
   auditEvents: [AuditEvent!]! @state(class: ARTIFACT)
   templates: [TemplateRecord!]! @state(class: ARTIFACT)
-  knowledge: [KnowledgeRecord!]! @state(class: ARTIFACT)
-  benchmarks: [BenchmarkRecord!]! @state(class: ARTIFACT)
+  knowledge: ArtifactChild! @state(class: ARTIFACT)
+  benchmarks: ArtifactChild! @state(class: ARTIFACT)
   traces: [TraceLink!]! @state(class: ARTIFACT)
   governance: Governance! @state(class: ARTIFACT)
 }
-

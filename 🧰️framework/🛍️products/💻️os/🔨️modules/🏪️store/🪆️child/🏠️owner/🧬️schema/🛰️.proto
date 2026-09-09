@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.os.store.child.owner;
+import "../../../../../../../🔨️modules/🚪️io/🧬️schema/🛰️.proto";
+message OwnerRef { semio.framework.io.ArtifactRef parent = 1; string slot = 2; string child_id = 3; }

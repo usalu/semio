@@ -793,7 +793,6 @@ mod scene_compute {
             drawings: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Model".into(), kind: "group".into() }, CadNode { id: "node-box".into(), label: "Box".into(), kind: "solid".into() }],
             references_by_model_definition_id: std::collections::BTreeMap::new(),
-            active_model_definition_id: CAD_MODEL_DEFINITION_SHAPE.into(),
         }
     }
 
@@ -846,7 +845,6 @@ mod scene_compute {
             drawings: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Concrete Forest Left".into(), kind: "group".into() }],
             references_by_model_definition_id: forest_references_for_model_definitions(CAD_FOREST_REFERENCE_PLANE_Z),
-            active_model_definition_id: CAD_MODEL_DEFINITION_SHAPE.into(),
         }
     }
 

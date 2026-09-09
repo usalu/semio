@@ -49,7 +49,7 @@
   "validations": null,
   "performance": null,
   "quality": null,
-  "documents": null,
+  "artifacts": null,
   "assumptions": null,
   "constraints": null,
   "complianceRecords": null,
@@ -70,7 +70,7 @@
   "benchmarks": {
     "childId": "architect-benchmarks-ebb8ef7bad26edae",
     "target": {
-      "artifactId": "architect-program-benchmarks",
+      "artifactId": "architect-benchmarks-ebb8ef7bad26edae",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

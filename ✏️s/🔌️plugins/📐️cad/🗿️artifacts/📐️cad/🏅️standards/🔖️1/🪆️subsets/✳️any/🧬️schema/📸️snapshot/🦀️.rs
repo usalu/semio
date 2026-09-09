@@ -22,23 +22,23 @@ pub struct CadSnapshot {
     #[state(artifact)]
     pub id: String,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.model")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub shape_model: Option<CadModelChild>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.model")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub building_model: Option<CadModelChild>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.model")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub energy_model: Option<CadModelChild>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.model")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub structure_classic_model: Option<CadModelChild>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.drawing")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default)]
     pub drawings: Vec<CadDrawingChild>,
     #[value(default)]
@@ -47,13 +47,6 @@ pub struct CadSnapshot {
     #[value(default)]
     #[state(artifact)]
     pub nodes: Vec<CadNode>,
-    #[value(default = "default_model_definition_id")]
-    #[state(artifact)]
-    pub active_model_definition_id: String,
-}
-
-fn default_model_definition_id() -> String {
-    "spatial.shape".into()
 }
 
 //#region 🔖️ChildCodecPrimitives
@@ -113,10 +106,19 @@ fn split_top_level(s: &str, sep: char) -> Vec<&str> {
 pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-pub(crate) fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+fn exact_child<S>(child_id: String, target: store::os_io::ArtifactRef, subset: &str) -> Result<store::ArtifactChild<S>, String> {
+    if child_id != target.artifact_id {
+        return Err("cad child id must equal target artifact id".into());
+    }
+    if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != subset {
+        return Err(format!("cad child must target s.stdio.semio@v1/{subset}"));
+    }
+    Ok(store::ArtifactChild::new(child_id, target))
+}
+pub(crate) fn dec_child<S>(s: &str, subset: &str) -> Result<store::ArtifactChild<S>, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
+    exact_child(dec_str(child_id)?, dec_ref(target)?, subset)
 }
 pub(crate) fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
     match c {
@@ -124,17 +126,17 @@ pub(crate) fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
         None => "[]".to_string(),
     }
 }
-pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
+pub(crate) fn dec_child_opt<S>(s: &str, subset: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
     if s == "[]" {
         return Ok(None);
     }
-    Ok(Some(dec_child(s)?))
+    Ok(Some(dec_child(s, subset)?))
 }
 pub(crate) fn enc_child_list<S>(items: &[store::ArtifactChild<S>]) -> String {
     format!("[{}]", items.iter().map(enc_child).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChild<S>>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_child).collect()
+pub(crate) fn dec_child_list<S>(s: &str, subset: &str) -> Result<Vec<store::ArtifactChild<S>>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|value| dec_child(value, subset)).collect()
 }
 //#endregion 🔖️ChildCodecPrimitives
 
@@ -170,7 +172,7 @@ fn from_json<T: protocol::FromValue>(s: &str) -> Result<T, String> {
 //#region 🔖️TextPrimitives
 fn print_cad_snapshot_body(s: &CadSnapshot) -> String {
     format!(
-        "schema={}\nid={}\nshapeModel={}\nbuildingModel={}\nenergyModel={}\nstructureClassicModel={}\ndrawings={}\nreferencesByModelDefinitionId={}\nnodes={}\nactiveModelDefinitionId={}",
+        "schema={}\nid={}\nshapeModel={}\nbuildingModel={}\nenergyModel={}\nstructureClassicModel={}\ndrawings={}\nreferencesByModelDefinitionId={}\nnodes={}",
         enc_str(&s.schema),
         enc_str(&s.id),
         enc_child_opt(&s.shape_model),
@@ -180,7 +182,6 @@ fn print_cad_snapshot_body(s: &CadSnapshot) -> String {
         enc_child_list(&s.drawings),
         enc_json(&s.references_by_model_definition_id),
         enc_json(&s.nodes),
-        enc_str(&s.active_model_definition_id),
     )
 }
 fn parse_cad_snapshot_body(body: &str) -> Result<CadSnapshot, String> {
@@ -197,21 +198,19 @@ fn parse_cad_snapshot_body(body: &str) -> Result<CadSnapshot, String> {
         } else if let Some(rest) = line.strip_prefix("id=") {
             snapshot.id = dec_str(rest)?;
         } else if let Some(rest) = line.strip_prefix("shapeModel=") {
-            snapshot.shape_model = dec_child_opt(rest)?;
+            snapshot.shape_model = dec_child_opt(rest, "model")?;
         } else if let Some(rest) = line.strip_prefix("buildingModel=") {
-            snapshot.building_model = dec_child_opt(rest)?;
+            snapshot.building_model = dec_child_opt(rest, "model")?;
         } else if let Some(rest) = line.strip_prefix("energyModel=") {
-            snapshot.energy_model = dec_child_opt(rest)?;
+            snapshot.energy_model = dec_child_opt(rest, "model")?;
         } else if let Some(rest) = line.strip_prefix("structureClassicModel=") {
-            snapshot.structure_classic_model = dec_child_opt(rest)?;
+            snapshot.structure_classic_model = dec_child_opt(rest, "model")?;
         } else if let Some(rest) = line.strip_prefix("drawings=") {
-            snapshot.drawings = dec_child_list(rest)?;
+            snapshot.drawings = dec_child_list(rest, "drawing")?;
         } else if let Some(rest) = line.strip_prefix("referencesByModelDefinitionId=") {
             snapshot.references_by_model_definition_id = dec_json(rest)?;
         } else if let Some(rest) = line.strip_prefix("nodes=") {
             snapshot.nodes = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("activeModelDefinitionId=") {
-            snapshot.active_model_definition_id = dec_str(rest)?;
         } else {
             return Err(format!("cad snapshot: unknown line {line:?}"));
         }
@@ -248,10 +247,10 @@ fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+fn read_child<S>(reader: &mut store::ByteReader<'_>, subset: &str) -> Result<store::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
+    exact_child(child_id, target, subset)
 }
 fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
     match c {
@@ -262,10 +261,10 @@ fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
         None => out.push(0),
     }
 }
-fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
+fn read_child_opt<S>(reader: &mut store::ByteReader<'_>, subset: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
-        _ => Ok(Some(read_child(reader)?)),
+        _ => Ok(Some(read_child(reader, subset)?)),
     }
 }
 fn write_child_list<S>(out: &mut Vec<u8>, items: &[store::ArtifactChild<S>]) {
@@ -274,11 +273,11 @@ fn write_child_list<S>(out: &mut Vec<u8>, items: &[store::ArtifactChild<S>]) {
         write_child(out, item);
     }
 }
-fn read_child_list<S>(reader: &mut store::ByteReader<'_>) -> Result<Vec<store::ArtifactChild<S>>, String> {
+fn read_child_list<S>(reader: &mut store::ByteReader<'_>, subset: &str) -> Result<Vec<store::ArtifactChild<S>>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut items = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        items.push(read_child(reader)?);
+        items.push(read_child(reader, subset)?);
     }
     Ok(items)
 }
@@ -295,7 +294,6 @@ fn encode_cad_snapshot_binary(s: &CadSnapshot) -> Vec<u8> {
     write_child_list(&mut out, &s.drawings);
     write_str_lp(&mut out, &json_of(&s.references_by_model_definition_id));
     write_str_lp(&mut out, &json_of(&s.nodes));
-    write_str_lp(&mut out, &s.active_model_definition_id);
     out
 }
 fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<CadSnapshot, String> {
@@ -308,14 +306,13 @@ fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<CadSnapshot, String> {
     let mut snapshot = empty_cad_snapshot();
     snapshot.schema = read_str_lp(&mut reader)?;
     snapshot.id = read_str_lp(&mut reader)?;
-    snapshot.shape_model = read_child_opt(&mut reader)?;
-    snapshot.building_model = read_child_opt(&mut reader)?;
-    snapshot.energy_model = read_child_opt(&mut reader)?;
-    snapshot.structure_classic_model = read_child_opt(&mut reader)?;
-    snapshot.drawings = read_child_list(&mut reader)?;
+    snapshot.shape_model = read_child_opt(&mut reader, "model")?;
+    snapshot.building_model = read_child_opt(&mut reader, "model")?;
+    snapshot.energy_model = read_child_opt(&mut reader, "model")?;
+    snapshot.structure_classic_model = read_child_opt(&mut reader, "model")?;
+    snapshot.drawings = read_child_list(&mut reader, "drawing")?;
     snapshot.references_by_model_definition_id = from_json(&read_str_lp(&mut reader)?)?;
     snapshot.nodes = from_json(&read_str_lp(&mut reader)?)?;
-    snapshot.active_model_definition_id = read_str_lp(&mut reader)?;
     Ok(snapshot)
 }
 //#endregion 🔖️BinaryPrimitives

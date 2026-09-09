@@ -1,6 +1,7 @@
 //! 🪟️ 🧩️ Flow play app commands command — `patch-flow-widgets`.
 
-use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use crate::schema::widget_id;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
@@ -38,7 +39,7 @@ fn patched_widgets_fixture(snapshot: &FlowSnapshot, widget_ids: &[String], field
     FlowSnapshot::from_fixture(fixture)
 }
 
-pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let fixture = doc.snapshot;
     let next = patched_widgets_fixture(fixture, &payload.widget_ids, &payload.field, &payload.value);
     let operations = crate::schema::mutations::snapshot_operations(fixture, &next);

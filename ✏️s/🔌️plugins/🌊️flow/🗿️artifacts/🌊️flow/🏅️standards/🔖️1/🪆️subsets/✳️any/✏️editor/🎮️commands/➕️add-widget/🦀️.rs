@@ -1,6 +1,7 @@
 //! 🪟️ 🧩️ Flow play app commands command — `add-widget`.
 
-use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework::kernel::UiDirtyScope;
@@ -23,30 +24,33 @@ fn child_add_widget_fault(message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("flow.add-widget.child-delta-invalid"), message)
 }
 
-fn child_add_widget_mutation(content: &SemioFlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, descriptor: &str, x: f64, y: f64) -> Result<SemioFlowMutation, Fault> {
-    let (widgets, synapses, layout) = crate::working_from_flow_content_snapshot(content);
-    let fixture = semio_framework_artifact_flow_flow::FlowFixture { schema: semio_framework_artifact_flow_flow::FLOW_DOCUMENT_SCHEMA.into(), camera: Default::default(), widgets, synapses, layout };
-    let mut host = flow::flow_host_with_session(&fixture, session);
-    crate::editor::flow::seed_host_catalogue(&mut host, &config.catalogue_sections_json);
-    crate::editor::flow::apply_canvas_options(&mut host, config);
-    let id = host.add_widget(descriptor, x, y).map_err(|error| child_add_widget_fault(error.to_string()))?;
-    let post = crate::flow_content_snapshot_from_working(&host.fixture.widgets, &host.fixture.synapses, &host.fixture.layout);
-    let expected_len = content.nodes.len().checked_add(1).ok_or_else(|| child_add_widget_fault("Flow child node count overflow"))?;
-    if post.schema != content.schema || post.nodes.len() != expected_len || post.nodes[..content.nodes.len()] != content.nodes || post.edges != content.edges {
-        return Err(child_add_widget_fault("Flow host add-widget produced a delta outside one appended typed node"));
+fn child_add_widget_mutation_from_descriptor(content: &SemioFlowSnapshot, descriptor: &semio_framework_artifact_flow_flow::WidgetDescriptor, kind_info: Option<&flow::neural::OperatorInfo>, x: f64, y: f64) -> Result<SemioFlowMutation, Fault> {
+    content.nodes.len().checked_add(1).ok_or_else(|| child_add_widget_fault("Flow child node count overflow"))?;
+    let id = semio_framework_artifact_flow_flow::descriptor_explicit_id(descriptor).unwrap_or_else(|| semio_framework_artifact_flow_flow::generated_widget_id(descriptor, content.nodes.iter().map(|node| node.id.as_str())).0);
+    if content.nodes.iter().any(|node| node.id == id) {
+        return Err(child_add_widget_fault(format!("widget id already exists: {id}")));
     }
-    let node = post.nodes.last().cloned().ok_or_else(|| child_add_widget_fault("Flow host add-widget produced no typed node"))?;
-    if node.id != id || node.position.x != x || node.position.y != y {
-        return Err(child_add_widget_fault("Flow host add-widget did not preserve the exact inserted identity and position"));
-    }
+    let widget = semio_framework_artifact_flow_flow::widget_from_descriptor_with_info(descriptor, id, kind_info);
+    let layout = semio_framework_artifact_flow_flow::WidgetLayout { x, y };
+    let node = crate::flow_content_node_from_working(&widget, Some(&layout));
     Ok(SemioFlowMutation::InsertNode(insert_node::InsertNode::new(node)))
+}
+
+fn child_add_widget_mutation(content: &SemioFlowSnapshot, descriptor_json: &str, x: f64, y: f64) -> Result<SemioFlowMutation, Fault> {
+    let descriptor: semio_framework_artifact_flow_flow::WidgetDescriptor = flow::os_pack::json::from_json_str(descriptor_json).map_err(|error| child_add_widget_fault(error.to_string()))?;
+    let registry = flow::flow_extension_registry();
+    let kind_info = match &descriptor {
+        semio_framework_artifact_flow_flow::WidgetDescriptor::Neuron { neuron_kind, .. } => registry.operator_info(neuron_kind),
+        _ => None,
+    };
+    child_add_widget_mutation_from_descriptor(content, &descriptor, kind_info, x, y)
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the new widget used to also become the
 /// selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
 /// framework's own injected `interactionSelect` handling, never by an app command's `Emit` (mirrors
 /// note's `add-block`).
-pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let descriptor = match payload.kind.as_str() {
         "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.as_deref().unwrap_or("math.add") }).to_string(),
         "inputSlider" => json!({ "kind": "inputSlider", "label": "" }).to_string(),
@@ -56,7 +60,7 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &C
     let y = payload.y.unwrap_or(120.0);
     let child_id = &doc.snapshot.content.child_id;
     let content = doc.children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
-    let mutation = child_add_widget_mutation(&content, cfg.snapshot, session, &descriptor, x, y)?;
+    let mutation = child_add_widget_mutation(&content, &descriptor, x, y)?;
     Ok(Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, &[mutation])], ui_scope: UiDirtyScope::Full, ..Default::default() })
 }
 

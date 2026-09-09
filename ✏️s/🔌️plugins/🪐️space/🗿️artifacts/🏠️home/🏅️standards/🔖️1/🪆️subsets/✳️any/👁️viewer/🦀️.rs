@@ -90,7 +90,7 @@ impl ArtifactViewer for HomeViewer {
             HomeViewCommand::Noop => Ok(ViewEmit::default()),
             HomeViewCommand::FoldDirectoryEvents { events_json } => {
                 let events: Vec<store::os_directory::DirectoryEvent> = pack::from_json_str(events_json).unwrap_or_default();
-                let config_mutations = events.iter().filter_map(|event| Some(pack::to_json_string(event))).map(|event_json| HomeConfigMutation::FoldDirectoryEvent { event_json }).collect();
+                let config_mutations = events.iter().map(pack::to_json_string).map(|event_json| HomeConfigMutation::FoldDirectoryEvent { event_json }).collect();
                 Ok(ViewEmit::config(config_mutations))
             }
         }

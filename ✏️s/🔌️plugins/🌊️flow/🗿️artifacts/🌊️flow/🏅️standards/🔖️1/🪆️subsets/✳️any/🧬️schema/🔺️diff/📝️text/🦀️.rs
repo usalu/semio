@@ -23,9 +23,6 @@ impl FlowDiff {
             if let Some(value) = &self.schema {
                 next.schema = value.clone();
             }
-            if let Some(value) = &self.camera {
-                next.camera = value.clone();
-            }
             if let Some(content) = &self.content {
                 next.content = content.clone();
             }
@@ -43,9 +40,6 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
             let mut next = snapshot.clone();
             if let Some(value) = &self.schema {
                 next.schema = value.clone();
-            }
-            if let Some(value) = &self.camera {
-                next.camera = value.clone();
             }
             if let Some(content) = &self.content {
                 next.content = content.clone();
@@ -66,7 +60,6 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
             };
         }
         take!(schema);
-        take!(camera);
         take!(content);
     }
 }

@@ -1,4 +1,4 @@
-#[path = "../../🧫️fixtures/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testkit/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{SetTransactionCount, SetTransactionCountAndNotify, SetTransactionCountWithoutPreflight, TxnMutation};
 
@@ -25,6 +25,12 @@ use ui_wgpu::wgpu::LocalizedLabel;
 #[dsl(extension = "testkit-txn")]
 pub(crate) struct TxnSnapshot {
     count: i32,
+}
+
+impl semio_framework_schema::ArtifactCompositionFields for TxnSnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
 }
 
 impl store::ArtifactDsl for TxnSnapshot {

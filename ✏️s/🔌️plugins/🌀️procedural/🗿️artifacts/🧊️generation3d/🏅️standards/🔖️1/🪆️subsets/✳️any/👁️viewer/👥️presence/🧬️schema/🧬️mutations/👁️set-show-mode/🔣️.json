@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🧬️mutations/👁️set-show-mode",
+  "semanticKind": "set-show-mode",
+  "displayName": "Set Show Mode",
+  "emoji": "👁️",
+  "aggregateVariant": "SetShowMode",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "show-mode",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

@@ -2,7 +2,6 @@
 
 use crate::FlowContentChild;
 use framework_schema::ArtifactSchema;
-use semio_framework_artifact_flow_flow::CameraJson;
 
 //#region 🔹Diff
 /// 🔺️ Sparse field delta for the flow artifact; persistent entries apply via
@@ -19,8 +18,6 @@ pub struct FlowDiff {
     pub artifact: Option<Box<FlowArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
-    #[state(artifact)]
-    pub camera: Option<CameraJson>,
     #[state(artifact)]
     pub content: Option<FlowContentChild>,
 }

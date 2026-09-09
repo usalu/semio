@@ -17,6 +17,9 @@ enum BrepMutationKind {
   MOVE_VERTEX
 }
 
+# Flattening keeps fields usable across all 13 variants, so GraphQL nullability alone cannot
+# express create-specific requiredness. Consumers must validate the mutation discriminant against
+# the authoritative create payload schemas; the shared tolerance fixture tests that mapping.
 type SemioBrepMutation {
   mutation: BrepMutationKind!
   id: String

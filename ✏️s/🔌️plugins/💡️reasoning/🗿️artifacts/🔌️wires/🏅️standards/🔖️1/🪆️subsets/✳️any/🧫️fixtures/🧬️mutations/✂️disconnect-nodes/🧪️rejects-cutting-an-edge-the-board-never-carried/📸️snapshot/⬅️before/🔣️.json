@@ -67,7 +67,7 @@
   "content": {
     "childId": "wires-content-disconnect-miss-fixture",
     "target": {
-      "artifactId": "wires-content",
+      "artifactId": "wires-content-disconnect-miss-fixture",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

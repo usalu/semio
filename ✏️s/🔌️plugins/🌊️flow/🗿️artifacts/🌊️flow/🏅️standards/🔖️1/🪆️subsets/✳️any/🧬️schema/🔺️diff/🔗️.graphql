@@ -1,81 +1,9 @@
-# 🧬️ Flow diff schema — sparse field delta.
-
+# 🔺️ Sparse Flow document delta.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type FlowDiff {
   artifact: FlowArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
-  camera: CameraJson @state(class: ARTIFACT)
-  widgets: FlowWidgetsDelta @state(class: ARTIFACT)
-  synapses: FlowSynapsesDelta @state(class: ARTIFACT)
-  layout: FlowLayoutMapDelta @state(class: ARTIFACT)
+  # @child kind=s.stdio.semio standard=v1 subset=flow
+  content: ArtifactChild @state(class: ARTIFACT)
 }
-
-type FlowArtifact {
-  schema: String!
-  camera: CameraJson!
-  widgets: [Widget!]!
-  synapses: [SynapseSpec!]!
-  layout: [WidgetLayoutEntry!]!
-}
-
-type CameraJson {
-  x: Float!
-  y: Float!
-  zoom: Float!
-}
-
-type WidgetLayout {
-  x: Float!
-  y: Float!
-}
-
-type WidgetLayoutEntry {
-  key: String!
-  value: WidgetLayout!
-}
-
-type SynapseSpec {
-  id: String!
-  from: String!
-  to: String!
-  fromPort: String!
-  toPort: String!
-}
-
-scalar Widget
-
-type FlowStringList {
-  values: [String!]!
-}
-
-type FlowWidgetPatchEntry {
-  id: String!
-  patch: Widget!
-}
-
-type FlowWidgetsDelta {
-  added: [Widget!]!
-  removed: [String!]!
-  patched: [FlowWidgetPatchEntry!]!
-  reordered: [String!]
-}
-
-type FlowSynapsePatchEntry {
-  id: String!
-  patch: SynapseSpec!
-}
-
-type FlowSynapsesDelta {
-  added: [SynapseSpec!]!
-  removed: [String!]!
-  patched: [FlowSynapsePatchEntry!]!
-  reordered: [String!]
-}
-
-type FlowLayoutMapDelta {
-  entries: [FlowLayoutNullableEntry!]!
-}
-
-type FlowLayoutNullableEntry {
-  key: String!
-  value: WidgetLayout
-}
+type FlowArtifact { schema: String! content: ArtifactChild! }

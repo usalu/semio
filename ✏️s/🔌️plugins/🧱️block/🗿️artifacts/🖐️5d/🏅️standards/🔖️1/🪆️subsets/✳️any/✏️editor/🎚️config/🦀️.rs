@@ -8,7 +8,7 @@ use protocol::Mutation;
 
 //#region 🔖️Config
 /// 🧮️ `Block5dPlayApp`'s empty artifact config; selection and locale live in the shared view model.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -60,12 +60,6 @@ impl store::ArtifactPack for Block5dConfig {
 }
 
 //#endregion 🔖️ArtifactCodec
-
-impl Default for Block5dConfig {
-    fn default() -> Self {
-        Self {}
-    }
-}
 
 store::impl_whole_record_config!(Block5dConfig);
 //#endregion 🔖️Config

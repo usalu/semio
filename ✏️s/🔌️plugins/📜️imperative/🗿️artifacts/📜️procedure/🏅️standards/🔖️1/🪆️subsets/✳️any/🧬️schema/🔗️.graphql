@@ -1,30 +1,7 @@
-# 🧬️ Imperative artifact schema — every field with its state class.
-
+# 🧬️ Procedure durable artifact composed from shared flow and text child identities.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type ProcedureArtifact {
   schema: String! @state(class: ARTIFACT)
-  path: ProcedurePath! @state(class: ARTIFACT)
-  seed: [ProcedureSeedEntry!]! @state(class: ARTIFACT)
+  flow: ArtifactChild! @state(class: ARTIFACT)
+  text: ArtifactChild! @state(class: ARTIFACT)
 }
-
-type ProcedurePath {
-  steps: [ProcedureStep!]!
-}
-
-type ProcedureStep {
-  id: String!
-  kind: String!
-  params: JSON
-  bodies: [ProcedureStepBodyEntry!]
-}
-
-type ProcedureStepBodyEntry {
-  slot: String!
-  path: ProcedurePath!
-}
-
-type ProcedureSeedEntry {
-  key: String!
-  value: JSON!
-}
-
-scalar JSON

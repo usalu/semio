@@ -116,7 +116,7 @@ fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
 
 //#region ⏱️BoundedInitializer
 fn initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Generation3dStoreInitializationAuthority {
-    generation3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, GENERATION3D_MAXIMUM_DOMAIN_ITEMS, GENERATION3D_MOUNTED_OUTPUT_CHANNELS, GENERATION3D_MOUNTED_CONTROL_CREDITS)
+    generation3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::standards::v1::subsets::any::schema::mutations::binary::Generation3dPublicationCredits { maximum_items: GENERATION3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_MOUNTED_CONTROL_CREDITS })
         .expect("P3 initializer law publication authority");
     Generation3dStoreInitializationAuthority::new(store::create_document_envelope(crate::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None), operation, generation)
 }

@@ -12,7 +12,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build, type Plugin } from "esbuild";
 import { describe, expect, it } from "vitest";
-import { stripExecutableShebang } from "../../📦️packages/🟦️typescript/🧪️tests/🧹️executable-source/🟦️.ts";
+import { stripExecutableShebang } from "../../📦️packages/🟦️typescript/🧹️executable-source/🟦️.ts";
 
 describe("executable source transformation", () => {
   it.each([
@@ -26,7 +26,7 @@ describe("executable source transformation", () => {
 
 const packageDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(packageDir, "../../../../../../..");
-const contract = JSON.parse(readFileSync(join(packageDir, "🧫️fixtures/⚙️config-graph.json"), "utf8")) as {
+const contract = JSON.parse(readFileSync(join(packageDir, "../../🧫️fixtures/⚙️config-graph.json"), "utf8")) as {
   readonly entry: string;
   readonly deny: readonly string[];
   readonly require: readonly string[];

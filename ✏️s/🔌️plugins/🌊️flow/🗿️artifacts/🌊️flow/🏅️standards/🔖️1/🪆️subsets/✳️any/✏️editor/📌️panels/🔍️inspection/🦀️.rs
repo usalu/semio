@@ -27,7 +27,7 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the per-widget field groups (rename,
-/// slider value, note text — driven by which widgets are selected) used to read `FlowConfig`; the
+/// slider value, note text — driven by which widgets are selected) used to read `FlowMainWindowConfig`; the
 /// "graph" domain's selection is framework-owned `InteractionState` now, and `ArtifactApp::render` is
 /// not threaded an `InteractionView` this wave (only `handle`/`copy_fragment`/`cut_operations` are, see
 /// `FlowPlayApp::handle`) — dropped rather than shown stale, mirroring lowpoly's identical

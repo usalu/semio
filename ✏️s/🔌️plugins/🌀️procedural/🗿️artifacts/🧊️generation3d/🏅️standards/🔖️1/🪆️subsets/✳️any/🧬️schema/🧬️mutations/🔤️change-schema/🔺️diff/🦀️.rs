@@ -14,5 +14,5 @@ pub fn diff(payload: &ChangeSchema, base: &Generation3dSnapshot) -> protocol::Mu
     if base.fixture.schema == payload.new_schema {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", format!("Schema is already \"{}\".", payload.new_schema));
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff::default(), SynapsesDiff::default(), LayoutDiff::default(), None, Some(payload.new_schema.clone())))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), None, Some(&payload.new_schema)))
 }

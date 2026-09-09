@@ -277,7 +277,7 @@ function hostileSources(fixture: Fixture, sources: Sources): void {
 }
 
 export function testPluginCodecCallerSource(repoRoot: string): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🔣️.json", testSourceUrl.href), "utf8")) as Fixture;
+  const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8")) as Fixture;
   const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", testSourceUrl.href), "utf8"));
   modelAndSchema(fixture, schema);
   const sources = Object.fromEntries(Object.entries(fixture.native.sources).map(([name, path]) => [name, readFileSync(resolve(repoRoot, path), "utf8")])) as Sources;

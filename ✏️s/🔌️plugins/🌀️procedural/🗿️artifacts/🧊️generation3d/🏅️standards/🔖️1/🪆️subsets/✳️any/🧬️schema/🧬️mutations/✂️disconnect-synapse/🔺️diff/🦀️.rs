@@ -11,5 +11,5 @@ pub fn diff(payload: &DisconnectSynapse, base: &Generation3dSnapshot) -> protoco
     if synapse_index(&base.fixture, &payload.id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff::default(), SynapsesDiff { removed: vec![payload.id.clone()], set: vec![] }, LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![payload.id.clone()], set: vec![] }, &LayoutDiff::default(), None, None))
 }

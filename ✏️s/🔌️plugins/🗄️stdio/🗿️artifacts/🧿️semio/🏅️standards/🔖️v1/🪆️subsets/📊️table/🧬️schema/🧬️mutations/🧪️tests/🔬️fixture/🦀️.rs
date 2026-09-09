@@ -6,7 +6,7 @@ mod tests_delete_column_drops_the_middle_column_and_cascades_into_every_row;
 mod tests_edit_cell_rewrites_the_population_cell_of_the_second_row;
 #[path = "../../📥insert-row/🧪️tests/📥️inserts-a-row-between-the-two-existing-rows/🦀️.rs"]
 mod tests_insert_row_inserts_a_row_between_the_two_existing_rows;
-#[path = "../../➖remove-row/🚫️removes-the-leading-row/🦀️.rs"]
+#[path = "../../➖remove-row/🧪️tests/🚫️removes-the-leading-row/🦀️.rs"]
 mod tests_remove_row_removes_the_leading_row;
 #[path = "../../🏷️rename-column/🧪️tests/✏️renames-city-to-town-without-touching-any-row/🦀️.rs"]
 mod tests_rename_column_renames_city_to_town_without_touching_any_row;

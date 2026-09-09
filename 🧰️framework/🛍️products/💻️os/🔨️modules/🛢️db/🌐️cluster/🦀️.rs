@@ -235,7 +235,9 @@ impl ReplicationRejected {
 }
 
 impl From<DbError> for ReplicationRejected {
-    fn from(error: DbError) -> Self { Self::BeforeWriter(error) }
+    fn from(error: DbError) -> Self {
+        Self::BeforeWriter(error)
+    }
 }
 
 impl std::fmt::Debug for ReplicationRejected {
@@ -272,20 +274,27 @@ pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_st
                     let bytes = match db_wal::WalBytes::try_admit(bytes, 1024 * 1024, &mut control).await {
                         Ok(bytes) => bytes,
                         Err(mut rejected) => {
-                            while rejected.close_step()? { semio_framework_async::yield_once().await; }
+                            while rejected.close_step()? {
+                                semio_framework_async::yield_once().await;
+                            }
                             return Err(rejected.into_error());
                         }
                     };
                     let mut records = db_wal::WalRecordBatch::new();
                     if let Err(mut record) = records.push(db_wal::WalRecord::Command(bytes)) {
-                        while record.close_step()? { semio_framework_async::yield_once().await; }
+                        while record.close_step()? {
+                            semio_framework_async::yield_once().await;
+                        }
                         return Err(DbError::LimitExceeded("db_cluster fixed wal record batch"));
                     }
                     let submitted = wal.submit(&follower_storage, &records, DurabilityClass::Fsync, now_ms).await;
                     let retired = async {
-                        while records.close_step()? { semio_framework_async::yield_once().await; }
+                        while records.close_step()? {
+                            semio_framework_async::yield_once().await;
+                        }
                         Ok(())
-                    }.await;
+                    }
+                    .await;
                     replication_retired(submitted, retired)?;
                 }
                 let frontier = db_sync::replay_sync_state(&follower_storage, document.clone()).await?.frontier;
@@ -297,7 +306,8 @@ pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_st
                 Ok(ReplicationOutcome::SnapshotTransferred { generation, pack_hash })
             }
         }
-    }.await;
+    }
+    .await;
     match (outcome, wal.close().await) {
         (outcome, Ok(())) => outcome.map_err(ReplicationRejected::BeforeWriter),
         (Ok(_), Err(close_error)) => Err(ReplicationRejected::RetainedWal { cause: DbError::Unavailable("replication follower WAL close failed".to_string()), close_error, wal }),
@@ -317,7 +327,9 @@ async fn replication_snapshot_input(mut pages: db_storage::DbIoPages) -> Result<
 }
 
 async fn close_replication_pages(pages: &mut db_storage::DbIoPages) -> Result<(), DbError> {
-    while pages.close_step()?.is_some() { semio_framework_async::yield_once().await; }
+    while pages.close_step()?.is_some() {
+        semio_framework_async::yield_once().await;
+    }
     Ok(())
 }
 

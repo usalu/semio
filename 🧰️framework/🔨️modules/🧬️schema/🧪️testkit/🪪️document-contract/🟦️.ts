@@ -18,6 +18,7 @@ export interface DocumentContractOracle {
   validDocuments: readonly { input: unknown; output: unknown }[];
   invalidDocuments: readonly unknown[];
   invalidDiffs?: readonly unknown[];
+  childIdentityFields?: readonly string[];
   mutationRoots: readonly string[];
   committed: { snapshots: number; diffs: number };
 }
@@ -27,20 +28,24 @@ export function assertDocumentContractOracle(spec: DocumentContractOracle): void
   const ajv = new Ajv({ strict: false, allErrors: true, validateFormats: false });
   for (const schema of spec.dependencies) ajv.addSchema(schema);
   ajv.addSchema(spec.artifact.schema);
+  const exactIdentities = (input: unknown): boolean => (spec.childIdentityFields ?? []).every((field) => {
+    const child = (input as Record<string, unknown>)?.[field] as { childId?: unknown; target?: { artifactId?: unknown } } | null | undefined;
+    return child == null || ajv.validate({ type: "object", properties: { childId: { const: child.target?.artifactId } } }, child) === true;
+  });
   for (const facet of [spec.artifact, spec.snapshot]) {
     const validate = ajv.compile(facet.schema);
     for (const { input, output } of spec.validDocuments) {
-      assert.equal(validate(input), true, JSON.stringify(validate.errors));
+      assert.equal(validate(input) && exactIdentities(input), true, JSON.stringify(validate.errors));
       assert.deepEqual(facet.parse(input), output);
     }
     for (const input of spec.invalidDocuments) {
-      assert.equal(validate(input), false, JSON.stringify(input));
+      assert.equal(validate(input) && exactIdentities(input), false, JSON.stringify(input));
       assert.throws(() => facet.parse(input));
     }
   }
   const validateDiff = ajv.compile(spec.diff.schema), validateSnapshot = ajv.compile(spec.snapshot.schema);
   for (const input of spec.invalidDiffs ?? []) {
-    assert.equal(validateDiff(input), false);
+    assert.equal(validateDiff(input) && exactIdentities(input), false);
     assert.throws(() => spec.diff.parse(input));
   }
   const paths = spec.mutationRoots.flatMap((root) => readdirSync(root, { recursive: true }).map((path) => ({ path: String(path).replaceAll("\\", "/"), file: join(root, String(path)) })));
@@ -50,7 +55,7 @@ export function assertDocumentContractOracle(spec: DocumentContractOracle): void
     const isDiff = path.endsWith("/🔺️diff/🔣️.json");
     if (!isSnapshot && !isDiff) continue;
     const input = JSON.parse(readFileSync(file, "utf8"));
-    assert.equal((isSnapshot ? validateSnapshot : validateDiff)(input), true, path);
+    assert.equal((isSnapshot ? validateSnapshot : validateDiff)(input) && exactIdentities(input), true, path);
     assert.deepEqual((isSnapshot ? spec.snapshot : spec.diff).parse(input), input, path);
     if (isSnapshot) snapshots++; else diffs++;
   }

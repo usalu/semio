@@ -1,0 +1,34 @@
+{
+  "windowKindId": "gis3d-main",
+  "leftWindowId": "terrain-left",
+  "rightWindowId": "terrain-right",
+  "base": {"cameraJson": "{\"position\":[800,-800,600],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":45}"},
+  "accepted": [
+    {"cameraJson": "{}"},
+    {"cameraJson": "{\"position\":[1,2,3],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":50}"}
+  ],
+  "rejected": [
+    {},
+    {"cameraJson": null},
+    {"cameraJson": "{}", "windowId": "payload-owned"},
+    {"cameraJson": "{}", "selection": []}
+  ],
+  "cases": [
+    {
+      "windowId": "terrain-left",
+      "cameraJson": "{\"position\":[10,20,30],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":40}",
+      "expected": {
+        "terrain-left": {"cameraJson": "{\"position\":[10,20,30],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":40}"},
+        "terrain-right": {"cameraJson": "{\"position\":[800,-800,600],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":45}"}
+      }
+    },
+    {
+      "windowId": "terrain-right",
+      "cameraJson": "{\"position\":[-30,5,70],\"target\":[1,2,3],\"up\":[0,0,1],\"fov\":55}",
+      "expected": {
+        "terrain-left": {"cameraJson": "{\"position\":[10,20,30],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":40}"},
+        "terrain-right": {"cameraJson": "{\"position\":[-30,5,70],\"target\":[1,2,3],\"up\":[0,0,1],\"fov\":55}"}
+      }
+    }
+  ]
+}

@@ -1,4 +1,3 @@
-
 use super::*;
 
 impl WalWriterGuard for usize {

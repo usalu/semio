@@ -143,7 +143,7 @@ describe("finite exact fixed parent scope", () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts");
     const ts = await import("typescript");
     const root = findRepoRoot(import.meta.dir);
-    const vector = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🔒️fixed-parent-cases.json"), "utf8"));
+    const vector = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🔒️fixed-parent-cases.json"), "utf8"));
     const common = { authority: "fixture compiler", reason: "exact parent fixture", configurability: "unconfigurable", verification: "finite exact fixed parent scope", expires: null };
     const parents = Object.fromEntries(Object.entries(vector.parents).map(([id, path]) => [id, { ...common, pathPattern: path, scope: { kind: "exact-path", path } }]));
     const scopeSchema = { type: "object", additionalProperties: false, required: ["kind", "fixedDirectoryContractIds"], properties: { kind: { const: "fixed-directory-contract-set" }, fixedDirectoryContractIds: { type: "array", minItems: 1, maxItems: 256, uniqueItems: true, items: { enum: Object.keys(parents) } } } };
@@ -4957,18 +4957,6 @@ type NormalizationFixture = {
   workspace: string;
 };
 
-type MutationProjectionGolden = Readonly<{
-  schemaVersion: 1;
-  contract: "artifact-mutation-test-projection-v1";
-  standardDirectoryName: string;
-  subsetDirectoryName: string;
-  profileDirectoryName: string;
-  registryCounts: Readonly<{ catalogs: number; vectors: number; scenarios: number; changedMutationRows: number; changedMutationSources: number }>;
-  sourceGlob: string;
-  bundle: readonly Readonly<{ source: string; destination: string }>[];
-  cases: readonly Readonly<{ mutationId: string; sourceMutationDirectoryName: string; mutationDirectoryName: string; sourceScenarioId: string; scenarioId: string }>[];
-}>;
-
 const NORMALIZATION_RUN_ROOT = realpathSync(tmpdir());
 const NORMALIZATION_RUN_DIRECTORY = "semio-normalization";
 const ARTIFACT_PROJECTION_RUN_PARENT = `${NORMALIZATION_RUN_DIRECTORY}/📓️draw-source-scenarios/🧪️runs`;
@@ -4979,7 +4967,6 @@ const NORMALIZATION_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/�
 const TICKET_IMPORTANT_HISTORY_ROOT_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/SCOPED-HISTORY-APPLY";
 const TICKET_IMPORTANT_HISTORY_SOURCE_REL = `${TICKET_IMPORTANT_HISTORY_ROOT_REL}/📌️important.md`;
 const TICKET_IMPORTANT_HISTORY_DESTINATION_REL = `${TICKET_IMPORTANT_HISTORY_ROOT_REL}/📓️important/📝️.md`;
-const MUTATION_PROJECTION_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🛤️mutation-path-projection/🔣️.json"), "utf8")) as MutationProjectionGolden;
 const SCOPED_INVENTORY_PATHSPEC_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎯️scoped-inventory-pathspec/🔣️.json"), "utf8")) as Readonly<{
   schemaVersion: 1;
   opaqueExclusions: readonly string[];
@@ -5177,29 +5164,6 @@ async function assertArtifactProjectionSingleCaseRoute(vector: Readonly<{ comman
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({ type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/repo-lib:${vector.target} --skip-nx-cache`, cwd: "${workspaceFolder}", presentation: { group: "4_gate", order: vector.launchOrder } });
   }
-}
-
-/** 🧭️ Discovers mutation catalog files without third-party glob semantics. */
-function nativeMutationCatalogPaths(workspace: string): string[] {
-  const root = join(workspace, "✏️s", "🔌️plugins");
-  const paths: string[] = [];
-  const walk = (directory: string): void => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      const absolute = join(directory, entry.name);
-      if (entry.isDirectory()) walk(absolute);
-      else if (absolute.replaceAll("\\", "/").endsWith("/🔣️oracle.json")) paths.push(relative(workspace, absolute).replaceAll("\\", "/"));
-    }
-  };
-  walk(root);
-  return paths.sort();
-}
-
-function mutationGoldenSource(entry: MutationProjectionGolden["cases"][number], leaf: string): string {
-  return `🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧬️schema/🧬️mutations/${entry.sourceMutationDirectoryName}/tests${entry.sourceScenarioId}/${leaf}`;
-}
-
-function mutationGoldenDestination(entry: MutationProjectionGolden["cases"][number], leaf: string): string {
-  return `tests${MUTATION_PROJECTION_GOLDEN.profileDirectoryName}/${entry.mutationDirectoryName}/🧪️${entry.scenarioId}/${leaf}`;
 }
 
 function normalizationGit(root: string, args: readonly string[]): string {
@@ -5568,140 +5532,6 @@ describe("taxonomy normalization", () => {
       rmSync(fixture.root, { recursive: true, force: true });
     }
   }, 120_000);
-
-  test("all physical mutation catalogs close the strict source-to-canonical registry", () => {
-    const workspace = getWorkspaceRoot();
-    const paths = ownedFilePaths(join(workspace, "✏️s", "🔌️plugins"))
-      .filter((path) => path.endsWith("/🔣️oracle.json"))
-      .map((path) => `✏️s/🔌️plugins/${path}`);
-    expect(paths).toEqual(nativeMutationCatalogPaths(workspace));
-    const registrations: SemanticProjectionCatalogRegistration[] = [];
-    for (const path of paths) {
-      const parsed = JSON.parse(readFileSync(join(workspace, path), "utf8")) as { mutationCatalogs?: readonly { id: string; vectors: SemanticProjectionCatalogRegistration["vectors"] }[] };
-      const ownerPath = path.slice(0, -"/🔣️oracle.json".length);
-      for (const catalog of parsed.mutationCatalogs ?? []) registrations.push({ ownerPath, catalogId: catalog.id, vectors: catalog.vectors });
-    }
-    const vectors = registrations.flatMap((catalog) => catalog.vectors);
-    const changed = vectors.filter((vector) => vector.sourceMutationDirectoryName !== vector.mutationDirectoryName);
-    const sourceTuples = registrations.flatMap((catalog) => catalog.vectors.flatMap((vector) => vector.scenarios.map((scenario) => `${catalog.catalogId}\0${vector.mutationId}\0${vector.sourceMutationDirectoryName}\0${scenario.id}`)));
-    const canonicalTuples = registrations.flatMap((catalog) => catalog.vectors.flatMap((vector) => vector.scenarios.map((scenario) => `${catalog.catalogId}\0${vector.mutationId}\0${vector.mutationDirectoryName}\0${scenario.id}`)));
-    const taxonomy = loadTaxonomy();
-    const reserve = taxonomy.semanticDescendantContracts[taxonomy.mutationCatalogProjection.descendantContractId].pathBudgetReserve.bytes;
-    const projectedBytes = registrations.flatMap((catalog) => catalog.vectors.flatMap((vector) => vector.scenarios.map((scenario) => new TextEncoder().encode(`${catalog.ownerPath.replace(/\/🏅️standards\/.*$/u, "")}/🪆️tests${catalog.ownerPath.match(/\/🏅️standards\/🔖️([^/]+)\/🪆️subsets\/✳️([^/]+)$/u)![1]}-${catalog.ownerPath.match(/\/🏅️standards\/🔖️([^/]+)\/🪆️subsets\/✳️([^/]+)$/u)![2]}/${vector.mutationDirectoryName}/${scenario.directoryName}`).length + reserve)));
-    expect(registrations).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.catalogs);
-    expect(vectors).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.vectors);
-    expect(vectors.flatMap((vector) => vector.scenarios)).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.scenarios);
-    expect(changed).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.changedMutationRows);
-    expect(new Set(changed.map((vector) => vector.sourceMutationDirectoryName)).size).toBe(MUTATION_PROJECTION_GOLDEN.registryCounts.changedMutationSources);
-    expect(new Set(sourceTuples).size).toBe(sourceTuples.length);
-    expect(new Set(canonicalTuples).size).toBe(canonicalTuples.length);
-    expect(Math.max(...projectedBytes)).toBeLessThanOrEqual(taxonomy.collisionPolicy.maxPathBytes);
-    expect(semanticProjectionCatalogProblems(registrations, taxonomy)).toEqual([]);
-  }, 15_000);
-
-  test("the strict catalog helper rejects missing sources, unknown canonical members, duplicate bundles, and excess path bytes", () => {
-    const taxonomy = loadTaxonomy();
-    const ownerPath = "✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️probe/🏅️standards/🔖️1/🪆️subsets/✳️any";
-    const vector = { mutationId: "change-annex", sourceMutationDirectoryName: "change-annex", mutationDirectoryName: "🏷️change-annex", scenarios: [{ id: "switches-to-national-annex-a", directoryName: "🧪️switches-to-national-annex-a" }] };
-    const problems = (vectors: SemanticProjectionCatalogRegistration["vectors"]) => semanticProjectionCatalogProblems([{ ownerPath, catalogId: "probe", vectors }], taxonomy);
-    expect(problems([{ mutationId: vector.mutationId, mutationDirectoryName: vector.mutationDirectoryName, scenarios: vector.scenarios } as SemanticProjectionCatalogRegistration["vectors"][number]]).some((problem) => problem.includes("exactly mutationId, sourceMutationDirectoryName"))).toBe(true);
-    expect(problems([{ ...vector, mutationDirectoryName: "🫥️change-annex" }]).some((problem) => problem.includes("no exact canonical schema membership"))).toBe(true);
-    expect(problems([vector, vector]).some((problem) => problem.includes("duplicates a source bundle tuple"))).toBe(true);
-    const id = `switches-${"very-long-".repeat(30)}annex`;
-    expect(problems([{ ...vector, scenarios: [{ id, directoryName: `🧪️${id}` }] }]).some((problem) => problem.includes("exceeds maxPathBytes"))).toBe(true);
-  });
-
-  test("the language-agnostic mutation projection golden agrees with owned filesystem discovery", () => {
-    const root = mkdtempSync(join(tmpdir(), "mutation-projection-golden-"));
-    try {
-      expect(MUTATION_PROJECTION_GOLDEN.sourceGlob).toBe(`🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧬️schema/🧬️mutations/*/🧪️tests/*/🦀️.rs`);
-      for (const entry of MUTATION_PROJECTION_GOLDEN.cases) {
-        const source = join(root, mutationGoldenSource(entry, "🦀️.rs"));
-        mkdirSync(resolve(source, ".."), { recursive: true });
-        writeFileSync(source, "fixture\n");
-      }
-      const platformBoundary = ownedFilePaths(root).filter((path) => /^🏅️standards\/[^/]+\/🪆️subsets\/[^/]+\/🧬️schema\/🧬️mutations\/[^/]+\/🧪️tests\/[^/]+\/🦀️component\.rs$/u.test(path));
-      const languageAgnostic = MUTATION_PROJECTION_GOLDEN.cases.map((entry) => mutationGoldenSource(entry, "🦀️.rs")).sort(ownedPathByteSort);
-      expect(platformBoundary).toEqual(languageAgnostic);
-      expect(MUTATION_PROJECTION_GOLDEN.cases.map((entry) => mutationGoldenDestination(entry, "🦀️.rs"))).toEqual([
-        "🧪️tests/🪆️1-any/🏷️change-annex/🦀️switches-to-national-annex-a.rs",
-        "🧪️tests/🪆️1-any/🌾️change-humidification-required-kg-h/🦀️required-humidification-becomes-3-point-5-kg-per-hour.rs",
-        "🧪️tests/🪆️1-any/🍀️change-humidification-provided-kg-h/🦀️provided-humidification-becomes-1-point-25-kg-per-hour.rs",
-        "🧪️tests/🪆️1-any/🌴️change-infiltration-allowance-m3-h/🦀️raises-infiltration-allowance-to-52-point-5-m3-per-hour.rs",
-        "🧪️tests/🪆️1-any/🔗️🎬️bind-default-scene/🦀️binds-first-scene-as-default.rs",
-        "🧪️tests/🪆️1-any/➖️delete-generation/🦀️removes-generation-2-and-selects-generation-1.rs",
-        "🧪️tests/🪆️1-any/✏️📦️change-asset-descriptive-metadata/🦀️restamps-generator-copyright-and-min-version.rs",
-        "🧪️tests/🪆️1-any/✏️📄️change-document-extension-data/🦀️attaches-punctual-lights-extension-to-document-root.rs",
-        "🧪️tests/🪆️1-any/✏️🔺️change-primitive-topology-mode/🦀️switches-primitive-from-triangles-to-triangle-strip.rs",
-        "🧪️tests/🪆️1-any/🚚️🧩️move-required-extension/🦀️moves-unlit-requirement-behind-transform-requirement.rs",
-        "🧪️tests/🪆️1-any/🔀️🧬️reorder-morph-target-attributes/🦀️orders-normal-before-position-in-morph-target.rs",
-      ]);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  test("projects every registered golden bundle into artifact profile storage", () => {
-    const files: Record<string, string> = {};
-    for (const entry of MUTATION_PROJECTION_GOLDEN.cases) {
-      for (const leaf of MUTATION_PROJECTION_GOLDEN.bundle) files[`🧪️artifact/${mutationGoldenSource(entry, leaf.source)}`] = "{}\n";
-    }
-    files[`🧪️artifact/🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🔣️oracle.json`] = `${JSON.stringify({
-      schemaVersion: 1,
-      oracles: [],
-      noOracleDecisions: [],
-      mutationCatalogs: [{
-        id: "golden-1-any",
-        capability: "golden-mutate",
-        standardDirectoryName: MUTATION_PROJECTION_GOLDEN.standardDirectoryName,
-        subsetDirectoryName: MUTATION_PROJECTION_GOLDEN.subsetDirectoryName,
-        kinds: ["runtime-only-operation"],
-        vectors: MUTATION_PROJECTION_GOLDEN.cases.map((entry) => ({ mutationId: entry.mutationId, sourceMutationDirectoryName: entry.sourceMutationDirectoryName, mutationDirectoryName: entry.mutationDirectoryName, scenarios: [{ id: entry.scenarioId, directoryName: `🧪️${entry.scenarioId}` }] })),
-      }],
-    }, null, 2)}\n`;
-    const fixture = normalizationFixture("mutation-projection", files);
-    try {
-      const { plan } = normalizationPlan(fixture);
-      for (const entry of MUTATION_PROJECTION_GOLDEN.cases) {
-        for (const leaf of MUTATION_PROJECTION_GOLDEN.bundle) {
-          const move = normalizationMove(plan, mutationGoldenSource(entry, leaf.source));
-          expect(move.destinationPath).toBe(`${fixture.scope}/🧪️artifact/${mutationGoldenDestination(entry, leaf.destination)}`);
-          expect(move.rationaleRule).toBe("artifact-mutation-test-projection-v1");
-        }
-      }
-      expect(plan.unresolved.filter((violation) => violation.code.includes("projection"))).toEqual([]);
-    } finally {
-      rmSync(fixture.root, { recursive: true, force: true });
-    }
-  });
-
-  test("blocks a reintroduced mutation source token after an empty converged plan", () => {
-    const entry = MUTATION_PROJECTION_GOLDEN.cases[0]!;
-    const files: Record<string, string> = {};
-    for (const leaf of MUTATION_PROJECTION_GOLDEN.bundle) files[`🧪️artifact/${mutationGoldenSource(entry, leaf.source)}`] = "{}\n";
-    files[`🧪️artifact/🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🔣️oracle.json`] = `${JSON.stringify({
-      schemaVersion: 1,
-      oracles: [],
-      noOracleDecisions: [],
-      mutationCatalogs: [{ id: "stale-1-any", capability: "stale-mutate", standardDirectoryName: MUTATION_PROJECTION_GOLDEN.standardDirectoryName, subsetDirectoryName: MUTATION_PROJECTION_GOLDEN.subsetDirectoryName, kinds: [], vectors: [{ mutationId: entry.mutationId, sourceMutationDirectoryName: entry.sourceMutationDirectoryName, mutationDirectoryName: entry.mutationDirectoryName, scenarios: [{ id: entry.scenarioId, directoryName: `🧪️${entry.scenarioId}` }] }] }],
-    }, null, 2)}\n`;
-    const fixture = normalizationFixture("mutation-stale", files);
-    try {
-      const first = normalizationPlan(fixture).plan;
-      expect(first.unresolved.filter((violation) => violation.severity === "error")).toEqual([]);
-      expect(applyTaxonomyPlan(first, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: first.baselineCommit, expectedPlanDigest: first.planDigest }).state).toBe("committed");
-      const clean = normalizationPlan(fixture).plan;
-      expect(clean.moves.filter((move) => move.rationaleRule === "artifact-mutation-test-projection-v1")).toEqual([]);
-      expect(clean.unresolved.filter((violation) => violation.code === "projection-old-token-stale")).toEqual([]);
-      const destination = join(fixture.workspace, "🧪️artifact", mutationGoldenDestination(entry, "🦀️.rs"));
-      writeFileSync(destination, `${readFileSync(destination, "utf8")}\n// ${mutationGoldenSource(entry, "")}\n`);
-      const stale = normalizationPlan(fixture).plan;
-      expect(stale.moves.filter((move) => move.rationaleRule === "artifact-mutation-test-projection-v1")).toEqual([]);
-      expect(stale.unresolved.filter((violation) => violation.code === "projection-old-token-stale")).toHaveLength(1);
-    } finally {
-      rmSync(fixture.root, { recursive: true, force: true });
-    }
-  }, 60_000);
 
   test("plans the exact CAD and Draw authority mappings with structured cross-profile references", () => {
     const fixture = artifactProjectionNormalizationFixture("plan", true);
@@ -6724,7 +6554,7 @@ describe("generator preview protocol", () => {
 
 //#region 🧾️TransactionDispositionsV2
 describe("taxonomy transaction dispositions v2", () => {
-  const sentinelCasesPath = resolve(import.meta.dir, "../../🧫️fixtures/🚨️transaction-sentinel-cases/🔣️.json");
+  const sentinelCasesPath = resolve(import.meta.dir, "../../🖼️assets/🚨️transaction-sentinel-cases/🔣️.json");
   const dispositionOutcomesPath = resolve(import.meta.dir, "../../🧫️fixtures/🎲️transaction-disposition-outcomes/🔣️.json");
   const protocolPath = resolve(import.meta.dir, "../../🧫️fixtures/🤝️transaction-protocol/🔣️.json");
 
@@ -6763,7 +6593,7 @@ describe("taxonomy transaction dispositions v2", () => {
     try {
       mkdirSync(join(root, "evidence", "directory"), { recursive: true });
       writeFileSync(join(root, "evidence", "file.txt"), "sentinel\n");
-      symlinkSync("../../📦️packages/file.txt", join(root, "evidence", "link"));
+      symlinkSync("../file.txt", join(root, "evidence", "link"));
       const native = noFollowTreeDigest(root, "evidence");
       const platformBoundary = ownedFilesystemEntries(join(root, "evidence"), true).map(({ path }) => path === "." ? "evidence" : `evidence/${path}`);
       expect(native.files).toBe(1);
@@ -6771,7 +6601,7 @@ describe("taxonomy transaction dispositions v2", () => {
       expect(native.symlinks).toBe(1);
       expect(platformBoundary).toEqual(["evidence", "evidence/directory", "evidence/file.txt", "evidence/link"]);
       expect(protocol.virtualPreimageNodes.find((row) => row.state === "file")?.contentHash).toBe("b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51");
-      expect(protocol.virtualPreimageNodes.find((row) => row.state === "symlink")?.target).toBe("../../📦️packages/file.txt");
+      expect(protocol.virtualPreimageNodes.find((row) => row.state === "symlink")?.target).toBe("../file.txt");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

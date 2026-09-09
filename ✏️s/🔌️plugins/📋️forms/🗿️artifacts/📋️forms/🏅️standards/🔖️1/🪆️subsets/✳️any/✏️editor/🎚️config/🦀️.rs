@@ -215,6 +215,10 @@ impl FormsTryValues {
     pub fn len(&self) -> usize {
         self.len
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
     pub fn root_token(&self) -> usize {
         Arc::as_ptr(&self.root) as usize
     }

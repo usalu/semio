@@ -12,7 +12,7 @@ use schema::ArtifactSchema;
 /// `crate::animation_child_handle`'s doc comment), so this diff carries no field
 /// for it at all — nothing in this plugin yet produces a delta for that slot.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.animate.presentation")]
 pub struct PresentationDiff {
     #[state(artifact)]

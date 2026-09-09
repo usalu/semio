@@ -35,7 +35,7 @@ const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️package
 const sessionPath = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions", plugin, "🟦️session.ts");
 const brandId = process.env.SEMIO_BRAND ?? PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.brand;
 const brand = resolveShellBrandById(brandId);
-const distributionSource = (source: string) => path.relative(repoRoot, path.resolve(playDir, source)).replaceAll("\\", "/");
+const distributionSource = (source: string) => source === "\0vite/preload-helper.js" ? "virtual/vite/preload-helper.js" : path.relative(repoRoot, path.resolve(playDir, source)).replaceAll("\\", "/");
 const distributionRollupOutput = {
   entryFileNames: (chunk: { facadeModuleId: string | null; moduleIds: string[] }) => distributionChunkName(DISTRIBUTION_LAYOUT, { facadeModuleId: chunk.facadeModuleId === null ? null : distributionSource(chunk.facadeModuleId), moduleIds: chunk.moduleIds.map(distributionSource) }),
   chunkFileNames: (chunk: { facadeModuleId: string | null; moduleIds: string[] }) => distributionChunkName(DISTRIBUTION_LAYOUT, { facadeModuleId: chunk.facadeModuleId === null ? null : distributionSource(chunk.facadeModuleId), moduleIds: chunk.moduleIds.map(distributionSource) }),
@@ -87,7 +87,7 @@ const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.varian
 // copied and every single-variant production build 404s the shard worker at first plugin activation.
 if (!resolvedPluginId) throw new Error(`Unknown playground module identity: ${plugin}`);
 const extensionIds = new Set(EXTENSION_TARGETS.map((target) => target.pluginId));
-const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, PLUGIN_BUILD_TARGETS) : undefined;
+const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS]) : undefined;
 const pluginModuleDirNames = [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId))];
 //#endregion 🔖️RegistryDrivenAssetsAndEngines
 

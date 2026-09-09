@@ -1,4 +1,3 @@
-
 use super::*;
 
 static FIXTURE_LOCK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -175,14 +174,12 @@ async fn wal_writer_mounted_controller_fences_at_signal_and_wakes_outside_regist
         let permit = table.acquire_with(&document, || Ok(WriterControllerLawGuard { failures: Arc::new(std::sync::atomic::AtomicUsize::new(0)), closed: false })).unwrap();
         let key = permit.key();
         let mut factory_calls = 0;
-        assert!(
-            table
-                .acquire_with(&document, || {
-                    factory_calls += 1;
-                    Ok(WriterControllerLawGuard { failures: Arc::new(std::sync::atomic::AtomicUsize::new(0)), closed: false })
-                })
-                .is_err()
-        );
+        assert!(table
+            .acquire_with(&document, || {
+                factory_calls += 1;
+                Ok(WriterControllerLawGuard { failures: Arc::new(std::sync::atomic::AtomicUsize::new(0)), closed: false })
+            })
+            .is_err());
         assert_eq!(factory_calls, row["guardFactoryCallsOnConflict"].as_u64().unwrap());
         table.pin_operation(key, control, &document, row["operation"].as_u64().unwrap()).unwrap();
         let mut release = permit.release();
@@ -1880,13 +1877,11 @@ fn db_io_maintenance_rotates_ready_and_faulted_classes_without_starvation() {
     }
     let cursor = std::sync::atomic::AtomicUsize::new(0);
     let mut attempted = 0;
-    assert!(
-        !db_io_maintenance_turn(&cursor, |_| {
-            attempted += 1;
-            Ok(false)
-        })
-        .unwrap()
-    );
+    assert!(!db_io_maintenance_turn(&cursor, |_| {
+        attempted += 1;
+        Ok(false)
+    })
+    .unwrap());
     assert_eq!(attempted, DB_IO_MAINTENANCE_CLASSES);
     eprintln!("[DEBUG] mounted DB maintenance rotates every continuously-ready or faulted class and bounds a fully idle scan to one round");
 }

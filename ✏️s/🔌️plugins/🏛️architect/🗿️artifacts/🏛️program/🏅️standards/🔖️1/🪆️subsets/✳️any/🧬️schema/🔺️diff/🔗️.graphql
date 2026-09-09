@@ -1,4 +1,5 @@
 # 🧬️ Program diff schema — sparse field delta.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 
 type ProgramDiff {
   artifact: ProgramArtifact @state(class: ARTIFACT)
@@ -51,7 +52,7 @@ type ProgramDiff {
   validations: ProgramValidationsDelta @state(class: ARTIFACT)
   performance: ProgramPerformanceDelta @state(class: ARTIFACT)
   quality: ProgramQualityDelta @state(class: ARTIFACT)
-  documents: ProgramDocumentsDelta @state(class: ARTIFACT)
+  artifacts: ProgramArtifactsDelta @state(class: ARTIFACT)
   assumptions: ProgramAssumptionsDelta @state(class: ARTIFACT)
   constraints: ProgramConstraintsDelta @state(class: ARTIFACT)
   complianceRecords: ProgramComplianceRecordsDelta @state(class: ARTIFACT)
@@ -68,8 +69,8 @@ type ProgramDiff {
   issues: ProgramIssuesDelta @state(class: ARTIFACT)
   auditEvents: ProgramAuditEventsDelta @state(class: ARTIFACT)
   templates: ProgramTemplatesDelta @state(class: ARTIFACT)
-  knowledge: ProgramKnowledgeDelta @state(class: ARTIFACT)
-  benchmarks: ProgramBenchmarksDelta @state(class: ARTIFACT)
+  knowledge: ArtifactChild @state(class: ARTIFACT)
+  benchmarks: ArtifactChild @state(class: ARTIFACT)
   traces: ProgramTracesDelta @state(class: ARTIFACT)
   governance: Governance @state(class: ARTIFACT)
 }
@@ -626,16 +627,16 @@ type ProgramQualityPatchEntry {
   item: QualityRecord!
 }
 
-type ProgramDocumentsDelta {
-  added: [DocumentRecord!]!
+type ProgramArtifactsDelta {
+  added: [ArtifactRecord!]!
   removed: [String!]!
-  patched: [ProgramDocumentsPatchEntry!]!
+  patched: [ProgramArtifactsPatchEntry!]!
   reordered: [String!]
 }
 
-type ProgramDocumentsPatchEntry {
+type ProgramArtifactsPatchEntry {
   id: String!
-  item: DocumentRecord!
+  item: ArtifactRecord!
 }
 
 type ProgramAssumptionsDelta {
@@ -828,30 +829,6 @@ type ProgramTemplatesDelta {
 type ProgramTemplatesPatchEntry {
   id: String!
   item: TemplateRecord!
-}
-
-type ProgramKnowledgeDelta {
-  added: [KnowledgeRecord!]!
-  removed: [String!]!
-  patched: [ProgramKnowledgePatchEntry!]!
-  reordered: [String!]
-}
-
-type ProgramKnowledgePatchEntry {
-  id: String!
-  item: KnowledgeRecord!
-}
-
-type ProgramBenchmarksDelta {
-  added: [BenchmarkRecord!]!
-  removed: [String!]!
-  patched: [ProgramBenchmarksPatchEntry!]!
-  reordered: [String!]
-}
-
-type ProgramBenchmarksPatchEntry {
-  id: String!
-  item: BenchmarkRecord!
 }
 
 type ProgramTracesDelta {

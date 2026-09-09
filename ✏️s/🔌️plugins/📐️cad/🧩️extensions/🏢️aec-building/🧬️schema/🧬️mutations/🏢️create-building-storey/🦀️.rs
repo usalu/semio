@@ -1,13 +1,12 @@
 //! 🏢️ Building storey composite mutation source.
 
 use semio_framework_os_kernel::{FromValue, ToValue};
-use semio_s_artifact_cad_cad::mutations::change_active_model_definition::ChangeActiveModelDefinition;
 use semio_s_artifact_cad_cad::mutations::create_node::CreateNode;
 use semio_s_artifact_cad_cad::{CadMutation, CadNode, CadSnapshot};
 
 /// 🏢️ Composite mutation contributed onto cad's `s.cad.cad` artifact — a real building-domain
 /// workflow step cad itself has no notion of (a bare CAD tool has no concept of a "storey"), planned
-/// entirely from two of cad's OWN leaf mutations (`create-node`, `change-active-model-definition`)
+/// entirely from cad's document-owned `create-node` leaf mutation; pane focus stays host-owned
 /// through `protocol::Planner::call`. Frozen id grammar (contract freeze §3):
 /// `"<target-document-schema>#<contributor-plugin-id>:<kebab-kind>"` — assembled by
 /// `ArtifactContribution::resolve`, never hand-formatted here.
@@ -34,8 +33,7 @@ impl protocol::CompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildin
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "building-storey", kind: "create-building-storey", record: "CreatedBuildingStorey" };
 
     fn plan(&self, _base: &CadSnapshot, planner: &mut protocol::Planner<CadSnapshot, CadMutation>) -> Result<(), protocol::PlanError> {
-        planner.call(CadMutation::CreateNode(CreateNode { node: CadNode { id: self.storey_id.clone(), label: self.storey_label(), kind: "building-storey".into() } }))?;
-        planner.call(CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() }))
+        planner.call(CadMutation::CreateNode(CreateNode { node: CadNode { id: self.storey_id.clone(), label: self.storey_label(), kind: "building-storey".into() } }))
     }
 
     fn label(&self) -> String {

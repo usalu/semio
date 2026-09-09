@@ -12,6 +12,8 @@ Puzzle 2D, Puzzle 3D, and Puzzle 5D now use the framework's concrete window-inst
 
 The active utility and live window roster continue to come from framework view/lifecycle state. Puzzle 2D and Puzzle 5D engagement actions now trust the dispatch context's concrete instance and registered window kind. Their SetActiveUtility effects address that exact instance instead of a kind id or the whole fixed window-kind roster.
 
+Each Puzzle transient owner uses the shared `ArtifactEphemeralTransferPreparationFactory` with owner-specific preflight and an infallible direct mutation-to-state move. State and mutation roots use `OwnedValueRetirementFactory`; the previous duplicate app-local lifecycle structs are removed. Puzzle 2D charges every nested `DslValue` allocation and key before queue extension against the exact Store admission ceiling, making both traversal and temporary queue space bounded. Tiny-grant regressions cover nested Puzzle 2D values, Puzzle 3D suggestion/input strings, and Puzzle 5D input strings through terminal-empty retirement.
+
 ## Registered-app runtime laws
 
 The native editor tests build real registry-backed VcsArtifactApp<EditorApp<_>> instances, bind receiver instance 1, dispatch through the typed operation route, advance bounded maintenance and publication turns, acknowledge terminal result pages, and drive close until the framework reports terminal-empty ownership.
@@ -74,11 +76,19 @@ The OS ownership gate's remaining host-opening-context fixture URL now follows t
 | Final cross-language authority rerun | RED before target entry; concurrent browser-context migration left a missing `🔣️.json`, and the graph references a currently absent `npm:@asamuzakjp/css-color` project | 🗑️generated/puzzle-publication-authority-audit.log |
 | Final cross-language authority rerun after the canonical fixture URL correction | GREEN; 3 owners, 7 neutral schemas, Ajv + independent oracle | 🗑️generated/puzzle-publication-authority-audit-2.log |
 
-All Cargo commands use CARGO_INCREMENTAL=0 and the ticket-owned 🗑️generated/cargo-puzzle-ownership target. No native result is treated as green while its owning process is still live.
+Current Cargo commands use CARGO_INCREMENTAL=0 and the shared ticket-owned 🗑️generated/cargo-trinity target. Note check session 22619 and shell PID 16786 are no longer registered or alive. 🗑️generated/note-window-check-4.log ends on an Nx heartbeat after 1,690,891 ms without a terminal Cargo result, so it is recorded as an orphaned no-result run.
+
+## Capacity admission correction
+
+The direct transient transfers now admit retained heap capacity rather than logical payload length. Puzzle 3D charges all three owned Strings. Puzzle 5D charges its engagement String. Puzzle 2D charges both top-level Strings, the reserved capacity of the top-level candidate Vec, every nested String, every nested array/object Vec, and every object-key String. Checked multiplication covers vector element storage, checked addition covers the cumulative footprint, and each charge rejects once it exceeds the Store one-item maximum before the traversal queue extends.
+
+Native unit regressions construct one-character Strings and empty Vecs whose capacity alone exceeds the Store maximum. They require begin to return the exact mutation allocation by checking value, pointer, and capacity, then retire that returned mutation to terminal emptiness with one-item/one-byte grants. Puzzle 2D covers both top-level Strings, the top-level Vec, nested String/array/object allocations, and object keys. Puzzle 3D covers engagement input plus both suggestion-menu identifiers. The existing accepted multi-kilobyte payload and tiny-grant retirement laws remain.
+
+These source and test changes have not been assigned a native result. The previous Note check was orphaned without a terminal result, and the parent owns the shared Cargo queue for the complete Note and Puzzle runtime gates.
 
 ## Remaining validation
 
-- Restore the concurrently moving DAG demo include and Nx graph inputs, then obtain terminal native runtime results for the focused Puzzle 5D, Puzzle 2D, and Puzzle 3D registered-app ownership laws.
+- Run the root-owned full Note native registered-app target, then obtain terminal native runtime results for the focused Puzzle 5D, Puzzle 2D, and Puzzle 3D registered-app ownership laws.
 - Obtain terminal native cancellation result for the Puzzle 3D exact fill identity law.
 - Re-run the generated plugin descriptor-freshness test with the 8 MiB test-thread stack.
 

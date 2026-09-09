@@ -1,22 +1,11 @@
-# 🧬️ GIS map artifact schema — every field with its state class.
-
+# 🗺️ Complete persisted map with separate child identities.
+# import GisMapFeature from "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📍️feature/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type GisMapArtifact {
   positions: [GisMapFeature!]! @state(class: ARTIFACT)
   routes: [GisMapFeature!]! @state(class: ARTIFACT)
   regions: [GisMapFeature!]! @state(class: ARTIFACT)
-}
-
-type GisMapFeature {
-  id: String!
-  data: String!
-}
-
-type GisMapBoolEntry {
-  key: String!
-  value: Boolean!
-}
-
-type GisMapNumberEntry {
-  key: String!
-  value: Float!
+  drawing: ArtifactChild! @state(class: ARTIFACT)
+  image: ArtifactChild @state(class: ARTIFACT)
+  value: ArtifactChild! @state(class: ARTIFACT)
 }

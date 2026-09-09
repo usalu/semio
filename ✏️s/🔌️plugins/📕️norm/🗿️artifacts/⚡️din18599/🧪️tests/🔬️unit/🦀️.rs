@@ -28,3 +28,13 @@ fn climate_working_data_is_owned_by_the_exact_child() {
 
     assert_eq!(observed, SerdeJsonDin18599ChildOwnerOracle::expected());
 }
+
+
+#[test]
+fn din18599_child_restore_projection_accepts_the_exact_owned_climate_table() {
+    let snapshot = Din18599Snapshot::default();
+    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical DIN 18599 climate child");
+    assert_eq!(projection.len(), 1);
+    assert!(projection.admits_member("climate", &snapshot.climate.target));
+    assert_eq!(snapshot.climate.child_id, snapshot.climate.target.artifact_id);
+}

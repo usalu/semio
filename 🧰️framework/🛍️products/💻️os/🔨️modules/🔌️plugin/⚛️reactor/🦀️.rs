@@ -700,6 +700,55 @@ pub async fn host_for_instance(instance: u32) -> crate::host::Host {
     crate::host::Host::new(registry).await
 }
 
+//#region 🔖️ExtensionContinuation
+/// 🔁️ Mints one `Effect::InvokeExtension` for `instance` through this actor's `RequestRegistry` and
+/// records `response_action` against the minted id — the ONE place in the repo where that effect is
+/// created on the guest side outside `host::Host::invoke_extension`'s awaiting variant. Returns the
+/// minted id (diagnostic; the effect itself rides the registry's own outbound queue, drained into
+/// `turn-result.effects` by `poll` later in the SAME turn).
+pub(crate) fn queue_extension_invocation(instance: u32, invocation: &crate::app::ExtensionInvocation) -> Result<semio_framework::kernel::RequestId, semio_framework::Fault> {
+    let registry = REGISTRY.with(|registry| registry.for_instance(instance));
+    let extension_id = invocation.extension_id.clone();
+    let capability = invocation.capability.clone();
+    let request_json = invocation.request_json.clone();
+    registry.request_continuation(invocation.response_action.clone(), invocation.request_json.clone(), move |req| Effect::invoke_extension(req, extension_id, capability, request_json))
+}
+
+/// 🔁️ The arguments `response_action` is dispatched with: the ORIGINAL request object's own fields
+/// (whatever correlation the app put there — a `nodeHash`, a handle, an operator id) merged with
+/// this invocation's outcome. Domain-neutral by construction: the SDK never invents a key the app
+/// did not already send, it only adds `ok` plus either `outputJson` or `faultCode`/`faultMessage`.
+pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, semio_framework::Fault>) -> dsl::DslValue {
+    let mut fields: Vec<(String, dsl::DslValue)> = match dsl::json::from_json_str::<dsl::DslValue>(request_json) {
+        Ok(dsl::DslValue::Object(object)) => object,
+        _ => Vec::new(),
+    };
+    fields.retain(|(key, _)| key != "ok" && key != "outputJson" && key != "faultCode" && key != "faultMessage");
+    match outcome {
+        Ok(bytes) => {
+            fields.push(("ok".to_string(), dsl::DslValue::Bool(true)));
+            fields.push(("outputJson".to_string(), dsl::DslValue::String(String::from_utf8_lossy(bytes).into_owned())));
+        }
+        Err(fault) => {
+            fields.push(("ok".to_string(), dsl::DslValue::Bool(false)));
+            fields.push(("faultCode".to_string(), dsl::DslValue::String(fault.code.0.clone())));
+            fields.push(("faultMessage".to_string(), dsl::DslValue::String(fault.message.clone())));
+        }
+    }
+    dsl::DslValue::object(fields)
+}
+
+/// 🔁️ `Event::Completed`'s continuation branch, factored out of `poll`'s event loop so it is unit
+/// testable without a live `PluginRuntime`: takes the id's continuation (if any) and builds the
+/// exact `(instance, action, args)` triple the follow-up dispatch uses. `None` means the id is an
+/// ordinary parked-future request and must go to `RequestRegistry::resolve` instead.
+pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, outcome: &Result<Vec<u8>, semio_framework::Fault>) -> Option<(u32, String, dsl::DslValue)> {
+    let continuation = REGISTRY.with(|registry| registry.take_continuation(req))?;
+    let args = extension_response_args(&continuation.request_json, outcome);
+    Some((continuation.instance, continuation.response_action, args))
+}
+//#endregion 🔖️ExtensionContinuation
+
 /// 🌐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): the instance-agnostic sibling of
 /// `host_for_instance` — a `Host` scoped to instance 0, the SAME "no instance tag declared" default
 /// `RequestRegistry::for_instance`'s own doc names. `⚛️reactor/💼️jobs/🦀️.rs::spawn_job`
@@ -1556,7 +1605,7 @@ mod wit_bridge {
             Effect::OpenDialog { req, dialog_id, args } => wit::Effect::OpenDialog(wit_effects::OpenDialogEffect { req: req.0, params: wit_effects::OpenDialogParams { dialog_id, args: args.map(|value| pack(&value)) } }),
             Effect::DispatchAction { req, action, args, delay_ms } => wit::Effect::DispatchAction(wit_effects::DispatchActionEffect { req: req.0, params: wit_effects::DispatchActionParams { action, args: args.map(|value| pack(&value)), delay_ms } }),
             Effect::ReplayShellCommand { action_id, args } => wit::Effect::ReplayShellCommand(wit_effects::ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
-            Effect::InvokeExtension { req, extension_id, capability, request_json } => {
+            Effect::InvokeExtension { req, extension_id, capability, request_json, .. } => {
                 wit::Effect::InvokeExtension(wit_effects::InvokeExtensionEffect { req: req.0, params: wit_effects::InvokeExtensionParams { extension_id, capability, payload: request_json.into_bytes() } })
             }
             Effect::SendMessage { target, payload } => wit::Effect::SendMessage(wit_effects::SendMessageEffect { target: kernel_endpoint_to_wit(target), payload }),
@@ -1656,3 +1705,9 @@ mod m1_m2_reactor_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️reconcile-budget/🦀️.rs"]
 mod reconcile_budget_tests;
+
+//#region 🧪️ExtensionContinuationTests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️extension-continuation/🦀️.rs"]
+mod extension_continuation_tests;
+//#endregion 🧪️ExtensionContinuationTests

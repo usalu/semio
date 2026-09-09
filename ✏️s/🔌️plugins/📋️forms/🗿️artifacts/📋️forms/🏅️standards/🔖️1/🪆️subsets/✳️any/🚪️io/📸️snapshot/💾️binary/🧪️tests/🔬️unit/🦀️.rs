@@ -47,7 +47,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-    let document = crate::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }]);
+    let document = crate::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, &[FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }]);
     let mut store: ArtifactStore<FormsSnapshot, FormMutation> = ArtifactStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None)).await.expect("valid artifact store fixture");
     let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
     store.dispatch(ArtifactCommand::Apply { mutations: vec![FormMutation::CreateStep(crate::mutations::create_step::mutation::CreateStep { step, index: None })], description: None }).await.expect("apply");

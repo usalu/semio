@@ -57,6 +57,15 @@ async fn content_child_handle_is_content_addressed_and_deterministic() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn wires_child_restore_projection_accepts_the_exact_owned_content() {
+    let snapshot = empty_wires_snapshot();
+    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Wires content child");
+    assert_eq!(projection.len(), 1);
+    assert!(projection.admits_member("content", &snapshot.content.target));
+    assert_eq!(snapshot.content.child_id, snapshot.content.target.artifact_id);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn wires_working_scene_is_owned_by_the_exact_snapshot_child() {
     let owned = wires_content_child_with_owner(Vec::new(), Vec::new());
     let wire = dsl::os_pack::to_json_string(&owned);

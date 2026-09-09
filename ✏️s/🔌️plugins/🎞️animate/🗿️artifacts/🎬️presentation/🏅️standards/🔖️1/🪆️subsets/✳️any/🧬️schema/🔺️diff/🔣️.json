@@ -4,108 +4,36 @@
   "title": "PresentationDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
     "artifact": {
-      "title": "PresentationArtifact",
-      "type": "object",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/s/animate/presentation/artifact.json"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "schema": {
-      "type": "string",
+      "type": [
+        "string",
+        "null"
+      ],
       "x-semio-state": "artifact"
     },
-    "source": {
-      "$ref": "https://semio.tech/schema/s/animate/presentation/artifact.json#/$defs/FigureTileSource",
-      "x-semio-state": "artifact"
-    },
-    "tiles": {
-      "$ref": "#/$defs/PresentationTilesDelta",
-      "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "FigureTileDraftPatch": {
-      "title": "FigureTileDraftPatch",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string"
+    "presentation": {
+      "anyOf": [
+        {
+          "type": "null"
         },
-        "crop": {
-          "$ref": "https://semio.tech/schema/s/animate/presentation/artifact.json#/$defs/FigureTileFrame"
+        {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
         }
-      }
-    },
-    "PresentationStringList": {
-      "title": "PresentationStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
       ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "PresentationTilesDelta": {
-      "title": "PresentationTilesDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://semio.tech/schema/s/animate/presentation/artifact.json#/$defs/FigureTileDraft"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PresentationTilePatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "PresentationTilePatchEntry": {
-      "title": "PresentationTilePatchEntry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/FigureTileDraftPatch"
-        }
-      }
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     }
   }
 }

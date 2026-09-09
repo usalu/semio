@@ -112,7 +112,7 @@ pub enum LifecycleStatus {
 /// @emoji 👥️ Ownership and authority roles attached to an entity header.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Ownership {
     pub owner_id: Option<EntityId>,
@@ -126,7 +126,7 @@ pub struct Ownership {
 /// @emoji 📝️ Rich or plain text payload with optional format hint.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct TextField {
     pub text: String,
@@ -144,7 +144,7 @@ impl TextField {
 /// @emoji 🏷️ Tagged free-text note on an entity.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct TaggedNote {
     pub tag: String,
@@ -154,7 +154,7 @@ pub struct TaggedNote {
 /// @emoji 🕒️ Created/updated audit timestamps on an entity header.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct TimestampMeta {
     pub created: String,
@@ -179,7 +179,7 @@ impl Default for TimestampMeta {
 /// @emoji 📋️ Common header shared by all register entities via serde flatten.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct EntityHeader {
     pub id: EntityId,
@@ -210,7 +210,7 @@ impl EntityHeader {
 /// @emoji 📐️ Numeric quantity with min/max/target bands and unit.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct QuantitySpec {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -276,7 +276,7 @@ pub enum TraceKind {
 /// @emoji 🧭️ Directed trace edge stored in the plugin trace register.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct TraceLink {
     pub id: EntityId,
@@ -316,7 +316,7 @@ pub enum DiagnosticSeverity {
 /// @emoji 🩺️ Non-fatal program validation or analysis finding.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramDiagnostic {
     pub severity: DiagnosticSeverity,
@@ -369,7 +369,7 @@ mod tests;
 
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct TraceLinkPatch {
     pub from_id: Option<EntityId>,

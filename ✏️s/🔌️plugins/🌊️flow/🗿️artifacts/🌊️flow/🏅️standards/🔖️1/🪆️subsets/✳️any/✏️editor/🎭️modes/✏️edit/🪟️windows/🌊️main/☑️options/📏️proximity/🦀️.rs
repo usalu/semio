@@ -1,7 +1,7 @@
 //! 📏️ Main-window option — the proximity-select distance slider.
 //! Its command handler lives in `🎮️commands/🔬️set-lod-mode`.
 
-use crate::editor::flow::config::FlowConfig;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::FLOW_PLAY_APP_ID;
 use semio_framework_plugin::{ActionDescriptor, WindowMeasure};
@@ -15,7 +15,7 @@ fn proximity_action(action: &str) -> ActionDescriptor {
     ActionDescriptor { controller_id: FLOW_PLAY_APP_ID.into(), action: action.into(), args: None }
 }
 
-pub fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
+pub fn measure(config: &FlowMainWindowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
     WindowMeasure::Slider {
         id: "flow-play-measures.proximity".into(),
         label: Some(labels.proximity_distance.into()),

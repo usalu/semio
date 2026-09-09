@@ -63,12 +63,14 @@ message Puzzle3dWindowConfig {
   bool transform_rotate = 12;
   string vortex_show = 13;
   string vortex_direction = 14;
-  WorldSunConfig sun = 15;
-  Puzzle3dCamera camera = 16;
+  string selection_method = 15;
+  WorldSunConfig sun = 16;
+  Puzzle3dCamera camera = 17;
 }
 
 message Puzzle3dWindowTransient {
   optional Puzzle3dSuggestionMenu suggestion_menu = 1;
   string engagement_input = 2;
   uint64 brush_candidate_index = 3;
+  string activation = 4;
 }

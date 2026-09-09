@@ -127,5 +127,202 @@
       "🧬️schema/📸️snapshot",
       "🧬️schema/🔺️diff"
     ]
-  }
+  },
+  "typescriptModules": [
+    {
+      "name": "local exported alias",
+      "files": {
+        "/root.ts": "interface Document { content: string; meta?: number; } export type Fixture = Document;"
+      },
+      "expected": [
+        "content",
+        "meta"
+      ]
+    },
+    {
+      "name": "imported alias",
+      "files": {
+        "/root.ts": "import { parse, type Document } from './document.ts'; export type Fixture = Document;",
+        "/document.ts": "export interface Document { content: string; } export const parse = () => {};"
+      },
+      "expected": [
+        "content"
+      ]
+    },
+    {
+      "name": "renamed import",
+      "files": {
+        "/root.ts": "import type { Document as Parent } from './document.ts'; export type Fixture = Parent;",
+        "/document.ts": "export interface Document { content: string; }"
+      },
+      "expected": [
+        "content"
+      ]
+    },
+    {
+      "name": "named type reexport",
+      "files": {
+        "/root.ts": "export { parse } from './document.ts'; export type { Document as Fixture } from './document.ts';",
+        "/document.ts": "export interface Document { content: string; child: Child; }"
+      },
+      "expected": [
+        "content",
+        "child"
+      ]
+    },
+    {
+      "name": "inline type named reexport",
+      "files": {
+        "/root.ts": "export { type Document as Fixture } from './document.ts';",
+        "/document.ts": "export interface Document { content: string; }"
+      },
+      "expected": [
+        "content"
+      ]
+    },
+    {
+      "name": "local named export",
+      "files": {
+        "/root.ts": "interface Document { content: string; } export type { Document as Fixture };"
+      },
+      "expected": [
+        "content"
+      ]
+    },
+    {
+      "name": "alias chain across modules",
+      "files": {
+        "/root.ts": "export type { Snapshot as Fixture } from './snapshot.ts';",
+        "/snapshot.ts": "import type { Document } from './document.ts'; export type Snapshot = Document;",
+        "/document.ts": "export interface Document { content: string; }"
+      },
+      "expected": [
+        "content"
+      ]
+    },
+    {
+      "name": "missing exported type remains missing",
+      "files": {
+        "/root.ts": "import type { Document } from './document.ts'; type Fixture = Document;",
+        "/document.ts": "export interface Document { content: string; }"
+      },
+      "expected": []
+    },
+    {
+      "name": "missing module remains missing",
+      "files": {
+        "/root.ts": "export type { Document as Fixture } from './missing.ts';"
+      },
+      "expected": []
+    },
+    {
+      "name": "circular alias remains missing",
+      "files": {
+        "/root.ts": "export type Fixture = Other; type Other = Fixture;"
+      },
+      "expected": []
+    },
+    {
+      "name": "circular reexport remains missing",
+      "files": {
+        "/root.ts": "export type { Fixture } from './other.ts';",
+        "/other.ts": "export type { Fixture } from './root.ts';"
+      },
+      "expected": []
+    },
+    {
+      "name": "empty interface inherits imported artifact",
+      "files": {
+        "/root.ts": "import type { Document } from './document.ts'; export interface Fixture extends Document {}",
+        "/document.ts": "export interface Document { content: string; child: Child; }"
+      },
+      "expected": [
+        "content",
+        "child"
+      ]
+    },
+    {
+      "name": "interface inheritance adds own fields",
+      "files": {
+        "/root.ts": "interface Base { content: string; } export interface Fixture extends Base { child: Child; }"
+      },
+      "expected": [
+        "child",
+        "content"
+      ]
+    },
+    {
+      "name": "interface override keeps the derived field",
+      "files": {
+        "/root.ts": "interface Base { content?: string; child: Child; } export interface Fixture extends Base { content: string; }"
+      },
+      "expected": [
+        "content",
+        "child"
+      ]
+    },
+    {
+      "name": "diamond inheritance shares one base",
+      "files": {
+        "/root.ts": "interface Base { content: string; } interface Left extends Base {} interface Right extends Base {} export interface Fixture extends Left, Right { child: Child; }"
+      },
+      "expected": [
+        "child",
+        "content"
+      ]
+    },
+    {
+      "name": "child metadata retains state ownership",
+      "files": {
+        "/root.ts": "export interface Fixture {\n  /** @state artifact @child kind=s.stdio.semio */\n  child: ArtifactChild;\n}\n"
+      },
+      "expected": [
+        "child"
+      ],
+      "states": [
+        "artifact"
+      ]
+    }
+  ],
+  "graphql": [
+    {
+      "name": "child role directives are metadata",
+      "source": "type Fixture { child: ArtifactChild! @child_slot(roles: OWNED, many: false) @state(class: ARTIFACT) count: Int! }",
+      "typescript": "export interface Fixture { child: ArtifactChild; count: number; }",
+      "expected": [
+        "child",
+        "count"
+      ],
+      "state": [
+        "artifact",
+        ""
+      ]
+    },
+    {
+      "name": "directives before and after state preserve ownership",
+      "source": "type Fixture { children: [ArtifactChild!]! @state(class: ARTIFACT) @child_slot(roles: OWNED) count: Int! @other(value: { roles: WRONG }) @state(class: APP) }",
+      "typescript": "export interface Fixture { children: ArtifactChild[]; count: number; }",
+      "expected": [
+        "children",
+        "count"
+      ],
+      "state": [
+        "artifact",
+        "app"
+      ]
+    },
+    {
+      "name": "comments and strings do not declare fields",
+      "source": "type Fixture { text: String! @label(value: \"fake: String! } @state(class: APP)\") # phantom: String!\n count: Int! }",
+      "typescript": "export interface Fixture { text: string; count: number; }",
+      "expected": [
+        "text",
+        "count"
+      ],
+      "state": [
+        "",
+        ""
+      ]
+    }
+  ]
 }

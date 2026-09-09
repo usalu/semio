@@ -1,4 +1,12 @@
-export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: Record<string, any>, source: { directory: string; url: string }): Promise<void> {
+import type { HistoryPatch, PluginRegistryEntry, UiNodeRecord } from "@semio-tech/framework";
+import type { LocalInteractionCapture } from "@semio-tech/framework-replication";
+import type { AppChannelClient } from "@semio-tech/framework-os";
+import type { ActivationRegistry, TurnOutcome } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import type { ShardBudget, ShardClient, ShardEventEnvelope, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import type { PluginManifest } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import type { PluginRuntimeTestDependenciesV1, PluginWasmHandle, RetainedSurface, WireTurnResult, WireVariant } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
+
+export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: PluginRuntimeTestDependenciesV1, source: { url: string }): Promise<void> {
   const { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
   describe("shared context-menu ViewModel", () => {
@@ -6,8 +14,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       const contextMenu = vi.fn(async () => []);
       const client = { contextMenu };
       const base = { locale: "de", terminology: "reuse" };
-      await performContextMenu(client, { menu: { id: "canvas" }, surface: { surfaceId: "first" }, windowInstanceId: "window-a" }, { ...base, windowId: "window-a" });
-      await performContextMenu(client, { menu: { id: "canvas" }, surface: { surfaceId: "second" }, windowInstanceId: "window-b" }, { ...base, windowId: "window-b" });
+      await performContextMenu(client, { menu: { id: "canvas", args: null }, surface: { surfaceId: "first", kind: "canvas" }, windowInstanceId: "window-a" }, { ...base, windowId: "window-a" });
+      await performContextMenu(client, { menu: { id: "canvas", args: null }, surface: { surfaceId: "second", kind: "canvas" }, windowInstanceId: "window-b" }, { ...base, windowId: "window-b" });
       expect(contextMenu.mock.calls.map((call: any[]) => call[0].viewState)).toEqual([
         { ...base, windowId: "window-a" },
         { ...base, windowId: "window-b" },
@@ -86,7 +94,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       const root: UiNodeRecord = {
         id: 0, key: measuresSection.bodyKey,
         component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
-        layout: { kind: "stack", axis: "vertical", gap: "none", padding: { start: "none", end: "none", top: "none", bottom: "none" }, align: "stretch", justify: "start", wrap: false },
+        layout: { kind: "stack", axis: "vertical", gap: "none", padding: { all: "none" }, align: "stretch", justify: "start", grow: false, wrap: false },
         style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false,
         transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [1, 2],
       };
@@ -95,8 +103,10 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         ops: [{ type: "upsert", ...leaf(1, chunks[0]) }, { type: "upsert", ...leaf(2, chunks[1]) }, { type: "upsert", ...root }, { type: "setRoot", id: 0 }],
       });
       expect(desynced).toBe(false);
-      expect(sectionValueFromBuiltNode(measuresSection.bodyKey, retainedSurfaceToBuiltNode(surface!))).toEqual(measures);
-      expect(() => sectionValueFromBuiltNode("framework.section.tools", retainedSurfaceToBuiltNode(surface!))).toThrow("plugin-ui.section-root-mismatch");
+      const built = retainedSurfaceToBuiltNode(surface!);
+      if (built === null) throw new Error("fixture surface has no root");
+      expect(sectionValueFromBuiltNode(measuresSection.bodyKey, built)).toEqual(measures);
+      expect(() => sectionValueFromBuiltNode("framework.section.tools", built)).toThrow("plugin-ui.section-root-mismatch");
       const retained = new Map<string, RetainedSurface>([[retainedSurfaceId(7, measuresSection.bodyKey), surface!]]);
       const response = retainedUiRefreshResponse(7, { viewState: {}, measures: {}, tools: {} }, retained);
       expect(response.measures).toMatchObject({ key: "measures", value: measures });

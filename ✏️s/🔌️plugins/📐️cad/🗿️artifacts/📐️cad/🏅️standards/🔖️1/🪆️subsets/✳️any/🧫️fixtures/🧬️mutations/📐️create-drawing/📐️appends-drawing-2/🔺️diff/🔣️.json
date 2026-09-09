@@ -9,7 +9,7 @@
   "drawings": {
     "values": [
       {
-        "childId": "drawing-1",
+        "childId": "cad-drawing-1",
         "target": {
           "artifactId": "cad-drawing-1",
           "dialect": {
@@ -20,7 +20,7 @@
         }
       },
       {
-        "childId": "drawing-2",
+        "childId": "cad-drawing-2",
         "target": {
           "artifactId": "cad-drawing-2",
           "dialect": {
@@ -33,6 +33,5 @@
     ]
   },
   "referencesByModelDefinitionId": null,
-  "nodes": null,
-  "activeModelDefinitionId": null
+  "nodes": null
 }

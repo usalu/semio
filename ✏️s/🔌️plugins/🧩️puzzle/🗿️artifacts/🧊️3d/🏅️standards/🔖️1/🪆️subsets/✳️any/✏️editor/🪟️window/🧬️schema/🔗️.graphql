@@ -60,6 +60,7 @@ type Puzzle3dWindowConfig {
   transformRotate: Boolean!
   vortexShow: String!
   vortexDirection: String!
+  selectionMethod: String!
   sun: Puzzle3dWorldSunConfig!
   camera: Puzzle3dCamera!
 }
@@ -68,4 +69,5 @@ type Puzzle3dWindowTransient {
   suggestionMenu: Puzzle3dSuggestionMenu
   engagementInput: String!
   brushCandidateIndex: Int!
+  activation: String!
 }

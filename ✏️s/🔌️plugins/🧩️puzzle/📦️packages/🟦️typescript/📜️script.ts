@@ -292,7 +292,7 @@ class PublicationAuthorityAuditScript extends BundleScript {
     const onlyOwner = segments[0];
     const puzzleRoot = resolve(this.root, "../..");
     const windowOwnershipCases = await validateWindowOwnershipSchemas(puzzleRoot);
-    const fixture = await Bun.file(resolve(puzzleRoot, "🔏️publication-authority/🔣️.json")).json() as PublicationFixture;
+    const fixture = await Bun.file(resolve(puzzleRoot, "🧫️fixtures/🔏️publication-authority/🔣️.json")).json() as PublicationFixture;
     const module = await Bun.file(resolve(puzzleRoot, "🧬️schema/🔣️.json")).json() as { $id: string };
     const ajv = new Ajv({ allErrors: true, strict: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });

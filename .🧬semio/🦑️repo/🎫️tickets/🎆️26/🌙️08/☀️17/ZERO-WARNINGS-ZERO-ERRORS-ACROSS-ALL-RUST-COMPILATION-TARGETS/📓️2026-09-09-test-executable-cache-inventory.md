@@ -1,0 +1,14 @@
+# Test Executable Cache Inventory
+
+Read-only inventory of ticket-owned native test executable cache files. Active compilation, library archives, compiler metadata, source inputs, fixtures, and reports are not selected. No deletion has occurred.
+
+- 128803504 bytes: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_s_artifact_remodel_remodeling-258fe895a1ddd426 (2026-09-09T10:14:47.895Z)
+- 126769008 bytes: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_framework_plugin_host-565876fb078e9177 (2026-09-09T08:16:29.292Z)
+- 65950688 bytes: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_framework_os_kernel-65e76b98fa417f00 (2026-09-09T12:17:58.486Z)
+- 48889568 bytes: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_s_artifact_cad_cad-eaad1600879c254b (2026-09-09T10:31:14.651Z)
+- 39955392 bytes: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_s_artifact_block_3d-59d98e2d91d17439 (2026-09-09T02:05:49.602Z)
+- 39628320 bytes: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_s_artifact_writer_writer-131536a92b2ecea6 (2026-09-09T03:16:57.394Z)
+- 36118032 bytes: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_s_artifact_mathematical_equation-e789e2c35532e689 (2026-09-09T02:26:54.400Z)
+- 33829872 bytes: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_s_plugin_writer-e1abe6e34b11b391 (2026-09-09T01:45:57.193Z)
+- 14501056 bytes: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_s_artifact_procedural_assembly-af67457b7af85f1d (2026-09-09T03:27:29.261Z)
+- 1395136 bytes: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/derive-target/debug/deps/semio_s_artifact_stdio_contract-08dbea34ef3a245d (2026-09-09T09:02:21.846Z)

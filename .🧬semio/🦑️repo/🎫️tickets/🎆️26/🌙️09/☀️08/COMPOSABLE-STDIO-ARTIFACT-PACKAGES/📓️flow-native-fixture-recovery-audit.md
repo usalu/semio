@@ -19,3 +19,15 @@ These two changes make the recovery report's repeated-publication and two-actual
 ## Native Evidence
 
 The active root-owned command is `flow-recovery-5`, sequentially running `@semio-tech/flow-plugin:child-identity-check`, `child-edit-check`, and `add-widget-retained-check`; its designated raw outputs are `🗑️generated/flow-recovery-5-{child-identity-check,child-edit-check,add-widget-retained-check}.txt` and `flow-recovery-5.tsv`. It was not read as a completed result and was not started, interrupted, or otherwise affected by this audit.
+
+## Flow Command-Table and Source-Contract Follow-up — 2026-09-09T13:53:17+02:00
+
+This was a static, read-only source audit. No TypeScript test, Rust test, Cargo invocation, Nx task, or native build was run.
+
+The current `FlowCommand` macro in `✏️editor/🦀️.rs` has 34 rows. The six host-wire fixture ordinals now agree with that table exactly: `evaluate=13`, `contextMenuAt=21`, `openSpotlight=23`, `replaceImage=24`, `flowEvalTick=32`, and `flowEvalResolve=33`. The Rust wire witness reads every ordinal from that fixture, so it has no independent stale literal. The `SetGridVisible` unit witness still encodes ordinal 18, which is also its current table position.
+
+One separate command-surface inconsistency remains. `✏️editor/🧪️tests/🔬️unit/🦀️.rs` constructs 36 `every_command()` values while asserting 37, and the two additional values are `FlowCommand::SetContributions` and `FlowCommand::DuplicateWidgetStep`. The current macro is the only `FlowCommand` definition; it has neither row, and no separate constructor implementation exists. `🧫️fixtures/🎬️action-cohort/🔣️.json` repeats the same two non-table routes, declares `routeCount: 37`, and physically contains 36 routes. Its `exactCensus` law is therefore contradictory. The coherent repair is to retire both obsolete entries from the unit/census and set the count to 34, unless the intended contract is instead to reintroduce full macro rows and their app/factory semantics. Changing only 37 to 36 retains the two undefined command constructions. The parent Flow catalog `✏️s/🔌️plugins/🌊️flow/🔣️.json` also contains both IDs and needs alignment with whichever authority is selected.
+
+The checked TypeScript source contract has no obsolete window-owner-trio assertion. Its editor/viewer hook assertions still name current store, presence, and transient disposer hooks. Current Flow transient source uses `ArtifactEphemeralTransferPreparationFactory::new(...)` and `WindowTransientOwnerBundle::new(...)`; the old trio scan returned zero Flow Rust references. This is source consistency only, not runtime acceptance.
+
+The bounded receipt is `🗑️generated/flow-source-contract-command-ordinal-audit.json`.

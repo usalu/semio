@@ -2,9 +2,9 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document_positions() {
-    use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_move::CanvasPointerMove, canvas_pointer_up::CanvasPointerUp};
+    use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_move::CanvasPointerMove, canvas_pointer_up::CanvasPointerUp, delete_selection::DeleteSelection};
     use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_BODY_COMPOSITE, WIRES_PLAY_WINDOW_CANVAS};
-    use semio_framework_plugin::{testkit, ActionMeta, App, Canvas2dScene, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
+    use semio_framework_plugin::{testkit, ActionMeta, App, Canvas2dScene, EditorApp, InteractionTarget, PluginApp, ViewModel, ViewWindowInstance, INTERACTION_SELECT_ACTION_ID};
     fn manifest() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
@@ -74,10 +74,7 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
                 let projection = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
                 let scene = testkit::decode_fixture_scene::<Canvas2dScene>(&projection).map_err(str::to_string)?;
                 let layers: serde_json::Value = serde_json::from_str(&scene.layers_json).map_err(|error| error.to_string())?;
-                let rendered = layers
-                    .as_array()
-                    .and_then(|layers| layers.iter().find(|layer| layer["id"].as_str() == vectors["node"].as_str()))
-                    .ok_or("rendered gesture node absent")?;
+                let rendered = layers.as_array().and_then(|layers| layers.iter().find(|layer| layer["id"].as_str() == vectors["node"].as_str())).ok_or("rendered gesture node absent")?;
                 let expected = if preview.is_null() { &row["position"] } else { preview };
                 let actual = serde_json::json!([rendered["x"].as_f64().ok_or("rendered x absent")?, rendered["y"].as_f64().ok_or("rendered y absent")?]);
                 if actual != *expected {
@@ -85,9 +82,13 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
                 }
             }
         }
-        app.dispatch_action("undo", None, &ActionMeta { view_state: view.for_window_instance("left"), ..testkit::meta("gesture-undo") })
-            .await
-            .map_err(|error| format!("{error:?}"))?;
+        let released = app.snapshot().map_err(|error| format!("{error:?}"))?;
+        let released_scene = released.content.require_local_owner::<crate::WiresWorkingScene>().map_err(|error| error.to_string())?;
+        let first_party_handle = crate::wires_content_child_handle(&released_scene.nodes, &released_scene.edges);
+        if released.content.child_id != first_party_handle.child_id || released.content.target != first_party_handle.target {
+            return Err("bounded release writer disagrees with the first-party graph content handle".into());
+        }
+        app.handle_action("undo", None, &ActionMeta { view_state: view.for_window_instance("left"), ..testkit::meta("gesture-undo") }).await.map_err(|error| format!("{error:?}"))?;
         let undone = app.snapshot().map_err(|error| format!("{error:?}"))?;
         let node = crate::standards::v1::subsets::any::schema::inferences::find_board_node(&undone, vectors["node"].as_str().ok_or("missing node")?).ok_or("undone node is absent")?;
         if crate::schema::node_position(&node) != (0.0, 0.0) {
@@ -96,6 +97,30 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
         let after = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
         if config.pack != after.pack || config.spr != after.spr {
             return Err("gesture persisted window state in app config".into());
+        }
+        let left = view.for_window_instance("left").ok_or("left window absent")?;
+        for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 1.0, y: 1.0 }), WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 5.0, y: 7.0 })] {
+            app.dispatch_typed(command, &ActionMeta { view_state: Some(left.clone()), ..testkit::meta("missing-target-drag") }).await.map_err(|error| format!("{error:?}"))?;
+            testkit::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        }
+        let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: "node-1".into() }]).map_err(|error| error.to_string())?;
+        app.handle_action(
+            INTERACTION_SELECT_ACTION_ID,
+            semio_framework_plugin::optional_json_to_dsl(Some(serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }))).as_ref(),
+            &testkit::meta("missing-target-selection"),
+        )
+        .await
+        .map_err(|error| format!("{error:?}"))?;
+        app.dispatch_typed(WiresCommand::DeleteSelection(DeleteSelection {}), &ActionMeta { view_state: Some(left.clone()), ..testkit::meta("missing-target-delete") }).await.map_err(|error| format!("{error:?}"))?;
+        testkit::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        app.dispatch_typed(WiresCommand::CanvasPointerUp(CanvasPointerUp {}), &ActionMeta { view_state: Some(left.clone()), ..testkit::meta("missing-target-release") }).await.map_err(|error| format!("{error:?}"))?;
+        let missing_release = testkit::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        if missing_release.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact) {
+            return Err("missing drag target published a durable move".into());
+        }
+        let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("missing-target transient absent")?;
+        if cleared.get::<WiresCanvasTransientOwner>() != Some(&WiresCanvasTransient::default()) {
+            return Err("missing drag target did not clear its exact window preview".into());
         }
         Ok(())
     }
@@ -106,6 +131,161 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
     testkit::close_registered_fixture_app(&mut app);
     result.expect("captured-canvas document gesture");
     eprintln!("[DEBUG] Wires pointer move: five neutral gesture steps isolate exact canvas previews, publish once, and undo in one step");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn wires_pointer_move_document_replacement_clears_only_successful_reload_previews() {
+    use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_move::CanvasPointerMove, node_graph_viewport::NodeGraphViewport};
+    use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_BODY_COMPOSITE, WIRES_PLAY_WINDOW_CANVAS};
+    use semio_framework_plugin::{testkit, ActionMeta, App, Canvas2dScene, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    fn manifest() -> App {
+        App { definition: create_wires_app(), examples: Vec::new() }
+    }
+    async fn dispatch_gesture(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>>, command: WiresCommand, window: &ViewModel) -> Result<(), String> {
+        app.dispatch_typed(command, &ActionMeta { view_state: Some(window.clone()), ..testkit::meta("reload-gesture") }).await.map_err(|error| format!("{error:?}"))?;
+        testkit::settle_registered_typed_operation(app, 1).await.map_err(|error| format!("{error:?}"))?;
+        Ok(())
+    }
+    async fn scene(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>>, window: &ViewModel) -> Result<Canvas2dScene, String> {
+        let tree = app.render(WIRES_PLAY_BODY_COMPOSITE, None, window).await.map_err(|error| format!("{error:?}"))?;
+        let projection = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+        testkit::decode_fixture_scene(&projection).map_err(str::to_string)
+    }
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🖱️pointer-move.json")).unwrap();
+    let mut app = testkit::new_app_with_registry::<EditorApp<ReasoningWiresPlayApp>>(manifest).await;
+    app.bind_instance_id(1).await;
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let left = view.for_window_instance("left").unwrap();
+    let result: Result<(), String> = async {
+        let mut seed = crate::empty_wires_snapshot();
+        seed.content = crate::wires_content_child_with_owner(vec![dsl::DslValue::from(&vectors["initialNode"])], Vec::new());
+        let envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", seed, None);
+        let pack = store::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
+        let text = store::print_document_text(&envelope).await.map_err(|error| format!("{error:?}"))?;
+        app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
+        let mut retirement = store::retire_document_envelope(
+            envelope,
+            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
+            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
+        );
+        for _ in 0..100_000 {
+            if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
+                break;
+            }
+        }
+        if !retirement.terminal_is_empty() {
+            return Err("reload seed envelope did not retire".into());
+        }
+        app.dispatch_typed(
+            WiresCommand::NodeGraphViewport(NodeGraphViewport { camera: crate::editor::wires::modes::edit::windows::canvas::config::WiresCanvasCamera { x: 12.0, y: -4.0, zoom: 2.0 } }),
+            &ActionMeta { view_state: Some(left.clone()), ..testkit::meta("reload-camera") },
+        )
+        .await
+        .map_err(|error| format!("{error:?}"))?;
+        testkit::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        let config_generation = app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))?.ok_or("window config generation absent")?;
+        dispatch_gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left).await?;
+        dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0 }), &left).await?;
+        app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
+        let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("cleared transient absent")?;
+        if cleared.get::<WiresCanvasTransientOwner>() != Some(&WiresCanvasTransient::default()) {
+            return Err("identical pack reload preserved an old drag preview".into());
+        }
+        let reloaded_scene = scene(&mut app, &left).await?;
+        if (reloaded_scene.camera_x, reloaded_scene.camera_y, reloaded_scene.zoom) != (12.0, -4.0, 2.0) || app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))? != Some(config_generation) {
+            return Err("document reload changed the concrete canvas camera".into());
+        }
+        dispatch_gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 4.0, y: 5.0 }), &left).await?;
+        dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 7.0, y: 9.0 }), &left).await?;
+        let preview = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<WiresCanvasTransientOwner>().cloned()).ok_or("active preview absent")?;
+        let preview_generation = app.window_transient_generation(&left).map_err(|error| format!("{error:?}"))?.ok_or("preview generation absent")?;
+        let mut malformed = pack.clone();
+        malformed.pack.truncate(4);
+        if app.load_document_pack(&malformed).await.is_ok() {
+            return Err("malformed pack unexpectedly replaced the document".into());
+        }
+        let preserved = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("preserved transient absent")?;
+        if preserved.get::<WiresCanvasTransientOwner>() != Some(&preview)
+            || app.window_transient_generation(&left).map_err(|error| format!("{error:?}"))? != Some(preview_generation)
+            || app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))? != Some(config_generation)
+        {
+            return Err("rejected pack changed preview or camera ownership".into());
+        }
+        app.load_document_text(&text).await.map_err(|error| format!("{error:?}"))?;
+        let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("text-cleared transient absent")?;
+        if cleared.get::<WiresCanvasTransientOwner>() != Some(&WiresCanvasTransient::default()) || app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))? != Some(config_generation) {
+            return Err("text reload did not clear the preview while preserving the camera".into());
+        }
+        Ok(())
+    }
+    .await;
+    if let Err(error) = &result {
+        eprintln!("[DEBUG] Wires document replacement runtime failure before close: {error}");
+    }
+    testkit::close_registered_fixture_app(&mut app);
+    result.expect("Wires document replacement ownership");
+    eprintln!("[DEBUG] Wires reload: valid pack/text clear exact-window previews, malformed pack preserves them, and camera config survives");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_zero_grants() {
+    use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_move::CanvasPointerMove, canvas_pointer_up::CanvasPointerUp};
+    use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_WINDOW_CANVAS};
+    use semio_framework_plugin::{testkit, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
+    fn manifest() -> App {
+        App { definition: create_wires_app(), examples: Vec::new() }
+    }
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🖱️pointer-move.json")).unwrap();
+    let mut app = testkit::new_app_with_registry::<EditorApp<ReasoningWiresPlayApp>>(manifest).await;
+    app.bind_instance_id(1).await;
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let left = view.for_window_instance("left").unwrap();
+    let result: Result<(), String> = async {
+        let mut seed = crate::empty_wires_snapshot();
+        seed.content = crate::wires_content_child_with_owner(vec![dsl::DslValue::from(&vectors["initialNode"])], Vec::new());
+        let envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", seed, None);
+        let pack = store::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
+        app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
+        let mut retirement = store::retire_document_envelope(
+            envelope,
+            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
+            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
+        );
+        for _ in 0..100_000 {
+            if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
+                break;
+            }
+        }
+        if !retirement.terminal_is_empty() {
+            return Err("cancellation seed envelope did not retire".into());
+        }
+        for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 0.0, y: 0.0 }), WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 11.0, y: 13.0 })] {
+            app.dispatch_typed(command, &ActionMeta { view_state: Some(left.clone()), ..testkit::meta("cancel-release") }).await.map_err(|error| format!("{error:?}"))?;
+            testkit::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        }
+        app.dispatch_typed(WiresCommand::CanvasPointerUp(CanvasPointerUp {}), &ActionMeta { view_state: Some(left), ..testkit::meta("cancel-release") }).await.map_err(|error| format!("{error:?}"))?;
+        if !app.has_pending_typed_operations() {
+            return Err("released drag did not enter retained publication".into());
+        }
+        app.maintenance_step(0, 0).map_err(|error| format!("{error:?}"))?;
+        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
+        if !app.has_pending_typed_operations() {
+            return Err("zero grant unexpectedly completed retained publication".into());
+        }
+        app.maintenance_step(1, 1).map_err(|error| format!("{error:?}"))?;
+        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
+        if !app.has_pending_typed_operations() {
+            return Err("one-byte grant unexpectedly completed retained publication".into());
+        }
+        Ok(())
+    }
+    .await;
+    if let Err(error) = &result {
+        eprintln!("[DEBUG] Wires cancellation runtime failure before close: {error}");
+    }
+    testkit::close_registered_fixture_app(&mut app);
+    result.expect("bounded Wires publication cancellation");
+    eprintln!("[DEBUG] Wires cancellation: zero/small grants leave release pending and app close reaches terminal-empty ownership");
 }
 
 //#region 🔖️ConfigTests

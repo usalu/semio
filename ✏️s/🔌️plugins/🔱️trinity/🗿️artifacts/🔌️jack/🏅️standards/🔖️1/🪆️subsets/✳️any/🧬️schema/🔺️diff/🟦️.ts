@@ -8,7 +8,7 @@ export interface JackDiff {
   /** @state artifact */ manifestId: string | null;
   /** @state artifact */ manifest: Manifest | null;
   /** @state artifact */ camera: Camera | null;
-  /** @state artifact @child kind=s.stdio.semio.graph */ content: ArtifactChild | null;
+  /** @state artifact @child kind=s.stdio.semio */ content: ArtifactChild | null;
   /** @state artifact */ rootNodeId: string | null;
 }
 

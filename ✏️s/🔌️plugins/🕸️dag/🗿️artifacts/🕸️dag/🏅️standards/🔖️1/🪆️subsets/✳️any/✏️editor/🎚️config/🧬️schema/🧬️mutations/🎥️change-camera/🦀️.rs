@@ -16,7 +16,7 @@ pub struct ChangeCamera {
 
 impl protocol::MutationKind<DagConfig, DagConfigMutation> for ChangeCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "camera", kind: "change-camera", record: "ChangeCamera" };
-    fn diff(&self, base: &DagConfig) -> protocol::MutationOutcome<DagConfig> {
+    fn diff(&self, _base: &DagConfig) -> protocol::MutationOutcome<DagConfig> {
         protocol::MutationOutcome::new(DagConfig { camera_x: self.x, camera_y: self.y, camera_zoom: self.zoom })
     }
     fn inverse(&self, base: &DagConfig) -> Vec<DagConfigMutation> {

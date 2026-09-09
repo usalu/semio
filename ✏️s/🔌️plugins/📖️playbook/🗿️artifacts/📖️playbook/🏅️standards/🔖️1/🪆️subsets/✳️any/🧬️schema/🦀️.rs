@@ -17,10 +17,10 @@ pub struct PlaybookArtifact {
     #[state(artifact)]
     pub title: Option<String>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.document")]
+    #[child(kind = "s.stdio.semio")]
     pub document: PlaybookDocumentChild,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.flow")]
+    #[child(kind = "s.stdio.semio")]
     pub flow: PlaybookFlowChild,
 }
 //#endregion 🔖️Artifact
@@ -41,7 +41,7 @@ impl PlaybookArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::PlaybookSnapshot) -> Self {
-        Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, document: snapshot.document, flow: snapshot.flow, ..Self::default() }
+        Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, document: snapshot.document, flow: snapshot.flow }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

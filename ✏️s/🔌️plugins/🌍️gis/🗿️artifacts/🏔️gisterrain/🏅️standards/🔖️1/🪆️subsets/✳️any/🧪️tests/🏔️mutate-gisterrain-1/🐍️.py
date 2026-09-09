@@ -1,41 +1,5 @@
 #!/usr/bin/env python3
-"""🏔️ An INDEPENDENT second implementation of the `s.gis.gisterrain` document and both of its typed
-mutations, in Python, serving as this case's differential oracle.
-
-**Why a second implementation and not a third-party library.** `GisTerrainSnapshot` persists exactly
-two fields: an `f64` vertical `exaggeration` and a raw `importedFeaturesJson` string that is the
-`map:in` port's insertion point and that the artifact never interprets. `geo`, `geojson` and `gdal`
-were surveyed by an earlier wave and declined: none reads `.dsl.semio`, and none is authoritative
-over a scalar exaggeration or over an opaque string the format itself does not parse. What a
-reference can adjudicate is the two setters, their independence, and the inverse of each — and that
-is what this file implements, from the specification, in another language.
-
-**What it was written from.**
-
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the document is
-  `{"exaggeration": double, "importedFeaturesJson": string}`, `additionalProperties: false`, both
-  `x-semio-state: artifact`.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the two verbs:
-  `change-exaggeration <number>` and `change-imported-features`.
-* the two committed specification vectors, which give the externally tagged wire form
-  (``{"ChangeExaggeration": {"newExaggeration": …}}`` and
-  ``{"ChangeImportedFeatures": {"newImportedFeaturesJson": …}}``) and demonstrate that the two
-  setters move their fields INDEPENDENTLY.
-
-**What this implementation deliberately does not do, and why.** It does not read `.dsl.semio`. The
-`gis.gisterrain` carrier has no prose document, and unlike its `gismap` sibling — whose members are
-plainly hex-encoded JSON, a layout that can be derived from the committed bytes and then pinned by
-byte-exact re-encoding — this document's only committed example carries an EMPTY
-`importedFeaturesJson`, so the encoding of a non-empty string value cannot be read off it at all.
-Guessing it and calling the guess a specification would be exactly the fabrication this exercise
-exists to prevent. The real-document scenarios therefore read a snapshot fixture derived once from
-committed real content (see the feature description for its full provenance), and the carrier's own
-laws stay where they can honestly be asserted: in role, on the Rust side, against the committed
-example.
-
-**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
-only.
-"""
+"""🏔️ Independent Terrain scalar mutation model preserving the exact committed mesh handle."""
 
 # region 🔖️Imports
 import json
@@ -46,8 +10,8 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Vocabulary
-FIELDS = ("exaggeration", "importedFeaturesJson")
-"""🗂️ The two fields `GisTerrainSnapshot` declares — and the cross-language projection."""
+FIELDS = ("exaggeration", "importedFeaturesJson", "mesh")
+"""🗂️ The persisted fields `GisTerrainSnapshot` declares — and the cross-language projection."""
 
 KINDS = ("change-exaggeration", "change-imported-features")
 """🏷️ Every kind the catalog declares."""
@@ -71,8 +35,8 @@ def validate(document):
 
 
 def document_of(payload):
-    """📥️ Reads the two declared fields out of a snapshot JSON value."""
-    document = {"exaggeration": float(payload["exaggeration"]), "importedFeaturesJson": payload["importedFeaturesJson"]}
+    """📥️ Reads the declared scalar fields and exact mesh handle from the snapshot."""
+    document = {"exaggeration": float(payload["exaggeration"]), "importedFeaturesJson": payload["importedFeaturesJson"], "mesh": payload.get("mesh")}
     validate(document)
     return document
 
@@ -141,7 +105,7 @@ def restores(kind, restored, original):
 
 
 def equals_committed(kind, produced, committed):
-    """🎯️ The committed after-snapshot claim, over the two fields the schema declares."""
+    """🎯️ The committed after-snapshot claim, over the complete persisted field projection."""
     for name in FIELDS:
         if produced[name] != committed[name]:
             raise AssertionError("spec-vector-%s: %s is %r, the committed after-snapshot says %r" % (kind, name, produced[name], committed[name]))

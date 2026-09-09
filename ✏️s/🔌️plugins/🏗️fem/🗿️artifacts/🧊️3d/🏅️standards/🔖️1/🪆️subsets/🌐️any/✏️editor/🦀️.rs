@@ -170,6 +170,7 @@ fn fem3d_retained_extent(command: &Fem3dCommand, snapshot: &Fem3dSnapshot, _inte
 /// 🎯️ One reducer for all 18 rows: `Fem3dCommand::dispatch` already routes each row to its own
 /// `🎮️commands/*` handler, so the retained job reuses the exact same owned reducers the batch path
 /// used — no second, drifting copy of any command body.
+#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
 fn fem3d_retained_reduce(
     command: &Fem3dCommand,
     snapshot: &Fem3dSnapshot,

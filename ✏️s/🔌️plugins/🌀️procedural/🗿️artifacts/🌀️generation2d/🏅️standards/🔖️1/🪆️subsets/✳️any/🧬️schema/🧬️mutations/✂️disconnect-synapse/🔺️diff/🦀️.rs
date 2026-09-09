@@ -8,5 +8,5 @@ pub fn diff(payload: &super::DisconnectSynapse, base: &Generation2dSnapshot) -> 
     if !base.fixture.synapses.iter().any(|synapse| synapse.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff::default(), SynapsesDiff { removed: vec![payload.id.clone()], set: vec![] }, LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![payload.id.clone()], set: vec![] }, &LayoutDiff::default(), None, None))
 }

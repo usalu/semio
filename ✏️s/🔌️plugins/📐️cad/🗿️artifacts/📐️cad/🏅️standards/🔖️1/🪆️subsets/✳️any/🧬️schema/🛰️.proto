@@ -1,42 +1,28 @@
 syntax = "proto3";
 package semio.s.cad.cad.artifact;
-
-// 🧬️ CadArtifact schema.
-
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message CadArtifact {
-  // @state artifact
   string schema = 1;
-  // @state artifact
   string id = 2;
-  // @state artifact
-  repeated CadObject objects = 3;
-  // @state artifact
-  repeated CadObject building_objects = 4;
-  // @state artifact
-  repeated CadObject energy_objects = 5;
-  // @state artifact
-  repeated CadObject structure_classic_objects = 6;
-  // @state artifact
-  map<string, CadReferenceList> references_by_model_definition_id = 7;
-  // @state artifact
-  repeated CadNode nodes = 8;
-  // @state artifact
-  optional CadGeometry shape_geometry = 9;
-  // @state artifact
-  optional CadGeometry building_geometry = 10;
-  // @state artifact
-  optional CadGeometry energy_geometry = 11;
-  // @state artifact
-  optional CadGeometry structure_classic_geometry = 12;
-  // @state artifact
-  string active_model_definition_id = 13;
-  // @state presence
-  // @state config
-  // @state config
+  optional semio.os.store.ArtifactChild shape_model = 3;
+  optional semio.os.store.ArtifactChild building_model = 4;
+  optional semio.os.store.ArtifactChild energy_model = 5;
+  optional semio.os.store.ArtifactChild structure_classic_model = 6;
+  repeated semio.os.store.ArtifactChild drawings = 7;
+  map<string, CadReferenceList> references_by_model_definition_id = 8;
+  repeated CadNode nodes = 9;
 }
-
-message CadObject { string id = 1; }
-message CadNode { string id = 1; }
-message CadReferenceList { repeated string values = 1; }
-message CadGeometry { string anchors_json = 1; }
-message CadCamera { double zoom = 1; }
+message CadNode { string id = 1; string label = 2; string kind = 3; }
+message CadReference {
+  string id = 1;
+  string source_url = 2;
+  string media_kind = 3;
+  repeated double origin = 4;
+  repeated double orientation = 5;
+  optional double scale = 6;
+  double width_world = 7;
+  bool hidden = 8;
+  bool locked = 9;
+  optional double opacity = 10;
+}
+message CadReferenceList { repeated CadReference values = 1; }

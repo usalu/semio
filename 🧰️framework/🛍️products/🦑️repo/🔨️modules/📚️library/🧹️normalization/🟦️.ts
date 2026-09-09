@@ -195,7 +195,7 @@ export type TaxonomyRemovalAuthority =
   | Readonly<{ kind: "byte-and-mode-identical"; evidenceSetDigest: string; retainedFinalPath: string; members: readonly TaxonomyEvidenceMember[] }>
   | Readonly<{ kind: "exact-path-mutation"; catalogPath: string; catalogContentHash: string; caseId: string; sourcePath: string; sourcePreimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>; disposition: "remove"; authorityDigest: string }>
   | Readonly<{ kind: "owner-manifest-status"; contractId: "ticket-important-markdown-v1"; ownerPath: string; manifestPath: string; manifestPreimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>; status: "closed"; contentState: "zero-byte"; authorityDigest: string }>
-  | Readonly<{ kind: "serialized-path-sentinel"; fixturePath: string; fixtureContentHash: string; caseId: string; serializedInputPath: string; expectedViolationCode: "windows-reserved-name" | "trailing-dot-or-space"; authorityDigest: string }>;
+  | Readonly<{ kind: "serialized-path-sentinel"; catalogPath: string; catalogContentHash: string; caseId: string; serializedInputPath: string; expectedViolationCode: "windows-reserved-name" | "trailing-dot-or-space"; authorityDigest: string }>;
 
 export interface TaxonomyEvidenceRemoval {
   readonly operationId: string;
@@ -866,8 +866,8 @@ interface LoadedTaxonomy {
 }
 
 const TAXONOMY_RELATIVE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-const TRANSACTION_SENTINEL_CASES_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🚨️transaction-sentinel-cases/🔣️.json";
-const TICKET_IMPORTANT_EXACT_MUTATIONS_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/💉️ticket-important-exact-mutations/🔣️.json";
+const TRANSACTION_SENTINEL_CASES_CATALOG_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🚨️transaction-sentinel-cases/🔣️.json";
+const TICKET_IMPORTANT_EXACT_MUTATIONS_CATALOG_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/💉️ticket-important-exact-mutations/🔣️.json";
 const TICKET_IMPORTANT_EXACT_GOVERNED_SOURCES = [
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/WINDOW-APP-PANEL-CONTRACTS/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📌️important.md",
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYNC-REPAIR-SWEEP/📌️important.md",
@@ -1808,7 +1808,7 @@ function parseEvidenceMember(value: unknown, name: string): TaxonomyEvidenceMemb
 }
 
 function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAuthority {
-  const candidate = planRecord(value, name, ["kind"], ["evidenceSetDigest", "retainedFinalPath", "members", "catalogPath", "catalogContentHash", "caseId", "sourcePath", "sourcePreimage", "disposition", "contractId", "ownerPath", "manifestPath", "manifestPreimage", "status", "contentState", "fixturePath", "fixtureContentHash", "serializedInputPath", "expectedViolationCode", "authorityDigest", "generatorContractId", "destinationPath", "outputPreimage", "packageId"]);
+  const candidate = planRecord(value, name, ["kind"], ["evidenceSetDigest", "retainedFinalPath", "members", "catalogPath", "catalogContentHash", "caseId", "sourcePath", "sourcePreimage", "disposition", "contractId", "ownerPath", "manifestPath", "manifestPreimage", "status", "contentState", "serializedInputPath", "expectedViolationCode", "authorityDigest", "generatorContractId", "destinationPath", "outputPreimage", "packageId"]);
   if (candidate.kind === "nested-cargo-generated-source") {
     const row = planRecord(value, name, ["kind", "catalogPath", "catalogContentHash", "packageId", "generatorContractId", "destinationPath", "sourcePreimage", "authorityDigest"]);
     const sourcePreimage = parseLeafPreimage(row.sourcePreimage, name + ".sourcePreimage");
@@ -1861,9 +1861,9 @@ function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAut
     return result;
   }
   if (candidate.kind === "serialized-path-sentinel") {
-    const row = planRecord(value, name, ["kind", "fixturePath", "fixtureContentHash", "caseId", "serializedInputPath", "expectedViolationCode", "authorityDigest"]);
+    const row = planRecord(value, name, ["kind", "catalogPath", "catalogContentHash", "caseId", "serializedInputPath", "expectedViolationCode", "authorityDigest"]);
     if (row.expectedViolationCode !== "windows-reserved-name" && row.expectedViolationCode !== "trailing-dot-or-space") throw new Error(`${name}.expectedViolationCode is invalid`);
-    const result = { kind: "serialized-path-sentinel" as const, fixturePath: planPath(row.fixturePath, `${name}.fixturePath`), fixtureContentHash: planString(row.fixtureContentHash, `${name}.fixtureContentHash`, PLAN_HASH), caseId: planString(row.caseId, `${name}.caseId`), serializedInputPath: planString(row.serializedInputPath, `${name}.serializedInputPath`), expectedViolationCode: row.expectedViolationCode as "windows-reserved-name" | "trailing-dot-or-space", authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
+    const result = { kind: "serialized-path-sentinel" as const, catalogPath: planPath(row.catalogPath, `${name}.catalogPath`), catalogContentHash: planString(row.catalogContentHash, `${name}.catalogContentHash`, PLAN_HASH), caseId: planString(row.caseId, `${name}.caseId`), serializedInputPath: planString(row.serializedInputPath, `${name}.serializedInputPath`), expectedViolationCode: row.expectedViolationCode as "windows-reserved-name" | "trailing-dot-or-space", authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
     const { authorityDigest: _digest, ...digestible } = result;
     if (result.authorityDigest !== sha256(canonicalJson(digestible))) throw new Error(`${name}.authorityDigest does not match its authority`);
     return result;
@@ -5698,11 +5698,20 @@ function projectionCatalogVectors(path: string, source: Pick<MutationProjectionS
         if (sourceMutationDirectoryName !== sourceMutationDirectoryName.normalize("NFC") || sourceMutationDirectoryName.includes("/")) throw new Error(`mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].sourceMutationDirectoryName is not one exact NFC basename`);
         const mutationDirectoryName = requiredString(vector.mutationDirectoryName, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].mutationDirectoryName`).normalize("NFC");
         if (!Array.isArray(vector.scenarios)) throw new Error(`mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}] has an invalid physical mutation identity`);
+        const scenarioIds = new Set<string>();
+        const scenarioDirectories = new Set<string>();
         for (let scenarioIndex = 0; scenarioIndex < vector.scenarios.length; scenarioIndex++) {
           const scenario = record(vector.scenarios[scenarioIndex], `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}]`);
           const scenarioId = requiredString(scenario.id, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}].id`);
-          const scenarioDirectoryName = requiredString(scenario.directoryName, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}].directoryName`).normalize("NFC");
-          if (splitLeadingEmoji(scenarioDirectoryName).rest !== scenarioId) throw new Error(`mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}] has an invalid physical scenario identity`);
+          if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(scenarioId)) throw new Error(`mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}] has an invalid logical scenario identity`);
+          const physicalScenarioName = requiredString(scenario.directoryName, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}].directoryName`);
+          const scenarioDirectoryName = physicalScenarioName.normalize("NFC");
+          const physicalScenarioId = splitLeadingEmoji(scenarioDirectoryName).rest;
+          if (physicalScenarioName !== scenarioDirectoryName || physicalScenarioId === scenarioDirectoryName || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(physicalScenarioId) || /[\\/]/u.test(scenarioDirectoryName)) throw new Error(`mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}] has an invalid physical scenario identity`);
+          const scenarioDirectoryKey = scenarioDirectoryName.replaceAll("\uFE0F", "").toLocaleLowerCase("und");
+          if (scenarioIds.has(scenarioId) || scenarioDirectories.has(scenarioDirectoryKey)) throw new Error(`mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}] duplicates a scenario identity`);
+          scenarioIds.add(scenarioId);
+          scenarioDirectories.add(scenarioDirectoryKey);
           const sourceKey = `${mutationId}\u0000${sourceMutationDirectoryName}\u0000${scenarioId}`;
           const canonicalKey = `${mutationId}\u0000${mutationDirectoryName}\u0000${scenarioId}`;
           if (seenSource.has(sourceKey) || seenCanonical.has(canonicalKey)) throw new Error(`Duplicate physical vector identity ${sourceKey.replaceAll("\u0000", "/")}`);
@@ -5765,7 +5774,11 @@ function canonicalProjectedMutationOwner(name: string, identity: string, subsetR
   const sourceOwner = mutationCatalogSourceOwner(subsetRoot, taxonomy.discoverySchema);
   if (sourceOwner === null) return null;
   const root = `${sourceOwner}/🧬️schema/🧬️mutations`;
-  if (!Object.hasOwn(taxonomy.discoverySchema.mutationDomainOwners, root)) return canonicalProjectedMemberName(name, taxonomy);
+  if (!Object.hasOwn(taxonomy.discoverySchema.mutationDomainOwners, root)) {
+    const normalized = name.normalize("NFC");
+    const physicalId = splitLeadingEmoji(normalized).rest;
+    return name === normalized && physicalId !== normalized && physicalId === identity && !/[\\/]/u.test(normalized) ? normalized : null;
+  }
   const owner = mutationOwnerRelativePath(root, identity, taxonomy.discoverySchema);
   return owner && basename(owner) === name ? owner : null;
 }
@@ -6327,7 +6340,7 @@ export interface TicketImportantExactMutationAuthority {
 }
 
 function ticketImportantExactMutationCases(repoRoot: string): readonly TicketImportantExactMutationAuthority[] {
-  const catalogPath = TICKET_IMPORTANT_EXACT_MUTATIONS_FIXTURE_PATH;
+  const catalogPath = TICKET_IMPORTANT_EXACT_MUTATIONS_CATALOG_PATH;
   const catalog = absolutePath(repoRoot, catalogPath);
   const catalogStat = lstatOrNull(catalog);
   if (!catalogStat) {
@@ -7228,7 +7241,7 @@ function frozenPlanCoordinateAuthority(path: string, bytes: Uint8Array): FrozenP
     if (planLike) {
       const parsed = parseTaxonomyPlan(value);
       if (content !== canonicalJson(parsed) + "\n") throw new Error("Retained plan bytes are not canonical");
-      const typedPath = /^(?:\/scope|\/excludedTreeDigests\/\d+\/relativeRoot|\/destinationAncestorPreimages\/\d+\/path|\/moves\/\d+\/(?:sourcePath|destinationPath|ownerId|sourcePreimage\/target|referenceEdits\/\d+\/(?:path|oldValue|newValue))|\/edits\/\d+\/(?:path|oldValue|newValue)|\/embeddedTicketRoots\/\d+\/(?:sourceMetadataRoot|sourceTicketRoot|canonicalTicketRoot)|\/embeddedTicketRootRelocations\/\d+\/(?:sourcePath|destinationPath|relativeEvidencePath|ownerId|preimage\/target)|\/symlinkTargetEdits\/\d+\/(?:sourcePath|finalPath|oldTarget|newTarget|logicalTargetSourcePath|logicalTargetFinalPath|ownerId|logicalTargetPreimage\/target)|\/evidenceRemovals\/\d+\/(?:sourcePath|ownerId|preimage\/target|authority\/(?:catalogPath|destinationPath|retainedFinalPath|sourcePath|ownerPath|manifestPath|fixturePath|serializedInputPath|members\/\d+\/(?:sourcePath|finalPath|preimage\/target)))|\/regenerations\/\d+\/(?:cwd|outputRoots\/\d+|(?:inputs|preOutputs|outputs)\/\d+\/(?:path|target)|preview\/(?:nodes\/\d+\/path|staleRemovals\/\d+)|staleRemovals\/\d+)|\/unresolved\/\d+\/path)$/u;
+      const typedPath = /^(?:\/scope|\/excludedTreeDigests\/\d+\/relativeRoot|\/destinationAncestorPreimages\/\d+\/path|\/moves\/\d+\/(?:sourcePath|destinationPath|ownerId|sourcePreimage\/target|referenceEdits\/\d+\/(?:path|oldValue|newValue))|\/edits\/\d+\/(?:path|oldValue|newValue)|\/embeddedTicketRoots\/\d+\/(?:sourceMetadataRoot|sourceTicketRoot|canonicalTicketRoot)|\/embeddedTicketRootRelocations\/\d+\/(?:sourcePath|destinationPath|relativeEvidencePath|ownerId|preimage\/target)|\/symlinkTargetEdits\/\d+\/(?:sourcePath|finalPath|oldTarget|newTarget|logicalTargetSourcePath|logicalTargetFinalPath|ownerId|logicalTargetPreimage\/target)|\/evidenceRemovals\/\d+\/(?:sourcePath|ownerId|preimage\/target|authority\/(?:catalogPath|destinationPath|retainedFinalPath|sourcePath|ownerPath|manifestPath|serializedInputPath|members\/\d+\/(?:sourcePath|finalPath|preimage\/target)))|\/regenerations\/\d+\/(?:cwd|outputRoots\/\d+|(?:inputs|preOutputs|outputs)\/\d+\/(?:path|target)|preview\/(?:nodes\/\d+\/path|staleRemovals\/\d+)|staleRemovals\/\d+)|\/unresolved\/\d+\/path)$/u;
       for (const row of jsonStringCoordinates(content)) if (typedPath.test(row.pointer)) coordinates.add(`${row.start}\0${row.end}\0${row.value}`);
     }
   } catch {}
@@ -7604,31 +7617,31 @@ interface SerializedSentinelCase {
   readonly sourceContentHash: string;
 }
 
-function serializedSentinelCases(repoRoot: string): { readonly fixtureContentHash: string; readonly cases: readonly SerializedSentinelCase[] } | null {
-  const absolute = absolutePath(repoRoot, TRANSACTION_SENTINEL_CASES_FIXTURE_PATH);
+function serializedSentinelCases(repoRoot: string): { readonly catalogContentHash: string; readonly cases: readonly SerializedSentinelCase[] } | null {
+  const absolute = absolutePath(repoRoot, TRANSACTION_SENTINEL_CASES_CATALOG_PATH);
   const stat = lstatOrNull(absolute);
   if (!stat) return null;
-  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Transaction sentinel cases authority fixture must be a regular no-follow file");
+  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Transaction sentinel cases authority catalog must be a regular no-follow file");
   const bytes = readFileSync(absolute);
-  const value = record(JSON.parse(bytes.toString("utf8")) as unknown, "transaction sentinel cases fixture");
-  requireExactKeys(value, ["schemaVersion", "virtualPathPolicyCases", "symlinkFlavorCases"], "transaction sentinel cases fixture");
-  if (value.schemaVersion !== 1 || !Array.isArray(value.virtualPathPolicyCases) || !Array.isArray(value.symlinkFlavorCases)) throw new Error("Transaction sentinel cases fixture has an invalid schema");
+  const value = record(JSON.parse(bytes.toString("utf8")) as unknown, "transaction sentinel cases catalog");
+  requireExactKeys(value, ["schemaVersion", "virtualPathPolicyCases", "symlinkFlavorCases"], "transaction sentinel cases catalog");
+  if (value.schemaVersion !== 1 || !Array.isArray(value.virtualPathPolicyCases) || !Array.isArray(value.symlinkFlavorCases)) throw new Error("Transaction sentinel cases catalog has an invalid schema");
   const cases = value.virtualPathPolicyCases.map((item, index) => {
-    const row = record(item, `transaction sentinel cases fixture.virtualPathPolicyCases[${index}]`);
-    requireExactKeys(row, ["id", "inputPath", "physicalSourcePath", "expectedViolationCode", "sourceContentHash"], `transaction sentinel cases fixture.virtualPathPolicyCases[${index}]`);
-    if (row.expectedViolationCode !== "windows-reserved-name" && row.expectedViolationCode !== "trailing-dot-or-space") throw new Error("Transaction sentinel cases fixture has an invalid violation code");
-    if (row.physicalSourcePath !== null && typeof row.physicalSourcePath !== "string") throw new Error("Transaction sentinel cases fixture has an invalid physical source path");
+    const row = record(item, `transaction sentinel cases catalog.virtualPathPolicyCases[${index}]`);
+    requireExactKeys(row, ["id", "inputPath", "physicalSourcePath", "expectedViolationCode", "sourceContentHash"], `transaction sentinel cases catalog.virtualPathPolicyCases[${index}]`);
+    if (row.expectedViolationCode !== "windows-reserved-name" && row.expectedViolationCode !== "trailing-dot-or-space") throw new Error("Transaction sentinel cases catalog has an invalid violation code");
+    if (row.physicalSourcePath !== null && typeof row.physicalSourcePath !== "string") throw new Error("Transaction sentinel cases catalog has an invalid physical source path");
     return { id: planString(row.id, "sentinel case id"), inputPath: planPath(row.inputPath, "sentinel input path"), physicalSourcePath: row.physicalSourcePath === null ? null : planPath(row.physicalSourcePath, "sentinel physical source path"), expectedViolationCode: row.expectedViolationCode, sourceContentHash: planString(row.sourceContentHash, "sentinel content hash", PLAN_HASH) } as SerializedSentinelCase;
   }).sort((left, right) => generatorPathCompare(left.id, right.id));
   if (new Set(cases.map((entry) => entry.id)).size !== cases.length || new Set(cases.map((entry) => entry.inputPath)).size !== cases.length) throw new Error("Transaction sentinel cases must have unique IDs and input paths");
-  return { fixtureContentHash: sha256(bytes), cases };
+  return { catalogContentHash: sha256(bytes), cases };
 }
 
 function planSerializedEvidenceRemovals(inventory: TaxonomyInventory): { readonly removals: readonly TaxonomyEvidenceRemoval[]; readonly violations: readonly TaxonomyViolation[] } {
-  const fixtureEntry = inventory.entries.find((entry) => entry.sourcePath === TRANSACTION_SENTINEL_CASES_FIXTURE_PATH);
+  const fixtureEntry = inventory.entries.find((entry) => entry.sourcePath === TRANSACTION_SENTINEL_CASES_CATALOG_PATH);
   if (!fixtureEntry) return { removals: [], violations: [] };
   const authority = serializedSentinelCases(inventory.repoRoot);
-  if (!authority || fixtureEntry.nodeKind !== "file" || fixtureEntry.contentHash !== authority.fixtureContentHash) return { removals: [], violations: [violation("serialized-sentinel-authority-invalid", TRANSACTION_SENTINEL_CASES_FIXTURE_PATH, "Serialized sentinel fixture bytes are not frozen by inventory")] };
+  if (!authority || fixtureEntry.nodeKind !== "file" || fixtureEntry.contentHash !== authority.catalogContentHash) return { removals: [], violations: [violation("serialized-sentinel-authority-invalid", TRANSACTION_SENTINEL_CASES_CATALOG_PATH, "Serialized sentinel catalog bytes are not frozen by inventory")] };
   const removals: TaxonomyEvidenceRemoval[] = [];
   const violations: TaxonomyViolation[] = [];
   for (const sentinel of authority.cases) {
@@ -7639,7 +7652,7 @@ function planSerializedEvidenceRemovals(inventory: TaxonomyInventory): { readonl
       violations.push(violation("serialized-sentinel-source-invalid", sentinel.inputPath, `Physical sentinel does not match serialized case ${sentinel.id}`));
       continue;
     }
-    const removalAuthority = { kind: "serialized-path-sentinel" as const, fixturePath: TRANSACTION_SENTINEL_CASES_FIXTURE_PATH, fixtureContentHash: authority.fixtureContentHash, caseId: sentinel.id, serializedInputPath: sentinel.inputPath, expectedViolationCode: sentinel.expectedViolationCode, authorityDigest: "" };
+    const removalAuthority = { kind: "serialized-path-sentinel" as const, catalogPath: TRANSACTION_SENTINEL_CASES_CATALOG_PATH, catalogContentHash: authority.catalogContentHash, caseId: sentinel.id, serializedInputPath: sentinel.inputPath, expectedViolationCode: sentinel.expectedViolationCode, authorityDigest: "" };
     const { authorityDigest: _authorityDigest, ...digestible } = removalAuthority;
     const frozenAuthority = { ...removalAuthority, authorityDigest: sha256(canonicalJson(digestible)) };
     const provisional = { sourcePath: entry.sourcePath, preimage: inventoryLeafPreimage(entry), authority: frozenAuthority, rationaleRule: "serialized-platform-sentinel-v1" as const, ownerId: entry.ownerId };
@@ -7888,7 +7901,7 @@ function plannedAffectedStateDigests(inventory: TaxonomyInventory, plan: Pick<Ta
     }
     if (removal.authority.kind === "owner-manifest-status") { const manifest = authorityStateRow(removal.authority.manifestPath); pre.push(manifest); post.push(manifest); }
     if (removal.authority.kind === "exact-path-mutation" || removal.authority.kind === "exact-owner-generated-source" || removal.authority.kind === "nested-cargo-generated-source") { const catalog = authorityStateRow(removal.authority.catalogPath); pre.push(catalog); post.push(catalog); }
-    if (removal.authority.kind === "serialized-path-sentinel") { const fixture = authorityStateRow(removal.authority.fixturePath); pre.push(fixture); post.push(fixture); }
+    if (removal.authority.kind === "serialized-path-sentinel") { const fixture = authorityStateRow(removal.authority.catalogPath); pre.push(fixture); post.push(fixture); }
   }
   for (const root of plan.embeddedTicketRoots) { pre.push({ path: root.sourceMetadataRoot, state: "directory-tree", tree: root.sourceTreeDigest }); post.push({ path: root.sourceMetadataRoot, state: "absent" }); }
   for (const edit of plan.symlinkTargetEdits) {
@@ -8827,12 +8840,12 @@ function removalAuthorityPaths(authority: TaxonomyRemovalAuthority): readonly st
   if (authority.kind === "byte-and-mode-identical") return authority.members.flatMap((member) => [member.sourcePath, member.finalPath]);
   if (authority.kind === "owner-manifest-status") return [authority.manifestPath];
   if (authority.kind === "exact-path-mutation" || authority.kind === "exact-owner-generated-source" || authority.kind === "nested-cargo-generated-source") return [authority.catalogPath];
-  return [authority.fixturePath];
+  return [authority.catalogPath];
 }
 
 function removalIncomingIgnoredSourceRoots(removal: TaxonomyEvidenceRemoval): readonly string[] {
   if (removal.authority.kind === "exact-path-mutation" || removal.authority.kind === "exact-owner-generated-source" || removal.authority.kind === "nested-cargo-generated-source") return [removal.sourcePath, removal.authority.catalogPath];
-  if (removal.authority.kind === "serialized-path-sentinel") return [removal.sourcePath, removal.authority.fixturePath];
+  if (removal.authority.kind === "serialized-path-sentinel") return [removal.sourcePath, removal.authority.catalogPath];
   return [removal.sourcePath];
 }
 
@@ -9291,7 +9304,7 @@ function reconcileTransactionOwnedTuples(repoRoot: string, plan: TaxonomyPlan, j
     } else if (entry.authority.kind === "serialized-path-sentinel") {
       const fixture = serializedSentinelCases(repoRoot);
       const sentinel = fixture?.cases.find((candidate) => candidate.id === entry.authority.caseId);
-      if (!fixture || fixture.fixtureContentHash !== entry.authority.fixtureContentHash || !sentinel || sentinel.inputPath !== entry.authority.serializedInputPath || sentinel.physicalSourcePath !== entry.sourcePath || sentinel.expectedViolationCode !== entry.authority.expectedViolationCode || sentinel.sourceContentHash !== entry.preimage.contentHash) throw new Error(`resume-state-drift: serialized sentinel authority ${entry.operationId}`);
+      if (!fixture || fixture.catalogContentHash !== entry.authority.catalogContentHash || !sentinel || sentinel.inputPath !== entry.authority.serializedInputPath || sentinel.physicalSourcePath !== entry.sourcePath || sentinel.expectedViolationCode !== entry.authority.expectedViolationCode || sentinel.sourceContentHash !== entry.preimage.contentHash) throw new Error(`resume-state-drift: serialized sentinel authority ${entry.operationId}`);
     } else if (entry.authority.kind === "exact-path-mutation") assertTicketImportantExactRemovalAuthority(repoRoot, entry);
     else assertTicketImportantRemovalAuthority(repoRoot, entry, taxonomy);
   }
@@ -11046,7 +11059,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       else if (removal.authority.kind === "serialized-path-sentinel") {
         const fixture = serializedSentinelCases(repoRoot);
         const sentinel = fixture?.cases.find((entry) => entry.id === removal.authority.caseId);
-        if (removal.authority.fixturePath !== TRANSACTION_SENTINEL_CASES_FIXTURE_PATH || !fixture || fixture.fixtureContentHash !== removal.authority.fixtureContentHash || !sentinel || sentinel.inputPath !== removal.authority.serializedInputPath || sentinel.physicalSourcePath !== removal.sourcePath || sentinel.expectedViolationCode !== removal.authority.expectedViolationCode || sentinel.sourceContentHash !== removal.preimage.contentHash) throw new Error(`Serialized sentinel authority changed: ${removal.authority.caseId}`);
+        if (removal.authority.catalogPath !== TRANSACTION_SENTINEL_CASES_CATALOG_PATH || !fixture || fixture.catalogContentHash !== removal.authority.catalogContentHash || !sentinel || sentinel.inputPath !== removal.authority.serializedInputPath || sentinel.physicalSourcePath !== removal.sourcePath || sentinel.expectedViolationCode !== removal.authority.expectedViolationCode || sentinel.sourceContentHash !== removal.preimage.contentHash) throw new Error(`Serialized sentinel authority changed: ${removal.authority.caseId}`);
       } else if (removal.authority.kind === "exact-path-mutation") assertTicketImportantExactRemovalAuthority(repoRoot, removal);
       else assertTicketImportantRemovalAuthority(repoRoot, removal, taxonomy);
     }

@@ -95,7 +95,7 @@ impl Block3dDiff {
             if let Some(d) = &self.vortex_kinds {
                 let current = crate::vortex_kinds_of_parts(&next.catalog, &next.vortex_kind_extra);
                 let merged = apply_delta!("vortexKinds", &current, d, |i: &Block3dVortexKind| i.id.as_str());
-                crate::set_vortex_kinds_parts(&mut next.catalog, &mut next.vortex_kind_extra, merged);
+                crate::set_vortex_kinds_parts(&mut next.catalog, &mut next.vortex_kind_extra, &merged);
             }
             if let Some(d) = &self.vortices {
                 next.vortices = apply_delta!("vortices", &next.vortices, d, |i: &Block3dVortexTemplate| i.id.as_str());
@@ -139,7 +139,7 @@ impl MutationDiff<Block3dSnapshot> for Block3dDiff {
             if let Some(d) = &self.vortex_kinds {
                 let current = crate::vortex_kinds_of(&next);
                 let merged = apply_delta!("vortexKinds", &current, d, |i: &Block3dVortexKind| i.id.as_str());
-                crate::set_vortex_kinds(&mut next, merged);
+                crate::set_vortex_kinds(&mut next, &merged);
             }
             if let Some(d) = &self.vortices {
                 next.vortices = apply_delta!("vortices", &next.vortices, d, |i: &Block3dVortexTemplate| i.id.as_str());

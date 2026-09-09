@@ -13,7 +13,6 @@
 //! every call site that used to read `snapshot.board_fixture` now goes through.
 
 extern crate infinite_canvas as infinite_board_port_directed;
-extern crate semio_framework_replication as replication;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -188,7 +187,7 @@ pub fn wires_content_child_handle(nodes: &[DslValue], edges: &[DslValue]) -> Wir
 pub fn wires_content_child_from_hash(content_hash: u64) -> WiresContentChild {
     let child_id = format!("wires-content-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "wires-content".into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️ContentBridge
@@ -232,8 +231,7 @@ pub fn wires_content_child_with_owner(nodes: Vec<DslValue>, edges: Vec<DslValue>
 /// (`DslValue::Null`), matching the old `BoardFixtureDsl.meta`'s `skip_serializing_if` behavior.
 pub fn wires_working_board(snapshot: &WiresSnapshot) -> DslValue {
     let scene = wires_working_scene(snapshot);
-    let mut entries: Vec<(String, DslValue)> =
-        vec![("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())), ("camera".into(), empty_camera()), ("nodes".into(), DslValue::Array(scene.nodes)), ("edges".into(), DslValue::Array(scene.edges))];
+    let mut entries: Vec<(String, DslValue)> = vec![("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())), ("camera".into(), empty_camera()), ("nodes".into(), DslValue::Array(scene.nodes)), ("edges".into(), DslValue::Array(scene.edges))];
     if !matches!(snapshot.meta, DslValue::Null) {
         entries.push(("meta".into(), snapshot.meta.clone()));
     }
@@ -846,6 +844,8 @@ pub mod editor {
             pub mod delete_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚛️force-layout/🦀️.rs"]
             pub mod force_layout;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️node-graph-viewport/🦀️.rs"]
+            pub mod node_graph_viewport;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️reorganize/🦀️.rs"]
             pub mod reorganize;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs"]

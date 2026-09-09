@@ -5,7 +5,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full Din18599 artifact state across the artifact and presence lanes. `climate` mirrors
-/// `Din18599Snapshot`'s composed `s.stdio.semio.table` child slot (ticket
+/// `Din18599Snapshot`'s composed `s.stdio.semio`/`table` child slot (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — `to_snapshot`/`from_snapshot` copy the
 /// handle across verbatim, same as `➗️mathematical`'s `EquationArtifact`/en1990's `En1990Artifact`.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -25,7 +25,7 @@ pub struct Din18599Artifact {
     #[state(artifact)]
     pub h_v: f64,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
     pub climate: Din18599ClimateChild,
     #[state(artifact)]

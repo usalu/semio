@@ -32,7 +32,7 @@ pub struct UpdateGenerationValues {
 }
 
 pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    let generation_id = payload.generation_id.clone().map(dsl::DslValue::String).unwrap_or(dsl::DslValue::Null);
+    let generation_id = payload.generation_id.clone().map_or(dsl::DslValue::Null, dsl::DslValue::String);
     let args = dsl::DslValue::object([("generationId".to_string(), generation_id), ("questionId".to_string(), dsl::DslValue::String(payload.question_id.clone())), ("value".to_string(), payload.value.clone())]);
     Ok(generation_command_result("updateGenerationValues", Some(&args), doc.snapshot, cfg.snapshot).map(|result| result.emit).unwrap_or_default())
 }

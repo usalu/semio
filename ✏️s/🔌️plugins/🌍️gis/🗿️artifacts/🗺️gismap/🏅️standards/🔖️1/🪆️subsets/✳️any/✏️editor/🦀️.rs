@@ -451,7 +451,7 @@ fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<Strin
             payload_hash: None,
             semantic_kind: None,
             label: None,
-            group_id: None,
+            group_id: authority.group_id().map(str::to_owned),
             origin: Default::default(),
         }],
         description,

@@ -1,0 +1,38 @@
+{
+  "schema": "semio.os.directory-administration-worker-wire-fixture.v1",
+  "valid": [
+    { "kind": "directory-administration-open", "operationEpoch": 0, "spaceId": "space-admin-01" },
+    { "kind": "directory-administration-refresh", "operationEpoch": 1 },
+    { "kind": "directory-administration-refresh", "operationEpoch": 2, "cursor": "m.6162_dead-beef" },
+    { "kind": "directory-administration-submit", "operationEpoch": 3, "requestId": "9f8e7d6c5b4a39281706f5e4d3c2b1a0", "command": { "kind": "rename-space", "spaceId": "space-admin-01", "name": "Research" } },
+    { "kind": "directory-administration-capability-request", "operationEpoch": 4 },
+    { "kind": "directory-administration-capability-result", "operationEpoch": 5, "transferEpoch": 1, "copied": true },
+    { "kind": "directory-administration-close", "operationEpoch": 6 }
+  ],
+  "invalid": [
+    { "name": "unknown-administration-kind", "request": { "kind": "directory-administration-forged", "operationEpoch": 1 } },
+    { "name": "open-extra-field", "request": { "kind": "directory-administration-open", "operationEpoch": 1, "spaceId": "space-admin-01", "authority": "forged" } },
+    { "name": "open-missing-space", "request": { "kind": "directory-administration-open", "operationEpoch": 1 } },
+    { "name": "refresh-extra-field", "request": { "kind": "directory-administration-refresh", "operationEpoch": 1, "spaceId": "space-admin-01" } },
+    { "name": "submit-missing-command", "request": { "kind": "directory-administration-submit", "operationEpoch": 1, "requestId": "9f8e7d6c5b4a39281706f5e4d3c2b1a0" } },
+    { "name": "capability-request-extra-field", "request": { "kind": "directory-administration-capability-request", "operationEpoch": 1, "copied": true } },
+    { "name": "capability-result-missing-copied", "request": { "kind": "directory-administration-capability-result", "operationEpoch": 1, "transferEpoch": 1 } },
+    { "name": "close-extra-field", "request": { "kind": "directory-administration-close", "operationEpoch": 1, "cursor": "m.1" } },
+    { "name": "negative-operation-epoch", "request": { "kind": "directory-administration-close", "operationEpoch": -1 } },
+    { "name": "fractional-operation-epoch", "request": { "kind": "directory-administration-close", "operationEpoch": 1.5 } },
+    { "name": "unsafe-operation-epoch", "request": { "kind": "directory-administration-close", "operationEpoch": 9007199254740992 } },
+    { "name": "control-space-id", "request": { "kind": "directory-administration-open", "operationEpoch": 1, "spaceId": "space\u0000admin" } },
+    { "name": "control-cursor", "request": { "kind": "directory-administration-refresh", "operationEpoch": 1, "cursor": "m.1\u0000" } },
+    { "name": "zero-request-id", "request": { "kind": "directory-administration-submit", "operationEpoch": 1, "requestId": "00000000000000000000000000000000", "command": { "kind": "rename-space", "spaceId": "space-admin-01", "name": "Research" } } },
+    { "name": "non-lowercase-request-id", "request": { "kind": "directory-administration-submit", "operationEpoch": 1, "requestId": "9F8E7D6C5B4A39281706F5E4D3C2B1A0", "command": { "kind": "rename-space", "spaceId": "space-admin-01", "name": "Research" } } },
+    { "name": "zero-transfer-epoch", "request": { "kind": "directory-administration-capability-result", "operationEpoch": 1, "transferEpoch": 0, "copied": true } },
+    { "name": "non-boolean-copied", "request": { "kind": "directory-administration-capability-result", "operationEpoch": 1, "transferEpoch": 1, "copied": 1 } },
+    { "name": "invalid-command-enum", "request": { "kind": "directory-administration-submit", "operationEpoch": 1, "requestId": "9f8e7d6c5b4a39281706f5e4d3c2b1a0", "command": { "kind": "set-visibility", "spaceId": "space-admin-01", "visibility": "secret" } } },
+    { "name": "invalid-command-scalar", "request": { "kind": "directory-administration-submit", "operationEpoch": 1, "requestId": "9f8e7d6c5b4a39281706f5e4d3c2b1a0", "command": { "kind": "remove-member", "spaceId": "space-admin-01", "userId": 7 } } },
+    { "name": "invalid-command-name", "request": { "kind": "directory-administration-submit", "operationEpoch": 1, "requestId": "9f8e7d6c5b4a39281706f5e4d3c2b1a0", "command": { "kind": "create-space", "name": 7, "spaceKind": "studio", "visibility": "private" } } },
+    { "name": "invalid-command-email", "request": { "kind": "directory-administration-submit", "operationEpoch": 1, "requestId": "9f8e7d6c5b4a39281706f5e4d3c2b1a0", "command": { "kind": "upsert-member", "spaceId": "space-admin-01", "email": false, "role": "author" } } },
+    { "name": "invalid-command-ttl", "request": { "kind": "directory-administration-submit", "operationEpoch": 1, "requestId": "9f8e7d6c5b4a39281706f5e4d3c2b1a0", "command": { "kind": "create-invite", "spaceId": "space-admin-01", "role": "spectator", "ttlSecs": 1.5 } } },
+    { "name": "invalid-command-descriptor", "request": { "kind": "directory-administration-submit", "operationEpoch": 1, "requestId": "9f8e7d6c5b4a39281706f5e4d3c2b1a0", "command": { "kind": "announce-document", "descriptor": { "spaceId": "space-admin-01", "documentId": "document-a", "artifactKind": "map", "artifactSchema": "map@1", "owner": { "pluginId": "gis", "packageId": "gis", "version": "1.0.0", "packageHash": "1111111111111111111111111111111111111111111111111111111111111111" }, "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222", "bootstrapVersion": 1, "bootstrapFrontier": { "headSeq": 1, "commitSeq": 2, "epoch": 0 }, "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333" } } } },
+    { "name": "command-extra-field", "request": { "kind": "directory-administration-submit", "operationEpoch": 1, "requestId": "9f8e7d6c5b4a39281706f5e4d3c2b1a0", "command": { "kind": "rename-space", "spaceId": "space-admin-01", "name": "Research", "admin": true } } }
+  ]
+}

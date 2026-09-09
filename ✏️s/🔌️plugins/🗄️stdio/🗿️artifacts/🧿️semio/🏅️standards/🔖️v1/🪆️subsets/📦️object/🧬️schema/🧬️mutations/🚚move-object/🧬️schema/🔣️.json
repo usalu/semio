@@ -9,29 +9,7 @@
   ],
   "properties": {
     "translation": {
-      "$ref": "#/$defs/SemioPoint3"
-    }
-  },
-  "$defs": {
-    "SemioPoint3": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "z": {
-          "type": "number"
-        }
-      }
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/geometry.json#/$defs/SemioPoint3"
     }
   }
 }

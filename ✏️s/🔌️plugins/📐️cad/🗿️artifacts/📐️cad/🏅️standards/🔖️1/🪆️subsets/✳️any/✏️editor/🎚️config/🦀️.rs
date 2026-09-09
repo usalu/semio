@@ -245,7 +245,7 @@ pub enum CadConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
-        config: CadConfig,
+        config: Box<CadConfig>,
     },
     #[dsl(key = "contributions")]
     SetContributions { json: String },
@@ -354,10 +354,10 @@ impl Mutation<CadConfig> for CadConfigMutation {
     fn diff(&self, base: &CadConfig) -> protocol::MutationOutcome<CadConfig> {
         match self {
             CadConfigMutation::Snapshot { config } => {
-                if config == base {
+                if config.as_ref() == base {
                     return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Config snapshot is already up to date.");
                 }
-                protocol::MutationOutcome::new(config.clone())
+                protocol::MutationOutcome::new(config.as_ref().clone())
             }
             CadConfigMutation::SetContributions { json } => {
                 if &base.contributions_json == json {
@@ -372,7 +372,7 @@ impl Mutation<CadConfig> for CadConfigMutation {
     }
 
     fn inverse(&self, base: &CadConfig) -> Vec<Self> {
-        vec![CadConfigMutation::Snapshot { config: base.clone() }]
+        vec![CadConfigMutation::Snapshot { config: Box::new(base.clone()) }]
     }
 }
 //#endregion 🔖️ConfigOperations

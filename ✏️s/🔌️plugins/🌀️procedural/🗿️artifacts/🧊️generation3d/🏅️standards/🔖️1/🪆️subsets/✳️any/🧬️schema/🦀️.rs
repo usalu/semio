@@ -22,7 +22,6 @@ use store::ArtifactDsl;
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.generation3d")]
-
 pub struct Generation3dArtifact {
     #[state(artifact)]
     pub fixture: FlowFixture,
@@ -66,7 +65,7 @@ impl Generation3dArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Generation3dSnapshot) -> Self {
-        Self { fixture: snapshot.fixture, generation: snapshot.generation, ..Self::default() }
+        Self { fixture: snapshot.fixture, generation: snapshot.generation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

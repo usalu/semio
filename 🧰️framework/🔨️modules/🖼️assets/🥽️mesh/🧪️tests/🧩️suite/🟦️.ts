@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseMeshDeliveryCatalog, resolveMeshAsset, meshAssetTransportUrl } from "../../🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🔣️.json"), "utf8"));
 
 describe("explicit mesh delivery authority", () => {
   it("agrees with independent JSON Schema admission and the neutral source/output map", async () => {

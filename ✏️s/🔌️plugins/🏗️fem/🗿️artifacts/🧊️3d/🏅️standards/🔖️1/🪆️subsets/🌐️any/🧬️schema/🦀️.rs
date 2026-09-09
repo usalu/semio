@@ -4,7 +4,7 @@ use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Artifact
 /// 🧬️ fem3d document artifact state.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, Default)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem3d")]
 pub struct Fem3dArtifact {
@@ -30,21 +30,6 @@ pub struct Fem3dArtifact {
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
-impl Default for Fem3dArtifact {
-    fn default() -> Self {
-        Self {
-            nodes: Default::default(),
-            elements: Default::default(),
-            materials: Default::default(),
-            sections: Default::default(),
-            solids: Default::default(),
-            supports: Default::default(),
-            load_cases: Default::default(),
-            combinations: Default::default(),
-            analysis: Default::default(),
-        }
-    }
-}
 
 impl Fem3dArtifact {
     /// 📸️ Persisted subset.
@@ -74,7 +59,6 @@ impl Fem3dArtifact {
             load_cases: snapshot.load_cases,
             combinations: snapshot.combinations,
             analysis: snapshot.analysis,
-            ..Self::default()
         }
     }
 

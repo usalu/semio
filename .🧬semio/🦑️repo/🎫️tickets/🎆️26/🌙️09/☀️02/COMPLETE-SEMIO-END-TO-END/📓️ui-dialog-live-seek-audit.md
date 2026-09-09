@@ -3907,3 +3907,522 @@ Bounded laws:
   requires a new user action.
 
 No commands, builds, or source edits were performed for this audit.
+
+### Catalog-Generation Packet Re-Audit and Private Mount Lifecycle
+
+The current shared contract is strict at the browser boundary.  The canonical request and status
+parsers require their full closed field sets, a lowercase non-zero 64-hex
+`expectedCatalogGenerationId`/`catalogGenerationId`, and exact canonical JSON re-encoding
+([`space-artifact creation schema`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts:1>)).
+Although the request parser temporarily converts members through `String`, the final canonical
+comparison rejects number, null, array, and object impostors.  The generic schema is also closed
+and requires the same non-zero digest ([`generic request`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json:3457>),
+[`generic status`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json:3537>)).
+
+The common JSON corpus covers missing, zero, uppercase, number, null, and array generation
+members plus unknown request/status fields; its raw cases exercise reordered, duplicate, padded,
+and escaped JSON.  `proveSpaceArtifactCreationContractV1` drives those through AJV and the
+canonical TypeScript parsers rather than treating the fixture as documentation
+([`corpus`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json:1>),
+[`contract driver`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:14921>)).
+
+The worker does not use its generic zero-permissive physical-hash helper for this authority.  Its
+dedicated generation validator rejects zero and malformed values at catalog, request, and status
+decode, and `spaceArtifactCreationStatus` requires status generation to equal the retained
+request generation before it can emit a Shell message
+([`worker validator`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:918>),
+[`worker owner check`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4145>)).
+Shell captures the catalog tuple at action dispatch, rechecks live tuple and exact kind membership,
+then stores the expected generation on the progress owner.  Its reducer and ready acceptance
+refuse a missing or changed generation; therefore no new status reaches Ready under a missing
+expected generation ([`dispatch`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1249>),
+[`progress reducer`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🌱️artifact-creation/🏦️.tsx:133>)).
+
+Initial POST 409 is deliberately a local, strict
+`space-artifact-creation-catalog-refresh-required` notification followed by a failed terminal
+presentation, not a synthetic Hub status or a retry.  This is safe for the route's deliberately
+ambiguous 409 causes: refresh only the exact retained owner, preserve the failed evidence, and
+require a fresh human action.  The worker's implementation issues one POST and never resubmits
+([`409 branch`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4221>)).
+
+The private G1 mount gate is correctly creation-only: `expectedCatalogGenerationId` is absent
+from generic document-open wire and is created only on the Ready open target.  The mounted browser
+identity is checked before resolving the entry ready promise, and the opening attempt rechecks the
+gate after attach before commit ([`gate`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts:11>),
+[`mounted identity`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2203>),
+[`post-attach check`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts:70>)).
+The gate catches its own rejected promise, so close-before-attach does not create an unhandled
+rejection.
+
+One P1 liveness defect remains in the current source, and the proposed correction is sound.
+`artifact-rebootstrap-required` closes `entry.creationMount` but does not reject `entry.ready`
+([`rebootstrap branch`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2439>)).
+The creation attempt currently awaits `entry.ready` before the mount promise
+([`sequential attach`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4885>)); with no successor mount it can wait through the 60-second opening deadline even though
+the gate is already retired.  A gate-owned `attach(documentReady)` that awaits/rejects
+`Promise.all([documentReady, mountReady])`, while ordinary openings continue waiting on document
+readiness alone, closes the exact attempt promptly without changing rebootstrap semantics.  The
+required neutral composition row is: rebootstrap before port readiness, no successor, zero
+deadline; assert no commit and one exact release/close.
+
+Root reported the current private-mount group as source-qualified (`mount99071 GREEN12/435 skip`)
+and OS full as green.  This report makes no native or mounted-runtime claim; Hub/Rust enforcement
+remains with its active owner.
+
+### Read-Only Disk Inventory
+
+At the sampled time the workspace filesystem had 17 GiB available (99% used).  No deletion was
+performed.  The active root-native target is
+`COMPLETE-SEMIO-END-TO-END/🗑️generated/hub-target` (7,415,280 KiB) and must not be touched.
+
+These exact, ticket-generated targets are conditional reclaim candidates only after their owning
+agents confirm no build/reuse remains; absence of an observed open descriptor is not sufficient
+authority to remove a compiler target:
+
+- `COMPLETE-SEMIO-END-TO-END/🗑️generated/headless-native-catalog-exact` — 15,689,600 KiB.
+- `COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target` — 13,269,480 KiB.
+- `COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-stdio-gis-browser` — 8,499,816 KiB.
+- `COMPLETE-SEMIO-END-TO-END/🗑️generated/direct-browser-actor` — 1,320,232 KiB.
+
+Do not broadly clear ticket `generated`, Nx caches, `node_modules`, or any target root while
+concurrent jobs run.  A confirming owner should remove only the specific inactive target above.
+
+No builds, source edits, or deletions were performed for this audit.
+
+### Framework Kernel Discovery: Collection Count and Re-Export Check
+
+The framework-level config now explicitly lists the real kernel owner once under
+`includeSource` and `coverage.include`, while preserving `include: []`
+([`framework Vitest config`](</Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/vitest.config.ts:20>)).
+That is the correct discovery boundary.  The framework facade does statically re-export the kernel
+([`facade`](</Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts:15>)), but the
+preceding genuine `No test files found` discovery result establishes that the re-export was not an
+`includeSource` collection route for the guarded kernel registrations.  Adding the actual kernel
+source is therefore required and does not, by itself, create a second discovery route.
+
+There is no `include`/`includeSource` duplication: `include` remains empty, which is the Vitest
+configuration's documented local guard against collecting the same in-source file twice.  The
+coverage list only instruments; it does not add a third test-file collector.
+
+The exact current kernel increment is **42** runtime laws, counted from the five actual guards in
+[`🎠️kernel/🟦️.ts`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts:214>):
+
+| Guard | Domain | Laws |
+| --- | --- | ---: |
+| `registerTests1` | `createTurnOutcomeBroadcast` | 4 |
+| `registerTests2` | `AppRouter` | 2 |
+| `registerTests3` | `ActivationRegistry` / metrics | 26 |
+| `registerTests4` | `expandPluginRegistry` | 1 |
+| `registerTests5` | `IoEntryGraph` / I/O | 9 |
+
+The framework facade's own registered `docklayoutstore` group has 89 laws.  Thus the current
+framework Vitest receipt should show **131** laws for these two source roots: 89 existing facade
+laws plus the 42 kernel laws.  A receipt of 89 means the new kernel root was not collected; 173
+means the kernel 42 were registered twice and must be investigated before accepting the result.
+This is an expected-count audit, not an execution claim.
+
+The extracted kernel suite's only source-rooted fixture path uses `dirname(source.url)` for
+`🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json`
+([`reader`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts:96>));
+the target exists.  All extracted-file relative imports resolve.  `source.directory` is currently
+unused, so no additional source-path migration is needed.
+
+No builds, source edits, or deletions were performed for this audit.
+
+### ShardClient Extracted Reserved-Response Test: Resolution-Base Re-Audit
+
+The extracted registration is invoked from the original ShardClient source with two deliberately
+different bases ([`registration`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:2293>)):
+
+* Literal `import("…")` expressions in the extracted test resolve relative to the extracted file
+  itself: [`🧪️shardclient-reserved-response-settlement/🟦️.ts`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts:1>).
+* The supplied `testSource.url` is intentionally the original
+  [`shard-client/🟦️.ts`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:2295>) URL.  Its 24 `new URL("…", testSource.url)` readers must continue to use the
+  original-source directory, not gain an extra `..` because the test moved.  This includes the
+  owner AST reads at lines 98/339/378/832/1009, activation/lifetime fixtures, and the two
+  framework-product spawner sources at lines 2699 and 3081.  Every current target exists.
+
+I also checked all 202 literal, extracted-file-relative imports: every current target resolves.
+The corrected builder type reference at
+[`line 1193`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts:1193>) properly needs four parent components to reach
+`framework/🔨️modules/🖱️ui`; it is no longer an unresolved path.  `testSource.directory` is
+currently passed but unused by this test, so it must not be substituted for `testSource.url` in a
+path repair.
+
+[`line 456`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts:456>) is not a relative-import or `new URL`
+site.  It spies on the `detachment` getter of the `OwnedResidentRecord` value destructured from
+the typed test dependencies at line 4.  Any remaining diagnostic there is a Vitest getter-overload
+or dependency-class typing issue, not an extraction path change; do not alter its location.
+
+No remaining moved-relative-import or original-source URL defect was found in this test.  No
+builds, source edits, or deletions were performed.
+
+### Kernel Extracted Broadcast Suite: Actual Vitest Collection Boundary
+
+The registered runtime test command is exactly:
+
+```sh
+bun nx run @semio-tech/framework-kernel:test
+```
+
+The project target invokes `bun ./📜️script.ts test`
+([`project`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📋️project.json:5>)),
+whose router calls `runVitest(..., "vitest.config.ts")` without a source or test-name filter
+([`router`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📜️script.ts:5>)).
+`runVitest` executes Vitest's `run` command ([`shared runner`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts:2580>)).
+Do not pass a `--testNamePattern` for this coverage claim.
+
+This is actual collection, not a source-only filter: the package config roots Vitest at
+`🎠️kernel`, has `include: []`, and uses `includeSource: ["*.ts",
+"📤️return/📦️content/🟦️.ts"]` with `passWithNoTests: false`
+([`config`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/vitest.config.ts:35>)).
+There is exactly one top-level TypeScript source at that module root,
+[`🎠️kernel/🟦️.ts`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts:1>), so
+the first glob instruments that owner.  Its five `import.meta.vitest` guarded calls all dynamically
+load the extracted suite: broadcast at line 215, AppRouter at 641, ActivationRegistry metrics at
+2204, registry expansion at 2923, and I/O routing at 2930.  Vitest consequently evaluates each
+guard and registers all five extracted groups in the same actual root-source run.
+
+The extracted suite's relative imports all resolve from its own directory.  Its only
+source-relative fixture reader intentionally uses the supplied original `source.url` to reach
+`🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json`
+([`reader`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts:96>));
+that target exists.  `source.directory` is currently unused.  No moved import or fixture path is
+left broken in this suite.
+
+`test-quick`, `test-long`, and `test-exhaustive` invoke the same configuration but alter the shared
+test-level timeout/coverage policy.  The unfiltered `:test` target above is the appropriate
+collection gate for the five groups; a green result would be a test execution result, which this
+read-only audit did not run.
+
+No builds, source edits, or deletions were performed for this audit.
+
+### Trusted Stdio + GIS: Two-Author Mounted Shell Journey Preflight
+
+The one registered end-to-end command is
+[`trusted-stdio-gis-bundle-check`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📋️project.json:670>)
+with `--two-author-shell`, exposed as the launch entry
+[`⚖️gate🤝️trusted-stdio-gis-two-author-shell🌎️hub`](</Users/ueli/Documents/semio/.vscode/launch.json:8328>).
+`--two-author-source` is deliberately only the schema/source gate; it cannot qualify a mounted
+journey. The source fixture is current at AppChannel protocol **15** and names the exact
+`[stdio, gis]` closure, English/German peer locales, the row-scoped `Open`/`Öffnen` controls, and
+all seventeen required steps ([`fixture`](</Users/ueli/Documents/semio/🌎️hub/🧫️fixtures/🤝️two-author-shell-v1/🔣️.json>),
+[`fixture oracle`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12771>)). I found no stale
+protocol-14 positive fixture in this route. The only stale reference is diagnostic text saying
+“compiled v14 Map target” despite the predicate comparing the current constant
+([`stale diagnostic`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12204>)); correct it so a
+future failure is not misdiagnosed as a protocol downgrade.
+
+#### Exact prerequisite and execution boundary
+
+The actual command first runs the shared source gates, then requires an absolute ticket-owned
+`SEMIO_TEST_ARTIFACT_DIR`, builds `semio-hub` and `semio-framework-os-mcp` into that ticket's
+`hub-target`, runs the genuine checkpoint-publication native law, materializes/publishes one
+trusted current, and only then invokes the process harness
+([`orchestration`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12851>),
+[`two-author native stage`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12964>)).
+Home should remain the only Cargo owner through the entire launch: the browser preparation also
+calls `buildPluginCargo` for the fresh **Space** component, after requiring the wasip2 Rust target
+and the platform developer linker configuration
+([`browser staging`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts:460>)).
+Thus this is not only a Hub/MCP binary build. It additionally needs a usable Playwright Chromium,
+Vite/Bun development server, and the generated `space` and `gis` browser registry entries. The
+launch entry already isolates the Cargo target, forces one Cargo job, supplies the ticket artifact
+directory, and gives the long bounded budgets; it is the correct next registered command, not an
+ad-hoc browser invocation.
+
+The harness rejects a changed current pointer or a data root outside the prepared artifact root
+before starting the Hub, and rechecks it after each durable change and restart
+([`current fence`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11956>)). It stages a
+ticket-owned Space host over the exact selected GIS component/descriptor hashes rather than using a
+repository-global output ([`staging call`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11982>),
+[`staging invariants`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts:460>)).
+
+#### What the mounted run actually exercises
+
+This is not a synthetic document insertion. Author A creates the map through the ordinary Space
+dialog (`#s-space-create-artifact`, `#name`, closed `#kindChoice`) and the harness accepts only the
+Directory-derived `artifact-<32hex>` row. Author B subsequently opens the exact row through the
+explicit localized action ([`ordinary peer owner`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11765>)).
+Each independently started Vite/Shell browser has an isolated data root, local relay credential,
+and explicitly locked locale. It must show `[data-semio-os-ready]`, a loaded selected catalog
+plugin, the right `<html lang>`, the directory row, and a non-null scoped mounted-map probe before
+it is admitted to the scenario. The later `waitMaps` comparison additionally requires two distinct
+`clientInstanceId`s, actual tiled-map root, selected current component/descriptor/browser actor
+digests, positive UI revision, and equality of checkpoint id, descriptor digest, frontier, and
+regions ([`mounted proof`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12076>)).
+
+The cancellation boundary is intentionally Author B's real MCP child: submit a running job, wait
+for the FD4 persisted-progress checkpoint, read B's own event page, cancel via B's MCP request,
+release, and require B's terminal cancelled/no-offer page. This proves real MCP progress/cancel;
+it does **not** claim a browser cancellation UI. A's proposal, approval, and Undo are normal Shell
+UI actions (`Propose Bounds Region`, localized approve button, localized History plus enabled Undo),
+then both mounted Shell probes must converge after each paired socket rebootstrap
+([`actual Shell approval/undo`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12120>)).
+B is separately denied A's private job routes before that approval.
+
+Finally the harness closes both browsers, MCP children, and sockets, restarts the Hub on the same
+data root and port, reopens two new real Shell peers and MCP/socket readers, and requires the
+post-Undo pair and empty regions again ([`restart proof`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12145>)).
+It properly does not claim private-job restart recovery, external-provider behavior, browser
+qualification of publication, or WGPU rendering.
+
+**Current blocker/status:** no source-level route break beyond the stale `v14` diagnostic was
+found. The actual native/browser command has not been run in this audit, so neither the native
+checkpoint seed nor the two mounted Shell observations is qualified yet. Its persisted receipt
+under the ticket artifact root is the required evidence; source fixture success alone is not a
+substitute. Do not replace the ordinary creation/open actions with the native bootstrap commands:
+those direct commands only create the shared private Space and admit B, which is legitimate
+fixture setup and not an assertion that Space administration UI was exercised.
+
+### Space Administration Worker: Latest Read and Retained Presentation Re-Audit
+
+The current worker closes the previously reported raw-command hole: every
+`directory-administration-*` wire message now reaches the closed
+`parseDirectoryAdministrationWorkerRequestV1` branch before dispatch
+([`wire admission`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:737>),
+[`closed parser`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:946>)). Its submit path
+uses the strict canonical command parser both in the page/capability predicate and again when
+sealing, so malformed, foreign-space, withdrawn-capability, member-page, and unrelated commands
+cannot become a POST ([`shared predicate`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:950>),
+[`worker submit`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4825>)).
+
+The latest-read boundary is also correctly owned. `loadDirectoryAdministrationPage` replaces and
+aborts the preceding `pageRead`, keeps the exact controller identity, and applies a result only if
+the retained operation and that controller are both still current
+([`page reader`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4748>)).
+`closeDirectory`, scoped membership revocation, unmount, and replacement all terminalize the exact
+operation first, abort both command and page reads, erase the page/receipt/capability, and then
+publish the terminal state ([`terminal owner`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4707>),
+[`directory close`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4535>)).
+The owned worker law covers older success *and* failure after a newer read and a refresh attempt
+while a command request is sealed
+([`law`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:1769>)).
+
+The worker intentionally retains the last verified canonical page during `receipt`/`refreshing` as
+read-only presentation; it does not retain admission authority. The pane has an explicit localized
+polite refreshing status ([`status`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🟦️.tsx:316>)),
+all normal property/member/invite/page controls use `dispatchable`, and the Shell rejects every
+request unless phase is exactly `ready` ([`semantic guard`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1418>)).
+This corrects the earlier suggestion to erase the renderer presentation during refresh: doing so
+would break the intentional receipt/draft contract without improving command admission.
+
+One concrete interaction defect remains: the Invite **Copy** button is disabled only while a copy
+is already active, not while the old page is `receipt` or `refreshing`
+([`copy control`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🟦️.tsx:373>)).
+It is therefore focusable and clickable despite the Shell's `ready` guard silently returning no
+worker request. This is not a secret or POST bypass, but it is an inaccessible dead action and
+contradicts the clearly announced pending state. Disable it with
+`!dispatchable || inviteCapabilityStatus === "copying"`, then add receipt and refreshing rows
+asserting the button is disabled. The exact transfer-epoch protocol otherwise prevents duplicate
+copy results and clears the retained invite on terminal/revoked/non-author transitions.
+
+No build, source edit, native execution, or browser claim was made in this audit.
+
+### Re-Audit: Opaque Extension Slots Are Dormant
+
+The generic `Component::Extension` contract is correctly opaque: its generated TS description
+explicitly leaves plugin/app/body addressing to the resolver
+([`ui-contract.ts`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract.ts:143>)),
+and the Rust component documentation says the same
+([`component.rs`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🧩️component.rs:442>)).
+The live resolver is unfinished — it keys contributor instances only by `pluginId`, races after an
+await, and currently returns *Extension unavailable*
+([`kernel`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts:296>),
+[`fallback`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts:312>)).
+
+That is not a current acceptance blocker. A source search excluding tests, fixtures, generated
+material and ticket output found no production `Component::Extension` author or manifest/catalog
+contribution that declares an opaque extension address. The only instances are generic builders and
+test/fixture values. `TopicContribution { topic, payload }` is a viable *future* domain-owned
+declaration seam, but there is no current producer or target to bind. Preserve the domain-neutral
+opaque component contract; do not invent a generic UI address field or revive the old renderer
+adapter during the signed Space/two-author work.
+
+### Space Administration: Current Command and Receipt Boundary
+
+The new rename/visibility UI is correctly non-optimistic at the Shell level. Its forms are gated by
+the canonical author page and its capability flags, their drafts are remounted only when the page
+receipt changes, and `ShellHost` maps them through the shared closed command predicate
+([`SpaceAdministration`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🟦️.tsx:250>),
+[`Shell mapper`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1414>),
+[`shared predicate`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:907>)).
+The Hub independently authorizes the matching commands; the following findings concern the local
+owner and truthfulness of the UI, not a relaxation of Hub authorization.
+
+1. **P0 for the worker admission packet: the inbound wire is a cast, not a parser.**
+   `decodeBackboneWorkerRequest` handles several special variants but falls through with
+   `return parsed as BackboneWorkerRequest` for all `directory-administration-*` variants
+   ([`worker decoder`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:737>)).
+   The worker dispatches `directory-administration-submit` directly to
+   `submitDirectoryAdministrationCommand`
+   ([`worker bridge`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5969>),
+   [`submit case`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:6024>)).
+   The predicate currently receives a TypeScript `DirectoryCommand`; its `"spaceId" in command`
+   test throws for `null` or a primitive ([`predicate`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:908>)).
+   Make the predicate total over `unknown`, and add an exact decoder arm for the administration
+   kinds: closed top-level fields, safe nonnegative epoch, canonical 32-hex request id, and a
+   closed `DirectoryCommand` parser before the worker owns any operation state. The worker must
+   also reapply this predicate to its live parsed page and operation space immediately before
+   sealing; currently it seals every type-asserted command
+   ([`submit`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4806>)).
+   Required rows: `command` as `null`, array and string; omitted/extra command fields; extra
+   request fields; invalid epoch/request id; and a schema-valid command for a different space.
+   Each must cause no POST and no receipt/state advancement. The seven capability rows remain the
+   positive counterpart.
+
+2. **P1: a late page parse can resurrect a closed pane.** The Shell captures the current operation
+   epoch before asynchronously parsing `canonicalJson`
+   ([`message handler`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2426>)).
+   If Close increments the ref and sets the state to `null` while the parse is pending, the
+   completion still passes its captured epoch to the reducer. The reducer accepts `current ===
+   null`, so it reconstructs the old page
+   ([`reducer`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1386>)).
+   Recheck `spaceAdministrationEpochRef.current` after every parse await and require an exact
+   non-null current operation for worker-state reductions. The only state creation belongs to the
+   synchronous `open` effect. Add both parse-success and parse-failure-after-close rows; neither
+   may restore controls, a page, a receipt, or a pending invite capability.
+
+3. **Fixture schema coverage is incomplete.** The new neutral properties fixture has no adjacent
+   schema — only [`properties/🔣️.json`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🧫️fixtures/⚙️properties/🔣️.json>)
+   exists. The current AJV assertion validates the derived `DirectoryCommand`, not the fixture's
+   own fields. Add its closed fixture schema and at least one unknown-field rejection; this keeps
+   the property corpus language-neutral rather than making it a TypeScript-only input.
+
+4. **Deletion remains deliberately out of scope, and needs a distinct terminal.** The current UI
+   has no delete intent/control. If added, it cannot use the generic accepted-receipt → refresh
+   path: a successful delete makes the following page request return 404, which
+   `loadDirectoryAdministrationPage` maps to `denied` and erases the accepted receipt
+   ([`page loader`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4742>),
+   [`status mapping`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4737>)).
+   Branch only on the exact locally issued, receipt-accepted `delete-space` into a no-page
+   `deleted` success terminal retaining a nonsecret receipt identity long enough to announce the
+   result. An arbitrary refresh 404 must remain a denial. Add accepted-delete/404, remote-delete
+   during another command/404, close-before-receipt, and authority-demotion-after-non-delete rows.
+
+No build, native execution, source mutation, or process claim was made in this audit.
+
+### Browser Dev Entry: Runtime/Test Extraction Re-Audit
+
+The reported production leak was real in the preceding source: the browser entry's
+`!import.meta.vitest` branch dynamically imported
+`🧑‍💻dev/🧪️tests/🧪️source-contract/🟦️.ts`, whose so-called `registerTests1` in fact performed the
+React boot. The current entry has moved that exact body inline and imports only the public renderer
+facade ([`OS dev entry`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts:44>)).
+The arguments are preserved exactly: selected plugin and complete `boot.plugins`, puzzle surface
+factories, app id/role, locks, defaults, brand, renderer guard, and the existing caught diagnostic.
+`bootFrameworkOs` remains the public React entry and retains the expected `#root`/brand/storage
+initialization path ([`public facade`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx:799>),
+[`boot`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx:1171>)).
+
+Within the intentionally narrow direct closure, no second negative-Vitest production block remains:
+the OS dev entry is the sole `!import.meta.vitest` block under production `os/🔨️modules` after
+excluding test and fixture directories. Runtime renderer modules use the opposite,
+`if (import.meta.vitest)`, shape; the production Vite plugin replaces it with `undefined` before
+asset collection ([`production boundary`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins.ts:427>)).
+Those positive registrations are a type-program concern but not an emitted browser-boot import.
+
+Two bounded follow-ups remain for the owner:
+
+1. The now-unreachable `🧪️tests/🧪️source-contract/🟦️.ts` still contains the old production boot
+   body and exports a misleading `registerTests1`; it has no current caller. Remove it rather than
+   allowing a future test discovery/import to accidentally boot React.
+2. Make WGPU's emitted-module assertion the proof, not merely the source search: the React dev
+   boot chunk must contain the public renderer entry and no module identifier fragment
+   `/🧪️tests/`, `vitest`, `node:`, or `bun:`. The WGPU Rollup run was active at audit time, so this
+   report makes no bundle-success claim.
+
+The entry has no explicit HMR root owner, but this was true before the move and is not evidence of a
+new production regression; do not alter mount lifetime behavior in this extraction repair without a
+separate real HMR reproduction.
+
+No build, source mutation, or browser runtime execution was performed for this audit.
+
+#### Correction: Entry-Rooted Browser Typecheck Still Sees Guarded Test Imports
+
+The entry-rooted recommendation above is necessary but not sufficient in the current tree.
+Read-only TypeScript `preProcessFile` confirms that TypeScript records a dynamic import inside a
+runtime-false `if (import.meta.vitest)` block as a module dependency.  The renderer entry directly
+imports PluginRuntime, whose test registration dynamically imports
+`engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx`
+([`PluginRuntime registration`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:2707>)).
+Reachable UiDocumentStore and Interpreter use the same pattern and additionally use Bun-only
+`import.meta.dir` in their guarded registration blocks
+([`UiDocumentStore`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx:557>),
+[`Interpreter`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx:1223>)).
+UiPreferences has an analogous guarded test import and should be included in the extraction audit
+if it remains in ShellHost's runtime closure.
+
+The PluginRuntime extracted test itself does **not** import the root CLI; the root `📜️script.ts`
+path in the preceding section remains the broad test-glob's three root-policy suites.  There are
+therefore two independent contaminants:
+
+1. Broad engine-test inclusion imports the root Bun policy registry.
+2. Runtime modules' guarded dynamic registrations import co-located test/Bun-only metadata even
+   when the only tsc root is `🟦️.tsx`.
+
+Do not change the current broad `typecheck` target yet.  First move each production module's
+`import.meta.vitest` registration into its test-owned entry/registration module so runtime files
+contain no Vitest or `import.meta.dir` reference.  Then add a separate entry-rooted browser type
+target.  Preserve the existing broad target until a separately owned Bun tooling/test type program
+declares Bun/Node types; do not paper over either program with global ambient shims or `any`.
+
+No builds, source edits, or deletions were performed for this correction.
+
+#### Re-Audit Update: Private Mount Rebootstrap Closure
+
+The preceding P1 liveness finding is repaired in the current source.  The private gate now exposes
+`attach(documentReady)`, which awaits `Promise.all([documentReady, mountReady])`
+([`gate attach`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts:4>)).
+The private bootstrap/rebootstrap path invokes `failDocumentBackbone` rather than merely retiring
+the mount; that exact helper rejects both ready waiters and invokes the exact `closeDocument`, which
+rejects the socket-actor waiter, retires ports/attachments, and deletes the owned map entry.
+Ordinary rebootstrap remains on its existing recovery route because this immediate terminalization
+is conditioned on `entry.creationMount !== null`.  There is no callback reentrancy exposure:
+subsequent old-client messages fail the map/client equality check.  Root reported the focused
+pending-port composition group green; this is a source/test-owner report, not an independent
+runtime execution claim.
+
+### Renderer Type Gate: Browser Program Versus Bun Tooling
+
+`@semio-tech/framework-renderer-react` currently invokes `tsc -p tsconfig.json` for its
+`typecheck` target ([`router`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts:53>)).
+Its tsconfig's broad `**/*.ts`/`**/*.tsx` includes the Bun task router and Vite config, while its
+separate `../../../../🧪️tests/**/*` include reaches the complete engine test tree
+([`tsconfig`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/tsconfig.json:19>)).
+The compiler has only browser types (`react`, `react-dom`, `vite/client`), so this is a mixed
+browser/Bun program rather than a renderer type boundary.
+
+The concrete import path that pulls the root test registry is:
+
+```text
+renderer-react/tsconfig.json include ../../../../🧪️tests/**/*.ts
+  -> engine/🧪️tests/🔬️interactivity-{live-reconcile,mounted-frame-transaction,
+       mounted-engine-surface-lifetime}/🟦️.ts
+  -> ../../../../../../../../📜️script.ts
+  -> Bun.serve/Bun.build/Bun.spawn/Bun.TOML/Bun.JSONC/Bun.Transpiler and root policy registry
+```
+
+Those three tests are deliberately excluded from this package's Vitest suite as
+`rootPolicySelfTestSuites` ([`Vitest exclusion`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/vitest.config.ts:32>),
+[`exclusion use`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/vitest.config.ts:68>)).
+They are root-policy tests, not renderer-runtime tests.  Thus their only inclusion in the renderer
+type program is accidental; it imports the whole root Bun CLI and exposes unrelated `any` leaks
+and Bun ambient errors.
+
+The smallest clean boundary is to make the renderer browser tsc program entry-rooted, for example
+replace `include` with `files: ["🟦️.tsx"]`.  TypeScript follows the renderer entry's complete static
+runtime import closure, so it still checks every browser-reachable Shell, worker, component, and
+schema module.  It intentionally does **not** compile the local Bun router `📜️script.ts`,
+`vitest.config.ts`, or test registries as browser code.  The existing Nx `test`, `test-quick`,
+`test-long`, and `test-exhaustive` targets still execute the selected actual tests through Bun/Vitest
+([`targets`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📋️project.json:25>)); no test is silenced.
+
+If a static type gate is later desired for the Bun task router/root policy registry, it must be a
+separate tooling-owner program with declared Bun types and Node/Vite config types, not a browser
+renderer configuration and not ambient `any` shims.  There is currently no `bun-types` or
+`@types/bun` dependency in the relevant manifest/lock snapshot, so adding it to the renderer's
+browser `types` list would be both inaccurate and insufficient.  Do not exclude imported runtime
+sources or add broad `any`; establish the entry-rooted browser program first.
+
+No builds, source edits, or deletions were performed for this audit.

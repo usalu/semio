@@ -7,7 +7,7 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️Snapshot
 /// 📸️ Persisted architect program snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(extension = "architect", layout = "lines")]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramSnapshot {
@@ -209,11 +209,11 @@ pub struct ProgramSnapshot {
     #[state(artifact)]
     pub templates: Vec<TemplateRecord>,
     #[dsl(block)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     #[state(artifact)]
     pub knowledge: crate::ProgramKnowledgeChild,
     #[dsl(block)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     #[state(artifact)]
     pub benchmarks: crate::ProgramBenchmarksChild,
     #[dsl(table)]

@@ -48,16 +48,17 @@ async fn move_rotate_scale_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn create_delete_brep_round_trips() {
-    let base = fixture();
+    let mut base = fixture();
+    base.brep = None;
     let target = ref_of("brep", "new-brep");
 
-    let create = SemioObjectMutation::CreateBrep(create_brep::CreateBrep { child_id: "brep-99".into(), target: target.clone() });
+    let create = SemioObjectMutation::CreateBrep(create_brep::CreateBrep { child_id: "new-brep".into(), target: target.clone() });
     let after = round_trip(&base, &create);
-    assert_eq!(after.brep.as_ref().unwrap().child_id, "brep-99");
+    assert_eq!(after.brep.as_ref().unwrap().child_id, "new-brep");
     assert_eq!(after.brep.as_ref().unwrap().target, target);
 
     let delete = SemioObjectMutation::DeleteBrep(delete_brep::DeleteBrep {});
-    let after = round_trip(&base, &delete);
+    let after = round_trip(&after, &delete);
     assert!(after.brep.is_none());
 }
 
@@ -71,35 +72,39 @@ async fn delete_brep_of_an_absent_slot_has_an_empty_inverse() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn create_brep_overwriting_an_existing_handle_restores_the_prior_one_on_undo() {
+async fn create_brep_rejects_an_occupied_slot_without_displacing_its_child() {
     let base = fixture();
-    assert!(base.brep.is_some(), "fixture must start with a brep handle to exercise overwrite");
-    let create = SemioObjectMutation::CreateBrep(create_brep::CreateBrep { child_id: "brand-new".into(), target: ref_of("brep", "brand-new-target") });
-    let after = round_trip(&base, &create);
-    assert_eq!(after.brep.as_ref().unwrap().child_id, "brand-new");
+    assert!(base.brep.is_some(), "fixture must start with an owned brep");
+    let create = SemioObjectMutation::CreateBrep(create_brep::CreateBrep { child_id: "brand-new".into(), target: ref_of("brep", "brand-new") });
+    let outcome = create.diff(&base);
+    assert_eq!(outcome.messages()[0].code.to_string(), "mutation.duplicate-id");
+    assert!(create.inverse(&base).is_empty(), "rejected duplicate creation has no inverse effect");
+    assert_eq!(outcome.diff().apply(&base).expect("rejected create has no diff"), base);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_delete_mesh_round_trips() {
-    let base = fixture();
-    let create = SemioObjectMutation::CreateMesh(create_mesh::CreateMesh { child_id: "mesh-99".into(), target: ref_of("mesh", "new-mesh") });
+    let mut base = fixture();
+    base.mesh = None;
+    let create = SemioObjectMutation::CreateMesh(create_mesh::CreateMesh { child_id: "new-mesh".into(), target: ref_of("mesh", "new-mesh") });
     let after = round_trip(&base, &create);
-    assert_eq!(after.mesh.as_ref().unwrap().child_id, "mesh-99");
+    assert_eq!(after.mesh.as_ref().unwrap().child_id, "new-mesh");
 
     let delete = SemioObjectMutation::DeleteMesh(delete_mesh::DeleteMesh {});
-    let after = round_trip(&base, &delete);
+    let after = round_trip(&after, &delete);
     assert!(after.mesh.is_none());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_delete_properties_round_trips() {
-    let base = fixture();
-    let create = SemioObjectMutation::CreateProperties(create_properties::CreateProperties { child_id: "props-99".into(), target: ref_of("value", "new-props") });
+    let mut base = fixture();
+    base.properties = None;
+    let create = SemioObjectMutation::CreateProperties(create_properties::CreateProperties { child_id: "new-props".into(), target: ref_of("value", "new-props") });
     let after = round_trip(&base, &create);
-    assert_eq!(after.properties.as_ref().unwrap().child_id, "props-99");
+    assert_eq!(after.properties.as_ref().unwrap().child_id, "new-props");
 
     let delete = SemioObjectMutation::DeleteProperties(delete_properties::DeleteProperties {});
-    let after = round_trip(&base, &delete);
+    let after = round_trip(&after, &delete);
     assert!(after.properties.is_none());
 }
 

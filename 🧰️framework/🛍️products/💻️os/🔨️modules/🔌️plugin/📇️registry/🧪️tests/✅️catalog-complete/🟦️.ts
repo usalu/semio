@@ -28,7 +28,7 @@ import {
   type PluginRegistryEntry,
 } from "../../📜️script.ts";
 
-const fixtureRoot = join(import.meta.dirname, "../🧬️catalog-complete");
+const fixtureRoot = join(import.meta.dirname, "../../🧫️fixtures/🧬️catalog-complete");
 const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
   readonly nodes: readonly CatalogVerificationNode[];
   readonly expectedOrder: readonly string[];
@@ -43,7 +43,7 @@ describe("handpicked module deployment directories", () => {
     const deployment = await import("../../📦️deployment/🟦️.ts"), { URL: IndependentUrl } = await import("whatwg-url");
     const routes = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🛣️routes.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
-    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧪️cases.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema.$defs.DeploymentModuleRoutesV1);
     expect(validate(routes)).toBe(true);
     expect(deployment.parseModuleRoutes(routes)).toEqual(routes);
@@ -59,7 +59,7 @@ describe("handpicked module deployment directories", () => {
 
   it("uses the declared authored bridge without deriving a filename from the public ID", async () => {
     const emojiRegex = (await import("emoji-regex")).default;
-    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧪️cases.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
     for (const name of [cases.bridgeFile, cases.installMetaFile]) expect([...name.matchAll(emojiRegex())]).toHaveLength(1);
     const deployment = await import("../../📦️deployment/🟦️.ts");
     expect(deployment.moduleStaticDirectoryNames("puzzle", false)).toEqual(cases.staticDirectories);
@@ -77,7 +77,7 @@ describe("handpicked module deployment directories", () => {
     const emojiRegex = (await import("emoji-regex")).default;
     const catalog = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🗺️catalog.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
-    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧪️cases.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
     const registrySchemas = new Ajv({ strict: true }).addSchema(JSON.parse(readFileSync(join(import.meta.dirname, "../../../../🧩️extension/🧬️schema/🔣️.json"), "utf8"))).addSchema(schema);
     const validate = registrySchemas.getSchema(`${schema.$id}#/$defs/DeploymentCatalogV1`)!;
     expect(validate(catalog)).toBe(true);

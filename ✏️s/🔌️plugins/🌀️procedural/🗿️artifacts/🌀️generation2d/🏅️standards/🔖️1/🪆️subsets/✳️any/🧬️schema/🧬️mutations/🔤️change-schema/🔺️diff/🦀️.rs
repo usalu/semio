@@ -8,5 +8,5 @@ pub fn diff(payload: &super::ChangeSchema, base: &Generation2dSnapshot) -> proto
     if base.fixture.schema == payload.schema {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fixture schema is already \"{}\".", payload.schema));
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff::default(), SynapsesDiff::default(), LayoutDiff::default(), None, Some(payload.schema.clone())))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), None, Some(&payload.schema)))
 }

@@ -1232,7 +1232,7 @@ fn drive_step_with_payload_ledger<J: InteractiveJob + ?Sized>(
         *callback_verdict = Some(watchdog.finish());
         outcome
     };
-    if callback_verdict.as_ref().is_some_and(semio_framework_trace::CallbackVerdict::is_fault) { return outcome; }
+    if callback_verdict.as_ref().is_some_and(|verdict| verdict.clock_fault().is_some()) { return outcome; }
     match &outcome {
         StepOutcome::Yield => {}
         StepOutcome::PreviewReady(_) => {
@@ -1885,6 +1885,7 @@ struct WorkerJobAuthority<J> {
     preadmitted_fault: Option<RetainedJobPayload>,
     outcome: Option<StepOutcome>,
     callback_verdict: Option<semio_framework_trace::CallbackVerdict>,
+    overruns: semio_framework_trace::StepOverrunLedger,
     quarantined_outcome: Option<StepOutcome>,
     close_stage: u8,
 }
@@ -1897,7 +1898,19 @@ impl<J> WorkerJobAuthority<J> {
             Ok(payload) => payload,
             Err(fault_source) => return Err((job, params, fault_source)),
         };
-        Ok(Self { job: Some(job), params: Some(params), preview_sequence: 0, step_sequence: 0, payload_ledger, preadmitted_fault: Some(preadmitted_fault), outcome: None, callback_verdict: None, quarantined_outcome: None, close_stage: 0 })
+        Ok(Self {
+            job: Some(job),
+            params: Some(params),
+            preview_sequence: 0,
+            step_sequence: 0,
+            payload_ledger,
+            preadmitted_fault: Some(preadmitted_fault),
+            outcome: None,
+            callback_verdict: None,
+            overruns: semio_framework_trace::StepOverrunLedger::new(),
+            quarantined_outcome: None,
+            close_stage: 0,
+        })
     }
 }
 
@@ -2040,6 +2053,10 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
         self.checked_out.as_ref().and_then(WorkerJobOutcome::callback_verdict)
     }
 
+    pub fn overrun_ledger(&self) -> Option<&semio_framework_trace::StepOverrunLedger> {
+        self.checked_out.as_ref().and_then(WorkerJobOutcome::overrun_ledger)
+    }
+
     pub fn take_checked_out_outcome(&mut self) -> Option<StepOutcome> {
         self.checked_out.as_mut().map(WorkerJobOutcome::take_outcome)
     }
@@ -2131,6 +2148,10 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
 
     pub fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
         self.checked_out.as_ref().and_then(WorkerJobOutcome::callback_verdict)
+    }
+
+    pub fn overrun_ledger(&self) -> Option<&semio_framework_trace::StepOverrunLedger> {
+        self.checked_out.as_ref().and_then(WorkerJobOutcome::overrun_ledger)
     }
 
     pub fn checked_out_job_mut(&mut self) -> Option<&mut J> {
@@ -2447,6 +2468,12 @@ struct WorkerJobSubmission<J> {
     ran: bool,
 }
 
+/// ▶️ Runs one step of a retained worker session and folds its exact callback verdict into that
+/// session's own `semio_framework_trace::StepOverrunLedger`. A step is quarantined with the
+/// pre-admitted `job-session.terminal-fault` page only when the ledger attributes the breach to the
+/// STEP — an unusable clock reading, or `SUSTAINED_OVERRUN_QUARANTINE_STEPS` consecutive over-ceiling
+/// steps — never for one over-ceiling WALL reading, which a descheduled thread produces for work that
+/// costs microseconds. A quarantined step's original outcome stays owned in `quarantined_outcome`.
 fn drive_worker_job_authority<J: InteractiveJob>(authority: &mut WorkerJobAuthority<J>) -> bool {
     if authority.step_sequence == u64::MAX {
         authority.outcome = Some(StepOutcome::Fault(JobFault { detail: authority.preadmitted_fault.take().expect("worker session pre-admitted terminal fault page") }));
@@ -2474,8 +2501,12 @@ fn drive_worker_job_authority<J: InteractiveJob>(authority: &mut WorkerJobAuthor
         )
     }));
     authority.step_sequence = authority.step_sequence.saturating_add(1);
+    let quarantine = match authority.callback_verdict {
+        Some(verdict) => authority.overruns.admit(&verdict),
+        None => semio_framework_trace::StepQuarantine::Admitted,
+    };
     authority.outcome = Some(match result {
-        Ok(outcome) if authority.callback_verdict.as_ref().is_some_and(semio_framework_trace::CallbackVerdict::is_fault) => {
+        Ok(outcome) if quarantine.is_terminal() => {
             authority.quarantined_outcome = Some(outcome);
             StepOutcome::Fault(JobFault { detail: authority.preadmitted_fault.take().expect("callback quarantine retains its pre-admitted terminal fault page") })
         }
@@ -2886,6 +2917,13 @@ pub struct WorkerJobOutcome<J> {
 impl<J> WorkerJobOutcome<J> {
     pub fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
         self.authority.as_ref().and_then(|authority| authority.callback_verdict.as_ref())
+    }
+
+    /// 📒️ This session's own overrun ledger — how many of its steps breached the interactive ceiling,
+    /// the longest consecutive run, and the worst reading, for a host that wants the counters without
+    /// waiting for a quarantine.
+    pub fn overrun_ledger(&self) -> Option<&semio_framework_trace::StepOverrunLedger> {
+        self.authority.as_ref().map(|authority| &authority.overruns)
     }
 
     pub fn job(&self) -> &J {

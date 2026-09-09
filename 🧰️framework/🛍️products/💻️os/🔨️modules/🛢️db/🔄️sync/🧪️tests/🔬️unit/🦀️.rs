@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -58,9 +57,9 @@ async fn sync_replay_ignores_neutral_aborted_command_snapshot_and_cas() {
     assert_eq!(ledger.bytes, 0);
 }
 
-use ArtifactId;
 use db_storage::MemoryStorage;
 use db_wal::{ArtifactWal, GroupCommitPolicy, WalRecord};
+use ArtifactId;
 
 //#region 🧸️Fixtures
 async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {

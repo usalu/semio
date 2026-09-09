@@ -33,7 +33,6 @@ pub struct CadDiff {
     #[state(artifact)]
     pub nodes: Option<CadNodesDelta>,
     #[state(artifact)]
-    pub active_model_definition_id: Option<String>,
 }
 //#endregion 🔖️Diff
 

@@ -18,5 +18,10 @@ export function testRetainedWindowInputOracle(): void {
   assert.equal(replacement.oldPublicationAccepted, false);
   assert.equal(replacement.oldWorkCancelled, true);
   assert.equal(replacement.newWorkCancelled, false);
+  const fairness = fixture.retirementFairness;
+  const pending = new Map<string, boolean>(fairness.owners.map((owner: string) => [owner, fairness.blocked.includes(owner)]));
+  for (const [owner, blocked] of pending) if (!blocked) pending.delete(owner);
+  assert.deepEqual([...pending.keys()], fairness.expectedSurvivors);
+  assert.equal(fairness.zeroGrantAdvancesCursor, false);
   console.log(`[DEBUG] retained window input: ${identities.size} distinct owner/generation tuples agree with Ajv uniqueItems`);
 }

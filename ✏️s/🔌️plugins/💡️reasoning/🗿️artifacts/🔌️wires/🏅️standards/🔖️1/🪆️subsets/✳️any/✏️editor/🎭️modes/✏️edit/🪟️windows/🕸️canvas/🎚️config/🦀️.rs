@@ -69,3 +69,15 @@ impl semio_framework_plugin::WindowConfigOwner for WiresCanvasWindowConfigOwner 
 pub fn current<'a, C>(view: &'a semio_framework_plugin::ConfigView<'_, C>) -> Option<&'a WiresCanvasWindowConfig> {
     view.window::<WiresCanvasWindowConfigOwner>()
 }
+
+pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: WiresCanvasWindowConfigMutation) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
+    let window_id = view
+        .window_id
+        .as_deref()
+        .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wires.canvas-window-required"), "Wires viewport changes require a concrete canvas window"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
+    if kind != Some(super::WIRES_PLAY_WINDOW_CANVAS) {
+        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wires.canvas-window-required"), "Wires viewport changes require a canvas window"));
+    }
+    Ok(semio_framework_plugin::WindowConfigMutation::of::<WiresCanvasWindowConfigOwner>(window_id, mutation))
+}

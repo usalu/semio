@@ -90,7 +90,7 @@ pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<semio_framework_artifac
     Ok((scene.widgets, scene.synapses, scene.layout))
 }
 
-/// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, camera, widgets, synapses,
+/// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, widgets, synapses,
 /// layout)`, the inline document fields plus the composed content child's working scene. It belongs
 /// to the subset rather than to a test adapter, because what counts as this document's meaning is
 /// this subset's ruling, not a case's. The content handle is deliberately absent:
@@ -101,7 +101,6 @@ pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
     let scene = crate::flow_working_scene(snapshot);
     let value = dsl::DslValue::object([
         ("schema".to_string(), dsl::ToValue::to_value(&snapshot.schema)),
-        ("camera".to_string(), dsl::ToValue::to_value(&snapshot.camera)),
         ("widgets".to_string(), dsl::ToValue::to_value(&scene.widgets)),
         ("synapses".to_string(), dsl::ToValue::to_value(&scene.synapses)),
         ("layout".to_string(), dsl::ToValue::to_value(&scene.layout)),

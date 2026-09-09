@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/shell/space-administration-properties-fixture-v1.json",
+  "title": "Space Administration Properties Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "spaceId",
+    "cases",
+    "refused",
+    "invalidNames",
+    "retiredVerificationPhases",
+    "locales"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.shell.space-administration-properties-fixture.v1"
+    },
+    "spaceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "intent",
+          "command"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "rename",
+              "unicode-name",
+              "public",
+              "private"
+            ]
+          },
+          "intent": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "rename-space"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "visibility"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "set-visibility"
+                  },
+                  "visibility": {
+                    "enum": [
+                      "public",
+                      "private"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "command": {
+            "$ref": "https://semio.tech/schema/os/directory/component.json#/$defs/DirectoryCommand"
+          }
+        }
+      }
+    },
+    "refused": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "capability-withdrawn",
+          "member",
+          "loading",
+          "submitting",
+          "receipt",
+          "refreshing",
+          "cancelled",
+          "denied",
+          "stale",
+          "failed",
+          "foreign-page"
+        ]
+      }
+    },
+    "invalidNames": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "retiredVerificationPhases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "ready",
+          "failed"
+        ]
+      }
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "locale",
+          "name",
+          "rename",
+          "visibility",
+          "applyVisibility",
+          "public",
+          "private"
+        ],
+        "properties": {
+          "locale": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rename": {
+            "type": "string",
+            "minLength": 1
+          },
+          "visibility": {
+            "type": "string",
+            "minLength": 1
+          },
+          "applyVisibility": {
+            "type": "string",
+            "minLength": 1
+          },
+          "public": {
+            "type": "string",
+            "minLength": 1
+          },
+          "private": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

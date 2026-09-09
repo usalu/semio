@@ -37,7 +37,7 @@ async function runS2() {
 // #region S3 — spawn-detached: export resolves before the spawned background import completes
 async function runS3() {
   const events = [];
-  const origSlowEcho = (await import("../../🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/🖥️host-shim.js")).slowEcho;
+  const origSlowEcho = (await import("../../🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🖥️host-shim.js")).slowEcho;
   const start = performance.now();
   const result = await probe.spawnDetached(80);
   const exportDoneAt = performance.now() - start;

@@ -1,23 +1,8 @@
 syntax = "proto3";
-package semio.s.gis.gisterrain.diff;
-
-// 🧬️ GIS terrain diff schema — sparse field delta.
-
+package semio.s.gis.gisterrain;
+import "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message GisTerrainDiff {
-  // @state artifact
   optional GisTerrainArtifact artifact = 1;
-  // @state artifact
   optional double exaggeration = 2;
-  // @state artifact
   optional string imported_features_json = 3;
-  // @state config
-}
-
-message GisTerrainArtifact {
-  double exaggeration = 1;
-  string imported_features_json = 2;
-}
-
-message GisTerrainStringList {
-  repeated string values = 1;
 }

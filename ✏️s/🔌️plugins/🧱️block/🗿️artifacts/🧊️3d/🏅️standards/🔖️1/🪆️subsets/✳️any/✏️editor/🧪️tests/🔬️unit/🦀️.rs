@@ -226,7 +226,7 @@ fn brush_preview_publications_are_partitioned_by_trusted_window_context() {
         let place_lanes = drive_preview_operation(&mut app, "world-b place").await?;
         let place_generation_a = app.window_transient_generation(&view_a).map_err(|error| format!("{error:?}"))?;
         let place_generation_b = app.window_transient_generation(&view_b).map_err(|error| format!("{error:?}"))?;
-        if place_lanes != (2, 0, 1) || place_generation_a != Some(2) || place_generation_b != Some(2) {
+        if place_lanes != (1, 0, 1) || place_generation_a != Some(2) || place_generation_b != Some(2) {
             return Err(format!(
                 "placement did not mutate the artifact and clear only trusted world-b: lanes={place_lanes:?} world-a={place_generation_a:?} world-b={place_generation_b:?}"
             ));
@@ -234,6 +234,14 @@ fn brush_preview_publications_are_partitioned_by_trusted_window_context() {
         if app.snapshot().map_err(|error| format!("{error:?}"))?.vortices.len() != before_place + 1 {
             return Err("placement did not create one vortex".into());
         }
+        for view in [&view_a, &view_b] {
+            let cleared = app.window_transient_snapshot(view).map_err(|error| format!("{error:?}"))?
+                .is_some_and(|snapshot| snapshot.get::<Block3dWorldWindowTransientOwner>().is_some_and(|state| state.brush_preview.is_none()));
+            if !cleared {
+                return Err("placement or leave retained a window brush preview".into());
+            }
+        }
+        eprintln!("[DEBUG] Block3D runtime: hover and leave preserve exact window ownership; placement publishes one artifact batch, creates one vortex and clears the invoking window");
         Ok(())
     }
     .await;

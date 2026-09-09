@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import Ajv from "ajv";
 import { parseJackArtifact } from "../../🟦️.ts";
 import { parseJackSnapshot } from "../../📸️snapshot/🟦️.ts";
@@ -40,6 +41,19 @@ export function testJackDocumentContract(): void {
   const parsedDiff = parseJackDiff(diff);
   assert.equal(artifact.content.childId, parsedSnapshot.content.childId);
   assert.equal(artifact.content.target.dialect.artifactKind, cases.expectedChildKind);
+  for (const schema of [artifactSchema, snapshotSchema, diffSchema] as Array<{ properties: { content: Record<string, unknown> } }>) {
+    assert.equal(schema.properties.content["x-semio-child-kind"], cases.expectedChildKind);
+  }
+  const fixtureRoot = join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations");
+  const snapshotFixtures = readdirSync(fixtureRoot, { recursive: true })
+    .map((path) => String(path).replaceAll("\\", "/"))
+    .filter((path) => path.includes("/📸️snapshot/") && path.endsWith("/🔣️.json"));
+  assert.equal(snapshotFixtures.length, 16);
+  for (const path of snapshotFixtures) {
+    const parsed = parseJackSnapshot(json(new URL(join(fixtureRoot, path), import.meta.url)));
+    assert.equal(parsed.content.target.dialect.artifactKind, cases.expectedChildKind, path);
+    assert.equal(parsed.content.target.artifactId, parsed.content.childId, path);
+  }
   assert.equal(parsedDiff.content, null);
   for (const invalid of cases.invalidDocuments) {
     assert.equal(validateArtifact?.(invalid), false);
@@ -52,4 +66,5 @@ export function testJackDocumentContract(): void {
     assert.throws(() => parseJackDiff(invalid));
   }
   console.log("[DEBUG] Jack artifact, snapshot, and diff accept the committed shared-child fixture and refuse embedded graph and replacement-artifact shapes");
+  console.log(`[DEBUG] Jack document contract admitted ${snapshotFixtures.length} exact s.stdio.semio content child identities`);
 }

@@ -1,6 +1,7 @@
 //! 📝️ Generate-mode window — the input form for the active generation.
 
-use crate::editor::flow::config::FlowConfig;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
+use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
 use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};
 use crate::playbook::{default_value_for_block, is_block_visible, selected_generation, PlaybookBlock, PlaybookValues};
 use crate::FlowSnapshot;
@@ -118,9 +119,9 @@ fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_actio
     Ok(Some(builder.try_build().map_err(|_| form_error("field-build"))?))
 }
 
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, labels: &crate::editor::flow::terminology::FlowPlayLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(fixture: &FlowSnapshot, _config: &FlowMainWindowConfig, transient: &FlowWindowTransient, labels: &crate::editor::flow::terminology::FlowPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let spec = flow_fixture_to_form_spec(&fixture.to_fixture());
-    let generation = config.generation();
+    let generation = transient.generation();
     let Some(active) = selected_generation(&generation) else {
         return ui::text(ui_label(labels.generation_needed.as_str())?).try_build().map_err(|_| form_error("placeholder-build"));
     };

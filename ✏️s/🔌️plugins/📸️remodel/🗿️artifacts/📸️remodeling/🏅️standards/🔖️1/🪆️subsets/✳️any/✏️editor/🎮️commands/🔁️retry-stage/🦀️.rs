@@ -16,6 +16,6 @@ pub struct RetryStage {
 
 /// 🔁️ Supersedes the live generation and resumes through the same bounded scheduler path.
 pub fn handle(payload: &RetryStage, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    run_reconstruction::begin_stage_reconstruction(doc, &payload.stage)
+    Ok(run_reconstruction::begin_stage_reconstruction(doc, &payload.stage))
 }
 //#endregion 🔖️RetryStage

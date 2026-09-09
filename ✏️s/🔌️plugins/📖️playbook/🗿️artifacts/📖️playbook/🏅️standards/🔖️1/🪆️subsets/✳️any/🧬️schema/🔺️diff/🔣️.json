@@ -64,7 +64,7 @@
         {
           "$ref": "https://semio.tech/schema/os/store/child.json",
           "x-semio-state": "artifact",
-          "x-semio-child-kind": "s.stdio.semio.document"
+          "x-semio-child-kind": "s.stdio.semio"
         },
         {
           "type": "null"
@@ -77,7 +77,7 @@
         {
           "$ref": "https://semio.tech/schema/os/store/child.json",
           "x-semio-state": "artifact",
-          "x-semio-child-kind": "s.stdio.semio.flow"
+          "x-semio-child-kind": "s.stdio.semio"
         },
         {
           "type": "null"

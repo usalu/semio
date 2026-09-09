@@ -1,0 +1,218 @@
+{
+  "document": {
+    "positions": [
+      {
+        "id": "harbor",
+        "data": {
+          "name": "Hafen",
+          "coordinates": [
+            5.5,
+            50.6
+          ],
+          "open": true
+        }
+      }
+    ],
+    "routes": [],
+    "regions": [],
+    "drawing": {
+      "childId": "map-drawing-custom",
+      "target": {
+        "artifactId": "map-drawing-custom",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "drawing"
+        }
+      }
+    },
+    "image": {
+      "childId": "map-image-custom",
+      "target": {
+        "artifactId": "map-image-custom",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "value": {
+      "childId": "map-value-custom",
+      "target": {
+        "artifactId": "map-value-custom",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "value"
+        }
+      }
+    }
+  },
+  "diff": {
+    "artifact": null,
+    "positions": {
+      "added": [
+        {
+          "id": "scalar-value",
+          "data": 7
+        }
+      ],
+      "removed": [],
+      "patched": [],
+      "reordered": null
+    },
+    "routes": null,
+    "regions": null
+  },
+  "invalidDocuments": [
+    {
+      "positions": [
+        {
+          "id": "harbor",
+          "data": {
+            "name": "Hafen",
+            "coordinates": [
+              5.5,
+              50.6
+            ],
+            "open": true
+          }
+        }
+      ],
+      "routes": [],
+      "regions": [],
+      "drawing": {
+        "childId": "map-drawing-custom",
+        "target": {
+          "artifactId": "map-drawing-custom",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "drawing"
+          }
+        }
+      },
+      "image": {
+        "childId": "map-image-custom",
+        "target": {
+          "artifactId": "map-image-custom",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "image"
+          }
+        }
+      },
+      "value": {
+        "childId": "map-value-custom",
+        "target": {
+          "artifactId": "map-value-custom",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "locale": "de"
+    },
+    {
+      "positions": [
+        {
+          "id": "harbor",
+          "data": {
+            "name": "Hafen",
+            "coordinates": [
+              5.5,
+              50.6
+            ],
+            "open": true
+          }
+        }
+      ],
+      "routes": [],
+      "regions": [],
+      "drawing": {
+        "nodes": []
+      },
+      "image": {
+        "childId": "map-image-custom",
+        "target": {
+          "artifactId": "map-image-custom",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "image"
+          }
+        }
+      },
+      "value": {
+        "childId": "map-value-custom",
+        "target": {
+          "artifactId": "map-value-custom",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      }
+    },
+    {
+      "positions": [
+        {
+          "id": "broken"
+        }
+      ],
+      "routes": [],
+      "regions": [],
+      "drawing": {
+        "childId": "map-drawing-custom",
+        "target": {
+          "artifactId": "map-drawing-custom",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "drawing"
+          }
+        }
+      },
+      "image": {
+        "childId": "map-image-custom",
+        "target": {
+          "artifactId": "map-image-custom",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "image"
+          }
+        }
+      },
+      "value": {
+        "childId": "map-value-custom",
+        "target": {
+          "artifactId": "map-value-custom",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      }
+    }
+  ],
+  "invalidDiffs": [
+    {
+      "camera": {}
+    },
+    {
+      "positions": {
+        "added": "bad",
+        "removed": [],
+        "patched": [],
+        "reordered": null
+      }
+    }
+  ]
+}

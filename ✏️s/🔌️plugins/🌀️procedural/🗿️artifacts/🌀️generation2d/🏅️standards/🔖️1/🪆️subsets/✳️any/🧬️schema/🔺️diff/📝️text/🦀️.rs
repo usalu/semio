@@ -152,14 +152,14 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
 
 //#region 🔖️Constructors
 /// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
-pub fn diff_fixture_from_helpers(base: &Generation2dSnapshot, widgets: WidgetsDiff, synapses: SynapsesDiff, layout: LayoutDiff, camera: Option<CameraJson>, schema: Option<String>) -> Generation2dDiff {
-    let fixture = apply_fixture_helpers(&base.fixture, &widgets, &synapses, &layout, camera.as_ref(), schema.as_deref());
+pub fn diff_fixture_from_helpers(base: &Generation2dSnapshot, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> Generation2dDiff {
+    let fixture = apply_fixture_helpers(&base.fixture, widgets, synapses, layout, camera, schema);
     Generation2dDiff { fixture: Some(fixture), ..Generation2dDiff::default() }
 }
 
 /// 🏗️ Generation field delta after applying ordered generation mutations.
-pub fn diff_generation_from_ops(base: &Generation2dSnapshot, ops: Vec<GenerationMutation>) -> Generation2dDiff {
-    let generation = apply_generation_helpers(&base.generation, &ops);
+pub fn diff_generation_from_ops(base: &Generation2dSnapshot, ops: &[GenerationMutation]) -> Generation2dDiff {
+    let generation = apply_generation_helpers(&base.generation, ops);
     Generation2dDiff { generation: Some(generation.into()), ..Generation2dDiff::default() }
 }
 //#endregion 🔖️Constructors

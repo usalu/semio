@@ -1,0 +1,14 @@
+{
+  "initial": 0,
+  "phase": "Closing",
+  "cases": [
+    {
+      "mutation": 0,
+      "fault": "injected construction failure"
+    },
+    {
+      "mutation": 1,
+      "fault": "ephemeral construction task exceeded its exact grant"
+    }
+  ]
+}

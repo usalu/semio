@@ -1,8 +1,27 @@
 syntax = "proto3";
-// 🧬️ SemioObjectMutation dispatch — real facet mirror.
-package semio.s_stdio_semio_object.mutations;
+package semio.s.stdio.semio.v1.object.mutations;
+import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🛰️.proto";
+import "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto";
 
+message MoveObject { semio.s.stdio.semio.v1.base.geometry.SemioPoint3 translation = 1; }
+message RotateObject { semio.s.stdio.semio.v1.base.geometry.SemioQuaternion rotation = 1; }
+message ScaleObject { semio.s.stdio.semio.v1.base.geometry.SemioPoint3 scale = 1; }
+message CreateBrep { string child_id = 1 [json_name = "child_id"]; semio.framework.io.ArtifactRef target = 2; }
+message DeleteBrep {  }
+message CreateMesh { string child_id = 1 [json_name = "child_id"]; semio.framework.io.ArtifactRef target = 2; }
+message DeleteMesh {  }
+message CreateProperties { string child_id = 1 [json_name = "child_id"]; semio.framework.io.ArtifactRef target = 2; }
+message DeleteProperties {  }
 message SemioObjectMutation {
-  string mutation = 1;
-  bytes payload_wire = 2;
+  oneof mutation {
+    MoveObject moveObject = 1 [json_name = "MoveObject"];
+    RotateObject rotateObject = 2 [json_name = "RotateObject"];
+    ScaleObject scaleObject = 3 [json_name = "ScaleObject"];
+    CreateBrep createBrep = 4 [json_name = "CreateBrep"];
+    DeleteBrep deleteBrep = 5 [json_name = "DeleteBrep"];
+    CreateMesh createMesh = 6 [json_name = "CreateMesh"];
+    DeleteMesh deleteMesh = 7 [json_name = "DeleteMesh"];
+    CreateProperties createProperties = 8 [json_name = "CreateProperties"];
+    DeleteProperties deleteProperties = 9 [json_name = "DeleteProperties"];
+  }
 }

@@ -48,6 +48,10 @@ fn default_vortex_direction() -> String {
     crate::editor::puzzle3d::PUZZLE3D_VORTEX_DIRECTION_OUTWARDS.into()
 }
 
+fn default_selection_method() -> String {
+    crate::editor::puzzle3d::PUZZLE3D_SELECTION_METHOD_PICK.into()
+}
+
 fn default_window_ids() -> Vec<String> {
     vec![crate::editor::puzzle3d::modes::edit::windows::main::WINDOW_KIND_ID.to_string()]
 }
@@ -151,6 +155,12 @@ pub struct Puzzle3dRuntime {
     pub selectable_kinds: Puzzle3dSelectableKinds,
     #[value(default)]
     pub engagement_input: String,
+    /// 🖱️ How a viewport drag sweeps a selection: `PUZZLE3D_SELECTION_METHOD_PICK` (a click picks,
+    /// a drag sweeps an axis-aligned rectangle), `…_RECTANGLE` or `…_LASSO`. Ephemeral per-window
+    /// command-line state — the engagement bar's `rectangle`/`lasso` verbs set it, `engagementAbort`
+    /// resets it, and `world_selection_json` hands it to `World3dHost.selection.method`.
+    #[value(default = "default_selection_method")]
+    pub selection_method: String,
     #[value(default = "default_proximity_radius")]
     pub proximity_radius: f64,
     #[value(default = "default_chunk_size")]
@@ -203,6 +213,7 @@ impl Default for Puzzle3dRuntime {
             grid_spacing: default_grid_spacing(),
             selectable_kinds: Puzzle3dSelectableKinds::default(),
             engagement_input: String::new(),
+            selection_method: default_selection_method(),
             proximity_radius: default_proximity_radius(),
             chunk_size: default_chunk_size(),
             voxel_dims: default_voxel_dims(),

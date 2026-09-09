@@ -1,4 +1,4 @@
-#[path = "../../🆕add-design/🏠️adds-an-empty-roof-design/🦀️.rs"]
+#[path = "../../🆕add-design/🧪️tests/🏠️adds-an-empty-roof-design/🦀️.rs"]
 mod tests_add_design_adds_an_empty_roof_design;
 #[path = "../../➕add-type/🧪️tests/📇️appends-a-slab-type-to-the-catalogue/🦀️.rs"]
 mod tests_add_type_appends_a_slab_type_to_the_catalogue;

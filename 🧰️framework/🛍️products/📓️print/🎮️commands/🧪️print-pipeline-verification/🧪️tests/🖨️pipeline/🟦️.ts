@@ -220,7 +220,7 @@ export function verifyPrintFontStaging(output = outputRoot): void {
 /** 🪶️ Independently resolves production imports without loading generators or repository tests. */
 export async function verifyPrintCommandBoundaries(): Promise<void> {
   const { build } = await import("esbuild");
-  const contract = JSON.parse(readFileSync(join(import.meta.dir, "🧫️command-boundaries.json"), "utf8"));
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️command-boundaries.json"), "utf8"));
   for (const entry of contract.entries) {
     const result = await build({ absWorkingDir: workspaceRoot, entryPoints: [join(productRoot, entry)], platform: "node", format: "esm", bundle: true, packages: "external", external: ["bun"], write: false, metafile: true, logLevel: "silent" });
     const files = Object.keys(result.metafile!.inputs);

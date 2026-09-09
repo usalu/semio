@@ -173,7 +173,7 @@ impl ProgramDiff {
             if let Some(delta) = &self.quality {
                 apply_collection_delta(&mut next.quality, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["quality"]))?;
             }
-            if let Some(delta) = &self.documents {
+            if let Some(delta) = &self.artifacts {
                 apply_collection_delta(&mut next.artifacts, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["artifacts"]))?;
             }
             if let Some(delta) = &self.assumptions {
@@ -858,8 +858,8 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                 None => self.quality = Some(delta),
             }
         }
-        if let Some(delta) = other.documents {
-            match &mut self.documents {
+        if let Some(delta) = other.artifacts {
+            match &mut self.artifacts {
                 Some(existing) => {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
@@ -868,7 +868,7 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                         existing.reordered = delta.reordered;
                     }
                 }
-                None => self.documents = Some(delta),
+                None => self.artifacts = Some(delta),
             }
         }
         if let Some(delta) = other.assumptions {

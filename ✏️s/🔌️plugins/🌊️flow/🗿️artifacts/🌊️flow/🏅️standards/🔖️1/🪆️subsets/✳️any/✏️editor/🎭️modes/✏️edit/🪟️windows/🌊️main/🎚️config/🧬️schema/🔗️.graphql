@@ -1,0 +1,13 @@
+# 🎚️ Persisted local settings for one concrete Flow main window.
+type FlowMainWindowConfig {
+  previewOffNodeIds: [String!]!
+  camera: FlowMainWindowCamera!
+  lodMode: String!
+  proximityDistance: Float!
+  gridVisible: Boolean!
+  gridSnapEnabled: Boolean!
+  gridFactor: Float!
+  catalogueSectionsJson: String!
+  automationEnabledJson: String!
+}
+type FlowMainWindowCamera { x: Float! y: Float! zoom: Float! }

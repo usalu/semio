@@ -5,7 +5,7 @@ use semio_framework_plugin::plugin_app_close_prelude::TypedOperationResultLane;
 //#region 🧪️RetainedConfigOracle
 #[semio_framework_async_macros::async_test]
 async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners() {
-    let oracle: Vec<crate::ObjectKind> = dsl::json::from_json_str(include_str!("../../../📚️examples/🎬️demo/📦️expected-stock.json")).unwrap();
+    let oracle: Vec<crate::ObjectKind> = dsl::json::from_json_str(include_str!("../../../🧫️fixtures/📦️expected-stock.json")).unwrap();
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;

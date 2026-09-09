@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["contract", "subset", "implementationRoot", "fixtureRoot", "implementationNodes", "fixtureNodes", "fixtureLeaves"],
+  "additionalProperties": false,
+  "properties": {
+    "contract": { "const": "canonical-mutation-case-pair-v1" },
+    "subset": { "type": "string", "minLength": 1 },
+    "implementationRoot": { "type": "string", "pattern": "^🧬️schema/🧬️mutations/.+/🧪️tests/.+$" },
+    "fixtureRoot": { "type": "string", "pattern": "^🧫️fixtures/🧬️mutations/.+/.+$" },
+    "implementationNodes": { "const": 2 },
+    "fixtureNodes": { "const": 12 },
+    "fixtureLeaves": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^(?:🦠️mutation|📸️snapshot/(?:⬅️before|➡️after)|🔺️diff|🎯️outcome)/(?:🔣️\\.json|🚫️\\.absent)$" }
+    }
+  }
+}

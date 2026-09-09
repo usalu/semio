@@ -19,6 +19,7 @@ pub struct Binding {
 #[path = "🪜️execution/🦀️.rs"]
 mod execution;
 pub use execution::{QueryExecution, QueryExecutionPreparation, QueryPreparationStep};
+pub(crate) use execution::QUERY_OUTPUT_MAXIMUM_BYTES;
 
 /// ▶️ Execute a jack query against a graph and emit CQRS operations for mutations.
 pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {

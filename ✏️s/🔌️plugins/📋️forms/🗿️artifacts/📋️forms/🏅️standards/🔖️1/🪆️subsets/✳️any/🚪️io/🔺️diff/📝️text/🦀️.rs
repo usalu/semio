@@ -58,8 +58,8 @@ pub fn apply_steps_delta(items: &[FormStep], delta: &FormsStepsDelta) -> Vec<For
 /// `FormsStepsDelta` applied against `base`'s working-scene steps — the standard way every
 /// mutation triad's `diff_*` function produces its result (replaces the old
 /// `FormsDiff{steps: Some(delta), ..}` literal).
-pub fn forms_diff_from_delta(delta: FormsStepsDelta, base: &FormsSnapshot) -> FormsDiff {
-    let next_steps = apply_steps_delta(&forms_steps(base), &delta);
+pub fn forms_diff_from_delta(delta: &FormsStepsDelta, base: &FormsSnapshot) -> FormsDiff {
+    let next_steps = apply_steps_delta(&forms_steps(base), delta);
     let (structure, results) = forms_children_from_steps(&next_steps);
     FormsDiff { structure: Some(structure), results: Some(results), ..Default::default() }
 }

@@ -17,6 +17,7 @@ import { parseWiresArtifact } from "../../🟦️.ts";
 import { parseWiresSnapshot } from "../../📸️snapshot/🟦️.ts";
 
 export function testWiresDocumentContractOracle(): void {
+  const expectedChildKind = "s.stdio.semio";
   const ajv = new Ajv({ strict: false, allErrors: true });
   ajv.addSchema(valueSchema).addSchema(ioSchema).addSchema(childSchema).addSchema(artifactSchema);
   for (const [schema, parse] of [[artifactSchema, parseWiresArtifact], [snapshotSchema, parseWiresSnapshot]] as const) {
@@ -29,6 +30,18 @@ export function testWiresDocumentContractOracle(): void {
   const validateDiff = ajv.compile(diffSchema);
   assert.equal(validateDiff(diff), true, JSON.stringify(validateDiff.errors));
   assert.deepEqual(Object.keys(diffSchema.properties).sort(), Object.keys(diff).sort());
+  for (const schema of [artifactSchema, snapshotSchema, diffSchema]) {
+    assert.equal(schema.properties.content["x-semio-child-kind"], expectedChildKind);
+  }
+  const snapshotFixtures = readdirSync(join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations"), { recursive: true })
+    .map((path) => String(path).replaceAll("\\", "/"))
+    .filter((path) => path.includes("/📸️snapshot/") && path.endsWith("/🔣️.json"));
+  assert.equal(snapshotFixtures.length, 20);
+  for (const path of snapshotFixtures) {
+    const parsed = parseWiresSnapshot(JSON.parse(readFileSync(join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations", path), "utf8")));
+    assert.equal(parsed.content.target.dialect.artifactKind, expectedChildKind, path);
+    assert.equal(parsed.content.target.artifactId, parsed.content.childId, path);
+  }
   const mutations = join(import.meta.dir, "../../🧬️mutations");
   for (const directory of readdirSync(mutations, { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
     const path = join(mutations, directory.name, "🧬️schema/🔣️.json");
@@ -49,5 +62,6 @@ export function testWiresDocumentContractOracle(): void {
   }
   assert.equal(fixtures.length > 0, true);
   console.log("[DEBUG] Wires document contract matched canonical native artifact/snapshot/diff fixtures and rejected editor-era boardFixture fields");
+  console.log(`[DEBUG] Wires document contract admitted ${snapshotFixtures.length} exact s.stdio.semio content child identities`);
   console.log(`[DEBUG] Wires aggregate mutation schema validated ${fixtures.length} committed wire inputs through their leaf-owned payload definitions`);
 }

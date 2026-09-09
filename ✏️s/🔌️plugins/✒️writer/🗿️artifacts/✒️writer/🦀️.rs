@@ -27,7 +27,7 @@ pub fn default_uri() -> String {
 }
 
 //#region 🔖️DocumentBridge
-/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.document` document — writer's
+/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio`/`document` document — writer's
 /// authored text now lives in this composed child's block tree rather than inline on
 /// `WriterSnapshot` (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM, `writer→C:document`).
 pub type WriterDocumentChild = store::ArtifactChild<SemioDocumentSnapshot>;
@@ -62,7 +62,7 @@ pub fn text_from_document_snapshot(snapshot: &SemioDocumentSnapshot) -> String {
 /// for identical `(text, language_id)`, a different pair once the content actually changes; the
 /// handle alone is the change signal the parent's diff/mutation machinery reads without ever
 /// comparing embedded content, mirroring lowpoly's `mesh_child_handle`/cad's `cad_model_child_handle`.
-pub fn document_child_handle(id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
+pub fn document_child_handle(_id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = document_snapshot_from_text(text, language_id);
     let content_json = dsl::os_pack::json::to_json_string(&snapshot);
@@ -71,7 +71,7 @@ pub fn document_child_handle(id: &str, text: &str, language_id: &str) -> WriterD
     let content_hash = hasher.finish();
     let child_id = format!("document-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "document".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: format!("{id}-document"), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️DocumentBridge

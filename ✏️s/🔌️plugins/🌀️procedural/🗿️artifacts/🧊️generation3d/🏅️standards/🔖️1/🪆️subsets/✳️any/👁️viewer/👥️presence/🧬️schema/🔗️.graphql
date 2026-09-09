@@ -1,0 +1,9 @@
+type Generation3dViewPresence {
+  previewCamera: Generation3dViewCamera! @state(class: PRESENCE)
+  showMode: String! @state(class: PRESENCE)
+}
+type Generation3dViewCamera {
+  position: [Float!]!
+  target: [Float!]!
+  fov: Float!
+}

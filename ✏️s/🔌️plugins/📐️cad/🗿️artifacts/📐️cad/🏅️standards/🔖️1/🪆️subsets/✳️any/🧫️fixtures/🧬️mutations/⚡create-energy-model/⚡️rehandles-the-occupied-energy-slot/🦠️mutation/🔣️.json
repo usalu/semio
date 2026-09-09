@@ -1,5 +1,5 @@
 {
   "mutation": "createEnergyModel",
-  "childId": "energy-model-2",
+  "childId": "cad-energy-2",
   "target": "cad-energy-2!s.stdio.semio@v1/model"
 }

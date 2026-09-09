@@ -3,7 +3,7 @@
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::editor::remodeling::engine::images::{BoundedDecodeProgress, BoundedStillDecoder, CompressedChunkRope};
 use crate::editor::remodeling::engine::{build_engine_params, camera_pose_preview, reconstruction as remodeling_engine, watertight_snapshot, RasterPngPreparation, RasterPngProgress};
-use crate::mutations::{commit_reconstruction, create_asset, replace_job, CommitReconstruction, ReconstructionAssetCommit};
+use crate::mutations::{commit_reconstruction, create_asset, replace_job, CommitReconstruction, CreateAsset, ReconstructionAssetCommit};
 use crate::op::RemodelingMutation;
 use crate::schema::next_remodeling_id;
 use crate::{CameraPosePreview, CameraTrajectory, FrameRef, GeoProducts, ImageAsset, MeshSource, PackedF32, QcReportSnapshot, ReconstructionJob, ReconstructionStage, RemodelingMesh, RemodelingSnapshot, SparseCloud, WatertightReportSnapshot};
@@ -124,7 +124,7 @@ struct RasterAssetPreparation {
 
 enum RasterAssetProgress {
     Working,
-    Mutation(RemodelingMutation),
+    CreateAsset(CreateAsset),
     Complete(ReconstructionAssetCommit),
     Failed,
 }
@@ -139,10 +139,10 @@ impl RasterAssetPreparation {
             RasterPngProgress::Working => RasterAssetProgress::Working,
             RasterPngProgress::Chunk(bytes) => {
                 let Some(index) = self.encoder.chunk_count().checked_sub(1) else { return RasterAssetProgress::Failed };
-                RasterAssetProgress::Mutation(create_asset(
-                    crate::remodeling_asset_stage_key(&self.staging_id, crate::RemodelingAssetContentKind::Raster, index),
-                    ImageAsset { mime: "application/vnd.semio.asset-chunk".into(), data: base64_codec::base64_standard_encode(bytes), width: 0, height: 0 },
-                ))
+                RasterAssetProgress::CreateAsset(CreateAsset {
+                    key: crate::remodeling_asset_stage_key(&self.staging_id, crate::RemodelingAssetContentKind::Raster, index),
+                    asset: ImageAsset { mime: "application/vnd.semio.asset-chunk".into(), data: base64_codec::base64_standard_encode(bytes), width: 0, height: 0 },
+                })
             }
             RasterPngProgress::Complete => RasterAssetProgress::Complete(self.commit_asset(&self.encoder.content_id())),
             RasterPngProgress::Failed => RasterAssetProgress::Failed,
@@ -630,20 +630,20 @@ fn terminal_preparation(generation: u64, artifact_authority: &str) -> TerminalPr
 
 //#region 🔖️Run
 /// 🌱️ Starts a fresh generation and schedules ingestion; it performs no pipeline work itself.
-pub fn begin_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn begin_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
     begin_requested_reconstruction(doc, RequestedStage::Full)
 }
 
 /// 🎯️ Starts a fresh dependency-prefix generation ending at the requested pipeline stage.
-pub fn begin_stage_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, requested_stage: &str) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    let Some(requested_stage) = RequestedStage::parse(requested_stage) else { return Ok(Emit::default()) };
+pub fn begin_stage_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, requested_stage: &str) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
+    let Some(requested_stage) = RequestedStage::parse(requested_stage) else { return Emit::default() };
     begin_requested_reconstruction(doc, requested_stage)
 }
 
-fn begin_requested_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, requested_stage: RequestedStage) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+fn begin_requested_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, requested_stage: RequestedStage) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
     let scene = doc.snapshot;
     if scene.streams.iter().all(|stream| stream.frames.is_empty()) {
-        return Ok(Emit::default());
+        return Emit::default();
     }
     let generation = NEXT_RECONSTRUCTION_GENERATION.fetch_add(1, Ordering::Relaxed);
     let job_id = next_remodeling_id("job");
@@ -678,10 +678,10 @@ fn begin_requested_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, re
     if !admit_session(generation, &scene.job.id) {
         job.stage = ReconstructionStage::Failed;
         job.error = Some(format!("Interactive reconstruction capacity is {MAX_LIVE_SESSIONS} active jobs; cancel one before retrying."));
-        return Ok(emit_step(job, generation, None));
+        return emit_step(job, generation, None);
     }
     put_session(generation, session);
-    Ok(emit_step(job, generation, Some(&next)))
+    emit_step(job, generation, Some(&next))
 }
 
 fn packed_chunk_base64(values: &[f32]) -> String {
@@ -830,7 +830,7 @@ fn advance_terminal(generation: u64, mut session: ReconstructionSession) -> Resu
             }
             match terminal.raster_asset.as_mut().expect("DSM preparation").advance() {
                 RasterAssetProgress::Working => {}
-                RasterAssetProgress::Mutation(mutation) => step_mutation = Some(mutation),
+                RasterAssetProgress::CreateAsset(mutation) => step_mutation = Some(RemodelingMutation::CreateAsset(mutation)),
                 RasterAssetProgress::Complete(asset) => {
                     terminal.completed_asset_staging_ids.push(terminal.raster_asset.as_ref().expect("completed DSM staging").staging_id.clone());
                     terminal.assets.push(asset);
@@ -853,7 +853,7 @@ fn advance_terminal(generation: u64, mut session: ReconstructionSession) -> Resu
             }
             match terminal.raster_asset.as_mut().expect("DTM preparation").advance() {
                 RasterAssetProgress::Working => {}
-                RasterAssetProgress::Mutation(mutation) => step_mutation = Some(mutation),
+                RasterAssetProgress::CreateAsset(mutation) => step_mutation = Some(RemodelingMutation::CreateAsset(mutation)),
                 RasterAssetProgress::Complete(asset) => {
                     terminal.completed_asset_staging_ids.push(terminal.raster_asset.as_ref().expect("completed DTM staging").staging_id.clone());
                     terminal.assets.push(asset);
@@ -1016,7 +1016,7 @@ pub struct AdvanceReconstruction {
 //#endregion 🔖️Payloads
 
 pub fn handle(_payload: &RunReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    begin_reconstruction(doc)
+    Ok(begin_reconstruction(doc))
 }
 
 pub fn handle_advance(payload: &AdvanceReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {

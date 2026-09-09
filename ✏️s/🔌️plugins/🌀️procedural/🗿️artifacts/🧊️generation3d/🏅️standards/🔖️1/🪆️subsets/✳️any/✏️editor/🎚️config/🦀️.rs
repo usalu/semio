@@ -82,11 +82,6 @@ pub struct Generation3dConfig {
     pub sun_json: String,
     /// 🧬️ The selected generation id.
     pub selected_generation_id: Option<String>,
-    /// 🧮️ The edit-mode 3D preview's persisted flow-graph evaluation output (`FlowEvalSession::eval_json`) —
-    /// `flowEvalTick` writes it every tick since the session itself is reconstructed fresh per dispatch
-    /// (`ArtifactEditor::handle`/`render` take no `&self`), so this config field is the ONLY place the
-    /// evaluated geometry survives between dispatches. See `edit::windows::preview::render`.
-    pub preview_eval_text: Option<String>,
 }
 
 //#region 🔖️ArtifactCodec
@@ -142,7 +137,6 @@ impl Default for Generation3dConfig {
             preview_camera: Generation3dPreviewCamera::default(),
             sun_json: default_sun_json(),
             selected_generation_id: None,
-            preview_eval_text: None,
         }
     }
 }
@@ -189,8 +183,6 @@ pub enum Generation3dConfigMutation {
     SetSun { json: String },
     #[dsl(key = "selected-generation")]
     SetSelectedGeneration { selected_generation_id: Option<String> },
-    #[dsl(key = "preview-eval")]
-    SetPreviewEval { eval_text: Option<String> },
 }
 
 //#region 🔖️OpCodec
@@ -367,22 +359,6 @@ impl Mutation<Generation3dConfig> for Generation3dConfigMutation {
             composition: protocol::MutationComposition::Atomic,
             required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
         },
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
-            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-preview-eval",
-            semantic_kind: "set-preview-eval",
-            display_name: "Set Preview Eval",
-            emoji: "⚙️",
-            aggregate_variant: "SetPreviewEval",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -394,7 +370,6 @@ impl Mutation<Generation3dConfig> for Generation3dConfigMutation {
             Generation3dConfigMutation::SetPreviewCamera { .. } => &Self::DESCRIPTORS[4],
             Generation3dConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[5],
             Generation3dConfigMutation::SetSelectedGeneration { .. } => &Self::DESCRIPTORS[6],
-            Generation3dConfigMutation::SetPreviewEval { .. } => &Self::DESCRIPTORS[7],
         }
     }
 
@@ -410,7 +385,6 @@ impl Mutation<Generation3dConfig> for Generation3dConfigMutation {
             Generation3dConfigMutation::SetPreviewCamera { camera } => next.preview_camera = camera.clone(),
             Generation3dConfigMutation::SetSun { json } => next.sun_json = json.clone(),
             Generation3dConfigMutation::SetSelectedGeneration { selected_generation_id } => next.selected_generation_id = selected_generation_id.clone(),
-            Generation3dConfigMutation::SetPreviewEval { eval_text } => next.preview_eval_text = eval_text.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

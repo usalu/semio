@@ -1,6 +1,6 @@
 //! 👁️ Generate-mode window — the evaluated output preview of the active generation.
 
-use crate::editor::flow::config::FlowConfig;
+use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
 use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use ui_wgpu::wgpu::TextEditorScene;
@@ -35,8 +35,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(config: &FlowConfig) -> UiAssemblyResult<BuiltNode> {
-    let generation = config.generation();
+pub fn render(transient: &FlowWindowTransient) -> UiAssemblyResult<BuiltNode> {
+    let generation = transient.generation();
     let text = generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or(FLOW_PLAY_PREVIEW_PLACEHOLDER);
     let scene = TextEditorScene::base(text.to_string(), Some("json".into()), None);
     scene_surface(FLOW_PLAY_SURFACE_GENERATE_PREVIEW, ContractSurfaceKind::TextEditor, &scene)

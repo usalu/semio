@@ -1,5 +1,5 @@
 /** 🗂️ Flow editor — Generate-mode Generations window: typed twin of `🦀️.rs`'s view-model.
- * Mirrors the pane's `render(config: &FlowConfig, locale: Locale, terminology: Terminology)` boundary —
+ * Mirrors the pane's `render(config: &FlowWindowTransient, locale: Locale, terminology: Terminology)` boundary —
  * the generation list tree with the "add generation" affordance. */
 
 /** 🗂️ One row of the generation list — mirrors the Rust `playbook::GenerationPlayState` entry shape. */

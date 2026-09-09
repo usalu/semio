@@ -5,7 +5,7 @@ import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../
 export interface WiresSnapshot {
   /** @state artifact */
   wiresFixture: DslValue;
-  /** @state artifact */
+  /** @state artifact @child kind=s.stdio.semio */
   content: ArtifactChild;
   /** @state artifact */
   meta: DslValue;

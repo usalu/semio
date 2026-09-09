@@ -330,3 +330,45 @@ Coordinator decisions:
   `fillBuildTick` 17.0 → 1.03 ms, `setActiveExample` 0.36 ms; precompute 132/132; component 89/44 (was
   58 failed isolated). Open: `Puzzle3dPlaySnapshot::new` default-document on null meta (§6.3),
   `worldRelocate` whole sync per dispatch (§6.6).
+- 12:20 W-R2 done (`📓️2026-09-09-wave-R2-store-replacement-step-budget.md`): stage 14 was a stale
+  cursor in my trace (idle early return) and every maintenance stage costs ≤43 µs natively; the ceiling
+  verdict measures wall time and fires on descheduling (19 µs unit measured 14.6 ms under load). Decision:
+  the cooperative-maintenance callback overrun is recorded, not instance-fatal (job-level step contract
+  keeps quarantining slow steps). Also: `drive_store_replacement_jobs` never runs for puzzle 3d
+  (`build_document_store_initialization_job` not overridden → `pollEnvelopeLoad` can never reach Ready),
+  `fillBuildTick` still breaches 25.6 ms on turn 763, `setActiveExample nakagin` → `job-session.terminal-fault`.
+- 12:15 audit `📓️2026-09-09-remaining-test-failures-audit.md`: 44 failures = 4 root causes (window-config
+  lane never quiesces → per-window settings hang; setActiveTool/Utility missing-owned-reducer; addObjectKind
+  no-op; suggestion popup transient dropped). Coordinator fix: host-owned `setActiveTool`/`setActiveUtility`
+  with no app mutation dispatch an empty `Emit` (`dispatch_action`). W-D2 launched for the other three
+  (`📓️2026-09-09-wave-D2-window-config-lane-and-scratch.md`).
+- 12:50 rebuild #7: no trap; the real boot fault is `puzzle command wire payload is malformed` — the JSON
+  action route admitted `(verb, args)` tuple JSON as the retained raw wire while the driver decodes the
+  `encode_op` map form. Fixed in `dispatch_action`/`dispatch_command` (admit `encode_op(&command)` via
+  `admit_command_wire`). Rebuild #8 pending on a peer's `🫧️transient` breakage.
+- 13:45 rebuild #8 (wire fix): boot `setActiveExample` succeeds (2.4 s), sections + both scenes render,
+  no faults; but the next host action (`noteShellCommand`) hangs: its 5th continuation turn never
+  returns from the worker (reactor trace stops at streak=4 with `command_ingress=true`, no shard-lost).
+  Added per-phase turn traces (`[DEBUG] turn N begin/phase/end`) and a reserved-job poll trace;
+  rebuild #9 queued (`heal-then-rebuild-8.txt`). W-D2 still running.
+- 14:25 second wasm pool gap (`📓️2026-09-09-runtime-verification.md` §14:20): framework-reserved routes
+  run under `resolve_ready`, whose spin never pumps the cooperative pool → `noteShellCommand` polled
+  `Submitted` 4096+ times inside one turn; every undo/redo/clipboard/history route hangs on wasm.
+  Fix: `run_framework_reserved_job` pumps the pool after each non-terminal poll on wasm. Rebuild #11
+  queued (`heal-then-rebuild-10.txt`).
+- 16:00 W-D2 done (`📓️2026-09-09-wave-D2-window-config-lane-and-scratch.md`): window-config lane hang
+  root-caused (`🪟️window/🎚️config/🦀️.rs:82` compared the 4 096-byte per-turn grant against the owner's
+  65 536 schema ceiling → `Blocked` forever for every owner above 4 KiB) and fixed; `addObjectKind`
+  materializes the default catalog; popup transient + `take_ephemeral` for acceptSuggestion; component
+  89/44 → 96/38 (22 of 38 are the load-flaky `job-session.terminal-fault`; box load avg 89-95).
+  Peer composition wave (`ArtifactCompositionFields` on `Puzzle3dPlaySnapshot`) keeps the workspace
+  uncompilable since 15:04; the wasm retry loop (`rebuild-until-ok.txt`) waits it out.
+- 16:45 checklist audit written (`📓️2026-09-09-user-feature-checklist.md`, 25 sections; the agent stalled
+  after writing it) → W-D4 launched for its source-read defects (zoomToSelection unregistered, outliner
+  hide/lock never toggles off, Add Object dialog kind selector static, engagement placeholder grammar,
+  silent engine failures). Peer composition wave requires `ArtifactCompositionFields` on the puzzle play
+  snapshots → implemented for 2d/3d/5d (3d delegates to the typed `Puzzle3dSnapshot` derive) so the wasm
+  rebuild loop can proceed. W-Q and W-D3 running.
+- 17:20 rebuild #11 verified (`📓️2026-09-09-runtime-verification.md` §17:10): boot actions succeed; the
+  async completion gap (seq-0 completion frames dropped, no drain polling, history carrier bug) → W-A
+  launched; W-M2 (paged mesh upload) launched at 17:12; rebuild #12 (trace retune) running.

@@ -77,7 +77,8 @@
           "type": "null"
         }
       ],
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
     "internalGainsWM2": {
       "anyOf": [

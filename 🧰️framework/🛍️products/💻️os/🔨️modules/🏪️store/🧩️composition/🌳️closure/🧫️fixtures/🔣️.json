@@ -1,0 +1,2157 @@
+{
+  "contractId": "semio.store.owned-document-closure",
+  "limits": {
+    "members": 1024,
+    "referencesPerParent": 64,
+    "fieldBytes": 256
+  },
+  "cases": [
+    {
+      "id": "nested-unordered-complete",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "empty-leaf",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "leaf",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          },
+          "children": []
+        },
+        "members": []
+      },
+      "accepted": true
+    },
+    {
+      "id": "missing-grandchild",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "extra-unreferenced-member",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "extra",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "value",
+              "childId": "extra"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-parent",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-parent-dialect",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-slot",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-owner-child-id",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "other"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-member-dialect",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v2",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "child-target-id-disagrees",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "other",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "duplicate-member",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "root-reused-as-child",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "kit",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "kit"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "duplicate-owner-edge",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              },
+              {
+                "slot": "other",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "undeclared-parent",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "absent",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "disconnected-cycle",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "a",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "b",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "children",
+              "childId": "a"
+            },
+            "children": [
+              {
+                "slot": "children",
+                "childId": "b",
+                "target": {
+                  "artifactId": "b",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "object"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "b",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "a",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "children",
+              "childId": "b"
+            },
+            "children": [
+              {
+                "slot": "children",
+                "childId": "a",
+                "target": {
+                  "artifactId": "a",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "object"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "self-cycle",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "kit",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "object",
+              "target": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "mesh",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "mesh"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "mesh",
+              "childId": "mesh"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "kit",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "object"
+            },
+            "children": [
+              {
+                "slot": "mesh",
+                "childId": "mesh",
+                "target": {
+                  "artifactId": "mesh",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                }
+              },
+              {
+                "slot": "value",
+                "childId": "properties",
+                "target": {
+                  "artifactId": "properties",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "value"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "reference": {
+              "artifactId": "properties",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "value",
+              "childId": "properties"
+            },
+            "children": []
+          },
+          {
+            "reference": {
+              "artifactId": "self",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "self",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              },
+              "slot": "children",
+              "childId": "self"
+            },
+            "children": [
+              {
+                "slot": "children",
+                "childId": "self",
+                "target": {
+                  "artifactId": "self",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "object"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "accepted": false
+    }
+  ],
+  "chainCases": [
+    {
+      "members": 64,
+      "accepted": true
+    },
+    {
+      "members": 65,
+      "accepted": true
+    },
+    {
+      "members": 1024,
+      "accepted": true
+    },
+    {
+      "members": 1025,
+      "accepted": false
+    }
+  ],
+  "breadthCases": [
+    {
+      "children": 64,
+      "accepted": true
+    },
+    {
+      "children": 65,
+      "accepted": false
+    }
+  ],
+  "ownerCases": {
+    "valid": [
+      {
+        "parent": {
+          "artifactId": "object",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "object"
+          }
+        },
+        "slot": "mesh",
+        "childId": "mesh"
+      }
+    ],
+    "invalid": [
+      null,
+      [],
+      {
+        "parent": {
+          "artifactId": "object",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "object"
+          }
+        },
+        "slot": 7,
+        "childId": "mesh"
+      },
+      {
+        "parent": {
+          "artifactId": "object",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "object"
+          }
+        },
+        "slot": "mesh"
+      },
+      {
+        "parent": {
+          "artifactId": "object",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "object"
+          }
+        },
+        "slot": "mesh",
+        "childId": "mesh",
+        "locale": "de"
+      }
+    ]
+  },
+  "continuationCases": [
+    {
+      "beforeMembers": 3,
+      "afterMembers": 2,
+      "reason": "stale"
+    },
+    {
+      "beforeMembers": 3,
+      "afterMembers": 4,
+      "reason": "stale"
+    }
+  ]
+}

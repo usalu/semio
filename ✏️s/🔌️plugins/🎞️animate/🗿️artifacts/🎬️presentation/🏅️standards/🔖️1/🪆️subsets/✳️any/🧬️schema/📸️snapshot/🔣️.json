@@ -4,26 +4,25 @@
   "title": "PresentationSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema",
-    "source",
-    "tiles"
-  ],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "source": {
-      "$ref": "https://semio.tech/schema/s/animate/presentation/artifact.json#/$defs/FigureTileSource",
-      "x-semio-state": "artifact"
+    "presentation": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     },
-    "tiles": {
-      "type": "array",
-      "items": {
-        "$ref": "https://semio.tech/schema/s/animate/presentation/artifact.json#/$defs/FigureTileDraft"
-      },
-      "x-semio-state": "artifact"
+    "animation": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
     }
-  }
+  },
+  "required": [
+    "schema",
+    "presentation",
+    "animation"
+  ]
 }

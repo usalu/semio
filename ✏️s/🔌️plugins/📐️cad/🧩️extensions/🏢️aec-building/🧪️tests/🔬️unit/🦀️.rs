@@ -1,7 +1,6 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
-use semio_s_artifact_cad_cad::mutations::change_active_model_definition::ChangeActiveModelDefinition;
 use semio_s_artifact_cad_cad::mutations::create_node::CreateNode;
 use semio_s_artifact_cad_cad::CadNode;
 
@@ -80,7 +79,7 @@ async fn contributed_mutation_id_structurally_cannot_collide_with_any_cad_owner_
 
 /// ✅️ Task requirement: "the plan folds to the same snapshot as applying cad's leaf mutations by
 /// hand" — `protocol::fold_plan_diff` over `CreateBuildingStorey::plan` must equal sequentially
-/// applying `create-node` then `change-active-model-definition` directly.
+/// applying `create-node` directly.
 #[semio_framework_async_macros::async_test]
 async fn plan_folds_to_the_same_snapshot_as_applying_cads_leaf_mutations_by_hand() {
     let base = semio_s_artifact_cad_cad::empty_cad_snapshot();
@@ -90,12 +89,9 @@ async fn plan_folds_to_the_same_snapshot_as_applying_cads_leaf_mutations_by_hand
 
     let create = CadMutation::CreateNode(CreateNode { node: CadNode { id: "storey-1".into(), label: kind.storey_label(), kind: "building-storey".into() } });
     let after_create = MutationDiff::apply(create.diff(&base).diff(), &base).expect("valid create mutation diff");
-    let switch = CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() });
-    let after_switch = MutationDiff::apply(switch.diff(&after_create).diff(), &after_create).expect("valid switch mutation diff");
 
-    assert_eq!(folded, after_switch);
-    assert_eq!(after_switch.active_model_definition_id, "aec.building");
-    assert!(after_switch.nodes.iter().any(|node| node.id == "storey-1" && node.kind == "building-storey"));
+    assert_eq!(folded, after_create);
+    assert!(after_create.nodes.iter().any(|node| node.id == "storey-1" && node.kind == "building-storey"));
 }
 
 #[semio_framework_async_macros::async_test]

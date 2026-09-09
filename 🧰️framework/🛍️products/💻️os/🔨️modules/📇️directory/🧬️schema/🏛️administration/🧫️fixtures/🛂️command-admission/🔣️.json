@@ -1,0 +1,39 @@
+{
+  "schema": "semio.directory.administration-command-admission-fixture.v1",
+  "spaceId": "space-admin-01",
+  "allowed": [
+    { "capability": "renameSpace", "command": { "kind": "rename-space", "spaceId": "space-admin-01", "name": "Research" } },
+    { "capability": "setVisibility", "command": { "kind": "set-visibility", "spaceId": "space-admin-01", "visibility": "public" } },
+    { "capability": "deleteSpace", "command": { "kind": "delete-space", "spaceId": "space-admin-01" } },
+    { "capability": "upsertMember", "command": { "kind": "upsert-member", "spaceId": "space-admin-01", "email": "b@example.invalid", "role": "author" } },
+    { "capability": "removeMember", "command": { "kind": "remove-member", "spaceId": "space-admin-01", "userId": "user-b" } },
+    { "capability": "createInvite", "command": { "kind": "create-invite", "spaceId": "space-admin-01", "role": "spectator", "ttlSecs": 3600 } },
+    { "capability": "revokeInvite", "command": { "kind": "revoke-invite", "spaceId": "space-admin-01", "inviteId": "invite-live" } }
+  ],
+  "unrelated": [
+    { "kind": "create-space", "name": "Another", "spaceKind": "studio", "visibility": "private" },
+    { "kind": "archive-space", "spaceId": "space-admin-01" },
+    {
+      "kind": "announce-document",
+      "descriptor": {
+        "spaceId": "space-admin-01",
+        "documentId": "document-a",
+        "artifactKind": "map",
+        "artifactSchema": "map@1",
+        "owner": { "pluginId": "gis", "packageId": "gis", "version": "1.0.0", "packageHash": "1111111111111111111111111111111111111111111111111111111111111111" },
+        "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "bootstrapVersion": 1,
+        "bootstrapFrontier": { "headSeq": 0, "commitSeq": 0, "epoch": 0 },
+        "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  ],
+  "refused": ["missing-page", "member-page", "foreign-command", "foreign-page", "foreign-space-view", "withdrawn-capability"],
+  "malformed": [
+    null, false, 1, "rename-space", [], {},
+    { "kind": "rename-space", "spaceId": "space-admin-01" },
+    { "kind": "rename-space", "spaceId": "space-admin-01", "name": "Research", "extra": true },
+    { "kind": "rename-space", "name": "Research", "spaceId": "space-admin-01" },
+    { "kind": "unknown", "spaceId": "space-admin-01" }
+  ]
+}

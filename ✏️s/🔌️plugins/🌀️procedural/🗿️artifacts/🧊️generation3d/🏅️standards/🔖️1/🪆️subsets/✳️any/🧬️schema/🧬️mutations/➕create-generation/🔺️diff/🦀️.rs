@@ -13,5 +13,5 @@ pub fn diff(payload: &CreateGeneration, base: &Generation3dSnapshot) -> protocol
     if base.generation.generations.iter().any(|entry| &entry.id == id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A generation with id \"{id}\" already exists."), [id.clone()]);
     }
-    protocol::MutationOutcome::new(diff_generation_from_ops(base, vec![GenerationMutation::Add { generation: payload.generation.clone() }]))
+    protocol::MutationOutcome::new(diff_generation_from_ops(base, &[GenerationMutation::Add { generation: payload.generation.clone() }]))
 }

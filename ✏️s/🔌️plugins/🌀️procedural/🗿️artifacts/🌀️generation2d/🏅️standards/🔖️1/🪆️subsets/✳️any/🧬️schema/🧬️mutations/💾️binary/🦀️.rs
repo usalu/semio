@@ -297,16 +297,23 @@ pub fn generation2d_take_publication_hostile_observed(operation: semio_framework
     slot.take()?.observed
 }
 
+/// 🧮️ Domain credits admitted together for one publication authority.
+#[derive(Clone, Copy, Debug)]
+pub struct Generation2dPublicationCredits {
+    pub maximum_items: usize,
+    pub maximum_output_pages: usize,
+    pub maximum_controls: usize,
+}
+
 pub fn generation2d_admit_publication_authority(
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     base_revision: u64,
     parent_revision: u64,
     live_revision: u64,
-    maximum_items: usize,
-    maximum_output_pages: usize,
-    maximum_controls: usize,
+    credits: Generation2dPublicationCredits,
 ) -> Result<(), &'static str> {
+    let Generation2dPublicationCredits { maximum_items, maximum_output_pages, maximum_controls } = credits;
     if generation.0 != live_revision || base_revision != live_revision || parent_revision != base_revision {
         return Err("generation2d-publication.initial-freshness");
     }
@@ -532,7 +539,7 @@ impl store::ErasedSnapshotRetirement for Generation2dReplayRetirement {
                 Generation2dReplayDisplaced::Widget(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Widget(value)),
                 Generation2dReplayDisplaced::Synapse(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Specs(vec![value])),
                 Generation2dReplayDisplaced::Layout(value) => drop(value),
-                Generation2dReplayDisplaced::Camera(value) => drop(value),
+                Generation2dReplayDisplaced::Camera(value) => { let _ = value; },
                 Generation2dReplayDisplaced::Text(value) => self.domain.text(value),
                 Generation2dReplayDisplaced::Generation(value) => drop(value),
                 Generation2dReplayDisplaced::Json(value) => drop(value),
@@ -553,8 +560,8 @@ impl Drop for Generation2dReplayRetirement {
     }
 }
 
-fn generation2d_retire_displaced(value: Generation2dReplayDisplaced) -> Option<Box<dyn store::ErasedSnapshotRetirement>> {
-    Some(Box::new(Generation2dReplayRetirement { value: std::mem::ManuallyDrop::new(Some(value)), domain: semio_framework_artifact_flow_flow::retained::FlowRetirement::default() }))
+fn generation2d_retire_displaced(value: Generation2dReplayDisplaced) -> Box<dyn store::ErasedSnapshotRetirement> {
+    Box::new(Generation2dReplayRetirement { value: std::mem::ManuallyDrop::new(Some(value)), domain: semio_framework_artifact_flow_flow::retained::FlowRetirement::default() })
 }
 
 /// 🔁️ Direct semantic replay table. It consumes the retained mutation and writes only the
@@ -572,11 +579,11 @@ fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapsho
         Generation2dMutation::ReplaceWidget(payload) => {
             let id = crate::widget_id(&payload.widget);
             let index = snapshot.fixture.widgets.iter().position(|entry| crate::widget_id(entry) == id).ok_or("generation2d-replay.widget-missing")?;
-            generation2d_retire_displaced(Generation2dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.fixture.widgets[index], generation2d_copy_widget(&payload.widget)?)))
+            Some(generation2d_retire_displaced(Generation2dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.fixture.widgets[index], generation2d_copy_widget(&payload.widget)?))))
         }
         Generation2dMutation::DeleteWidget(payload) => {
             let index = snapshot.fixture.widgets.iter().position(|entry| crate::widget_id(entry) == payload.id).ok_or("generation2d-replay.widget-missing")?;
-            generation2d_retire_displaced(Generation2dReplayDisplaced::Widget(snapshot.fixture.widgets.remove(index)))
+            Some(generation2d_retire_displaced(Generation2dReplayDisplaced::Widget(snapshot.fixture.widgets.remove(index))))
         }
         Generation2dMutation::ConnectSynapse(payload) => {
             if snapshot.fixture.synapses.iter().any(|entry| entry.id == payload.synapse.id) {
@@ -588,11 +595,11 @@ fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapsho
         }
         Generation2dMutation::ReplaceSynapse(payload) => {
             let index = snapshot.fixture.synapses.iter().position(|entry| entry.id == payload.synapse.id).ok_or("generation2d-replay.synapse-missing")?;
-            generation2d_retire_displaced(Generation2dReplayDisplaced::Synapse(std::mem::replace(&mut snapshot.fixture.synapses[index], generation2d_copy_synapse(&payload.synapse)?)))
+            Some(generation2d_retire_displaced(Generation2dReplayDisplaced::Synapse(std::mem::replace(&mut snapshot.fixture.synapses[index], generation2d_copy_synapse(&payload.synapse)?))))
         }
         Generation2dMutation::DisconnectSynapse(payload) => {
             let index = snapshot.fixture.synapses.iter().position(|entry| entry.id == payload.id).ok_or("generation2d-replay.synapse-missing")?;
-            generation2d_retire_displaced(Generation2dReplayDisplaced::Synapse(snapshot.fixture.synapses.remove(index)))
+            Some(generation2d_retire_displaced(Generation2dReplayDisplaced::Synapse(snapshot.fixture.synapses.remove(index))))
         }
         Generation2dMutation::MoveWidget(payload) => {
             if !payload.layout.x.is_finite() || !payload.layout.y.is_finite() {
@@ -603,16 +610,16 @@ fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapsho
                 .layout
                 .insert(generation2d_copy_string(&payload.id)?, semio_framework_artifact_flow_flow::WidgetLayout { x: payload.layout.x, y: payload.layout.y })
                 .map(Generation2dReplayDisplaced::Layout)
-                .and_then(generation2d_retire_displaced)
+                .map(generation2d_retire_displaced)
         }
-        Generation2dMutation::ClearWidgetLayout(payload) => snapshot.fixture.layout.remove(&payload.id).map(Generation2dReplayDisplaced::Layout).and_then(generation2d_retire_displaced),
+        Generation2dMutation::ClearWidgetLayout(payload) => snapshot.fixture.layout.remove(&payload.id).map(Generation2dReplayDisplaced::Layout).map(generation2d_retire_displaced),
         Generation2dMutation::UpdateCamera(payload) => {
             if !payload.camera.x.is_finite() || !payload.camera.y.is_finite() || !payload.camera.zoom.is_finite() {
                 return Err("generation2d-replay.camera-nonfinite");
             }
-            generation2d_retire_displaced(Generation2dReplayDisplaced::Camera(std::mem::replace(&mut snapshot.fixture.camera, semio_framework_artifact_flow_flow::CameraJson { x: payload.camera.x, y: payload.camera.y, zoom: payload.camera.zoom })))
+            Some(generation2d_retire_displaced(Generation2dReplayDisplaced::Camera(std::mem::replace(&mut snapshot.fixture.camera, semio_framework_artifact_flow_flow::CameraJson { x: payload.camera.x, y: payload.camera.y, zoom: payload.camera.zoom }))))
         }
-        Generation2dMutation::ChangeSchema(payload) => generation2d_retire_displaced(Generation2dReplayDisplaced::Text(std::mem::replace(&mut snapshot.fixture.schema, generation2d_copy_string(&payload.schema)?))),
+        Generation2dMutation::ChangeSchema(payload) => Some(generation2d_retire_displaced(Generation2dReplayDisplaced::Text(std::mem::replace(&mut snapshot.fixture.schema, generation2d_copy_string(&payload.schema)?)))),
         Generation2dMutation::CreateGeneration(payload) => {
             if snapshot.generation.generations.iter().any(|entry| entry.id == payload.generation.id) {
                 return Err("generation2d-replay.generation-duplicate");
@@ -641,16 +648,16 @@ fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapsho
                 }
                 snapshot.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = selected;
             }
-            generation2d_retire_displaced(Generation2dReplayDisplaced::Generation(removed))
+            Some(generation2d_retire_displaced(Generation2dReplayDisplaced::Generation(removed)))
         }
         Generation2dMutation::RenameGeneration(payload) => {
             let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("generation2d-replay.generation-missing")?;
-            generation2d_retire_displaced(Generation2dReplayDisplaced::Text(std::mem::replace(&mut entry.name, generation2d_copy_string(&payload.name)?)))
+            Some(generation2d_retire_displaced(Generation2dReplayDisplaced::Text(std::mem::replace(&mut entry.name, generation2d_copy_string(&payload.name)?))))
         }
         Generation2dMutation::ChangeGenerationValue(payload) => {
             let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("generation2d-replay.generation-missing")?;
             let copied = generation2d_copy_json(&payload.value, 0)?;
-            entry.values.insert(generation2d_copy_string(&payload.question_id)?, copied).map(Generation2dReplayDisplaced::Json).and_then(generation2d_retire_displaced)
+            entry.values.insert(generation2d_copy_string(&payload.question_id)?, copied).map(Generation2dReplayDisplaced::Json).map(generation2d_retire_displaced)
         }
     };
     Ok(retired)
@@ -1183,17 +1190,17 @@ impl Generation2dRetainedMutationOwner {
         Ok(())
     }
 
-    fn begin_dsl(&mut self) -> Result<bool, &'static str> {
+    fn begin_dsl(&mut self) -> bool {
         if self.dsl_destination.is_some() {
-            return Ok(true);
+            return true;
         }
-        let Some(parent) = self.stack.len().checked_sub(1) else { return Ok(false) };
+        let Some(parent) = self.stack.len().checked_sub(1) else { return false };
         let field = match self.stack.get(parent) {
             Some(Generation2dMutationFrame::Widget { field: Some(field @ (2 | 3)), owner }) if owner.keyword == "cluster" => *field,
-            _ => return Ok(false),
+            _ => return false,
         };
         self.dsl_destination = Some((parent, usize::from(field - 2)));
-        Ok(true)
+        true
     }
 
     fn end_dsl(&mut self, kind: store::mounted_pack_rt::RetainedValueContainer) -> Result<bool, &'static str> {
@@ -1307,12 +1314,12 @@ impl Generation2dRetainedMutationOwner {
         match token {
             Token::Tag { value: 0x11, .. } => {
                 if self.dsl_destination.is_some() {
-                    self.begin_dsl()?;
+                    self.begin_dsl();
                 } else if self.json_destination.is_none() {
                     if self.ordinal == 13 && self.root_field() == Some(2) {
                         self.begin_json(Generation2dMutationJsonDestination::ChangeValue)?;
                     } else {
-                        self.begin_dsl()?;
+                        self.begin_dsl();
                     }
                 }
             }
@@ -1390,13 +1397,10 @@ impl Generation2dRetainedMutationOwner {
                 _ => return Err("generation2d-mutation.field-owner"),
             },
             Token::Unsigned { role: Role::TableRows, value } => self.pending_table_rows = Some(value),
-            Token::Unsigned { role: Role::TableField, value } => match self.stack.last_mut() {
-                Some(Generation2dMutationFrame::Dictionary { field, present, next, .. }) => {
-                    *field = Some(u16::try_from(value).map_err(|_| "generation2d-mutation.dictionary-field")?);
-                    present.fill(false);
-                    *next = 0;
-                }
-                _ => {}
+            Token::Unsigned { role: Role::TableField, value } => if let Some(Generation2dMutationFrame::Dictionary { field, present, next, .. }) = self.stack.last_mut() {
+                *field = Some(u16::try_from(value).map_err(|_| "generation2d-mutation.dictionary-field")?);
+                present.fill(false);
+                *next = 0;
             },
             Token::Unsigned { role: Role::Unsigned, value } if self.json_destination.is_none() && self.dsl_destination.is_none() => {
                 self.index = usize::try_from(value).map_err(|_| "generation2d-mutation.index")?;
@@ -1509,23 +1513,18 @@ impl Generation2dRetainedMutationOwner {
                 _ => return Err("generation2d-mutation.wire-node"),
             },
             Token::TablePresence { rows, value } => match self.stack.last_mut() {
-                Some(Generation2dMutationFrame::Dictionary { present, .. }) if rows as usize == present.len() => {
-                    if value == 0 {
-                        present.fill(true);
-                    }
+                Some(Generation2dMutationFrame::Dictionary { present, .. }) if rows as usize == present.len() && value == 0 => {
+                    present.fill(true);
                 }
                 _ => {}
             },
-            Token::TableBitmap { first_row, value } => match self.stack.last_mut() {
-                Some(Generation2dMutationFrame::Dictionary { present, .. }) => {
-                    for bit in 0..8 {
-                        let row = first_row as usize + bit;
-                        if row < present.len() {
-                            present[row] = value & (1 << bit) != 0;
-                        }
+            Token::TableBitmap { first_row, value } => if let Some(Generation2dMutationFrame::Dictionary { present, .. }) = self.stack.last_mut() {
+                for bit in 0..8 {
+                    let row = first_row as usize + bit;
+                    if row < present.len() {
+                        present[row] = value & (1 << bit) != 0;
                     }
                 }
-                _ => {}
             },
             Token::End(kind) => {
                 if self.end_dsl(kind)? {
@@ -1627,8 +1626,8 @@ impl Generation2dRetainedMutationOwner {
         drop(self.value.take());
         drop(self.widget.take());
         drop(self.synapse.take());
-        drop(self.layout.take());
-        drop(self.camera.take());
+        self.layout = None;
+        self.camera = None;
         drop(self.generation.take());
         self.json_stack.clear();
         self.json_destination = None;
@@ -1691,7 +1690,7 @@ struct Generation2dMutationSession {
 
 impl Generation2dMutationSession {
     fn new(expected_bytes: usize, maximum_items: usize) -> Result<Self, &'static str> {
-        if expected_bytes < 3 || expected_bytes > GENERATION2D_OWNER_BYTES || maximum_items == 0 {
+        if !(3..=GENERATION2D_OWNER_BYTES).contains(&expected_bytes) || maximum_items == 0 {
             return Err("generation2d-mutation.exact-credits");
         }
         Ok(Self {
@@ -1780,15 +1779,13 @@ impl Generation2dMutationSession {
                     self.body.as_mut().ok_or("generation2d-mutation.body-owner")?.admit_byte(self.body_bytes, byte).map_err(|(_, byte)| if byte == 0 { "generation2d-mutation.body-handback-zero" } else { "generation2d-mutation.body-handback" })?;
                     self.body_bytes += 1;
                 }
-                if let Some(event) = self.body.as_mut().ok_or("generation2d-mutation.body-owner")?.grant().map_err(|_| "generation2d-mutation.body-malformed")? {
-                    if let store::mounted_pack_rt::RetainedRecordBodyToken::Value(token) = event {
-                        let complete = matches!(token, store::mounted_pack_rt::RetainedValueToken::Complete { .. });
-                        let body = self.body.as_ref().expect("P2 retained mutation body");
-                        self.owner.as_mut().expect("P2 retained mutation owner").accept(token, body)?;
-                        if complete {
-                            self.phase = Generation2dMutationSessionPhase::Ready;
-                            return Ok(true);
-                        }
+                if let Some(store::mounted_pack_rt::RetainedRecordBodyToken::Value(token)) = self.body.as_mut().ok_or("generation2d-mutation.body-owner")?.grant().map_err(|_| "generation2d-mutation.body-malformed")? {
+                    let complete = matches!(token, store::mounted_pack_rt::RetainedValueToken::Complete { .. });
+                    let body = self.body.as_ref().expect("P2 retained mutation body");
+                    self.owner.as_mut().expect("P2 retained mutation owner").accept(token, body)?;
+                    if complete {
+                        self.phase = Generation2dMutationSessionPhase::Ready;
+                        return Ok(true);
                     }
                 }
             }
@@ -2340,7 +2337,7 @@ fn generation2d_copy_json(source: &dsl::DslValue, depth: usize) -> Result<dsl::D
     Ok(match source {
         dsl::DslValue::Null => dsl::DslValue::Null,
         dsl::DslValue::Bool(value) => dsl::DslValue::Bool(*value),
-        dsl::DslValue::Number(value) => dsl::DslValue::Number(value.clone()),
+        dsl::DslValue::Number(value) => dsl::DslValue::Number(*value),
         dsl::DslValue::String(value) => dsl::DslValue::String(generation2d_copy_string(value)?),
         dsl::DslValue::Array(values) => {
             let mut target = Vec::new();
@@ -2994,7 +2991,7 @@ impl Generation2dStoreInitializationAuthority {
             let disposer = self.candidate_disposer.as_mut().expect("P2 candidate disposer retained");
             return match disposer.close_step(candidate, 1, maximum_bytes).map_err(|_| "generation2d-initializer.candidate-close".to_string())? {
                 semio_framework_plugin::PluginCloseStep::Complete if disposer.terminal_is_empty(candidate) => {
-                    drop(self.candidate_disposer.take());
+                    *self.candidate_disposer = None;
                     drop(self.candidate.take());
                     Ok(false)
                 }
@@ -3157,9 +3154,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
                         let id = entry
                             .mutation_meta
                             .get(index)
-                            .and_then(|meta| meta.mutation_id.as_ref())
-                            .map(|id| protocol::MutationId(generation2d_copy_string(&id.0).unwrap_or_default()))
-                            .unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
+                            .and_then(|meta| meta.mutation_id.as_ref()).map_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)), |id| protocol::MutationId(generation2d_copy_string(&id.0).unwrap_or_default()));
                         match runtime.seed_mutation(id) {
                             Ok(()) => self.phase = Generation2dStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 },
                             Err(error) => {
@@ -3311,8 +3306,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
             Generation2dStoreInitializationPhase::RetireCancelled | Generation2dStoreInitializationPhase::RetireFault => match self.pump_retirement(GENERATION2D_OWNER_BYTES) {
                 Ok(false) => return semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    drop(self.initial_digest.take());
-                    drop(self.edit_digest.take());
+                    *self.initial_digest = None;
+                    *self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == Generation2dStoreInitializationPhase::RetireCancelled {
                         self.phase = Generation2dStoreInitializationPhase::Cancelled;
@@ -3353,8 +3348,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
             return None;
         }
         let candidate = self.candidate.take()?;
-        drop(self.initial_digest.take());
-        drop(self.edit_digest.take());
+        *self.initial_digest = None;
+        *self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }
@@ -3374,8 +3369,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
         match self.pump_retirement(maximum_bytes.min(GENERATION2D_OWNER_BYTES)) {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                drop(self.initial_digest.take());
-                drop(self.edit_digest.take());
+                *self.initial_digest = None;
+                *self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }

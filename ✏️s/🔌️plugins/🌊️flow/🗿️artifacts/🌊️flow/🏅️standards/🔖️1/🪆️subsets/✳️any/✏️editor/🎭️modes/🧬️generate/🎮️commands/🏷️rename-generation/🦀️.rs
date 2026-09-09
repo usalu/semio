@@ -1,68 +1,9 @@
-//! 🧬️ 🧬️ Generate-mode commands command — `rename-generation`.
+//! 🏷️ Renames one generation through the exact invoking window's retained transient route.
 
-use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::editor::flow::seed_host_catalogue;
-use crate::editor::flow::FLOW_PLAY_APP_ID;
-use crate::playbook::{handle_generation_action, selected_generation, PlaybookValues};
 use crate::{op::FlowMutation, FlowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-
-use flow::{
-    forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
-    FlowEvalSession, FlowHost,
-};
+use flow::FlowEvalSession;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
-
-//#region 🔖️SharedDispatch
-fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, values: &PlaybookValues) -> String {
-    let fixture_json = dsl::json::to_json_string(&fixture.to_fixture());
-    let object: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
-    let patched = apply_generation_values_to_fixture(&fixture_json, &object);
-    let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.to_fixture());
-    let mut host = FlowHost::from_fixture(patched_fixture);
-    seed_host_catalogue(&mut host, &config.catalogue_sections_json);
-    host.evaluate().unwrap_or_default()
-}
-
-/// 🧬️ Shared body for all five Generate-mode commands — one `playbook` CRUD call, then (for the three
-/// verbs that change which values are active) a fresh preview evaluation seeded into the eval session.
-fn handle_generation(action_id: &str, args: Option<&dsl::DslValue>, fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
-    let spec = flow_fixture_to_form_spec(&fixture.to_fixture());
-    let mut generation = config.generation();
-    if !handle_generation_action(action_id, args, &mut generation, &spec, FLOW_PLAY_APP_ID) {
-        return Emit::default();
-    }
-    let mut config_mutations = Vec::new();
-    if matches!(action_id, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
-        match selected_generation(&generation) {
-            Some(active) => {
-                let preview = evaluate_generation_preview(fixture, config, &active.values.clone());
-                generation.preview_text = Some(preview.clone());
-                session.set_eval_json(preview);
-            }
-            None => generation.preview_text = None,
-        }
-    }
-    config_mutations.insert(0, FlowConfigMutation::SetGeneration { json: serde_json::to_string(&generation).unwrap_or_default() });
-    let coalesce_key = (action_id == "updateGenerationValues").then(|| "generation-values".to_string());
-    Emit { config_mutations, coalesce_key, ..Default::default() }
-}
-//#endregion 🔖️SharedDispatch
-
-//#region 🔖️AddGeneration
-//#endregion 🔖️AddGeneration
-
-//#region 🔖️RemoveGeneration
-//#endregion 🔖️RemoveGeneration
-
-//#region 🔖️SelectGeneration
-//#endregion 🔖️SelectGeneration
-
-//#region 🔖️RenameGeneration
-//#endregion 🔖️RenameGeneration
-
-//#region 🔖️UpdateGenerationValues
-//#endregion 🔖️UpdateGenerationValues
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct RenameGeneration {
@@ -70,7 +11,6 @@ pub struct RenameGeneration {
     pub name: String,
 }
 
-pub fn handle(payload: &RenameGeneration, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-    let args = dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(payload.id.clone())), ("name".to_string(), dsl::DslValue::String(payload.name.clone()))]);
-    Ok(handle_generation("renameGeneration", Some(&args), doc.snapshot, cfg.snapshot, session))
+pub fn handle(_payload: &RenameGeneration, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    Ok(Emit::default())
 }

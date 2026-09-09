@@ -105,6 +105,7 @@ import {
   type WindowLayoutWindowNode,
   type WindowStackCorner,
   type WindowMeasure,
+  blake3Hex,
 } from "@semio-tech/framework";
 import {
   type ArtifactSyncStatus,
@@ -2498,7 +2499,104 @@ export function createCoalescingActionDispatcher<T>(dispatch: (value: T) => unkn
   };
 }
 
-export const registeredPuzzle3dBrushMeshes = new Set<string>();
+//#region 🥽️Puzzle3dBrushMeshUpload
+/** 📏️ Raw JSON bytes one retained puzzle command admits — `PUZZLE_COMMAND_RAW_BYTES`
+ * (`✏️s/🔌️plugins/🧩️puzzle/🎮️commands/🧵️retained/🦀️.rs`). A whole GLB never fitted it: the Nakagin
+ * capsule `🧊️placeholder.glb` is 25 344 positions plus 48 384 indices, 64 KB as JSON number arrays,
+ * so real collision geometry reaches the plugin only as a page run. */
+export const PUZZLE3D_MESH_COMMAND_RAW_BYTES = 8_192;
+
+/** 📏️ Values — positions and indices counted together — one page carries at most. Mirrors
+ * `PUZZLE3D_MESH_PAGE_VALUES` (`✏️editor/⏳️precompute/🦀️.rs`); a mesh id long enough to crowd the
+ * envelope shrinks its own pages below this instead of overrunning the wire. */
+export const PUZZLE3D_MESH_PAGE_VALUES = 1_024;
+
+/** 🔤️ Base64 padding characters reserved per page — one group per payload string. */
+const PUZZLE3D_MESH_PAGE_PADDING_CHARS = 8;
+
+/** 🥽️ One page of a `registerBrushMesh` upload run. Positions fill a page first; the indices stream
+ * continues in whatever of the page's value budget is left, so the run is dense and its last page is
+ * the only partial one. */
+export type Puzzle3dBrushMeshPage = {
+  readonly url: string;
+  readonly digest: string;
+  readonly page: number;
+  readonly pageCount: number;
+  readonly positionsB64?: string;
+  readonly indicesB64?: string;
+};
+
+/** 🥽️ Mesh identities this process already paged to the plugin, by id — the value is the digest that
+ * was uploaded, so a later window adopts the same geometry by `{url, digest}` alone instead of paging
+ * it again, and a mesh whose bytes changed uploads afresh. */
+export const registeredPuzzle3dBrushMeshes = new Map<string, string>();
+
+/** 📏️ Upper bound on the bytes a JSON string costs on the retained wire: ASCII exactly, every other
+ * UTF-16 code unit charged as a six-character `\uXXXX` escape, which no JSON encoder exceeds. */
+function puzzle3dWireBytes(text: string): number {
+  let bytes = 0;
+  for (let index = 0; index < text.length; index += 1) bytes += text.charCodeAt(index) < 0x80 ? 1 : 6;
+  return bytes;
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 1) binary += String.fromCharCode(bytes[index]!);
+  return btoa(binary);
+}
+
+/** 🔗️ The mesh's bytes on the wire and in the digest: little-endian `f32` positions followed by
+ * little-endian `u32` indices — the exact layout `decode_brush_mesh_page_values` reassembles. */
+function puzzle3dBrushMeshBytes(positions: readonly number[], indices: readonly number[]): Uint8Array {
+  const bytes = new Uint8Array((positions.length + indices.length) * 4);
+  new Float32Array(bytes.buffer, 0, positions.length).set(positions);
+  new Uint32Array(bytes.buffer, positions.length * 4, indices.length).set(indices);
+  return bytes;
+}
+
+/** #️⃣ The identity one uploaded mesh is keyed by: unkeyed BLAKE3 over {@link puzzle3dBrushMeshBytes},
+ * byte-identical to the plugin's own `brush_mesh_digest` (`✏️editor/⏳️precompute/🦀️.rs`), which is what
+ * lets the plugin refuse a run whose pages do not reassemble into the mesh the client announced. */
+export function puzzle3dBrushMeshDigest(positions: readonly number[], indices: readonly number[]): string {
+  return blake3Hex(puzzle3dBrushMeshBytes(positions, indices));
+}
+
+/** 📏️ Values this mesh id may put in one page without pushing the JSON envelope past
+ * {@link PUZZLE3D_MESH_COMMAND_RAW_BYTES}. Zero means the id alone already exhausts the wire, and the
+ * mesh cannot be uploaded at all. */
+function puzzle3dBrushMeshPageCapacity(url: string, surfaceId: string, digest: string): number {
+  const probe = { surfaceId, url, digest, page: 999_999, pageCount: 999_999, positionsB64: "", indicesB64: "" };
+  const budget = PUZZLE3D_MESH_COMMAND_RAW_BYTES - puzzle3dWireBytes(JSON.stringify(["registerBrushMesh", probe])) - PUZZLE3D_MESH_PAGE_PADDING_CHARS;
+  return Math.max(0, Math.min(PUZZLE3D_MESH_PAGE_VALUES, Math.floor((budget * 3) / 16)));
+}
+
+/** 🥽️ Splits one loaded GLB's collision geometry into the `registerBrushMesh` page run that carries it
+ * inside the retained command contract. An empty result means the mesh id leaves no room for a payload
+ * on the wire — the caller uploads nothing rather than emitting a command the framework will refuse. */
+export function puzzle3dBrushMeshPages(url: string, surfaceId: string, positions: readonly number[], indices: readonly number[]): readonly Puzzle3dBrushMeshPage[] {
+  const digest = puzzle3dBrushMeshDigest(positions, indices);
+  const capacity = puzzle3dBrushMeshPageCapacity(url, surfaceId, digest);
+  const total = positions.length + indices.length;
+  if (capacity === 0 || total === 0) return [];
+  const pageCount = Math.ceil(total / capacity);
+  const pages: Puzzle3dBrushMeshPage[] = [];
+  for (let page = 0; page < pageCount; page += 1) {
+    const start = page * capacity;
+    const end = Math.min(total, start + capacity);
+    const positionSlice = positions.slice(Math.min(start, positions.length), Math.min(end, positions.length));
+    const indexSlice = indices.slice(Math.max(0, start - positions.length), Math.max(0, end - positions.length));
+    pages.push({
+      url,
+      digest,
+      page,
+      pageCount,
+      ...(positionSlice.length > 0 ? { positionsB64: bytesToBase64(new Uint8Array(Float32Array.from(positionSlice).buffer)) } : {}),
+      ...(indexSlice.length > 0 ? { indicesB64: bytesToBase64(new Uint8Array(Uint32Array.from(indexSlice).buffer)) } : {}),
+    });
+  }
+  return pages;
+}
+//#endregion 🥽️Puzzle3dBrushMeshUpload
 
 /** @emoji 🎚️ Whether any measure (including nested group children) declares `id`. */
 export function windowMeasureTreeContainsId(measures: readonly WindowMeasure[], id: string): boolean {

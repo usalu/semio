@@ -14,5 +14,5 @@ pub fn diff(payload: &UpdateCamera, base: &Generation3dSnapshot) -> protocol::Mu
     if base.fixture.camera == payload.camera {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", "Camera is already in the requested state.");
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff::default(), SynapsesDiff::default(), LayoutDiff::default(), Some(payload.camera.clone()), None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), Some(&payload.camera), None))
 }

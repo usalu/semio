@@ -70,7 +70,6 @@ const KINDS: &[&str] = &[
     "move-reference",
     "replace-reference-media",
     "replace-references",
-    "change-active-model-definition",
 ];
 
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `CadDiff` mirrors `CadSnapshot` name for name, so the table is empty and every field is matched by its own name; the `🧩️assembly`, `🖐️5d` and `🧊️3d` subsets, whose diffs split, rename or fold their fields, carry real rows here.

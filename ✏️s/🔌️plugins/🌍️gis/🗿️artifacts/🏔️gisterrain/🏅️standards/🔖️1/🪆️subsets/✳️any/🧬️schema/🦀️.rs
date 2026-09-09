@@ -1,5 +1,9 @@
 //! 🧬️ GIS terrain artifact schema — every field of the artifact with its state class.
 
+#[cfg(test)]
+#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+mod document_contract_tests;
+
 use crate::document_dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
@@ -10,17 +14,16 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot
 //#region 🔖️Artifact
 /// 🧬️ GIS terrain document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainArtifact {
     #[state(artifact)]
     pub exaggeration: f64,
     #[state(artifact)]
     pub imported_features_json: String,
-    /// 🕸️ Mirrors `GisTerrainSnapshot.mesh` — see that field's own doc comment. Always re-derived
-    /// from `(exaggeration, imported_features_json)` by `to_snapshot`, never independently set.
+    /// 🕸️ Exact owned mesh handle preserved across artifact and snapshot conversions.
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.mesh")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
 }
@@ -34,15 +37,14 @@ impl Default for GisTerrainArtifact {
 }
 
 impl GisTerrainArtifact {
-    /// 📸️ Persisted subset. `mesh` is always re-derived here (never carried verbatim off `self`) so
-    /// it can never drift from what `(exaggeration, imported_features_json)` actually determine.
+    /// 📸️ Projects the persisted document without replacing any owned child identity.
     pub fn to_snapshot(&self) -> GisTerrainSnapshot {
-        GisTerrainSnapshot { exaggeration: self.exaggeration, imported_features_json: self.imported_features_json.clone(), mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(self.exaggeration, &self.imported_features_json))) }
+        GisTerrainSnapshot { exaggeration: self.exaggeration, imported_features_json: self.imported_features_json.clone(), mesh: self.mesh.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: GisTerrainSnapshot) -> Self {
-        Self { exaggeration: snapshot.exaggeration, imported_features_json: snapshot.imported_features_json, mesh: snapshot.mesh, ..Self::default() }
+        Self { exaggeration: snapshot.exaggeration, imported_features_json: snapshot.imported_features_json, mesh: snapshot.mesh }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

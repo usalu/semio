@@ -49,7 +49,7 @@
   "validations": null,
   "performance": null,
   "quality": null,
-  "documents": {
+  "artifacts": {
     "added": [],
     "removed": [
       "document-a"

@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "projectName", "projectRoot", "nativeProject", "samples"],
+  "properties": {
+    "version": { "const": 1 },
+    "projectName": { "type": "string", "minLength": 1 },
+    "projectRoot": { "type": "string", "minLength": 1 },
+    "nativeProject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "root", "fixturePath"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "root": { "type": "string", "minLength": 1 },
+        "fixturePath": { "type": "string", "minLength": 1 }
+      }
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "role", "path", "production", "test"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z]+(?:-[a-z0-9]+)*$" },
+          "role": { "enum": ["fixture", "test", "asset", "code"] },
+          "path": { "type": "string", "minLength": 1 },
+          "production": { "type": "boolean" },
+          "test": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

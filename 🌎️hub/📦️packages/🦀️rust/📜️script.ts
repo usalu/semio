@@ -1335,7 +1335,12 @@ async function waitForCheckpointSocketFrame<T>(socket: WebSocket, frames: readon
 
 /** 🌱️ Creates the initial canonical pair through the retained server-owned creation transaction. */
 async function createCheckpointPublicationProcessGenesis(run: LocalHubRun, capability: string, spaceId: string, fixture: CheckpointPublicationProcessFixtureV1): Promise<CheckpointPublicationProcessFixtureV1> {
-  const request = sealSpaceArtifactCreateV1({ requestId: randomBytes(16).toString("hex"), kindId: fixture.artifact.kind, name: "Verified GIS Map" });
+  const request = sealSpaceArtifactCreateV1({
+    requestId: randomBytes(16).toString("hex"),
+    expectedCatalogGenerationId: fixture.generationId,
+    kindId: fixture.artifact.kind,
+    name: "Verified GIS Map",
+  });
   const route = `/spaces/${encodeURIComponent(spaceId)}/artifact-creations`;
   const accepted = await fetch(`http://127.0.0.1:${run.port}${route}`, {
     method: "POST",
@@ -1344,7 +1349,12 @@ async function createCheckpointPublicationProcessGenesis(run: LocalHubRun, capab
     signal: AbortSignal.timeout(5_000),
   });
   let status = parseSpaceArtifactCreationStatusJsonV1(await accepted.text());
-  if (![200, 202].includes(accepted.status) || status.requestId !== request.requestId || status.spaceId !== spaceId) throw new Error(`checkpoint process genesis was not durably accepted: ${accepted.status}`);
+  if (
+    ![200, 202].includes(accepted.status) ||
+    status.requestId !== request.requestId ||
+    status.spaceId !== spaceId ||
+    status.catalogGenerationId !== request.expectedCatalogGenerationId
+  ) throw new Error(`checkpoint process genesis was not durably accepted: ${accepted.status}`);
   const deadline = Date.now() + 120_000;
   while (status.phase !== "ready") {
     if (!["accepted", "preparing", "indeterminate"].includes(status.phase) || Date.now() >= deadline) throw new Error(`checkpoint process genesis reached ${status.phase} before Ready`);
@@ -1352,6 +1362,7 @@ async function createCheckpointPublicationProcessGenesis(run: LocalHubRun, capab
     const response = await fetch(`http://127.0.0.1:${run.port}${route}/${encodeURIComponent(request.requestId)}`, { headers: { authorization: `Bearer ${capability}` }, signal: AbortSignal.timeout(5_000) });
     status = parseSpaceArtifactCreationStatusJsonV1(await response.text());
     if (response.status !== 200 && response.status !== 202) throw new Error(`checkpoint process genesis status failed: ${response.status}`);
+    if (status.catalogGenerationId !== request.expectedCatalogGenerationId) throw new Error("checkpoint process genesis status crossed its selected catalog generation");
   }
   if (
     status.ready?.kindId !== fixture.artifact.kind ||

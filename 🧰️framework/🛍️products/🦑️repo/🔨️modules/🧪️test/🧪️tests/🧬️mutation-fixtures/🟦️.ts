@@ -26,10 +26,9 @@ for (const row of vectors.cases) test(row.id, () => {
       mkdirSync(dirname(destination), { recursive: true });
       writeFileSync(destination, source);
     }
-    const oracle = new Ajv({ strict: true }).compile({ type: "object", additionalProperties: false, required: Object.keys(vectors.files), properties: Object.fromEntries(Object.keys(vectors.files).map(path => [path, { type: "string" }])) });
+    const oracle = new Ajv({ strict: true, allowMatchingProperties: true }).compile({ type: "object", additionalProperties: false, required: Object.keys(vectors.files), properties: Object.fromEntries(Object.keys(vectors.files).map(path => [path, { type: "string" }])), patternProperties: { "^🧬️schema/🧬️mutations/[^/]+/🧪️tests/[^/]+/🦀️\\.rs$": { type: "string" } } });
     expect(oracle(files)).toBe(row.valid);
     const findings = mutationVectorRegistryBreaches(root, registry, taxonomy);
     expect(findings.length === 0, JSON.stringify(findings)).toBe(row.valid);
-    console.log(`[DEBUG] ${row.id}: registry valid=${findings.length === 0}, Ajv file-set oracle=${oracle(files)}`);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

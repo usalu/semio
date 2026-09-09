@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/directory/administration-page-retirement-fixture-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "cases", "refreshDuringSubmit"],
+  "properties": {
+    "schema": { "const": "semio.directory.administration-page-retirement-fixture.v1" },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "older", "newer", "expected"],
+        "properties": {
+          "id": { "enum": ["older-success", "older-failure"] },
+          "older": { "enum": ["author", "failure"] },
+          "newer": { "const": "member" },
+          "expected": { "const": "member" }
+        }
+      }
+    },
+    "refreshDuringSubmit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "additionalRequests"],
+      "properties": {
+        "code": { "const": "capacity" },
+        "additionalRequests": { "const": 0 }
+      }
+    }
+  }
+}

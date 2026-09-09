@@ -121,6 +121,59 @@ async fn for_instance_shares_the_same_id_counter_as_the_registry_it_was_derived_
     assert_eq!(registry.pending_ids(), vec![RequestId(1)]);
 }
 
+/// 🔁️ A continuation draws from the SAME id counter as a parked-future request and queues its
+/// effect on the SAME outbound queue — that shared counter is what makes a minted `req` unable to
+/// collide with a future's, which a hand-written `RequestId(105)` never guaranteed.
+#[semio_framework_async_macros::async_test]
+async fn request_continuation_queues_one_effect_and_shares_the_request_id_counter() {
+    let registry = RequestRegistry::new();
+    let _parked = registry.request(|req| Effect::CancelJob { job: req.0 }); // id 1
+    let minted = registry.request_continuation("flowEvalResolve".to_string(), "{}".to_string(), |req| Effect::CancelJob { job: req.0 }).expect("continuation admission");
+    assert_eq!(minted, RequestId(2), "a continuation must not restart or share the parked-future counter");
+    assert_eq!(registry.drain().len(), 2, "both the parked request and the continuation queue exactly one effect each");
+    assert_eq!(registry.pending_ids(), vec![RequestId(1)], "a continuation parks no future, so it is not a pending checkpoint id");
+}
+
+/// 🔁️ `take_continuation` answers exactly once, and only for a continuation id — a parked-future id
+/// stays with `resolve`, which is what keeps the two delivery shapes from stealing each other's work.
+#[semio_framework_async_macros::async_test]
+async fn take_continuation_answers_once_and_never_claims_a_parked_future() {
+    let registry = RequestRegistry::new();
+    let scoped = registry.for_instance(5);
+    let parked = registry.request(|req| Effect::CancelJob { job: req.0 }); // id 1, instance 0
+    let minted = scoped.request_continuation("flowTessellateResolve".to_string(), r#"{"nodeHash":8}"#.to_string(), |req| Effect::CancelJob { job: req.0 }).expect("continuation admission");
+    assert!(registry.take_continuation(RequestId(1)).is_none(), "a parked-future id is never a continuation");
+    let taken = registry.take_continuation(minted).expect("the minted id owns a continuation");
+    assert_eq!(taken.instance, 5, "the continuation remembers the instance whose handle minted it");
+    assert_eq!(taken.response_action, "flowTessellateResolve");
+    assert_eq!(taken.request_json, r#"{"nodeHash":8}"#);
+    assert!(registry.take_continuation(minted).is_none(), "a continuation is consumed by its first taker");
+    drop(parked);
+}
+
+/// 🔁️ `resolve` on a continuation id is inert — the continuation survives it intact, so a stray
+/// completion route can never silently consume a redispatch that has not been dispatched yet.
+#[semio_framework_async_macros::async_test]
+async fn resolve_does_not_consume_or_corrupt_a_continuation() {
+    let registry = RequestRegistry::new();
+    let minted = registry.request_continuation("flowEvalResolve".to_string(), "{}".to_string(), |req| Effect::CancelJob { job: req.0 }).expect("continuation admission");
+    registry.resolve(minted, Ok(b"ignored".to_vec()));
+    assert_eq!(registry.take_continuation(minted).map(|taken| taken.response_action), Some("flowEvalResolve".to_string()));
+}
+
+/// 🔁️ `Event::InstanceClose` cancellation sweeps continuations exactly like parked requests: a
+/// closed instance can never be redispatched into.
+#[semio_framework_async_macros::async_test]
+async fn cancel_instance_sweeps_a_continuation_of_that_instance_only() {
+    let registry = RequestRegistry::new();
+    let doomed = registry.for_instance(9).request_continuation("flowEvalResolve".to_string(), "{}".to_string(), |req| Effect::CancelJob { job: req.0 }).expect("continuation admission");
+    let survivor = registry.for_instance(4).request_continuation("flowTessellateResolve".to_string(), "{}".to_string(), |req| Effect::CancelJob { job: req.0 }).expect("continuation admission");
+    let mut cursor = registry.begin_cancel_instance(9);
+    while registry.cancel_instance_step(&mut cursor) != RequestCloseStep::Complete {}
+    assert!(registry.take_continuation(doomed).is_none(), "the closed instance's continuation must be gone");
+    assert!(registry.take_continuation(survivor).is_some(), "another instance's continuation must be untouched");
+}
+
 // 🚫️async: E4 fn-pointer slot — Waker::noop() replaces the hand-rolled RawWakerVTable outright;
 // no vtable fn-pointer slot survives to tag.
 fn futures_test_waker() -> &'static Waker {

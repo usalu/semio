@@ -4514,7 +4514,7 @@ impl DrawingMutationCandidateAuthority {
 
     fn close_step(&mut self, mut source: Option<&mut DrawingSnapshot>, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
         if let Some(preflight) = self.preflight_mutation.as_mut() {
-            return match preflight.close_step(maximum_bytes)? {
+            return match preflight.close_step(maximum_bytes) {
                 store::SnapshotRetirementStep::Complete if preflight.terminal_is_empty() => {
                     drop(self.preflight_mutation.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })

@@ -1,15 +1,10 @@
+use crate::JackWorkingScene;
 use super::*;
 use crate::{Camera, Manifest, Port, PortDirection, PropertyBag};
 
 //#region 🧸️Fixtures
 fn mini_fixture() -> JackSnapshot {
-    JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "mini".into(),
-        Some("nakagin".into()),
-        Manifest::nakagin_default(),
-        Camera::default(),
-        vec![
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -32,8 +27,7 @@ fn mini_fixture() -> JackSnapshot {
                 properties: PropertyBag::new(),
                 ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
             },
-        ],
-        vec![Edge {
+        ], edges: vec![Edge {
             id: "e1".into(),
             kind: "Connection".into(),
             source: "root@out-a".into(),
@@ -44,9 +38,7 @@ fn mini_fixture() -> JackSnapshot {
                 p.insert("v".into(), PropertyValue::Number(-0.6));
                 p
             },
-        }],
-        Some("root".into()),
-    )
+        }] }, Some("root".into()))
 }
 //#endregion 🧸️Fixtures
 
@@ -60,13 +52,7 @@ async fn flat_position_bfs_walks_from_root() {
 
 #[semio_framework_async_macros::async_test]
 async fn flat_position_covers_disconnected_components() {
-    let fixture = JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "disconnected".into(),
-        Some("nakagin".into()),
-        Manifest::nakagin_default(),
-        Camera::default(),
-        vec![
+    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "disconnected".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root-a".into(),
                 kind: "Piece".into(),
@@ -111,8 +97,7 @@ async fn flat_position_covers_disconnected_components() {
                 properties: PropertyBag::new(),
                 ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
             },
-        ],
-        vec![
+        ], edges: vec![
             Edge {
                 id: "e-a".into(),
                 kind: "Connection".into(),
@@ -137,9 +122,7 @@ async fn flat_position_covers_disconnected_components() {
                     p
                 },
             },
-        ],
-        Some("root-a".into()),
-    );
+        ] }, Some("root-a".into()));
     let flat = compute_flat_position(&fixture);
     assert_eq!(flat.positions.get("child-a"), Some(&JackFlatPositionUv { u: 2.0, v: 1.0 }));
     assert_eq!(flat.positions.get("child-b"), Some(&JackFlatPositionUv { u: 3.0, v: -1.0 }));
@@ -147,13 +130,7 @@ async fn flat_position_covers_disconnected_components() {
 
 #[semio_framework_async_macros::async_test]
 async fn flat_position_handles_cycles_without_looping() {
-    let fixture = JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "cycle".into(),
-        Some("nakagin".into()),
-        Manifest::nakagin_default(),
-        Camera::default(),
-        vec![
+    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "cycle".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "a".into(),
                 kind: "Piece".into(),
@@ -176,8 +153,7 @@ async fn flat_position_handles_cycles_without_looping() {
                 properties: PropertyBag::new(),
                 ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
             },
-        ],
-        vec![
+        ], edges: vec![
             Edge {
                 id: "ab".into(),
                 kind: "Connection".into(),
@@ -191,9 +167,7 @@ async fn flat_position_handles_cycles_without_looping() {
                 },
             },
             Edge { id: "ba".into(), kind: "Connection".into(), source: "b@out".into(), target: "a@out".into(), properties: PropertyBag::new() },
-        ],
-        Some("a".into()),
-    );
+        ] }, Some("a".into()));
     let flat = compute_flat_position(&fixture);
     assert!(flat.positions.contains_key("a"));
     assert!(flat.positions.contains_key("b"));

@@ -48,20 +48,20 @@ fn text(value: &str, emphasize: bool) -> UiAssemblyResult<ui::BuiltNode> {
     admit(ui::text(admit(ui::Label::try_from(value))?).emphasize(emphasize).try_build())
 }
 
-fn read_only_field(question: &FormQuestion, value_text: String) -> UiAssemblyResult<ui::BuiltNode> {
+fn read_only_field(question: &FormQuestion, value_text: &str) -> UiAssemblyResult<ui::BuiltNode> {
     let mut field = admit(ui::field(admit(ui::Label::try_from(question.label.as_str()))?).try_id(format!("forms-view-try.{}", question.id)))?;
     if let Some(description) = &question.description {
         field = field.description(ui::UiText::try_from_str(description).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms viewer description admission failed"))?);
     }
-    admit(admit(field.try_child(text(&value_text, false)?))?.try_build())
+    admit(admit(field.try_child(text(value_text, false)?))?.try_build())
 }
 
 fn render_view_question(question: &FormQuestion) -> UiAssemblyResult<ui::BuiltNode> {
     if is_extension_question_kind(&question.kind) {
-        return read_only_field(question, format!("({})", question.kind));
+        return read_only_field(question, &format!("({})", question.kind));
     }
     let value = dsl_to_value(&default_value_for_question(question));
-    read_only_field(question, json_string_value(&value))
+    read_only_field(question, &json_string_value(&value))
 }
 
 pub fn render(document: &FormsSnapshot) -> UiAssemblyResult<ui::BuiltNode> {

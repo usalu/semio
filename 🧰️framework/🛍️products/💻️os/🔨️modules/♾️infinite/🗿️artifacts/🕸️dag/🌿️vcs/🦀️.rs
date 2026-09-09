@@ -486,13 +486,13 @@ pub async fn create_dag_store(id: &str, snapshot: DagSnapshot) -> Result<DagStor
 #[cfg(test)]
 fn close_dag_test_store(mut store: DagStore) {
     loop {
-        match crate::os_store::SpaceMember::close_owned_step(&mut store, 1, 4_096).expect("bounded DAG test-store close") {
+        match store.close_owned_store_step(1, 4_096).expect("bounded DAG test-store close") {
             crate::os_store::SnapshotRetirementStep::Complete => break,
             crate::os_store::SnapshotRetirementStep::Pending { .. } => {}
             crate::os_store::SnapshotRetirementStep::Blocked => panic!("nonzero DAG test-store close grant blocked"),
         }
     }
-    assert!(crate::os_store::SpaceMember::close_owned_terminal_is_empty(&store));
+    assert!(store.close_owned_store_terminal_is_empty());
 }
 
 //#region 🔖️Dsl

@@ -503,16 +503,135 @@ type ToleranceCase = Readonly<{
   mutation: Record<string, Record<string, unknown>>;
 }>;
 
+type CreateSchema = ToleranceCase["schema"];
+type ToleranceFixture = Readonly<{
+  cases: ToleranceCase[];
+  diffCases: { id: string; accepted: boolean; diff: Record<string, unknown> }[];
+  inverseCases: { id: string; before: Record<string, unknown>; mutation: Record<string, Record<string, unknown>>; expectedInverse: Record<string, Record<string, unknown>>[] }[];
+  diffCodecCases: { id: string; encoding: "text" | "binary"; entity: "vertex" | "edge" | "face"; expectedArity: number; accepted: boolean; value?: string; bytesHex?: string }[];
+  textMutationCases: { id: string; schema: CreateSchema; accepted: boolean; value: string }[];
+  transportRequiredFields: { schema: CreateSchema; discriminant: string; requiredFields: string[] }[];
+  sourceLiteralCensus: { types: string[]; requiredField: string; roots: string[] };
+}>;
+
+const CREATE_SCHEMA_DIRECTORY: Readonly<Record<CreateSchema, string>> = {
+  "create-vertex": "🏗️create-vertex",
+  "create-edge": "🖇️create-edge",
+  "create-face": "🔷create-face",
+};
+
+/** 🧬️ Loads one authoritative create payload schema. */
+function createSchema(schema: CreateSchema): Record<string, unknown> {
+  return JSON.parse(readFileSync(join(import.meta.dir, "..", "🧬️schema", "🧬️mutations", CREATE_SCHEMA_DIRECTORY[schema], "🧬️schema", "🔣️.json"), "utf8")) as Record<string, unknown>;
+}
+
+/** 🔀️ Splits a bracketed codec value only at separators outside nested records. */
+function splitTopLevel(value: string, separator: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index]!;
+    if (character === "[") depth += 1;
+    else if (character === "]") depth -= 1;
+    else if (character === separator && depth === 0) {
+      parts.push(value.slice(start, index));
+      start = index + 1;
+    }
+  }
+  parts.push(value.slice(start));
+  return parts;
+}
+
+/** 🔢️ Reads the fixture's unsigned LEB128 segment length without using the Rust codec. */
+function readVarint(bytes: Uint8Array, offset: number): { value: number; next: number } {
+  let value = 0;
+  let shift = 0;
+  let next = offset;
+  while (next < bytes.length) {
+    const byte = bytes[next++]!;
+    value |= (byte & 0x7f) << shift;
+    if ((byte & 0x80) === 0) return { value, next };
+    shift += 7;
+    if (shift > 28) break;
+  }
+  throw new Error("invalid fixture varint");
+}
+
+/** 📏️ Independently measures the sparse entity record inside a text or binary diff case. */
+function codecCaseArity(testCase: ToleranceFixture["diffCodecCases"][number]): { entity: string; arity: number } {
+  let entity = testCase.entity;
+  let encoded: string;
+  if (testCase.encoding === "text") {
+    const [prefix, value] = (testCase.value ?? "").split("=", 2);
+    entity = prefix === "vertices" ? "vertex" : prefix === "edges" ? "edge" : prefix === "faces" ? "face" : "unknown";
+    encoded = value ?? "";
+  } else {
+    const bytes = Uint8Array.from(Buffer.from(testCase.bytesHex ?? "", "hex"));
+    if (bytes[0] !== 1) throw new Error(`${testCase.id}: binary format must be 1`);
+    entity = bytes[1] === 1 ? "vertex" : bytes[1] === 2 ? "edge" : bytes[1] === 8 ? "face" : "unknown";
+    const length = readVarint(bytes, 2);
+    if (length.next + length.value !== bytes.length) throw new Error(`${testCase.id}: binary segment length mismatch`);
+    encoded = new TextDecoder().decode(bytes.slice(length.next));
+  }
+  const sections = splitTopLevel(encoded, ";");
+  if (sections.length !== 3) throw new Error(`${testCase.id}: named diff must have three sections`);
+  const modified = sections[1]!;
+  const entry = modified.slice(1, -1);
+  const separator = entry.indexOf(":");
+  const record = separator < 0 ? "" : entry.slice(separator + 1);
+  if (!record.startsWith("[") || !record.endsWith("]")) throw new Error(`${testCase.id}: modified record must be bracketed`);
+  return { entity, arity: splitTopLevel(record.slice(1, -1), ",").length };
+}
+
+/** 🔤️ Converts schema field names to the flattened GraphQL mirror spelling. */
+function graphqlField(field: string): string {
+  return field.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
+}
+
+/** 🧾️ Enumerates Rust sources without a shell dependency. */
+function rustSources(directory: string): string[] {
+  const files: string[] = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...rustSources(path));
+    else if (entry.isFile() && entry.name.endsWith(".rs")) files.push(path);
+  }
+  return files;
+}
+
+/** 🧱️ Extracts balanced Rust struct literal bodies for the caller census. */
+function structLiteralBodies(source: string, type: string): string[] {
+  const bodies: string[] = [];
+  const pattern = new RegExp(`\\b${type}\\s*\\{`, "g");
+  for (let match = pattern.exec(source); match !== null; match = pattern.exec(source)) {
+    if (/\b(?:struct|for)\s*$/.test(source.slice(Math.max(0, match.index - 32), match.index))) continue;
+    const open = source.indexOf("{", match.index);
+    let depth = 0;
+    let close = -1;
+    for (let index = open; index < source.length; index += 1) {
+      if (source[index] === "{") depth += 1;
+      else if (source[index] === "}" && --depth === 0) {
+        close = index;
+        break;
+      }
+    }
+    if (close < 0) throw new Error(`unterminated ${type} literal`);
+    bodies.push(source.slice(open + 1, close));
+    pattern.lastIndex = close + 1;
+  }
+  return bodies;
+}
+
 /** 📏️ Validates the shared tolerance cases with the independent JSON Schema implementation. */
 function validateToleranceContract(): number {
   const fixturePath = join(import.meta.dir, "..", "🧫️fixtures", "📏️tolerance", "🔣️.json");
-  const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { cases: ToleranceCase[]; diffCases: { id: string; accepted: boolean; diff: Record<string, unknown> }[] };
+  const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as ToleranceFixture;
   const cases = fixture.cases;
   const validator = new Validator();
   let failed = 0;
   for (const testCase of cases) {
-    const schemaPath = join(import.meta.dir, "..", "🧬️schema", "🧬️mutations", testCase.schema === "create-vertex" ? "🏗️create-vertex" : testCase.schema === "create-edge" ? "🖇️create-edge" : "🔷create-face", "🧬️schema", "🔣️.json");
-    const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
+    const schema = createSchema(testCase.schema);
     const payload = Object.values(testCase.mutation)[0];
     const result = validator.validate(payload, schema);
     const accepted = result.valid;
@@ -534,8 +653,110 @@ function validateToleranceContract(): number {
       console.error(`[tolerance-contract] ${testCase.id} accepted=${accepted}`);
     }
   }
-  const total = cases.length + fixture.diffCases.length;
-  console.error(`[tolerance-contract] ${total - failed}/${total} cases matched the JSON Schema contract`);
+
+  const inverseTolerances = new Set<number>();
+  for (const testCase of fixture.inverseCases) {
+    const mutation = Object.entries(testCase.mutation)[0];
+    if (mutation === undefined) throw new Error(`${testCase.id}: missing delete mutation`);
+    const [kind, deletePayload] = mutation;
+    const before = testCase.before as { vertices?: Record<string, unknown>[]; edges?: Record<string, unknown>[]; faces?: Record<string, unknown>[] };
+    const expected = kind === "DeleteVertex"
+      ? [
+          { CreateVertex: before.vertices?.find((record) => record.id === deletePayload.id) },
+          ...(before.edges ?? []).filter((record) => record.startVertex === deletePayload.id || record.endVertex === deletePayload.id).map((record) => ({ CreateEdge: { id: record.id, start_vertex: record.startVertex, end_vertex: record.endVertex, curve: record.curve, tol: record.tol } })),
+        ]
+      : kind === "DeleteEdge"
+        ? [{ CreateEdge: (() => { const record = before.edges?.find((candidate) => candidate.id === deletePayload.id); return record && { id: record.id, start_vertex: record.startVertex, end_vertex: record.endVertex, curve: record.curve, tol: record.tol }; })() }]
+        : [{ CreateFace: (() => { const record = before.faces?.find((candidate) => candidate.id === deletePayload.id); return record && { id: record.id, outer_loop: record.outerLoop, inner_loops: record.innerLoops, surface: record.surface, orientation: record.orientation, tol: record.tol }; })() }];
+    if (JSON.stringify(expected) !== JSON.stringify(testCase.expectedInverse)) {
+      failed += 1;
+      console.error(`[tolerance-contract] ${testCase.id} expected inverse does not match the independent structural oracle`);
+      continue;
+    }
+    for (const operation of testCase.expectedInverse) {
+      const [createKind, payload] = Object.entries(operation)[0]!;
+      const schema = createKind === "CreateVertex" ? "create-vertex" : createKind === "CreateEdge" ? "create-edge" : "create-face";
+      const result = validator.validate(payload, createSchema(schema));
+      const tolerance = payload.tol;
+      if (!result.valid || typeof tolerance !== "number" || !Number.isFinite(tolerance) || tolerance === 0) {
+        failed += 1;
+        console.error(`[tolerance-contract] ${testCase.id} has an invalid inverse ${createKind}`);
+      } else inverseTolerances.add(tolerance);
+    }
+    console.error(`[tolerance-contract] ${testCase.id} inverse=${testCase.expectedInverse.length}`);
+  }
+  const inverseCount = fixture.inverseCases.reduce((count, testCase) => count + testCase.expectedInverse.length, 0);
+  if (inverseTolerances.size !== inverseCount) {
+    failed += 1;
+    console.error(`[tolerance-contract] inverse tolerances must be distinct and nonzero expected=${inverseCount} actual=${inverseTolerances.size}`);
+  }
+
+  for (const testCase of fixture.diffCodecCases) {
+    const measured = codecCaseArity(testCase);
+    const accepted = measured.entity === testCase.entity && measured.arity === testCase.expectedArity;
+    if (accepted !== testCase.accepted) {
+      failed += 1;
+      console.error(`[tolerance-contract] ${testCase.id} expected=${testCase.accepted} actual=${accepted} entity=${measured.entity} arity=${measured.arity}`);
+    } else console.error(`[tolerance-contract] ${testCase.id} accepted=${accepted} arity=${measured.arity}/${testCase.expectedArity}`);
+  }
+
+  const grammar = readFileSync(join(import.meta.dir, "..", "🧬️schema", "🧬️mutations", "📝️text", "📖️.grammar.semio"), "utf8");
+  for (const testCase of fixture.textMutationCases) {
+    const hasTolerance = testCase.value.split(" ").some((token) => token.startsWith("tol="));
+    const grammarRequiresTolerance = grammar.split("\n").some((line) => line.startsWith(`${testCase.schema} =`) && line.includes('"tol" "=" number'));
+    const accepted = hasTolerance && grammarRequiresTolerance;
+    if (accepted !== testCase.accepted) {
+      failed += 1;
+      console.error(`[tolerance-contract] ${testCase.id} expected=${testCase.accepted} actual=${accepted}`);
+    } else console.error(`[tolerance-contract] ${testCase.id} accepted=${accepted}`);
+  }
+
+  const proto = readFileSync(join(import.meta.dir, "..", "🧬️schema", "🧬️mutations", "🛰️.proto"), "utf8");
+  const graphql = readFileSync(join(import.meta.dir, "..", "🧬️schema", "🧬️mutations", "🔗️.graphql"), "utf8");
+  for (const contract of fixture.transportRequiredFields) {
+    const required = (createSchema(contract.schema).required ?? []) as string[];
+    const requiredMatches = [...required].sort().join("\0") === [...contract.requiredFields].sort().join("\0");
+    const fieldsExist = contract.requiredFields.every((field) => new RegExp(`\\b${field}\\s*=\\s*\\d+`).test(proto) && new RegExp(`^\\s*${graphqlField(field)}\\s*:`, "m").test(graphql));
+    const discriminantsExist = new RegExp(`^\\s*${contract.discriminant}\\s*=\\s*\\d+;`, "m").test(proto) && new RegExp(`^\\s*${contract.discriminant}\\s*$`, "m").test(graphql);
+    const casesExist = cases.some((testCase) => testCase.schema === contract.schema && testCase.accepted) && cases.some((testCase) => testCase.schema === contract.schema && !testCase.accepted && !("tol" in Object.values(testCase.mutation)[0]!));
+    if (!requiredMatches || !fieldsExist || !discriminantsExist || !casesExist) {
+      failed += 1;
+      console.error(`[tolerance-contract] ${contract.discriminant} flattened required-field validation failed`);
+    } else console.error(`[tolerance-contract] ${contract.discriminant} requires ${contract.requiredFields.join(",")}`);
+  }
+  if (!/optional\s+double\s+tol\s*=/.test(proto) || !/^\s*tol\s*:\s*Float\s*$/m.test(graphql)) {
+    failed += 1;
+    console.error("[tolerance-contract] flattened transports must retain conditional optional/null tolerance fields");
+  }
+
+  const subsetRoot = join(import.meta.dir, "..", "..");
+  const censusRoots: Readonly<Record<string, string>> = { brep: join(subsetRoot, "🧊️brep"), base: join(subsetRoot, "✉️base") };
+  const literalCounts = new Map(fixture.sourceLiteralCensus.types.map((type) => [type, 0]));
+  for (const root of fixture.sourceLiteralCensus.roots) {
+    const directory = censusRoots[root];
+    if (directory === undefined) throw new Error(`unknown source census root ${root}`);
+    for (const path of rustSources(directory)) {
+      const source = readFileSync(path, "utf8");
+      for (const type of fixture.sourceLiteralCensus.types) {
+        for (const body of structLiteralBodies(source, type)) {
+          literalCounts.set(type, literalCounts.get(type)! + 1);
+          if (!new RegExp(`\\b${fixture.sourceLiteralCensus.requiredField}\\s*:`).test(body)) {
+            failed += 1;
+            console.error(`[tolerance-contract] ${path} ${type} literal omits ${fixture.sourceLiteralCensus.requiredField}`);
+          }
+        }
+      }
+    }
+  }
+  for (const [type, count] of literalCounts) {
+    if (count === 0) {
+      failed += 1;
+      console.error(`[tolerance-contract] source census found no ${type} literals`);
+    } else console.error(`[tolerance-contract] source census ${type}=${count}`);
+  }
+
+  const total = cases.length + fixture.diffCases.length + fixture.inverseCases.length + fixture.diffCodecCases.length + fixture.textMutationCases.length + fixture.transportRequiredFields.length + 1;
+  console.error(`[tolerance-contract] ${total - failed}/${total} checks matched the tolerance contract`);
   return failed === 0 ? 0 : 1;
 }
 //#endregion 📏️ToleranceContract

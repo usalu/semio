@@ -3,12 +3,11 @@
 use crate::{MapFeature, MapFeaturePatch};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::BTreeMap;
 
 //#region 🔹Diff
 /// 🔺️ Sparse field delta for the GIS map artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapDiff {
     #[state(artifact)]
@@ -23,20 +22,6 @@ pub struct GisMapDiff {
 //#endregion 🔹Diff
 
 //#region 🔹DeltaHelpers
-/// 📂 Bool-map wrapper so optional map diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct GisMapBoolMapDelta {
-    pub entries: BTreeMap<String, Option<bool>>,
-}
-
-/// 📂 Number-map wrapper so optional map diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct GisMapNumberMapDelta {
-    pub entries: BTreeMap<String, Option<f64>>,
-}
-
 /// Identified-collection delta for feature lists.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", default)]

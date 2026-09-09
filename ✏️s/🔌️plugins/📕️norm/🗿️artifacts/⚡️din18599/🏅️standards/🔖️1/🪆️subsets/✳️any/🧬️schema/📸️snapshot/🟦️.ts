@@ -13,7 +13,7 @@ export interface Din18599Snapshot {
   hT: number;
   /** 🗿️ @state artifact */
   hV: number;
-  /** 🗿️ @state artifact */
+  /** 🗿️ @state artifact @child kind=s.stdio.semio */
   climate: ArtifactChild;
   /** 🗿️ @state artifact */
   internalGainsWM2: number;

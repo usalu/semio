@@ -45,24 +45,13 @@ pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::ArtifactChild<
     let content_hash = hasher.finish();
     let child_id = format!("gisterrain-mesh-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "gisterrain-mesh".into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
-/// 🔑️ The single string every caller hashes into `gis_terrain_mesh_child_handle` — the exact
-/// `(exaggeration, imported_features_json)` pair that determines the mesh's content below, kept in
-/// one place so `to_snapshot`/`GisTerrainDiff::apply`/fixture construction can never drift apart.
+/// 🔑️ Construction seed for an initial terrain mesh; persisted identity survives later edits.
 pub fn gis_terrain_mesh_content_key(exaggeration: f64, imported_features_json: &str) -> String {
     format!("{exaggeration}|{imported_features_json}")
-}
-
-/// 🔄️ Re-derives `mesh` from `document`'s CURRENT `(exaggeration, imported_features_json)` — the
-/// single call every constructor/mutator/test fixture funnels through so the composed child never
-/// drifts from what it actually describes. Mirrors `semio_s_artifact_gis_gismap`'s
-/// `gis_map_snapshot_with_derived_children`.
-pub fn gis_terrain_snapshot_with_derived_mesh(mut document: GisTerrainSnapshot) -> GisTerrainSnapshot {
-    document.mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(document.exaggeration, &document.imported_features_json)));
-    document
 }
 
 /// 🏔️ WRITE direction, real (not a stub): builds an actual `SemioMeshSnapshot` from the terrain
@@ -79,7 +68,7 @@ pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMes
     let (min_y, max_y) = if min_y < max_y { (min_y, max_y) } else { (min_y, min_y + 1.0) };
     // 🏔️ Honest gap (matches `gis3d_scene_media`'s own doc comment): with no DEM heightfield, every
     // vertex is flat at z=0 regardless of `exaggeration` — `exaggeration` still round-trips as
-    // real document state and still keys the mesh's content-addressed handle, it simply has no
+    // real document state; it currently has no
     // per-vertex effect on THIS placeholder surface yet.
     let z = 0.0;
     let positions = vec![SemioPoint3 { x: min_x, y: min_y, z }, SemioPoint3 { x: max_x, y: min_y, z }, SemioPoint3 { x: max_x, y: max_y, z }, SemioPoint3 { x: min_x, y: max_y, z }];
@@ -617,16 +606,6 @@ pub mod editor {
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
-
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
 
         #[path = "."]
         pub mod presence {

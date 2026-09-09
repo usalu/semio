@@ -32,3 +32,23 @@ The reset implementation is authored in `plugin/🪟️window/🫧️transient/�
 The TypeScript/Ajv oracle completed successfully in the current attempt (five distinct ownership tuples plus replacement expectations). Native compilation is queued behind the Wires diagnostic using the same target directory. No native passing result is claimed yet.
 
 The typed registry delegates payload disposal to each registered WindowTransientOwner. The existing generic `bounded_transient_store_disposer` still measures the entire DSL payload and requires that many bytes in one retirement step. That implementation needs a separate boundedness audit for large results (Jack in particular); merely moving the owner into a registry does not prove payload cleanup is bounded. This limitation is explicitly pending.
+
+## Independent Fairness Audit Corrections
+
+The Terra audit found first-entry starvation at all three levels: displaced document generation, window kind, and concrete partition. Added separate maintenance/close generation cursors plus rotating kind/partition cursors; a zero-item grant leaves cursors and owners untouched. Added neutral fairness expectations with independent TypeScript Map projection and Rust tests that keep the first owner blocked while later owners drain. Native verification remains pending; no behavioral RED result was observed before implementing these corrections. The generic large-payload disposer and returned snapshot lease findings remain open and are not solved by this scheduling change.
+
+## Native Attempt And Repair
+
+`window-document-generation-green-1.log` ended with exit 1 in the SDK test crate: the new document-generation fairness fixture omitted `std::sync::Arc` import in two factory signatures. No other compiler errors were reported. Added the import and reran the registered Bun/Nx target as `window-document-generation-green-2.log`; execution remains pending.
+
+## Testkit Source-Authority Repair
+
+The second native attempt reached the SDK test crate and reproduced sixteen missing mutation descriptors after source relocation into testkit. The exact metadata/payload moves and unchanged semantic identities are listed in `sdk-testkit-mutation-metadata-ownership.md`. Native lifecycle/fairness execution is still unverified.
+
+## Native Attempts Three and Four
+
+Attempt three stopped at the shared durable-group Send/Sync bounds before SDK tests; those source bounds are now fixed by the transient foundation owner. Attempt four compiled kernel and reached SDK, then failed during the active WindowTransientOwner bundle/read-lease migration. It also exposed four existing typed-command test initializers missing the newly required terminal_fault field; those initializers now explicitly start at None. No runtime success is claimed for either run.
+
+## Tracked Read Test Adaptation
+
+Both lifecycle test owners now use WindowTransientOwnerBundle with explicit preparation and owned state/mutation retirement. The shared scalar-publication testkit is deliberately limited to PublicationTransient and its one u64 mutation: compile-time assertions reject heap-owning or widened payloads. Preparation copies the exact scalar and retirement charges its actual fixed payload size; no whole DSL/binary encoding is used to estimate work. Identity tests now acquire real tracked erased reads and drain their exact store after returning them. Fairness fixture owners initialize both independent retirement and maintenance cursors. Native validation remains pending shared production owner migration.

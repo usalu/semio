@@ -12,5 +12,5 @@ pub fn diff(payload: &super::UpdateCamera, base: &Generation2dSnapshot) -> proto
     if base.fixture.camera == *camera {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Camera is already at the requested position.".to_string());
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff::default(), SynapsesDiff::default(), LayoutDiff::default(), Some(camera.clone()), None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), Some(&camera), None))
 }

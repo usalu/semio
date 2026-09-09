@@ -29,7 +29,7 @@
         { "$ref": "https://semio.tech/schema/os/store/child.json" }
       ],
       "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio.graph"
+      "x-semio-child-kind": "s.stdio.semio"
     },
     "rootNodeId": { "type": ["string", "null"], "x-semio-state": "artifact" }
   }

@@ -125,3 +125,55 @@ Invocation 12 passed with PDF hash `2796437571782912483`, a cache miss, 200 stag
 ## Comparable Input Census
 
 The invocation13 private Nx file-map snapshot contains 83672 files; 23802 entries differ from invocation10 in the same Nx-native hash format. Critical shared changes include `Cargo.lock`, `Cargo.toml`, `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`. A separate direct SHA-256 workspace census used a different inventory/hash algorithm and is retained only as a separate diagnostic; it must not be compared directly with the Nx-native decimal hashes. The incompatible draft comparison was replaced with the actual Nx file-map comparison. This evidence classifies shared input drift, not a completed cache-isolation pass.
+
+## Published Format Dependency Boundary
+
+The successful invocation12 publication inventory was inspected directly. Its stdio libraries are exactly PDF, Binary, Deflate and the shared Stdio contract, each with the required rlib/rmeta pair. No Semio-format or other unrelated stdio artifact library appears in the publication. This independently supports the composable package boundary in the actual emitted native dependency closure; it does not establish a cache restoration hit or a cold-build speed ratio. Receipt: `🗑️generated/pdf-native-baseline-12-graph-recovery-local-inventory.json`.
+
+## Native Invocation 13
+
+Ordinary Nx build completed with exact task status 0 and cache miss, hash `14640378857550514297`, from 08:53:41.805 to 10:32:16.653 UTC on 2026-09-09 (including shared Cargo queueing). The publication inventory has 200 files, including the owner marker, totaling 576,480,011 bytes. The stable proof loop has advanced to invocation 14; no local hit, output restoration, or source-isolation proof has yet been accepted. Current graph evidence is being recaptured because earlier standalone graph receipts predate subsequent toolchain-policy changes.
+
+## Native Invocation 14 Compile Failure
+
+The unchanged-source attempt exited 1 after current shared Store changes invalidated the task and failed native compilation. Twelve diagnostics identify missing Send + Sync bounds on returned-read retirement paths and references to nonexistent PresenceStore members. The shared Store executor is repairing the current source. A fresh post-failure inventory exactly matches successful invocation13: all200 files and576,480,011bytes are unchanged, including every SHA256. No output was moved and no cache restoration proof was created. The failed invocation receipt is 🗑️generated/pdf-native-cache-14-failed-run.json; this attempt does not satisfy local cache acceptance.
+
+## Native Invocation 19 Shared Export Failure
+
+After the Store correction, invocation19 failed on six removed bounded-transient helpers still reexported by the shared plugin. The current owner-bundle API is being integrated without restoring obsolete helper APIs. The run executed no PDF tests and did not publish; the complete200-file publication remains byte-identical to invocation13. Exact failed Nx receipt: 🗑️generated/pdf-native-cache-19-failed-run.json. Root also reaped the consolidated Semio attempt, which exited1 on the same plugin exports with zero tests. Both native gates require fresh retries after source settlement.
+
+## Restored Consumer Input Preparation
+
+The pending standalone consumer command now resolves its serde_json rlib/rmeta pair deterministically from the verified publication inventory, rather than hardcoding a compiler artifact hash. Invocation13 contains two complete serde_json variants; the first sorted published pair is the same29b1d187bb150e8e pair used by the earlier successful consumer. A preflight verified both pairs exist in the owner inventory. The consumer shares only primitive metadata values across the PDF API, and still compiles with dependency search paths exclusively inside the restored PDF publication. The command has not yet run against cache-restored native output; that acceptance remains dependent on the local restoration and source-isolation proofs.
+
+## Current Owner-Bundle Retry
+
+After the shared window-transient owner-bundle source settled, the coordinator started ordinary PDF invocation26, followed by unchanged invocations27/28 and conditional owned-output restoration29. No cache proof is accepted before that loop verifies an actual local hit, identical task hash and complete byte-for-byte restored publication. The same handoff starts full Semio retry2 and Flow recovery8 with private Nx state and the shared ticket Cargo cache. Source audits and native results remain separate.
+
+## Native Invocation26 Publication
+
+Ordinary Nx completed all4 tasks successfully. The PDF task hash is4030302576088414454, cache miss, with the task interval11:23:24.324–11:50:38.130UTC on2026-09-09. The complete publication contains200 files totaling576,961,088bytes. Its stdio closure still contains only PDF, Binary, Deflate and the shared Stdio contract, with complete rlib/rmeta pairs and no Semio-format dependency. Invocations27/28 now seek an unchanged local hit;27 entered Cargo again after input changes, so local-cache acceptance is still pending. No output restoration or source probe has occurred. Current raw receipts: `🗑️generated/pdf-native-cache-26-owner-bundle-recovery-local-run.json`, `🗑️generated/pdf-native-baseline-26-owner-bundle-recovery-local-inventory.json`, `🗑️generated/pdf-native-26-format-closure.json`. The closure preflight validates the observed shared-contract manifest name.
+
+## Native Input Count Terminology
+
+The earlier current14 receipt reports835 entries in the Nx `nativeSources` input set:815 PDF paths, zero JPG paths and zero other artifact paths. This is a source-input count, not a claim of815 Rust files. A later read-only inventory found772 `.rs` files under the PDF artifact; schemas and fixtures account for additional source inputs. No input-boundary or native acceptance change is inferred from comparing these different categories.
+
+## Current Router Read-Through
+
+A narrow read of the current artifact Rust router confirms that build/check route through the shared Cargo publication/owned-command helpers, while test uses the budgeted Nextest helper. The repository Nx adapter obtains target inputs from the selected local router and its literal relative executable import closure via `relativeScriptInputs`, plus the native compiler/environment contract. No source change or additional native acceptance resulted from this read-through.
+
+## PDF27 Shared Source Failure And Publication Preservation
+
+The unchanged27 invocation exited1 after96m53s, including shared Cargo waiting. Its first/only compiler diagnostic is E0433 in shared semio-framework-plugin: crate::os_schema_composition::ArtifactCompositionFields names a module absent from that crate root. The shared-code lane owns the exact current module qualification repair. Failed task hash15275070322891442310 was captured from the actual private Nx receipt. Every one of the200 successful PDF26 published files remains byte- and SHA256-identical (576,961,088 bytes). The original loop is terminal/reaped; its guarded terminal handler confirmed no output move occurred. Native local cache reuse/restoration/source probes/consumer remain pending. Receipts: 🗑️generated/pdf-native-cache-27-failed-run.json and 🗑️generated/pdf-native-27-failure-preserved-26-publication.json.
+
+## Guarded PDF35 Recovery Started
+
+The shared plugin qualification was already corrected by concurrent work before the execution lane attempted a patch: its bound now uses semio_framework_schema::ArtifactCompositionFields. The plugin directly depends on semio-framework-schema, which reexports the same kernel-owned trait; the plugin uses that schema owner in other existing bounds. No packaging-lane source edit was made for this reference. Exact-file rustfmt reported broader existing formatting drift and no broad formatting was applied. The ordinary guarded PDF35 recovery now runs with the same private Nx state/cache and shared Cargo, BUILD budget0 and fresh invocation-receipt checks. It will attempt stable repeats36/37 and exact guarded restoration38. Source probes30–32 and restored consumer remain gated on that proof.
+
+## Guarded Recovery35 Publication
+
+All four ordinary Nx tasks passed. PDF build hash3349577625346025899 ran from13:35:15.919 to14:26:24.110UTC; full run51m10s and native build51m include the shared Cargo queue. Publication contains200 files totaling578,054,859 bytes. The current shared plugin, Binary and PDF compilation completed. This supersedes recovery26 as the latest accepted publication. The unchanged36 invocation is active; no native local-cache restoration or source isolation acceptance is claimed yet.
+
+The active36 task environment reports hash273405952024672359, different from35's3349577625346025899. The unchanged invocation therefore uses a new task key and has entered Cargo. Shared source corrections occurred during35's wall-clock interval, consistent with input invalidation; this observation alone does not identify every changed input. The active hash receipt is pdf-native-cache-36-active-task-hash.json. No local hit or restoration is accepted yet.
+
+The current PDF build uses nativeSources with explicit exclusions for dist/build and every descendant, expressed both at the workspace path and projectRoot. Published package files are therefore not admitted by that own-source input set. Receipt: pdf-native-cache-36-output-exclusion-receipt.json. Actual stable-key cache-hit acceptance remains pending.

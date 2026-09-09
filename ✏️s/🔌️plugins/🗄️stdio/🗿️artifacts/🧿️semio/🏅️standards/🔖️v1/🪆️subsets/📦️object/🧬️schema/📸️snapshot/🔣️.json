@@ -2,105 +2,40 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/semio/v1/object/snapshot.json",
   "title": "SemioObjectSnapshot",
-  "description": "One spatial thing: a placement/transform, its geometry (brep and/or mesh child handles), and its property sets (value child handle). First COMPOSITE subset.",
   "type": "object",
+  "additionalProperties": false,
   "required": [
     "schema",
     "transform"
   ],
   "properties": {
     "schema": {
-      "type": "string",
+      "const": "stdio.semio.object",
       "x-semio-state": "artifact"
     },
     "transform": {
-      "type": "object",
-      "x-semio-state": "artifact",
-      "properties": {
-        "translation": {
-          "type": "object",
-          "properties": {
-            "x": {
-              "type": "number"
-            },
-            "y": {
-              "type": "number"
-            },
-            "z": {
-              "type": "number"
-            }
-          }
-        },
-        "rotation": {
-          "type": "object",
-          "properties": {
-            "x": {
-              "type": "number"
-            },
-            "y": {
-              "type": "number"
-            },
-            "z": {
-              "type": "number"
-            },
-            "w": {
-              "type": "number"
-            }
-          }
-        },
-        "scale": {
-          "type": "object",
-          "properties": {
-            "x": {
-              "type": "number"
-            },
-            "y": {
-              "type": "number"
-            },
-            "z": {
-              "type": "number"
-            }
-          }
-        }
-      }
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/geometry.json",
+      "x-semio-state": "artifact"
     },
     "brep": {
-      "type": "object",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/brep",
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.brep",
-      "properties": {
-        "childId": {
-          "type": "string"
-        },
-        "target": {
-          "type": "string"
-        }
+      "x-semio-child": {
+        "kind": "s.stdio.semio"
       }
     },
     "mesh": {
-      "type": "object",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/mesh",
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.mesh",
-      "properties": {
-        "childId": {
-          "type": "string"
-        },
-        "target": {
-          "type": "string"
-        }
+      "x-semio-child": {
+        "kind": "s.stdio.semio"
       }
     },
     "properties": {
-      "type": "object",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/value",
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.value",
-      "properties": {
-        "childId": {
-          "type": "string"
-        },
-        "target": {
-          "type": "string"
-        }
+      "x-semio-child": {
+        "kind": "s.stdio.semio"
       }
     }
   }

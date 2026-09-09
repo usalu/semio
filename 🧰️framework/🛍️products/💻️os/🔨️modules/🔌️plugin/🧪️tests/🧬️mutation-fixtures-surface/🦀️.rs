@@ -1,4 +1,4 @@
-#[path = "../../🧫️fixtures/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testkit/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 
@@ -20,6 +20,12 @@ const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "testkit.surfa
 #[dsl(extension = "testkit-surface")]
 pub(crate) struct SurfaceSnapshot {
     count: i32,
+}
+
+impl semio_framework_schema::ArtifactCompositionFields for SurfaceSnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
 }
 
 impl store::ArtifactDsl for SurfaceSnapshot {

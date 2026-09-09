@@ -79,7 +79,7 @@ impl ArtifactViewer for FlowViewer {
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(Box::new(semio_framework_plugin::NoTransientStoreDisposer::new()))
+        Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {

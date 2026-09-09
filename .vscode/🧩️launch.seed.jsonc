@@ -2,6 +2,125 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+    {"name":"🧪️stdio-document-contract","type":"node-terminal","request":"launch","command":"bun nx run workspace:stdio-document-contract","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.166}},
+    {"name":"🧪️stdio-document-contract-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:stdio-document-contract-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.167}},
+    {"name":"🧪️layout-document-contract","type":"node-terminal","request":"launch","command":"bun nx run workspace:layout-document-contract","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.168}},
+    {"name":"🧪️layout-document-contract-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:layout-document-contract-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.169}},
+    {
+      "name": "🧪️host-ownership-native-test", "type": "node-terminal", "request": "launch",
+      "command": "bun nx run workspace:host-ownership-native-test", "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.162 }
+    },
+    {"name": "🧪️owned-document-closure", "type": "node-terminal", "request": "launch", "command": "bun nx run workspace:owned-document-closure", "cwd": "${workspaceFolder}", "presentation": {"group": "3_test", "order": 311.16}},
+    {"name": "🧪️owned-document-closure-native", "type": "node-terminal", "request": "launch", "command": "bun nx run workspace:owned-document-closure-native", "cwd": "${workspaceFolder}", "presentation": {"group": "3_test", "order": 311.161}},
+    {"name": "🧪️generation3d-preview-window-transient", "type": "node-terminal", "request": "launch", "command": "bun nx run workspace:generation3d-preview-window-transient", "cwd": "${workspaceFolder}", "presentation": {"group": "3_test", "order": 311.164}},
+    {"name": "🧪️generation3d-preview-window-transient-native", "type": "node-terminal", "request": "launch", "command": "bun nx run workspace:generation3d-preview-window-transient-native", "cwd": "${workspaceFolder}", "presentation": {"group": "3_test", "order": 311.165}},
+    {"name": "🧪️gis-terrain-window-config", "type": "node-terminal", "request": "launch", "command": "bun nx run workspace:gis-terrain-window-config", "cwd": "${workspaceFolder}", "presentation": {"group": "3_test", "order": 311.170}},
+    {"name": "🧪️gis-terrain-window-config-native", "type": "node-terminal", "request": "launch", "command": "bun nx run workspace:gis-terrain-window-config-native", "cwd": "${workspaceFolder}", "presentation": {"group": "3_test", "order": 311.171}},
+    {"name": "🧪️program-document-contract", "type": "node-terminal", "request": "launch", "command": "bun nx run workspace:program-document-contract", "cwd": "${workspaceFolder}", "presentation": {"group": "3_test", "order": 311.156}},
+    {"name": "🧪️program-document-contract-native", "type": "node-terminal", "request": "launch", "command": "bun nx run workspace:program-document-contract-native", "cwd": "${workspaceFolder}", "presentation": {"group": "3_test", "order": 311.157}},
+    {
+      "name": "🧪️map-document-contract",
+      "type": "node-terminal", "request": "launch",
+      "command": "bun nx run workspace:map-document-contract", "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.154 }
+    },
+    {
+      "name": "🧪️map-document-contract-native",
+      "type": "node-terminal", "request": "launch",
+      "command": "bun nx run workspace:map-document-contract-native", "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.155 }
+    },
+    {
+      "name": "🧪️terrain-document-contract",
+      "type": "node-terminal", "request": "launch",
+      "command": "bun nx run workspace:terrain-document-contract", "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.152 }
+    },
+    {
+      "name": "🧪️terrain-document-contract-native",
+      "type": "node-terminal", "request": "launch",
+      "command": "bun nx run workspace:terrain-document-contract-native", "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.153 }
+    },
+    {
+      "name": "🧪️flow-window-ownership-oracle",
+      "type": "node-terminal", "request": "launch",
+      "command": "bun nx run workspace:flow-window-ownership-oracle", "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.147 }
+    },
+    {
+      "name": "🧪️flow-window-ownership-native",
+      "type": "node-terminal", "request": "launch",
+      "command": "bun nx run workspace:flow-window-ownership-native", "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.148 }
+    },
+    {
+      "name": "🧪️store-reload-publication-native",
+      "type": "node-terminal", "request": "launch",
+      "command": "bun nx run workspace:store-reload-publication-native", "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.151 }
+    },
+    {
+      "name": "🧪️writer-window-state-oracle",
+      "type": "node-terminal", "request": "launch",
+      "command": "bun nx run workspace:writer-window-state-oracle", "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.149 }
+    },
+    {
+      "name": "🧪️writer-window-state-native",
+      "type": "node-terminal", "request": "launch",
+      "command": "bun nx run workspace:writer-window-state-native", "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.150 }
+    },
+    {
+      "name": "🧪️block3d-window-transient-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:block3d-window-transient-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.148 }
+    },
+    {
+      "name": "🧪️ephemeral-transfer-preparation-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:ephemeral-transfer-preparation-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.147 }
+    },
+    {
+      "name": "🧪️presentation-document-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:presentation-document-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.145 }
+    },
+    {
+      "name": "🧪️presentation-document-contract-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:presentation-document-contract-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.146 }
+    },
+    {
+      "name": "🧪️procedure-document-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:procedure-document-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.143 }
+    },
+    {
+      "name": "🧪️procedure-document-contract-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:procedure-document-contract-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.144 }
+    },
     {
       "name": "🧪️dag-demo-ownership",
       "type": "node-terminal",
@@ -57,6 +176,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.138
+      }
+    },
+    {
+      "name": "📊️jack-results-window-transient",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:jack-results-window-transient",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.1375
       }
     },
     {
@@ -1468,14 +1598,15 @@
       }
     },
     {
-      "name": "🛠️dev🔧️procedural🏙️3d🧩️hexagonal🧱️column⚛️react",
+      "name": "🛠️dev🔧️procedural🏙️3d🎛️hexagonal🍄️mushroom🧱️column⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- procedural 3d fixture hexagonal-column",
+      "command": "bun nx run workspace:dev -- procedural 3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROCEDURAL_3D_PLAY_PORT": "6018",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6018",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_DEFAULT_EXAMPLE": "hexagonal-mushroom-column"
       },
       "presentation": {
         "group": "3_dev",
@@ -1488,14 +1619,15 @@
       }
     },
     {
-      "name": "🛠️dev🔧️procedural🏙️3d🧩️hexagonal🧱️column🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🔧️procedural🏙️3d🎛️hexagonal🍄️mushroom🧱️column🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- procedural 3d fixture hexagonal-column",
+      "command": "bun nx run workspace:dev -- procedural 3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROCEDURAL_3D_PLAY_PORT": "6118",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6118",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_DEFAULT_EXAMPLE": "hexagonal-mushroom-column"
       },
       "presentation": {
         "group": "3_dev",
@@ -1505,17 +1637,6 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6118)",
         "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🔧️procedural🏙️3d🧩️hexagonal🧱️column🧊️wgpu🖥️native",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- generation3d",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 200.2
       }
     },
     {
@@ -2759,6 +2880,28 @@
       "presentation": {
         "group": "4_gate",
         "order": 400.99484
+      }
+    },
+    {
+      "name": "⚖️gate💻️os🌱️artifact-creation-catalog-generation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os:test-long -- --testNamePattern=\"withholds creation authority|retains the selected catalog generation|requires a catalog refresh before failing one exact initial POST conflict|suppresses a late initial POST conflict\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.99485
+      }
+    },
+    {
+      "name": "⚖️gate💻️os🌱️artifact-creation-catalog-refresh",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-react:test-long -- --run --maxWorkers=1 --testNamePattern=\"refreshes only the exact current selected catalog\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.99486
       }
     },
     {
@@ -4533,6 +4676,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.5
+      }
+    },
+    {
+      "name": "⚖️gate🦀️zero-warnings🧪️regressions📦️combined",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=workspace -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/📜️script.ts\" laws-fleet",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.51
       }
     },
     {
@@ -8889,10 +9043,10 @@
       }
     },
     {
-      "name": "📦️build🔧️procedural🏙️3d🎛️column",
+      "name": "📦️build🔧️procedural🏙️3d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:build -- generation3d fixture hexagonal-column",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-generation3d-react-release",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -15012,7 +15166,7 @@
       "order": 180,
       "command": "bun nx run workspace:dev -- procedural 2d",
       "reactEnv": {
-        "PROCEDURAL_2D_PLAY_PORT": "{PORT}",
+        "S_OS_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
       },
       "reactServerReadyAction": {
@@ -15021,7 +15175,7 @@
       },
       "wgpuOrder": 180.1,
       "wgpuEnv": {
-        "PROCEDURAL_2D_PLAY_PORT": "{PORT}",
+        "S_OS_PORT": "{PORT}",
         "SEMIO_RENDERER": "wgpu"
       },
       "wgpuServerReadyAction": {
@@ -15034,7 +15188,7 @@
       "order": 190,
       "command": "bun nx run workspace:dev -- procedural 3d",
       "reactEnv": {
-        "PROCEDURAL_3D_PLAY_PORT": "{PORT}",
+        "S_OS_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
       },
       "reactServerReadyAction": {
@@ -15043,7 +15197,7 @@
       },
       "wgpuOrder": 190.1,
       "wgpuEnv": {
-        "PROCEDURAL_3D_PLAY_PORT": "{PORT}",
+        "S_OS_PORT": "{PORT}",
         "SEMIO_RENDERER": "wgpu"
       },
       "wgpuServerReadyAction": {

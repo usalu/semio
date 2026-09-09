@@ -3,8 +3,8 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
 //! `🎭️modes/*/🪟️windows/*`, chrome measures in those windows' `☑️options/*`, panel trees in
-//! `📌️panels/*`, labels in `🦀️terminology.rs`, view state in `🦀️config.rs`, shared compute in the
-//! artifact's `⚙️engine`. This file is a routing table: `handle` → `NoteCommand::dispatch`, `render` →
+//! `📌️panels/*`, labels in `🦀️terminology.rs`, exact view state in `🪟️window`, shared compute in
+//! the artifact's `⚙️engine`. This file is a routing table: `handle` → `NoteCommand::dispatch`, `render` →
 //! body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::editor::note::commands::ink_apply_events;
@@ -166,8 +166,8 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🔖️NotePlayApp
-/// 🧪️ B1: unit struct — every former `NotePlayRuntime`/`ViewModel`-read field now lives in
-/// `NoteConfig` (see `ArtifactEditor::Config`), written through `NoteConfigMutation`s.
+/// 🧪️ B1: unit struct — document preferences live in `NoteSnapshot`; composite camera and
+/// engagement input live in their exact WindowConfig and WindowTransient owners.
 #[derive(Default)]
 pub struct NotePlayApp;
 
@@ -441,7 +441,7 @@ pub fn create_note_app() -> AppDefinition {
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("inkApplyEvents", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("nudgeSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("nudgeSelectionUp", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("nudgeSelectionDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)

@@ -11,11 +11,11 @@ use crate::LowpolyDiff;
 use crate::LowpolyMutation;
 use crate::LowpolySnapshot;
 
-const BEFORE: &str = include_str!("../../../../../📄️documents/🧬️mutations/🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../📄️documents/🧬️mutations/🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../📄️documents/🧬️mutations/🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../📄️documents/🧬️mutations/🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../📄️documents/🧬️mutations/🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull/🎯️outcome/🔣️.json");
 
 /// 🔓️ Decodes committed fixture JSON through the artifact's own value codec — these types carry
 /// `ToValue`/`FromValue`, never `serde`, because `LowpolyObject.mesh` is an `ArtifactChild` handle.

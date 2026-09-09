@@ -26,3 +26,13 @@ While its ordinary library check was active, the coordinator read the Process3D 
 ## Current Default Library Matrix Interruption Classification
 
 The ordinary Nx matrix remains live. VCS and Process3D have accepted exit-0 receipts. Lowpoly, Wires, Forms, Layout and CAD exited during project-graph construction, before Cargo checked their package: Lowpoly encountered the relocated Note document-contract schema import; Wires, Forms, Layout and CAD encountered the relocated shared-map-delta source-law import in the root router. Playbook reached its framework-graph generator prerequisite and failed on the undefined `artifactProjection` identifier. These source paths and the identifier are repaired, and the fresh repository contract invocation has since cleared graph construction. They need targeted retries after the current matrix ends; these receipts do not establish native package regressions. The earlier Equation and Flow native compiler failures were in the shared IO/helper layer and are separately recorded. Shooting was interrupted by the generator input-pattern ordering error.
+
+## Procedure Shared Store Compile Interruption
+
+The ordinary Procedure default library gate reached Cargo and exited 1 on two `E0277` errors in the shared Store, before compiling Procedure itself. `ArtifactEphemeralOneItemPublication<P, Mutation>` calls `advance_returned_snapshot_read`, whose `P: Send + Sync + 'static` contract was absent from the enclosing implementation at the captured source revision. The shared Store executor is checking the current file for a narrow correction while preserving concurrent changes. This is an unaccepted gate requiring retry, not a Procedure runtime result. The matrix continues with Remodel. Raw receipt: `🗑️generated/native-library-recovery-semio-s-artifact-imperative-procedure.txt`.
+
+The subsequent Remodel gate also ended on the shared TransientStore retirement bounds before the executor repair. Energy then identified the corresponding missing bound on the durable-group helper that calls close_step; that caller is being corrected. These are terminal failed compile attempts, not accepted artifact results. Their exact rows remain in the retry set.
+
+## Note Compile Snapshot
+
+Note reached its own artifact code after compiling the shared dependencies, then exited1 on stale value_derive paths in its new window module. A read-only current-source check found all four derives already changed to the declared semio_framework_value_derive crate, whose package dependency exists. The coordinator made no production correction or attribution for that concurrent fix. Note remains an unaccepted default gate to retry. Source fixture validation separately corrected only the Note window test JSON include.

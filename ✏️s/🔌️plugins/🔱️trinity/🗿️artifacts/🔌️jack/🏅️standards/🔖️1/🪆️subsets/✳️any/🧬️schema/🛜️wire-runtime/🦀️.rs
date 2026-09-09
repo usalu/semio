@@ -748,6 +748,7 @@ impl store::ArtifactOwnedValueRetirementFactory<TrinityGraphMutation> for JackMu
     }
 }
 
+#[expect(clippy::large_enum_variant, reason = "The active decoder retains its fixed-size owned field authority inline so cursor transitions do not allocate another retirement owner.")]
 enum JackSnapshotDecodeState {
     AwaitToken,
     Decode(store::OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>),
@@ -865,6 +866,7 @@ impl Drop for JackSnapshotDecodeAuthority {
     }
 }
 
+#[expect(clippy::large_enum_variant, reason = "The active decoder retains its fixed-size owned field authority inline so cursor transitions do not allocate another retirement owner.")]
 enum JackMutationDecodeState {
     AwaitToken,
     Decode(store::OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>),
@@ -1060,6 +1062,12 @@ pub struct JackSnapshotCloneAuthority {
     index: usize,
     retain_local_owner: bool,
     terminal: bool,
+}
+
+impl Default for JackSnapshotCloneAuthority {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl JackSnapshotCloneAuthority {

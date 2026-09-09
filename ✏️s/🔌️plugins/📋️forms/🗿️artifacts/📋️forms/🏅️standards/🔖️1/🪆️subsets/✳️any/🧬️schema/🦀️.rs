@@ -40,7 +40,7 @@ pub struct FormsArtifact {
 //#region 🔖️Conversions
 impl Default for FormsArtifact {
     fn default() -> Self {
-        let empty = forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, Vec::new());
+        let empty = forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, &[]);
         Self { schema: empty.schema, id: empty.id, version: empty.version, title: empty.title, structure: empty.structure, results: empty.results }
     }
 }
@@ -53,7 +53,7 @@ impl FormsArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: FormsSnapshot) -> Self {
-        Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, structure: snapshot.structure, results: snapshot.results, ..Self::default() }
+        Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, structure: snapshot.structure, results: snapshot.results }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -87,7 +87,7 @@ pub fn initial_try_values(spec: &FormsSnapshot, overrides: &Object) -> Object {
 //#region 🔖️DocumentHelpers
 /// 🌱️ The forms app's empty document — a single "Inputs" step with no blocks yet.
 pub fn empty_forms_snapshot() -> FormsSnapshot {
-    forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }])
+    forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, &[FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }])
 }
 
 /// 🌱️ The forms app's default document — the building-component fixture, seeded from its derive-

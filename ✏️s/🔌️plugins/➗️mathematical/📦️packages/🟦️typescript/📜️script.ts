@@ -29,7 +29,7 @@ class TestScript extends BundleScript {
     if (JSON.stringify(scripts) !== JSON.stringify({ test: "bun nx run @semio-tech/mathematical-js:test" })) throw new Error("Mathematical package scripts do not match its Nx targets");
     if (JSON.stringify(dependencies) !== JSON.stringify({ ajv: "^8.20.0" })) throw new Error("Mathematical package dependencies are not source-scoped");
     const plugin = resolve(this.root, "../..");
-    const authority = resolve(plugin, "📣️publication-authority");
+    const authority = resolve(plugin, "🧫️fixtures/📣️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
     const module = await Bun.file(resolve(plugin, "🧬️schema/🔣️.json")).json() as { $id: string };
     const ajv = new Ajv({ allErrors: true, strict: true });

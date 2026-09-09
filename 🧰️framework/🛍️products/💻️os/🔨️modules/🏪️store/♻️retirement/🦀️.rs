@@ -129,7 +129,9 @@ impl<K: RetireOwned + Ord, V: RetireOwned> RetirementCursor for OrderedMap<K, V>
     fn close_step(&mut self, _: usize) -> RetirementStep {
         self.0.pop_first().map_or(RetirementStep::Complete, |entry| RetirementStep::Child(entry.retirement()))
     }
-    fn terminal_is_empty(&self) -> bool { self.0.is_empty() }
+    fn terminal_is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 impl<K: RetireOwned + Ord, V: RetireOwned> Drop for OrderedMap<K, V> {
     fn drop(&mut self) {
@@ -138,10 +140,14 @@ impl<K: RetireOwned + Ord, V: RetireOwned> Drop for OrderedMap<K, V> {
     }
 }
 impl<K: RetireOwned + Ord, V: RetireOwned> RetireOwned for std::collections::BTreeMap<K, V> {
-    fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(OrderedMap(ManuallyDrop::new(self))) }
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        Box::new(OrderedMap(ManuallyDrop::new(self)))
+    }
 }
 impl<V: RetireOwned> RetireOwned for protocol::MapDelta<V> {
-    fn retirement(self) -> Box<dyn RetirementCursor> { self.into_entries().retirement() }
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        self.into_entries().retirement()
+    }
 }
 impl<V: RetireOwned> RetireOwned for protocol::MapEntryDelta<V> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
@@ -219,13 +225,19 @@ impl RetirementCursor for ValueRetirement {
             Some(crate::DslValue::Object(value)) => RetirementStep::Child(value.retirement()),
         }
     }
-    fn terminal_is_empty(&self) -> bool { self.0.is_none() }
+    fn terminal_is_empty(&self) -> bool {
+        self.0.is_none()
+    }
 }
 impl Drop for ValueRetirement {
-    fn drop(&mut self) { assert!(self.0.is_none(), "dynamic value retired before terminal-empty"); }
+    fn drop(&mut self) {
+        assert!(self.0.is_none(), "dynamic value retired before terminal-empty");
+    }
 }
 impl RetireOwned for crate::DslValue {
-    fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(ValueRetirement(ManuallyDrop::new(Some(self)))) }
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        Box::new(ValueRetirement(ManuallyDrop::new(Some(self))))
+    }
 }
 
 struct CursorStack(ManuallyDrop<Vec<Box<dyn RetirementCursor>>>);

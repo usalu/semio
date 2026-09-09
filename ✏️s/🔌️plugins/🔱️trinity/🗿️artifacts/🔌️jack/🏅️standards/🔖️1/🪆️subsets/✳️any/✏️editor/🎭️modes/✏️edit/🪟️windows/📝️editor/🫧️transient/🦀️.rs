@@ -76,6 +76,27 @@ impl protocol::MutationDiff<JackEditorWindowTransient> for JackEditorWindowTrans
 mod mutations;
 pub use mutations::*;
 
+store::artifact_retire_struct!(JackEditorSelection { start, end });
+store::artifact_retire_struct!(JackEditorWindowTransient { selection });
+store::artifact_retire_struct!(SetEditorSelection { selection });
+
+impl store::retirement::RetireOwned for JackEditorWindowTransientMutation {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        match self {
+            Self::SetEditorSelection(value) => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(value)]),
+        }
+    }
+}
+
+fn editor_window_transient_footprint(_: &JackEditorWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: std::mem::size_of::<JackEditorWindowTransient>() })
+}
+
+fn editor_window_transient_transfer(mutation: JackEditorWindowTransientMutation) -> JackEditorWindowTransient {
+    let JackEditorWindowTransientMutation::SetEditorSelection(value) = mutation;
+    JackEditorWindowTransient { selection: value.selection }
+}
+
 pub struct JackEditorWindowTransientOwner;
 
 impl semio_framework_plugin::WindowTransientOwner for JackEditorWindowTransientOwner {
@@ -83,15 +104,10 @@ impl semio_framework_plugin::WindowTransientOwner for JackEditorWindowTransientO
     type State = JackEditorWindowTransient;
     type Mutation = JackEditorWindowTransientMutation;
 
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::State, Self::Mutation>> {
-        semio_framework_plugin::bounded_window_transient_preparation_factory::<Self>()
-    }
-
-    fn build_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::State>> {
-        semio_framework_plugin::bounded_window_transient_root_retirement_factory::<Self>()
-    }
-
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::State, Self::Mutation>>> {
-        semio_framework_plugin::bounded_window_transient_store_disposer::<Self>()
+    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+        let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(editor_window_transient_footprint, editor_window_transient_transfer, state.clone(), mutation.clone()));
+        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }

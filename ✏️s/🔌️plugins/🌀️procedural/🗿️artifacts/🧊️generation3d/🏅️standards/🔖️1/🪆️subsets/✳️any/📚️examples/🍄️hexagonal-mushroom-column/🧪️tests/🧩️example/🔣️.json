@@ -1,0 +1,38 @@
+{
+  "schema": "s.procedural.generation3d.example-geometry/v1",
+  "example": "hexagonal-mushroom-column",
+  "opChain": [
+    "brep.curve.polygon",
+    "math.vector",
+    "brep.solid.extrude"
+  ],
+  "preview": {
+    "node": "extrude",
+    "channel": "solid",
+    "kind": "solid"
+  },
+  "tessellationTolerance": 0.05,
+  "expect": {
+    "minTriangles": 20,
+    "closed": true,
+    "volume": 3.897114317029974,
+    "volumeTolerance": 0.0001,
+    "volumeSource": "analytic regular-hexagon area (3*sqrt(3)/2*r^2, r=0.5) * height 6",
+    "edgePerimeter": null,
+    "edgePerimeterTolerance": 0.0,
+    "boundingBoxMin": [
+      -0.5,
+      -0.4330127018922193,
+      0.0
+    ],
+    "boundingBoxMax": [
+      0.5,
+      0.4330127018922193,
+      6.0
+    ],
+    "boundingBoxTolerance": 1e-06,
+    "kernelVolumeNode": null,
+    "kernelVolumeChannel": null
+  },
+  "kernelStatus": "green"
+}

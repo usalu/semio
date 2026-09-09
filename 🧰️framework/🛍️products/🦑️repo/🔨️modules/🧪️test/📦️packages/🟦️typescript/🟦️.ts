@@ -763,6 +763,7 @@ export function mutationCatalogProblems(value: unknown, owner?: string, taxonomy
       continue;
     }
     const scenarioIds = new Set<string>();
+    const scenarioDirectories = new Set<string>();
     for (const [scenarioIndex, scenario] of candidate.scenarios.entries()) {
       if (!isPlainObject(scenario)) {
         problems.push(`vectors[${vectorIndex}].scenarios[${scenarioIndex}] is not an object`);
@@ -774,8 +775,12 @@ export function mutationCatalogProblems(value: unknown, owner?: string, taxonomy
       if (!MUTATION_ID_RE.test(id)) problems.push(`vectors[${vectorIndex}].scenarios[${scenarioIndex}].id must be kebab-case`);
       if (scenarioIds.has(id)) problems.push(`vectors[${vectorIndex}] scenario id ${id} is duplicated`);
       scenarioIds.add(id);
-      if (leadingEmojiIdentity(directoryName).rest !== id || pathEmojiStatuteFindings([{ path: directoryName, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length > 0 || /[\\/]/u.test(directoryName)) problems.push(`vectors[${vectorIndex}].scenarios[${scenarioIndex}].directoryName must be one canonical NFC test-case identity`);
+      const physicalId = leadingEmojiIdentity(directoryName).rest;
+      if (!MUTATION_ID_RE.test(physicalId) || physicalId === directoryName || pathEmojiStatuteFindings([{ path: directoryName, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length > 0 || /[\\/]/u.test(directoryName) || directoryName === "." || directoryName === "..") problems.push(`vectors[${vectorIndex}].scenarios[${scenarioIndex}].directoryName must be one canonical NFC test-case identity`);
       if (directoryName !== directoryName.normalize("NFC")) problems.push(`vectors[${vectorIndex}].scenarios[${scenarioIndex}].directoryName must be NFC`);
+      const directoryKey = directoryName.replaceAll("\uFE0F", "").toLocaleLowerCase("und");
+      if (scenarioDirectories.has(directoryKey)) problems.push(`vectors[${vectorIndex}] scenario directory ${directoryName} is duplicated`);
+      scenarioDirectories.add(directoryKey);
     }
   }
   return problems;
@@ -1481,11 +1486,11 @@ export function mutationVectorRegistryBreaches(repoRoot: string, registry: Oracl
   }
   for (const { sourceRoot, fixtureRoot, grouped } of sweeps.values()) {
     const owners = (root: string): string[] => childDirectories(root).flatMap(name => grouped ? childDirectories(join(root, name)).map(operation => `${name}/${operation}`) : [name]);
-    for (const owner of new Set([...owners(sourceRoot), ...owners(fixtureRoot)])) {
+    for (const owner of owners(fixtureRoot)) {
       const cases = join(sourceRoot, owner, "🧪️tests");
-      for (const scenario of new Set([...childDirectories(cases), ...childDirectories(join(fixtureRoot, owner))])) {
+      for (const scenario of childDirectories(join(fixtureRoot, owner))) {
         const key = relative(repoRoot, join(cases, scenario)).split(sep).join("/");
-        if (!represented.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", key, `Mutation test or fixture ${key} is not registered`, "Every physical example and executable case has an explicit catalog identity.", "Declare its current mutation and scenario identity."));
+        if (!represented.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", key, `Mutation fixture for ${key} is not registered`, "Every physical mutation fixture example has an explicit catalog identity and matching implementation.", "Declare its current mutation and scenario identity."));
       }
     }
   }

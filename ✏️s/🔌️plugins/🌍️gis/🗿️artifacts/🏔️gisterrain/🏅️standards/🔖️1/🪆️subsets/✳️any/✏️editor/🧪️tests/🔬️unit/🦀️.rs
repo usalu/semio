@@ -112,6 +112,7 @@ async fn retained_commands_publish_only_their_declared_store_lanes() {
         match lane {
             semio_framework_plugin::app::TypedOperationResultLane::Artifact => "artifact",
             semio_framework_plugin::app::TypedOperationResultLane::Config => "config",
+            semio_framework_plugin::app::TypedOperationResultLane::WindowConfig => "window-config",
             semio_framework_plugin::app::TypedOperationResultLane::Ui => "ui",
             semio_framework_plugin::app::TypedOperationResultLane::Terminal => "terminal",
             lane => panic!("unexpected Terrain publication lane {lane:?}"),

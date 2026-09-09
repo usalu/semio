@@ -1,4 +1,3 @@
-
 use super::*;
 use std::sync::Arc as StdArc;
 
@@ -1719,14 +1718,12 @@ fn artifact_history_construction_unwind_hands_partial_owner_to_registry_without_
         let mut page = Vec::new();
         page.try_reserve_exact(HISTORY_REPLAY_PAGE_BYTES as usize).expect("fixture page");
         page.resize(HISTORY_REPLAY_PAGE_BYTES as usize, 0);
-        assert!(
-            builder
-                .edit_cursor(|cursor| cursor.result_pages.as_mut().is_some_and(|owners| {
-                    owners.push(Some(page));
-                    true
-                }))
-                .unwrap_or(false)
-        );
+        assert!(builder
+            .edit_cursor(|cursor| cursor.result_pages.as_mut().is_some_and(|owners| {
+                owners.push(Some(page));
+                true
+            }))
+            .unwrap_or(false));
         panic!("injected construction unwind");
     });
     assert!(unwind.is_err());

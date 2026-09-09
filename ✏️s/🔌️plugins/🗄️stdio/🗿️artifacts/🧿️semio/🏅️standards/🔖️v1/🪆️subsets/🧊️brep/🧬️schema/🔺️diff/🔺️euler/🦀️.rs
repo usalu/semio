@@ -391,25 +391,47 @@ pub fn splice_boundary_vertex(body: &mut Body, loop_id: LoopId, target: VertexId
     Err(KernelError::Operation("imprint point does not lie on the face's boundary loop".into()))
 }
 
-/// 🖋️ Generalizes [`split_planar_face_by_line`] to any surface/curve pair: splices an
-/// already-built imprint edge (`edge_id`, both endpoints already real, possibly shared, vertices)
-/// into `face`'s outer boundary and rebuilds it as two chains sharing that chord, using 3D
-/// point-on-boundary matching (any curve kind, via [`splice_boundary_vertex`]) instead of the
-/// planar line-projection the original used. `pcurve`/`prange` are THIS face's own p-curve for
-/// `edge_id`, already in the edge's own curve order — set on both new chord coedges verbatim
-/// (never reversed, per the p-curve convention). Returns `(original_face, new_face)`.
+/// 🖋️ The oriented start/end vertices of one [`ParametricEdge`] traversal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn split_face_by_edge(body: &mut Body, face: FaceId, edge_id: EdgeId, pcurve: Curve2Id, prange: (f64, f64), tol: f64, rec: &mut OpRecorder) -> Result<(FaceId, FaceId), KernelError> {
+fn oriented_endpoints(body: &Body, member: ParametricEdge) -> Result<(VertexId, VertexId), KernelError> {
+    let edge = body.edges.get(member.0).ok_or_else(|| KernelError::MissingEntity(format!("edge {}", member.0)))?;
+    Ok(if member.1 { (edge.v0, edge.v1) } else { (edge.v1, edge.v0) })
+}
+
+/// 🖋️ Generalizes [`split_planar_face_by_line`] to any surface/curve pair AND to a multi-segment
+/// chord: splices the chain's two END vertices into `face`'s outer boundary and rebuilds the face
+/// as two rings that share the whole chain, using 3D point-on-boundary matching (any curve kind,
+/// via [`splice_boundary_vertex`]) instead of the planar line-projection the original used. Each
+/// member carries THIS face's own p-curve for its edge, already in that edge's own curve order —
+/// set on both traversals verbatim (never reversed, per the p-curve convention).
+///
+/// A chain rather than a single chord because one intersection segment need not reach the boundary
+/// on its own: three planes cutting one sphere meet it in quarter arcs that touch the face
+/// boundary at one end and EACH OTHER at the other, so only their concatenation is a legal chord.
+/// The caller assembles maximal chains (see `diff::boolean`'s `chain_open_pendings`); a chain whose
+/// two ends coincide is closed and belongs to [`split_face_by_interior_curve`] or
+/// [`split_face_by_seam_crossing`] instead. Returns `(original_face, new_face)`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn split_face_by_chain(body: &mut Body, face: FaceId, chain: &[ParametricEdge], tol: f64, rec: &mut OpRecorder) -> Result<(FaceId, FaceId), KernelError> {
     let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
     let outer = face_data.outer.ok_or_else(|| KernelError::Operation(format!("face {face} has no outer loop")))?;
     if !face_data.inners.is_empty() {
-        return Err(KernelError::Operation("split_face_by_edge does not support faces with inner loops yet".into()));
+        return Err(KernelError::Operation("split_face_by_chain does not support faces with inner loops yet".into()));
     }
-    let new_edge = body.edges.get(edge_id).ok_or_else(|| KernelError::MissingEntity(format!("edge {edge_id}")))?.clone();
-    let va = new_edge.v0;
-    let vb = new_edge.v1;
+    let (Some(&first), Some(&last)) = (chain.first(), chain.last()) else {
+        return Err(KernelError::Operation("imprint chain is empty".into()));
+    };
+    let (va, _) = oriented_endpoints(body, first)?;
+    let (_, vb) = oriented_endpoints(body, last)?;
     if va == vb {
         return Err(KernelError::Operation("imprint chord has coincident endpoints".into()));
+    }
+    for pair in chain.windows(2) {
+        let (_, end) = oriented_endpoints(body, pair[0])?;
+        let (start, _) = oriented_endpoints(body, pair[1])?;
+        if end != start {
+            return Err(KernelError::Operation("imprint chain members are not end-to-end connected".into()));
+        }
     }
     let pa = body.vertices.get(va).ok_or_else(|| KernelError::MissingEntity(format!("vertex {va}")))?.position;
     let pb = body.vertices.get(vb).ok_or_else(|| KernelError::MissingEntity(format!("vertex {vb}")))?.position;
@@ -425,10 +447,10 @@ pub fn split_face_by_edge(body: &mut Body, face: FaceId, edge_id: EdgeId, pcurve
         return Err(KernelError::Operation("imprint edge does not partition the outer loop into two non-empty chains".into()));
     }
 
-    let mut members_a = chain_ab;
-    members_a.push((edge_id, false, Some(pcurve), prange)); // traverses vb -> va, closing chain A
-    let mut members_b = chain_ba;
-    members_b.push((edge_id, true, Some(pcurve), prange)); // traverses va -> vb, closing chain B
+    let mut members_a = chain_ab; // va -> vb along the boundary
+    members_a.extend(chain.iter().rev().map(|&(edge, forward, pcurve, prange)| (edge, !forward, pcurve, prange))); // vb -> va along the chain
+    let mut members_b = chain_ba; // vb -> va along the boundary
+    members_b.extend_from_slice(chain); // va -> vb along the chain
 
     for cid in body.loop_coedges(outer) {
         body.coedges.remove(cid);
@@ -544,7 +566,7 @@ fn loop_uv_signed_area(body: &Body, loop_id: LoopId) -> f64 {
 /// edge's both occurrences at once) — genuinely different from [`split_face_by_interior_curve`]'s
 /// "small hole in the middle of the face" shape: the curve doesn't bound a sub-region, it
 /// separates the WHOLE face into two pieces along the periodic direction, exactly like
-/// [`split_face_by_edge`] except both chord endpoints are the SAME vertex, appearing twice in the
+/// [`split_face_by_chain`] except both chord endpoints are the SAME vertex, appearing twice in the
 /// ring once spliced in. `edge_id` must be a closed (`v0 == v1`) edge (same shape
 /// [`split_face_by_interior_curve`] uses); [`splice_boundary_vertex`] inserts that one vertex into
 /// the loop — because it splits by EDGE id, not by coedge, one call updates BOTH occurrences of
@@ -771,7 +793,7 @@ fn loop_walk(body: &Body, loop_id: LoopId) -> Result<LoopWalk, KernelError> {
 /// `pcurve: None`): without this, a pre-existing chain member (e.g. a cylinder's own `e_bot`/
 /// `e_top`/half-seam pieces, already carrying real p-curves from `🧱️primitives`) would silently
 /// lose them on every split, later failing `check_missing_pcurves`/trim tests for no visible
-/// reason. 🐛 This was a real bug here (not hypothetical): `split_face_by_edge`/
+/// reason. 🐛 This was a real bug here (not hypothetical): `split_face_by_chain`/
 /// `split_face_by_seam_crossing` used to call plain `loop_walk` + `make_loop`, discarding every
 /// chain member's p-curve — confirmed via live debug instrumentation (a post-split cylinder
 /// lateral piece's own `sample_loop_uv` showed only ONE coedge surviving, because the other three

@@ -13,45 +13,7 @@
       "type": "string"
     },
     "target": {
-      "$ref": "#/$defs/ArtifactRef"
-    }
-  },
-  "$defs": {
-    "ArtifactRef": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "artifactId",
-        "dialect"
-      ],
-      "properties": {
-        "artifactId": {
-          "type": "string"
-        },
-        "dialect": {
-          "$ref": "#/$defs/ArtifactDialect"
-        }
-      }
-    },
-    "ArtifactDialect": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "artifactKind",
-        "standard",
-        "subset"
-      ],
-      "properties": {
-        "artifactKind": {
-          "type": "string"
-        },
-        "standard": {
-          "type": "string"
-        },
-        "subset": {
-          "type": "string"
-        }
-      }
+      "$ref": "https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactRef"
     }
   }
 }

@@ -60,6 +60,5 @@ field new-opacity bytes
 record replace-references tag=19
 field model-definition-id utf8
 field references bytes
-record change-active-model-definition tag=20
 field new-model-definition-id utf8
 chain hash u64

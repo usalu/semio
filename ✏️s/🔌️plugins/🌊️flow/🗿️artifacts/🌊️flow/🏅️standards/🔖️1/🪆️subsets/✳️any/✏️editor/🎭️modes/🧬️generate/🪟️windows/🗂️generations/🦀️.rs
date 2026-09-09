@@ -1,6 +1,6 @@
 //! 🗂️ Generate-mode window — the generation list.
 
-use crate::editor::flow::config::FlowConfig;
+use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
 use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};
 use crate::playbook::FormGeneration;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
@@ -96,8 +96,8 @@ fn generation_item(generation: &FormGeneration, surface_prefix: &str, locale: Lo
     builder.try_build().map_err(|_| generation_error("item-build"))
 }
 
-pub fn render(config: &FlowConfig, locale: Locale, terminology: Terminology) -> UiAssemblyResult<BuiltNode> {
-    let generation = config.generation();
+pub fn render(transient: &FlowWindowTransient, locale: Locale, terminology: Terminology) -> UiAssemblyResult<BuiltNode> {
+    let generation = transient.generation();
     let surface_prefix = "flow-play-generate";
     let mut items = UiFixedList::default();
     for entry in &generation.generations {

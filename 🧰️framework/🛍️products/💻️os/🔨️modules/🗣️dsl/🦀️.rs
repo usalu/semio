@@ -39,6 +39,19 @@ pub trait DslField: Sized {
     fn from_value(value: &FieldValue) -> Result<Self, String>;
 }
 
+/// 📦️ Boxed ownership preserves the inner field's schema, value, and decoding errors.
+impl<T: DslField> DslField for Box<T> {
+    fn shape() -> Shape {
+        T::shape()
+    }
+    fn to_value(&self) -> FieldValue {
+        T::to_value(self.as_ref())
+    }
+    fn from_value(value: &FieldValue) -> Result<Self, String> {
+        T::from_value(value).map(Box::new)
+    }
+}
+
 macro_rules! impl_dsl_field_int {
     ($ty:ty, $shape:expr, $variant:ident, $as_ty:ty) => {
         impl DslField for $ty {
@@ -725,6 +738,10 @@ pub mod test_support {
 //#endregion 🔖️TestSupport
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/📦️boxed-fields/🦀️.rs"]
+mod boxed_field_tests;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔢️checked-integers/🦀️.rs"]
 mod checked_integer_tests;

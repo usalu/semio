@@ -14,7 +14,9 @@ use std::sync::{Arc, Mutex, OnceLock};
 //#region 🔖️BulkSession
 const MAX_BULK_KEY_BYTES: usize = 4_096;
 const MAX_LIVE_BULK_SESSIONS: usize = 64;
-static ACTIVE_BULK_GENERATIONS: OnceLock<Mutex<BTreeMap<(String, String, String), (u64, String)>>> = OnceLock::new();
+type BulkGenerations = BTreeMap<(String, String, String), (u64, String)>;
+
+static ACTIVE_BULK_GENERATIONS: OnceLock<Mutex<BulkGenerations>> = OnceLock::new();
 static NEXT_BULK_REQUEST: AtomicU64 = AtomicU64::new(40_000);
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct BulkJobKey {
@@ -72,7 +74,7 @@ fn bulk_sessions() -> &'static Mutex<BTreeMap<BulkJobKey, BulkSession>> {
     BULK_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
 }
 
-fn active_bulk_generations() -> &'static Mutex<BTreeMap<(String, String, String), (u64, String)>> {
+fn active_bulk_generations() -> &'static Mutex<BulkGenerations> {
     ACTIVE_BULK_GENERATIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
 }
 

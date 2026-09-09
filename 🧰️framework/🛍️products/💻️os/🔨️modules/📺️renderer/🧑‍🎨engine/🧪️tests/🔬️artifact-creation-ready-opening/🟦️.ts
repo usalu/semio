@@ -3,9 +3,10 @@ import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
-import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🔣️.json";
+import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🔣️.json";
+import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
-import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
+import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
 
 import { runArtifactCreationReadyOpeningV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import {
@@ -19,6 +20,7 @@ import {
 const owner = {
   requestId: "1".repeat(32),
   spaceId: "space-a",
+  expectedCatalogGenerationId: artifactCreationCatalogAuthorityFixture.catalog.catalogGenerationId,
   kindId: "s.gis.gismap",
   name: "Shared Map",
   runtimeKey: "hub:space-a:index",

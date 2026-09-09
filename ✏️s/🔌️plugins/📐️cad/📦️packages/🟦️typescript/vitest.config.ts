@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { createWorkspaceViteResolveConfig } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
+import { createWorkspaceViteResolveConfig } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const configDir = dirname(fileURLToPath(import.meta.url));

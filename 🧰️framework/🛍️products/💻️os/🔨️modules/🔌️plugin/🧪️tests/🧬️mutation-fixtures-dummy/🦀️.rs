@@ -1,4 +1,4 @@
-#[path = "../../🧫️fixtures/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testkit/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{DummyMutation, SetDummyCount};
 
@@ -21,6 +21,12 @@ use ui_wgpu::wgpu::LocalizedLabel;
 #[dsl(extension = "testkit-dummy")]
 pub(crate) struct DummySnapshot {
     count: i32,
+}
+
+impl semio_framework_schema::ArtifactCompositionFields for DummySnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
 }
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack for SDK test double (artifact coincides with snapshot only in tests).

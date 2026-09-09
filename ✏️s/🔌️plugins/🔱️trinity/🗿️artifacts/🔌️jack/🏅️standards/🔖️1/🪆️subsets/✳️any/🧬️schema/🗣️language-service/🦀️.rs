@@ -1,6 +1,7 @@
 //! 🗣️ Trinity jack language service — parse, complete, lint, hover.
 #![allow(dead_code)]
 
+use crate::JackWorkingScene;
 use crate::lexer::{lex, lex_spanned, SpannedToken, Token};
 use crate::{port_node_id, port_port_id, Camera, Edge, Graph, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
 use semio_framework_graph::dsl::{QueryableEdge, QueryableGraph};
@@ -497,13 +498,7 @@ pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
 /// 🧩️ Demo `Piece`/`Connection` fixture shared by the jack language server default session
 /// and playgrounds that need a non-empty graph for completions, hover and lint.
 pub fn example_graph_fixture() -> JackSnapshot {
-    JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "jack-example".into(),
-        Some("nakagin".into()),
-        Manifest::nakagin_default(),
-        Camera::default(),
-        vec![
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "jack-example".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -526,10 +521,7 @@ pub fn example_graph_fixture() -> JackSnapshot {
                 properties: PropertyBag::new(),
                 ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
             },
-        ],
-        vec![Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out".into(), target: "child@in".into(), properties: PropertyBag::new() }],
-        Some("root".into()),
-    )
+        ], edges: vec![Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out".into(), target: "child@in".into(), properties: PropertyBag::new() }] }, Some("root".into()))
 }
 
 /// 🧩️ [`example_graph_fixture`] as a resolved in-memory [`Graph`].

@@ -24,6 +24,17 @@ async fn block_fields_roundtrip() {
     assert!(block.required.unwrap_or(false));
 }
 
+#[semio_framework_async_macros::async_test]
+async fn playbook_child_restore_projection_accepts_the_exact_owned_children() {
+    let snapshot = PlaybookSnapshot::default();
+    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Playbook document and flow children");
+    assert_eq!(projection.len(), 2);
+    assert!(projection.admits_member("document", &snapshot.document.target));
+    assert!(projection.admits_member("flow", &snapshot.flow.target));
+    assert_eq!(snapshot.document.child_id, snapshot.document.target.artifact_id);
+    assert_eq!(snapshot.flow.child_id, snapshot.flow.target.artifact_id);
+}
+
 //#region 🌉️ContentBridgeLaws
 fn sample_steps() -> Vec<PlaybookStep> {
     vec![

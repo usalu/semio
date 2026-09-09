@@ -17,9 +17,9 @@
   "contractId": "readme-license-owner-leaves-v1",
   "revisionId": "testing-readme-protocol-v2-reviewed",
   "revisionInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🔖️readme-current-source-revision/🔣️.json",
-  "revisionInputSha256": "7697e8654fa60d6d5befcd501b0ff3a629251a51207e7fc9410344b5870d15fb",
+  "revisionInputSha256": "1d9700f8bcdebaa4622373c85faa58bf5d626cee34fc19cf57310feba543f3d7",
   "taxonomyPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-  "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚖️readme-license-owner-authority/🔣️.json",
+  "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
   "catalogSha256": "2dcb31628412a9e95b4adfc8756d8fbe9dfa1b397742b3f8a47c603ad15ccc79",
   "catalogCaseIndex": 31,
   "baseline": {
@@ -29,7 +29,7 @@
     "size": 7205,
     "mode": 420
   },
-  "expectedRevisionDigest": "9065d253c4cbe1980439ad54199e2f432ed65abee52316882e379846300f6518",
+  "expectedRevisionDigest": "ac0299064894934e2a5e4c2861a8b57a9dee84a46698f224a2eb48d2e42d28ee",
   "shippedPublication": {
     "revisionPointer": [
       "semanticOwnedFileProjectionContracts",

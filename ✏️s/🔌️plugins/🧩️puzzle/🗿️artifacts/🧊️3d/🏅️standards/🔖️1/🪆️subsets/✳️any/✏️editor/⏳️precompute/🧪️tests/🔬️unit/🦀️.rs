@@ -1297,7 +1297,7 @@ fn a_registered_mesh_is_shared_by_id_across_sessions() {
     assert_eq!(shared_brush_mesh(url).expect("cached geometry").0, positions, "a second read hits the content-addressed cache");
     let mut fresh = Puzzle3dCollision::new();
     assert!(!fresh.has_mesh(url), "a fresh engine starts without any mesh");
-    assert!(fresh.adopt_shared_mesh(url), "the id alone is enough to install real geometry");
+    assert!(fresh.adopt_shared_mesh(url, None), "the id alone is enough to install real geometry");
     assert!(fresh.has_mesh(url), "the adopted mesh is live in the collision engine");
     assert!(derive_brush_mesh(url, &positions[..6], &indices).is_none(), "a malformed upload is refused by the kernel, not cached");
 }

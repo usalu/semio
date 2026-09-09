@@ -3,7 +3,7 @@
   "presentation": {
     "childId": "presentation-delete-tile-missing",
     "target": {
-      "artifactId": "animate-presentation-deck-presentation",
+      "artifactId": "presentation-delete-tile-missing",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -14,7 +14,7 @@
   "animation": {
     "childId": "animation-fixture-empty",
     "target": {
-      "artifactId": "animate-presentation-deck-animation",
+      "artifactId": "animation-fixture-empty",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

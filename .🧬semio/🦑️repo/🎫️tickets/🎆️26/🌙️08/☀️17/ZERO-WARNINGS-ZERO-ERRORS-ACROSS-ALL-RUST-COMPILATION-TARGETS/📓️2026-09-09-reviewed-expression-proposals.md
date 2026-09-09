@@ -1,0 +1,160 @@
+# Reviewed Expression Proposals
+
+Read-only selection of compiler-suggested expression substitutions from wasm1044. Each source line was checked against the diagnostic before recording the proposal; duplicate shared-source diagnostics are coalesced. No files were changed in this inventory.
+
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🫀️core/🖼️semantic-ui/🦀️.rs:179
+  - Before: value.as_array().map(<[DslValue]>::to_vec).unwrap_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect())
+  - After: value.as_array().map_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect(), <[DslValue]>::to_vec)
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🫀️core/🖼️semantic-ui/🦀️.rs:180
+  - Before: question                         .fields                         .as_deref()                         .map(|fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect())                         .unwrap_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect())
+  - After: question                         .fields                         .as_deref().map_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect(), |fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect())
+- clippy::clone_on_copy ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs:2343
+  - Before: value.clone()
+  - After: *value
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs:3157
+  - Before: entry                             .mutation_meta                             .get(index)                             .and_then(|meta| meta.mutation_id.as_ref())                             .map(|id| protocol::MutationId(generation2d_copy_string(&id.0).unwrap_or_default()))                             .unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)))
+  - After: entry                             .mutation_meta                             .get(index)                             .and_then(|meta| meta.mutation_id.as_ref()).map_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)), |id| protocol::MutationId(generation2d_copy_string(&id.0).unwrap_or_default()))
+- clippy::explicit_auto_deref ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:40
+  - Before: *t
+  - After: t
+- clippy::explicit_auto_deref ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:41
+  - Before: *b
+  - After: b
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs:21
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs:21
+  - Before: .unwrap_or(text)
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs:21
+  - Before: 
+  - After: text, 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs:64
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs:64
+  - Before: .unwrap_or(dsl::DslValue::Null)
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs:64
+  - Before: 
+  - After: dsl::DslValue::Null, 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs:71
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs:71
+  - Before: .unwrap_or(dsl::DslValue::Null)
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs:71
+  - Before: 
+  - After: dsl::DslValue::Null, 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️select-generation/🦀️.rs:18
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️select-generation/🦀️.rs:18
+  - Before: .unwrap_or(dsl::DslValue::Null)
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️select-generation/🦀️.rs:18
+  - Before: 
+  - After: dsl::DslValue::Null, 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️update-generation-values/🦀️.rs:21
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️update-generation-values/🦀️.rs:21
+  - Before: .unwrap_or(dsl::DslValue::Null)
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️update-generation-values/🦀️.rs:21
+  - Before: 
+  - After: dsl::DslValue::Null, 
+- clippy::clone_on_copy ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs:2348
+  - Before: value.clone()
+  - After: *value
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs:3161
+  - Before: entry                             .mutation_meta                             .get(index)                             .and_then(|meta| meta.mutation_id.as_ref())                             .map(|id| protocol::MutationId(generation3d_copy_string(&id.0).unwrap_or_default()))                             .unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)))
+  - After: entry                             .mutation_meta                             .get(index)                             .and_then(|meta| meta.mutation_id.as_ref()).map_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)), |id| protocol::MutationId(generation3d_copy_string(&id.0).unwrap_or_default()))
+- clippy::explicit_auto_deref ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:42
+  - Before: *t
+  - After: t
+- clippy::explicit_auto_deref ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:43
+  - Before: *b
+  - After: b
+- clippy::redundant_closure ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1007
+  - Before: |value| dsl::json::to_json_string(value)
+  - After: dsl::json::to_json_string
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs:57
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs:57
+  - Before: .unwrap_or(dsl::DslValue::Null)
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs:57
+  - Before: 
+  - After: dsl::DslValue::Null, 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️update-generation-values/🦀️.rs:35
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️update-generation-values/🦀️.rs:35
+  - Before: .unwrap_or(dsl::DslValue::Null)
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️update-generation-values/🦀️.rs:35
+  - Before: 
+  - After: dsl::DslValue::Null, 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs:102
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs:102
+  - Before: .unwrap_or("[]")
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs:102
+  - Before: 
+  - After: "[]", 
+- clippy::manual_is_multiple_of ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs:112
+  - Before: s.len() % 2 != 0
+  - After: !s.len().is_multiple_of(2)
+- clippy::explicit_auto_deref ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:36
+  - Before: *t
+  - After: t
+- clippy::explicit_auto_deref ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:37
+  - Before: *b
+  - After: b
+- clippy::useless_format ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs:10
+  - Before: format!("Imported pdf")
+  - After: "Imported pdf".to_string()
+- clippy::useless_format ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️.rs:10
+  - Before: format!("Imported docx")
+  - After: "Imported docx".to_string()
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs:151
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs:151
+  - Before: .unwrap_or(dsl::DslValue::Null)
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs:151
+  - Before: 
+  - After: dsl::DslValue::Null, 
+- clippy::manual_is_multiple_of ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs:24
+  - Before: s.len() % 2 != 0
+  - After: !s.len().is_multiple_of(2)
+- clippy::needless_borrow ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:148
+  - Before: &chunk
+  - After: chunk
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🦀️.rs:309
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🦀️.rs:309
+  - Before: .unwrap_or(1)
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🦀️.rs:309
+  - Before: 
+  - After: 1, 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🦀️.rs:1142
+  - Before: map
+  - After: map_or
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🦀️.rs:1142
+  - Before: .unwrap_or(1)
+  - After: 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🦀️.rs:1142
+  - Before: 
+  - After: 1, 
+- clippy::map_unwrap_or ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🦀️.rs:1425
+  - Before: payload.value_json.as_ref().map(ChunkAddressableJson::owner).unwrap_or_else(|| std::sync::Arc::from("false"))
+  - After: payload.value_json.as_ref().map_or_else(|| std::sync::Arc::from("false"), ChunkAddressableJson::owner)

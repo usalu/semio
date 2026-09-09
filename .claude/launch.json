@@ -36,14 +36,30 @@
       "name": "procedural3d-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
-        "procedural",
-        "3d"
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:serve-generation3d-react-dev"
       ],
-      "port": 6019,
+      "port": 6018,
       "env": {
-        "PROCEDURAL_3D_PLAY_PORT": "6019"
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6018"
+      }
+    },
+    {
+      "name": "procedural3d-wgpu",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:dev",
+        "--",
+        "generation3d"
+      ],
+      "port": 6118,
+      "env": {
+        "SEMIO_RENDERER": "wgpu",
+        "S_OS_PORT": "6118"
       }
     },
     {
@@ -204,6 +220,11 @@
       "name": "puzzle3d-react-attach",
       "url": "http://localhost:6013",
       "port": 6013
+    },
+    {
+      "name": "procedural3d-react-attach",
+      "url": "http://localhost:6018",
+      "port": 6018
     }
   ]
 }

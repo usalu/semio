@@ -8,15 +8,11 @@ extern crate semio_framework_os_kernel as vcs;
 
 /// 📸️ Persisted GIS map snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
 pub use crate::schema::snapshot::GisMapSnapshot;
-use semio_framework_value_derive::{FromValue, ToValue};
 
-use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 //#region 🔹Constants
 
@@ -26,47 +22,7 @@ pub const GIS_MAP_SCHEMA: &str = "gis.map";
 pub const GISMAP_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.gis.gismap", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 //#endregion 🔹Constants
 
-//#region 🔹Types
-/// 🗺️ One id-keyed spatial feature carried as its full opaque descriptor payload.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct MapFeature {
-    #[dsl(positional)]
-    pub id: String,
-    /// 🧬️ Deliberately untyped: binds through the engine's `Shape::Value` escape hatch.
-    pub data: dsl::DslValue,
-}
-
-impl Identified<String> for MapFeature {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
-
-/// Whole-payload replacement patch (features are opaque JSON); inverts to the prior payload.
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct MapFeaturePatch {
-    pub data: Option<dsl::DslValue>,
-}
-
-impl Patchable<MapFeaturePatch> for MapFeature {
-    fn apply_patch(&mut self, patch: &MapFeaturePatch) {
-        if let Some(data) = &patch.data {
-            self.data = data.clone();
-        }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<MapFeaturePatch> {
-        (self.data != other.data).then(|| MapFeaturePatch { data: Some(other.data.clone()) })
-    }
-}
-
-//#endregion 🔹Types
+pub use crate::schema::feature::{MapFeature, MapFeaturePatch};
 
 //#region 🔖️Composition
 /// 🧩️ Composed `s.stdio.semio.drawing`/`s.stdio.semio.image`/`s.stdio.semio.value` child slots

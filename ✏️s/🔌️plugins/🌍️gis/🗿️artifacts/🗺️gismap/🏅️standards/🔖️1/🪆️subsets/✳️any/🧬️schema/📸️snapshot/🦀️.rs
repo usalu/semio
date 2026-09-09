@@ -17,31 +17,28 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples:
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS map document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapSnapshot {
     #[state(artifact)]
-    #[value(default)]
     pub positions: Vec<MapFeature>,
     #[state(artifact)]
-    #[value(default)]
     pub routes: Vec<MapFeature>,
     #[state(artifact)]
-    #[value(default)]
     pub regions: Vec<MapFeature>,
     /// 🕸️ Composed `s.stdio.semio.drawing` child — see `crate::🦀️.rs`'s
     /// `🔖️Composition` region for the full stable-member design.
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.drawing")]
+    #[child(kind = "s.stdio.semio")]
     pub drawing: GisMapDrawingChild,
     /// 🕸️ Composed `s.stdio.semio.image` child — always absent today (see `🔖️Composition`'s doc).
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.image")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
     /// 🕸️ Composed `s.stdio.semio.value` child — the lossless `{positions,routes,regions}` mirror.
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.value")]
+    #[child(kind = "s.stdio.semio")]
     pub value: GisMapValueChild,
 }
 

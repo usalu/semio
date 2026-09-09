@@ -1344,6 +1344,8 @@ pub mod standards {
                     }
                     #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🦀️.rs"]
                     pub mod geometry;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🦀️.rs"]
+                    pub mod child;
                     #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧰️triples/🦀️.rs"]
                     pub mod triples;
                 }

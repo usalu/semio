@@ -6,7 +6,7 @@
   "document": {
     "childId": "playbook-document-move-block-missing-target-step",
     "target": {
-      "artifactId": "playbook-document",
+      "artifactId": "playbook-document-move-block-missing-target-step",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -17,7 +17,7 @@
   "flow": {
     "childId": "playbook-flow-move-block-missing-target-step",
     "target": {
-      "artifactId": "playbook-flow",
+      "artifactId": "playbook-flow-move-block-missing-target-step",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

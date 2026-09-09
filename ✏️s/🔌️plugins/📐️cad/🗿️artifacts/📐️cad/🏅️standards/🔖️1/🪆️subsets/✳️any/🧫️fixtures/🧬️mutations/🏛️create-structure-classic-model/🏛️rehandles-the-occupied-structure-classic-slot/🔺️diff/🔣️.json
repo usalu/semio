@@ -6,7 +6,7 @@
   "buildingModel": null,
   "energyModel": null,
   "structureClassicModel": {
-    "childId": "structure-classic-model-2",
+    "childId": "cad-structure-2",
     "target": {
       "artifactId": "cad-structure-2",
       "dialect": {
@@ -18,6 +18,5 @@
   },
   "drawings": null,
   "referencesByModelDefinitionId": null,
-  "nodes": null,
-  "activeModelDefinitionId": null
+  "nodes": null
 }

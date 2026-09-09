@@ -18,11 +18,12 @@ for (const path of paths) {
     }
     return undefined;
   };
-  const value = (node: ts.Expression, seen = new Set<ts.Node>()): string | undefined => {
+  const value = (node: ts.Expression, seen = new Set<ts.Node>()): unknown => {
     if (seen.has(node)) return undefined;
     seen = new Set([...seen, node]);
     if (ts.isStringLiteralLike(node)) return node.text;
-    if (ts.isParenthesizedExpression(node)) return value(node.expression, seen);
+    if (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isNonNullExpression(node)) return value(node.expression, seen);
+    if (ts.isPropertyAccessExpression(node) && node.getText(source) !== "import.meta.dir" && node.getText(source) !== "import.meta.path") { const object = value(node.expression, seen); return object && typeof object === "object" ? (object as Record<string, unknown>)[node.name.text] : undefined; }
     if (node.getText(source) === "import.meta.dir") return dirname(absolute);
     if (node.getText(source) === "import.meta.path") return absolute;
     if (ts.isIdentifier(node)) { const declaration = resolveDeclaration(node.text, node); return declaration ? value(declaration, seen) : undefined; }
@@ -30,14 +31,16 @@ for (const path of paths) {
       const args = node.arguments.map(argument => value(argument, seen));
       if (args.some(argument => argument === undefined)) return undefined;
       const name = node.expression.getText(source);
-      if (["join", "resolve", "dirname", "posix.join"].includes(name)) return name === "dirname" ? dirname(args[0]!) : name === "resolve" ? resolve(...args as string[]) : join(...args as string[]);
+      if (name === "JSON.parse" && typeof args[0] === "string") { try { return JSON.parse(args[0]); } catch { return undefined; } }
+      if (name === "readFileSync" && typeof args[0] === "string" && args[0].startsWith(root + "/") && existsSync(args[0])) { try { return readFileSync(args[0], "utf8"); } catch { return undefined; } }
+      if (["join", "resolve", "dirname", "posix.join"].includes(name) && args.every(argument => typeof argument === "string")) return name === "dirname" ? dirname(args[0] as string) : name === "resolve" ? resolve(...args as string[]) : join(...args as string[]);
     }
     return undefined;
   };
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node) && ["readFileSync", "Bun.file"].includes(node.expression.getText(source)) && node.arguments[0]) {
       const target = value(node.arguments[0]);
-      if (target && target.startsWith(root + "/") && !target.includes("/🗑️generated/")) {
+      if (typeof target === "string" && target.startsWith(root + "/") && !target.includes("/🗑️generated/")) {
         observed++;
         if (!existsSync(target)) missing.push({ source: relative(root, absolute), line: source.getLineAndCharacterOfPosition(node.getStart()).line + 1, path: relative(root, target), expression: node.arguments[0].getText(source) });
       }
@@ -48,6 +51,6 @@ for (const path of paths) {
 }
 mkdirSync(output, { recursive: true });
 writeFileSync(join(output, "computed-fixture-read-audit.json"), JSON.stringify({ files: paths.length, observed, missing }, null, 2) + "\n");
-writeFileSync(join(ticket, "📓️computed-fixture-read-audit-2026-09-09.md"), "# Computed Fixture Read Audit\n\nTypeScript AST inspection resolves literal filesystem reads and lexical constants composed with join, resolve and dirname. Dynamic paths, parameters and runtime computations remain outside this bounded audit. Missing paths are candidates for review, not proof that every branch executes.\n\n```json\n" + JSON.stringify({ files: paths.length, observed, missing }, null, 2) + "\n```\n");
+writeFileSync(join(ticket, "📓️computed-fixture-read-audit-2026-09-09.md"), "# Computed Fixture Read Audit\n\nTypeScript AST inspection resolves literal filesystem reads, JSON property coordinates and lexical constants composed with join, resolve and dirname. Dynamic paths, parameters and runtime computations remain outside this bounded audit. Missing paths are candidates for review, not proof that every branch executes.\n\n```json\n" + JSON.stringify({ files: paths.length, observed, missing }, null, 2) + "\n```\n");
 console.log(JSON.stringify({ files: paths.length, observed, missing: missing.length }));
 

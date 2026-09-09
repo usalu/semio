@@ -25,7 +25,7 @@ pub fn diff_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapshot) 
         }
         blocks.insert(at, block);
         let patch = FormsStepPatch { blocks: Some(blocks), ..Default::default() };
-        return protocol::MutationOutcome::new(forms_diff_from_delta(FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: payload.step_id.clone(), patch }], ..Default::default() }, base));
+        return protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: payload.step_id.clone(), patch }], ..Default::default() }, base));
     }
 
     let Some(dest_step) = steps.iter().find(|step| step.id == payload.to_step_id) else {
@@ -35,15 +35,12 @@ pub fn diff_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapshot) 
     let mut dest_blocks = dest_step.blocks.clone();
     let at = payload.index.min(dest_blocks.len());
     dest_blocks.insert(at, block);
-    protocol::MutationOutcome::new(forms_diff_from_delta(
-        FormsStepsDelta {
+    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta {
             patched: vec![
                 FormsStepPatchEntry { id: payload.step_id.clone(), patch: FormsStepPatch { blocks: Some(source_blocks), ..Default::default() } },
                 FormsStepPatchEntry { id: payload.to_step_id.clone(), patch: FormsStepPatch { blocks: Some(dest_blocks), ..Default::default() } },
             ],
             ..Default::default()
-        },
-        base,
-    ))
+        }, base))
 }
 //#endregion 🔖️Diff

@@ -9,33 +9,7 @@
   ],
   "properties": {
     "rotation": {
-      "$ref": "#/$defs/SemioQuaternion"
-    }
-  },
-  "$defs": {
-    "SemioQuaternion": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "z",
-        "w"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "z": {
-          "type": "number"
-        },
-        "w": {
-          "type": "number"
-        }
-      }
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/geometry.json#/$defs/SemioQuaternion"
     }
   }
 }

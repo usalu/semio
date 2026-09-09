@@ -200,7 +200,7 @@
       "kind": "required",
       "connection": "direct",
       "separations": [],
-      "weight": 0.0,
+      "weight": 0,
       "rationale": null,
       "distanceMaxM": null,
       "distanceMinM": null,
@@ -275,7 +275,7 @@
   "knowledge": {
     "childId": "architect-knowledge-7904dd65836c8ff4",
     "target": {
-      "artifactId": "architect-program-knowledge",
+      "artifactId": "architect-knowledge-7904dd65836c8ff4",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -286,7 +286,7 @@
   "benchmarks": {
     "childId": "architect-benchmarks-7904dd65836c8ff4",
     "target": {
-      "artifactId": "architect-program-benchmarks",
+      "artifactId": "architect-benchmarks-7904dd65836c8ff4",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

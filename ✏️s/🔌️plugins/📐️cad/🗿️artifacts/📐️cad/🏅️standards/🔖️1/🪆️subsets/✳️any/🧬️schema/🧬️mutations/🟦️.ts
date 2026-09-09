@@ -123,11 +123,6 @@ export interface ReplaceReferences {
   references: CadReference[];
 }
 
-/** 🎯️ `change-active-model-definition` payload — changes the document-level active-pane selector. */
-export interface ChangeActiveModelDefinition {
-  newModelDefinitionId: string;
-}
-
 export type CadMutation =
   | ({ mutation: "createShapeModel" } & CreateShapeModel)
   | ({ mutation: "deleteShapeModel" } & DeleteShapeModel)
@@ -147,5 +142,4 @@ export type CadMutation =
   | ({ mutation: "changeReferenceWidth" } & ChangeReferenceWidth)
   | ({ mutation: "moveReference" } & MoveReference)
   | ({ mutation: "replaceReferenceMedia" } & ReplaceReferenceMedia)
-  | ({ mutation: "replaceReferences" } & ReplaceReferences)
-  | ({ mutation: "changeActiveModelDefinition" } & ChangeActiveModelDefinition);
+  | ({ mutation: "replaceReferences" } & ReplaceReferences);

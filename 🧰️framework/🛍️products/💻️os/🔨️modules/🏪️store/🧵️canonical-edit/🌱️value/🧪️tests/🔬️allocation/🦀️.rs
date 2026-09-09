@@ -16,7 +16,10 @@ fn shared_value_canonical_json_rejects_overcapacity_before_admitting_key_storage
         });
         assert_eq!(called, requested * size_of::<Option<KeySlot>>() <= budget);
         assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap());
-        if let Ok(value) = result { assert!(value.is_empty()); assert!(value.capacity() * size_of::<Option<KeySlot>>() <= budget); }
+        if let Ok(value) = result {
+            assert!(value.is_empty());
+            assert!(value.capacity() * size_of::<Option<KeySlot>>() <= budget);
+        }
     }
     println!("[DEBUG] canonical key admission rejects injected allocator overcapacity before retaining a numeric table");
 }

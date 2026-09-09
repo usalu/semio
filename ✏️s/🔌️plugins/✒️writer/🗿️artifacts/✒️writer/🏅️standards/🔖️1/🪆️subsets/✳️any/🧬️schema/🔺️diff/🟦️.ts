@@ -13,6 +13,6 @@ export interface WriterDiff {
   languageId: string | null;
   /** @state artifact */
   uri: string | null;
-  /** @state artifact */
+  /** @state artifact @child kind=s.stdio.semio */
   document: ArtifactChild | null;
 }

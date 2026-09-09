@@ -1,4 +1,3 @@
-
 #[path = "../../🚚️change-accidental-mass-t/🧪️tests/🚚️lightens-impact-vehicle-to-12-5-t/🦀️.rs"]
 mod tests_change_accidental_mass_t_lightens_impact_vehicle_to_12_5_t;
 #[path = "../../🚗️change-accidental-speed-km-h/🧪️tests/🚗️lowers-impact-speed-to-50-km-h/🦀️.rs"]
@@ -25,7 +24,7 @@ mod tests_change_cd_lowers_dynamic_factor_cd_to_0_875;
 mod tests_change_construction_activity_switches_construction_activity_to_concreting;
 #[path = "../../🏗️change-crane-class/🧪️tests/🏗️upgrades-crane-to-class-hc3/🦀️.rs"]
 mod tests_change_crane_class_upgrades_crane_to_class_hc3;
-#[path = "../../🔎️change-cs/🔎️raises-size-factor-cs-to-1-125/🦀️.rs"]
+#[path = "../../🔎️change-cs/🧪️tests/🔎️raises-size-factor-cs-to-1-125/🦀️.rs"]
 mod tests_change_cs_raises_size_factor_cs_to_1_125;
 #[path = "../../🌡️change-delta-tk/🧪️tests/🌡️raises-thermal-delta-tk-to-45-k/🦀️.rs"]
 mod tests_change_delta_tk_raises_thermal_delta_tk_to_45_k;
@@ -49,7 +48,7 @@ mod tests_change_self_weight_material_switches_self_weight_material_to_structura
 mod tests_change_self_weight_thickness_m_thickens_self_weight_layer_to_0_375_m;
 #[path = "../../🌾️change-silo-bulk-density-kn-m3/🧪️tests/🌾️raises-silo-bulk-density-to-10-5-kn-m3/🦀️.rs"]
 mod tests_change_silo_bulk_density_kn_m3_raises_silo_bulk_density_to_10_5_kn_m3;
-#[path = "../../🗼️change-silo-height-m/🗼️raises-silo-to-18-m/🦀️.rs"]
+#[path = "../../🗼️change-silo-height-m/🧪️tests/🗼️raises-silo-to-18-m/🦀️.rs"]
 mod tests_change_silo_height_m_raises_silo_to_18_m;
 #[path = "../../⭕️change-silo-hydraulic-radius-m/🧪️tests/⭕️widens-silo-hydraulic-radius-to-2-25-m/🦀️.rs"]
 mod tests_change_silo_hydraulic_radius_m_widens_silo_hydraulic_radius_to_2_25_m;

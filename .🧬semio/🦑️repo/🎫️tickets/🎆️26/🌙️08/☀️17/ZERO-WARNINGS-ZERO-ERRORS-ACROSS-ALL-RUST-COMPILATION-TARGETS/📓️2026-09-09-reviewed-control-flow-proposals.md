@@ -1,0 +1,79 @@
+# Reviewed Control Flow Proposals
+
+Read-only selection of compiler-suggested expression substitutions from wasm1044. Each source line was checked against the diagnostic before recording the proposal; duplicate shared-source diagnostics are coalesced. No files were changed in this inventory.
+
+- clippy::single_match ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs:789
+  - Before: match self.stack.last_mut() {                 Some(                     Generation2dMountedContainerOwner::Synapses { field, present, next, .. } | Generation2dMountedContainerOwner::Generations { field, present, next, .. } | Generation2dMountedContainerOwner::Dictionary { field, present, next, .. },                 ) => {                     *field = Some(u16::try_from(value).map_err(|_| "generation2d-mounted.table-field")?);                     present.fill(false);                     *next = 0;                 }                 _ => {}             }
+  - After: if let Some(                     Generation2dMountedContainerOwner::Synapses { field, present, next, .. } | Generation2dMountedContainerOwner::Generations { field, present, next, .. } | Generation2dMountedContainerOwner::Dictionary { field, present, next, .. },                 ) = self.stack.last_mut() {                 *field = Some(u16::try_from(value).map_err(|_| "generation2d-mounted.table-field")?);                 present.fill(false);                 *next = 0;             }
+- clippy::single_match ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs:877
+  - Before: match self.stack.last_mut() {                 Some(Generation2dMountedContainerOwner::Synapses { present, .. } | Generation2dMountedContainerOwner::Generations { present, .. } | Generation2dMountedContainerOwner::Dictionary { present, .. }) => {                     for bit in 0..8 {                         let row = first_row as usize + bit;                         if row < present.len() {                             present[row] = value & (1 << bit) != 0;                         }                     }                 }                 _ => {}             }
+  - After: if let Some(Generation2dMountedContainerOwner::Synapses { present, .. } | Generation2dMountedContainerOwner::Generations { present, .. } | Generation2dMountedContainerOwner::Dictionary { present, .. }) = self.stack.last_mut() {                 for bit in 0..8 {                     let row = first_row as usize + bit;                     if row < present.len() {                         present[row] = value & (1 << bit) != 0;                     }                 }             }
+- clippy::single_match ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs:1393
+  - Before: match self.stack.last_mut() {                 Some(Generation2dMutationFrame::Dictionary { field, present, next, .. }) => {                     *field = Some(u16::try_from(value).map_err(|_| "generation2d-mutation.dictionary-field")?);                     present.fill(false);                     *next = 0;                 }                 _ => {}             }
+  - After: if let Some(Generation2dMutationFrame::Dictionary { field, present, next, .. }) = self.stack.last_mut() {                 *field = Some(u16::try_from(value).map_err(|_| "generation2d-mutation.dictionary-field")?);                 present.fill(false);                 *next = 0;             }
+- clippy::single_match ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs:1519
+  - Before: match self.stack.last_mut() {                 Some(Generation2dMutationFrame::Dictionary { present, .. }) => {                     for bit in 0..8 {                         let row = first_row as usize + bit;                         if row < present.len() {                             present[row] = value & (1 << bit) != 0;                         }                     }                 }                 _ => {}             }
+  - After: if let Some(Generation2dMutationFrame::Dictionary { present, .. }) = self.stack.last_mut() {                 for bit in 0..8 {                     let row = first_row as usize + bit;                     if row < present.len() {                         present[row] = value & (1 << bit) != 0;                     }                 }             }
+- clippy::manual_range_contains ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs:1694
+  - Before: expected_bytes < 3 || expected_bytes > GENERATION2D_OWNER_BYTES
+  - After: !(3..=GENERATION2D_OWNER_BYTES).contains(&expected_bytes)
+- clippy::single_match ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs:802
+  - Before: match self.stack.last_mut() {                 Some(                     Generation3dMountedContainerOwner::Synapses { field, present, next, .. } | Generation3dMountedContainerOwner::Generations { field, present, next, .. } | Generation3dMountedContainerOwner::Dictionary { field, present, next, .. },                 ) => {                     *field = Some(u16::try_from(value).map_err(|_| "generation3d-mounted.table-field")?);                     present.fill(false);                     *next = 0;                 }                 _ => {}             }
+  - After: if let Some(                     Generation3dMountedContainerOwner::Synapses { field, present, next, .. } | Generation3dMountedContainerOwner::Generations { field, present, next, .. } | Generation3dMountedContainerOwner::Dictionary { field, present, next, .. },                 ) = self.stack.last_mut() {                 *field = Some(u16::try_from(value).map_err(|_| "generation3d-mounted.table-field")?);                 present.fill(false);                 *next = 0;             }
+- clippy::single_match ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs:890
+  - Before: match self.stack.last_mut() {                 Some(Generation3dMountedContainerOwner::Synapses { present, .. } | Generation3dMountedContainerOwner::Generations { present, .. } | Generation3dMountedContainerOwner::Dictionary { present, .. }) => {                     for bit in 0..8 {                         let row = first_row as usize + bit;                         if row < present.len() {                             present[row] = value & (1 << bit) != 0;                         }                     }                 }                 _ => {}             }
+  - After: if let Some(Generation3dMountedContainerOwner::Synapses { present, .. } | Generation3dMountedContainerOwner::Generations { present, .. } | Generation3dMountedContainerOwner::Dictionary { present, .. }) = self.stack.last_mut() {                 for bit in 0..8 {                     let row = first_row as usize + bit;                     if row < present.len() {                         present[row] = value & (1 << bit) != 0;                     }                 }             }
+- clippy::single_match ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs:1399
+  - Before: match self.stack.last_mut() {                 Some(Generation3dMutationFrame::Dictionary { field, present, next, .. }) => {                     *field = Some(u16::try_from(value).map_err(|_| "generation3d-mutation.dictionary-field")?);                     present.fill(false);                     *next = 0;                 }                 _ => {}             }
+  - After: if let Some(Generation3dMutationFrame::Dictionary { field, present, next, .. }) = self.stack.last_mut() {                 *field = Some(u16::try_from(value).map_err(|_| "generation3d-mutation.dictionary-field")?);                 present.fill(false);                 *next = 0;             }
+- clippy::single_match ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs:1525
+  - Before: match self.stack.last_mut() {                 Some(Generation3dMutationFrame::Dictionary { present, .. }) => {                     for bit in 0..8 {                         let row = first_row as usize + bit;                         if row < present.len() {                             present[row] = value & (1 << bit) != 0;                         }                     }                 }                 _ => {}             }
+  - After: if let Some(Generation3dMutationFrame::Dictionary { present, .. }) = self.stack.last_mut() {                 for bit in 0..8 {                     let row = first_row as usize + bit;                     if row < present.len() {                         present[row] = value & (1 << bit) != 0;                     }                 }             }
+- clippy::manual_range_contains ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs:1699
+  - Before: expected_bytes < 3 || expected_bytes > GENERATION3D_OWNER_BYTES
+  - After: !(3..=GENERATION3D_OWNER_BYTES).contains(&expected_bytes)
+- clippy::redundant_clone ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:140
+  - Before: .to_string()
+  - After: 
+- clippy::redundant_clone ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:149
+  - Before: .to_string()
+  - After: 
+- clippy::redundant_clone ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:157
+  - Before: .to_string()
+  - After: 
+- clippy::redundant_clone ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:165
+  - Before: .to_string()
+  - After: 
+- clippy::redundant_clone ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:173
+  - Before: .to_string()
+  - After: 
+- clippy::redundant_clone ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:181
+  - Before: .to_string()
+  - After: 
+- clippy::redundant_clone ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌳️steps/🦀️.rs:45
+  - Before: .clone()
+  - After: 
+- clippy::unnecessary_lazy_evaluations ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:211
+  - Before: then(|| QuestionKindRoute { app_id: payload.app_id, params_body_key: payload.params_body_key, preview_body_key: payload.preview_body_key })
+  - After: then_some(QuestionKindRoute { app_id: payload.app_id, params_body_key: payload.params_body_key, preview_body_key: payload.preview_body_key })
+- clippy::obfuscated_if_else ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🦀️.rs:1354
+  - Before: current_content_id                     .is_none()                     .then(|| {                         let fallback = match &rewrite {                             TryValueRewrite::Vector(_) => "null",                             TryValueRewrite::Container(ContainerRewrite { edit: ContainerEdit::Option { .. }, .. }) => "[]",                             TryValueRewrite::Container(ContainerRewrite { edit: ContainerEdit::Object { .. }, .. }) => "{}",                         };                         ChunkedSource::from_text(fallback.into())                     })                     .unwrap_or_default()
+  - After: if current_content_id                     .is_none() { {                         let fallback = match &rewrite {                             TryValueRewrite::Vector(_) => "null",                             TryValueRewrite::Container(ContainerRewrite { edit: ContainerEdit::Option { .. }, .. }) => "[]",                             TryValueRewrite::Container(ContainerRewrite { edit: ContainerEdit::Object { .. }, .. }) => "{}",                         };                         ChunkedSource::from_text(fallback.into())                     } } else { Default::default() }
+- clippy::manual_range_patterns ✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs:236
+  - Before: 0 | 1 | 2
+  - After: 0..=2
+- clippy::manual_range_patterns ✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs:240
+  - Before: 0 | 1 | 2
+  - After: 0..=2
+- clippy::manual_range_patterns ✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs:259
+  - Before: 0 | 1 | 2
+  - After: 0..=2
+- clippy::redundant_clone ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️.rs:492
+  - Before: .clone()
+  - After: 
+- clippy::redundant_clone ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️.rs:511
+  - Before: .clone()
+  - After: 
+- clippy::redundant_clone ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️.rs:569
+  - Before: .clone()
+  - After: 

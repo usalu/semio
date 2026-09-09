@@ -38,7 +38,7 @@ impl store::ConfigRecord for TestConfig {}
 //#endregion 🧫️Snapshot
 
 //#region 🧬️Mutations
-#[path = "../../🧫️fixtures/🖥️test-app-mutations/🎚️config/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testkit/🖥️test-app-mutations/🎚️config/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{ChangeTestConfigSelection, TestConfigMutation};
 //#endregion 🧬️Mutations

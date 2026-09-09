@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/composition/closure/vectors.json",
+  "title": "Owned Document Closure Input Projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "root",
+    "members"
+  ],
+  "properties": {
+    "root": {
+      "$ref": "#/$defs/Root"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Member"
+      }
+    }
+  },
+  "$defs": {
+    "Child": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "childId",
+        "target"
+      ],
+      "properties": {
+        "slot": {
+          "type": "string"
+        },
+        "childId": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "Owner": {
+      "$ref": "https://semio.tech/schema/os/store/child/owner.json"
+    },
+    "Root": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "children"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactRef"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Child"
+          }
+        }
+      }
+    },
+    "Member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "children",
+        "owner"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactRef"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Child"
+          }
+        },
+        "owner": {
+          "$ref": "#/$defs/Owner"
+        }
+      }
+    }
+  }
+}

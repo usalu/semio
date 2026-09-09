@@ -16,5 +16,5 @@ pub fn diff(payload: &UpdateSynapse, base: &Generation3dSnapshot) -> protocol::M
     if base.fixture.synapses[index] == payload.synapse {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", format!("Synapse \"{id}\" is already in the requested state."));
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff::default(), SynapsesDiff { removed: vec![], set: vec![(0, payload.synapse.clone())] }, LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(0, payload.synapse.clone())] }, &LayoutDiff::default(), None, None))
 }

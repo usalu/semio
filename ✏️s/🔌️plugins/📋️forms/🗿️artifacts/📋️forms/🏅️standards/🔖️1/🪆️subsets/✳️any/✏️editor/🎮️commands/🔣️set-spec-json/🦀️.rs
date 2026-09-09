@@ -42,7 +42,7 @@ pub fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>, _cfg
     let Ok(spec) = dsl::os_pack::json::from_json_str::<semio_framework_artifact_playbook_playbook::PlaybookSpec>(&payload.json) else {
         return Ok(Emit::default());
     };
-    let next = crate::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps);
+    let next = crate::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, &spec.steps);
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer clears a config-owned
     // selection here — swapping in a whole new document prunes every stale "fields" selection id
     // automatically via `revalidate_interaction_state_after_document_change`.

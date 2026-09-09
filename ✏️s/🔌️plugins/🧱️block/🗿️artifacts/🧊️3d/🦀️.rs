@@ -146,14 +146,14 @@ pub fn vortex_kinds_of(snapshot: &Block3dSnapshot) -> Vec<Block3dVortexKind> {
 /// kinds catalogue: mints a fresh content-addressed `catalog` handle, seeds the working-scene cache,
 /// and writes the overflow half — given the composed child handle and overflow list directly (works
 /// for both `Block3dSnapshot` and `Block3dArtifact`).
-pub fn set_vortex_kinds_parts(catalog: &mut store::ArtifactChild<SemioKitSnapshot>, extra: &mut Vec<Block3dVortexKindExtra>, kinds: Vec<Block3dVortexKind>) {
-    let handle = catalog_child_handle(&kinds);
+pub fn set_vortex_kinds_parts(catalog: &mut store::ArtifactChild<SemioKitSnapshot>, extra: &mut Vec<Block3dVortexKindExtra>, kinds: &[Block3dVortexKind]) {
+    let handle = catalog_child_handle(kinds);
     *catalog = handle;
-    *extra = vortex_kind_extra_list_from_vortex_kinds(&kinds);
+    *extra = vortex_kind_extra_list_from_vortex_kinds(kinds);
 }
 
 /// ✍️ `set_vortex_kinds_parts` specialized to `Block3dSnapshot`.
-pub fn set_vortex_kinds(snapshot: &mut Block3dSnapshot, kinds: Vec<Block3dVortexKind>) {
+pub fn set_vortex_kinds(snapshot: &mut Block3dSnapshot, kinds: &[Block3dVortexKind]) {
     set_vortex_kinds_parts(&mut snapshot.catalog, &mut snapshot.vortex_kind_extra, kinds);
 }
 

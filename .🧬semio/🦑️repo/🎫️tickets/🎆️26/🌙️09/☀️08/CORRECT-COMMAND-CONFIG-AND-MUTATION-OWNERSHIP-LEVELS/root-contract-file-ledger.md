@@ -1,5 +1,13 @@
 # Root Contract File Ledger
 
+## Terrain And Current Integration
+
+Terrain twelve non-Rust document facets, artifact/snapshot native metadata and conversion, native diff application, new neutral document fixture and TypeScript/native tests are recorded in terrain-document-contract-ownership.md. Five exact fixture targets are listed in terrain-fixture-file-ledger.md. Root and ticket script/project routes plus both launch registries include Terrain contract commands.
+
+Block3D editor runtime test now expects one atomic artifact result batch and checks actual cleared previews in both windows. Three tests passed before that expectation correction; the latest native rerun is pending.
+
+Root Flow validation now imports its domain oracle and invokes the common Cargo helper directly; the permanent workspace command no longer depends on this ticket's script. The ticket wrapper retains this run's Cargo output location.
+
 This ledger records shared map, canonical field discovery, Rewriting, Forms and Playbook contract work. Earlier OS/window/Wires changes remain recorded in their existing ticket reports and artifact-contract-changes.md; agent-owned family files remain in their handoffs. It is a reviewable path ledger, not generated command output.
 
 - `.vscode/launch.json`
@@ -243,3 +251,84 @@ The Store root reexports relocated link/blob native definitions. Root `📜️sc
 - Ticket reports `dag-demo-owner.md` and `document-window-replacement-lifecycle.md`.
 
 - `.vscode/🧩️launch.seed.jsonc`: registered the same four Norm, Note, Note native and DAG demo commands already present in launch.json so editor launch regeneration preserves them.
+
+## Procedure Document Facets And Verification
+
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔗️.graphql`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🛰️.proto`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🦀️.rs`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🪪️document-contract/🔣️.json`
+
+Command registration also updates root `📜️script.ts`, `📋️project.json`, `.vscode/launch.json`, `.vscode/🧩️launch.seed.jsonc`, and ticket validation `📜️script.ts`/`project.json`.
+
+## SDK Testkit Metadata
+
+All moved descriptor/schema files (created destination and removed source) are listed in `sdk-testkit-mutation-metadata-ownership.md`.
+
+## Procedure Native Diagnostic
+
+The full Procedure native run compiled and started 137 tests, then aborted on an existing addStep missing retained factory and non-terminal disposer Drop. See `procedure-document-contract-ownership.md`. The contract command now targets `procedure_document_contract`; complete editor command ownership and full-suite rerun remain outstanding.
+
+## Presentation and Shared Validation Continuation
+
+`presentation-document-contract-ownership.md` lists the twelve facet updates, native parent metadata/identity corrections, eighteen fixture updates and added tests. Oracle and strict TypeScript passed; native remains pending. Root/project/ticket script routes and both launch registries now include presentation-document-contract and its native form; Procedure launch entries now include existing test grouping/order. Four typed-command fixture literals in plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs explicitly initialize the new terminal_fault field to None to restore native compilation. No runtime claim for that fixture change yet.
+
+The SDK window lifecycle tests now consume the final explicit WindowTransientOwnerBundle interface via the new `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️testkit/📢️scalar-publication/🦀️.rs` fixture module mounted in plugin/🦀️.rs. Both existing window lifecycle test files were updated; production generic transient factories remain assigned to the Wires agent.
+
+## Shared Ephemeral Preparation And Consumer Migration
+
+- Store `🦀️.rs`: mounts and exports the generic task lifecycle and ownership-only transfer factory.
+- Store `🫧️ephemeral/📢️publication/🧩️preparation/🦀️.rs`: new shared retained construction lifecycle.
+- Store `🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs`, `🧫️fixtures/🔣️.json`, `🧪️tests/🔬️unit/🦀️.rs`: transfer factory, neutral grant/cancellation fixture, three ownership tests.
+- Block3D world-window `🫧️transient/🦀️.rs` and its `🧪️tests/🔬️unit/🦀️.rs`: typed retirement, shared transfer factory and tiny-grant runtime test.
+- Root `📜️script.ts`, `📋️project.json`, both launch registries, and ticket validation project/script: permanent transfer and Block3D preview native commands.
+- Ticket `ephemeral-transfer-preparation-ownership.md`: design and validation status.
+
+SDK native attempt 5 failed only on two newly added transient-retirement fixture matches missing AwaitingInput; Wires agent corrected both. A runtime pass has not yet been observed. The child-slot audit in `child-slot-kind-and-identity-fixture-audit.md` found 32 disagreeing child fields among 43 fields with fixture roots; fixes remain open. A parity run initially hit a missing Flow facet during its migration; a fresh run is pending now that the twelve facets exist.
+
+## Writer Construction And Reload Capacity
+
+Writer main-window transient `🦀️.rs` now mounts `📢️publication/🦀️.rs` and the new `🧪️tests/🧩️partial-construction/🦀️.rs`, backed by `🧫️fixtures/🧩️partial-construction/🔣️.json`. The task moves replacement input directly, incrementally copies preserved UTF-8, and retires partial buffers under the grant. Root script/project and both launch registries now permanently register Writer oracle/native commands.
+
+Store `🦀️.rs` preserves history owner capacity through set_state and applied/redo replacements; revision accumulator creation preallocates its two fixed catalogs. The existing Store unit test module adds the empty-reset→batch regression from `🧫️fixtures/🔁️reset-publication/🔣️.json`. See `store-reload-publication-capacity.md`.
+
+The refreshed artifact field parity report completed successfully and reports 16 remaining disagreements, all in GIS Terrain, GIS Map, Architect Program, Layout and CAD. Presentation, Procedure and Flow no longer appear in this field-set report. Runtime validation and semantic child ownership remain distinct open checks.
+
+Writer adds `🫧️transient/🧪️tests/🧩️partial-construction/🟦️.ts` and invokes it from the existing main-window config `🧪️tests/🔬️window-state-ownership/🟦️.ts`. The registered Writer oracle passed, including new large-Unicode vectors. Store reload publication is registered in root `📜️script.ts`, `📋️project.json`, both launch registries and ticket validation project. Native result remains pending.
+
+The Store publication lifecycle now owns task-error→fault→close transitions in one shared `advance_preparation` method used by presence and transient stores. Store unit tests and `🧫️fixtures/🫧️preparation-fault/🔣️.json` cover domain errors and invalid receipts on both lanes. This is included in the registered ephemeral-transfer native command.
+
+Presentation native contract validation passed: one targeted native test plus oracle/strict TS, with runtime debug evidence. Its full child persistence remains open. Store ephemeral native attempt 1 failed in SPR testkit MutationLeaf metadata source authority before running tests; the missing descriptor/schema locations require the same ownership correction as the earlier SDK testkit move.
+
+The SDK scalar publication testkit now uses the same production transfer lifecycle and field retirement as app consumers. Its duplicated request/result/cancel/close and whole-scalar-grant disposal code were removed, retaining exact scalar size/no-Drop assertions. Existing window/document replacement laws exercise the shared factory directly. Native SDK attempt 6 remains pending.
+
+## GIS Parent Contracts
+
+Terrain files and fixture corrections are listed in terrain-document-contract-ownership.md and terrain-fixture-file-ledger.md. Map files are listed in map-document-contract-ownership.md. Both independent oracles and strict TypeScript passed before the shared-record follow-up; their native law runs remain queued. Shared record boundary files and consumers are listed in shared-schema-record-ownership.md.
+
+## Recursive Owned-Document Closure
+
+Exact new cursor, shared owner schema and registration files are listed in recursive-document-closure-ownership.md. SDK app-typed-command-full-operation test now includes the canonical Store fixture directory. Writer window-state ownership fixture closes boxed app values through as_mut(). Their native reruns are queued; prior failures occurred before runtime assertions.
+
+
+## Shared Inspector and Terrain Identity Follow-up
+
+The shared inspector's three changed files and red/green/integrated evidence are recorded in schema-parity-alias-ownership.md. The integrated report now lists seven Layout discrepancies, with alias/inheritance and GraphQL metadata false positives removed.
+
+Terrain's parent-edit preservation changes, removed snapshot-remint helper, exact fixture decoding and expanded Rust/Python comparison are listed with exact paths in terrain-document-contract-ownership.md. First-party TypeScript diff application agrees with independent JSON Patch; native proof is pending. Shared closure count-fence vectors and native/TS tests are recorded in recursive-document-closure-ownership.md.
+
+Stdio geometry/Object source and fixture ownership: [stdio-object-kit-ownership.md](stdio-object-kit-ownership.md), [stdio-object-fixture-ledger.md](stdio-object-fixture-ledger.md). Shared OwnerRef admission correction and native retry: [recursive-document-closure-ownership.md](recursive-document-closure-ownership.md).

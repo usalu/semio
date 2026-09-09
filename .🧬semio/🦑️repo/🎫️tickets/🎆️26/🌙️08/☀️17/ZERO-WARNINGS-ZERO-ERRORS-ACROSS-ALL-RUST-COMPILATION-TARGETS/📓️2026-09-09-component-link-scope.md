@@ -1,0 +1,65 @@
+# Component Link Scope
+
+Verified all 59 registry roots (33 plugins and 26 extensions) declare cdylib and name their expected WebAssembly output from the current Cargo package identity. The prepared component link check uses the development path: wasm32-wasip2, wasm-dev, and the same 8 MiB stack argument as the OS development builder. Root Cargo keeps native development debug information disabled and uses one codegen unit for WASI; package-specific lowpoly and puzzle3d optimization overrides remain inherited.
+
+The OS BuildScript switches to ship mode and may select wasm-release; the prepared development-link receipt does not claim release-profile verification.
+
+- semio-s-plugin-animate: {"name":"semio-s-plugin-animate","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_animate.wasm","defaultFeatures":[]}
+- semio-s-plugin-architect: {"name":"semio-s-plugin-architect","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_architect.wasm","defaultFeatures":[]}
+- semio-s-plugin-block: {"name":"semio-s-plugin-block","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_block.wasm","defaultFeatures":["plugin-entry"]}
+- semio-s-plugin-cad: {"name":"semio-s-plugin-cad","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_cad.wasm","defaultFeatures":["plugin-entry"]}
+- semio-s-plugin-dag: {"name":"semio-s-plugin-dag","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_dag.wasm","defaultFeatures":[]}
+- semio-s-plugin-demonstrator: {"name":"semio-s-plugin-demonstrator","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_demonstrator.wasm","defaultFeatures":[]}
+- semio-s-plugin-draw: {"name":"semio-s-plugin-draw","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_draw.wasm","defaultFeatures":[]}
+- semio-s-plugin-energy: {"name":"semio-s-plugin-energy","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_energy.wasm","defaultFeatures":[]}
+- semio-s-plugin-fem: {"name":"semio-s-plugin-fem","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_fem.wasm","defaultFeatures":["plugin-entry"]}
+- semio-s-plugin-flow: {"name":"semio-s-plugin-flow","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_flow.wasm","defaultFeatures":[]}
+- semio-s-plugin-forms: {"name":"semio-s-plugin-forms","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_forms.wasm","defaultFeatures":[]}
+- semio-s-plugin-gis: {"name":"semio-s-plugin-gis","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_gis.wasm","defaultFeatures":["plugin-entry"]}
+- semio-s-plugin-imperative: {"name":"semio-s-plugin-imperative","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_imperative.wasm","defaultFeatures":[]}
+- semio-s-plugin-layout: {"name":"semio-s-plugin-layout","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_layout.wasm","defaultFeatures":[]}
+- semio-s-plugin-lowpoly: {"name":"semio-s-plugin-lowpoly","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_lowpoly.wasm","defaultFeatures":[]}
+- semio-s-plugin-mathematical: {"name":"semio-s-plugin-mathematical","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_mathematical.wasm","defaultFeatures":[]}
+- semio-s-plugin-norm: {"name":"semio-s-plugin-norm","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_norm.wasm","defaultFeatures":[]}
+- semio-s-plugin-note: {"name":"semio-s-plugin-note","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_note.wasm","defaultFeatures":[]}
+- semio-s-plugin-playbook: {"name":"semio-s-plugin-playbook","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_playbook.wasm","defaultFeatures":[]}
+- semio-s-plugin-procedural: {"name":"semio-s-plugin-procedural","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_procedural.wasm","defaultFeatures":["plugin-entry"]}
+- semio-s-plugin-process: {"name":"semio-s-plugin-process","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_process.wasm","defaultFeatures":["plugin-entry"]}
+- semio-s-plugin-puzzle: {"name":"semio-s-plugin-puzzle","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_puzzle.wasm","defaultFeatures":["plugin-entry"]}
+- semio-s-plugin-raster: {"name":"semio-s-plugin-raster","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_raster.wasm","defaultFeatures":[]}
+- semio-s-plugin-reasoning-mindmap: {"name":"semio-s-plugin-reasoning-mindmap","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_reasoning_mindmap.wasm","defaultFeatures":[]}
+- semio-s-plugin-remodel: {"name":"semio-s-plugin-remodel","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_remodel.wasm","defaultFeatures":[]}
+- semio-s-plugin-sequence: {"name":"semio-s-plugin-sequence","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_sequence.wasm","defaultFeatures":[]}
+- semio-s-plugin-shooting: {"name":"semio-s-plugin-shooting","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_shooting.wasm","defaultFeatures":[]}
+- semio-s-plugin-sourcing: {"name":"semio-s-plugin-sourcing","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_sourcing.wasm","defaultFeatures":["plugin-entry"]}
+- semio-s-plugin-space: {"name":"semio-s-plugin-space","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_space.wasm","defaultFeatures":["plugin-entry"]}
+- semio-s-plugin-stdio: {"name":"semio-s-plugin-stdio","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_stdio.wasm","defaultFeatures":["plugin-root"]}
+- semio-s-plugin-trinity: {"name":"semio-s-plugin-trinity","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_trinity.wasm","defaultFeatures":["plugin-entry"]}
+- semio-s-plugin-vcs: {"name":"semio-s-plugin-vcs","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_vcs.wasm","defaultFeatures":[]}
+- semio-s-plugin-writer: {"name":"semio-s-plugin-writer","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_writer.wasm","defaultFeatures":[]}
+- semio-s-plugin-cad-aec-building: {"name":"semio-s-plugin-cad-aec-building","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_cad_aec_building.wasm","defaultFeatures":[]}
+- semio-s-plugin-cad-aec-building-energy: {"name":"semio-s-plugin-cad-aec-building-energy","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_cad_aec_building_energy.wasm","defaultFeatures":[]}
+- semio-s-plugin-cad-aec-building-structure: {"name":"semio-s-plugin-cad-aec-building-structure","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_cad_aec_building_structure.wasm","defaultFeatures":[]}
+- semio-s-plugin-cad-spatial-shape: {"name":"semio-s-plugin-cad-spatial-shape","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_cad_spatial_shape.wasm","defaultFeatures":[]}
+- semio-s-plugin-flow-extension-bim: {"name":"semio-s-plugin-flow-extension-bim","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_flow_extension_bim.wasm","defaultFeatures":["component-guest"]}
+- semio-s-plugin-flow-extension-brep: {"name":"semio-s-plugin-flow-extension-brep","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_flow_extension_brep.wasm","defaultFeatures":["component-guest"]}
+- semio-s-plugin-flow-extension-dictionary: {"name":"semio-s-plugin-flow-extension-dictionary","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_flow_extension_dictionary.wasm","defaultFeatures":["component-guest"]}
+- semio-s-plugin-flow-extension-draw: {"name":"semio-s-plugin-flow-extension-draw","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_flow_extension_draw.wasm","defaultFeatures":["component-guest"]}
+- semio-s-plugin-flow-extension-list: {"name":"semio-s-plugin-flow-extension-list","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_flow_extension_list.wasm","defaultFeatures":["component-guest"]}
+- semio-s-plugin-flow-extension-logic: {"name":"semio-s-plugin-flow-extension-logic","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_flow_extension_logic.wasm","defaultFeatures":["component-guest"]}
+- semio-s-plugin-flow-extension-math: {"name":"semio-s-plugin-flow-extension-math","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_flow_extension_math.wasm","defaultFeatures":["component-guest"]}
+- semio-s-plugin-flow-extension-primitive: {"name":"semio-s-plugin-flow-extension-primitive","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_flow_extension_primitive.wasm","defaultFeatures":["component-guest"]}
+- semio-s-plugin-flow-extension-text: {"name":"semio-s-plugin-flow-extension-text","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_flow_extension_text.wasm","defaultFeatures":["component-guest"]}
+- semio-s-plugin-imperative-control: {"name":"semio-s-plugin-imperative-control","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_imperative_control.wasm","defaultFeatures":["extension-entry"]}
+- semio-s-plugin-imperative-effect: {"name":"semio-s-plugin-imperative-effect","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_imperative_effect.wasm","defaultFeatures":["extension-entry"]}
+- semio-s-plugin-imperative-logic: {"name":"semio-s-plugin-imperative-logic","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_imperative_logic.wasm","defaultFeatures":["extension-entry"]}
+- semio-s-plugin-imperative-math: {"name":"semio-s-plugin-imperative-math","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_imperative_math.wasm","defaultFeatures":["extension-entry"]}
+- semio-s-plugin-imperative-text: {"name":"semio-s-plugin-imperative-text","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_imperative_text.wasm","defaultFeatures":["extension-entry"]}
+- semio-s-plugin-playbook-procedural: {"name":"semio-s-plugin-playbook-procedural","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_playbook_procedural.wasm","defaultFeatures":[]}
+- semio-s-plugin-process-concrete: {"name":"semio-s-plugin-process-concrete","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_process_concrete.wasm","defaultFeatures":[]}
+- semio-s-plugin-process-metal: {"name":"semio-s-plugin-process-metal","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_process_metal.wasm","defaultFeatures":[]}
+- semio-s-plugin-process-robotic: {"name":"semio-s-plugin-process-robotic","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_process_robotic.wasm","defaultFeatures":[]}
+- semio-s-plugin-process-wood: {"name":"semio-s-plugin-process-wood","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_process_wood.wasm","defaultFeatures":[]}
+- semio-s-plugin-sourcing-beams: {"name":"semio-s-plugin-sourcing-beams","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_sourcing_beams.wasm","defaultFeatures":[]}
+- semio-s-plugin-sourcing-slabs: {"name":"semio-s-plugin-sourcing-slabs","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_sourcing_slabs.wasm","defaultFeatures":[]}
+- semio-s-plugin-sourcing-windows: {"name":"semio-s-plugin-sourcing-windows","crateTypes":["cdylib","rlib"],"wasmOut":"semio_s_plugin_sourcing_windows.wasm","defaultFeatures":[]}

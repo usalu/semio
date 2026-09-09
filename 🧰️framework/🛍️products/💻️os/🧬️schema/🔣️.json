@@ -1049,12 +1049,25 @@
             "authorityFence": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["cases", "openingCode", "blockedOpeningCode", "successorRoutes"],
+              "required": ["cases", "openingCode", "blockedOpeningCode", "successorRoutes", "physicalReopen"],
               "properties": {
                 "cases": { "const": ["absent-authority-refused", "sealed-request-proof-replacement"] },
                 "openingCode": { "const": "inference.denied" },
                 "blockedOpeningCode": { "const": "inference.capacity" },
-                "successorRoutes": { "const": [] }
+                "successorRoutes": { "const": [] },
+                "physicalReopen": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["oldClosed", "absentBeforeReopen", "differentOwner", "differentClient", "openingOutcome", "successorOwnsFreshClient"],
+                  "properties": {
+                    "oldClosed": { "const": true },
+                    "absentBeforeReopen": { "const": true },
+                    "differentOwner": { "const": true },
+                    "differentClient": { "const": true },
+                    "openingOutcome": { "const": "opened" },
+                    "successorOwnsFreshClient": { "const": true }
+                  }
+                }
               }
             },
             "successorProof": { "$ref": "#/$defs/GisMapInferencePortHex64" },

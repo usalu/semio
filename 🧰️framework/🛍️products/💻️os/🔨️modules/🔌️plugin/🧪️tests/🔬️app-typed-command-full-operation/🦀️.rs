@@ -247,7 +247,7 @@ mod typed_command_full_operation_tests {
     }
 
     pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
         let grant = store::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
         assert_eq!(grant.maximum_items, 1);
         assert_eq!(grant.maximum_bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
@@ -295,6 +295,7 @@ mod typed_command_full_operation_tests {
                 result_sequence: 0,
                 publication_attempt: 0,
                 ui_pending: true,
+                terminal_fault: None,
                 stage: MountedTypedCommandFullOperationStage::Publishing,
             };
             if boundary != "producer" {
@@ -447,7 +448,7 @@ mod typed_command_full_operation_tests {
     }
 
     pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
-        let fixture: Value = serde_json::from_str(include_str!("../../🥇️tool-latest-wins.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         for case in fixture["publicationCases"].as_array().unwrap() {
             for delayed_ack in [false, true] {
                 let boundary = case["cancelAt"].as_str().unwrap();
@@ -491,6 +492,7 @@ mod typed_command_full_operation_tests {
                     result_sequence: 0,
                     publication_attempt: 0,
                     ui_pending: true,
+                    terminal_fault: None,
                     stage: MountedTypedCommandFullOperationStage::Publishing,
                 };
                 if boundary != "producer" {
@@ -593,7 +595,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🥇️tool-latest-wins.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         let first = &fixture["first"];
         assert_eq!(first["target"].as_str().unwrap().len(), 8_192);
         for case in fixture["cases"].as_array().unwrap() {
@@ -710,7 +712,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn retained_latest_wins_contended_finish_is_deferred_and_cannot_release_replacement() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🔗️tool-latest-wins-integration.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let cancellations = ToolCancellationHandle::default();
         let key = ToolOperationKey {
             app_instance_id: 7,
@@ -739,7 +741,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn retained_latest_wins_rebase_rebinds_exact_registered_cancellation_authority() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🔗️tool-latest-wins-integration.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let cancellations = ToolCancellationHandle::default();
         let old = ToolOperationKey {
             app_instance_id: 7,
@@ -764,7 +766,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn retained_latest_wins_full_registry_reclaims_completed_targets_before_admission() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🔗️tool-latest-wins-integration.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let cancellations = ToolCancellationHandle::default();
         let mut registry = ToolLatestWinsRegistry::new();
         let count = fixture["reclamation"]["sequentialCompletedTargets"].as_u64().unwrap();
@@ -822,7 +824,7 @@ mod typed_command_full_operation_tests {
     }
 
     pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🔗️tool-latest-wins-integration.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let mut app = VcsArtifactApp::<A>::new(A::default()).await;
         let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
         let collision = fixture["slotReservation"]["collidingOperation"].as_u64().unwrap();
@@ -876,6 +878,7 @@ mod typed_command_full_operation_tests {
                     result_sequence: 0,
                     publication_attempt: 0,
                     ui_pending: false,
+                    terminal_fault: None,
                     stage: if id == 1 { MountedTypedCommandFullOperationStage::Worker } else { MountedTypedCommandFullOperationStage::Publishing },
                 },
             );
@@ -926,6 +929,7 @@ mod typed_command_full_operation_tests {
                     result_sequence: 0,
                     publication_attempt: 0,
                     ui_pending: false,
+                    terminal_fault: None,
                     stage: MountedTypedCommandFullOperationStage::AwaitingAck,
                 },
             );
@@ -1153,7 +1157,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn retained_child_wire_rejection_retires_nested_owners_under_the_production_grant() {
-        let fixture: Value = serde_json::from_str(include_str!("../../../🏪️store/📢️member-publication.json")).expect("retained child fixture");
+        let fixture: Value = serde_json::from_str(include_str!("../../../🏪️store/🧫️fixtures/📢️member-publication.json")).expect("retained child fixture");
         let row = &fixture["orderedMembers"][0];
         let mut wire = row["wire"].as_str().unwrap().as_bytes().to_vec();
         wire.resize(wire.len() + row["paddingBytes"].as_u64().unwrap() as usize, b' ');

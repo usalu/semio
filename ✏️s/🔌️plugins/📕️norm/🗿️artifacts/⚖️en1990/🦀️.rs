@@ -28,7 +28,7 @@ pub use crate::document_schema::snapshot::En1990QkEntry;
 //#region 🔖️Composition
 /// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2 (orchestrator-dispatched
 /// correction, `norm→C:table` on `en1990.q_k`): the inline `Vec<En1990QkEntry>` variable-action
-/// table is replaced by a fixed composed `s.stdio.semio.table` CHILD slot — `q_k` composes
+/// table is replaced by a fixed composed `s.stdio.semio`/`table` CHILD slot — `q_k` composes
 /// stdio's `table` subset instead of hand-rolling its own two-column shape. `#[child(...)]` drives
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Every one of the five
 /// existing `insert`/`remove`/`reorder`/`change-category`/`change-value` mutation triads keeps its
@@ -92,14 +92,15 @@ fn en1990_qk_scene_id(entries: &[En1990QkEntry]) -> String {
     format!("en1990-qk-{:016x}", hasher.finish())
 }
 
-fn en1990_qk_target() -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef { artifact_id: "en1990-qk".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
+fn en1990_qk_target(child_id: &str) -> store::os_io::ArtifactRef {
+    store::os_io::ArtifactRef { artifact_id: child_id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
 /// 🏗️ Mints the composed-child handle and transfers the entry list into that exact owner.
 pub fn en1990_qk_child_from_entries(entries: &[En1990QkEntry]) -> En1990QkChild {
     let scene_id = en1990_qk_scene_id(entries);
-    store::ArtifactChild::new(scene_id, en1990_qk_target()).with_local_owner(std::sync::Arc::new(En1990QkWorkingTable { entries: entries.to_vec() }))
+    let target = en1990_qk_target(&scene_id);
+    store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(En1990QkWorkingTable { entries: entries.to_vec() }))
 }
 
 /// 🔎 The live `q_k` entries behind a snapshot's composed child — the single read call site every

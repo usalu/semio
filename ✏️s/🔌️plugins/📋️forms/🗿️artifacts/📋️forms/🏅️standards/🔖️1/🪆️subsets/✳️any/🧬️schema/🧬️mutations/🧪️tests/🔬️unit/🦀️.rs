@@ -38,7 +38,7 @@ fn base_snapshot() -> FormsSnapshot {
 }
 
 fn base_snapshot_with_steps(steps: Vec<FormStep>) -> FormsSnapshot {
-    crate::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, steps)
+    crate::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, &steps)
 }
 
 fn steps_of(snapshot: &FormsSnapshot) -> Vec<FormStep> {

@@ -7177,6 +7177,13 @@ export class VerifyScript extends Script {
       testResolvedHostContext();
       return;
     }
+    if (segments[0] === "host-ownership") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      for (const filter of ["concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]) {
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", filter, "--", "--nocapture"], this.root);
+      }
+      return;
+    }
     if (segments[0] === "wires-document-contract") {
       const { testWiresDocumentContractOracle } = await import("./✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
       testWiresDocumentContractOracle();
@@ -7262,6 +7269,11 @@ export class VerifyScript extends Script {
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-reasoning-wires", "--lib", "wires_pointer_move_", "--", "--nocapture"], this.root);
       return;
     }
+    if (segments[0] === "jack-results-window-transient") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-trinity-jack", "--features", "semio-s-artifact-trinity-jack/component-app-assembly", "--lib", "results_window_large_output_", "--", "--nocapture"], this.root);
+      return;
+    }
     if (segments[0] === "shared-value-canonical-json") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "shared_value_canonical_json", "--", "--nocapture"], this.root);
@@ -7289,7 +7301,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (segments[0] === "rewriting-window-config") {
-      const { testRewritingDocumentRetirementOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🧪️tests/🟦️.ts");
+      const { testRewritingDocumentRetirementOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🧪️tests/🔬️document-retirement/🟦️.ts");
       testRewritingDocumentRetirementOracle();
       const { testRewritingWindowConfigOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts");
       testRewritingWindowConfigOracle();
@@ -7319,6 +7331,168 @@ export class VerifyScript extends Script {
     if (segments[0] === "jack-document-contract") {
       const { testJackDocumentContract } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
       testJackDocumentContract();
+      return;
+    }
+    if (segments[0] === "store-reload-publication") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "artifact_store_reset_preserves_capacity_for_retained_batch_publication", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "flow-window-ownership") {
+      const { testFlowWindowOwnershipOracle } = await import("./✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window-ownership/🟦️.ts");
+      testFlowWindowOwnershipOracle();
+      if (segments[1] === "check" || segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        const mode = segments[1] === "check" ? ["check", "--tests"] : ["test", "--lib", "flow_window_ownership_", "--", "--nocapture"];
+        await runCargo([mode[0]!, "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-flow-flow", ...mode.slice(1)], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "writer-window-state") {
+      const { testWriterWindowStateOracle } = await import("./✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🟦️.ts");
+      testWriterWindowStateOracle();
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "writer_window_state_", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust"));
+      }
+      return;
+    }
+    if (segments[0] === "block3d-window-transient") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-block-3d", "--features", "component-app-assembly", "--lib", "preview_", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "ephemeral-transfer-preparation") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "ephemeral_transfer_preparation", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "owned-document-closure") {
+      const { testOwnedDocumentClosureOracle } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🟦️.ts");
+      testOwnedDocumentClosureOracle();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🟦️.ts")], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "owned_document_closure", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "stdio-document-contract") {
+      const { testSemioObjectDocumentContract } = await import("./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testSemioObjectDocumentContract();
+      const { testSemioKitDocumentContract } = await import("./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testSemioKitDocumentContract();
+      const { testSemioGeometryContract } = await import("./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🧪️tests/🔬️unit/🟦️.ts");
+      testSemioGeometryContract();
+      const stdioSchemaRoot = join(this.root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets");
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${stdioSchemaRoot}/✉️base/🧬️schema/🧮️geometry/🟦️.ts`, ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts"].map((file) => `${stdioSchemaRoot}/📦️object/🧬️schema/${file}`), ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${stdioSchemaRoot}/🧰️kit/🧬️schema/${file}`)], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        for (const filter of ["stdio_document_contract", "subsets::object::", "subsets::kit::"]) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-stdio-semio", "--lib", filter, "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "map-document-contract") {
+      const { testMapDocumentContractOracle } = await import("./✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testMapDocumentContractOracle();
+      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-gis-gismap", "--lib", "map_document_contract", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "terrain-document-contract") {
+      const { testTerrainDocumentContractOracle } = await import("./✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testTerrainDocumentContractOracle();
+      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-gis-gisterrain", "--lib", "terrain_document_contract", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "program-document-contract") {
+      const { testProgramDocumentContract } = await import("./✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️document-contract/🟦️.ts");
+      testProgramDocumentContract();
+      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-architect-program", "--lib", "program_document_contract", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "cad-document-contract") {
+      const { testCadDocumentContractOracle } = await import("./✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testCadDocumentContractOracle();
+      const schemaRoot = join(this.root, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
+      if (segments[1] === "native") {
+        process.env.CARGO_TARGET_DIR = join(this.root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/CORRECT-COMMAND-CONFIG-AND-MUTATION-OWNERSHIP-LEVELS/🗑️generated/cargo-trinity");
+        process.env.CARGO_INCREMENTAL = "0";
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-cad-cad", "--lib", "cad_document_contract", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "layout-document-contract") {
+      const { testLayoutDocumentContractOracle } = await import("./✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testLayoutDocumentContractOracle();
+      const schemaRoot = join(this.root, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
+      if (segments[1] === "native") {
+        process.env.CARGO_TARGET_DIR = join(this.root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/CORRECT-COMMAND-CONFIG-AND-MUTATION-OWNERSHIP-LEVELS/🗑️generated/cargo-trinity");
+        process.env.CARGO_INCREMENTAL = "0";
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-layout-layout", "--lib", "layout_document_contract", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "generation3d-preview-window-transient") {
+      const testRoot = join(this.root, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient");
+      const { testGeneration3dPreviewWindowTransientContract } = await import(`${testRoot}/🧪️tests/🔬️contract/🟦️.ts`);
+      testGeneration3dPreviewWindowTransientContract();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧬️schema/🟦️.ts`, `${testRoot}/🧪️tests/🔬️contract/🟦️.ts`], { cwd: this.root });
+      if (segments[1] === "native") {
+        process.env.CARGO_TARGET_DIR = join(this.root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/CORRECT-COMMAND-CONFIG-AND-MUTATION-OWNERSHIP-LEVELS/🗑️generated/cargo-trinity");
+        process.env.CARGO_INCREMENTAL = "0";
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--features", "component-app-assembly", "--lib", "preview_eval_", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "gis-terrain-window-config") {
+      const testRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/⚙️config");
+      const { testGisTerrainWindowConfigContract } = await import(`${testRoot}/🧪️tests/🔬️contract/🟦️.ts`);
+      testGisTerrainWindowConfigContract();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧬️schema/🟦️.ts`, `${testRoot}/🧪️tests/🔬️contract/🟦️.ts`], { cwd: this.root });
+      if (segments[1] === "native") {
+        process.env.CARGO_TARGET_DIR = join(this.root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/CORRECT-COMMAND-CONFIG-AND-MUTATION-OWNERSHIP-LEVELS/🗑️generated/cargo-trinity");
+        process.env.CARGO_INCREMENTAL = "0";
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-gis-gisterrain", "--features", "component-app-assembly", "--lib", "gis_terrain_window_config_", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "presentation-document-contract") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      const { testPresentationDocumentContractOracle } = await import("./✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testPresentationDocumentContractOracle();
+      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), ...["--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)]], { cwd: this.root });
+      if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-animate-presentation", "--lib", "presentation_document_contract", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "procedure-document-contract") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      const { testProcedureDocumentContractOracle } = await import("./✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testProcedureDocumentContractOracle();
+      const schemaRoot = join(this.root, "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), ...["--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)]], { cwd: this.root });
+      if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-imperative-procedure", "--lib", "procedure_document_contract", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "dag-document-contract") {
@@ -25297,43 +25471,105 @@ function policyParseTsFieldType(typeText: string, optionalMark: boolean): Pick<P
 }
 
 /**
- * 🟦️Extract members of the single exported interface, reading the state JSDoc tag above each property.
+ * 🟦️Extract the declared exported schema, following named aliases to their owning interface.
  */
-export function policyExtractTypescriptSchemaFields(text: string, expectedTypeName: string | null = null): PolicySchemaLeafExtract {
-  const decl = policyFindSchemaDeclaration(text, /\bexport\s+interface\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, expectedTypeName);
-  if (!decl) return { typeName: "", fields: [] };
-  const { typeName, bodyStart } = decl;
-  let depth = 1;
-  let i = bodyStart;
-  for (; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === "{") depth++;
-    else if (ch === "}") {
-      depth--;
-      if (depth === 0) break;
+export function policyExtractTypescriptSchemaFields(
+  text: string,
+  expectedTypeName: string | null = null,
+  resolveModule?: (specifier: string, importingModule: string) => { moduleId: string; text: string } | null,
+  moduleId = "",
+): PolicySchemaLeafExtract {
+  const seen = new Set<string>();
+  const bodyOf = (source: string, start: number): string => {
+    let depth = 1, end = start;
+    for (; end < source.length; end++) {
+      if (source[end] === "{") depth++;
+      else if (source[end] === "}" && --depth === 0) break;
     }
-  }
-  const body = text.slice(bodyStart, i);
+    return source.slice(start, end);
+  };
+  const find = (source: string, sourceId: string, name: string | null, exported: boolean): { text: string; typeName: string; bodyStart: number } | null => {
+    const key = JSON.stringify([sourceId, name, exported]);
+    if (seen.has(key)) return null;
+    seen.add(key);
+    try {
+      const declaration = policyFindSchemaDeclaration(source, exported ? /\bexport\s+interface\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/ : /\binterface\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, name);
+      if (declaration) return { text: source, ...declaration };
+      if (!name) return null;
+      for (const match of source.matchAll(/\b(export\s+)?interface\s+([A-Za-z_][A-Za-z0-9_]*)\s+extends\s+([A-Za-z_][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z_][A-Za-z0-9_]*)*)\s*\{/g)) {
+        if (match[2] !== name || (exported && !match[1])) continue;
+        const own = bodyOf(source, match.index! + match[0].length);
+        const inherited: string[] = [];
+        for (const base of match[3]!.split(",")) {
+          const declaration = find(source, sourceId, base.trim(), false);
+          if (!declaration) return null;
+          inherited.push(bodyOf(declaration.text, declaration.bodyStart));
+        }
+        return { text: [own, ...inherited].join("\n"), typeName: name, bodyStart: 0 };
+      }
+      const resolve = (specifier: string, target: string) => {
+        const next = resolveModule?.(specifier, sourceId);
+        return next ? find(next.text, next.moduleId, target, true) : null;
+      };
+      for (const match of source.matchAll(/\bexport\s+(?:type\s+)?\{([^}]+)\}\s*(?:from\s*["']([^"']+)["'])?/g)) {
+        for (const item of match[1]!.split(",")) {
+          const binding = /^(?:type\s+)?([A-Za-z_][A-Za-z0-9_]*)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?$/.exec(item.trim());
+          if (binding && (binding[2] ?? binding[1]) === name) return match[2] ? resolve(match[2], binding[1]!) : find(source, sourceId, binding[1]!, false);
+        }
+      }
+      for (const match of source.matchAll(/\b(export\s+)?type\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*;/g)) {
+        if (match[2] === name && (!exported || match[1])) return find(source, sourceId, match[3]!, false);
+      }
+      if (!exported) {
+        for (const match of source.matchAll(/\bimport\s+(?:type\s+)?\{([^}]+)\}\s*from\s*["']([^"']+)["']/g)) {
+          for (const item of match[1]!.split(",")) {
+            const binding = /^(?:type\s+)?([A-Za-z_][A-Za-z0-9_]*)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?$/.exec(item.trim());
+            if (binding && (binding[2] ?? binding[1]) === name) return resolve(match[2]!, binding[1]!);
+          }
+        }
+      }
+      return null;
+    } finally { seen.delete(key); }
+  };
+  const decl = find(text, moduleId, expectedTypeName, true);
+  if (!decl) return { typeName: "", fields: [] };
+  const { bodyStart } = decl;
+  text = decl.text;
+  const typeName = expectedTypeName ?? decl.typeName;
+  const body = bodyOf(text, bodyStart);
   const fields: PolicySchemaFieldShape[] = [];
-  const fieldRe = /(?:\/\*\*\s*@state\s+([a-z0-9_-]+)\s*\*\/\s*)?([A-Za-z_][A-Za-z0-9_]*|"[^"\n]+"|'[^'\n]+')(\?)?\s*:\s*([^;]+);/g;
+  const fieldRe = /(?:\/\*\*([\s\S]*?)\*\/\s*)?([A-Za-z_][A-Za-z0-9_]*|"[^"\n]+"|'[^'\n]+')(\?)?\s*:\s*([^;]+);/g;
   let m: RegExpExecArray | null;
   while ((m = fieldRe.exec(body))) {
     const parsed = policyParseTsFieldType(m[4]!.trim(), Boolean(m[3]));
+    const name = m[2]!.replace(/^["']|["']$/g, "");
+    if (fields.some((field) => field.name === name)) continue;
+    const state = /@state\s+([a-z0-9_-]+)/.exec(m[1] ?? "")?.[1];
     fields.push({
-      name: m[2]!.replace(/^["']|["']$/g, ""),
+      name,
       optional: parsed.optional,
       cardinality: parsed.cardinality,
       scalar: parsed.scalar,
-      state: m[1] ? policyCanonicalState(m[1]) : "",
+      state: state ? policyCanonicalState(state) : "",
     });
   }
   return { typeName, fields };
+}
+
+/** 📂️Resolve relative schema modules without loading or executing their code. */
+function policyExtractTypescriptSchemaFile(abs: string, text: string, expectedTypeName: string | null): PolicySchemaLeafExtract {
+  return policyExtractTypescriptSchemaFields(text, expectedTypeName, (specifier, from) => {
+    if (!specifier.startsWith(".")) return null;
+    const moduleId = resolve(dirname(from), specifier);
+    return existsSync(moduleId) && statSync(moduleId).isFile() ? { moduleId, text: readFileSync(moduleId, "utf8") } : null;
+  }, abs);
 }
 
 /**
  * 🔗️Extract fields of the single GraphQL type, reading the state directive on each field.
  */
 export function policyExtractGraphqlSchemaFields(text: string, expectedTypeName: string | null = null): PolicySchemaLeafExtract {
+  text = text.replace(/"""[\s\S]*?"""|"(?:\\.|[^"\\])*"|#[^\n]*/g, (value) => value.replace(/[^\n]/g, " "));
   const decl = policyFindSchemaDeclaration(text, /\btype\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, expectedTypeName);
   if (!decl) return { typeName: "", fields: [] };
   const { typeName, bodyStart } = decl;
@@ -25349,13 +25585,20 @@ export function policyExtractGraphqlSchemaFields(text: string, expectedTypeName:
   }
   const body = text.slice(bodyStart, i);
   const fields: PolicySchemaFieldShape[] = [];
-  const fieldRe = /([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(\[[^\]]+\]|[A-Za-z_][A-Za-z0-9_]*)(!)?(?:\s*@state\s*\(\s*class\s*:\s*([A-Z_]+)\s*\))?/g;
-  let m: RegExpExecArray | null;
-  while ((m = fieldRe.exec(body))) {
+  let argumentDepth = 0;
+  const declarations = body.replace(/[\s\S]/g, (character) => {
+    if (character === "(") argumentDepth++;
+    const visible = argumentDepth === 0;
+    if (character === ")") argumentDepth--;
+    return visible ? character : " ";
+  });
+  const matches = [...declarations.matchAll(/([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(\[[^\]]+\]|[A-Za-z_][A-Za-z0-9_]*)(!)?/g)];
+  for (const [index, m] of matches.entries()) {
     const name = m[1]!;
     const typeTok = m[2]!;
     const required = Boolean(m[3]);
-    const stateRaw = m[4] ?? "";
+    const directives = body.slice(m.index! + m[0].length, matches[index + 1]?.index ?? body.length);
+    const stateRaw = /@state\s*\(\s*class\s*:\s*([A-Z_]+)\s*\)/.exec(directives)?.[1] ?? "";
     let cardinality: PolicySchemaFieldCardinality = "scalar";
     let scalar = typeTok;
     const listMatch = /^\[\s*(.+?)\s*!?\s*\]$/.exec(typeTok);
@@ -25529,7 +25772,7 @@ function policyLoadSchemaFacetLeaves(
         extract = policyExtractRustSchemaFields(text, expected);
         break;
       case "🟦️typescript":
-        extract = policyExtractTypescriptSchemaFields(text, expected);
+        extract = policyExtractTypescriptSchemaFile(abs, text, expected);
         break;
       case "🔗️graphql":
         extract = policyExtractGraphqlSchemaFields(text, expected);
@@ -25955,7 +26198,7 @@ function policyLoadAppSchemaFacetLeaves(
         extract = policyExtractRustSchemaFields(text, expectedTypeName);
         break;
       case "🟦️typescript":
-        extract = policyExtractTypescriptSchemaFields(text, expectedTypeName);
+        extract = policyExtractTypescriptSchemaFile(abs, text, expectedTypeName);
         break;
       case "🔗️graphql":
         extract = policyExtractGraphqlSchemaFields(text, expectedTypeName);
@@ -26359,7 +26602,8 @@ export function policyArtifactOwnershipFieldParity(root: string): { path: string
   for (const path of paths) {
     const schema = JSON.parse(readFileSync(join(root, path), "utf8")) as { title: string; properties: Record<string, unknown> };
     for (const [filename, extract] of representations) {
-      const source = join(dirname(path), filename), text = policyReadFileSafe(root, source), declaration = extract(text, schema.title);
+      const source = join(dirname(path), filename), text = policyReadFileSafe(root, source);
+      const declaration = filename === "🟦️.ts" ? policyExtractTypescriptSchemaFile(join(root, source), text, schema.title) : extract(text, schema.title);
       const difference = policySchemaFieldDifferences(Object.keys(schema.properties ?? {}), declaration.fields.map((field) => field.name));
       if (!declaration.typeName) difference.missing.unshift(`declaration:${schema.title}`);
       if (difference.missing.length || difference.extra.length) breaches.push({ path: source, ...difference });
@@ -26401,7 +26645,8 @@ export function abstractionOwnershipChecks(root: string): number {
     const artifact = JSON.parse(readFileSync(join(root, path), "utf8"));
     if (!validateArtifactFields(artifact.properties)) throw new Error(`[verify abstraction-ownership] ${path}: app/window state leaks into the artifact contract: ${JSON.stringify(validateArtifactFields.errors)}.`);
     for (const [filename, extract] of artifactRepresentations) {
-      const source = join(dirname(path), filename), contents = readFileSync(join(root, source), "utf8"), declaration = extract(contents, artifact.title);
+      const source = join(dirname(path), filename), contents = readFileSync(join(root, source), "utf8");
+      const declaration = filename === "🟦️.ts" ? policyExtractTypescriptSchemaFile(join(root, source), contents, artifact.title) : extract(contents, artifact.title);
       if (filename === "🟦️.ts") typescript.scan(contents);
       if (!declaration.typeName) throw new Error(`[verify abstraction-ownership] ${source}: missing document declaration ${artifact.title}.`);
       const misplaced = declaration.fields.filter((field) => field.state && field.state !== "artifact");

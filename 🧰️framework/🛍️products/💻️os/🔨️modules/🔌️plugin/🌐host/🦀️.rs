@@ -555,7 +555,7 @@ impl Host {
         let capability = capability.into();
         let request_json = request_json.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::InvokeExtension { req, extension_id, capability, request_json }).await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::invoke_extension(req, extension_id, capability, request_json)).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]

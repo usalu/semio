@@ -11,7 +11,7 @@ use framework_schema::ArtifactSchema;
 /// slots are never absent, only ever replaced, so a single `Option<…Child>` — not the double-
 /// `Option` an optional slot needs — is the sparse-vs-unchanged signal here).
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.imperative.procedure")]
 pub struct ProcedureDiff {
     #[state(artifact)]

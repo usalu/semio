@@ -1,0 +1,47 @@
+{
+  "emptyRecordCases": [
+    { "value": {}, "valid": true },
+    { "value": { "locale": "de" }, "valid": false },
+    { "value": null, "valid": false },
+    { "value": [], "valid": false },
+    { "value": "", "valid": false },
+    { "value": false, "valid": false }
+  ],
+  "keys": [
+    "name",
+    "value"
+  ],
+  "valid": [
+    {},
+    {
+      "name": "title"
+    },
+    {
+      "value": {
+        "nested": [
+          null,
+          true,
+          7
+        ]
+      }
+    },
+    {
+      "name": 14,
+      "value": null
+    }
+  ],
+  "invalid": [
+    null,
+    [],
+    42,
+    "record",
+    true,
+    {
+      "locale": "de"
+    },
+    {
+      "name": "title",
+      "camera": {}
+    }
+  ]
+}

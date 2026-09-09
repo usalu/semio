@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.architect.program.artifact;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Program artifact schema
 message ProgramArtifact {
@@ -102,7 +103,7 @@ message ProgramArtifact {
   // @state artifact
   repeated QualityRecord quality = 49;
   // @state artifact
-  repeated DocumentRecord documents = 50;
+  repeated ArtifactRecord artifacts = 50;
   // @state artifact
   repeated Assumption assumptions = 51;
   // @state artifact
@@ -136,12 +137,11 @@ message ProgramArtifact {
   // @state artifact
   repeated TemplateRecord templates = 66;
   // @state artifact
-  repeated KnowledgeRecord knowledge = 67;
+  semio.os.store.ArtifactChild knowledge = 67;
   // @state artifact
-  repeated BenchmarkRecord benchmarks = 68;
+  semio.os.store.ArtifactChild benchmarks = 68;
   // @state artifact
   repeated TraceLink traces = 69;
   // @state artifact
   Governance governance = 70;
 }
-

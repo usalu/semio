@@ -12,6 +12,7 @@ import {
   captureSpaceArtifactCreationCatalogAuthorityV1,
   mountedGisMapProbeV1,
   runInvokeExtensionEffect,
+  spaceArtifactCreationCatalogRefreshRequestV1,
   spaceArtifactCreationOwnerAcceptsStatus,
   spaceArtifactCreationReadyOpening,
   spaceArtifactCreationRequestFromAction,
@@ -28,19 +29,20 @@ import mountedGisMapProbeFixture from "../../🧱️elements/🏛️ShellHost/�
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
 import Ajv, { type ValidateFunction } from "ajv";
 import deepEqual from "fast-deep-equal";
-import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🔣️.json";
+import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🔣️.json";
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
-import admittedInstanceFixture from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/🔣️.json";
-import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🔣️.json";
-import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
-import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
+import admittedInstanceFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🛂️admission/🔣️.json";
+import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🔣️.json";
+import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
+import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
 import { runArtifactCreationReadyOpeningV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
+import { runDocumentOpeningAttemptV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { ARTIFACT_CREATION_PROGRESS_CAPACITY, ARTIFACT_CREATION_PROGRESS_TEXT_V1, ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, artifactCreationProgressLocaleV1, artifactCreationProgressRoleV1, artifactCreationProgressTerminalV1, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🏦️.tsx";
 import { OwnedShellDialog, type OwnedShellDialogProps } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🌐️browser/🟦️.tsx";
-import tutorialRunFixture from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🎥️tutorial/🔣️.json";
+import tutorialRunFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🔣️.json";
 import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
-import tutorialSeekFixture from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🎥️tutorial/⏩️seek/🔣️.json";
-import tutorialSerialFixture from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🎥️tutorial/🧵️serial/🔣️.json";
+import tutorialSeekFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/⏩️seek/🔣️.json";
+import tutorialSerialFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🧵️serial/🔣️.json";
 import descriptorLoadFixture from "../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/📇️descriptor-load/🔣️.json";
 import kernelFixtureSchema from "../../../../../../../🔨️modules/🎠️kernel/🧬️schema/🔣️.json";
 import { createInstance as createTranslationOracle } from "i18next";
@@ -663,8 +665,8 @@ describe("Space artifact creation host owner", () => {
     spaceId: "space-a",
     expectedCatalogGenerationId: catalogAuthority.catalogGenerationId,
     kindId: "s.gis.gismap",
-    runtimeKey: "hub:space-a:index",
-    clientInstanceId: "client-a",
+    runtimeKey: artifactCreationCatalogAuthorityFixture.catalog.runtimeKey,
+    clientInstanceId: artifactCreationCatalogAuthorityFixture.catalog.clientInstanceId,
     sessionInstanceId: 7,
     opening: false,
     cancelRequested: false,
@@ -726,6 +728,42 @@ describe("Space artifact creation host owner", () => {
     });
     expect({ requestGeneration: (request as unknown as Record<string, unknown>)?.expectedCatalogGenerationId, statuses }).toEqual({ requestGeneration: catalogAuthority.catalogGenerationId, statuses: artifactCreationCatalogAuthorityFixture.statusCases.map(row => row.admitted) });
     console.log("[DEBUG] Shell creation request and ready statuses preserve the selected catalog generation");
+  });
+
+  it("refreshes only the exact current selected catalog after an owned initial conflict", () => {
+    expect(directoryExport("SpaceArtifactCreationCatalogAuthorityV1")(artifactCreationCatalogAuthorityFixture)).toBe(true);
+    const refresh = { kind: "space-artifact-creation-catalog-refresh-required" as const, requestId, spaceId: owner.spaceId, catalogGenerationId: owner.expectedCatalogGenerationId };
+    const ready = {
+      kind: "space-artifact-creation-status" as const,
+      requestId,
+      spaceId: owner.spaceId,
+      catalogGenerationId: owner.expectedCatalogGenerationId,
+      phase: "ready" as const,
+      ready: { documentId: `artifact-${"2".repeat(32)}`, kindId: owner.kindId, artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } },
+    };
+    const owners: Readonly<Record<string, SpaceArtifactCreationOwnerV1 | null>> = { current: owner, absent: null, ready: { ...owner, ready }, opening: { ...owner, opening: true } };
+    const authorities: Readonly<Record<string, SpaceArtifactCreationCatalogAuthorityV1 | null>> = {
+      current: catalogAuthority,
+      unavailable: null,
+      "rotated-generation": { ...catalogAuthority, catalogGenerationId: "4".repeat(64) },
+      "replaced-runtime": { ...catalogAuthority, runtimeKey: "hub:space-a:replacement" },
+    };
+    const origins: Readonly<Record<string, ShellDialogOriginV1 | null>> = {
+      current: catalogOrigin,
+      "replaced-session": { ...catalogOrigin, sessionInstanceId: catalogOrigin.sessionInstanceId + 1 },
+      "replaced-client": { ...catalogOrigin, document: { ...catalogOrigin.document!, clientInstanceId: "22222222-2222-4222-8222-222222222222" } },
+      "other-document": { ...catalogOrigin, document: { ...catalogOrigin.document!, scope: { spaceId: owner.spaceId, documentId: "other" } } },
+    };
+    const messages: Readonly<Record<string, Extract<BackboneWorkerResponse, { kind: "space-artifact-creation-catalog-refresh-required" }>>> = {
+      current: refresh,
+      "replaced-request": { ...refresh, requestId: "2".repeat(32) },
+      "rotated-generation": { ...refresh, catalogGenerationId: "4".repeat(64) },
+    };
+    for (const row of artifactCreationCatalogAuthorityFixture.refreshCases) {
+      const request = spaceArtifactCreationCatalogRefreshRequestV1(owners[row.owner], authorities[row.authority], origins[row.origin], messages[row.message]);
+      expect(request, row.id).toEqual(row.admitted ? { kind: "space-artifact-creation-catalog-open", clientInstanceId: owner.clientInstanceId, spaceId: owner.spaceId } : null);
+    }
+    console.log("[DEBUG] Shell creation catalog refresh: neutral=12 admitted=1 stale-or-terminal=11");
   });
 
   it("retires only staged artifact-kind fields on catalog revision", () => {
@@ -797,6 +835,66 @@ describe("Space artifact creation host owner", () => {
     console.log("[DEBUG] Ready opening disposition: neutral=9 published=1 released-once=6");
   });
 
+  it("requires an explicit same-generation mount after the document port becomes ready", async () => {
+    expect(directoryExport("ArtifactCreationReadyOpeningV1")(artifactCreationReadyOpeningFixture)).toBe(true);
+    const { createArtifactCreationCatalogMountV1 } = await import("../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts");
+    for (const row of artifactCreationReadyOpeningFixture.mountCases) {
+      const gate = createArtifactCreationCatalogMountV1(catalogAuthority.catalogGenerationId);
+      let outcome = "pending";
+      const settled = gate.ready.then(() => { outcome = "ready"; }, () => { outcome = "failed"; });
+      await Promise.resolve();
+      expect(outcome, row.id).toBe("pending");
+      expect(gate.current(), row.id).toBe(true);
+      const accepted: boolean[] = [];
+      for (const action of row.actions) {
+        if (action === "close") gate.close(new Error("document closed"));
+        else accepted.push(gate.accept(action === "current" ? catalogAuthority.catalogGenerationId : action === "rotated" ? "4".repeat(64) : ""));
+      }
+      await settled;
+      const expected = { accepted: row.accepted, outcome: row.outcome };
+      expect({ accepted, outcome }, row.id).toEqual(expected);
+      expect(deepEqual({ accepted, outcome }, expected), row.id).toBe(true);
+      expect(gate.current(), row.id).toBe(row.committed);
+    }
+    for (const generation of ["", "0".repeat(64), "A".repeat(64), "1".repeat(63), "1".repeat(65), null, ["1".repeat(64)]]) expect(() => createArtifactCreationCatalogMountV1(generation as string)).toThrow();
+    console.log("[DEBUG] creation mount gate: eight identity/retirement cases; a bound port alone never admits commit");
+  });
+
+  it("commits private document opening only after a still-current creation mount", async () => {
+    expect(directoryExport("ArtifactCreationReadyOpeningV1")(artifactCreationReadyOpeningFixture)).toBe(true);
+    const { createArtifactCreationCatalogMountV1 } = await import("../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts");
+    for (const row of artifactCreationReadyOpeningFixture.mountCases) {
+      const gate = createArtifactCreationCatalogMountV1(catalogAuthority.catalogGenerationId);
+      let commits = 0, closes = 0, detaches = 0, retires = 0;
+      let failure: string | null = null;
+      let attached!: () => void;
+      const attachment = new Promise<void>(resolve => { attached = resolve; });
+      const documentReady = row.id === "rebootstrap-before-port-ready" ? new Promise<void>(() => {}) : Promise.resolve();
+      const opening = runDocumentOpeningAttemptV1({
+        deadlineMs: 1_000,
+        current: gate.current,
+        socket: async () => {},
+        attach: async () => { attached(); await gate.attach(documentReady); },
+        commit: () => { commits += 1; },
+        close: () => { closes += 1; gate.close(new Error("opening closed")); },
+        detach: async () => { detaches += 1; },
+        retire: () => { retires += 1; },
+      }).catch(error => { failure = error instanceof Error ? error.message : String(error); return false; });
+      await attachment;
+      expect({ commits, closes, detaches, retires }, row.id).toEqual({ commits: 0, closes: 0, detaches: 0, retires: 0 });
+      for (const action of row.actions) {
+        if (action === "close") gate.close(new Error("document closed"));
+        else gate.accept(action === "current" ? catalogAuthority.catalogGenerationId : action === "rotated" ? "4".repeat(64) : "");
+      }
+      const result = { committed: await opening, commits, closes, detaches, retires };
+      const expected = { committed: row.committed, commits: Number(row.committed), closes: Number(!row.committed), detaches: Number(!row.committed), retires: 1 };
+      expect(result, row.id).toEqual(expected);
+      expect(deepEqual(result, expected), row.id).toBe(true);
+      if (row.outcome === "failed") expect(failure, row.id).toBe(row.actions.includes("close") ? "document closed" : "artifact-creation.catalog-generation-mismatch");
+    }
+    console.log("[DEBUG] creation opening composition: eight mount cases; two commits and six exact private releases without deadline expiry");
+  });
+
   it("retains exact sibling owners through one-shot cancellation and accepts a racing Ready", () => {
     const progressOwner: ArtifactCreationProgressOwnerV1 = owner;
     const sibling: ArtifactCreationProgressOwnerV1 = { ...progressOwner, requestId: "2".repeat(32), name: "Second Map" };
@@ -813,6 +911,7 @@ describe("Space artifact creation host owner", () => {
       kind: "space-artifact-creation-status" as const,
       requestId,
       spaceId: "space-a",
+      catalogGenerationId: owner.expectedCatalogGenerationId,
       phase: "ready" as const,
       ready: { documentId: `artifact-${"4".repeat(32)}`, kindId: "s.draw.draw", artifactSchema: "s.draw.draw", parentDialect: { artifactKind: "s.draw.draw", standard: "1", subset: "*" } },
     };
@@ -3387,7 +3486,7 @@ describe("framework external slots", () => {
       // doc), so these two only need to satisfy the shape, never actually fire.
       enqueue: () => {},
       outcomes: createTurnOutcomeBroadcast<TurnOutcome>().stream,
-      dispose: () => {},
+      dispose: async () => {},
     };
     const externalNode: Parameters<typeof resolveExternalSlots>[0] = {
       key: "forms-module-procedural",

@@ -2194,6 +2194,16 @@ pub struct Fem3dPageVisualJob {
     abort_started: bool,
 }
 
+/// 📦️ Scalar payload and active lengths for one visual page item.
+#[derive(Clone, Copy)]
+struct Fem3dVisualItemPayload {
+    numbers: [f64; 16],
+    number_len: u8,
+    indexes: [u32; 8],
+    index_len: u8,
+    flags: u16,
+}
+
 impl Fem3dPageVisualJob {
     fn backing_usage(&self) -> (usize, usize) {
         let region = usize::from(self.region_order.is_some());
@@ -2307,7 +2317,8 @@ impl Fem3dPageVisualJob {
         }
     }
 
-    fn push_item(&mut self, page: usize, strings: [Option<&str>; 4], numbers: [f64; 16], number_len: u8, indexes: [u32; 8], index_len: u8, flags: u16) -> Result<(), Vec<u8>> {
+    fn push_item(&mut self, page: usize, strings: [Option<&str>; 4], payload: Fem3dVisualItemPayload) -> Result<(), Vec<u8>> {
+        let Fem3dVisualItemPayload { numbers, number_len, indexes, index_len, flags } = payload;
         let owner = self.pages.get_mut(page).and_then(Option::as_mut).ok_or_else(|| b"fem3d.visual-page-owner".to_vec())?;
         let byte_count = strings.iter().try_fold(0usize, |total, value| total.checked_add(value.map_or(0, |text| text.len()))).ok_or_else(|| b"fem3d.visual-page-byte-overflow".to_vec())?;
         if owner.item_count() == WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY || owner.byte_count().checked_add(byte_count).is_none_or(|count| count > WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY) {
@@ -2445,15 +2456,7 @@ impl Fem3dPageVisualJob {
                 }
                 let divisor = self.point_cursor.max(1) as f64;
                 let kind = if solid.layers == 1 { 1 } else { 2 };
-                self.push_item(
-                    1,
-                    [Some(&solid.id), Some(if kind == 1 { "tetrahedron" } else { "hexahedron" }), None, None],
-                    Self::instance_numbers([self.solid_sum[0] / divisor, self.solid_sum[1] / divisor, solid.base_z + solid.height * 0.5], [1.0, 1.0, solid.height]),
-                    14,
-                    [kind, 0, 0, 0, 0, 0, 0, 0],
-                    1,
-                    1,
-                )?;
+                self.push_item(1, [Some(&solid.id), Some(if kind == 1 { "tetrahedron" } else { "hexahedron" }), None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([self.solid_sum[0] / divisor, self.solid_sum[1] / divisor, solid.base_z + solid.height * 0.5], [1.0, 1.0, solid.height]), number_len: 14, indexes: [kind, 0, 0, 0, 0, 0, 0, 0], index_len: 1, flags: 1 })?;
                 self.cursor += 1;
                 self.point_cursor = 0;
                 self.solid_sum = [0.0; 2];
@@ -2466,7 +2469,7 @@ impl Fem3dPageVisualJob {
             Fem3dVisualJobStage::BuildMeshElement => {
                 if self.item_phase == 0 {
                     if let Some(node) = doc.nodes.get(self.cursor) {
-                        self.push_item(2 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(&node.id), None, None, None], Self::instance_numbers([node.x, node.y, node.z], [0.05; 3]), 14, [0; 8], 0, 2)?;
+                        self.push_item(2 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(&node.id), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([node.x, node.y, node.z], [0.05; 3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 2 })?;
                         self.cursor += 1;
                     } else {
                         self.cursor = 0;
@@ -2507,7 +2510,7 @@ impl Fem3dPageVisualJob {
                 let dy = self.endpoint_b[1] - self.endpoint_a[1];
                 let dz = self.endpoint_b[2] - self.endpoint_a[2];
                 let length = (dx * dx + dy * dy + dz * dz).sqrt();
-                self.push_item(4 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(element_id(element)), None, None, None], Self::instance_numbers(midpoint, [0.05, 0.05, length]), 14, [0; 8], 0, 3)?;
+                self.push_item(4 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(element_id(element)), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers(midpoint, [0.05, 0.05, length]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 3 })?;
                 self.cursor += 1;
                 self.item_phase = 1;
             }
@@ -2516,7 +2519,7 @@ impl Fem3dPageVisualJob {
                     self.advance(Fem3dVisualJobStage::BuildLoadGlyph);
                     return Ok(false);
                 };
-                self.push_item(6 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(element_id(&doc.elements[index])), None, None, None], Self::instance_numbers([0.0; 3], [0.03; 3]), 14, [0; 8], 0, 4)?;
+                self.push_item(6 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(element_id(&doc.elements[index])), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([0.0; 3], [0.03; 3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 4 })?;
                 self.cursor += 1;
             }
             Fem3dVisualJobStage::BuildLoadGlyph => {
@@ -2529,7 +2532,7 @@ impl Fem3dPageVisualJob {
                     self.load_cursor = 0;
                     return Ok(false);
                 };
-                self.push_item(8, [Some(load_id(load)), None, None, None], Self::instance_numbers([0.0, 0.0, 1.0], [0.03, 0.03, 0.3]), 14, [0; 8], 0, 5)?;
+                self.push_item(8, [Some(load_id(load)), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([0.0, 0.0, 1.0], [0.03, 0.03, 0.3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 5 })?;
                 self.load_cursor += 1;
             }
             Fem3dVisualJobStage::BuildSupportGlyph => {
@@ -2537,7 +2540,7 @@ impl Fem3dPageVisualJob {
                     self.advance(Fem3dVisualJobStage::BuildDisplacementEntry);
                     return Ok(false);
                 };
-                self.push_item(9, [Some(&support.id), None, None, None], Self::instance_numbers([0.0; 3], [0.1; 3]), 14, [0; 8], 0, 6)?;
+                self.push_item(9, [Some(&support.id), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([0.0; 3], [0.1; 3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 6 })?;
                 self.cursor += 1;
             }
             Fem3dVisualJobStage::BuildDisplacementEntry | Fem3dVisualJobStage::BuildResidualEntry | Fem3dVisualJobStage::BuildReactionEntry | Fem3dVisualJobStage::BuildContourEntry | Fem3dVisualJobStage::BuildModeEntry => {
@@ -2560,18 +2563,18 @@ impl Fem3dPageVisualJob {
                     Fem3dVisualJobStage::BuildContourEntry => ([0.0; 3], field.contour, 13),
                     _ => (field.mode_shape, field.eigen_estimate, 14),
                 };
-                self.push_item(Self::field_page(self.stage, self.cursor), [Some(&node.id), None, None, None], Self::field_numbers(field, [node.x, node.y, node.z], vector, scalar), 14, [0; 8], 0, flag)?;
+                self.push_item(Self::field_page(self.stage, self.cursor), [Some(&node.id), None, None, None], Fem3dVisualItemPayload { numbers: Self::field_numbers(field, [node.x, node.y, node.z], vector, scalar), number_len: 14, indexes: [0; 8], index_len: 0, flags: flag })?;
                 self.cursor += 1;
             }
             Fem3dVisualJobStage::BuildLabelEntry => {
                 if self.cursor == 0 {
-                    self.push_item(20, [Some("en"), Some(FEM3D_VISUAL_LABEL_EN), None, None], Self::progress_numbers(solver), 3, [solver.total as u32, solver.state as u32, 0, 0, 0, 0, 0, 0], 2, 20)?;
+                    self.push_item(20, [Some("en"), Some(FEM3D_VISUAL_LABEL_EN), None, None], Fem3dVisualItemPayload { numbers: Self::progress_numbers(solver), number_len: 3, indexes: [solver.total as u32, solver.state as u32, 0, 0, 0, 0, 0, 0], index_len: 2, flags: 20 })?;
                     self.cursor = 1;
                 } else if self.cursor == 1 {
-                    self.push_item(20, [Some("de"), Some(FEM3D_VISUAL_LABEL_DE), None, None], Self::progress_numbers(solver), 3, [solver.total as u32, solver.state as u32, 0, 0, 0, 0, 0, 0], 2, 20)?;
+                    self.push_item(20, [Some("de"), Some(FEM3D_VISUAL_LABEL_DE), None, None], Fem3dVisualItemPayload { numbers: Self::progress_numbers(solver), number_len: 3, indexes: [solver.total as u32, solver.state as u32, 0, 0, 0, 0, 0, 0], index_len: 2, flags: 20 })?;
                     self.cursor = 2;
                 } else if self.cursor == 2 {
-                    self.push_item(0, [Some("box"), None, None, None], [0.0; 16], 0, [self.credit.draw_count, self.credit.draw_bytes, 0, 0, 0, 0, 0, 0], 2, 30)?;
+                    self.push_item(0, [Some("box"), None, None, None], Fem3dVisualItemPayload { numbers: [0.0; 16], number_len: 0, indexes: [self.credit.draw_count, self.credit.draw_bytes, 0, 0, 0, 0, 0, 0], index_len: 2, flags: 30 })?;
                     self.cursor = 3;
                 } else {
                     self.advance(Fem3dVisualJobStage::SealPages);

@@ -1,6 +1,6 @@
 {
   "CreateProperties": {
-    "child_id": "props-1",
+    "child_id": "kitchen-sink-properties",
     "target": {
       "artifactId": "kitchen-sink-properties",
       "dialect": {

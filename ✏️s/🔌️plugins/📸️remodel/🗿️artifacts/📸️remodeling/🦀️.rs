@@ -1468,26 +1468,6 @@ impl Default for RemodelingMesh {
     }
 }
 
-//#region 🔖️MeshBridge
-/// 🌉️ `Box<T>` is a `#[fundamental]` std type, so implementing the foreign `dsl::DslField` trait for
-/// `Box<RemodelingMesh>` (a local type parameter) here is coherence-legal — needed because
-/// `RemodelingMutation::ReplaceMeshResult` carries `mesh: Box<RemodelingMesh>` (boxed only to shrink the
-/// enum's overall size; `RemodelingMesh` itself is a plain record, not a `DslEnum`, so the derive's
-/// `#[dsl(statements)] Box<T>` "exactly-one-tagged-value" idiom doesn't apply — this is the ordinary
-/// boxed-scalar case instead). Delegates to `RemodelingMesh`'s own (now derive-generated) `DslField` impl.
-impl dsl::DslField for Box<RemodelingMesh> {
-    fn shape() -> dsl::Shape {
-        <RemodelingMesh as dsl::DslField>::shape()
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        <RemodelingMesh as dsl::DslField>::to_value(self.as_ref())
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        <RemodelingMesh as dsl::DslField>::from_value(value).map(Box::new)
-    }
-}
-//#endregion 🔖️MeshBridge
-
 /// ☁️ Sparse point cloud from bundle adjustment (`points` = flat xyz triples).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase", default)]

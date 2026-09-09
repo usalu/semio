@@ -1,6 +1,5 @@
 //! 🖼️ Note play app — the composite (editable) canvas window: the full infinite-canvas surface.
 
-use crate::editor::note::config::NoteConfig;
 use crate::editor::note::modes::edit::windows::composite::options;
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::{NoteCamera, NoteSnapshot};

@@ -54,7 +54,7 @@ pub fn generation_command_result_for(command: &Generation3dCommand, projection: 
             generation_command_result("renameGeneration", Some(&args), projection, config)
         }
         Generation3dCommand::UpdateGenerationValues(payload) => {
-            let generation_id = payload.generation_id.clone().map(dsl::DslValue::String).unwrap_or(dsl::DslValue::Null);
+            let generation_id = payload.generation_id.clone().map_or(dsl::DslValue::Null, dsl::DslValue::String);
             let args = dsl::DslValue::object([("generationId".to_string(), generation_id), ("questionId".to_string(), dsl::DslValue::String(payload.question_id.clone())), ("value".to_string(), payload.value.clone())]);
             generation_command_result("updateGenerationValues", Some(&args), projection, config)
         }

@@ -16,7 +16,7 @@ async fn demo_stock_example_dsl_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn demo_stock_example_preserves_authored_content_against_json_oracle() {
-    let expected: Vec<crate::ObjectKind> = dsl::json::from_json_str(include_str!("../../../../../📚️examples/🎬️demo/📦️expected-stock.json")).unwrap();
+    let expected: Vec<crate::ObjectKind> = dsl::json::from_json_str(include_str!("../../../../../🧫️fixtures/📦️expected-stock.json")).unwrap();
     let document = parse_dsl(DEMO_STOCK_TEXT).expect("authored stock must parse without an empty fallback");
     assert_eq!(crate::stock_of(&document), expected);
     assert_eq!(crate::stock_of(&crate::schema::default_document()), expected);

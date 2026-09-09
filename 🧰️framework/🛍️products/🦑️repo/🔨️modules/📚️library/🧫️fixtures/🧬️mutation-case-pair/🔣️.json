@@ -1,0 +1,15 @@
+{
+  "contract": "canonical-mutation-case-pair-v1",
+  "subset": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "implementationRoot": "🧬️schema/🧬️mutations/⚠️create-fault/🧪️tests/✅️applies",
+  "fixtureRoot": "🧫️fixtures/🧬️mutations/⚠️create-fault/✅️applies",
+  "implementationNodes": 2,
+  "fixtureNodes": 12,
+  "fixtureLeaves": [
+    "🦠️mutation/🔣️.json",
+    "📸️snapshot/⬅️before/🔣️.json",
+    "📸️snapshot/➡️after/🔣️.json",
+    "🔺️diff/🔣️.json",
+    "🎯️outcome/🔣️.json"
+  ]
+}

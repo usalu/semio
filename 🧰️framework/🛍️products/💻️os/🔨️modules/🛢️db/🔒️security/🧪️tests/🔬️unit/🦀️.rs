@@ -1,4 +1,3 @@
-
 use super::*;
 
 async fn doc(id: &str) -> protocol::ArtifactId {
